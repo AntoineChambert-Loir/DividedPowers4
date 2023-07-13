@@ -1,4 +1,4 @@
-import Mathbin.RingTheory.Ideal.Operations
+import Mathlib.RingTheory.Ideal.Operations
 
 section Induction
 
@@ -33,7 +33,9 @@ theorem Factorial.isUnit [Algebra ℚ A] (n : ℕ) : IsUnit (n.factorial : A) :=
   by
   rw [← map_natCast (algebraMap ℚ A)]
   apply IsUnit.map
-  exact is_unit_iff_ne_zero.mpr (nat.cast_ne_zero.mpr (Nat.factorial_ne_zero n))
+  rw [isUnit_iff_ne_zero]
+  simp only [ne_eq, Nat.cast_eq_zero]
+  exact Nat.factorial_ne_zero n
 #align factorial.is_unit Factorial.isUnit
 
 end Factorial
