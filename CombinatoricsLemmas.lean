@@ -1,8 +1,15 @@
-import Mathbin.Data.Nat.Choose.Vandermonde
+import Mathlib.Data.Nat.Choose.Vandermonde
 
 --import multinomial 
 --import multinomial
 section Combinatorics
+
+-- Because mathlib hasn't it yet!
+@[eliminator]
+theorem Nat.rec' {motive : Nat → Sort u}
+    (zero : motive 0) (add_one : (n : Nat) → motive n → motive (n + 1)) (t : Nat) :
+    motive t :=
+  Nat.rec zero add_one t
 
 /-- Number of possibilities of choosing m groups of n-element subsets out of mn elements -/
 def mchoose (m n : ℕ) : ℕ :=
@@ -26,7 +33,7 @@ theorem mchoose_lemma (m : ℕ) {n : ℕ} (hn : n ≠ 0) :
     m.factorial * n.factorial ^ m * mchoose m n = (m * n).factorial :=
   by
   rw [← zero_lt_iff] at hn 
-  induction' m with m ih
+  induction' m  with m ih
   · rw [mchoose_zero, mul_one, MulZeroClass.zero_mul, Nat.factorial_zero, pow_zero, mul_one]
   · have hmn : (m + 1) * (m * n + n - 1).choose (n - 1) = (m * n + n).choose n :=
       by
