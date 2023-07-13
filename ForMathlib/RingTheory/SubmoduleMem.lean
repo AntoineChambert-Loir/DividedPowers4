@@ -2,6 +2,9 @@ import Mathlib.RingTheory.Ideal.Operations
 
 namespace Submodule
 
+-- TODO : Check where we use this:
+-- These two lemmas are true, but they are usually not useful
+-- It is rarely useful to write an element of the span as a linear combination
 theorem mem_span_iff_exists_sum {R : Type _} [CommSemiring R] {M : Type _} [AddCommMonoid M]
     [Module R M] {ι : Type _} (f : ι → M) (x : M) :
     x ∈ span R (Set.range f) ↔ ∃ a : ι →₀ R, (a.sum fun (i : ι) (c : R) => c • f i) = x :=
