@@ -1,5 +1,5 @@
-import Mathbin.RingTheory.Ideal.Basic
-import Mathbin.RingTheory.Ideal.Operations
+import Mathlib.RingTheory.Ideal.Basic
+import Mathlib.RingTheory.Ideal.Operations
 
 theorem Ideal.image_eq_map_of_surjective {A B : Type _} [Semiring A] [Semiring B] (f : A →+* B)
     (I : Ideal A) (hf : Function.Surjective f) : f '' I = I.map f :=
