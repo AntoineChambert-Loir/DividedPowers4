@@ -32,6 +32,8 @@ end Classical
 
 -/
 
+open BigOperators
+
 section FourFoldSums
 
 /- This lemma is awkward and mathematically obvious, 
@@ -107,6 +109,8 @@ for sums indexed by finset.nat_tuple_antidiagonal
 This one would first rewrite to 
 (finset.nat_tuple_antidiagonal 4 n).sum (λ x, f(x0, x1, x2, x3)) 
 and then one would apply the permutation (13)(24) -/
+
+open BigOperators
 
 /-- Rewrites a 4-fold sum from variables (12)(34) to (13)(24) -/
 theorem Finset.sum_4_rw {α : Type _} [AddCommMonoid α] 

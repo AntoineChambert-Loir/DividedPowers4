@@ -1,50 +1,55 @@
-import Mathbin.Topology.Algebra.Ring.Basic
-import Mathbin.RingTheory.Ideal.Basic
-import Mathbin.Topology.Algebra.Nonarchimedean.Bases
+import Mathlib.Topology.Algebra.Ring.Basic
+import Mathlib.RingTheory.Ideal.Basic
+import Mathlib.Topology.Algebra.Nonarchimedean.Bases
 
 section Complements
 
 theorem topologicalSpace_eq_iff_nhds_eq {α : Type _} (τ τ' : TopologicalSpace α) :
-    τ = τ' ↔ ∀ (a : α) (s : Set α) (has : a ∈ s), s ∈ @nhds α τ a ↔ s ∈ @nhds α τ' a :=
+    τ = τ' ↔ ∀ (s : Set α), ∀ a ∈ s, s ∈ @nhds α τ a ↔ s ∈ @nhds α τ' a :=
   by
   constructor
-  · intro h a s has; rw [h]
+  · intro h s a _; rw [h]
   intro h; ext s
-  simp only [isOpen_iff_mem_nhds]
+  simp only [@isOpen_iff_mem_nhds α τ, @isOpen_iff_mem_nhds α τ']
   apply forall_congr'; intro a
-  apply imp_congr_right; exact h a s
+  apply imp_congr_right; exact h s a
 #align topological_space_eq_iff_nhds_eq topologicalSpace_eq_iff_nhds_eq
 
 theorem topologicalSpace_le_iff_nhds_le {α : Type _} (τ τ' : TopologicalSpace α) :
-    τ ≤ τ' ↔ ∀ (a : α) (s : Set α) (has : a ∈ s), s ∈ @nhds α τ' a → s ∈ @nhds α τ a :=
+    τ ≤ τ' ↔ ∀ (s : Set α), ∀ a ∈ s, s ∈ @nhds α τ' a → s ∈ @nhds α τ a :=
   by
   rw [TopologicalSpace.le_def]
   constructor
-  · intro h a s has
-    simp only [mem_nhds_iff]
+  · intro h a s _
+    simp only [@mem_nhds_iff α τ, @mem_nhds_iff α τ']
     apply Exists.imp; intro t
-    apply Exists.imp; intro ht
-    rintro ⟨ht_open, h'⟩; exact ⟨h t ht_open, h'⟩
-  intro h
-  intro s
-  simp only [isOpen_iff_mem_nhds]
-  intro hs a has
-  exact h a s has (hs a has)
+    apply And.imp_right
+    simp only [and_imp]
+    intro ht_open h' 
+    exact ⟨h t ht_open, h'⟩
+  . intro h
+    intro s
+    simp only [@isOpen_iff_mem_nhds α τ, @isOpen_iff_mem_nhds α τ']
+    intro hs a has
+    exact h s a has (hs a has)
 #align topological_space_le_iff_nhds_le topologicalSpace_le_iff_nhds_le
 
-theorem mem_nhds_add_iff {α : Type _} [AddGroup α] [TopologicalSpace α] [TopologicalAddGroup α]
+theorem mem_nhds_add_iff {α : Type _} [AddCommGroup α] [TopologicalSpace α] [TopologicalAddGroup α]
     (V : Set α) (a b : α) : V ∈ nhds (a + b) ↔ Add.add a ⁻¹' V ∈ nhds b :=
   by
   constructor
-  exact fun hV => (continuous_add_left a).ContinuousAt hV
+  . exact fun hV => ContinuousAt.preimage_mem_nhds (continuous_add_left a).continuousAt hV
   · intro hV
     suffices : V = Add.add (-a) ⁻¹' (Add.add a ⁻¹' V)
-    rw [this]
-    apply (continuous_add_left (-a)).ContinuousAt
-    simp only [neg_add_cancel_left]
-    exact hV
-    rw [Set.preimage_preimage]
-    simp only [add_neg_cancel_left, Set.preimage_id']
+    . rw [this]
+      apply ContinuousAt.preimage_mem_nhds
+      exact (continuous_add_left (-a)).continuousAt
+      convert hV
+      apply neg_add_cancel_left
+    . rw [Set.preimage_preimage]
+      apply symm
+      convert Set.preimage_id'
+      apply add_neg_cancel_left a
 #align mem_nhds_add_iff mem_nhds_add_iff
 
 end Complements
@@ -71,13 +76,13 @@ def ofComm {α : Type _} [CommRing α] {ι : Type _} {B : ι → Ideal α}
 /- def to_submodules_ring_basis {α  : Type*} [comm_ring α] {ι : Type*} {B : ι → ideal α} (hB : ideals_basis B) :
   submodules_ring_basis B := sorry 
  -/
-def to_ringSubgroupsBasis {ι : Type _} {B : ι → Ideal α} (hB : IdealsBasis B) :
+def toRingSubgroupsBasis {ι : Type _} {B : ι → Ideal α} (hB : IdealsBasis B) :
     RingSubgroupsBasis fun i => (B i).toAddSubgroup
     where
   inter := hB.inter
   mul i :=
     ⟨i, fun u => by
-      rintro ⟨x, y, hx, hy, rfl⟩
+      rintro ⟨x, y, _, hy, rfl⟩
       apply Ideal.mul_mem_left; exact hy⟩
   leftMul a i :=
     ⟨i, by
@@ -88,11 +93,9 @@ def to_ringSubgroupsBasis {ι : Type _} {B : ι → Ideal α} (hB : IdealsBasis 
     ⟨i, by
       intro y hy; rw [Set.mem_preimage]
       apply hB.mul_right; exact hy⟩
-#align ideals_basis.to_ring_subgroups_basis IdealsBasis.to_ringSubgroupsBasis
+#align ideals_basis.to_ring_subgroups_basis IdealsBasis.toRingSubgroupsBasis
 
-def toRingFilterBasis {ι : Type _} [Nonempty ι] {B : ι → Ideal α} (hB : IdealsBasis B) :
-    RingFilterBasis α :=
-  hB.toRing_subgroups_basis.toRingFilterBasis
+def toRingFilterBasis {ι : Type _} [Nonempty ι] {B : ι → Ideal α} (hB : IdealsBasis B) := hB.toRingSubgroupsBasis.toRingFilterBasis
 #align ideals_basis.to_ring_filter_basis IdealsBasis.toRingFilterBasis
 
 def topology {ι : Type _} {B : ι → Ideal α} [Nonempty ι] (hB : IdealsBasis B) :
