@@ -1,7 +1,7 @@
 /- Copyright 2022 ACL & MIdFF
 ! This file was ported from Lean 3 source module graded_algebra
 -/
-import Mathbin.Algebra.Module.GradedModule
+import Mathlib.Algebra.Module.GradedModule
 
 section DirectSum
 
@@ -15,12 +15,14 @@ variable {β : ι → Type w} [∀ i : ι, AddCommMonoid (β i)]
 
 theorem DirectSum.mk_apply_of_mem {s : Finset ι} {f : ∀ i : (↑s : Set ι), β i.val} {n : ι}
     (hn : n ∈ s) : DirectSum.mk β s f n = f ⟨n, hn⟩ := by
-  simp only [DirectSum.mk, AddMonoidHom.coe_mk, DFinsupp.mk_apply, dif_pos hn]
+  dsimp only [Finset.coe_sort_coe, mk, AddMonoidHom.coe_mk, ZeroHom.coe_mk, DFinsupp.mk_apply]
+  rw [dif_pos hn]
 #align direct_sum.mk_apply_of_mem DirectSum.mk_apply_of_mem
 
 theorem DirectSum.mk_apply_of_not_mem {s : Finset ι} {f : ∀ i : (↑s : Set ι), β i.val} {n : ι}
     (hn : n ∉ s) : DirectSum.mk β s f n = 0 := by
-  simp only [DirectSum.mk, AddMonoidHom.coe_mk, DFinsupp.mk_apply, dif_neg hn]
+  dsimp only [Finset.coe_sort_coe, mk, AddMonoidHom.coe_mk, ZeroHom.coe_mk, DFinsupp.mk_apply] 
+  rw [dif_neg hn]
 #align direct_sum.mk_apply_of_not_mem DirectSum.mk_apply_of_not_mem
 
 end Mk
@@ -31,16 +33,20 @@ variable {M : Type w} [DecidableEq M] [AddCommMonoid M]
 
 theorem DirectSum.coeAddMonoidHom_eq_dfinsupp_sum {M : Type w} [DecidableEq M] [AddCommMonoid M]
     (A : ι → AddSubmonoid M) (x : DirectSum ι fun i => A i) :
-    DirectSum.coeAddMonoidHom A x = DFinsupp.sum x fun i => coe := by
+    DirectSum.coeAddMonoidHom A x = DFinsupp.sum x fun i => (fun x : A i => ↑x) := by
   simp only [DirectSum.coeAddMonoidHom, DirectSum.toAddMonoid, DFinsupp.liftAddHom, AddEquiv.coe_mk,
-    DFinsupp.sumAddHom_apply, AddSubmonoidClass.coe_subtype]
+    Equiv.coe_fn_mk]
+  rw [DFinsupp.sumAddHom_apply]
+  simp only [AddSubmonoidClass.coe_subtype]
 #align direct_sum.coe_add_monoid_hom_eq_dfinsupp_sum DirectSum.coeAddMonoidHom_eq_dfinsupp_sum
 
 theorem DirectSum.coeLinearMap_eq_dfinsupp_sum {R : Type u} [Semiring R] [Module R M]
     (A : ι → Submodule R M) (x : DirectSum ι fun i => A i) :
-    DirectSum.coeLinearMap A x = DFinsupp.sum x fun i => coe := by
-  simp only [DirectSum.coeLinearMap, DirectSum.toModule, DFinsupp.lsum, LinearEquiv.coe_mk,
-    LinearMap.coe_mk, DFinsupp.sumAddHom_apply, LinearMap.toAddMonoidHom_coe, Submodule.coeSubtype]
+    DirectSum.coeLinearMap A x = DFinsupp.sum x fun i => (fun x : A i => ↑x) := by
+  simp only [coeLinearMap, toModule, DFinsupp.lsum, LinearEquiv.coe_mk, LinearMap.coe_mk, 
+    AddHom.coe_mk]
+  rw [DFinsupp.sumAddHom_apply]
+  simp only [LinearMap.toAddMonoidHom_coe, Submodule.coeSubtype]
 #align direct_sum.coe_linear_map_eq_dfinsupp_sum DirectSum.coeLinearMap_eq_dfinsupp_sum
 
 theorem DirectSum.support_subset (A : ι → AddSubmonoid M) (x : DirectSum ι fun i => A i) :
