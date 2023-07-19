@@ -1,6 +1,6 @@
-import Oneshot.DividedPowers.Topology.LinearTopology
-import Oneshot.MvPowerSeries.Topology
-import Mathbin.Control.Ulift
+import DividedPowers.Topology.LinearTopology
+import DividedPowers.MvPowerSeries.Topology
+import Mathlib.Control.Ulift
 
 variable (σ : Type _)
 
