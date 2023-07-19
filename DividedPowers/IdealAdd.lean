@@ -405,7 +405,7 @@ theorem dpow_comp_aux {J : Ideal A} (hJ : DividedPowers J)
        = a^[n]^[c i] = mchoose (c i) n * a^[n * c i]
     -/
   have L1 :
-    ∀ (k : Sym ℕ m) (i : ℕ) (hi : i ∈ Finset.range (n + 1)),
+    ∀ (k : Sym ℕ m) (i : ℕ) (_ : i ∈ Finset.range (n + 1)),
       dpow hI hJ (Multiset.count i ↑k) (hI.dpow i a * hJ.dpow (n - i) b) =
         cnik n i ↑k * hI.dpow (Multiset.count i ↑k * i) a *
           hJ.dpow (Multiset.count i ↑k * (n - i)) b :=
@@ -450,7 +450,7 @@ theorem dpow_comp_aux {J : Ideal A} (hJ : DividedPowers J)
   suffices hφ : ∀ k : Sym ℕ m, k ∈ (Finset.range (n + 1)).sym m → φ k ∈ Finset.range (m * n + 1)
   rw [← Finset.sum_fiberwise_of_maps_to hφ _]
   suffices L4 :
-    ∀ (p : ℕ) (hp : p ∈ Finset.range (m * n + 1)),
+    ∀ (p : ℕ) (_ : p ∈ Finset.range (m * n + 1)),
       ((Finset.filter (fun x : Sym ℕ m => (fun k : Sym ℕ m => φ k) x = p)
               ((Finset.range (n + 1)).sym m)).sum
           fun x : Sym ℕ m =>
@@ -469,7 +469,7 @@ theorem dpow_comp_aux {J : Ideal A} (hJ : DividedPowers J)
   simp only [Sym.mem_coe, mem_sym_iff, mem_range, ge_iff_le, Nat.cast_sum, Nat.cast_mul, Nat.cast_prod]
   simp_rw [Finset.sum_mul]
   · -- L4
-    intro p hp
+    intro p _
     apply Finset.sum_congr rfl
     intro k hk
     rw [Finset.mem_filter] at hk 
@@ -517,7 +517,7 @@ open Polynomial
 
 open scoped Classical
 
-theorem Polynomial.inv_c_eq_c_inv {R : Type _} [CommRing R] (a : R) :
+theorem Polynomial.inv_C_eq_C_inv {R : Type _} [CommRing R] (a : R) :
     Ring.inverse (C a) = C (Ring.inverse a) :=
   by
   simp only [Ring.inverse]
@@ -539,96 +539,111 @@ theorem Polynomial.inv_c_eq_c_inv {R : Type _} [CommRing R] (a : R) :
     convert congr_arg₂ coeff hb rfl
     rw [Polynomial.coeff_C_mul]
     simp only [coeff_one_zero]
-#align divided_powers.ideal_add.polynomial.inv_C_eq_C_inv DividedPowers.IdealAdd.Polynomial.inv_c_eq_c_inv
+set_option linter.uppercaseLean3 false
+#align divided_powers.ideal_add.polynomial.inv_C_eq_C_inv DividedPowers.IdealAdd.Polynomial.inv_C_eq_C_inv
+
+open BigOperators
 
 theorem dpow_comp_coeffs {m n p : ℕ} (hn : n ≠ 0) (hp : p ≤ m * n) :
-    mchoose m n =
-      (Finset.filter
-            (fun l : Sym ℕ m =>
-              ((Finset.range (n + 1)).Sum fun i : ℕ => Multiset.count i ↑l * i) = p)
-            ((Finset.range (n + 1)).Sym m)).Sum
+  mchoose m n =
+    (Finset.filter (fun l : Sym ℕ m =>
+      ((Finset.range (n + 1)).sum fun i : ℕ => Multiset.count i ↑l * i) = p)
+        ((Finset.range (n + 1)).sym m)).sum
         fun x : Sym ℕ m =>
-        ((Finset.range (n + 1)).Prod fun i : ℕ => cnik n i ↑x) *
+        ((Finset.range (n + 1)).prod fun i : ℕ => cnik n i ↑x) *
           ((Nat.multinomial (Finset.range (n + 1)) fun i : ℕ => Multiset.count i ↑x * i) *
-            Nat.multinomial (Finset.range (n + 1)) fun i : ℕ => Multiset.count i ↑x * (n - i)) :=
-  by
+            Nat.multinomial (Finset.range (n + 1)) fun i : ℕ => Multiset.count i ↑x * (n - i)) := by
   rw [← mul_left_inj' (pos_iff_ne_zero.mp (Nat.choose_pos hp))]
-  have : Function.Injective (coe : ℕ → ℚ) := Nat.cast_injective
-  apply this
-  simp only [Nat.cast_mul, Nat.cast_sum, Nat.cast_prod, Nat.cast_eq_zero]
+  apply @Nat.cast_injective ℚ
+  simp only [Sym.mem_coe, mem_sym_iff, mem_range, ge_iff_le, Nat.cast_mul]
   conv_lhs => rw [← Polynomial.coeff_X_add_one_pow ℚ (m * n) p]
-  let A := Polynomial ℚ
+  let A := ℚ[X]
   --   let X : A :=  1 1,
   let I : Ideal A := ⊤
-  let hI : DividedPowers I := rat_algebra.divided_powers ⊤
-  let hII : ∀ (n : ℕ) (a : A), a ∈ I ⊓ I → hI.dpow n a = hI.dpow n a := fun n a ha => rfl
+  let hI : DividedPowers I := RatAlgebra.dividedPowers ⊤
+  let hII : ∀ (n : ℕ) (a : A), a ∈ I ⊓ I → hI.dpow n a = hI.dpow n a := fun n a _ => rfl
   let h1 : (1 : A) ∈ I := Submodule.mem_top
   let hX : X ∈ I := Submodule.mem_top
-  suffices hdpow : ∀ (k : ℕ) (a : A) (ha : a ∈ I), hI.dpow k a = C (1 / ↑k.factorial) * a ^ k
+  suffices hdpow : ∀ (k : ℕ) (a : A) (ha : a ∈ I), hI.dpow k a = C ( Ring.inverse (k.factorial : ℚ)) * (a ^ k) 
+
   rw [← hI.factorial_mul_dpow_eq_pow (m * n) (X + 1) Submodule.mem_top]
   rw [← Polynomial.coeff_C_mul]
-  rw [← mul_assoc, mul_comm (C ↑(mchoose m n)), mul_assoc]
+  rw [← mul_assoc, mul_comm (C ((mchoose m n) : ℚ)), mul_assoc]
   simp only [C_eq_nat_cast]
   rw [← hI.dpow_comp m hn Submodule.mem_top]
-  rw [← dpow_eq_of_mem_left hI hI hII n Submodule.mem_top, ←
-    dpow_eq_of_mem_left hI hI hII m Submodule.mem_top]
+
+  rw [← dpow_eq_of_mem_left hI hI hII n Submodule.mem_top, 
+    ← dpow_eq_of_mem_left hI hI hII m Submodule.mem_top]
   rw [dpow_comp_aux hI hI hII m hn hX h1]
   rw [← C_eq_nat_cast]
   simp only [Finset.mul_sum]
+  simp only [finset_sum_coeff]
+  simp only [map_natCast, Sym.mem_coe, mem_sym_iff, mem_range, ge_iff_le, Nat.cast_sum, Nat.cast_mul, Nat.cast_prod]
+
   -- simp only [← C_eq_nat_cast, ← ring_hom.map_sum, ← ring_hom.map_prod],
   -- simp only [← ring_hom.map_sum, ← ring_hom.map_prod],
-  simp only [Finset.sum_mul, Finset.mul_sum]
-  simp only [finset_sum_coeff]
+  -- simp only [Finset.sum_mul, Finset.mul_sum]
+  -- simp only [finset_sum_coeff]
+
+  simp only [← C_eq_nat_cast, coeff_C_mul]  
+  simp only [hdpow _ _ Submodule.mem_top, one_pow, mul_one, one_mul]
+
+--     convert @mul_zero ℚ _ _
+
+  simp_rw [mul_comm _ (X ^ _)]
+  simp_rw [← mul_assoc, coeff_mul_C]
+  simp_rw [← map_prod]
+  simp_rw [mul_assoc, ← map_mul]    
+  simp_rw [← map_sum]
+  simp_rw [coeff_C_mul]
+  simp_rw [coeff_X_pow]
+  
   rw [Finset.sum_eq_single p]
-  · simp only [hdpow _ _ Submodule.mem_top, one_pow, mul_one, one_mul]
-    simp_rw [Polynomial.coeff_C_mul]
-    simp only [← C_eq_nat_cast, ← RingHom.map_prod]
-    simp_rw [mul_assoc, Polynomial.coeff_C_mul, Polynomial.coeff_mul_C]
-    simp only [coeff_X_pow_self p]
+  
+  · simp only [coeff_X_pow_self p, if_true, mul_one]
+    -- apply symm
+    -- simp only [← mul_assoc, Ring.eq_mul_inverse_iff_mul_eq]
+    conv_lhs => 
+      simp only [mul_assoc]
+      rw [mul_comm]
+      simp only [mul_assoc]
+    apply congr_arg₂ 
     apply Finset.sum_congr rfl
-    intro x hx
-    rw [mul_comm]
-    simp only [mul_assoc]
-    apply congr_arg₂ (· * ·) rfl
-    apply congr_arg₂ (· * ·) rfl
-    apply congr_arg₂ (· * ·) rfl
-    rw [← Nat.choose_mul_factorial_mul_factorial hp]
-    simp only [one_div, Nat.cast_mul, one_mul]
-    rw [mul_comm]; simp only [mul_assoc]; rw [mul_comm ↑(m * n - p).factorial]
-    rw [mul_comm]; simp only [mul_assoc]
-    convert mul_one _
-    rw [← mul_assoc]
-    convert mul_one _
-    · rw [mul_inv_cancel]
-      simp only [Ne.def, Nat.cast_eq_zero]
-      exact Nat.factorial_ne_zero _
-    · rw [mul_inv_cancel]
-      simp only [Ne.def, Nat.cast_eq_zero]
-      exact Nat.factorial_ne_zero _
-  · intro k hk hk'
+    . intro x hx
+      ring
+    . rw [Ring.inverse_mul_eq_iff_eq_mul]
+      rw [Ring.inverse_mul_eq_iff_eq_mul]
+      rw [← Nat.choose_mul_factorial_mul_factorial hp]
+      simp only [Nat.cast_mul]
+      ring
+      all_goals {
+      rw [isUnit_iff_ne_zero, ne_eq, Nat.cast_eq_zero]
+      apply Nat.factorial_ne_zero }
+  
+  . intro k a ha
+    rw [if_neg ha.symm]
+    simp only [zero_mul, mul_zero]
+    
+  · intro hp
+    simp_rw [if_true, mul_one]
+    convert @mul_zero ℚ _ _ 
+    convert @zero_mul ℚ _ _
     rw [Finset.sum_eq_zero]
     intro x hx
-    simp only [hdpow _ _ Submodule.mem_top, one_pow, mul_one, one_mul]
-    simp_rw [Polynomial.coeff_C_mul]
-    simp only [← C_eq_nat_cast, ← RingHom.map_prod]
-    simp_rw [mul_assoc, Polynomial.coeff_C_mul, Polynomial.coeff_mul_C]
-    simp only [Polynomial.coeff_X_pow, if_neg (Ne.symm hk')]
-    simp only [MulZeroClass.mul_zero, MulZeroClass.zero_mul]
-  · intro hp
-    convert Finset.sum_empty
-    rw [Finset.eq_empty_iff_forall_not_mem]
-    intro x hx
-    simp only [Finset.mem_filter] at hx 
+    exfalso
     apply hp
     rw [Finset.mem_range, Nat.lt_succ_iff]
+    simp only [mem_filter] at hx
     rw [← hx.2]
     exact range_sym_weighted_sum_le x hx.1
-  · intro k a ha
-    simp only [rat_algebra.divided_powers_dpow_apply, rat_algebra.dpow,
-      of_invertible_factorial.dpow, dif_pos ha, one_div]
-    simp only [← C_eq_nat_cast]
-    rw [polynomial.inv_C_eq_C_inv]
+
+  . intro k a ha
     simp only [Ring.inverse_eq_inv']
+    
+
+    sorry
+
+  
 #align divided_powers.ideal_add.dpow_comp_coeffs DividedPowers.IdealAdd.dpow_comp_coeffs
 
 theorem dpow_comp {J : Ideal A} (hJ : DividedPowers J)
