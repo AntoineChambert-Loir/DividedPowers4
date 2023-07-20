@@ -2,6 +2,32 @@ import DividedPowers.ForMathlib.AlgebraLemmas
 import DividedPowers.Basic
 import Mathlib.Algebra.Algebra.Basic
 
+
+lemma Nat.isUnitFactorial (n : ℕ) : IsUnit (n.factorial : ℚ) := by
+  rw [isUnit_iff_ne_zero, ne_eq, Nat.cast_eq_zero]
+  apply Nat.factorial_ne_zero
+
+lemma Nat.inv_smul_eq_invCast_mul {A : Type _} [CommRing A] [Algebra ℚ A] (n : ℕ) (a : A) :
+  Ring.inverse (n : ℚ) • a = Ring.inverse (n : A) * a := by
+  cases' Nat.eq_zero_or_pos n with hn hn
+  . simp only [hn, Nat.cast_zero, isUnit_zero_iff, not_false_eq_true, Ring.inverse_non_unit, zero_smul,
+    Ring.inverse_zero, zero_mul]
+  . suffices hn' : IsUnit (n : ℚ)
+    simp only [Algebra.smul_def, ← map_natCast (algebraMap ℚ A)]
+    apply symm
+    rw [Ring.inverse_mul_eq_iff_eq_mul, ← mul_assoc]
+    apply symm
+    convert @one_mul A _ _
+    simp only [← map_mul, ← map_one (algebraMap ℚ A)]
+    apply congr_arg
+    apply symm
+    rw [Ring.eq_mul_inverse_iff_mul_eq, one_mul]
+    . exact hn'
+    . apply RingHom.isUnit_map
+      exact hn'
+    rw [isUnit_iff_ne_zero, ne_eq, Nat.cast_eq_zero]
+    exact Nat.ne_of_gt hn
+
 namespace DividedPowers
 
 namespace OfInvertibleFactorial
@@ -260,24 +286,10 @@ theorem dividedPowers_dpow_apply (n : ℕ) (x : R) : (dividedPowers I).dpow n x 
   rfl
 #align divided_powers.rat_algebra.divided_powers_dpow_apply DividedPowers.RatAlgebra.dividedPowers_dpow_apply
 
-lemma isUnitFactorial (n : ℕ) : IsUnit (n.factorial : ℚ) := by
-  rw [isUnit_iff_ne_zero, ne_eq, Nat.cast_eq_zero]
-  apply Nat.factorial_ne_zero
-
 theorem dpow_eq_inv_fact_smul (n : ℕ) {x : R} (hx : x ∈ I) :
-  dpow I n x = Ring.inverse (Nat.factorial n : ℚ) • x ^ n := by
+  dpow I n x = (Ring.inverse (Nat.factorial n : ℚ) : ℚ) • x ^ n := by
   rw [dpow, OfInvertibleFactorial.dpow, if_pos hx]
-  simp only [Algebra.smul_def, ← map_natCast (algebraMap ℚ R)]
-  rw [Ring.inverse_mul_eq_iff_eq_mul, ← mul_assoc]
-  apply symm
-  convert @one_mul R _ _
-  simp only [← map_mul, ← map_one (algebraMap ℚ R)]
-  apply congr_arg
-  apply symm
-  rw [Ring.eq_mul_inverse_iff_mul_eq, one_mul]
-  . apply isUnitFactorial
-  . apply RingHom.isUnit_map
-    apply isUnitFactorial
+  rw [Nat.inv_smul_eq_invCast_mul]
 
 variable {I}
 

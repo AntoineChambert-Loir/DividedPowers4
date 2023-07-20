@@ -1,6 +1,10 @@
 import DividedPowers.RatAlgebra
 import DividedPowers.BasicLemmas
 
+
+theorem Polynomial.C_eq_smul_one {R : Type _} [Semiring R] (a : R) : (C a : Polynomial R) = a • (1 : Polynomial R) := by
+  rw [← C_mul', mul_one]
+
 open Finset
 
 namespace DividedPowers
@@ -167,7 +171,7 @@ theorem dpow_eq_of_mem_right {J : Ideal A} (hJ : DividedPowers J)
 
 theorem dpow_zero {J : Ideal A} (hJ : DividedPowers J)
     (hIJ : ∀ (n : ℕ), ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) :
-    ∀ (x : A) (_ : x ∈ I + J), dpow hI hJ 0 x = 1 := by
+    ∀ {x : A} (_ : x ∈ I + J), dpow hI hJ 0 x = 1 := by
   intro x
   rw [Ideal.add_eq_sup, Submodule.mem_sup]
   rintro ⟨a, ha, b, hb, rfl⟩
@@ -255,12 +259,12 @@ theorem dpow_mul {J : Ideal A} (hJ : DividedPowers J)
 #align divided_powers.ideal_add.dpow_mul DividedPowers.IdealAdd.dpow_mul
 
 theorem dpow_mem {J : Ideal A} (hJ : DividedPowers J)
-    (hIJ : ∀ (n : ℕ), ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) :
-    ∀ {n : ℕ} (_ : n ≠ 0) {x : A} (_ : x ∈ I + J), dpow hI hJ n x ∈ I + J :=
+    (hIJ : ∀ (n : ℕ), ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) 
+    {n : ℕ}  {x : A} (hn : n ≠ 0) (hx : x ∈ I + J) : 
+  dpow hI hJ n x ∈ I + J :=
   by
-  intro n hn x
-  rw [Ideal.add_eq_sup, Submodule.mem_sup]
-  rintro ⟨a, ha, b, hb, rfl⟩
+  rw [Ideal.add_eq_sup, Submodule.mem_sup] at hx
+  obtain ⟨a, ha, b, hb, rfl⟩ := hx
   rw [dpow_eq hI hJ hIJ _ ha hb]
   apply Submodule.sum_mem (I ⊔ J)
   intro k _
@@ -564,8 +568,7 @@ theorem dpow_comp_coeffs {m n p : ℕ} (hn : n ≠ 0) (hp : p ≤ m * n) :
   let hII : ∀ (n : ℕ) (a : A), a ∈ I ⊓ I → hI.dpow n a = hI.dpow n a := fun n a _ => rfl
   let h1 : (1 : A) ∈ I := Submodule.mem_top
   let hX : X ∈ I := Submodule.mem_top
-  suffices hdpow : ∀ (k : ℕ) (a : A) (ha : a ∈ I), hI.dpow k a = C ( Ring.inverse (k.factorial : ℚ)) * (a ^ k)  
-
+  
   rw [← hI.factorial_mul_dpow_eq_pow (m * n) (X + 1) Submodule.mem_top]
   rw [← Polynomial.coeff_C_mul]
   rw [← mul_assoc, mul_comm (C ((mchoose m n) : ℚ)), mul_assoc]
@@ -580,36 +583,28 @@ theorem dpow_comp_coeffs {m n p : ℕ} (hn : n ≠ 0) (hp : p ≤ m * n) :
   simp only [finset_sum_coeff]
   simp only [map_natCast, Sym.mem_coe, mem_sym_iff, mem_range, ge_iff_le, Nat.cast_sum, Nat.cast_mul, Nat.cast_prod]
 
-  -- simp only [← C_eq_nat_cast, ← ring_hom.map_sum, ← ring_hom.map_prod],
-  -- simp only [← ring_hom.map_sum, ← ring_hom.map_prod],
-  -- simp only [Finset.sum_mul, Finset.mul_sum]
-  -- simp only [finset_sum_coeff]
-
   simp only [← C_eq_nat_cast, coeff_C_mul]  
-  simp only [hdpow _ _ Submodule.mem_top, one_pow, mul_one, one_mul]
+  simp only [RatAlgebra.dividedPowers, RatAlgebra.dpow_eq_inv_fact_smul _ _ Submodule.mem_top, Polynomial.smul_eq_C_mul]
 
---     convert @mul_zero ℚ _ _
-
+  simp_rw [one_pow, mul_one]   
   simp_rw [mul_comm _ (X ^ _)]
   simp_rw [← mul_assoc, coeff_mul_C]
   simp_rw [← map_prod]
-  simp_rw [mul_assoc, ← map_mul]    
-  simp_rw [← map_sum]
-  simp_rw [coeff_C_mul]
-  simp_rw [coeff_X_pow]
-  
+  simp_rw [mul_assoc, ← map_mul]
+  simp_rw [← map_sum, coeff_C_mul]
+  simp only [← mul_assoc, coeff_mul_C]
+  simp_rw [coeff_X_pow, one_pow, mul_one, coeff_mul_C]
+
   rw [Finset.sum_eq_single p]
   
-  · simp only [coeff_X_pow_self p, if_true, mul_one]
-    -- apply symm
-    -- simp only [← mul_assoc, Ring.eq_mul_inverse_iff_mul_eq]
+  · simp only [ite_true, mul_one]
     conv_lhs => 
       simp only [mul_assoc]
       rw [mul_comm]
       simp only [mul_assoc]
     apply congr_arg₂ 
     apply Finset.sum_congr rfl
-    . intro x hx
+    . intro x _
       ring
     . rw [Ring.inverse_mul_eq_iff_eq_mul]
       rw [Ring.inverse_mul_eq_iff_eq_mul]
@@ -620,12 +615,13 @@ theorem dpow_comp_coeffs {m n p : ℕ} (hn : n ≠ 0) (hp : p ≤ m * n) :
       rw [isUnit_iff_ne_zero, ne_eq, Nat.cast_eq_zero]
       apply Nat.factorial_ne_zero }
   
-  . intro k a ha
+  . intro k _ ha
     rw [if_neg ha.symm]
     simp only [zero_mul, mul_zero]
     
   · intro hp
     simp_rw [if_true, mul_one]
+    simp only [mul_assoc]
     convert @mul_zero ℚ _ _ 
     convert @zero_mul ℚ _ _
     rw [Finset.sum_eq_zero]
@@ -636,31 +632,12 @@ theorem dpow_comp_coeffs {m n p : ℕ} (hn : n ≠ 0) (hp : p ≤ m * n) :
     simp only [mem_filter] at hx
     rw [← hx.2]
     exact range_sym_weighted_sum_le x hx.1
-
-  . intro k a ha
-    let this := RatAlgebra.dpow_eq_inv_fact_smul I n ha
-    simp at this
-    
-
-    simp only [this]
-
-
-
-
-  -- _ _ Submodule.mem_top
-  -- ]
-    
-    simp only [Ring.inverse_eq_inv']
-
-
-    sorry
-
-  
 #align divided_powers.ideal_add.dpow_comp_coeffs DividedPowers.IdealAdd.dpow_comp_coeffs
 
 theorem dpow_comp {J : Ideal A} (hJ : DividedPowers J)
-    (hIJ : ∀ (n : ℕ), ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) (m : ℕ) {n : ℕ} (hn : n ≠ 0) {x : A}
-    (hx : x ∈ I + J) : dpow hI hJ m (dpow hI hJ n x) = ↑(mchoose m n) * dpow hI hJ (m * n) x :=
+    (hIJ : ∀ (n : ℕ), ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) 
+    (m : ℕ) {n : ℕ} {x : A} (hn : n ≠ 0) (hx : x ∈ I + J) : 
+  dpow hI hJ m (dpow hI hJ n x) = ↑(mchoose m n) * dpow hI hJ (m * n) x :=
   by
   rw [Ideal.add_eq_sup, Submodule.mem_sup] at hx 
   obtain ⟨a, ha, b, hb, rfl⟩ := hx
@@ -673,36 +650,39 @@ theorem dpow_comp {J : Ideal A} (hJ : DividedPowers J)
   rw [dpow_eq_of_mem_right hI hJ hIJ _ hb]
   simp only [mul_assoc]; apply congr_arg₂ (· * ·) _ rfl
   -- it remains to check coefficients
-  rw [dpow_comp_coeffs hn (nat.lt_succ_iff.mp (finset.mem_range.mp hp))]
-  simp only [Nat.cast_sum, Nat.cast_mul, Nat.cast_prod]
+  rw [dpow_comp_coeffs hn (Nat.lt_succ_iff.mp (Finset.mem_range.mp hp))]
 #align divided_powers.ideal_add.dpow_comp DividedPowers.IdealAdd.dpow_comp
 
--- MOVE dpow_null and dpow_one outside of the definition
+theorem dpow_null {J : Ideal A} (hJ : DividedPowers J)
+    {n : ℕ} {x : A} (hx : x ∉ I + J) : dpow hI hJ n x = 0 := by 
+  simp only [dpow]
+  rw [Function.extend_apply']; rfl
+  rintro ⟨⟨⟨a, ha⟩, ⟨b, hb⟩⟩, h⟩; apply hx
+  rw [← h]
+  exact Submodule.add_mem_sup ha hb
+
+theorem dpow_one {J : Ideal A} (hJ : DividedPowers J)
+    (hIJ : ∀ (n : ℕ), ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
+    {x : A} (hx : x ∈ I + J) : 
+  dpow hI hJ 1 x = x := by
+  rw [Ideal.add_eq_sup, Submodule.mem_sup] at hx
+  obtain ⟨a, ha, b, hb, rfl⟩ := hx
+  rw [dpow_eq hI hJ hIJ _ ha hb]
+  suffices : Finset.range (1 + 1) = {0, 1}; rw [this]
+  simp only [Finset.sum_insert, Finset.mem_singleton, Nat.zero_ne_one, not_false_iff, tsub_zero,
+    Finset.sum_singleton, tsub_self]
+  rw [hI.dpow_zero ha, hI.dpow_one ha, hJ.dpow_zero hb, hJ.dpow_one hb]
+  ring
+  · rw [Finset.range_succ, Finset.range_one]; ext k; simp; exact or_comm
+
 noncomputable def dividedPowers {J : Ideal A} (hJ : DividedPowers J)
-    (hIJ : ∀ (n : ℕ), ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) : DividedPowers (I + J)
-    where
+    (hIJ : ∀ (n : ℕ), ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) : 
+  DividedPowers (I + J) where
   dpow := dpow hI hJ
-  dpow_null := by
-    intro n x hx
-    simp only [dpow]
-    rw [Function.extend_apply']
-    rintro ⟨⟨⟨a, ha⟩, ⟨b, hb⟩⟩, h⟩; apply hx
-    rw [← h]
-    --  change a + b ∈ I + J,
-    exact Submodule.add_mem_sup ha hb
+  dpow_null := dpow_null hI hJ
   dpow_zero := dpow_zero hI hJ hIJ
-  dpow_one := by
-    intro x
-    rw [Ideal.add_eq_sup, Submodule.mem_sup]
-    rintro ⟨a, ha, b, hb, rfl⟩
-    rw [dpow_eq hI hJ hIJ _ ha hb]
-    suffices : Finset.range (1 + 1) = {0, 1}; rw [this]
-    simp only [Finset.sum_insert, Finset.mem_singleton, Nat.zero_ne_one, not_false_iff, tsub_zero,
-      Finset.sum_singleton, tsub_self]
-    rw [hI.dpow_zero ha, hI.dpow_one ha, hJ.dpow_zero hb, hJ.dpow_one hb]
-    ring
-    · rw [Finset.range_succ, Finset.range_one]; ext k; simp; exact or_comm
-  dpow_mem n := dpow_mem hI hJ hIJ
+  dpow_one := dpow_one hI hJ hIJ
+  dpow_mem := dpow_mem hI hJ hIJ
   dpow_add := dpow_add hI hJ hIJ
   dpow_smul := dpow_smul hI hJ hIJ
   dpow_mul := dpow_mul hI hJ hIJ
@@ -713,7 +693,8 @@ theorem dpow_unique {J : Ideal A} (hJ : DividedPowers J) (hsup : DividedPowers (
     (hI' : ∀ (n : ℕ), ∀ a ∈ I, hI.dpow n a = hsup.dpow n a)
     (hJ' : ∀ (n : ℕ), ∀ b ∈ J, hJ.dpow n b = hsup.dpow n b) :
     let hIJ : ∀ (n : ℕ), ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a := fun n a ha => by
-      simp only [hI' n a (submodule.mem_inf.mp ha).1, hJ' n a (submodule.mem_inf.mp ha).2]
+      rw [Submodule.mem_inf] at ha
+      rw [hI' _ _ ha.1, hJ' _ _ ha.2]
     hsup = dividedPowers hI hJ hIJ :=
   by
   intro hIJ
@@ -721,10 +702,10 @@ theorem dpow_unique {J : Ideal A} (hJ : DividedPowers J) (hsup : DividedPowers (
   intro n x hx
   rw [Ideal.add_eq_sup, Submodule.mem_sup] at hx 
   obtain ⟨a, ha, b, hb, rfl⟩ := hx
-  simp only [DividedPowers, dpow_eq hI hJ hIJ n ha hb]
   rw [hsup.dpow_add n (Submodule.mem_sup_left ha) (Submodule.mem_sup_right hb)]
+  simp only [IdealAdd.dividedPowers, dpow_eq hI hJ hIJ n ha hb]
   apply Finset.sum_congr rfl
-  intro k hk
+  intro k _
   apply congr_arg₂ (· * ·) (hI' _ a ha).symm (hJ' _ b hb).symm
 #align divided_powers.ideal_add.dpow_unique DividedPowers.IdealAdd.dpow_unique
 
