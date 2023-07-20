@@ -1,12 +1,14 @@
 /- Copyright 2022 ACL & MIdFF
 ! This file was ported from Lean 3 source module divided_powers.dp_algebra.misc
 -/
-import Mathbin.Algebra.RingQuot
-import Mathbin.Algebra.TrivSqZeroExt
-import Mathbin.Algebra.Algebra.Operations
-import Mathbin.Data.MvPolynomial.Supported
-import Mathbin.Data.MvPolynomial.CommRing
-import Oneshot.WeightedHomogeneous
+
+import DividedPowers.ForMathlib.WeightedHomogeneous
+
+import Mathlib.Algebra.RingQuot
+import Mathlib.Algebra.TrivSqZeroExt
+import Mathlib.Algebra.Algebra.Operations
+import Mathlib.Data.MvPolynomial.Supported
+import Mathlib.Data.MvPolynomial.CommRing
 
 -- import algebra.free_algebra
 -- import linear_algebra.multilinear.basic

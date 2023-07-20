@@ -1,9 +1,11 @@
 /- ACL and MIdFF, Lean 2022 meeting at Icerm 
 ! This file was ported from Lean 3 source module divided_powers.basic
 -/
-import Mathlib.RingTheory.PowerSeries.Basic
+
 import DividedPowers.ForMathlib.AlgebraLemmas
 import DividedPowers.ForMathlib.CombinatoricsLemmas
+
+import Mathlib.RingTheory.PowerSeries.Basic
 import Mathlib.Data.Nat.Choose.Multinomial
 
 /-! # Divided powers 

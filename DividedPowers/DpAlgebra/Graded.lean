@@ -1,8 +1,9 @@
-import Oneshot.DividedPowers.DpAlgebra.Init
-import Oneshot.DividedPowers.RatAlgebra
-import Mathbin.Algebra.TrivSqZeroExt
-import Oneshot.WeightedHomogeneous
-import Oneshot.GradedRingQuot
+import DividedPowers.DpAlgebra.Init
+import DividedPowers.RatAlgebra
+import DividedPowers.ForMathlib.WeightedHomogeneous
+import DividedPowers.ForMathlib.GradedRingQuot
+
+import Mathlib.Algebra.TrivSqZeroExt
 
 -- Modified version of PR #17855
 -- Modified version of PR #17855

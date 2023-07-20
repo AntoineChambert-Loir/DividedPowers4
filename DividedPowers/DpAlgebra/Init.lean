@@ -1,11 +1,13 @@
 /- Copyright 2022 ACL & MIdFF
 ! This file was ported from Lean 3 source module divided_powers.dp_algebra.init
 -/
-import Mathbin.Algebra.RingQuot
-import Mathbin.Algebra.Algebra.Operations
-import Mathbin.Data.Rel
-import Oneshot.DividedPowers.Basic
-import Oneshot.DividedPowers.DpAlgebra.Misc
+
+import DividedPowers.Basic
+import DividedPowers.DpAlgebra.Misc
+
+import Mathlib.Algebra.RingQuot
+import Mathlib.Algebra.Algebra.Operations
+import Mathlib.Data.Rel
 
 -- import algebra.free_algebra
 -- import algebra.triv_sq_zero_ext

@@ -1,5 +1,7 @@
-import DividedPowers.Topology.LinearTopology
-import DividedPowers.MvPowerSeries.Topology
+
+import DividedPowers.ForMathlib.Topology.LinearTopology
+import DividedPowers.ForMathlib.MvPowerSeries.Topology
+
 import Mathlib.Control.Ulift
 
 variable (σ : Type _)
