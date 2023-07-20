@@ -564,7 +564,7 @@ theorem dpow_comp_coeffs {m n p : ℕ} (hn : n ≠ 0) (hp : p ≤ m * n) :
   let hII : ∀ (n : ℕ) (a : A), a ∈ I ⊓ I → hI.dpow n a = hI.dpow n a := fun n a _ => rfl
   let h1 : (1 : A) ∈ I := Submodule.mem_top
   let hX : X ∈ I := Submodule.mem_top
-  suffices hdpow : ∀ (k : ℕ) (a : A) (ha : a ∈ I), hI.dpow k a = C ( Ring.inverse (k.factorial : ℚ)) * (a ^ k) 
+  suffices hdpow : ∀ (k : ℕ) (a : A) (ha : a ∈ I), hI.dpow k a = C ( Ring.inverse (k.factorial : ℚ)) * (a ^ k)  
 
   rw [← hI.factorial_mul_dpow_eq_pow (m * n) (X + 1) Submodule.mem_top]
   rw [← Polynomial.coeff_C_mul]
@@ -638,8 +638,20 @@ theorem dpow_comp_coeffs {m n p : ℕ} (hn : n ≠ 0) (hp : p ≤ m * n) :
     exact range_sym_weighted_sum_le x hx.1
 
   . intro k a ha
-    simp only [Ring.inverse_eq_inv']
+    let this := RatAlgebra.dpow_eq_inv_fact_smul I n ha
+    simp at this
     
+
+    simp only [this]
+
+
+
+
+  -- _ _ Submodule.mem_top
+  -- ]
+    
+    simp only [Ring.inverse_eq_inv']
+
 
     sorry
 

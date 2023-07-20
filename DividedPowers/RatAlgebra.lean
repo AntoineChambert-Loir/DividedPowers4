@@ -1,5 +1,6 @@
 import DividedPowers.ForMathlib.AlgebraLemmas
 import DividedPowers.Basic
+import Mathlib.Algebra.Algebra.Basic
 
 namespace DividedPowers
 
@@ -254,9 +255,29 @@ noncomputable def dividedPowers : DividedPowers I
     OfInvertibleFactorial.dpow_comp_dif_pos (Factorial.isUnit (m * k + 1 - 1)) hk (lt_add_one _) hx
 #align divided_powers.rat_algebra.divided_powers DividedPowers.RatAlgebra.dividedPowers
 
+@[simp]
 theorem dividedPowers_dpow_apply (n : ℕ) (x : R) : (dividedPowers I).dpow n x = dpow I n x :=
   rfl
 #align divided_powers.rat_algebra.divided_powers_dpow_apply DividedPowers.RatAlgebra.dividedPowers_dpow_apply
+
+lemma isUnitFactorial (n : ℕ) : IsUnit (n.factorial : ℚ) := by
+  rw [isUnit_iff_ne_zero, ne_eq, Nat.cast_eq_zero]
+  apply Nat.factorial_ne_zero
+
+theorem dpow_eq_inv_fact_smul (n : ℕ) {x : R} (hx : x ∈ I) :
+  dpow I n x = Ring.inverse (Nat.factorial n : ℚ) • x ^ n := by
+  rw [dpow, OfInvertibleFactorial.dpow, if_pos hx]
+  simp only [Algebra.smul_def, ← map_natCast (algebraMap ℚ R)]
+  rw [Ring.inverse_mul_eq_iff_eq_mul, ← mul_assoc]
+  apply symm
+  convert @one_mul R _ _
+  simp only [← map_mul, ← map_one (algebraMap ℚ R)]
+  apply congr_arg
+  apply symm
+  rw [Ring.eq_mul_inverse_iff_mul_eq, one_mul]
+  . apply isUnitFactorial
+  . apply RingHom.isUnit_map
+    apply isUnitFactorial
 
 variable {I}
 
