@@ -7,8 +7,11 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 
 /- TODO : 
-There are two complicated "convert" - they probably deserve a lemma 
-that does the rewrite in an easy way (`rw` sufficed in mathlib3) 
+
+1) There are two complicated "convert" - they probably deserve a lemma that does the rewrite in an easy way (`rw` sufficed in mathlib3) 
+
+2) I (ACL) removed all `classical` and the `instance` that we had added - the 3 natural `DecidableEq` assumptions (on variables, weights and coefficients) suffice.
+
 -/
 
 import DividedPowers.ForMathlib.GradedAlgebra
