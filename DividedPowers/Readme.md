@@ -1,46 +1,66 @@
-Basic
-BasicLemmas
-IdealAdd
-RatAlgebra
-Ring
-SubDpIdeal
-TensorProduct
-mwe
+# Divided powers in Mathlib 4
 
-DpAlgebra/BaseChange
-DpAlgebra/Dpow
-DpAlgebra/Envelope
-DpAlgebra/Exponential
-DpAlgebra/Graded
-DpAlgebra/Init
-DpAlgebra/Misc
-DpAlgebra/PolynomialMap
-DpAlgebra/RobyLemma5
-DpAlgebra/RobyLemma9
+✓ : ported to Mathlib4 
+✕ : not yet ported
 
-ForMathlib/AlgebraComp
-ForMathlib/AlgebraLemmas
-ForMathlib/Antidiagonal
-ForMathlib/CombinatoricsLemmas
-ForMathlib/GradedAlgebra
-ForMathlib/GradedModuleQuot
-ForMathlib/GradedRingQuot
-ForMathlib/Homogeneous
-ForMathlib/TpAlgebra
-ForMathlib/WeightedHomogeneous
+## Main files
 
-ForMathlib/InfiniteSum/Basic
-ForMathlib/InfiniteSum/Order
+* ✓Basic : definitions of divided powers
+* ✓BasicLemmas : rewriting lemmas for 4-fold sums
+* ✓IdealAdd : divided powers on the sum of two ideals
+* ✓RatAlgebra : divided powers when factorials are invertible 
+* Ring : notion of DP ring (unused)
+* ✓SubDpIdeal : sub DP ideal 
+* TensorProduct : tensor product (obsolete)
 
-ForMathlib/MvPowerSeries/LinearTopology
-ForMathlib/MvPowerSeries/Order
-ForMathlib/MvPowerSeries/StronglySummable/Basic
-ForMathlib/MvPowerSeries/StronglySummable/Topology
-ForMathlib/MvPowerSeries/Substitutions
-ForMathlib/MvPowerSeries/Topology
+* mwe 
 
-ForMathlib/RingTheory/Ideal
-ForMathlib/RingTheory/SubmoduleMem
-ForMathlib/RingTheory/TensorProduct
+## The Divided power algebra
 
-ForMathlib/Topology/LinearTopology
+* DpAlgebra/BaseChange
+* DpAlgebra/Dpow
+* DpAlgebra/Envelope
+* DpAlgebra/Exponential
+* DpAlgebra/Graded
+* DpAlgebra/Init
+* DpAlgebra/Misc
+* DpAlgebra/PolynomialMap
+* DpAlgebra/RobyLemma5
+* DpAlgebra/RobyLemma9
+
+## Additional files for Mathlib
+
+* ForMathlib/AlgebraComp
+* ForMathlib/AlgebraLemmas
+* ForMathlib/Antidiagonal
+* ForMathlib/CombinatoricsLemmas
+* ForMathlib/GradedAlgebra
+* ForMathlib/GradedModuleQuot
+* ForMathlib/GradedRingQuot
+* ForMathlib/Homogeneous
+* ForMathlib/TpAlgebra
+* ✓ForMathlib/WeightedHomogeneous
+
+### Infinite sums
+
+* ForMathlib/InfiniteSum/Basic
+* ForMathlib/InfiniteSum/Order
+
+### Substitutions in power series
+
+* ForMathlib/MvPowerSeries/LinearTopology
+* ForMathlib/MvPowerSeries/Order
+* ForMathlib/MvPowerSeries/StronglySummable/Basic
+* ForMathlib/MvPowerSeries/StronglySummable/Topology
+* ForMathlib/MvPowerSeries/Substitutions
+* ForMathlib/MvPowerSeries/Topology
+
+### Complements of ring theory
+
+* ✓ForMathlib/RingTheory/Ideal
+* ✓ForMathlib/RingTheory/SubmoduleMem
+* ✓ForMathlib/RingTheory/TensorProduct
+
+### Complements of topology
+
+* ForMathlib/Topology/LinearTopology
