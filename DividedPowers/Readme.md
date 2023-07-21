@@ -13,9 +13,6 @@
 ✓ SubDpIdeal : sub DP ideal 
 ✕ TensorProduct : tensor product (obsolete)
 
-* mwe 
-
-
 ## The Divided power algebra
 
 ✕ DpAlgebra/BaseChange
@@ -23,7 +20,7 @@
 ✕ DpAlgebra/Envelope
 ✕ DpAlgebra/Exponential
 ✕ DpAlgebra/Graded
-* DpAlgebra/Init
+✓ DpAlgebra/Init
 ✓ DpAlgebra/Misc
 ✕ DpAlgebra/PolynomialMap
 ✕ DpAlgebra/RobyLemma5
