@@ -8,7 +8,9 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 
 /- TODO : 
 
-1) There are two complicated "convert" - they probably deserve a lemma that does the rewrite in an easy way (`rw` sufficed in mathlib3) 
+1) There is one complicated "convert" - 
+it probably deserves a lemma that does the rewrite in an easy way 
+(`rw` sufficed in mathlib3) 
 
 2) I (ACL) removed all `classical` and the `instance` that we had added - the 3 natural `DecidableEq` assumptions (on variables, weights and coefficients) suffice.
 
@@ -93,7 +95,7 @@ def weightedDegree' (w : σ → M) : (σ →₀ ℕ) →ₗ[ℕ] M :=
 theorem weightedDegree'_apply (w : σ → M) (f : σ →₀ ℕ):
   weightedDegree' w f = Finsupp.sum f (fun i c => c • w i) := by
   rfl
-  
+
 section SemilatticeSup
 
 variable [SemilatticeSup M]
@@ -689,7 +691,6 @@ theorem weightedHomogeneousComponent_directSum
         ((DirectSum.coeLinearMap fun i : M => weightedHomogeneousSubmodule R w i) x) =
       x m :=
   by
---  classical
   rw [DirectSum.coeLinearMap_eq_dfinsupp_sum]
   rw [DFinsupp.sum]
   rw [map_sum]
@@ -875,22 +876,7 @@ def weightedDecomposition [DecidableEq σ] [DecidableEq R] [DecidableEq M] :
     apply DFinsupp.ext; intro m
     rw [← Subtype.coe_inj]
     rw [decompose'_toFun_apply]
-    change
-      (weightedHomogeneousComponent w m)
-          ((DirectSum.coeLinearMap (weightedHomogeneousSubmodule R w)) x) =
-        ↑(x m)
-    rw [DirectSum.coeLinearMap_eq_dfinsupp_sum]
-    rw [DFinsupp.sum]
-    rw [map_sum]
-    convert @Finset.sum_eq_single (MvPolynomial σ R) M _ (DFinsupp.support x) _ m _ _
-    · rw [weightedHomogeneousComponent_of_weighted_homogeneous_polynomial_same]
-      exact (x m).prop
-    · intro n _ hmn
-      rw [weightedHomogeneousComponent_of_weightedHomogeneous_ne n]
-      exact (x n).prop
-      exact Ne.symm hmn
-    · intro hm; rw [DFinsupp.not_mem_support_iff] at hm 
-      simp only [hm, Submodule.coe_zero, map_zero]
+    apply weightedHomogeneousComponent_directSum
 #align mv_polynomial.weighted_decomposition MvPolynomial.weightedDecomposition
 
 /-- Given a weight, mv_polynomial as a graded algebra -/
