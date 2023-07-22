@@ -1,9 +1,9 @@
-import Oneshot.DividedPowers.DpAlgebra.Init
-import Oneshot.DividedPowers.DpAlgebra.Graded
-import Mathbin.RingTheory.PowerSeries.Basic
-import Mathbin.RingTheory.TensorProduct
-import Mathbin.LinearAlgebra.Multilinear.Basic
-import Oneshot.ForMathlib.RingTheory.SubmoduleMem
+import DividedPowers.DpAlgebra.Init
+import DividedPowers.DpAlgebra.Graded
+import DividedPowers.ForMathlib.RingTheory.SubmoduleMem
+import Mathlib.RingTheory.PowerSeries.Basic
+import Mathlib.RingTheory.TensorProduct
+import Mathlib.LinearAlgebra.Multilinear.Basic
 
 /-! Polynomial laws on modules
 

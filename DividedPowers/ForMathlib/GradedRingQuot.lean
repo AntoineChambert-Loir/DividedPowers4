@@ -1,11 +1,9 @@
-import Mathbin.Algebra.Module.LinearMap
-import Mathbin.RingTheory.GradedAlgebra.HomogeneousIdeal
-import Mathbin.Algebra.RingQuot
-import Mathbin.RingTheory.Ideal.Quotient
-import Mathbin.RingTheory.Ideal.QuotientOperations
+import Mathlib.Algebra.Module.LinearMap
+import Mathlib.RingTheory.GradedAlgebra.HomogeneousIdeal
+import Mathlib.Algebra.RingQuot
+import Mathlib.RingTheory.Ideal.Quotient
+import Mathlib.RingTheory.Ideal.QuotientOperations
 
--- import algebra.module.graded_module
--- import algebra.module.graded_module
 section Classes
 
 section LinearMap
@@ -14,8 +12,11 @@ variable {R : Type _} [Semiring R]
 
 variable {β γ : Type _} [AddCommMonoid β] [Module R β] [AddCommMonoid γ] [Module R γ]
 
-instance {F : Type _} [LinearMapClass F R β γ] : CoeTC F (β →ₗ[R] γ)
-    where coe h := ⟨h, map_add h, map_smulₛₗ h⟩
+instance {F : Type _} [LinearMapClass F R β γ] : CoeTC F (β →ₗ[R] γ) where 
+  coe h := {
+    toFun := h
+    map_add' := map_add h 
+    map_smul' := map_smul h }
 
 theorem LinearMap.coe_coe {F : Type _} [LinearMapClass F R β γ] (f : F) :
     ((f : β →ₗ[R] γ) : β → γ) = f :=
@@ -120,13 +121,13 @@ example {β : ι → Type _} [∀ i, AddCommMonoid (β i)] [∀ i, Module R (β 
 
 -- linear_map, with classes :
 example {β : ι → Type _} [∀ i, AddCommMonoid (β i)] [∀ i, Module R (β i)] {γ : Type _}
-    [AddCommMonoid γ] [Module R γ] {F : ∀ i : ι, Type _} [∀ i, LinearMapClass (F i) R (β i) γ]
+    [AddCommMonoid γ] [Module R γ] {F : ∀ _ : ι, Type _} [∀ i, LinearMapClass (F i) R (β i) γ]
     (h : ∀ i, F i) : DirectSum ι β →ₗ[R] γ :=
   DirectSum.toModule R ι γ fun i => h i
 
 -- ⟨h i, map_add _, map_smulₛₗ _⟩
 example {β : ι → Type _} [∀ i, AddCommMonoid (β i)] [∀ i, Module R (β i)] {γ : Type _}
-    [AddCommMonoid γ] [Module R γ] {F : ∀ i : ι, Type _} [∀ i, LinearMapClass (F i) R (β i) γ]
+    [AddCommMonoid γ] [Module R γ] {F : ∀ _ : ι, Type _} [∀ i, LinearMapClass (F i) R (β i) γ]
     (h : ∀ i, F i) : DirectSum ι β →ₗ[R] γ :=
   DirectSum.toModule R ι γ fun i => h i
 
@@ -137,13 +138,13 @@ example {β : ι → Type _} [∀ i, AddCommMonoid (β i)] [∀ i, Module R (β 
    In principle, the latter should suffice. -/
 /-- Linear_maps from a direct sum to a direct sum given by families of linear_maps-/
 def DirectSum.map {β γ : ι → Type _} [∀ i, AddCommMonoid (β i)] [∀ i, AddCommMonoid (γ i)]
-    {F : ∀ i : ι, Type _} [∀ i, AddMonoidHomClass (F i) (β i) (γ i)] (h : ∀ i, F i) :
+    {F : ∀ _ : ι, Type _} [∀ i, AddMonoidHomClass (F i) (β i) (γ i)] (h : ∀ i, F i) :
     DirectSum ι β →+ DirectSum ι γ :=
   DirectSum.toAddMonoid fun i => AddMonoidHom.comp (DirectSum.of γ i) (h i)
 #align direct_sum.map DirectSum.map
 
 def DirectSum.lmap {β γ : ι → Type _} [∀ i, AddCommMonoid (β i)] [∀ i, Module R (β i)]
-    [∀ i, AddCommMonoid (γ i)] [∀ i, Module R (γ i)] {F : ∀ i : ι, Type _}
+    [∀ i, AddCommMonoid (γ i)] [∀ i, Module R (γ i)] {F : ∀ _ : ι, Type _}
     [∀ i, LinearMapClass (F i) R (β i) (γ i)] (h : ∀ i, F i) : DirectSum ι β →ₗ[R] DirectSum ι γ :=
   DirectSum.toModule R ι (DirectSum ι γ) fun i =>
     LinearMap.comp (DirectSum.lof R ι γ i) (h i : β i →ₗ[R] γ i)
@@ -201,10 +202,13 @@ example {β γ : ι → Type _} [∀ i, AddCommMonoid (β i)] [∀ i, Module R (
     DirectSum.lmap' h = DirectSum.lmap h := by rfl
 
 -- Lemmas to help computation
-theorem DirectSum.map_of {β γ : ι → Type _} [∀ i, AddCommMonoid (β i)] [∀ i, AddCommMonoid (γ i)]
-    {F : ∀ i, Type _} [∀ i, AddMonoidHomClass (F i) (β i) (γ i)] (h : ∀ i, F i) (i : ι) (x : β i) :
-    DirectSum.map h (DirectSum.of β i x) = DirectSum.of γ i (h i x) := by
+theorem DirectSum.map_of {β γ : ι → Type _} 
+    [∀ i, AddCommMonoid (β i)] [∀ i, AddCommMonoid (γ i)]
+    {F : ∀ _, Type _} [∀ i, AddMonoidHomClass (F i) (β i) (γ i)] 
+    (h : ∀ i, F i) (i : ι) (x : β i) :
+  DirectSum.map h (DirectSum.of β i x) = DirectSum.of γ i (h i x) := by
   simp only [DirectSum.map, DirectSum.toAddMonoid_of, AddMonoidHom.coe_comp, AddMonoidHom.coe_coe]
+  rfl
 #align direct_sum.map_of DirectSum.map_of
 
 /- unknown constant…
@@ -235,26 +239,29 @@ end
 -/
 theorem DirectSum.map'_of {β γ : ι → Type _} [∀ i, AddCommMonoid (β i)] [∀ i, AddCommMonoid (γ i)]
     (h : ∀ i, β i →+ γ i) (i : ι) (x : β i) :
-    DirectSum.map' h (DirectSum.of β i x) = DirectSum.of γ i (h i x) :=
-  by
+    DirectSum.map' h (DirectSum.of β i x) = DirectSum.of γ i (h i x) := by
   dsimp only [DirectSum.map']
   rw [DirectSum.toAddMonoid_of]
   simp only [AddMonoidHom.coe_comp]
+  rfl
 #align direct_sum.map'_of DirectSum.map'_of
 
-theorem DirectSum.lmap'_lof {β γ : ι → Type _} [∀ i, AddCommMonoid (β i)] [∀ i, AddCommMonoid (γ i)]
-    [∀ i, Module R (β i)] [∀ i, Module R (γ i)] (h : ∀ i, β i →ₗ[R] γ i) (i : ι) (x : β i) :
-    DirectSum.lmap' h (DirectSum.lof R ι β i x) = DirectSum.lof R ι γ i (h i x) :=
-  by
+theorem DirectSum.lmap'_lof {β γ : ι → Type _} 
+    [∀ i, AddCommMonoid (β i)] [∀ i, AddCommMonoid (γ i)]
+    [∀ i, Module R (β i)] [∀ i, Module R (γ i)] (h : ∀ i, β i →ₗ[R] γ i) 
+    (i : ι) (x : β i) :
+  DirectSum.lmap' h (DirectSum.lof R ι β i x) = 
+    DirectSum.lof R ι γ i (h i x) := by
   dsimp only [DirectSum.lmap']
   rw [DirectSum.toModule_lof]
   simp only [LinearMap.coe_comp]
+  rfl
 #align direct_sum.lmap'_lof DirectSum.lmap'_lof
 
 theorem DirectSum.lmap'_apply {β γ : ι → Type _} [∀ i, AddCommMonoid (β i)]
-    [∀ i, AddCommMonoid (γ i)] [∀ i, Module R (β i)] [∀ i, Module R (γ i)] (h : ∀ i, β i →ₗ[R] γ i)
-    (x : DirectSum ι β) (i : ι) : DirectSum.lmap' h x i = h i (x i) :=
-  by
+    [∀ i, AddCommMonoid (γ i)] [∀ i, Module R (β i)] [∀ i, Module R (γ i)] 
+    (h : ∀ i, β i →ₗ[R] γ i) (x : DirectSum ι β) (i : ι) : 
+  DirectSum.lmap' h x i = h i (x i) := by
   simp only [DirectSum.apply_eq_component R]
   rw [← LinearMap.comp_apply]
   rw [← LinearMap.comp_apply]
@@ -270,11 +277,12 @@ theorem DirectSum.lmap'_apply {β γ : ι → Type _} [∀ i, AddCommMonoid (β 
   · simp only [DirectSum.of_eq_of_ne _ j i _ hji, map_zero]
 #align direct_sum.lmap'_apply DirectSum.lmap'_apply
 
-theorem DirectSum.toModule_comp_lmap'_eq {β γ : ι → Type _} {δ : Type _} [∀ i, AddCommMonoid (β i)]
-    [∀ i, AddCommMonoid (γ i)] [AddCommMonoid δ] [∀ i, Module R (β i)] [∀ i, Module R (γ i)]
-    [Module R δ] (h : ∀ i, β i →ₗ[R] γ i) (f : ∀ i, γ i →ₗ[R] δ) (x : DirectSum ι β) :
-    DirectSum.toModule R ι δ f (DirectSum.lmap' h x) =
-      DirectSum.toModule R ι δ (fun i => (f i).comp (h i)) x :=
+theorem DirectSum.toModule_comp_lmap'_eq {β γ : ι → Type _} {δ : Type _} 
+    [∀ i, AddCommMonoid (β i)] [∀ i, AddCommMonoid (γ i)] [AddCommMonoid δ] 
+    [∀ i, Module R (β i)] [∀ i, Module R (γ i)] [Module R δ] 
+    (h : ∀ i, β i →ₗ[R] γ i) (f : ∀ i, γ i →ₗ[R] δ) (x : DirectSum ι β) :
+  DirectSum.toModule R ι δ f (DirectSum.lmap' h x) =
+    DirectSum.toModule R ι δ (fun i => (f i).comp (h i)) x :=
   by
   rw [← LinearMap.comp_apply]
   revert x
@@ -290,9 +298,9 @@ theorem DirectSum.toModule_comp_lmap'_eq {β γ : ι → Type _} {δ : Type _} [
 
 theorem DirectSum.map'_apply {β γ : ι → Type _} [∀ i, AddCommMonoid (β i)]
     [∀ i, AddCommMonoid (γ i)] [∀ (i : ι) (x : β i), Decidable (x ≠ 0)]
-    [∀ (i : ι) (x : γ i), Decidable (x ≠ 0)] (h : ∀ i, β i →+ γ i) (x : DirectSum ι β) (i : ι) :
-    DirectSum.map' h x i = h i (x i) :=
-  by
+    [∀ (i : ι) (x : γ i), Decidable (x ≠ 0)] 
+    (h : ∀ i, β i →+ γ i) (x : DirectSum ι β) (i : ι) :
+  DirectSum.map' h x i = h i (x i) := by
   let f : DirectSum ι β →+ γ i :=
     { toFun := fun x => DirectSum.map' h x i
       map_zero' := by simp only [map_zero, DirectSum.zero_apply]
@@ -306,7 +314,7 @@ theorem DirectSum.map'_apply {β γ : ι → Type _} [∀ i, AddCommMonoid (β i
   rw [this]
   apply DirectSum.addHom_ext
   intro j y
-  simp [f, g, DirectSum.map'_of]
+  simp [DirectSum.map'_of]
   by_cases hj : j = i
   · rw [← hj]; simp only [DirectSum.of_eq_same]
   · simp only [DirectSum.of_eq_of_ne _ j i _ hj, map_zero]
@@ -315,21 +323,22 @@ theorem DirectSum.map'_apply {β γ : ι → Type _} [∀ i, AddCommMonoid (β i
 -- Lemmas using direct_sum.mk   : could probably be removed
 theorem DirectSum.mk_apply {β : ι → Type _} [∀ i, AddCommMonoid (β i)] (s : Finset ι)
     (f : ∀ i : s, β ↑i) (i : ι) :
-    DirectSum.mk β s f i = dite (i ∈ s) (fun h => f ⟨i, h⟩) fun h => 0 :=
+    DirectSum.mk β s f i = if h : i ∈ s then f ⟨i, h⟩ else 0 :=
   rfl
 #align direct_sum.mk_apply DirectSum.mk_apply
 
 theorem DirectSum.mk_eq_sum' {β : ι → Type _} [∀ i, AddCommMonoid (β i)]
     [∀ (i : ι) (x : β i), Decidable (x ≠ 0)] (s : Finset ι) (f : ∀ i, β i) :
-    (DirectSum.mk β s fun i : ↥↑s => f i) = s.Sum fun i => DirectSum.of β i (f i) :=
-  by
-  ext i
+    (DirectSum.mk β s (fun i => f i)) = 
+      s.sum (fun i => DirectSum.of β i (f i)) := by
+  simp only [Finset.coe_sort_coe]
+  apply DFinsupp.ext
+  intro i
   rw [DirectSum.mk_apply, DFinsupp.finset_sum_apply]
-  split_ifs with hi hi
+  split_ifs with hi
   · rw [Finset.sum_eq_single_of_mem i hi]
     · rw [← DirectSum.lof_eq_of ℕ, DirectSum.lof_apply]
-      rfl
-    · intro j hj hij
+    · intro j _ hij
       exact DirectSum.of_eq_of_ne _ _ _ _ hij
   · apply symm
     apply Finset.sum_eq_zero
@@ -339,99 +348,103 @@ theorem DirectSum.mk_eq_sum' {β : ι → Type _} [∀ i, AddCommMonoid (β i)]
 
 theorem DFinsupp.mk_eq_sum {β : ι → Type _} [∀ i, AddCommMonoid (β i)]
     [∀ (i : ι) (x : β i), Decidable (x ≠ 0)] (s : Finset ι) (f : ∀ i, β i) :
-    (DFinsupp.mk s fun i : ↥↑s => f i) = s.Sum fun i => DirectSum.of β i (f i) :=
+    (DFinsupp.mk s fun i => f i) = s.sum fun i => DirectSum.of β i (f i) :=
   by
   ext i
   simp only [DFinsupp.mk_apply, DFinsupp.finset_sum_apply]
-  split_ifs with hi hi
-  · rw [Finset.sum_eq_single_of_mem i hi]
-    rw [DirectSum.of_eq_same]; rfl
-    intro j hj hij
-    rw [DirectSum.of_eq_of_ne]
-    exact hij
-  · apply symm; apply Finset.sum_eq_zero
+  
+  split_ifs with hi
+  · rw [DFinsupp.finset_sum_apply, Finset.sum_eq_single_of_mem i hi, 
+      DirectSum.of_eq_same]
+    . intro j _ hij
+      rw [DirectSum.of_eq_of_ne]
+      exact hij
+  · rw [DFinsupp.finset_sum_apply, Finset.sum_eq_zero]
     intro j hj
     rw [DirectSum.of_eq_of_ne]
     intro hij; apply hi; rw [← hij]; exact hj
 #align dfinsupp.mk_eq_sum DFinsupp.mk_eq_sum
 
 theorem DirectSum.mk_eq_sum {β : ι → Type _} [∀ i, AddCommMonoid (β i)]
-    [∀ (i : ι) (x : β i), Decidable (x ≠ 0)] (s : Finset ι) (x : ∀ i : s, β i) :
-    DirectSum.mk β s x =
-      s.Sum fun i => DirectSum.of β i (dite (i ∈ s) (fun hi => x ⟨i, hi⟩) fun hi => 0) :=
-  by
-  ext i
-  rw [DFinsupp.finset_sum_apply, DirectSum.mk_apply]
-  split_ifs with hi hi
-  · rw [Finset.sum_eq_single i]
+    [∀ (i : ι) (x : β i), Decidable (x ≠ 0)] 
+    (s : Finset ι) (x : ∀ i : s, β i) :
+  DirectSum.mk β s x =
+    s.sum fun i => DirectSum.of β i (if h : i ∈ s then x ⟨i, h⟩ else 0) := by
+  apply DFinsupp.ext
+  intro i
+  rw [DirectSum.mk_apply]
+  split_ifs with hi 
+  · rw [DFinsupp.finset_sum_apply, Finset.sum_eq_single i]
     · rw [DirectSum.of_eq_same, dif_pos hi]
-    · intro j hjs hji
-      exact DirectSum.of_eq_of_ne _ _ _ _ hji
+    · intro j _ hji
+      rw [DirectSum.of_eq_of_ne]
+      exact hji
     · intro his
       rw [DirectSum.of_eq_same, dif_neg his]
-  · apply symm; apply Finset.sum_eq_zero
+  · rw [DFinsupp.finset_sum_apply, Finset.sum_eq_zero]
     intro j hj
-    rw [DirectSum.of_eq_of_ne _ _ _ _ (ne_of_mem_of_not_mem hj hi)]
+    rw [DirectSum.of_eq_of_ne]
+    exact ne_of_mem_of_not_mem hj hi
 #align direct_sum.mk_eq_sum DirectSum.mk_eq_sum
 
-theorem DirectSum.toAddMonoid_mk {β : ι → Type _} [∀ i, AddCommMonoid (β i)] {γ : Type _}
-    [AddCommMonoid γ] [∀ (i : ι) (x : β i), Decidable (x ≠ 0)] [∀ x : γ, Decidable (x ≠ 0)]
+theorem DirectSum.toAddMonoid_mk {β : ι → Type _} [∀ i, AddCommMonoid (β i)] 
+    {γ : Type _} [AddCommMonoid γ] [∀ (i : ι) (x : β i), Decidable (x ≠ 0)] 
+    [∀ x : γ, Decidable (x ≠ 0)]
     (ψ : ∀ i, β i →+ γ) (s : Finset ι) (x : ∀ i : s, β i) :
-    DirectSum.toAddMonoid ψ (DirectSum.mk β s x) =
-      s.Sum fun i => ψ i (dite (i ∈ s) (fun hi => x ⟨i, hi⟩) fun hi => 0) :=
+  DirectSum.toAddMonoid ψ (DirectSum.mk β s x) =
+    s.sum fun i => ψ i (if h : i ∈ s then x ⟨i, h⟩ else 0) :=
   by
   rw [DirectSum.mk_eq_sum, map_sum]
   apply Finset.sum_congr rfl
-  intro i hi
+  intro i _
   rw [DirectSum.toAddMonoid_of]
 #align direct_sum.to_add_monoid_mk DirectSum.toAddMonoid_mk
 
 theorem DirectSum.map'_apply'_old {β γ : ι → Type _} [∀ i, AddCommMonoid (β i)]
     [∀ i, AddCommMonoid (γ i)] [∀ (i : ι) (x : β i), Decidable (x ≠ 0)]
-    [∀ (i : ι) (x : γ i), Decidable (x ≠ 0)] (h : ∀ i, β i →+ γ i) (x : DirectSum ι β) :
-    DirectSum.map' h x = DirectSum.mk γ x.support fun i => h i (x i) :=
-  by
-  conv_lhs => rw [← DirectSum.sum_support_of β x]
-  rw [map_sum]
-  simp_rw [DirectSum.map'_of]
-  apply symm
-  convert DirectSum.mk_eq_sum x.support fun i => (h i) (x i)
-  apply funext
+    [∀ (i : ι) (x : γ i), Decidable (x ≠ 0)] 
+    (h : ∀ i, β i →+ γ i) (x : DirectSum ι β) :
+  DirectSum.map' h x = DirectSum.mk γ x.support fun i => h i (x i) := by
+  apply DFinsupp.ext
   intro i
-  dsimp
-  apply congr_arg
-  split_ifs with hi
-  rfl
-  rw [DFinsupp.not_mem_support_iff] at hi 
-  rw [hi]; simp only [map_zero]
+  conv_lhs => rw [← DirectSum.sum_support_of β x, map_sum, DFinsupp.finset_sum_apply]
+  rw [DirectSum.mk_eq_sum]
+  simp only [DFinsupp.mem_support_toFun, ne_eq, dite_eq_ite]
+  rw [DFinsupp.finset_sum_apply]
+  apply Finset.sum_congr rfl
+  intro j _
+  split_ifs with h
+  . simp only [h, map_zero, zero_apply]
+  . by_cases hij : j = i
+    . rw [hij]
+      simp only [of_eq_same]
+      simp [map']
+    . rw [of_eq_of_ne]
+      simp [map']
+      rw [of_eq_of_ne]
+      exact hij
+      exact hij
 #align direct_sum.map'_apply'_old DirectSum.map'_apply'_old
 
 def zoto {β γ : ι → Type _} [∀ i, AddCommMonoid (β i)] [∀ i, AddCommMonoid (γ i)]
     [∀ (i : ι) (x : β i), Decidable (x ≠ 0)] [∀ (i : ι) (x : γ i), Decidable (x ≠ 0)]
-    {F : ∀ i, Type _} [∀ i, AddMonoidHomClass (F i) (β i) (γ i)] (h : ∀ i, F i)
+    {F : ∀ _, Type _} [∀ i, AddMonoidHomClass (F i) (β i) (γ i)] (h : ∀ i, F i)
     (B : DirectSum ι β) : ∀ i : (B.support : Set ι), γ i := fun i => (h i) (B i)
 #align zoto zoto
 
 theorem DirectSum.map_apply' {β γ : ι → Type _} [∀ i, AddCommMonoid (β i)]
     [∀ i, AddCommMonoid (γ i)] [∀ (i : ι) (x : β i), Decidable (x ≠ 0)]
-    [∀ (i : ι) (x : γ i), Decidable (x ≠ 0)] {F : ∀ i, Type _}
+    [∀ (i : ι) (x : γ i), Decidable (x ≠ 0)] {F : ∀ _, Type _}
     [∀ i, AddMonoidHomClass (F i) (β i) (γ i)] (h : ∀ i, F i) (x : DirectSum ι β) :
-    DirectSum.map h x = DirectSum.mk γ x.support (zoto h x) :=
-  by
+    DirectSum.map h x = DirectSum.mk γ x.support (zoto h x) := by
   -- (λ i, (h i) (x i))  gives `unknown fresh 0._ ` error
   conv_lhs => rw [← DirectSum.sum_support_of β x]
   rw [map_sum]
   simp_rw [DirectSum.map_of]
   apply symm
   convert DirectSum.mk_eq_sum x.support fun i => (h i) (x i)
-  apply funext
-  intro i
-  dsimp
-  apply congr_arg
-  split_ifs with hi
-  rfl
-  rw [DFinsupp.not_mem_support_iff] at hi 
-  rw [hi]; simp only [map_zero]
+  rw [dif_pos]
+  assumption
 #align direct_sum.map_apply' DirectSum.map_apply'
 
 end DirectSum
@@ -476,7 +489,7 @@ variable (I : Ideal A)
 
 -- variables [h𝒜 : graded_algebra 𝒜] (hI: ideal.is_homogeneous 𝒜 I)
 -- It seems I start understanding what I'm doing
-example : SemilinearMapClass (A →+* A ⧸ I) (RingHom.id ℤ) _ _ :=
+example : SemilinearMapClass (A →+* A ⧸ I) (RingHom.id ℤ) A (A ⧸ I) :=
   { coe := fun f a => f a
     coe_injective' := fun f g hfg => RingHom.ext fun x => Function.funext_iff.mp hfg x
     map_add := map_add
@@ -514,17 +527,18 @@ def quotCompMap (i : ι) : ↥(𝒜 i) →ₗ[R] ↥(quotSubmodule R 𝒜 I i)
     where
   toFun u :=
     ⟨Ideal.Quotient.mkₐ R I ↑u, by
-      rw [quotSubmodule, Submodule.mem_map] <;> exact ⟨↑u, u.prop, rfl⟩⟩
+      rw [quotSubmodule, Submodule.mem_map]
+      exact ⟨↑u, u.prop, rfl⟩⟩
   map_add' u v := by
-    simp only [← Subtype.coe_inj, Submodule.coe_add, map_add, AddMemClass.mk_add_mk]
+    simp only [AddSubmonoid.coe_add, Submodule.coe_toAddSubmonoid, map_add, 
+      Ideal.Quotient.mkₐ_eq_mk, AddSubmonoid.mk_add_mk]
   map_smul' r u := by
-    simp only [Submodule.coe_smul_of_tower, RingHom.id_apply, SetLike.mk_smul_mk, Subtype.mk_eq_mk,
-      map_smul]
+    simp only [SetLike.val_smul, map_smul, Ideal.Quotient.mkₐ_eq_mk, RingHom.id_apply]
+    rfl
 #align quot_comp_map quotCompMap
 
 -- lemma quot_comp_map_surjective (i : ι) : function.surjective (quot_comp_map R 𝒜 I i) := sorry
-example : Submodule R A :=
-  I.restrictScalars R
+example : Submodule R A := I.restrictScalars R
 
 /-- The decomposition at the higher level -/
 def quotDecomposeLaux [GradedAlgebra 𝒜] :
@@ -532,86 +546,93 @@ def quotDecomposeLaux [GradedAlgebra 𝒜] :
   LinearMap.comp (DirectSum.lmap' (quotCompMap R 𝒜 I)) (DirectSum.decomposeAlgEquiv 𝒜).toLinearMap
 #align quot_decompose_laux quotDecomposeLaux
 
-theorem quotDecomposeLaux_of_mem_eq_zero [GradedAlgebra 𝒜] (hI : I.Homogeneous 𝒜) (x : A)
+theorem quotDecomposeLaux_of_mem_eq_zero [GradedAlgebra 𝒜] (hI : I.IsHomogeneous 𝒜) (x : A)
     (hx : x ∈ I) (i : ι) : ((quotDecomposeLaux R 𝒜 I) x) i = 0 :=
   by
   rw [quotDecomposeLaux, LinearMap.comp_apply, DirectSum.lmap'_apply, quotCompMap]
-  simp only [Ideal.Quotient.mkₐ_eq_mk, AlgEquiv.toLinearMap_apply,
-    DirectSum.decomposeAlgEquiv_apply, LinearMap.coe_mk, Submodule.mk_eq_zero]
+  simp only [Ideal.Quotient.mkₐ_eq_mk, AlgEquiv.toLinearMap_apply, 
+    DirectSum.decomposeAlgEquiv_apply, LinearMap.coe_mk,
+    AddHom.coe_mk, Submodule.mk_eq_zero]
   rw [Ideal.Quotient.eq_zero_iff_mem]
   exact hI i hx
 #align quot_decompose_laux_of_mem_eq_zero quotDecomposeLaux_of_mem_eq_zero
 
-theorem quotDecomposeLaux_ker [GradedAlgebra 𝒜] (hI : I.Homogeneous 𝒜) :
-    I.restrictScalars R ≤ (quotDecomposeLaux R 𝒜 I).ker :=
+theorem quotDecomposeLaux_ker [GradedAlgebra 𝒜] (hI : I.IsHomogeneous 𝒜) :
+    I.restrictScalars R ≤ LinearMap.ker (quotDecomposeLaux R 𝒜 I) :=
   by
   intro x hx
   simp only [Submodule.restrictScalars_mem] at hx 
   rw [LinearMap.mem_ker]
-  ext i
-  rw [DirectSum.zero_apply, Submodule.coe_zero, Submodule.coe_eq_zero]
-  apply quotDecomposeLaux_of_mem_eq_zero
-  exact hI; exact hx
+  apply DFinsupp.ext
+  intro i
+  simp only [DirectSum.zero_apply]
+  apply quotDecomposeLaux_of_mem_eq_zero R 𝒜 I hI x hx
 #align quot_decompose_laux_ker quotDecomposeLaux_ker
 
 /-- The decomposition at the higher level -/
-def quotDecompose [GradedAlgebra 𝒜] (hI : I.Homogeneous 𝒜) :
-    A ⧸ I →ₗ[R] DirectSum ι fun i : ι => ↥(quotSubmodule R 𝒜 I i) :=
-  by
-  apply
-    @Submodule.liftQ R A _ _ _ (I.restrict_scalars R) R (DirectSum ι fun i => quotSubmodule R 𝒜 I i)
-      _ _ _ (RingHom.id R) (quotDecomposeLaux R 𝒜 I)
+def quotDecompose [GradedAlgebra 𝒜] (hI : I.IsHomogeneous 𝒜) :
+    A ⧸ I →ₗ[R] DirectSum ι fun i : ι => ↥(quotSubmodule R 𝒜 I i) := by
+  apply @Submodule.liftQ R A _ _ _ (I.restrictScalars R) R 
+    (DirectSum ι fun i => quotSubmodule R 𝒜 I i)
+    _ _ _ (RingHom.id R) (quotDecomposeLaux R 𝒜 I)
   -- without explicit arguments, it is too slow
   -- apply submodule.liftq (I.restrict_scalars R) (quot_decompose_laux R 𝒜 I),
   apply quotDecomposeLaux_ker R 𝒜 I hI
 #align quot_decompose quotDecompose
 
-theorem quotDecomposeLaux_apply_mk [GradedAlgebra 𝒜] (hI : I.Homogeneous 𝒜) (a : A) :
-    quotDecompose R 𝒜 I hI (Ideal.Quotient.mk I a) = quotDecomposeLaux R 𝒜 I a :=
-  by
+theorem quotDecomposeLaux_apply_mk [GradedAlgebra 𝒜] (hI : I.IsHomogeneous 𝒜) 
+    (a : A) :
+  quotDecompose R 𝒜 I hI (Ideal.Quotient.mk I a) = quotDecomposeLaux R 𝒜 I a := by
   rw [quotDecompose]
   have : Ideal.Quotient.mk I a = Submodule.Quotient.mk a := rfl
   rw [this]
-  -- with explicit arguments, it times out
-  -- exact submodule.liftq_apply (I.restrict_scalars R) (quot_decompose_laux R 𝒜 I) a, 
+  -- exact Submodule.liftQ_apply (I.restrictScalars R) (quotDecomposeLaux R 𝒜 I) a
   -- apply works
   apply Submodule.liftQ_apply
 #align quot_decompose_laux_apply_mk quotDecomposeLaux_apply_mk
 
-def quot_decomposition_left_inv [GradedAlgebra 𝒜] (hI : I.Homogeneous 𝒜) :
-    Function.LeftInverse (DirectSum.coeAddMonoidHom (quotSubmodule R 𝒜 I))
-      (quotDecompose R 𝒜 I hI) :=
-  fun a => by
-  obtain ⟨a, rfl⟩ := (Ideal.Quotient.mk I).is_surjective a
-  rw [quotDecomposeLaux_apply_mk]
-  rw [quotDecomposeLaux]
-  simp only [LinearMap.comp_apply]
+def quotDecomposition_left_inv' [GradedAlgebra 𝒜] (hI : I.IsHomogeneous 𝒜) :
+  Function.LeftInverse (DirectSum.coeLinearMap (quotSubmodule R 𝒜 I))
+    (quotDecompose R 𝒜 I hI) := by
+  intro x
+  obtain ⟨(a : A), rfl⟩ := Ideal.Quotient.mk_surjective x
   let h𝒜 : DirectSum.Decomposition 𝒜 := by infer_instance
-  let ha := h𝒜.left_inv a
-  have : (DirectSum.decomposeAlgEquiv 𝒜).toLinearMap a = DirectSum.Decomposition.decompose' a
-  rfl
-  rw [this]
-  conv_rhs => rw [← h𝒜.left_inv a]
-  change _ = Submodule.mkQ (I.restrict_scalars R) _
-  simp only [← LinearMap.toAddMonoidHom_coe]
-  rw [DirectSum.lmap'_toAddMonoidHom_eq_map']
-  simp only [← AddMonoidHom.comp_apply]
-  generalize DirectSum.Decomposition.decompose' a = b
+  have ha : (DirectSum.coeLinearMap 𝒜) (DirectSum.decomposeAlgEquiv 𝒜 a) = a
+  . conv_rhs => rw [← h𝒜.left_inv a]
+  conv_rhs => 
+    change Submodule.mkQ (I.restrictScalars R) a
+    rw [← ha]
+    simp only [← LinearMap.comp_apply]
+  conv_lhs =>
+    rw [quotDecomposeLaux_apply_mk, quotDecomposeLaux, LinearMap.comp_apply]
+    simp only [AlgEquiv.toLinearMap_apply] 
+    simp only [← LinearMap.comp_apply]
+  generalize DirectSum.decomposeAlgEquiv 𝒜 a = b
   revert b
-  rw [← AddMonoidHom.ext_iff]
-  apply DirectSum.addHom_ext
-  intro i y
-  simp only [AddMonoidHom.coe_comp, Function.comp_apply, LinearMap.toAddMonoidHom_coe,
-    DirectSum.coeAddMonoidHom_of, Submodule.mkQ_apply]
-  rw [DirectSum.map'_of]
-  rw [DirectSum.coeAddMonoidHom_of]
-  simp only [LinearMap.toAddMonoidHom_coe]
-  rw [quotCompMap]
-  simp only [Ideal.Quotient.mkₐ_eq_mk, LinearMap.coe_mk, Submodule.coe_mk]
+  suffices h : (LinearMap.comp (DirectSum.coeLinearMap (quotSubmodule R 𝒜 I)) (DirectSum.lmap' (quotCompMap R 𝒜 I))) =
+    (LinearMap.comp (Submodule.mkQ (Submodule.restrictScalars R I)) (DirectSum.coeLinearMap 𝒜))
+  intro b ; rw [h] ; rfl
+  apply DirectSum.linearMap_ext
+  intro i
+  ext x
+  dsimp
+  change _ = (Submodule.mkQ (Submodule.restrictScalars R I)) (_)
+  simp only [DirectSum.lmap'_lof]
+  simp only [DirectSum.lof_eq_of, DirectSum.coeLinearMap_of]
+  simp only [Submodule.mkQ_apply]
   rfl
-#align quot_decomposition_left_inv quot_decomposition_left_inv
 
-def quot_decomposition_right_inv [GradedAlgebra 𝒜] (hI : I.Homogeneous 𝒜) :
+def quotDecomposition_left_inv [GradedAlgebra 𝒜] (hI : I.IsHomogeneous 𝒜) :
+  Function.LeftInverse (DirectSum.coeAddMonoidHom (quotSubmodule R 𝒜 I))
+    (quotDecompose R 𝒜 I hI).toAddMonoidHom := by
+  rw [Function.leftInverse_iff_comp]
+  rw [LinearMap.toAddMonoidHom_coe]
+  change (DirectSum.coeLinearMap _) ∘ _ = _
+  rw [← Function.leftInverse_iff_comp]
+  exact quotDecomposition_left_inv' R 𝒜 I hI
+#align quot_decomposition_left_inv quotDecomposition_left_inv
+
+def quotDecomposition_right_inv [GradedAlgebra 𝒜] (hI : I.Homogeneous 𝒜) :
     Function.RightInverse (DirectSum.coeAddMonoidHom (quotSubmodule R 𝒜 I))
       (quotDecompose R 𝒜 I hI) :=
   fun x => by
@@ -651,8 +672,8 @@ def quotDecomposition [GradedAlgebra 𝒜] (hI : I.Homogeneous 𝒜) :
     DirectSum.Decomposition (quotSubmodule R 𝒜 I)
     where
   decompose' := quotDecompose R 𝒜 I hI
-  left_inv := quot_decomposition_left_inv R 𝒜 I hI
-  right_inv := quot_decomposition_right_inv R 𝒜 I hI
+  left_inv := quotDecomposition_left_inv R 𝒜 I hI
+  right_inv := quotDecomposition_right_inv R 𝒜 I hI
 #align quot_decomposition quotDecomposition
 
 theorem mem_quotSubmodule_iff (i : ι) (g : A ⧸ I) :
