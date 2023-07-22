@@ -34,7 +34,7 @@
 ✓ ForMathlib/CombinatoricsLemmas
 ✓ ForMathlib/GradedAlgebra
 ✕ ForMathlib/GradedModuleQuot
-✕ ForMathlib/GradedRingQuot
+✓ ForMathlib/GradedRingQuot
 ✕ ForMathlib/Homogeneous
 ✕ ForMathlib/TpAlgebra
 ✓ ForMathlib/WeightedHomogeneous
