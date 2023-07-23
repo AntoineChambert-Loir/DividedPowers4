@@ -601,7 +601,7 @@ theorem Ideal.quotDecomposeLaux_apply_mk [GradedAlgebra 𝒜]
     (hI : I.IsHomogeneous 𝒜) (a : A) :
   I.quotDecompose R 𝒜 hI (Ideal.Quotient.mk I a) = 
     I.quotDecomposeLaux R 𝒜 a := by
-  rw [Ideal.quotDecompose]
+  simp only [Ideal.quotDecompose]
   have : Ideal.Quotient.mk I a = Submodule.Quotient.mk a := rfl
   rw [this]
   -- exact Submodule.liftQ_apply (I.restrictScalars R) (quotDecomposeLaux R 𝒜 I) a

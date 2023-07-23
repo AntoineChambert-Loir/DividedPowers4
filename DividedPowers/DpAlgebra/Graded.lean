@@ -65,6 +65,8 @@ set_option linter.uppercaseLean3 true
 -- THIS DOESN'T WORK ANYMORE BECAUSE I HAVE REWRITTEN
 -- DividedPowerAlgebra AS A RingQuot…
 
+#check DividedPowerAlgebra
+
 /-- The graded submodules of `divided_power_algebra R M` -/
 def grade (n : ℕ) : Submodule R (DividedPowerAlgebra R M) :=
   quotSubmodule R 
