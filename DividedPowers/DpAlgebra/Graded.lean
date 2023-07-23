@@ -9,7 +9,8 @@ import Mathlib.Algebra.TrivSqZeroExt
 -- Modified version of PR #17855
 -- Quotients of graded rings
 -- Quotients of graded rings
-variable (R M : Type _) [CommRing R] [AddCommGroup M] [Module R M]
+variable (R M : Type _) [CommRing R] [AddCommGroup M] [Module R M] 
+  [DecidableEq R] [DecidableEq M]
 
 noncomputable section
 
@@ -25,46 +26,50 @@ open RingQuot
 
 section DecidableEq
 
-variable (M)
+#check (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ))
 
-theorem relI_isHomogeneous :
-    (relI R M).Homogeneous (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) :=
-  by
-  apply is_homogeneous_span
-  rintro x ⟨a, b, h, hx⟩
-  rw [eq_sub_iff_add_eq.mpr hx]
-  induction' h with n r n m n p m n u v
-  ·
-    exact
-      ⟨0, Submodule.sub_mem _ (is_weighted_homogeneous_X R _ _) (is_weighted_homogeneous_one R _)⟩
-  ·
-    exact
-      ⟨n,
-        Submodule.sub_mem _ (is_weighted_homogeneous_X R _ _)
-          (Submodule.smul_mem _ _ (is_weighted_homogeneous_X R _ _))⟩
-  ·
-    exact
-      ⟨n + p,
-        Submodule.sub_mem _
-          (is_weighted_homogeneous.mul (is_weighted_homogeneous_X R _ _)
-            (is_weighted_homogeneous_X R _ _))
-          (nsmul_mem (is_weighted_homogeneous_X R _ _) _)⟩
-  · use n
-    refine' Submodule.sub_mem _ (is_weighted_homogeneous_X R _ _) (Submodule.sum_mem _ _)
-    intro c hc
-    have hnc : n = c + (n - c) := (Nat.add_sub_of_le (finset.mem_range_succ_iff.mp hc)).symm
-    nth_rw 2 [hnc]
-    exact
-      is_weighted_homogeneous.mul (is_weighted_homogeneous_X R _ _)
-        (is_weighted_homogeneous_X R _ _)
-#align divided_power_algebra.relI_is_homogeneous DividedPowerAlgebra.relI_isHomogeneous
+#check weightedGradedAlgebra R (Prod.fst : ℕ × M → ℕ)
 
-variable [DecidableEq R] [DecidableEq M]
+example : GradedAlgebra (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) := inferInstance
+-- weightedGradedAlgebra R (Prod.fst : ℕ × M → ℕ)
+
+theorem RelI_isHomogeneous :
+  (RelI R M).IsHomogeneous (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) :=  by 
+  apply IsHomogeneous_of_rel
+  -- simp only [RelIsHomogeneous]
+  intro a b h
+  cases' h with a r n a m n a n a b
+  . use 0
+    simp only [mem_weightedHomogeneousSubmodule, isWeightedHomogeneous_X, isWeightedHomogeneous_one]
+  . use n
+    simp only [mem_weightedHomogeneousSubmodule, Submodule.smul_mem, isWeightedHomogeneous_X]
+  . use m + n
+    constructor
+    . apply IsWeightedHomogeneous.mul <;> simp only [isWeightedHomogeneous_X]
+    . apply nsmul_mem
+      simp only [mem_weightedHomogeneousSubmodule, isWeightedHomogeneous_X]
+  . use n
+    constructor
+    . simp only [mem_weightedHomogeneousSubmodule, isWeightedHomogeneous_X]
+    . apply Submodule.sum_mem
+      intro c hc
+      suffices : n = c + (n - c)
+      nth_rewrite 2 [this]
+      apply IsWeightedHomogeneous.mul <;> simp only [isWeightedHomogeneous_X]
+      . rw [mem_range, Nat.lt_succ_iff] at hc
+        rw [Nat.add_sub_of_le hc]
+set_option linter.uppercaseLean3 false
+#align divided_power_algebra.relI_is_homogeneous DividedPowerAlgebra.RelI_isHomogeneous
+set_option linter.uppercaseLean3 true
+
+-- THIS DOESN'T WORK ANYMORE BECAUSE I HAVE REWRITTEN
+-- DividedPowerAlgebra AS A RingQuot…
 
 /-- The graded submodules of `divided_power_algebra R M` -/
-def grade :=
-  quotSubmodule R (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ))
-    (DividedPowerAlgebra.relI R M)
+def grade (n : ℕ) : Submodule R (DividedPowerAlgebra R M) :=
+  quotSubmodule R 
+    (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ))
+    (DividedPowerAlgebra.RelI R M)
 #align divided_power_algebra.grade DividedPowerAlgebra.grade
 
 theorem one_mem : (1 : DividedPowerAlgebra R M) ∈ grade R M 0 :=
