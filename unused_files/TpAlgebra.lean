@@ -1,4 +1,4 @@
-import Mathbin.RingTheory.TensorProduct
+import Mathlib.RingTheory.TensorProduct
 
 variable {R : Type _} [CommRing R]
 
@@ -31,5 +31,5 @@ example : WithTop Unit :=
 example : (Unit.unit : WithTop Unit) ≠ (⊤ : WithTop Unit) :=
   WithTop.coe_ne_top
 
---#check unit.star
+--#check IsUnit.star
 --#eval unit.star
