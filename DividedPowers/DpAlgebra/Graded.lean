@@ -71,7 +71,7 @@ set_option linter.uppercaseLean3 true
 def grade (n : ℕ) : Submodule R (DividedPowerAlgebra R M) :=
   quotSubmodule R 
     (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ))
-    (DividedPowerAlgebra.RelI R M)
+    (DividedPowerAlgebra.RelI R M) n
 #align divided_power_algebra.grade DividedPowerAlgebra.grade
 
 theorem one_mem : (1 : DividedPowerAlgebra R M) ∈ grade R M 0 :=
