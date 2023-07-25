@@ -2,9 +2,9 @@
  inspired by a file of Bhavik Mehta 
 ! This file was ported from Lean 3 source module antidiagonal
 -/
-import Mathbin.Data.Finset.Basic
-import Mathbin.RingTheory.PowerSeries.Basic
-import Oneshot.MvPowerSeries.Order
+import Mathlib.Data.Finset.Basic
+import Mathlib.RingTheory.PowerSeries.Basic
+import DividedPowers.ForMathlib.MvPowerSeries.Order
 
 open scoped BigOperators
 
@@ -23,10 +23,10 @@ namespace Finset
 /-- The finset of functions `ι → μ` whose support is contained in `s`
   and whose sum is `n` -/
 def cut (s : Finset ι) (n : μ) : Finset (ι → μ) :=
-  Finset.filter (fun f => s.Sum f = n)
+  Finset.filter (fun f => s.sum f = n)
     ((s.pi fun _ => Iic n).map
-      ⟨fun f i => if h : i ∈ s then f i h else 0, fun f g h => by ext i hi;
-        simpa only [dif_pos hi] using congr_fun h i⟩)
+      ⟨fun f i => if h : i ∈ s then f i h else 0, 
+        fun f g h => by ext i hi; simpa only [dif_pos hi] using congr_fun h i⟩)
 #align finset.cut Finset.cut
 
 /-- The finset of pairs of elements of `μ` with sum `n` -/
@@ -34,38 +34,35 @@ def antidiagonal (n : μ) : Finset (μ × μ) :=
   Finset.filter (fun uv => uv.fst + uv.snd = n) (Finset.product (Iic n) (Iic n))
 #align finset.antidiagonal Finset.antidiagonal
 
-theorem mem_antidiagonal (n : μ) (a : μ × μ) : a ∈ antidiagonal n ↔ a.fst + a.snd = n :=
-  by
-  simp only [antidiagonal, mem_filter, mem_product, mem_Iic, and_iff_right_iff_imp]
+theorem mem_antidiagonal (n : μ) (a : μ × μ) : a ∈ antidiagonal n ↔ a.fst + a.snd = n := by
+  simp only [antidiagonal, Prod.forall, mem_filter, and_iff_right_iff_imp]
   intro h; rw [← h]
+  erw [mem_product, mem_Iic, mem_Iic]
   exact ⟨le_self_add, le_add_self⟩
 #align finset.mem_antidiagonal Finset.mem_antidiagonal
 
-/- ./././Mathport/Syntax/Translate/Basic.lean:638:2: warning: expanding binder collection (i «expr ∉ » s) -/
+/- ./././Mathport/Syntax/Translate/Basic.lean:638:2: warning: 
+  expanding binder collection (i «expr ∉ » s) -/
 theorem mem_cut (s : Finset ι) (n : μ) (f : ι → μ) :
-    f ∈ cut s n ↔ s.Sum f = n ∧ ∀ (i) (_ : i ∉ s), f i = 0 :=
+    f ∈ cut s n ↔ s.sum f = n ∧ ∀ (i) (_ : i ∉ s), f i = 0 :=
   by
-  rw [cut, mem_filter, and_comm', and_congr_right]
+  rw [cut, mem_filter, and_comm, and_congr_right]
   intro h
   simp only [mem_map, exists_prop, Function.Embedding.coeFn_mk, mem_pi]
   constructor
-  · rintro ⟨_, _, rfl⟩ _ _
-    simp [dif_neg H]
+  · rintro ⟨_, _, rfl⟩ _ hi
+    dsimp only
+    rw [dif_neg hi]
   · intro hf
-    refine' ⟨fun i hi => f i, fun i hi => _, _⟩
+    refine' ⟨fun i _ => f i, fun i hi => _, _⟩
     · rw [mem_Iic, ← h]
       apply single_le_sum _ hi
       simp
-    · ext
+    · ext x
+      dsimp only
       rw [dite_eq_ite, ite_eq_left_iff, eq_comm]
       exact hf x
 #align finset.mem_cut Finset.mem_cut
-
-theorem Finsupp.antidiagonal_eq_antidiagonal (d : σ →₀ ℕ) : d.antidiagonal = antidiagonal d :=
-  by
-  ext x
-  rw [Finsupp.mem_antidiagonal, mem_antidiagonal]
-#align finsupp.antidiagonal_eq_antidiagonal Finsupp.antidiagonal_eq_antidiagonal
 
 theorem cut_equiv_antidiagonal (n : μ) :
     Equiv.finsetCongr (Equiv.boolArrowEquivProd _) (cut univ n) = antidiagonal n :=
@@ -102,7 +99,7 @@ theorem cut_insert (n : μ) (a : ι) (s : Finset ι) (h : a ∉ s) :
         (cut s p.snd).image fun f => Function.update f a p.fst :=
   by
   ext f
-  rw [mem_cut, mem_bUnion, sum_insert h]
+  rw [mem_cut, mem_biUnion, sum_insert h]
   constructor
   · rintro ⟨rfl, h₁⟩
     simp only [exists_prop, Function.Embedding.coeFn_mk, mem_map, mem_antidiagonal, Prod.exists]
@@ -142,6 +139,12 @@ theorem cut_insert (n : μ) (a : ι) (s : Finset ι) (h : a ∉ s) :
 
 end Finset
 
+theorem Finsupp.antidiagonal_eq_antidiagonal (d : σ →₀ ℕ) : 
+    d.antidiagonal = Finset.antidiagonal d := by
+  ext x
+  rw [Finsupp.mem_antidiagonal, Finset.mem_antidiagonal]
+#align finsupp.antidiagonal_eq_antidiagonal Finsupp.antidiagonal_eq_antidiagonal
+
 -- TODO : move elsewhere
 namespace MvPowerSeries
 
@@ -150,51 +153,49 @@ open Finset
 /-- The `d`th coefficient of a finite product over `s` of power series 
 is the sum of products of coefficients indexed by `cut s d` -/
 theorem coeff_prod (s : Finset ι) (f : ι → MvPowerSeries σ α) (d : σ →₀ ℕ) :
-    coeff α d (∏ j in s, f j) = ∑ l in cut s d, ∏ i in s, coeff α (l i) (f i) :=
-  by
+    coeff α d (∏ j in s, f j) = ∑ l in cut s d, ∏ i in s, coeff α (l i) (f i) := by
   revert d
-  apply Finset.induction_on s
+  refine' Finset.induction_on s _ _
   · intro d
     simp only [prod_empty, cut_empty, coeff_one]
     split_ifs <;> simp
-  intro a s ha ih d
-  rw [cut_insert _ _ _ ha, prod_insert ha, coeff_mul, sum_bUnion]
-  · apply Finset.sum_congr (Finsupp.antidiagonal_eq_antidiagonal d)
-    rintro ⟨u, v⟩ huv
-    simp only [mem_antidiagonal] at huv 
-    dsimp
-    rw [sum_image _]
-    simp only [Pi.add_apply, Function.Embedding.coeFn_mk, prod_insert ha, if_pos rfl, ih, mul_sum]
-    apply sum_congr rfl
-    · intro k hk
-      apply congr_arg₂ _
-      rw [Function.update_same]
-      apply Finset.prod_congr rfl
-      intro i hi; rw [Function.update_noteq]
-      intro hi'; apply ha; simpa [hi'] using hi
-    · intro k hk l hl
-      simp only [funext_iff]; apply forall_imp
-      intro i h
+  . intro a s ha ih d
+    rw [cut_insert _ _ _ ha, prod_insert ha, coeff_mul, sum_biUnion]
+    . apply Finset.sum_congr (Finsupp.antidiagonal_eq_antidiagonal d)
+      rintro ⟨u, v⟩ huv
+      simp only [mem_antidiagonal] at huv 
+      dsimp
+      rw [sum_image _]
+      simp only [Pi.add_apply, Function.Embedding.coeFn_mk, prod_insert ha, if_pos rfl, ih, mul_sum]
+      apply sum_congr rfl
+      · intro k _
+        apply congr_arg₂ _
+        rw [Function.update_same]
+        apply Finset.prod_congr rfl
+        intro i hi; rw [Function.update_noteq]
+        intro hi'; apply ha; simpa [hi'] using hi
+      · intro k hk l hl
+        simp only [funext_iff]; apply forall_imp
+        intro i h
+        simp only [mem_cut] at hk hl 
+        by_cases hi : i = a
+        rw [hi, hk.2 a ha, hl.2 a ha]
+        simpa only [Function.update_noteq hi] using h
+    · simp only [Set.PairwiseDisjoint, Set.Pairwise, Finset.mem_coe, mem_antidiagonal]
+      rintro ⟨u, v⟩ huv ⟨u', v'⟩ huv' h
+      rw [onFun_apply, disjoint_left]
+      intro k hk hl; simp only [mem_image] at hk hl 
+      obtain ⟨k, hk, rfl⟩ := hk
+      obtain ⟨l, hl, hkl⟩ := hl
       simp only [mem_cut] at hk hl 
-      by_cases hi : i = a
-      rw [hi, hk.2 a ha, hl.2 a ha]
-      simpa only [Function.update_noteq hi] using h
-  · simp only [Set.PairwiseDisjoint, Set.Pairwise, Finset.mem_coe, mem_antidiagonal]
-    rintro ⟨u, v⟩ huv ⟨u', v'⟩ huv' h
-    dsimp at huv huv' 
-    simp only [on_fun_apply]
-    rw [disjoint_left]
-    intro k hk hl; simp only [mem_image] at hk hl 
-    obtain ⟨k, hk, rfl⟩ := hk
-    obtain ⟨l, hl, hkl⟩ := hl
-    simp only [mem_cut] at hk hl 
-    apply h; simp only [Prod.mk.inj_iff]
-    suffices : u = u'
-    apply And.intro this
-    rw [this, ← huv'] at huv 
-    simpa only [add_right_inj] using huv
-    apply symm
-    simpa only [Function.update_same] using funext_iff.mp hkl a
+      apply h; simp only [Prod.mk.inj_iff]
+      suffices : u = u'
+      apply And.intro this
+      rw [this, ← huv'] at huv 
+      simpa only [add_right_inj] using huv
+      apply symm
+      simpa only [Function.update_same] using funext_iff.mp hkl a
+    --sorry
 #align mv_power_series.coeff_prod MvPowerSeries.coeff_prod
 
 variable [DecidableEq (ℕ → σ →₀ ℕ)]
@@ -204,7 +205,7 @@ is the sum of products of coefficients indexed by `cut s d` -/
 theorem coeff_pow (f : MvPowerSeries σ α) (n : ℕ) (d : σ →₀ ℕ) :
     coeff α d (f ^ n) = ∑ l in cut (Finset.range n) d, ∏ i in Finset.range n, coeff α (l i) f :=
   by
-  suffices : f ^ n = (Finset.range n).Prod fun i => f
+  suffices : f ^ n = (Finset.range n).prod fun _ => f
   rw [this, coeff_prod]
   rw [Finset.prod_const, card_range]
 #align mv_power_series.coeff_pow MvPowerSeries.coeff_pow
@@ -217,37 +218,36 @@ theorem coeff_eq_zero_of_constantCoeff_nilpotent (f : MvPowerSeries σ α) (m : 
   apply sum_eq_zero
   intro k hk
   rw [mem_cut] at hk 
-  let s := (range n).filterₓ fun i => k i = 0
+  let s := (range n).filter fun i => k i = 0 
   suffices hs : s ⊆ range n
-  rw [← prod_sdiff hs]
-  convert MulZeroClass.mul_zero _
-  have hs' : ∀ i ∈ s, coeff α (k i) f = constant_coeff σ α f :=
-    by
-    simp only [s, mem_filter]; intro i hi; rw [hi.2]
-    simp only [coeff_zero_eq_constant_coeff]
-  rw [prod_congr rfl hs']
-  rw [prod_const]
-  suffices : m ≤ s.card
-  obtain ⟨m', hm'⟩ := Nat.exists_eq_add_of_le this
-  rw [hm', pow_add, hf, MulZeroClass.zero_mul]
-  rw [← Nat.add_le_add_iff_right]; rw [add_comm s.card]
-  rw [Finset.card_sdiff_add_card_eq_card hs]
-  simp only [card_range]
-  apply le_trans _ hn
-  simp only [add_comm m, Nat.add_le_add_iff_right]
-  rw [← hk.1]; rw [map_sum]
-  rw [← sum_sdiff hs]
-  have hs' : ∀ i ∈ s, degree (k i) = 0 := by simp only [s, mem_filter]; intro i hi;
-    rw [hi.2, map_zero]
-  rw [sum_eq_zero hs', add_zero]
-  convert Finset.card_nsmul_le_sum (range n \ s) _ 1 _
-  simp only [Algebra.id.smul_eq_mul, mul_one]
-  · simp only [mem_filter, mem_sdiff, mem_range, not_and, and_imp]
-    intro i hi hi'; rw [← not_lt]; intro h; apply hi' hi
-    simpa only [Nat.lt_one_iff, degree_eq_zero_iff] using h
-  -- hs
+  . rw [← prod_sdiff hs]
+    refine' mul_eq_zero_of_right _ _
+    have hs' : ∀ i ∈ s, coeff α (k i) f = constantCoeff σ α f := by
+      simp only [mem_filter]
+      intro i hi
+      rw [hi.2, coeff_zero_eq_constantCoeff]
+    rw [prod_congr rfl hs', prod_const]
+    suffices : m ≤ s.card
+    . obtain ⟨m', hm'⟩ := Nat.exists_eq_add_of_le this
+      rw [hm', pow_add, hf, MulZeroClass.zero_mul]
+    rw [← Nat.add_le_add_iff_right, add_comm s.card, Finset.card_sdiff_add_card_eq_card hs]
+    simp only [card_range]
+    apply le_trans _ hn
+    simp only [add_comm m, Nat.add_le_add_iff_right]
+    rw [← hk.1, map_sum, ← sum_sdiff hs]
+    have hs'' : ∀ i ∈ s, degree (k i) = 0 := by 
+      simp only [mem_filter]
+      intro i hi
+      rw [hi.2, map_zero]
+    rw [sum_eq_zero hs'', add_zero]
+    convert Finset.card_nsmul_le_sum (range n \ s) _ 1 _
+    simp only [Algebra.id.smul_eq_mul, mul_one]
+    · simp only [mem_filter, mem_sdiff, mem_range, not_and, and_imp]
+      intro i hi hi'; rw [← not_lt]; intro h; apply hi' hi
+      simpa only [Nat.lt_one_iff, degree_eq_zero_iff] using h
   apply filter_subset
-#align mv_power_series.coeff_eq_zero_of_constant_coeff_nilpotent MvPowerSeries.coeff_eq_zero_of_constantCoeff_nilpotent
+#align mv_power_series.coeff_eq_zero_of_constant_coeff_nilpotent
+  MvPowerSeries.coeff_eq_zero_of_constantCoeff_nilpotent
 
 end MvPowerSeries
 
@@ -262,7 +262,8 @@ to_fun := λ i, if h : i ∈ s then f ⟨i, h⟩ else 0,
 support := s.filter (λ i, i ∈ (coe : ↥s → ι) '' f.support),
 mem_support_to_fun := λ i,
 begin
-  simp only [set.mem_image, mem_support, ne.def, finset.exists_coe, subtype.coe_mk, exists_and_distrib_right, exists_eq_right,
+  simp only [set.mem_image, mem_support, ne.def, finset.exists_coe, subtype.coe_mk, 
+    exists_and_distrib_right, exists_eq_right,
   mem_filter, dite_eq_right_iff, not_forall, and_iff_right_iff_imp, forall_exists_index],
   intros hx _, exact hx,
 end }
@@ -276,7 +277,8 @@ finset.filter (λ f, f.sum (λ u v, v) = n) ((s.pi (λ _, Iic n)).map
     support := s.filter (λ i, ∃ h : i ∈ s, f i h ≠ 0),
     mem_support_to_fun := λ i, 
     begin
-      simp only [ne.def, mem_filter, dite_eq_right_iff, not_forall, and_iff_right_iff_imp, forall_exists_index],
+      simp only [ne.def, mem_filter, dite_eq_right_iff, not_forall, and_iff_right_iff_imp,
+        forall_exists_index],
       intros hi _, exact hi,
     end } : ι →₀ μ), 
   λ f g h, 
@@ -310,3 +312,5 @@ begin
       intro hi, rw hf i hi, } }
 end
  -/
+
+--#lint
