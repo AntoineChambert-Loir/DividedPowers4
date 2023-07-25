@@ -73,17 +73,35 @@ def Multipliable (f : β → α) : Prop :=
 
 /-- `∑' i, f i` is the sum of `f` it exists, or 0 otherwise. -/
 irreducible_def tsum [TopologicalSpace γ] [AddCommMonoid γ] {β} (f : β → γ) :=
-  if h : Summable f then Classical.choose h else 0
+  if h : Summable f then
+  /- Note that the sum might not be uniquely defined if the topology is not separated.
+  When the support of `f` is finite, we make the most reasonable choice to use the finite sum over
+  the support. Otherwise, we choose arbitrarily an `a` satisfying `HasSum f a`. -/
+    if (support f).Finite then finsum f
+    else Classical.choose h
+  else 0
 #align tsum tsum
 
+/- /-- `∑' i, f i` is the sum of `f` it exists, or 0 otherwise. -/
+irreducible_def tsum [TopologicalSpace γ] [AddCommMonoid γ] {β} (f : β → γ) :=
+  if h : Summable f then Classical.choose h else 0
+#align tsum tsum -/
+
 /-- `∏' i, f i` is the product of `f` it exists, or 1 otherwise -/
-irreducible_def tprod {β} (f : β → α) :=
-  if h : Multipliable f then Classical.choose h else 1
+irreducible_def tprod {β} (f : β → α):=
+  if h : Multipliable f then
+  /- Note that the product might not be uniquely defined if the topology is not separated.
+  When the support of `f` is finite, we make the most reasonable choice to use the finite product
+  over the support. Otherwise, we choose arbitrarily an `a` satisfying `HasProd f a`. -/
+    if (mulSupport f).Finite then finprod f
+    else Classical.choose h
+  else 1
 #align tprod tprod
 
-#check tsum
-
-#check tprod
+/- /-- `∏' i, f i` is the product of `f` it exists, or 1 otherwise -/
+irreducible_def tprod {β} (f : β → α) :=
+  if h : Multipliable f then Classical.choose h else 1
+#align tprod tprod -/
 
 notation3"∏' "-- see Note [operator precedence of big operators]
 (...)", "r:67:(scoped f => tprod f) => r
@@ -91,15 +109,6 @@ notation3"∏' "-- see Note [operator precedence of big operators]
 notation3"∑' "(...)", "r:67:(scoped f => tsum f) => r
 
 variable {f g : β → α} {a b : α} {s : Finset β}
-
-theorem Summable.hasSum [TopologicalSpace γ] [AddCommMonoid γ] {β} {f' : β → γ} 
-  (ha : Summable f') : HasSum f' (∑' d, f' d) := by
-  simp only [tsum_def, ha, dite_true]; exact choose_spec ha
-#align summable.has_sum Summable.hasSum
-
-theorem Multipliable.hasProd (ha : Multipliable f) : HasProd f (∏' b, f b) := by
-  simp only [tprod_def, ha, dite_true]; exact choose_spec ha
-#align multipliable.has_prod Multipliable.hasProd
 
 @[to_additive HasSum.summable]
 theorem HasProd.multipliable (h : HasProd f a) : Multipliable f :=
@@ -259,6 +268,22 @@ theorem multipliable_of_ne_finset_one (hf : ∀ (b) (_ : b ∉ s), f b = 1) : Mu
   (hasProd_prod_of_ne_finset_one hf).multipliable
 #align multipliable_of_ne_finset_one multipliable_of_ne_finset_one
 #align multipliable_of_ne_finset_zero multipliable_of_ne_finset_zero
+
+theorem Summable.hasSum [TopologicalSpace γ] [AddCommMonoid γ] {β} {f : β → γ} 
+  (ha : Summable f) : HasSum f (∑' d, f d) := by
+  simp only [tsum_def, ha, dite_true]
+  by_cases H : (support f).Finite
+  · simp [H, hasSum_sum_of_ne_finset_zero, finsum_eq_sum]
+  · simpa [H] using Classical.choose_spec ha
+#align summable.has_sum Summable.hasSum
+
+theorem Multipliable.hasProd (ha : Multipliable f) : HasProd f (∏' b, f b) := by
+  --simp only [tprod_def, ha, dite_true]; exact choose_spec ha
+  simp only [tprod_def, ha, dite_true]
+  by_cases H : (mulSupport f).Finite
+  · simp [H, hasProd_prod_of_ne_finset_one, finprod_eq_prod]
+  · simpa [H] using Classical.choose_spec ha
+#align multipliable.has_prod Multipliable.hasProd
 
 /- ./././Mathport/Syntax/Translate/Basic.lean:638:2: warning: expanding binder collection (b' «expr ≠ » b) -/
 @[to_additive]
@@ -509,14 +534,14 @@ theorem Multipliable.mul_compl {s : Set β} (hs : Multipliable (f ∘ (↑) : s 
   (hs.hasProd.mul_compl hsc.hasProd).multipliable
 #align multipliable.mul_compl Multipliable.mul_compl
 
-@[to_additive HasSum.compl_add]
+@[to_additive]
 theorem HasProd.compl_mul {s : Set β} (ha : HasProd (f ∘ (↑) : (sᶜ : Set β) → α) a)
     (hb : HasProd (f ∘ (↑) : s → α) b) : HasProd f (a * b) :=
   ha.mul_isCompl isCompl_compl.symm hb
 #align has_prod.compl_mul HasProd.compl_mul
 #align has_sum.compl_add HasSum.compl_add
 
-@[to_additive HasSum.even_add_odd]
+@[to_additive]
 theorem HasProd.even_mul_odd {f : ℕ → α} (he : HasProd (fun k => f (2 * k)) a)
     (ho : HasProd (fun k => f (2 * k + 1)) b) : HasProd f (a * b) := by
   have := mul_right_injective₀ (two_ne_zero' ℕ)
@@ -528,44 +553,47 @@ theorem HasProd.even_mul_odd {f : ℕ → α} (he : HasProd (fun k => f (2 * k))
 #align has_prod.even_mul_odd HasProd.even_mul_odd
 #align has_sum.even_add_odd HasSum.even_add_odd
 
-#exit
+theorem Summable.compl_add [TopologicalSpace γ] [AddCommMonoid γ] {f : β → γ} {s : Set β}
+    (hs : Summable (f ∘ (↑) : (sᶜ : Set β) → γ))
+    (hsc : Summable (f ∘ (↑) : s → γ)) : Summable f :=
+  (hs.hasSum.compl_add hsc.hasSum).summable
+#align summable.compl_add Summable.compl_add
 
-@[to_additive Summable.compl_add]
 theorem Multipliable.compl_mul {s : Set β} (hs : Multipliable (f ∘ (↑) : (sᶜ : Set β) → α))
     (hsc : Multipliable (f ∘ (↑) : s → α)) : Multipliable f :=
   (hs.hasProd.compl_mul hsc.hasProd).multipliable
 #align multipliable.compl_mul Multipliable.compl_mul
-#align summable.compl_add Summable.compl_add
 
-
-
-@[to_additive Summable.even_add_odd]
-theorem Multipliable.even_mul_odd {f : ℕ → α} (he : Multipliable fun k => f (2 * k))
-    (ho : Multipliable fun k => f (2 * k + 1)) : Multipliable f :=
-  (he.HasProd.even_mul_odd ho.HasProd).Multipliable
-#align multipliable.even_mul_odd Multipliable.even_mul_odd
+theorem Summable.even_add_odd [TopologicalSpace γ] [AddCommMonoid γ] {f : ℕ → γ}
+  (he : Summable fun k => f (2 * k)) (ho : Summable fun k => f (2 * k + 1)) : Summable f :=
+  (he.hasSum.even_add_odd ho.hasSum).summable
 #align summable.even_add_odd Summable.even_add_odd
 
-@[to_additive HasSum.sigma]
+theorem Multipliable.even_mul_odd {f : ℕ → α} (he : Multipliable fun k => f (2 * k))
+    (ho : Multipliable fun k => f (2 * k + 1)) : Multipliable f :=
+  (he.hasProd.even_mul_odd ho.hasProd).multipliable
+#align multipliable.even_mul_odd Multipliable.even_mul_odd
+
+@[to_additive]
 theorem HasProd.sigma [RegularSpace α] {γ : β → Type _} {f : (Σ b : β, γ b) → α} {g : β → α} {a : α}
     (ha : HasProd f a) (hf : ∀ b, HasProd (fun c => f ⟨b, c⟩) (g b)) : HasProd g a :=
   by
-  refine' (at_top_basis.tendsto_iff (closed_nhds_basis a)).mpr _
+  refine' (atTop_basis.tendsto_iff (closed_nhds_basis a)).mpr _
   rintro s ⟨hs, hsc⟩
-  rcases mem_at_top_sets.mp (ha hs) with ⟨u, hu⟩
+  rcases mem_atTop_sets.mp (ha hs) with ⟨u, hu⟩
   use u.image Sigma.fst, trivial
   intro bs hbs
   simp only [Set.mem_preimage, ge_iff_le, Finset.le_iff_subset] at hu 
   have :
-    tendsto (fun t : Finset (Σ b, γ b) => ∏ p in t.filterₓ fun p => p.1 ∈ bs, f p) at_top
+    Tendsto (fun t : Finset (Σ b, γ b) => ∏ p in t.filter fun p => p.1 ∈ bs, f p) atTop
       (𝓝 <| ∏ b in bs, g b) :=
     by
     simp only [← sigma_preimage_mk, prod_sigma]
     refine' tendsto_finset_prod _ fun b hb => _
     change
-      tendsto (fun t => (fun t => ∏ s in t, f ⟨b, s⟩) (preimage t (Sigma.mk b) _)) at_top (𝓝 (g b))
-    exact tendsto.comp (hf b) (tendsto_finset_preimage_at_top_at_top _)
-  refine' hsc.mem_of_tendsto this (eventually_at_top.2 ⟨u, fun t ht => hu _ fun x hx => _⟩)
+      Tendsto (fun t => (fun t => ∏ s in t, f ⟨b, s⟩) (preimage t (Sigma.mk b) _)) atTop (𝓝 (g b))
+    sorry --exact Tendsto.comp (hf b) (tendsto_finset_preimage_atTop_atTop _)
+  refine' hsc.mem_of_tendsto this (eventually_atTop.2 ⟨u, fun t ht => hu _ fun x hx => _⟩)
   exact mem_filter.2 ⟨ht hx, hbs <| mem_image_of_mem _ hx⟩
 #align has_prod.sigma HasProd.sigma
 #align has_sum.sigma HasSum.sigma
@@ -581,32 +609,45 @@ theorem HasProd.prod_fiberwise [RegularSpace α] {f : β × γ → α} {g : β �
 #align has_prod.prod_fiberwise HasProd.prod_fiberwise
 #align has_sum.prod_fiberwise HasSum.prod_fiberwise
 
-@[to_additive Summable.sigma']
+theorem Summable.sigma' [TopologicalSpace γ] [AddCommMonoid γ] [ContinuousAdd γ] 
+    [RegularSpace γ] {δ : β → Type _} {f : (Σ b : β, δ b) → γ} 
+    (ha : Summable f) (hf : ∀ b, Summable fun c => f ⟨b, c⟩) :
+    Summable fun b => ∑' c, f ⟨b, c⟩ :=
+   (ha.hasSum.sigma fun b => (hf b).hasSum).summable
+#align summable.sigma' Summable.sigma'
+
+@[to_additive existing]
 theorem Multipliable.sigma' [RegularSpace α] {γ : β → Type _} {f : (Σ b : β, γ b) → α}
     (ha : Multipliable f) (hf : ∀ b, Multipliable fun c => f ⟨b, c⟩) :
     Multipliable fun b => ∏' c, f ⟨b, c⟩ :=
-  (ha.HasProd.Sigma fun b => (hf b).HasProd).Multipliable
+  (ha.hasProd.sigma fun b => (hf b).hasProd).multipliable
 #align multipliable.sigma' Multipliable.sigma'
-#align summable.sigma' Summable.sigma'
 
-@[to_additive HasSum.sigma_of_hasSum]
+theorem HasSum.sigma_of_hasSum [TopologicalSpace γ] [AddCommMonoid γ] [ContinuousAdd γ]
+    [T3Space γ] {δ : β → Type _} {f : (Σ b : β, δ b) → γ} {g : β → γ}
+    {a : γ} (ha : HasSum g a) (hf : ∀ b, HasSum (fun c => f ⟨b, c⟩) (g b))
+    (hf' : Summable f) : HasSum f a := by
+  simpa [(hf'.hasSum.sigma hf).unique ha] using hf'.hasSum
+#align has_sum.sigma_of_has_sum HasSum.sigma_of_hasSum
+
+@[to_additive existing]
 theorem HasProd.sigma_of_hasProd [T3Space α] {γ : β → Type _} {f : (Σ b : β, γ b) → α} {g : β → α}
     {a : α} (ha : HasProd g a) (hf : ∀ b, HasProd (fun c => f ⟨b, c⟩) (g b))
     (hf' : Multipliable f) : HasProd f a := by
-  simpa [(hf'.has_prod.sigma hf).unique ha] using hf'.has_prod
+  simpa [(hf'.hasProd.sigma hf).unique ha] using hf'.hasProd
 #align has_prod.sigma_of_has_prod HasProd.sigma_of_hasProd
-#align has_sum.sigma_of_has_sum HasSum.sigma_of_hasSum
 
 /-- Version of `has_prod.update` for `comm_monoid` rather than `comm_group`.
 Rather than showing that `f.update` has a specific sum in terms of `has_prod`,
 it gives a relationship between the products of `f` and `f.update` given that both exist. -/
-@[to_additive HasSum.update'
-      "Version of `has_sum.update` for `add_comm_monoid` rather than `add_comm_group`.\nRather than showing that `f.update` has a specific sum in terms of `has_sum`,\nit gives a relationship between the sums of `f` and `f.update` given that both exist. -/\n"]
+@[to_additive "Version of `has_sum.update` for `add_comm_monoid` rather than 
+`add_comm_group`.\nRather than showing that `f.update` has a specific sum in terms of `has_sum`,
+\nit gives a relationship between the sums of `f` and `f.update` given that both exist. -/\n"]
 theorem HasProd.update' {α β : Type _} [TopologicalSpace α] [CommMonoid α] [T2Space α]
     [ContinuousMul α] {f : β → α} {a a' : α} (hf : HasProd f a) (b : β) (x : α)
-    (hf' : HasProd (f.update b x) a') : a * x = a' * f b :=
+    (hf' : HasProd (update f b x) a') : a * x = a' * f b :=
   by
-  have : ∀ b', f b' * ite (b' = b) x 1 = f.update b x b' * ite (b' = b) (f b) 1 :=
+  have : ∀ b', f b' * ite (b' = b) x 1 = update f b x b' * ite (b' = b) (f b) 1 :=
     by
     intro b'
     split_ifs with hb'
@@ -629,7 +670,7 @@ theorem eq_mul_of_hasProd_ite {α β : Type _} [TopologicalSpace α] [CommMonoid
   by
   refine' (mul_one a).symm.trans (hf.update' b 1 _)
   convert hf'
-  exact funext (f.update_apply b 1)
+  sorry --exact funext (update_apply f b 1)
 #align eq_mul_of_has_prod_ite eq_mul_of_hasProd_ite
 #align eq_add_of_has_sum_ite eq_add_of_hasSum_ite
 
@@ -639,53 +680,76 @@ section tprod
 
 variable [CommMonoid α] [TopologicalSpace α]
 
-@[to_additive tsum_congr_subtype]
-theorem tprod_congr_subtype (f : β → α) {s t : Set β} (h : s = t) : ∏' x : s, f x = ∏' x : t, f x :=
+theorem tsum_congr_subtype [AddCommMonoid γ] [TopologicalSpace γ] (f : β → γ) {s t : Set β} 
+    (h : s = t) : ∑' x : s, f x = ∑' x : t, f x :=
   by rw [h]
-#align tprod_congr_subtype tprod_congr_subtype
 #align tsum_congr_subtype tsum_congr_subtype
 
-@[to_additive]
+theorem tprod_congr_subtype (f : β → α) {s t : Set β} (h : s = t) : 
+    ∏' x : s, f x = ∏' x : t, f x :=
+  by rw [h]
+#align tprod_congr_subtype tprod_congr_subtype
+
+theorem tsum_zero' [TopologicalSpace γ] [AddCommMonoid γ] (hz : IsClosed ({0} : Set γ)) : 
+    ∑' b : β, (0 : γ) = 0 := by
+  sorry
+
 theorem tprod_one' (hz : IsClosed ({1} : Set α)) : ∏' b : β, (1 : α) = 1 := by
   classical
   rw [tprod, dif_pos multipliable_one]
   suffices ∀ x : α, HasProd (fun b : β => (1 : α)) x → x = 1 by
-    exact this _ (Classical.choose_spec _)
+    sorry --exact this _ (Classical.choose_spec _)
   intro x hx
   contrapose! hx
   simp only [HasProd, tendsto_nhds, Finset.prod_const_one, Filter.mem_atTop_sets, ge_iff_le,
     Finset.le_eq_subset, Set.mem_preimage, not_forall, not_exists, exists_prop, exists_and_right]
-  refine' ⟨{1}ᶜ, ⟨is_open_compl_iff.mpr hz, _⟩, fun y => ⟨⟨y, subset_refl _⟩, _⟩⟩
-  · simpa using hx
-  · simp
+  sorry --refine' ⟨{1}ᶜ, ⟨is_open_compl_iff.mpr hz, _⟩, fun y => ⟨⟨y, subset_refl _⟩, _⟩⟩
+  --· sorry --simpa using hx
+  --· simp
 #align tprod_one' tprod_one'
-#align tprod_zero' tprod_zero'
 
-@[simp, to_additive]
-theorem tprod_one [T1Space α] : ∏' b : β, (1 : α) = 1 :=
+@[simp]
+theorem tsum_zero [TopologicalSpace γ] [AddCommMonoid γ] [T1Space γ] : ∑' _ : β, (0 : γ) = 0 :=
+  tsum_zero' isClosed_singleton
+#align tsum_zero tsum_zero
+
+@[to_additive (attr := simp) existing tsum_zero]
+theorem tprod_one [T1Space α] : ∏' _ : β, (1 : α) = 1 :=
   tprod_one' isClosed_singleton
 #align tprod_one tprod_one
-#align tprod_zero tprod_zero
 
 variable [T2Space α] {f g : β → α} {a a₁ a₂ : α}
 
-@[to_additive HasSum.tsum_eq]
+theorem HasSum.tsum_eq [TopologicalSpace γ] [AddCommMonoid γ] [T2Space γ] {f : β → γ} {a : γ}
+  (ha : HasSum f a) : ∑' b, f b = a := (Summable.hasSum ⟨a, ha⟩).unique ha
+#align has_sum.tsum_eq HasSum.tsum_eq
+
+@[to_additive existing HasSum.tsum_eq]
 theorem HasProd.tprod_eq (ha : HasProd f a) : ∏' b, f b = a :=
   (Multipliable.hasProd ⟨a, ha⟩).unique ha
 #align has_prod.tprod_eq HasProd.tprod_eq
-#align has_sum.tsum_eq HasSum.tsum_eq
 
-@[to_additive Summable.hasSum_iff]
-theorem Multipliable.hasProd_iff (h : Multipliable f) : HasProd f a ↔ ∏' b, f b = a :=
-  Iff.intro HasProd.tprod_eq fun eq => Eq ▸ h.HasProd
-#align multipliable.has_prod_iff Multipliable.hasProd_iff
+theorem Summable.hasSum_iff [TopologicalSpace γ] [AddCommMonoid γ] [T2Space γ] {f : β → γ} {a : γ}
+    (h : Summable f) : HasSum f a ↔ ∑' b, f b = a :=
+  Iff.intro HasSum.tsum_eq fun eq => eq ▸ h.hasSum
 #align summable.has_sum_iff Summable.hasSum_iff
 
-@[simp, to_additive tsum_empty]
+@[to_additive existing]
+theorem Multipliable.hasProd_iff (h : Multipliable f) : HasProd f a ↔ ∏' b, f b = a :=
+  Iff.intro HasProd.tprod_eq fun eq => eq ▸ h.hasProd
+#align multipliable.has_prod_iff Multipliable.hasProd_iff
+
+theorem tsum_empty [TopologicalSpace γ] [AddCommMonoid γ] [T2Space γ] {f : β → γ} [IsEmpty β] : 
+    ∑' b, f b = 0 :=
+  hasSum_empty.tsum_eq
+#align tsum_empty tsum_empty
+
+@[to_additive existing tsum_empty]
 theorem tprod_empty [IsEmpty β] : ∏' b, f b = 1 :=
   hasProd_empty.tprod_eq
 #align tprod_empty tprod_empty
-#align tsum_empty tsum_empty
+
+#exit
 
 /- ./././Mathport/Syntax/Translate/Basic.lean:638:2: warning: expanding binder collection (b «expr ∉ » s) -/
 @[to_additive]
