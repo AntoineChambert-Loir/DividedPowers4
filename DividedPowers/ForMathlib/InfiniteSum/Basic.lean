@@ -187,6 +187,17 @@ theorem Function.Injective.multipliable_iff {g : γ → β} (hg : Injective g)
 #align function.injective.multipliable_iff Function.Injective.multipliable_iff
 #align function.injective.summable_iff Function.Injective.summable_iff
 
+@[to_additive (attr := simp)] 
+theorem hasProd_extend_one {g : β → γ} (hg : Injective g) :
+    HasProd (extend g f 1) a ↔ HasProd f a := by
+  rw [← hg.hasProd_iff, extend_comp hg]
+  exact extend_apply' _ _
+
+@[to_additive (attr := simp) summable_extend_zero] 
+theorem multipliable_extend_one {g : β → γ} (hg : Injective g) :
+    Multipliable (extend g f 1) ↔ Multipliable f :=
+  exists_congr fun _ => hasProd_extend_one hg
+
 @[to_additive]
 theorem hasProd_subtype_iff_of_mulSupport_subset {s : Set β} (hf : mulSupport f ⊆ s) :
     HasProd (f ∘ (↑) : s → α) a ↔ HasProd f a :=
