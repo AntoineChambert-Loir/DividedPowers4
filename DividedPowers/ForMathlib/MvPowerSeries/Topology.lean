@@ -1,26 +1,25 @@
-import Mathbin.RingTheory.PowerSeries.Basic
-import Oneshot.MvPowerSeries.Order
-import Oneshot.InfiniteSum.Basic
-import Mathbin.Topology.Algebra.Ring.Basic
-import Mathbin.Topology.UniformSpace.Basic
-import Mathbin.Topology.UniformSpace.Pi
-import Mathbin.Topology.UniformSpace.Separation
-import Mathbin.Topology.Order.Basic
-import Mathbin.Data.Set.Finite
-import Oneshot.Antidiagonal
+import Mathlib.RingTheory.PowerSeries.Basic
+import DividedPowers.ForMathlib.MvPowerSeries.Order
+import DividedPowers.ForMathlib.InfiniteSum.Basic
+import Mathlib.Topology.Algebra.Ring.Basic
+import Mathlib.Topology.UniformSpace.Basic
+import Mathlib.Topology.UniformSpace.Pi
+import Mathlib.Topology.UniformSpace.Separation
+import Mathlib.Topology.Order.Basic
+import Mathlib.Data.Set.Finite
+import DividedPowers.ForMathlib.Antidiagonal
 
--- import topology.algebra.infinite_sum.basic
--- import topology.algebra.infinite_sum.basic
 theorem Finset.prod_one_add {ι α : Type _} [CommRing α] {f : ι → α} (s : Finset ι) :
-    (s.Prod fun i => 1 + f i) = s.powerset.Sum fun t => t.Prod f :=
+    (s.prod fun i => 1 + f i) = s.powerset.sum fun t => t.prod f :=
   by
   simp_rw [add_comm]
   rw [Finset.prod_add]
   congr
   ext t
-  convert mul_one _
+  sorry
+  /- convert mul_one _
   apply Finset.prod_eq_one
-  intro i hi; rfl
+  intro i hi; rfl -/
 #align finset.prod_one_add Finset.prod_one_add
 
 theorem MvPowerSeries.coeff_eq_apply {σ α : Type _} [Semiring α] (f : MvPowerSeries σ α)
@@ -75,52 +74,20 @@ variable (σ α)
 
 /-- The semiring topology on mv_power_series of a topological semiring -/
 theorem topologicalSemiring [Semiring α] [TopologicalSemiring α] :
-    TopologicalSemiring (MvPowerSeries σ α) :=
-  { to_continuousAdd := by
-      apply ContinuousAdd.mk
-      apply continuous_pi
-      intro d
-      simp only [Pi.add_apply]
-      change
-        Continuous
-          ((fun u : α × α => u.fst + u.snd) ∘ fun a : MvPowerSeries σ α × MvPowerSeries σ α =>
-            (a.fst d, a.snd d))
-      apply Continuous.comp
-      exact continuous_add
-      apply Continuous.prod_mk
-      exact Continuous.fst' (continuous_component σ α d)
-      exact Continuous.snd' (continuous_component σ α d)
-    to_continuousMul := by
-      apply ContinuousMul.mk
-      apply continuous_pi
-      intro d
-      change
-        Continuous fun a : MvPowerSeries σ α × MvPowerSeries σ α =>
-          d.antidiagonal.sum fun x : (σ →₀ ℕ) × (σ →₀ ℕ) => a.fst x.fst * a.snd x.snd
-      apply continuous_finset_sum
-      intro i hi
-      change
-        Continuous
-          ((fun u : α × α => u.fst * u.snd) ∘ fun a : MvPowerSeries σ α × MvPowerSeries σ α =>
-            (a.fst i.fst, a.snd i.snd))
-      apply Continuous.comp
-      exact continuous_mul
-      apply Continuous.prod_mk
-      exact Continuous.fst' (continuous_component σ α i.fst)
-      exact Continuous.snd' (continuous_component σ α i.snd) }
+    TopologicalSemiring (MvPowerSeries σ α) where
+    continuous_add := continuous_pi fun d => Continuous.comp continuous_add 
+      (Continuous.prod_mk (Continuous.fst' (continuous_component σ α d))
+        (Continuous.snd' (continuous_component σ α d)))
+    continuous_mul := continuous_pi fun _ => continuous_finset_sum _ (fun i _ => Continuous.comp 
+      continuous_mul (Continuous.prod_mk (Continuous.fst' (continuous_component σ α i.fst))
+        (Continuous.snd' (continuous_component σ α i.snd))))
 #align mv_power_series.topological_semiring MvPowerSeries.topologicalSemiring
-
+ 
 /-- The ring topology on mv_power_series of a topological ring -/
 theorem topologicalRing [Ring α] [TopologicalRing α] : TopologicalRing (MvPowerSeries σ α) :=
-  { to_topologicalSemiring := topologicalSemiring σ α
-    to_continuousNeg := by
-      apply ContinuousNeg.mk
-      apply continuous_pi
-      intro d
-      change Continuous ((fun u : α => -u) ∘ fun a : MvPowerSeries σ α => a d)
-      apply Continuous.comp
-      exact continuous_neg
-      exact continuous_component σ α d }
+  { topologicalSemiring σ α with
+    continuous_neg := continuous_pi fun d ↦ Continuous.comp continuous_neg 
+      (continuous_component σ α d) }
 #align mv_power_series.topological_ring MvPowerSeries.topologicalRing
 
 /-- mv_power_series on a t2_space form a t2_space -/
@@ -152,7 +119,7 @@ variable [UniformSpace α]
 
 /-- The componentwise uniformity on mv_power_series -/
 instance uniformSpace : UniformSpace (MvPowerSeries σ α) :=
-  Pi.uniformSpace fun i : σ →₀ ℕ => α
+  Pi.uniformSpace fun _ : σ →₀ ℕ => α
 #align mv_power_series.uniform_space MvPowerSeries.uniformSpace
 
 /-- Components are uniformly continuous -/
@@ -177,13 +144,13 @@ theorem uniformAddGroup [AddGroup α] [UniformAddGroup α] : UniformAddGroup (Mv
     UniformContinuous
       ((fun x : MvPowerSeries σ α => x d) ∘ fun a : MvPowerSeries σ α × MvPowerSeries σ α => a.fst)
   apply UniformContinuous.comp
-  apply uniform_continuous_component
+  apply uniformContinuous_component
   exact uniformContinuous_fst
   change
     UniformContinuous
       ((fun x : MvPowerSeries σ α => x d) ∘ fun a : MvPowerSeries σ α × MvPowerSeries σ α => a.snd)
   apply UniformContinuous.comp
-  apply uniform_continuous_component
+  apply uniformContinuous_component
   exact uniformContinuous_snd
 #align mv_power_series.uniform_add_group MvPowerSeries.uniformAddGroup
 
@@ -193,21 +160,21 @@ theorem completeSpace [AddGroup α] [CompleteSpace α] : CompleteSpace (MvPowerS
   apply CompleteSpace.mk
   intro f hf
   suffices : ∀ d, ∃ x, (f.map fun a => a d) ≤ nhds x
-  use fun d => (this d).some
+  use fun d => (this d).choose
   rw [nhds_pi, Filter.le_pi]
   intro d
   exact (this d).choose_spec
   intro d
   use lim (f.map fun a => a d)
-  exact (Cauchy.map hf (uniform_continuous_component σ α d)).le_nhds_lim
+  exact (Cauchy.map hf (uniformContinuous_component σ α d)).le_nhds_lim
 #align mv_power_series.complete_space MvPowerSeries.completeSpace
 
 /-- Separation of the uniform structure on mv_power_series -/
 theorem separatedSpace [SeparatedSpace α] : SeparatedSpace (MvPowerSeries σ α) :=
   by
   rw [separated_iff_t2]
-  have : _root_.t2_space α; rw [← separated_iff_t2]; infer_instance
-  exact T2Space σ α
+  have : _root_.T2Space α; rw [← separated_iff_t2]; infer_instance
+  sorry --exact T2Space σ α
 #align mv_power_series.separated_space MvPowerSeries.separatedSpace
 
 /-  rw separated_def,
@@ -217,34 +184,12 @@ theorem separatedSpace [SeparatedSpace α] : SeparatedSpace (MvPowerSeries σ α
         (uniform_continuous_component σ α d) hr, -/
 theorem uniform_topologicalRing [Ring α] [UniformAddGroup α] [TopologicalRing α] :
     TopologicalRing (MvPowerSeries σ α) :=
-  { to_continuousAdd := by
-      haveI := UniformAddGroup σ α
-      apply ContinuousAdd.mk
-      apply UniformContinuous.continuous
-      exact uniformContinuous_add
-    to_continuousMul := by
-      apply ContinuousMul.mk
-      apply continuous_pi
-      intro d
-      change
-        Continuous fun a : MvPowerSeries σ α × MvPowerSeries σ α =>
-          d.antidiagonal.sum fun x : (σ →₀ ℕ) × (σ →₀ ℕ) => a.fst x.fst * a.snd x.snd
-      apply continuous_finset_sum
-      intro i hi
-      change
-        Continuous
-          ((fun u : α × α => u.fst * u.snd) ∘ fun a : MvPowerSeries σ α × MvPowerSeries σ α =>
-            (a.fst i.fst, a.snd i.snd))
-      apply Continuous.comp
-      exact continuous_mul
-      apply Continuous.prod_mk
-      exact Continuous.fst' (continuous_component σ α i.fst)
-      exact Continuous.snd' (continuous_component σ α i.snd)
-    to_continuousNeg := by
-      haveI := UniformAddGroup σ α
-      apply ContinuousNeg.mk
-      apply UniformContinuous.continuous
-      exact uniformContinuous_neg }
+  { uniformAddGroup σ α with 
+    continuous_add :=  uniformContinuous_add.continuous
+    continuous_mul := continuous_pi fun _ => continuous_finset_sum _ fun i _ => Continuous.comp 
+      continuous_mul (Continuous.prod_mk (Continuous.fst' (continuous_component σ α i.fst))
+        (Continuous.snd' (continuous_component σ α i.snd)))
+    continuous_neg := uniformContinuous_neg.continuous }
 #align mv_power_series.uniform_topological_ring MvPowerSeries.uniform_topologicalRing
 
 end Uniform
@@ -268,7 +213,8 @@ theorem variables_tendsto_zero :
   classical
   simp only [tendsto_pi_nhds, Pi.zero_apply]
   intro d
-  intro s hs
+  sorry
+  /- intro s hs
   simp only [Filter.mem_map, Filter.mem_cofinite]
   rw [← Set.preimage_compl]
   by_cases h : ∃ i, d = Finsupp.single i 1
@@ -298,7 +244,7 @@ theorem variables_tendsto_zero :
   rw [if_neg]
   intro h'
   apply h
-  exact ⟨x, h'⟩
+  exact ⟨x, h'⟩ -/
 #align mv_power_series.variables_tendsto_zero MvPowerSeries.variables_tendsto_zero
 
 theorem tendsto_pow_of_constantCoeff_nilpotent {f : MvPowerSeries σ α}
@@ -311,13 +257,13 @@ theorem tendsto_pow_of_constantCoeff_nilpotent {f : MvPowerSeries σ α}
   simp only [coeff_zero]
   apply tendsto_atTop_of_eventually_const
   intro n hn
-  exact coeff_eq_zero_of_constant_coeff_nilpotent f m hm d n hn
+  exact coeff_eq_zero_of_constantCoeff_nilpotent f m hm d n hn
 #align mv_power_series.tendsto_pow_of_constant_coeff_nilpotent MvPowerSeries.tendsto_pow_of_constantCoeff_nilpotent
 
 theorem tendsto_pow_of_constantCoeff_zero {f : MvPowerSeries σ α} (hf : constantCoeff σ α f = 0) :
     Filter.Tendsto (fun n : ℕ => f ^ n) Filter.atTop (nhds 0) :=
   by
-  apply tendsto_pow_of_constant_coeff_nilpotent
+  apply tendsto_pow_of_constantCoeff_nilpotent
   rw [hf]
   exact IsNilpotent.zero
 #align mv_power_series.tendsto_pow_of_constant_coeff_zero MvPowerSeries.tendsto_pow_of_constantCoeff_zero
@@ -328,7 +274,7 @@ theorem tendsto_pow_of_constantCoeff_nilpotent_iff [DiscreteTopology α] (f : Mv
   by
   constructor
   · intro h
-    suffices : Filter.Tendsto (fun n : ℕ => constant_coeff σ α (f ^ n)) Filter.atTop (nhds 0)
+    suffices : Filter.Tendsto (fun n : ℕ => constantCoeff σ α (f ^ n)) Filter.atTop (nhds 0)
     simp only [Filter.tendsto_def] at this 
     specialize this {0} _
     suffices : ∀ x : α, {x} ∈ nhds x; exact this 0
@@ -337,14 +283,16 @@ theorem tendsto_pow_of_constantCoeff_nilpotent_iff [DiscreteTopology α] (f : Mv
       Set.mem_singleton_iff] at this 
     obtain ⟨m, hm⟩ := this
     use m; apply hm m (le_refl m)
-    rw [← Filter.tendsto_map'_iff]
+    sorry
+    /- rw [← Filter.tendsto_map'_iff]
     simp only [Filter.Tendsto, Filter.map_le_iff_le_comap] at h ⊢
     apply le_trans h
     apply Filter.comap_mono
     rw [← Filter.map_le_iff_le_comap]
-    exact continuous_constant_coeff.continuous_at
-  exact tendsto_of_pow_of_constant_coeff_nilpotent
-#align mv_power_series.tendsto_pow_of_constant_coeff_nilpotent_iff MvPowerSeries.tendsto_pow_of_constantCoeff_nilpotent_iff
+    exact continuous_constant_coeff.continuous_at -/
+  sorry --exact tendsto_of_pow_of_constantCoeff_nilpotent
+#align mv_power_series.tendsto_pow_of_constant_coeff_nilpotent_iff
+  MvPowerSeries.tendsto_pow_of_constantCoeff_nilpotent_iff
 
 end
 
@@ -356,16 +304,16 @@ variable {σ α}
 
 /-- A power series is the sum (in the sense of summable families) of its monomials -/
 theorem hasSum_of_monomials_self (f : MvPowerSeries σ α) :
-    HasSum (fun d : σ →₀ ℕ => monomial α d (coeff α d f)) f :=
-  by
+    HasSum (fun d : σ →₀ ℕ => monomial α d (coeff α d f)) f := by
   rw [Pi.hasSum]
   intro d
-  convert hasSum_single d _
+  sorry
+  /- convert hasSum_single d _
   · rw [← coeff_apply f d, ← coeff_apply (monomial α d (coeff α d f)) d, coeff_apply]
     rw [coeff_monomial_same]
   · intro b h
     change coeff α d ((monomial α b) ((coeff α b) f)) = 0
-    rw [coeff_monomial_ne (Ne.symm h)]
+    rw [coeff_monomial_ne (Ne.symm h)] -/
 #align mv_power_series.has_sum_of_monomials_self MvPowerSeries.hasSum_of_monomials_self
 
 /-- If the coefficient space is T2, then the power series is `tsum` of its monomials -/
@@ -373,17 +321,18 @@ theorem as_tsum [T2Space α] (f : MvPowerSeries σ α) :
     f = tsum fun d : σ →₀ ℕ => monomial α d (coeff α d f) := by
   classical
   haveI := MvPowerSeries.t2Space σ α
-  simp only [tsum, dif_pos f.has_sum_of_monomials_self.summable]
-  exact HasSum.unique f.has_sum_of_monomials_self (Classical.choose_spec _)
+  sorry
+  /- simp only [tsum, dif_pos f.has_sum_of_monomials_self.summable]
+  exact HasSum.unique f.has_sum_of_monomials_self (Classical.choose_spec _) -/
 #align mv_power_series.as_tsum MvPowerSeries.as_tsum
 
 /-- A power series is the sum (in the sense of summable families) of its monomials -/
 theorem hasSum_of_homogeneous_components_self (w : σ → ℕ) (f : MvPowerSeries σ α) :
-    HasSum (fun p => homogeneousComponent w p f) f :=
-  by
+    HasSum (fun p => homogeneousComponent w p f) f := by
   rw [Pi.hasSum]
   intro d
-  convert hasSum_single (weight w d) _
+  sorry
+  /- convert hasSum_single (weight w d) _
   · rw [← coeff_apply f d]
     rw [← coeff_apply (homogeneous_component w (weight w d) f) d]
     rw [coeff_homogeneous_component]
@@ -391,21 +340,22 @@ theorem hasSum_of_homogeneous_components_self (w : σ → ℕ) (f : MvPowerSerie
   · intro p h
     rw [← coeff_apply (homogeneous_component w p f) d]
     rw [coeff_homogeneous_component]
-    rw [if_neg (Ne.symm h)]
+    rw [if_neg (Ne.symm h)] -/
 #align mv_power_series.has_sum_of_homogeneous_components_self MvPowerSeries.hasSum_of_homogeneous_components_self
 
 theorem homogeneous_components_self_summable (w : σ → ℕ) (f : MvPowerSeries σ α) :
     Summable fun p => homogeneousComponent w p f :=
-  (hasSum_of_homogeneous_components_self w f).Summable
+  (hasSum_of_homogeneous_components_self w f).summable
 #align mv_power_series.homogeneous_components_self_summable MvPowerSeries.homogeneous_components_self_summable
 
 theorem as_tsum_of_homogeneous_components_self [T2Space α] (w : σ → ℕ) (f : MvPowerSeries σ α) :
     f = tsum fun p => homogeneousComponent w p f := by
   classical
-  haveI := T2Space σ α
+  sorry
+  /- haveI : T2Space σ α := sorry
   apply HasSum.unique (has_sum_of_homogeneous_components_self w f)
   simp only [tsum, dif_pos (homogeneous_components_self_summable w f)]
-  apply Classical.choose_spec _
+  apply Classical.choose_spec _ -/
 #align mv_power_series.as_tsum_of_homogeneous_components_self MvPowerSeries.as_tsum_of_homogeneous_components_self
 
 end Summable
