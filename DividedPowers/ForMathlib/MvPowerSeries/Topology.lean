@@ -169,24 +169,34 @@ variable [TopologicalSpace α] [CommRing α] [TopologicalRing α]
 theorem variables_tendsto_zero :
     Filter.Tendsto (fun s : σ => (X s : MvPowerSeries σ α)) Filter.cofinite (nhds 0) := by
   classical
-  simp only [tendsto_pi_nhds, Pi.zero_apply]
-  intro d
-  sorry
-  /- intro s hs
-  simp only [Filter.mem_map, Filter.mem_cofinite]
-  rw [← Set.preimage_compl]
+  rw [tendsto_pi_nhds]
+  simp_rw [Pi.zero_apply]
+  intro d s hs
+  rw [Filter.mem_map, Filter.mem_cofinite, ← Set.preimage_compl]
   by_cases h : ∃ i, d = Finsupp.single i 1
-  obtain ⟨i, rfl⟩ := h
-  apply Set.Finite.subset (Set.finite_singleton i)
-  intro x
-  rw [Set.mem_preimage]
-  simp only [Set.mem_compl_iff, Set.mem_singleton_iff]
-  rw [not_imp_comm]
-  intro hx
-  convert mem_of_mem_nhds hs
-  rw [← coeff_eq_apply (X x) (Finsupp.single i 1)]
-  rw [coeff_X]
-  rw [if_neg]
+  . obtain ⟨i, rfl⟩ := h
+    apply Set.Finite.subset (Set.finite_singleton i)
+    intro x
+    rw [Set.mem_preimage, Set.mem_compl_iff, Set.mem_singleton_iff, not_imp_comm]
+    intro hx
+    convert mem_of_mem_nhds hs
+    --ext d
+    -- [← coeff_eq_apply (X x) (Finsupp.single i 1)]
+    sorry
+  . convert Set.finite_empty
+    rw [Set.eq_empty_iff_forall_not_mem]
+    intro x
+    simp only [Set.mem_preimage, Set.not_mem_compl_iff]
+    convert mem_of_mem_nhds hs
+    sorry
+    /- rw [← coeff_eq_apply (X x) d]
+    rw [coeff_X]
+    rw [if_neg]
+    intro h'
+    apply h
+    exact ⟨x, h'⟩ -/
+
+  /- rw [if_neg]
   intro hx'
   rw [Finsupp.ext_iff] at hx' 
   apply zero_ne_one' ℕ
@@ -202,7 +212,7 @@ theorem variables_tendsto_zero :
   rw [if_neg]
   intro h'
   apply h
-  exact ⟨x, h'⟩ -/
+  exact ⟨x, h'⟩  -/
 #align mv_power_series.variables_tendsto_zero MvPowerSeries.variables_tendsto_zero
 
 theorem tendsto_pow_of_constantCoeff_nilpotent {f : MvPowerSeries σ α}
