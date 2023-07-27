@@ -139,6 +139,9 @@ theorem mkRingHom_eq {a b : MvPolynomial (ℕ × M) R} (h : Rel R M a b) :
 def mk : MvPolynomial (ℕ × M) R →ₐ[R] DividedPowerAlgebra R M := 
   mkAlgHom R (Rel R M)
 
+lemma mk_surjective : Function.Surjective (@mk R M _ _ _) := by 
+  apply RingQuot.mkAlgHom_surjective
+
 variable (R)
 
 /-- `dp R n m` is the equivalence class of `X (⟨n, m⟩)` in `divided_power_algebra R M`. -/

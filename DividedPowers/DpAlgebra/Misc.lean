@@ -291,9 +291,12 @@ end GradedAlgebra
 section GradedAlgebra
 
 variable {R : Type _} [CommRing R]
+variable {S : Type _} [CommRing S] [Algebra R S]
 
-def GalgHom.IsHomogeneous {ι : Type _} {A : Type _} [CommRing A] [Algebra R A]
-    (𝒜 : ι → Submodule R A) {B : Type _} [CommRing B] [Algebra R B] (ℬ : ι → Submodule R B)
+def GalgHom.IsHomogeneous {ι : Type _} 
+    {A : Type _} [CommRing A] [Algebra R A] (𝒜 : ι → Submodule R A) 
+    {B : Type _} [CommRing B] [Algebra S B] [Algebra R B] 
+    [IsScalarTower R S B] (ℬ : ι → Submodule S B)
     (f : A →ₐ[R] B) :=
   ∀ i a, a ∈ 𝒜 i → f a ∈ ℬ i
 #align galg_hom.is_homogeneous GalgHom.IsHomogeneous
@@ -322,7 +325,8 @@ def GalgHom.isHomogeneous' {ι κ : Type _}
     [CommRing A] [Algebra R A] (𝒜 : ι → Submodule R A)
     -- [graded_algebra 𝒜]
     (B : Type _)
-    [CommRing B] [Algebra R B] (ℬ : κ → Submodule R B)
+    [CommRing B] [Algebra R B] [Algebra S B] [IsScalarTower R S B]
+    (ℬ : κ → Submodule S B)
     -- [graded_algebra ℬ]
     (φ : ι → κ)
     (f : A →ₐ[R] B) :=

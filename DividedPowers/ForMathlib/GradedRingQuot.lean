@@ -792,7 +792,7 @@ theorem _root_.IsHomogeneous_of_rel_isHomogeneous [h𝒜 : GradedAlgebra 𝒜]
     ∃ i, a ∈ 𝒜 i ∧ b ∈ 𝒜 i ∧ r a b
   suffices : Ideal.ofRel r = Ideal.ofRel r'
   . rw [this]
-    apply IsHomogeneous_of_rel_isPureHomogeneous
+    apply Ideal.IsHomogeneous_of_rel_isPureHomogeneous 
     intro a b h'
     obtain ⟨i, h⟩ := h'
     exact ⟨i, h.1, h.2.1⟩
