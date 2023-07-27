@@ -1,12 +1,5 @@
-import Mathlib.RingTheory.PowerSeries.Basic
-import DividedPowers.ForMathlib.MvPowerSeries.Order
-import DividedPowers.ForMathlib.InfiniteSum.Basic
 import Mathlib.Topology.Algebra.Ring.Basic
-import Mathlib.Topology.UniformSpace.Basic
-import Mathlib.Topology.UniformSpace.Pi
-import Mathlib.Topology.UniformSpace.Separation
-import Mathlib.Topology.Order.Basic
-import Mathlib.Data.Set.Finite
+import DividedPowers.ForMathlib.InfiniteSum.Basic
 import DividedPowers.ForMathlib.Antidiagonal
 
 theorem Finset.prod_one_add {ι α : Type _} [CommRing α] {f : ι → α} (s : Finset ι) :
@@ -113,7 +106,7 @@ theorem uniformContinuous_component :
 #align mv_power_series.uniform_continuous_component MvPowerSeries.uniformContinuous_component
 
 /-- The uniform_add_group structure on mv_power_series of a uniform_add_group -/
-theorem uniformAddGroup [AddGroup α] [UniformAddGroup α] : UniformAddGroup (MvPowerSeries σ α) where 
+theorem uniformAddGroup [AddGroup α] [UniformAddGroup α] : UniformAddGroup (MvPowerSeries σ α) where
   uniformContinuous_sub := uniformContinuous_pi.mpr fun _ => UniformContinuous.comp 
     uniformContinuous_sub
     (UniformContinuous.prod_mk 
@@ -204,14 +197,16 @@ theorem tendsto_pow_of_constantCoeff_nilpotent {f : MvPowerSeries σ α}
   simp_rw [MvPowerSeries.tendsto_iff_coeff_tendsto, coeff_zero]
   exact fun d =>  tendsto_atTop_of_eventually_const fun n hn => 
     coeff_eq_zero_of_constantCoeff_nilpotent f m hm d n hn
-#align mv_power_series.tendsto_pow_of_constant_coeff_nilpotent MvPowerSeries.tendsto_pow_of_constantCoeff_nilpotent
+#align mv_power_series.tendsto_pow_of_constant_coeff_nilpotent
+  MvPowerSeries.tendsto_pow_of_constantCoeff_nilpotent
 
 theorem tendsto_pow_of_constantCoeff_zero {f : MvPowerSeries σ α} (hf : constantCoeff σ α f = 0) :
     Filter.Tendsto (fun n : ℕ => f ^ n) Filter.atTop (nhds 0) := by
   apply tendsto_pow_of_constantCoeff_nilpotent
   rw [hf]
   exact IsNilpotent.zero
-#align mv_power_series.tendsto_pow_of_constant_coeff_zero MvPowerSeries.tendsto_pow_of_constantCoeff_zero
+#align mv_power_series.tendsto_pow_of_constant_coeff_zero
+  MvPowerSeries.tendsto_pow_of_constantCoeff_zero
 
 /-- Bourbaki, Algèbre, chap. 4, §4, n°2, corollaire de la prop. 3 -/
 theorem tendsto_pow_of_constantCoeff_nilpotent_iff [DiscreteTopology α] (f : MvPowerSeries σ α) :
@@ -290,19 +285,22 @@ theorem hasSum_of_homogeneous_components_self (w : σ → ℕ) (f : MvPowerSerie
   · rw [← coeff_apply f d, ← coeff_apply (homogeneousComponent w (weight w d) f) d,
       coeff_homogeneousComponent]
     simp only [eq_self_iff_true, if_true]
-#align mv_power_series.has_sum_of_homogeneous_components_self MvPowerSeries.hasSum_of_homogeneous_components_self
+#align mv_power_series.has_sum_of_homogeneous_components_self
+  MvPowerSeries.hasSum_of_homogeneous_components_self
 
 theorem homogeneous_components_self_summable (w : σ → ℕ) (f : MvPowerSeries σ α) :
     Summable fun p => homogeneousComponent w p f :=
   (hasSum_of_homogeneous_components_self w f).summable
-#align mv_power_series.homogeneous_components_self_summable MvPowerSeries.homogeneous_components_self_summable
+#align mv_power_series.homogeneous_components_self_summable
+  MvPowerSeries.homogeneous_components_self_summable
 
 theorem as_tsum_of_homogeneous_components_self [T2Space α] (w : σ → ℕ) (f : MvPowerSeries σ α) :
     f = tsum fun p => homogeneousComponent w p f := by
   haveI := t2Space σ α
   exact HasSum.unique (hasSum_of_homogeneous_components_self w f)
    (homogeneous_components_self_summable w f).hasSum
-#align mv_power_series.as_tsum_of_homogeneous_components_self MvPowerSeries.as_tsum_of_homogeneous_components_self
+#align mv_power_series.as_tsum_of_homogeneous_components_self
+  MvPowerSeries.as_tsum_of_homogeneous_components_self
 
 end Summable
 
