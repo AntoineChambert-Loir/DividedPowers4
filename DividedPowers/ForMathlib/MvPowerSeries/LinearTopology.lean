@@ -103,9 +103,8 @@ theorem topology_eq_ideals_basis_topolgy [DiscreteTopology α] :
   change τ = τ'
   rw [topologicalSpace_eq_iff_nhds_eq]
   suffices ∀ s, s ∈ @nhds _ τ 0 ↔ s ∈ @nhds _ τ' 0 by
-    let tr := topologicalRing σ α
     let tg := @TopologicalRing.to_topologicalAddGroup _ _ τ ( topologicalRing σ α)
-    intro s a ha 
+    intro s a _
     rw [← add_zero a, @mem_nhds_add_iff _ _ τ tg, mem_nhds_add_iff]
     apply this
   intro s
@@ -124,6 +123,7 @@ theorem topology_eq_ideals_basis_topolgy [DiscreteTopology α] :
       exact he
     apply Finset.le_sup he'
 #align mv_power_series.topology_eq_ideals_basis_topolgy MvPowerSeries.topology_eq_ideals_basis_topolgy
+
 
 /- -- TODO : problèmes d'univers
 
