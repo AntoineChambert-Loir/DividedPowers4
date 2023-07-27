@@ -20,13 +20,13 @@ variable {α : Type _} {ι : Type _}
 along the cofinite filter, then `f` has finite support. -/
 theorem finite_support_of_tendsto_zero [AddCommMonoid α] [TopologicalSpace α] [DiscreteTopology α]
     {f : ι → α} (hf : Tendsto f cofinite (nhds 0)) : f.support.Finite := by
-  sorry/- rw [nhds_discrete, tendsto_pure] at hf 
-  obtain ⟨s, H, p⟩ := eventually.exists_mem hf
-  apply finite.subset H
+  rw [nhds_discrete, tendsto_pure] at hf 
+  obtain ⟨s, H, p⟩ := Eventually.exists_mem hf
+  apply Finite.subset H
   intro x hx
   rw [mem_compl_iff]
   by_contra hxs
-  exact hx (p x hxs) -/
+  exact hx (p x hxs)
 #align function.finite_support_of_tendsto_zero Function.finite_support_of_tendsto_zero
 
 /-- If a function `f` to a discrete topological commutative additive group is summable, then it has
@@ -105,17 +105,12 @@ section Order
 theorem of_weightedOrder_tendsto_top (w : σ → ℕ) (f : ι → MvPowerSeries σ α)
     (hf : Tendsto (fun i => weightedOrder w (f i)) cofinite (nhds ⊤)) : StronglySummable f := by
   intro d
-  sorry
-  /- rw [has_basis.tendsto_right_iff nhds_top_basis] at hf 
+  rw [HasBasis.tendsto_right_iff nhds_top_basis] at hf 
   specialize hf (weight w d : ℕ∞) (WithTop.coe_lt_top _)
   refine' hf.subset _
-  intro i
-  simp only [mem_support, Ne.def, mem_set_of_eq]
-  intro h' h
+  intro i  h' h
   apply h'
-  exact coeff_of_lt_weighted_order w _ h
-  · infer_instance
-  · infer_instance -/
+  exact coeff_of_lt_weightedOrder w _ h
 #align mv_power_series.strongly_summable.of_weighted_order_tendsto_top MvPowerSeries.StronglySummable.of_weightedOrder_tendsto_top
 
 theorem of_order_tendsto_top (f : ι → MvPowerSeries σ α)
@@ -129,23 +124,30 @@ iff their weighted orders tend to infinity. -/
 theorem weightedOrder_tendsto_top_iff [Finite σ] {ι : Type _} {w : σ → ℕ} (hw : ∀ x, w x ≠ 0)
     (f : ι → MvPowerSeries σ α) :
     StronglySummable f ↔ Tendsto (fun i => weightedOrder w (f i)) cofinite (nhds ⊤) := by
-  sorry
-  /- refine' ⟨fun hf => _, of_weightedOrder_tendsto_top w f⟩
-  · rw [has_basis.tendsto_right_iff nhds_top_basis]
+  refine' ⟨fun hf => _, of_weightedOrder_tendsto_top w f⟩
+  · rw [HasBasis.tendsto_right_iff nhds_top_basis]
     intro n hn
     induction n
     · exfalso; exact lt_irrefl ⊤ hn
-    · simp only [Set.mem_Ioi, eventually_cofinite, not_lt]
-      let s := {d : σ →₀ ℕ | ↑(weight w d) ≤ n}
+    · rename_i n
+      simp only [Set.mem_Ioi, eventually_cofinite, not_lt]
+      let s := {d : σ →₀ ℕ | (weight w d) ≤ n}
       suffices h_ss :
         {i | (f i).weightedOrder w ≤ some n} ⊆ ⋃ (d : σ →₀ ℕ) (H : d ∈ s), {i | coeff α d (f i) ≠ 0}
-      · exact ((finite_of_weight_le w hw n).biUnion fun d hd => hf d).Subset h_ss
+      · exact ((finite_of_weight_le w hw n).biUnion fun d hd => hf d).subset h_ss
       · intro i hi
-        simp only [mem_set_of_eq, Nat.cast_id, Ne.def, mem_Union, exists_prop]
-        obtain ⟨d, hd⟩ := exists_coeff_ne_zero_of_weighted_order w (f i) _
+        simp only [mem_setOf_eq, Nat.cast_id, Ne.def, mem_iUnion, mem_setOf_eq, exists_prop]
+        have heq: (ENat.toNat (weightedOrder w (f i))) = weightedOrder w (f i) := by
+          rw [ENat.coe_toNat_eq_self]
+          sorry
+        obtain ⟨d, hd⟩ := exists_coeff_ne_zero_of_weightedOrder w (f i) heq
         refine' ⟨d, _, hd.2⟩
-        simpa [← hd.1, WithTop.some_eq_coe, Nat.cast_le] using hi
-        rw [ENat.coe_toNat_eq_self]
+        simpa [← hd.1, WithTop.some_eq_coe, Nat.cast_le] using hi 
+        /- obtain ⟨d, hd⟩ := exists_coeff_ne_zero_of_weightedOrder w (f i) _
+        refine' ⟨d, _, hd.2⟩
+        simpa [← hd.1, WithTop.some_eq_coe, Nat.cast_le] using hi  -/
+     
+        /- rw [ENat.coe_toNat_eq_self]
         · intro hi'
           rw [mem_set_of_eq, hi', top_le_iff] at hi 
           exact WithTop.coe_ne_top hi
@@ -257,15 +259,15 @@ noncomputable def sum {f : ι → MvPowerSeries σ α} (hf : StronglySummable f)
   fun d => (hf d).toFinset.sum fun i => coeff α d (f i)
 #align mv_power_series.strongly_summable.sum MvPowerSeries.StronglySummable.sum
 
-theorem CoeffSum.def {f : ι → MvPowerSeries σ α} {hf : StronglySummable f} (d : σ →₀ ℕ) :
+theorem coeffSum.def {f : ι → MvPowerSeries σ α} {hf : StronglySummable f} (d : σ →₀ ℕ) :
     coeff α d hf.sum = (hf d).toFinset.sum fun i => coeff α d (f i) :=
   rfl
-#align mv_power_series.strongly_summable.coeff_sum.def MvPowerSeries.StronglySummable.CoeffSum.def
+#align mv_power_series.strongly_summable.coeff_sum.def MvPowerSeries.StronglySummable.coeffSum.def
 
 theorem coeff_sum {f : ι → MvPowerSeries σ α} {hf : StronglySummable f} (d : σ →₀ ℕ) (s : Finset ι)
     (hs : (fun i => coeff α d (f i)).support ⊆ s) :
     coeff α d hf.sum = s.sum fun i => coeff α d (f i) := by
-  rw [CoeffSum.def, sum_subset (Finite.toFinset_subset.mpr hs)]
+  rw [coeffSum.def, sum_subset (Finite.toFinset_subset.mpr hs)]
   intro i _ hi'
   simpa only [Finite.mem_toFinset, Function.mem_support, Classical.not_not] using hi'
 #align mv_power_series.strongly_summable.coeff_sum MvPowerSeries.StronglySummable.coeff_sum
@@ -273,7 +275,7 @@ theorem coeff_sum {f : ι → MvPowerSeries σ α} {hf : StronglySummable f} (d 
 theorem sum_congr {f g : ι → MvPowerSeries σ α} {hf : StronglySummable f} {hg : StronglySummable g}
     (h : f = g) : hf.sum = hg.sum := by
   ext d
-  rw [CoeffSum.def]
+  rw [coeffSum.def]
   sorry
   /- refine' sum_congr _ fun i hi => by rw [h]
   ext i
@@ -476,7 +478,7 @@ theorem StronglySummable.Finset.prod_of_one_add_eq [DecidableEq ι] (hf : Strong
     (d : σ →₀ ℕ) (J : Finset ι) (hJ : hf.unionOfSupportOfCoeffLe d ⊆ J) :
     (coeff α d) (J.prod fun i => 1 + f i) = (coeff α d) hf.to_stronglyMultipliable.prod := by
   rw [hf.to_stronglyMultipliable.prod_eq_finset_prod_add J, map_add, self_eq_add_right,
-    StronglySummable.CoeffSum.def]
+    StronglySummable.coeffSum.def]
   apply sum_eq_zero
   intro t ht
   rw [indicator]
