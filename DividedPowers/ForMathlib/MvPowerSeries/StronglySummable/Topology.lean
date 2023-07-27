@@ -1,5 +1,5 @@
-import Oneshot.MvPowerSeries.StronglySummable.Basic
-import Oneshot.MvPowerSeries.Topology
+import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Basic
+import DividedPowers.ForMathlib.MvPowerSeries.Topology
 
 namespace MvPowerSeries
 
@@ -16,23 +16,26 @@ section Semiring
 variable [Semiring α]
 
 theorem hasSum [TopologicalSpace α] {f : ι → MvPowerSeries σ α} (hf : StronglySummable f) :
-    HasSum f hf.Sum :=
+    HasSum f hf.sum :=
   Pi.hasSum.mpr hf.hasSum_coeff
 #align mv_power_series.strongly_summable.has_sum MvPowerSeries.StronglySummable.hasSum
 
 theorem summable [TopologicalSpace α] {f : ι → MvPowerSeries σ α} (hf : StronglySummable f) :
     Summable f :=
-  ⟨hf.Sum, hf.HasSum⟩
+  ⟨hf.sum, hf.hasSum⟩
 #align mv_power_series.strongly_summable.summable MvPowerSeries.StronglySummable.summable
 
 theorem sum_eq_tsum [TopologicalSpace α] [T2Space α] {f : ι → MvPowerSeries σ α}
-    (hf : StronglySummable f) : hf.Sum = tsum f := by
-  classical
+    (hf : StronglySummable f) : hf.sum = tsum f := by
   ext d
-  simp only [tsum, dif_pos hf.summable]
-  exact
-    HasSum.unique (hf.has_sum_coeff d)
-      (HasSum.map (Classical.choose_spec hf.summable) _ (continuous_component σ α d))
+  rw [tsum_def, dif_pos hf.summable]
+  apply HasSum.unique (hf.hasSum_coeff d)
+  apply HasSum.map
+  . split_ifs with h 
+    . rw [← tsum_eq_finsum h]
+      exact hf.summable.hasSum
+    . exact (Classical.choose_spec hf.summable)
+  . exact continuous_component σ α d
 #align mv_power_series.strongly_summable.sum_eq_tsum MvPowerSeries.StronglySummable.sum_eq_tsum
 
 end Semiring
@@ -59,7 +62,7 @@ example [TopologicalSpace α] {f : ι → MvPowerSeries σ α} : StronglySummabl
 -- TODO (?): replace topological_ring instance by topological_add_group…
 example [TopologicalSpace α] [TopologicalRing α] {f : ι → MvPowerSeries σ α} :
     Summable f → Filter.Tendsto f Filter.cofinite (nhds 0) :=
-  haveI := TopologicalRing σ α
+  haveI := topologicalRing σ α
   tendsto_zero_of_summable
 
 theorem iff_summable [TopologicalSpace α] [DiscreteTopology α] {f : ι → MvPowerSeries σ α} :
@@ -68,11 +71,10 @@ theorem iff_summable [TopologicalSpace α] [DiscreteTopology α] {f : ι → MvP
 #align mv_power_series.strongly_summable.iff_summable MvPowerSeries.StronglySummable.iff_summable
 
 theorem iff_summable' [TopologicalSpace α] [DiscreteTopology α] {f : ι → MvPowerSeries σ α} :
-    StronglySummable f ↔ Filter.Tendsto f Filter.cofinite (nhds 0) :=
-  by
-  haveI := TopologicalRing σ α
+    StronglySummable f ↔ Filter.Tendsto f Filter.cofinite (nhds 0) := by
+  haveI := topologicalRing σ α
   refine' ⟨fun hf => hf.summable.tendsto_cofinite_zero, _⟩
-  rw [strongly_summable, nhds_pi, Filter.tendsto_pi]
+  rw [StronglySummable, nhds_pi, Filter.tendsto_pi]
   exact forall_imp fun d => finite_support_of_tendsto_zero
 #align mv_power_series.strongly_summable.iff_summable' MvPowerSeries.StronglySummable.iff_summable'
 
@@ -87,12 +89,13 @@ variable [Semiring α] [TopologicalSpace α]
 /-- A family of power series is summable if their weighted orders tend to infinity. -/
 theorem summable_of_weightedOrder_tendsto_top {ι : Type _} (w : σ → ℕ) (f : ι → MvPowerSeries σ α)
     (hf : Filter.Tendsto (fun i => weightedOrder w (f i)) Filter.cofinite (nhds ⊤)) : Summable f :=
-  (StronglySummable.of_weightedOrder_tendsto_top w f hf).Summable
-#align mv_power_series.summable_of_weighted_order_tendsto_top MvPowerSeries.summable_of_weightedOrder_tendsto_top
+  (StronglySummable.of_weightedOrder_tendsto_top w f hf).summable
+#align mv_power_series.summable_of_weighted_order_tendsto_top
+  MvPowerSeries.summable_of_weightedOrder_tendsto_top
 
 theorem summable_of_order_tendsto_top {ι : Type _} (f : ι → MvPowerSeries σ α)
     (hf : Filter.Tendsto (fun i => order (f i)) Filter.cofinite (nhds ⊤)) : Summable f :=
-  (StronglySummable.of_order_tendsto_top f hf).Summable
+  (StronglySummable.of_order_tendsto_top f hf).summable
 #align mv_power_series.summable_of_order_tendsto_top MvPowerSeries.summable_of_order_tendsto_top
 
 end Summable
@@ -106,27 +109,27 @@ namespace StronglySummable
 variable [UniformSpace α] [UniformAddGroup α]
 
 theorem hasProd_of_one_add (hf : StronglySummable f) :
-    HasProd (fun i => 1 + f i) hf.to_stronglyMultipliable.Prod := by
+    HasProd (fun i => 1 + f i) hf.to_stronglyMultipliable.prod := by
   classical
-  haveI := UniformAddGroup σ α
+  haveI := uniformAddGroup σ α
   intro V hV
   simp only [Filter.mem_map, Filter.mem_atTop_sets, ge_iff_le, Finset.le_eq_subset,
     Set.mem_preimage]
-  let V₀ := Add.add hf.to_strongly_multipliable.prod ⁻¹' V
-  have hV'₀ : V = Add.add (-hf.to_strongly_multipliable.prod) ⁻¹' V₀ :=
-    by
-    simp only [V₀, ← Set.preimage_comp, comp_add_left, add_right_neg]
+  set V₀ := Add.add hf.to_stronglyMultipliable.prod ⁻¹' V with V₀_def
+  have hV'₀ : V = Add.add (-hf.to_stronglyMultipliable.prod) ⁻¹' V₀ := by
+    simp only [V₀_def, ← Set.preimage_comp, comp_add_left, add_right_neg]
     ext x
-    rw [Set.mem_preimage, zero_add]
-  have hV₀ : V₀ ∈ nhds (0 : MvPowerSeries σ α) :=
-    by
-    simp only [V₀]
-    apply continuous_at_def.mp (Continuous.continuousAt (continuous_add_left _))
-    rw [add_zero]; exact hV
-    · infer_instance
-  simp only [nhds_pi, Filter.mem_pi] at hV₀ 
+    rw [Set.mem_preimage]
+    simp only [comp_apply]
+    sorry
+  have hV₀ : V₀ ∈ nhds (0 : MvPowerSeries σ α) := by
+    simp only [V₀_def]
+    apply continuousAt_def.mp (Continuous.continuousAt (continuous_add_left _))
+    rw [add_zero]
+    exact hV
+  rw [nhds_pi, Filter.mem_pi] at hV₀
   obtain ⟨D, hD, t, ht, htV₀⟩ := hV₀
-  use hf.union_of_support_of_coeff_le (hD.to_finset.sup id)
+  use hf.unionOfSupportOfCoeffLe (hD.toFinset.sup id)
   intro J hIJ
   rw [hV'₀, Set.mem_preimage]
   apply htV₀
@@ -134,28 +137,31 @@ theorem hasProd_of_one_add (hf : StronglySummable f) :
   intro d hd
   convert mem_of_mem_nhds (ht d)
   simp only [Pi.zero_apply, neg_eq_zero, neg_add_eq_sub, sub_eq_zero]
-  convert strongly_summable.finset.prod_of_one_add_eq hf d J _
+  sorry
+  /- convert StronglySummable.Finset.prod_of_one_add_eq hf d J _
   intro i hi
   apply hIJ
   revert hi
   contrapose
   simp only [strongly_summable.not_mem_union_of_support_of_coeff_le_iff]
   intro h e hed
-  exact h _ (le_trans hed (Finset.le_sup ((Set.Finite.mem_toFinset hD).mpr hd)))
-#align mv_power_series.strongly_summable.has_prod_of_one_add MvPowerSeries.StronglySummable.hasProd_of_one_add
+  exact h _ (le_trans hed (Finset.le_sup ((Set.Finite.mem_toFinset hD).mpr hd)))  -/
+#align mv_power_series.strongly_summable.has_prod_of_one_add
+  MvPowerSeries.StronglySummable.hasProd_of_one_add
 
 theorem multipliable_of_one_add {ι : Type _} (f : ι → MvPowerSeries σ α) (hf : StronglySummable f) :
-    Multipliable fun i => 1 + f i := by classical exact hf.has_prod_of_one_add.multipliable
-#align mv_power_series.strongly_summable.multipliable_of_one_add MvPowerSeries.StronglySummable.multipliable_of_one_add
+    Multipliable fun i => 1 + f i := by classical exact hf.hasProd_of_one_add.multipliable
+#align mv_power_series.strongly_summable.multipliable_of_one_add
+  MvPowerSeries.StronglySummable.multipliable_of_one_add
 
 variable [T2Space α]
 
 theorem tprod_eq_of_one_add {ι : Type _} {f : ι → MvPowerSeries σ α} (hf : StronglySummable f) :
-    (tprod fun i => 1 + f i) = tsum (partialProduct f) :=
-  by
-  haveI : _root_.t2_space (MvPowerSeries σ α) := T2Space σ α
-  rw [hf.has_prod_of_one_add.tprod_eq, strongly_multipliable.prod_eq, sum_eq_tsum]
-#align mv_power_series.strongly_summable.tprod_eq_of_one_add MvPowerSeries.StronglySummable.tprod_eq_of_one_add
+    (tprod fun i => 1 + f i) = tsum (partialProduct f) := by
+  haveI : T2Space (MvPowerSeries σ α) := t2Space σ α
+  rw [hf.hasProd_of_one_add.tprod_eq, StronglyMultipliable.prod_eq, sum_eq_tsum]
+#align mv_power_series.strongly_summable.tprod_eq_of_one_add
+  MvPowerSeries.StronglySummable.tprod_eq_of_one_add
 
 end StronglySummable
 
@@ -169,7 +175,8 @@ end StronglySummable
   
   have := @has_prod.tprod_eq (mv_power_series σ α) ι _
     (@mv_power_series.topological_space σ α default)
-    (@mv_power_series.t2_space σ α default (@discrete_topology.to_t2_space α default (discrete_topology_bot α))),
+    (@mv_power_series.t2_space σ α default (@discrete_topology.to_t2_space α default
+      (discrete_topology_bot α))),
 
   exact this h,
 
