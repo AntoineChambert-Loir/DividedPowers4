@@ -177,42 +177,23 @@ theorem variables_tendsto_zero :
   . obtain ⟨i, rfl⟩ := h
     apply Set.Finite.subset (Set.finite_singleton i)
     intro x
+    simp only [OfNat.ofNat, Zero.zero] at hs 
     rw [Set.mem_preimage, Set.mem_compl_iff, Set.mem_singleton_iff, not_imp_comm]
     intro hx
     convert mem_of_mem_nhds hs
-    --ext d
-    -- [← coeff_eq_apply (X x) (Finsupp.single i 1)]
-    sorry
+    rw [← coeff_eq_apply (X x) (Finsupp.single i 1), coeff_X,
+      if_neg (by simp only [Finsupp.single_eq_single_iff, and_true, or_false, Ne.symm hx])]
+    rfl      
   . convert Set.finite_empty
     rw [Set.eq_empty_iff_forall_not_mem]
     intro x
-    simp only [Set.mem_preimage, Set.not_mem_compl_iff]
-    convert mem_of_mem_nhds hs
-    sorry
-    /- rw [← coeff_eq_apply (X x) d]
-    rw [coeff_X]
-    rw [if_neg]
-    intro h'
-    apply h
-    exact ⟨x, h'⟩ -/
-
-  /- rw [if_neg]
-  intro hx'
-  rw [Finsupp.ext_iff] at hx' 
-  apply zero_ne_one' ℕ
-  specialize hx' x
-  simpa only [Finsupp.single_eq_same, Finsupp.single_eq_of_ne (Ne.symm hx)] using hx'
-  convert Set.finite_empty
-  rw [Set.eq_empty_iff_forall_not_mem]
-  intro x
-  simp only [Set.mem_preimage, Set.not_mem_compl_iff]
-  convert mem_of_mem_nhds hs
-  rw [← coeff_eq_apply (X x) d]
-  rw [coeff_X]
-  rw [if_neg]
-  intro h'
-  apply h
-  exact ⟨x, h'⟩  -/
+    rw [Set.mem_preimage, Set.not_mem_compl_iff]
+    convert mem_of_mem_nhds hs using 1
+    rw [← coeff_eq_apply (X x) d, coeff_X, if_neg]
+    rfl
+    . intro h'
+      apply h
+      exact ⟨x, h'⟩
 #align mv_power_series.variables_tendsto_zero MvPowerSeries.variables_tendsto_zero
 
 theorem tendsto_pow_of_constantCoeff_nilpotent {f : MvPowerSeries σ α}
@@ -236,7 +217,7 @@ theorem tendsto_pow_of_constantCoeff_zero {f : MvPowerSeries σ α} (hf : consta
 theorem tendsto_pow_of_constantCoeff_nilpotent_iff [DiscreteTopology α] (f : MvPowerSeries σ α) :
     Filter.Tendsto (fun n : ℕ => f ^ n) Filter.atTop (nhds 0) ↔ 
       IsNilpotent (constantCoeff σ α f) := by
-  constructor
+  refine' ⟨_, tendsto_pow_of_constantCoeff_nilpotent ⟩
   · intro h
     suffices : Filter.Tendsto (fun n : ℕ => constantCoeff σ α (f ^ n)) Filter.atTop (nhds 0)
     simp only [Filter.tendsto_def] at this 
@@ -246,15 +227,19 @@ theorem tendsto_pow_of_constantCoeff_nilpotent_iff [DiscreteTopology α] (f : Mv
     simp only [map_pow, Filter.mem_atTop_sets, ge_iff_le, Set.mem_preimage,
       Set.mem_singleton_iff] at this 
     obtain ⟨m, hm⟩ := this
-    use m; apply hm m (le_refl m)
-    sorry
+    use m
+    apply hm m (le_refl m) 
+    --rw [← Filter.tendsto_map'_iff]
+    simp only [Filter.Tendsto, Filter.map_le_iff_le_comap] at h ⊢
+    apply le_trans h
+    rw [← Filter.map_le_iff_le_comap] 
+    sorry --exact continuous_constantCoeff.continuousAt
     /- rw [← Filter.tendsto_map'_iff]
     simp only [Filter.Tendsto, Filter.map_le_iff_le_comap] at h ⊢
     apply le_trans h
-    apply Filter.comap_mono
+    refine' Filter.comap_mono
     rw [← Filter.map_le_iff_le_comap]
     exact continuous_constant_coeff.continuous_at -/
-  sorry --exact tendsto_of_pow_of_constantCoeff_nilpotent
 #align mv_power_series.tendsto_pow_of_constant_coeff_nilpotent_iff
   MvPowerSeries.tendsto_pow_of_constantCoeff_nilpotent_iff
 
@@ -271,23 +256,26 @@ theorem hasSum_of_monomials_self (f : MvPowerSeries σ α) :
     HasSum (fun d : σ →₀ ℕ => monomial α d (coeff α d f)) f := by
   rw [Pi.hasSum]
   intro d
-  sorry
-  /- convert hasSum_single d _
-  · rw [← coeff_apply f d, ← coeff_apply (monomial α d (coeff α d f)) d, coeff_apply]
-    rw [coeff_monomial_same]
-  · intro b h
-    change coeff α d ((monomial α b) ((coeff α b) f)) = 0
-    rw [coeff_monomial_ne (Ne.symm h)] -/
+  have hd : ∀ (d' : σ →₀ ℕ), d' ≠ d → (monomial α d') ((coeff α d') f) d = 0 := by
+    intro d' h
+    change coeff α d ((monomial α d') ((coeff α d') f)) = 0
+    rw [coeff_monomial_ne (Ne.symm h)]
+  convert hasSum_single d hd using 1
+  · rw [← coeff_apply f d, ← coeff_apply (monomial α d (coeff α d f)) d, coeff_apply,
+      coeff_monomial_same]
 #align mv_power_series.has_sum_of_monomials_self MvPowerSeries.hasSum_of_monomials_self
 
 /-- If the coefficient space is T2, then the power series is `tsum` of its monomials -/
 theorem as_tsum [T2Space α] (f : MvPowerSeries σ α) :
     f = tsum fun d : σ →₀ ℕ => monomial α d (coeff α d f) := by
-  classical
   haveI := MvPowerSeries.t2Space σ α
-  sorry
-  /- simp only [tsum, dif_pos f.has_sum_of_monomials_self.summable]
-  exact HasSum.unique f.has_sum_of_monomials_self (Classical.choose_spec _) -/
+  apply HasSum.unique f.hasSum_of_monomials_self
+  rw [tsum_def]
+  rw [dif_pos f.hasSum_of_monomials_self.summable]
+  split_ifs with h'
+  . rw [← tsum_eq_finsum h']
+    exact (f.hasSum_of_monomials_self.summable).hasSum
+  . exact (Classical.choose_spec _)
 #align mv_power_series.as_tsum MvPowerSeries.as_tsum
 
 /-- A power series is the sum (in the sense of summable families) of its monomials -/
@@ -295,16 +283,14 @@ theorem hasSum_of_homogeneous_components_self (w : σ → ℕ) (f : MvPowerSerie
     HasSum (fun p => homogeneousComponent w p f) f := by
   rw [Pi.hasSum]
   intro d
-  sorry
-  /- convert hasSum_single (weight w d) _
-  · rw [← coeff_apply f d]
-    rw [← coeff_apply (homogeneous_component w (weight w d) f) d]
-    rw [coeff_homogeneous_component]
+  have hd : ∀ (b' : ℕ), b' ≠ (weight w) d → (homogeneousComponent w b') f d = 0 := by
+    intro p h
+    rw [← coeff_apply (homogeneousComponent w p f) d, coeff_homogeneousComponent,
+      if_neg (Ne.symm h)] 
+  convert hasSum_single (weight w d) hd using 1
+  · rw [← coeff_apply f d, ← coeff_apply (homogeneousComponent w (weight w d) f) d,
+      coeff_homogeneousComponent]
     simp only [eq_self_iff_true, if_true]
-  · intro p h
-    rw [← coeff_apply (homogeneous_component w p f) d]
-    rw [coeff_homogeneous_component]
-    rw [if_neg (Ne.symm h)] -/
 #align mv_power_series.has_sum_of_homogeneous_components_self MvPowerSeries.hasSum_of_homogeneous_components_self
 
 theorem homogeneous_components_self_summable (w : σ → ℕ) (f : MvPowerSeries σ α) :
@@ -314,13 +300,9 @@ theorem homogeneous_components_self_summable (w : σ → ℕ) (f : MvPowerSeries
 
 theorem as_tsum_of_homogeneous_components_self [T2Space α] (w : σ → ℕ) (f : MvPowerSeries σ α) :
     f = tsum fun p => homogeneousComponent w p f := by
-  classical
-  sorry
-  /- haveI := t2Space σ α
-  apply HasSum.unique (hasSum_of_homogeneous_components_self w f)
-  rw [tsum_def, dif_pos (homogeneous_components_self_summable w f)]
-  simp only
-  apply Classical.choose_spec _ -/
+  haveI := t2Space σ α
+  exact HasSum.unique (hasSum_of_homogeneous_components_self w f)
+   (homogeneous_components_self_summable w f).hasSum
 #align mv_power_series.as_tsum_of_homogeneous_components_self MvPowerSeries.as_tsum_of_homogeneous_components_self
 
 end Summable
