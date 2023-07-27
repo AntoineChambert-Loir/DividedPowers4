@@ -228,8 +228,11 @@ theorem tendsto_pow_of_constantCoeff_nilpotent_iff [DiscreteTopology α] (f : Mv
       Set.mem_singleton_iff] at this 
     obtain ⟨m, hm⟩ := this
     use m
-    apply hm m (le_refl m) 
-    change Filter.Tendsto (constantCoeff σ α ∘ fun n => f ^ n) Filter.atTop (nhds 0)
+    apply hm m (le_refl m)
+    -- -- Lean4 doesn't detect that there is a composition -> change
+    -- change Filter.Tendsto (constantCoeff σ α ∘ fun n => f ^ n) Filter.atTop (nhds 0)
+    -- -- this simp works as well
+    simp only [← @comp_apply _ α ℕ]
     rw [← Filter.tendsto_map'_iff]
     simp only [Filter.Tendsto, Filter.map_le_iff_le_comap] at h ⊢
     apply le_trans h
