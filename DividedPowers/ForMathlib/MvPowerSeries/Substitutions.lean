@@ -1,4 +1,4 @@
-import Oneshot.MvPowerSeries.LinearTopology
+import DividedPowers.ForMathlib.MvPowerSeries.LinearTopology
 
 /- # Substitutions in power series 
 
@@ -30,16 +30,14 @@ theorem Continuous.tendsto_apply_pow_of_constant_coeff_zero (φ : MvPowerSeries 
     (hφ : Continuous φ) (s : σ) : Filter.Tendsto (fun n : ℕ => φ (X s ^ n)) Filter.atTop (nhds 0) :=
   by
   rw [← φ.map_zero]
-  refine' Filter.Tendsto.comp hφ.continuous_at _
-  apply tendsto_pow_of_constant_coeff_zero
-  simp only [constant_coeff_X]
-#align continuous.tendsto_apply_pow_of_constant_coeff_zero Continuous.tendsto_apply_pow_of_constant_coeff_zero
+  refine' Filter.Tendsto.comp hφ.continuousAt (tendsto_pow_of_constantCoeff_zero _)
+  rw [constantCoeff_X]
+#align continuous.tendsto_apply_pow_of_constant_coeff_zero
+  Continuous.tendsto_apply_pow_of_constant_coeff_zero
 
-theorem Continuous.apply_variables (φ : MvPowerSeries σ α →ₐ[α] R) (hφ : Continuous φ) (s : σ) :
-    Filter.Tendsto (fun s : σ => φ (X s)) Filter.cofinite (nhds 0) :=
-  by
+theorem Continuous.apply_variables (φ : MvPowerSeries σ α →ₐ[α] R) (hφ : Continuous φ) :
+    Filter.Tendsto (fun s : σ => φ (X s)) Filter.cofinite (nhds 0) := by
   rw [← φ.map_zero]
-  refine' Filter.Tendsto.comp hφ.continuous_at _
-  exact variables_tendsto_zero
+  exact Filter.Tendsto.comp hφ.continuousAt variables_tendsto_zero
 #align continuous.apply_variables Continuous.apply_variables
 
