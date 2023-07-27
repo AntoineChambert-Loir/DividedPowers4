@@ -1005,101 +1005,17 @@ lemma quotDecomposition_IsInternal [h𝒜 : GradedAlgebra 𝒜]
   exact quotDecompose'_bijective R 𝒜 rel hrel
 
 -- We need a full decomposition with an explicit left inverse
--- (may be obtained by choice, if necessary)
-def DirectSum.Decomposition_RingQuot [h𝒜 : GradedAlgebra 𝒜] 
+-- (here, it is obtained by `Function.invFun`)
+noncomputable def DirectSum.Decomposition_RingQuot [GradedAlgebra 𝒜] 
     (hrel : RelIsHomogeneous 𝒜 rel) :
-  GradedAlgebra (fun i => (𝒜 i).map (RingQuot.mkAlgHom R rel)) := {
+  GradedAlgebra (quotSubmodule R 𝒜 rel) := {
   SetLike.GradedMonoid_RingQuot R 𝒜 rel with 
-  decompose' := sorry
-  left_inv := sorry
-  right_inv := sorry }
+  decompose' := Function.invFun (quotDecompose' R 𝒜 rel)
+  left_inv := Function.rightInverse_invFun
+    (quotDecompose'_surjective R 𝒜 rel)
+  right_inv := Function.leftInverse_invFun
+    (quotDecompose_injective' R 𝒜 rel hrel) }
 
-/-- The canonical LinearMap from A to ⊕ (quotSubmodule R 𝒜 rel i) -/
-def quotDecomposeLaux [GradedAlgebra 𝒜] :
-    A →ₗ[R] DirectSum ι fun i : ι => (quotSubmodule R 𝒜 rel i) :=
-  LinearMap.comp 
-    (DirectSum.lmap' (quotCompMap R 𝒜 rel)) 
-    (DirectSum.decomposeAlgEquiv 𝒜).toLinearMap
-
-/- -- WHAT TO DO WITH THIS ?
-theorem quotDecomposeLaux_of_mem_eq_zero [GradedAlgebra 𝒜] 
-    (hrel : RelIsHomogeneous 𝒜 rel) (x : A)
-    (hx : x ∈ I) (i : ι) : ((quotDecomposeLaux R 𝒜 rel) x) i = 0 :=
-  by
-  rw [quotDecomposeLaux, LinearMap.comp_apply, DirectSum.lmap'_apply, quotCompMap]
-  simp only [Ideal.Quotient.mkₐ_eq_mk, AlgEquiv.toLinearMap_apply, 
-    DirectSum.decomposeAlgEquiv_apply, LinearMap.coe_mk,
-    AddHom.coe_mk, Submodule.mk_eq_zero]
-  rw [Ideal.Quotient.eq_zero_iff_mem]
-  exact hI i hx
-#align quot_decompose_laux_of_mem_eq_zero quotDecomposeLaux_of_mem_eq_zero
- -/
- 
-
-/-- The decomposition at the higher level -/
-def quotDecompose [GradedAlgebra 𝒜] (hrel : RelIsHomogeneous 𝒜 rel) :
-    RingQuot rel →ₗ[R] DirectSum ι fun i : ι => (quotSubmodule R 𝒜 rel i) := by
-  apply @Submodule.liftQ R A _ _ _ (I.restrictScalars R) R 
-    (DirectSum ι fun i => I.quotSubmodule R 𝒜 i)
-    _ _ _ (RingHom.id R) (quotDecomposeLaux R 𝒜 rel)
-  -- without explicit arguments, it is too slow
-  -- apply submodule.liftq (I.restrict_scalars R) (quot_decompose_laux R 𝒜 I),
-  apply I.quotDecomposeLaux_ker R 𝒜 hI
-#align quot_decompose Ideal.quotDecompose
-
-
-theorem quotDecomposeLaux_apply_mk [GradedAlgebra 𝒜]
-    (hrel : RelIsHomogeneous 𝒜 rel) (a : A) :
-  quotDecompose R 𝒜 rel hrel (RingQuot rel) = 
-    quotDecomposeLaux R 𝒜 a := by 
-  sorry
-
-
-/- THIS SECTION IS A MESS
-ITS GOAL IS TO TRANSFER THE GRADED ALGEBRA STRUCTURE TO
-THE CASE WHERE THE QUOTIENT IS DEFINED VIA A RELATION 
-
-ALSO : 
-
--/
-
-
--- variable (𝒜 : ι → Submodule R A) 
--- variable [GradedAlgebra 𝒜]
-
-variable (r : A → A → Prop)
-
-variable {R}
-
-/-- Adding the alg_hom component to the natural ring_equiv -/
-def ringQuotEquivAlgIdealQuotient : RingQuot r ≃ₐ[R] A ⧸ Ideal.ofRel r :=
-  { RingQuot.ringQuotEquivIdealQuotient r with
-    commutes' := fun s => by
-      simp only [RingEquiv.toEquiv_eq_coe, Equiv.toFun_as_coe_apply, RingEquiv.coe_toEquiv]
-      rw [← AlgHom.commutes (RingQuot.mkAlgHom R r), ←
-        AlgHom.commutes (Ideal.Quotient.mkₐ R (Ideal.ofRel r)), Ideal.Quotient.mkₐ_eq_mk, ←
-        RingQuot.ringQuotToIdealQuotient_apply r _, ← RingQuot.mkAlgHom_coe R r]
-      rfl }
-#align ring_quot_equiv_alg_ideal_quotient ringQuotEquivAlgIdealQuotient
-
-/- example [decidable_eq (submodule R A)] (i : ι) : 
-quot_submodule R 𝒜 (ideal.of_rel r) i = submodule.map ((ideal.quotient.mkₐ  R _).comp 
-  (ring_quot.mk_alg_hom R r)) i :=
-begin
-
-end -/
-
--- TODO ? : Unclear of what remains to do 
--- Probably writing what we did for DPAlgebra in full generality
--- For the moment, it is commented out
-
-/- 
-def gradedQuotAlgRel [GradedAlgebra 𝒜] [DecidableEq (Submodule R A)] (hr : RelIsHomogeneous 𝒜 r) :
-    GradedAlgebra fun i => Submodule.map (RingQuot.mkAlgHom R r) i :=
-  sorry
-#align graded_quot_alg_rel gradedQuotAlgRel
-
--/
 end Rel
 
 section Ideal
@@ -1122,12 +1038,8 @@ example : SemilinearMapClass (A →+* RingQuot rel) (RingHom.id ℤ) A (RingQuot
     map_smulₛₗ := fun f r a => by
       simp only [zsmul_eq_mul, map_mul, map_intCast, eq_intCast, Int.cast_id] }
 
--- This will probably be useless in the end, because I "R-modulify" everything
--- ideal.quotient.mk vs ideal.quotient.mkₐ
 example (r : R) (a : A) : r • Ideal.Quotient.mk I a = Ideal.Quotient.mk I (r • a) :=
   map_smul (Ideal.Quotient.mkₐ R I) r a
-
-#check RingQuot.mkAlgHom R rel
 
 example (r : R) (a : A) : r • (RingQuot.mkAlgHom R rel a) = RingQuot.mkAlgHom R rel (r • a) := by 
   simp only [map_smul]
@@ -1136,24 +1048,7 @@ example (r : R) (a : A) : r • (RingQuot.mkAlgHom R rel a) = RingQuot.mkAlgHom 
 def Ideal.quotSubmodule : ι → Submodule R (A ⧸ I) := fun i => Submodule.map (Ideal.Quotient.mkₐ R I) (𝒜 i)
 #align quot_submodule Ideal.quotSubmodule
 
-/- broken by the passage to modules…
--- I think this one can be erased, since we have the laux version
-/-- The decomposition at the higher level -/
-def quot_decompose_aux [graded_ring 𝒜] :
-  A → direct_sum ι (λ (i : ι), ↥(quot_submodule R 𝒜 I i)) := λ a,
-begin
-  refine (direct_sum.map _) (direct_sum.decompose_linear_equiv 𝒜 a),
-  exact λ i, {
-  to_fun := λu, ⟨ideal.quotient.mk I ↑u,
-  begin
-    simp [quot_submodule, submodule.mem_map],
-    exact ⟨↑u, u.prop, rfl⟩,
-  end⟩,
-  map_zero' := by simp only [←subtype.coe_inj, submodule.coe_zero, map_zero, submodule.coe_mk],
-  map_add' := λ u v, by simp only [←subtype.coe_inj, submodule.coe_add, map_add,
-                add_mem_class.mk_add_mk] },
-end
--/
+
 def Ideal.quotCompMap (i : ι) : ↥(𝒜 i) →ₗ[R] ↥(quotSubmodule R 𝒜 I i)
     where
   toFun u :=
