@@ -53,7 +53,10 @@ variable (R M : Type _) [CommRing R] [AddCommGroup M] [Module R M]
 
 namespace DividedPowerAlgebra
 
---open finset mv_polynomial ideal.quotient triv_sq_zero_ext ideal direct_sum ring_quot
+/- For technical reasons, when passing to quotients,
+  it seems that one has to add to `Rel` the property that
+  it is reflexive… -/
+  
 -- We should probably change this name...
 /-- The type coding the basic relations that will give rise to the divided power algebra. 
   The class of X (n, a) will be equal to dpow n a, with a ∈ M. --/

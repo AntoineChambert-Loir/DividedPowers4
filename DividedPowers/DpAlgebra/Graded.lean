@@ -33,10 +33,10 @@ section DecidableEq
 example : GradedAlgebra (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) := inferInstance
 -- weightedGradedAlgebra R (Prod.fst : ℕ × M → ℕ)
 
-theorem RelI_isHomogeneous :
-  (RelI R M).IsHomogeneous (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) :=  by 
-  apply IsHomogeneous_of_rel
-  -- simp only [RelIsHomogeneous]
+theorem rel_isPureHomogeneous : 
+  RelIsPureHomogeneous 
+    (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) 
+    (Rel R M) := by 
   intro a b h
   cases' h with a r n a m n a n a b
   . use 0
@@ -58,6 +58,18 @@ theorem RelI_isHomogeneous :
       apply IsWeightedHomogeneous.mul <;> simp only [isWeightedHomogeneous_X]
       . rw [mem_range, Nat.lt_succ_iff] at hc
         rw [Nat.add_sub_of_le hc]
+
+theorem Rel_isHomogeneous : RelIsHomogeneous 
+  (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) 
+  (Rel R M) :=  by 
+  apply RelIsHomogeneous_of_isPureHomogeneous
+  apply rel_isPureHomogeneous
+
+theorem RelI_isHomogeneous :
+  (RelI R M).IsHomogeneous (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) :=  by 
+  apply IsHomogeneous_of_rel_isPureHomogeneous
+  apply rel_isPureHomogeneous
+  
 set_option linter.uppercaseLean3 false
 #align divided_power_algebra.relI_is_homogeneous DividedPowerAlgebra.RelI_isHomogeneous
 set_option linter.uppercaseLean3 true
@@ -71,17 +83,18 @@ set_option linter.uppercaseLean3 true
 def grade (n : ℕ) : Submodule R (DividedPowerAlgebra R M) :=
   quotSubmodule R 
     (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ))
-    (DividedPowerAlgebra.RelI R M) n
+    (DividedPowerAlgebra.Rel R M) n
 #align divided_power_algebra.grade DividedPowerAlgebra.grade
 
 theorem one_mem : (1 : DividedPowerAlgebra R M) ∈ grade R M 0 :=
-  ⟨1, isWeightedHomogeneous_one R _, rfl⟩
+  ⟨1, isWeightedHomogeneous_one R _, map_one _⟩
 #align divided_power_algebra.one_mem DividedPowerAlgebra.one_mem
 
 /-- The canonical decomposition of `divided_power_algebra R M` -/
-def decomposition :=
-  quotDecomposition R (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ))
-    (DividedPowerAlgebra.relI R M) (relI_isHomogeneous R M)
+def decomposition : DirectSum.Decomposition (grade R M) :=
+  quotDecomposition R 
+    (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ))
+    (DividedPowerAlgebra.Rel R M) (Rel_isHomogeneous R M)
 #align divided_power_algebra.decomposition DividedPowerAlgebra.decomposition
 
 end DecidableEq
