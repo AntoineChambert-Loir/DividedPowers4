@@ -34,7 +34,7 @@ section Topological
 variable [TopologicalSpace α]
 
 /-- The pointwise topology on mv_power_series -/
-instance : TopologicalSpace (MvPowerSeries σ α) :=
+instance MvPowerSeries.topologicalSpace : TopologicalSpace (MvPowerSeries σ α) :=
   Pi.topologicalSpace
 
 /-- Components are continuous -/
