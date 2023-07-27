@@ -555,6 +555,21 @@ lemma RingConGen.Rel.sum {α : Type _} [Ring α] (r : RingCon α)
       intro i hi
       apply hs i (Finset.mem_insert_of_mem hi)
 
+theorem DFinsupp.sum_of_support_le 
+    {M : Type _} [AddCommMonoid M]
+    {ι : Type v} [dec_ι : DecidableEq ι] (β : ι → Type w) 
+    [inst : (i : ι) → AddCommMonoid (β i)] 
+    [inst : (i : ι) → (x : β i) → Decidable (x ≠ 0)] 
+    (h : (i : ι) → (β i →+ M))
+    (x : DFinsupp β)
+    (s : Finset ι) (hs : DFinsupp.support x ⊆ s) :
+  x.sum (fun i y => h i y) = s.sum (fun i => h i (x i)) := by
+  simp only [DFinsupp.sum]
+  apply Finset.sum_subset hs
+  . intro i _ hi'
+    simp only [DFinsupp.mem_support_toFun, ne_eq, not_not] at hi'
+    rw [hi', map_zero]
+
 theorem DirectSum.sum_of_support_le 
     {ι : Type v} [dec_ι : DecidableEq ι] (β : ι → Type w) 
     [inst : (i : ι) → AddCommMonoid (β i)] 
@@ -578,64 +593,173 @@ theorem DirectSum.finsupp_sum_support_decompose'
     r = ((DirectSum.decompose ℳ) r).sum (fun i x => ↑x) := by
   conv_lhs => rw [← DirectSum.sum_support_decompose ℳ r]
 
-  
+theorem EqvGenIsHomogeneous_of [h𝒜 : GradedAlgebra 𝒜] (hr :RelIsHomogeneous 𝒜 r) : 
+  RelIsHomogeneous 𝒜 (EqvGen r) := by
+  intro a b h
+  induction h with
+  | rel a b h =>
+    intro i
+    apply EqvGen.rel
+    exact hr h i
+  | refl a =>
+    intro i
+    apply EqvGen.refl
+  | symm a b _ k => 
+    intro i
+    apply EqvGen.symm
+    exact k i
+  | trans a b c _ _ k k' => 
+    intro i
+    apply EqvGen.trans _ _ _ (k i) (k' i)
 
 
-example [h𝒜 : GradedAlgebra 𝒜] (hr :RelIsHomogeneous 𝒜 r) : 
+lemma rel_of_sum_of_rel_add {A : Type _} [AddCommMonoid A] 
+    (r : A → A → Prop) (hr_zero : r 0 0)
+    (hr_add : ∀ {a b c d} (_ : r a c) (_ : r b d), r (a + b) (c + d)) 
+    {ι : Type _} [DecidableEq ι] (f g : ι → A) (s : Finset ι) 
+    (H : ∀ i ∈ s, r (f i) (g i)) :
+  r (s.sum f) (s.sum g) := by 
+  revert H
+  induction s using Finset.induction_on with
+  | empty => 
+    intro _
+    simp only [Finset.sum_empty]
+    exact hr_zero
+  | @insert i s hi hs => 
+    intro H
+    simp only [Finset.sum_insert hi]
+    apply hr_add
+    . apply H
+      apply Finset.mem_insert_self
+    . apply hs
+      intro i hi
+      apply H
+      apply Finset.mem_insert_of_mem hi
+
+lemma rel_of_finsupp_sum_of_rel_add {A : Type _} [AddCommMonoid A] 
+    (r : A → A → Prop) (hr_zero : r 0 0)
+    (hr_add : ∀ {a b c d} (_ : r a c) (_ : r b d), r (a + b) (c + d)) 
+    {ι : Type _} [DecidableEq ι] (f g : ι →₀ A) 
+    (H : ∀ i, r (f i) (g i)) : 
+  r (f.sum fun _ x => x) (g.sum fun _ x => x) := by
+  rw [Finsupp.sum_of_support_subset f (Finset.subset_union_left _ g.support)]
+  rw [Finsupp.sum_of_support_subset g (Finset.subset_union_right f.support _)]
+  apply rel_of_sum_of_rel_add r hr_zero hr_add
+  . intro i _ ; exact H i
+  all_goals { intro _ _ ; rfl }
+
+lemma rel_of_dsum_of_rel_add {A : Type _} [AddCommMonoid A] 
+    (r : A → A → Prop) (hr_zero : r 0 0)
+    (hr_add : ∀ {a b c d} (_ : r a c) (_ : r b d), r (a + b) (c + d)) 
+    {ι : Type _} [DecidableEq ι] {β : ι → Type _} 
+    [∀ i, AddCommMonoid (β i)] (f g : (i : ι) → β i) 
+    (h : (i : ι) → (β i →+ A))
+    (s : Finset ι) 
+    (H : ∀ i ∈ s, r (h i (f i)) (h i (g i))) :
+  r (s.sum (fun i => h i (f i))) (s.sum (fun i => h i (g i))) := by 
+  revert H
+  induction s using Finset.induction_on with
+  | empty => 
+    intro _
+    simp only [Finset.sum_empty]
+    exact hr_zero
+  | @insert i s hi hs => 
+    intro H
+    simp only [Finset.sum_insert hi]
+    apply hr_add
+    . apply H
+      apply Finset.mem_insert_self
+    . apply hs
+      intro i hi
+      apply H
+      apply Finset.mem_insert_of_mem hi
+
+lemma rel_of_dfinsupp_sum_of_rel_add {A : Type _} [AddCommMonoid A] 
+    (r : A → A → Prop) (hr_zero : r 0 0)
+    (hr_add : ∀ {a b c d} (_ : r a c) (_ : r b d), r (a + b) (c + d)) 
+    {ι : Type _} [DecidableEq ι] {β : ι → Type _}
+    [∀ i, AddCommMonoid (β i)] 
+    [∀ i (y : β i), Decidable (y ≠ 0)]
+    (h : (i : ι) → (β i →+ A)) (h' : (i : ι) → (β i →+ A))
+    (f g : DFinsupp β)
+    (H : ∀ i, r (h i (f i)) (h' i (g i))) : 
+  r (f.sum fun i y => h i y) (g.sum fun i y => h' i y) := by
+  rw [DFinsupp.sum_of_support_le _ _ _ _  (Finset.subset_union_left f.support g.support)] 
+  rw [DFinsupp.sum_of_support_le _ _ _ _  (Finset.subset_union_right f.support g.support)] 
+  apply rel_of_sum_of_rel_add r hr_zero hr_add
+  . intro i _ ; exact H i
+
+def Φ (n i j : ι) : 𝒜 i →+ 𝒜 j →+ A := {
+  toFun := fun x => {
+    toFun := fun y => if i + j = n then x * y else (0 : A)
+    map_add' := fun a a' => by
+      split_ifs <;>
+      simp only [AddSubmonoid.coe_add, Submodule.coe_toAddSubmonoid, mul_add, add_zero]
+    map_zero' := by simp only [ZeroMemClass.coe_zero, mul_zero, ite_self] }
+  map_add' := fun b b' => by 
+    ext a
+    simp only [AddSubmonoid.coe_add, Submodule.coe_toAddSubmonoid, AddMonoidHom.coe_mk, ZeroHom.coe_mk,
+      AddMonoidHom.add_apply]
+    split_ifs <;> simp only [add_mul, add_zero]
+  map_zero' := by
+    simp only [ZeroMemClass.coe_zero, zero_mul, ite_self]
+    rfl }
+    
+def Φy (n : ι) (y : DirectSum ι (fun i => 𝒜 i)) (i : ι) : (𝒜 i) →+ A := { 
+    toFun := fun a => y.sum (fun j b => Φ 𝒜 n i j a b)
+    map_add' := fun a a' => by
+      simp only [map_add, AddMonoidHom.coe_mk, ZeroHom.coe_mk, AddMonoidHom.add_apply, DFinsupp.sum_add]
+    map_zero' := by
+      simp only [map_zero, AddMonoidHom.zero_apply, DFinsupp.sum_zero] }
+
+/-- The equivalence ring relation generated by a homogeneous relation
+  is homogeneous -/
+theorem RingConGen.RelIsHomogeneous_of 
+    [h𝒜 : GradedAlgebra 𝒜] (hr :RelIsHomogeneous 𝒜 r) : 
   RelIsHomogeneous 𝒜 (RingConGen.Rel r) := by
-  intro a b h i
-  induction' h with a b h a a b h h' a b c h h' k k'
-    a b c d h h' k k'
-    a b c d h h' k k'
-  . exact RingConGen.Rel.of _ _ (hr h i)
-  . apply RingConGen.Rel.refl
-  . exact RingConGen.Rel.symm h'
-  . exact RingConGen.Rel.trans k k'
-  . simp only [map_add]
-    apply RingConGen.Rel.add k k'
-  . rw [DirectSum.finsupp_sum_support_decompose' 𝒜 a,
-      DirectSum.finsupp_sum_support_decompose' 𝒜 b,
-      DirectSum.finsupp_sum_support_decompose' 𝒜 c, 
-      DirectSum.finsupp_sum_support_decompose' 𝒜 d]
-    simp only [AlgEquiv.toLinearMap_apply, map_mul, 
-      DFinsupp.sum_mul]
-
-
-
-
-    
-
-    /- 
-    let s := DFinsupp.support ((DirectSum.decompose 𝒜) c) 
-      ∪ (DFinsupp.support ((DirectSum.decompose 𝒜) d))
-    rw [← DirectSum.sum_support_decompose' 𝒜 c s, ← DirectSum.sum_support_decompose' 𝒜 d s]
-    simp only [Finset.mul_sum, map_sum, Finset.sum_apply', Finset.sum_apply]
- -/
-    
-    simp only [DFinsupp.sum_apply, map_sum]
-
-    
-    
-
-
-
-
-    
-
-
-
-
-
-
-
-
-
-    
-    simp only [DirectSum.Decomposition.decompose'_eq, AlgEquiv.toLinearMap_apply, map_mul]
-    simp only [map_mul]
-
-
-  
+  intro a b h
+  induction h with 
+  | of x y h =>
+    intro i
+    exact RingConGen.Rel.of _ _ (hr h i)
+  | refl x => 
+    intro i
+    apply RingConGen.Rel.refl
+  | symm _ h' => 
+    intro i
+    exact RingConGen.Rel.symm (h' i)
+  | trans _ _ k k' =>
+    intro i
+    exact RingConGen.Rel.trans (k i) (k' i)
+  | add _ _  k k' =>
+    intro i
+    simp only [map_add]
+    apply RingConGen.Rel.add (k i) (k' i)
+  | @mul a b c d _ _ k k' => 
+    intro n
+    simp only [AlgEquiv.toLinearMap_apply, map_mul]
+    simp only [DirectSum.coe_mul_apply_eq_dfinsupp_sum]
+    apply rel_of_dfinsupp_sum_of_rel_add (RingConGen.Rel r)
+      (RingConGen.Rel.refl 0) (RingConGen.Rel.add) 
+      (Φy 𝒜 n (DirectSum.decomposeAlgEquiv 𝒜 c))
+      (Φy 𝒜 n (DirectSum.decomposeAlgEquiv 𝒜 d))
+      (DirectSum.decomposeAlgEquiv 𝒜 a) 
+      (DirectSum.decomposeAlgEquiv 𝒜 b) 
+    intro i
+    apply rel_of_dfinsupp_sum_of_rel_add (RingConGen.Rel r)
+      (RingConGen.Rel.refl 0) (RingConGen.Rel.add) 
+      _ _ -- (Φ _) (Φ _)
+      (DirectSum.decomposeAlgEquiv 𝒜 c) 
+      (DirectSum.decomposeAlgEquiv 𝒜 d) 
+    intro j
+    dsimp only [Φ]
+    by_cases hn : i + j = n
+    . simp only [if_pos hn]
+      apply RingConGen.Rel.mul
+      exact k i
+      exact k' j
+    . simp only [if_neg hn]
+      apply RingConGen.Rel.refl
 
 /-- The ideal generated by a homogeneous relation is homogeneous -/
 theorem _root_.IsHomogeneous_of_rel_isHomogeneous [h𝒜 : GradedAlgebra 𝒜] 
@@ -759,17 +883,42 @@ theorem quotDecompose_surjective [h𝒜 : GradedAlgebra 𝒜] :
   conv_rhs => rw [← e]
   apply quotDecompose_left_inv'_aux_apply
 
+lemma obvious_iff {x y : A} :
+  RingQuot.mkRingHom rel x = RingQuot.mkRingHom rel y ↔ 
+    RingConGen.Rel rel x y := by
+  constructor
+  . intro h
+    suffices : ∀ x, Quot.mk (RingQuot.Rel rel) x = ((RingQuot.mkRingHom rel) x).toQuot 
+    rw [← RingQuot.eqvGen_rel_eq]
+    rw [← Quot.eq, this x, this y, h]
+    intro x
+    simp only [RingQuot.mkRingHom]
+    rfl
+  . intro h
+    induction h with
+    | of x y h => exact RingQuot.mkRingHom_rel h
+    | refl x => exact rfl
+    | symm _ k => exact k.symm
+    | trans h h' k k' => rw [k, k']
+    | add _ _ k k' => simp only [map_add, k, k']
+    | mul _ _ k k' => simp only [map_mul, k, k']
+
+
+
+
+
+
 theorem quotDecompose_injective [h𝒜 : GradedAlgebra 𝒜] (hrel : RelIsHomogeneous 𝒜 rel) {x y : A}
   (hxy : RingQuot.mkAlgHom R rel x = RingQuot.mkAlgHom R rel y)
   (i : ι) :
   RingQuot.mkAlgHom R rel (h𝒜.decompose' x i) = 
-    RingQuot.mkAlgHom R rel (h𝒜.decompose' y i) := by sorry
-
-
+    RingQuot.mkAlgHom R rel (h𝒜.decompose' y i) := by 
+  rw [← AlgHom.coe_toRingHom, RingQuot.mkAlgHom_coe R rel, obvious_iff] at hxy ⊢
+  exact RingConGen.RelIsHomogeneous_of 𝒜 _ hrel hxy i
+  
 theorem quotDecompose_injective' [h𝒜 : GradedAlgebra 𝒜] (hrel : RelIsHomogeneous 𝒜 rel) : 
   Function.Injective (DirectSum.coeLinearMap 
-    (fun i => (𝒜 i).map (RingQuot.mkAlgHom R rel))) := by
-  
+    (fun i => (𝒜 i).map (RingQuot.mkAlgHom R rel))) := by   
   have hφ : ∀ i, Function.Surjective (quotCompMap R 𝒜 rel i)
   . intro i ⟨x, hx⟩
     obtain ⟨a, ha, rfl⟩ := hx 
@@ -778,15 +927,20 @@ theorem quotDecompose_injective' [h𝒜 : GradedAlgebra 𝒜] (hrel : RelIsHomog
   obtain ⟨a, ha, rfl⟩ := DirectSum.lmap'_surjective (quotCompMap R 𝒜 rel) hφ x
   obtain ⟨b, hb, rfl⟩ := DirectSum.lmap'_surjective (quotCompMap R 𝒜 rel) hφ y
   simp only [quotDecompose_left_inv'_aux_apply] at hxy
-  apply DirectSum.ext R
+  let hxy' := quotDecompose_injective R 𝒜 rel hrel hxy
+  apply DFinsupp.ext
   intro i
+  specialize hxy' i
+  simp only [DirectSum.Decomposition.decompose'_eq] at hxy' 
+  suffices : ∀ a,  RingQuot.mkAlgHom R rel ↑(((DirectSum.decompose fun i => 𝒜 i) ((DirectSum.coeLinearMap fun i => 𝒜 i) a)) i)
+     = ((DirectSum.lmap' (quotCompMap R 𝒜 rel)) a) i
+  simpa only [this, SetLike.coe_eq_coe] using hxy' 
 
-  let hxy' := quotDecompose_injective R 𝒜 rel hrel hxy i
-  sorry
+  intro a
+  simp only [DirectSum.lmap'_apply]
+  congr
+  exact h𝒜.right_inv a
 
-
-
-  
 
 def DirectSum.Decomposition_RingQuot [h𝒜 : GradedAlgebra 𝒜] :
   GradedAlgebra (fun i => (𝒜 i).map (RingQuot.mkAlgHom R rel)) := {
