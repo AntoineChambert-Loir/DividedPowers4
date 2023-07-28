@@ -10,29 +10,6 @@ import Mathlib.Algebra.Algebra.Operations
 import Mathlib.Data.Rel
 import Mathlib.RingTheory.Ideal.Quotient
 
--- import algebra.free_algebra
--- import algebra.triv_sq_zero_ext
--- import algebra.triv_sq_zero_ext
--- import linear_algebra.multilinear.basic
--- import linear_algebra.multilinear.basic
--- import ring_theory.graded_algebra.basic
--- import ring_theory.graded_algebra.basic
--- import ring_theory.tensor_product
--- import ring_theory.tensor_product
--- import data.mv_polynomial.supported
--- import data.mv_polynomial.supported
--- import divided_powers.sub_pd_ideal
--- import divided_powers.sub_pd_ideal
--- import divided_powers.rat_algebra
--- import divided_powers.rat_algebra
--- import divided_powers.ideal_add
--- import divided_powers.ideal_add
--- import ..weighted_homogeneous -- Modified version of PR #17855
--- import ..weighted_homogeneous -- Modified version of PR #17855
--- import ..graded_ring_quot -- Quotients of graded rings
--- import ..graded_ring_quot -- Quotients of graded rings
--- import ..graded_module_quot
--- import ..graded_module_quot
 noncomputable section
 
 open Finset MvPolynomial Ideal.Quotient
@@ -142,6 +119,8 @@ def mk : MvPolynomial (ℕ × M) R →ₐ[R] DividedPowerAlgebra R M :=
 lemma mk_surjective : Function.Surjective (@mk R M _ _ _) := by 
   apply RingQuot.mkAlgHom_surjective
 
+lemma mk_C (a : R) : mk (C a) = algebraMap R (DividedPowerAlgebra R M) a := by
+  rw [← MvPolynomial.algebraMap_eq, AlgHom.commutes]
 variable (R)
 
 /-- `dp R n m` is the equivalence class of `X (⟨n, m⟩)` in `divided_power_algebra R M`. -/
@@ -213,14 +192,27 @@ theorem dp_sum_smul {ι : Type _} [DecidableEq ι] (s : Finset ι)
   by simp_rw [dp_sum, dp_smul, Algebra.smul_def, map_prod, ← Finset.prod_mul_distrib]
 #align divided_power_algebra.dp_sum_smul DividedPowerAlgebra.dp_sum_smul
 
-theorem unique_on_dp {A : Type _} [CommRing A] [Algebra R A] 
+variable {R}
+theorem ext_iff {A : Type _} [CommRing A] [Algebra R A] 
+    {f g : DividedPowerAlgebra R M →ₐ[R] A} :
+    (f = g) ↔ (∀ n m, f (dp R n m) = g (dp R n m)) := by
+  constructor
+  . intro h n m
+    rw [h]
+  . intro h
+    rw [FunLike.ext'_iff]
+    apply Function.Surjective.injective_comp_right (mkAlgHom_surjective R (Rel R M))
+    simp only [← AlgHom.coe_comp, ← FunLike.ext'_iff]
+    exact MvPolynomial.algHom_ext fun ⟨n, m⟩ => h n m
+
+@[ext]
+theorem ext {A : Type _} [CommRing A] [Algebra R A] 
     {f g : DividedPowerAlgebra R M →ₐ[R] A} 
-    (h : ∀ n m, f (dp R n m) = g (dp R n m)) : f = g := by
-  rw [FunLike.ext'_iff]
-  apply Function.Surjective.injective_comp_right (mkAlgHom_surjective R (Rel R M))
-  simp only [← AlgHom.coe_comp, ← FunLike.ext'_iff]
-  exact MvPolynomial.algHom_ext fun ⟨n, m⟩ => h n m
-#align divided_power_algebra.unique_on_dp DividedPowerAlgebra.unique_on_dp
+    (h : ∀ n m, f (dp R n m) = g (dp R n m)) : f = g :=
+  DividedPowerAlgebra.ext_iff.mpr h
+#align divided_power_algebra.unique_on_dp DividedPowerAlgebra.ext
+
+variable (R)
 
 section UniversalProperty
 
@@ -270,6 +262,7 @@ def lift' (f : ℕ × M → A) (hf_zero : ∀ m, f (0, m) = 1)
     {val := eval₂AlgHom R f, property := lift'_imp R M f hf_zero hf_smul hf_mul hf_add }
 #align divided_power_algebra.lift_aux DividedPowerAlgebra.lift'
 
+@[simp]
 theorem lift'AlgHom_apply (f : ℕ × M → A) (hf_zero : ∀ m, f (0, m) = 1)
     (hf_smul : ∀ (n : ℕ) (r : R) (m : M), f ⟨n, r • m⟩ = r ^ n • f ⟨n, m⟩)
     (hf_mul : ∀ n p m, f ⟨n, m⟩ * f ⟨p, m⟩ = (n + p).choose n • f ⟨n + p, m⟩)
@@ -281,6 +274,7 @@ theorem lift'AlgHom_apply (f : ℕ × M → A) (hf_zero : ∀ m, f (0, m) = 1)
   rfl
 #align divided_power_algebra.lift_aux_eq DividedPowerAlgebra.lift'AlgHom_apply
 
+@[simp]
 theorem lift'AlgHom_apply_dp (f : ℕ × M → A) (hf_zero : ∀ m, f (0, m) = 1)
     (hf_smul : ∀ (n : ℕ) (r : R) (m : M), f ⟨n, r • m⟩ = r ^ n • f ⟨n, m⟩)
     (hf_mul : ∀ n p m, f ⟨n, m⟩ * f ⟨p, m⟩ = (n + p).choose n • f ⟨n + p, m⟩)
@@ -311,6 +305,7 @@ def lift : DividedPowerAlgebra R M →ₐ[R] A :=
 
 variable {φ}
 
+@[simp]
 theorem liftAlgHom_apply (p : MvPolynomial (ℕ × M) R) :
     lift hI φ hφ (mk p) =
       aeval (fun nm : ℕ × M => hI.dpow nm.1 (φ nm.2)) p :=
@@ -323,6 +318,7 @@ theorem liftAlgHom_apply (p : MvPolynomial (ℕ × M) R) :
 --   by rw [liftAlgHom_apply]
 -- #align divided_power_algebra.lift_eq DividedPowerAlgebra.lift_eq
 
+@[simp]
 theorem liftAlgHom_apply_dp (n : ℕ) (m : M) :
     lift hI φ hφ (dp R n m) = hI.dpow n (φ m) := by 
   rw [lift, lift'AlgHom_apply_dp]
