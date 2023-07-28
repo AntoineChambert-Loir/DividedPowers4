@@ -647,20 +647,11 @@ theorem ι_mem_grade_one (m : M) : ι R m ∈ grade R M 1 := by
     convert isWeightedHomogeneous_X R Prod.fst ⟨1,m⟩
   . rfl
 
-
-theorem mem_grade_one_iff (a : DividedPowerAlgebra R M) : 
-  a ∈ grade R M 1 ↔ ∃ m, a = ι R m := by
-  constructor
-  . intro ha
-    
-  . rintro ⟨m, rfl⟩
-    apply ι_mem_grade_one
-    
-
+variable [Module Rᵐᵒᵖ M] [IsCentralScalar R M] 
 
 /-- The canonical map from `divided_power_algebra R M` into `triv_sq_zero_ext R M` that sends
 `divided_power_algebra.ι` to `triv_sq_zero_ext.inr`. -/
-def toTrivSqZeroExt [Module Rᵐᵒᵖ M] [IsCentralScalar R M] :
+def toTrivSqZeroExt :
     DividedPowerAlgebra R M →ₐ[R] TrivSqZeroExt R M := 
   lift (DividedPowers.OfSquareZero.dividedPowers 
       (TrivSqZeroExt.sqZero R M) : DividedPowers (kerIdeal R M))
@@ -669,18 +660,26 @@ def toTrivSqZeroExt [Module Rᵐᵒᵖ M] [IsCentralScalar R M] :
 #align divided_power_algebra.to_triv_sq_zero_ext DividedPowerAlgebra.toTrivSqZeroExt
 
 @[simp]
-theorem toTrivSqZeroExt_ι [Module Rᵐᵒᵖ M] [IsCentralScalar R M] (x : M) :
+theorem toTrivSqZeroExt_ι (x : M) :
     toTrivSqZeroExt R M (ι R x) = inr x :=
   lift_ι_apply R _ _ _ x
 #align divided_power_algebra.to_triv_sq_zero_ext_ι DividedPowerAlgebra.toTrivSqZeroExt_ι
 
-theorem toTrivSqZeroExt_snd [Module Rᵐᵒᵖ M] [IsCentralScalar R M] (m : M) :
+/- -- Pas très utile
+theorem toTrivSqZeroExt_snd (m : M) :
     ((toTrivSqZeroExt R M) (ι R m)).snd = m := by
   rw [toTrivSqZeroExt_ι]
   rfl
 #align divided_power_algebra.to_triv_sq_zero_ext_snd DividedPowerAlgebra.toTrivSqZeroExt_snd
+-/
 
-theorem deg_one_left_inv [Module Rᵐᵒᵖ M] [IsCentralScalar R M] :
+theorem toTrivSqZeroExt_apply_dp_of_two_le (n : ℕ) (m : M) (hn : 2 ≤ n) :
+  toTrivSqZeroExt R M (dp R n m) = 0 := by
+  rw [toTrivSqZeroExt, liftAlgHom_apply_dp]
+  rw [DividedPowers.OfSquareZero.dpow_of_two_le]
+  exact hn
+
+theorem deg_one_left_inv :
     Function.LeftInverse 
       (fun x : grade R M 1 => (toTrivSqZeroExt R M x.1).snd)
       (proj' R M 1 ∘ ι R) :=
@@ -695,11 +694,8 @@ theorem deg_one_left_inv [Module Rᵐᵒᵖ M] [IsCentralScalar R M] :
 
 #align divided_power_algebra.deg_one_left_inv DividedPowerAlgebra.deg_one_left_inv
 
-
-
-theorem grade_one_eq_span /- (R M : Type _) [CommRing R] [AddCommGroup M] [Module R M] [DecidableEq R]
-    [DecidableEq M ]-/ : grade R M 1 = Submodule.span R (Set.range (dp R 1)) :=
-  by
+theorem grade_one_eq_span : 
+  grade R M 1 = Submodule.span R (Set.range (dp R 1)) := by
   apply le_antisymm
   · intro p hp
     obtain ⟨q, hq1, hqp⟩ := surjective_of_supported' R M ⟨p, hp⟩
@@ -727,8 +723,7 @@ theorem grade_one_eq_span /- (R M : Type _) [CommRing R] [AddCommGroup M] [Modul
     exact dp_mem_grade R M 1 m
 #align divided_power_algebra.grade_one_eq_span DividedPowerAlgebra.grade_one_eq_span
 
-theorem grade_one_eq_span' (R M : Type _) [CommRing R] [AddCommGroup M] [Module R M] [DecidableEq R]
-    [DecidableEq M] :
+theorem grade_one_eq_span' :
     (⊤ : Submodule R (grade R M 1)) =
       Submodule.span R (Set.range fun m => ⟨dp R 1 m, dp_mem_grade R M 1 m⟩) :=
   by
@@ -739,7 +734,8 @@ theorem grade_one_eq_span' (R M : Type _) [CommRing R] [AddCommGroup M] [Module 
   rw [← Set.range_comp]; rfl
 #align divided_power_algebra.grade_one_eq_span' DividedPowerAlgebra.grade_one_eq_span'
 
-theorem deg_one_right_inv [DecidableEq R] [DecidableEq M] [Module Rᵐᵒᵖ M] [IsCentralScalar R M] :
+
+theorem deg_one_right_inv :
     Function.RightInverse
       (TrivSqZeroExt.sndHom R M ∘ (toTrivSqZeroExt R M).toLinearMap ∘ (grade R M 1).subtype)
       (proj' R M 1 ∘ ι R) :=
@@ -749,20 +745,17 @@ theorem deg_one_right_inv [DecidableEq R] [DecidableEq M] [Module Rᵐᵒᵖ M] 
   rw [FunLike.coe_injective.eq_iff]
   apply LinearMap.ext_on_range (grade_one_eq_span' R M).symm
   intro m
-  have hm : ((toTrivSqZeroExt R M) (dp R 1 m)).snd = m := by
-    rw [toTrivSqZeroExt, liftAlgHom_apply_dp]
-    rw [DividedPowers.dpow_one]
-    simp only [inrHom_apply, snd_inr]
-    rw [mem_kerIdeal_iff_exists]
-    exact ⟨m, rfl⟩
   simp only [proj'._eq_1, proj._eq_1, ι, LinearMap.coe_comp, LinearMap.coe_mk, AddHom.coe_mk, Submodule.coeSubtype,
     Function.comp_apply, AlgHom.toLinearMap_apply, sndHom_apply, LinearMap.id_coe, id_eq]
   ext
-  rw [hm, decompose_of_mem_same _ (dp_mem_grade R M 1 m), Subtype.coe_mk]
+  dsimp
+  rw [← ι_def R m, toTrivSqZeroExt_ι, ← ι_def, snd_inr]
+  rw [decompose_of_mem_same]
+  apply ι_mem_grade_one
 #align divided_power_algebra.deg_one_right_inv DividedPowerAlgebra.deg_one_right_inv
 
 -- ι : M → grade R M 1 is an isomorphism
-def linearEquivDegreeOne [Module Rᵐᵒᵖ M] [IsCentralScalar R M] :
+def linearEquivDegreeOne :
   LinearEquiv (RingHom.id R) M (grade R M 1) where
   toFun := (proj' R M 1).comp (ι R)
   invFun x := TrivSqZeroExt.sndHom R M (toTrivSqZeroExt R M x.1)
@@ -771,6 +764,25 @@ def linearEquivDegreeOne [Module Rᵐᵒᵖ M] [IsCentralScalar R M] :
   left_inv := deg_one_left_inv R M
   right_inv := deg_one_right_inv R M
 #align divided_power_algebra.linear_equiv_degree_one DividedPowerAlgebra.linearEquivDegreeOne
+
+lemma ι_toTrivSqZeroExt_of_mem_grade_one {a} (ha : a ∈ grade R M 1) :
+  (ι R) ((sndHom R M) ((toTrivSqZeroExt R M) a)) = a := by
+  suffices : 
+    ⟨(ι R) ((sndHom R M) ((toTrivSqZeroExt R M) a)), ι_mem_grade_one R M _⟩ = (⟨a, ha⟩ : grade R M 1) 
+  simpa only [sndHom_apply, Subtype.mk.injEq] using this 
+  apply (linearEquivDegreeOne R M).symm.injective
+  rw [← LinearEquiv.invFun_eq_symm]
+  simp only [linearEquivDegreeOne, toTrivSqZeroExt_ι]
+  simp only [sndHom_apply, snd_inr]
+
+theorem mem_grade_one_iff (a : DividedPowerAlgebra R M) : 
+  a ∈ grade R M 1 ↔ ∃ m, a = ι R m := by
+  constructor
+  . intro ha
+    use ((sndHom R M) ((toTrivSqZeroExt R M) a))
+    rw [ι_toTrivSqZeroExt_of_mem_grade_one R M ha]
+  . rintro ⟨m, rfl⟩
+    apply ι_mem_grade_one
 
 end GradeOne
 
