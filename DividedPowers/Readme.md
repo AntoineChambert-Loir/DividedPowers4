@@ -19,7 +19,7 @@
 ✕ DpAlgebra/Dpow
 ✕ DpAlgebra/Envelope
 ✕ DpAlgebra/Exponential
-✕ DpAlgebra/Graded
+✓ DpAlgebra/Graded
 ✓ DpAlgebra/Init
 ✓ DpAlgebra/Misc
 ✕ DpAlgebra/PolynomialMap
