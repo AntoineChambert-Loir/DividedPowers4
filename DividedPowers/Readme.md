@@ -22,7 +22,7 @@
 ✓ DpAlgebra/Graded
 ✓ DpAlgebra/Init
 ✓ DpAlgebra/Misc
-✕ DpAlgebra/PolynomialMap
+✓ DpAlgebra/PolynomialMap
 ✕ DpAlgebra/RobyLemma5
 ✕ DpAlgebra/RobyLemma9
 

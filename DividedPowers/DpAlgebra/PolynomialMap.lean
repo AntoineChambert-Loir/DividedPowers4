@@ -687,7 +687,6 @@ How to construct the coefficients:
 one needs to restrict m to r.support
 -/
 
-
 theorem image_eq_coeff_sum' {ι : Type _} [DecidableEq ι] (m : ι → M) 
     (f : PolynomialMap A M N) 
     (R : Type _) [CommSemiring R] [Algebra A R] (r : ι →₀ R) :
@@ -930,20 +929,21 @@ theorem TensorProduct.is_finsupp_sum_tmul' {A R : Type _}
 theorem isHomogeneousOfDegree_iff
     (p : ℕ) (f : PolynomialMap A M N) :
   f.IsHomogeneousOfDegree p ↔
-    ∀ {ι : Type _} [Fintype ι] (m : ι → M) (k : ι →₀ ℕ) (h : coeff m f k ≠ 0), 
+    ∀ {ι : Type _} [DecidableEq ι] [Fintype ι] 
+      (m : ι → M) (k : ι →₀ ℕ) (h : coeff m f k ≠ 0), 
       (k.sum fun i n => n) = p :=
   by
   classical
   constructor
   · -- difficult direction
     intro hf
-    intro ι _ m k h
+    intro ι _ _ m k h
     suffices hι : Nonempty ι
     obtain ⟨i₀: ι⟩ := hι
 
-
     simp only [IsHomogeneousOfDegree] at hf
-    specialize hf (MvPolynomial ι A) (MvPolynomial.X i₀) (Finset.sum Finset.univ fun i => MvPolynomial.X i ⊗ₜ[A] m i)
+    specialize hf (MvPolynomial ι A) (MvPolynomial.X i₀) 
+      (Finset.sum Finset.univ fun i => MvPolynomial.X i ⊗ₜ[A] m i)
     simp [← Finset.sum_smul] at hf
     have : MvPolynomial.X (R := A) i₀ • (Finset.univ.sum fun (i : ι) => (MvPolynomial.X i : MvPolynomial ι A) ⊗ₜ[A] m i) = 
       Finset.univ.sum (fun i => (MvPolynomial.X i₀ * MvPolynomial.X i : MvPolynomial ι A) ⊗ₜ[A] m i)
@@ -951,6 +951,8 @@ theorem isHomogeneousOfDegree_iff
       apply Finset.sum_congr rfl
       intro i _
       rfl
+    let hf' := LinearEquiv.congr_arg (e := (zooEquiv ι A N).symm) hf
+
     rw [this, image_eq_coeff_sum, image_eq_coeff_sum] at hf
     rw [Finsupp.smul_sum] at hf
     simp only [Finsupp.sum] at hf
@@ -966,6 +968,8 @@ theorem isHomogeneousOfDegree_iff
     
 
     sorry
+    sorry
+    . sorry
   · intro hf R _ _ c m
     classical
     obtain ⟨n, m, r, rfl⟩ := TensorProduct.is_finsupp_sum_tmul' m
