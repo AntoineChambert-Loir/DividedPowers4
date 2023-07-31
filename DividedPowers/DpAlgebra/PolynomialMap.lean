@@ -1,7 +1,7 @@
 import Mathlib.RingTheory.PowerSeries.Basic
 import Mathlib.RingTheory.TensorProduct
 import Mathlib.LinearAlgebra.Multilinear.Basic
-import Mathlib.Algebra.Module.Submodule.SubmoduleMem
+import DividedPowers.ForMathlib.RingTheory.SubmoduleMem
 /-! Polynomial laws on modules
 
 Reference : N. Roby, Lois polynômes et lois formelles en théorie des modules…
