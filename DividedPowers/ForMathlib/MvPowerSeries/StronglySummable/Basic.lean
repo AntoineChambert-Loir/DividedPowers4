@@ -56,17 +56,16 @@ theorem tendsto_zero_of_summable [AddCommGroup α] [TopologicalSpace α] [Topolo
     apply hi
     apply addU₁_subset
     use (insert i S).sum f - a, S.sum f - a, hS (insert i S) (subset_insert i S), hS S le_rfl
-    sorry --rw [sum_insert his, sub_sub_sub_cancel_right, add_sub_cancel]
+    simp only [sum_insert his, sub_sub_sub_cancel_right, add_sub_cancel]
   · suffices h_open : IsOpen ((fun xy : α × α => xy.fst - xy.snd) ⁻¹' U₀)
     · rw [isOpen_prod_iff] at h_open 
       obtain ⟨u, v, hu, hv, mem_u, mem_v, H⟩ :=
         h_open 0 0 (by simp only [Set.mem_preimage, sub_self, memU₀])
       use u ∩ v, IsOpen.inter hu hv, ⟨mem_u, mem_v⟩
-      sorry
-      /- apply subset_trans _ (set.image_subset_iff.mpr H)
-      rw [image_prod, image2_sub]
+      apply subset_trans _ (Set.image_subset_iff.mpr H)
+      rw [image_prod]
       rintro z ⟨x, y, hx, hy, rfl⟩
-      exact ⟨x, y, mem_of_mem_inter_left hx, mem_of_mem_inter_right hy, rfl⟩ -/
+      exact ⟨x, y, mem_of_mem_inter_left hx, mem_of_mem_inter_right hy, rfl⟩ 
     · exact IsOpen.preimage continuous_sub hU₀
 #align function.tendsto_zero_of_summable Function.tendsto_zero_of_summable
 
@@ -111,12 +110,14 @@ theorem of_weightedOrder_tendsto_top (w : σ → ℕ) (f : ι → MvPowerSeries 
   intro i  h' h
   apply h'
   exact coeff_of_lt_weightedOrder w _ h
-#align mv_power_series.strongly_summable.of_weighted_order_tendsto_top MvPowerSeries.StronglySummable.of_weightedOrder_tendsto_top
+#align mv_power_series.strongly_summable.of_weighted_order_tendsto_top
+  MvPowerSeries.StronglySummable.of_weightedOrder_tendsto_top
 
 theorem of_order_tendsto_top (f : ι → MvPowerSeries σ α)
     (hf : Tendsto (fun i => order (f i)) cofinite (nhds ⊤)) : StronglySummable f :=
   of_weightedOrder_tendsto_top _ f hf
-#align mv_power_series.strongly_summable.of_order_tendsto_top MvPowerSeries.StronglySummable.of_order_tendsto_top
+#align mv_power_series.strongly_summable.of_order_tendsto_top
+  MvPowerSeries.StronglySummable.of_order_tendsto_top
 
 -- Réciproques quand σ est fini !
 /-- When σ is finite, a family of power series is strongly summable 
@@ -133,34 +134,27 @@ theorem weightedOrder_tendsto_top_iff [Finite σ] {ι : Type _} {w : σ → ℕ}
       simp only [Set.mem_Ioi, eventually_cofinite, not_lt]
       let s := {d : σ →₀ ℕ | (weight w d) ≤ n}
       suffices h_ss :
-        {i | (f i).weightedOrder w ≤ some n} ⊆ ⋃ (d : σ →₀ ℕ) (H : d ∈ s), {i | coeff α d (f i) ≠ 0}
-      · exact ((finite_of_weight_le w hw n).biUnion fun d hd => hf d).subset h_ss
+        {i | (f i).weightedOrder w ≤ some n} ⊆ ⋃ (d : σ →₀ ℕ) (_ : d ∈ s), {i | coeff α d (f i) ≠ 0}
+      · exact ((finite_of_weight_le w hw n).biUnion fun d _ => hf d).subset h_ss
       · intro i hi
+        simp only [mem_setOf_eq] at hi 
         simp only [mem_setOf_eq, Nat.cast_id, Ne.def, mem_iUnion, mem_setOf_eq, exists_prop]
         have heq: (ENat.toNat (weightedOrder w (f i))) = weightedOrder w (f i) := by
           rw [ENat.coe_toNat_eq_self]
-          sorry
+          exact ne_of_lt (lt_of_le_of_lt hi hn)
         obtain ⟨d, hd⟩ := exists_coeff_ne_zero_of_weightedOrder w (f i) heq
         refine' ⟨d, _, hd.2⟩
         simpa [← hd.1, WithTop.some_eq_coe, Nat.cast_le] using hi 
-        /- obtain ⟨d, hd⟩ := exists_coeff_ne_zero_of_weightedOrder w (f i) _
-        refine' ⟨d, _, hd.2⟩
-        simpa [← hd.1, WithTop.some_eq_coe, Nat.cast_le] using hi  -/
-     
-        /- rw [ENat.coe_toNat_eq_self]
-        · intro hi'
-          rw [mem_set_of_eq, hi', top_le_iff] at hi 
-          exact WithTop.coe_ne_top hi
-    · infer_instance
-    · infer_instance -/
-#align mv_power_series.strongly_summable.weighted_order_tendsto_top_iff MvPowerSeries.StronglySummable.weightedOrder_tendsto_top_iff
+#align mv_power_series.strongly_summable.weighted_order_tendsto_top_iff 
+  MvPowerSeries.StronglySummable.weightedOrder_tendsto_top_iff
 
 /-- When σ is finite, a family of power series is strongly summable 
 iff their orders tend to infinity. -/
 theorem order_tendsto_top_iff [Finite σ] (f : ι → MvPowerSeries σ α) :
     StronglySummable f ↔ Tendsto (fun i => order (f i)) cofinite (nhds ⊤) :=
   weightedOrder_tendsto_top_iff (by simp) f
-#align mv_power_series.strongly_summable.order_tendsto_top_iff MvPowerSeries.StronglySummable.order_tendsto_top_iff
+#align mv_power_series.strongly_summable.order_tendsto_top_iff
+  MvPowerSeries.StronglySummable.order_tendsto_top_iff
 
 end Order
 
@@ -169,31 +163,33 @@ the coefficients bounded by `d`. -/
 noncomputable def unionOfSupportOfCoeffLe [DecidableEq ι] {f : ι → MvPowerSeries σ α}
     (hf : StronglySummable f) (d : σ →₀ ℕ) : Finset ι :=
   Finset.biUnion (Iic d) fun e => (hf e).toFinset
-#align mv_power_series.strongly_summable.union_of_support_of_coeff_le MvPowerSeries.StronglySummable.unionOfSupportOfCoeffLe
+#align mv_power_series.strongly_summable.union_of_support_of_coeff_le
+  MvPowerSeries.StronglySummable.unionOfSupportOfCoeffLe
 
 theorem not_mem_unionOfSupportOfCoeffLe_iff [DecidableEq ι] {f : ι → MvPowerSeries σ α}
     (hf : StronglySummable f) (d : σ →₀ ℕ) (i : ι) :
-    i ∉ hf.unionOfSupportOfCoeffLe d ↔ ∀ (e) (he : e ≤ d), coeff α e (f i) = 0 := by
+    i ∉ hf.unionOfSupportOfCoeffLe d ↔ ∀ (e) (_ : e ≤ d), coeff α e (f i) = 0 := by
   simp only [unionOfSupportOfCoeffLe, Finset.mem_biUnion, Finset.mem_Iic, Finite.mem_toFinset,
-    mem_support, not_exists, Classical.not_not]
-  sorry
-#align mv_power_series.strongly_summable.not_mem_union_of_support_of_coeff_le_iff MvPowerSeries.StronglySummable.not_mem_unionOfSupportOfCoeffLe_iff
+    mem_support, not_exists, ne_eq, not_and, not_not]
+#align mv_power_series.strongly_summable.not_mem_union_of_support_of_coeff_le_iff
+  MvPowerSeries.StronglySummable.not_mem_unionOfSupportOfCoeffLe_iff
 
 /- lemma union_of_coeff_support_finite {f : ι → mv_power_series σ α} 
   (hf : strongly_summable f) (d : σ →₀ ℕ) : 
   (⋃ e (H : e ≤ d), (λ i, coeff α e (f i)).support).finite := 
 (set.Iic d).to_finite.bUnion (λ d H, hf d) -/
+
 theorem of_subset_union_of_coeff_support_finite [DecidableEq ι] {f : ι → MvPowerSeries σ α}
     (hf : StronglySummable f) (d : σ →₀ ℕ) :
     {I : Finset ι | I ⊆ hf.unionOfSupportOfCoeffLe d}.Finite := by
-  sorry
-  /- suffices
-    {I : Finset ι | I ⊆ hf.union_of_support_of_coeff_le d} =
-      (hf.union_of_support_of_coeff_le d).powerset
-    by rw [this]; apply finite_to_set
+  suffices
+    {I : Finset ι | I ⊆ hf.unionOfSupportOfCoeffLe  d} =
+      (hf.unionOfSupportOfCoeffLe  d).powerset
+    by rw [this]; apply finite_toSet
   ext I
-  simp only [mem_set_of_eq, coe_powerset, Set.mem_preimage, mem_powerset_iff, coe_subset] -/
-#align mv_power_series.strongly_summable.of_subset_union_of_coeff_support_finite MvPowerSeries.StronglySummable.of_subset_union_of_coeff_support_finite
+  simp only [mem_setOf_eq, coe_powerset, Set.mem_preimage, mem_powerset_iff, coe_subset]
+#align mv_power_series.strongly_summable.of_subset_union_of_coeff_support_finite
+  MvPowerSeries.StronglySummable.of_subset_union_of_coeff_support_finite
 
 theorem support_add [DecidableEq ι] {f g : ι → MvPowerSeries σ α} (hf : StronglySummable f)
     (hg : StronglySummable g) :
@@ -234,16 +230,21 @@ theorem support_mul [DecidableEq ι] {f : ι → MvPowerSeries σ α} {κ : Type
   by
   rintro d ⟨i, j⟩ h
   dsimp only [Function.mem_support, coeff_mul] at h 
-  suffices ∃ p ∈ d.antidiagonal, coeff α (p.fst : σ →₀ ℕ) (f i) * (coeff α p.snd) (g j) ≠ 0
-    by
+  suffices ∃ p ∈ d.antidiagonal, coeff α (p.fst : σ →₀ ℕ) (f i) * (coeff α p.snd) (g j) ≠ 0 by
     obtain ⟨⟨b, c⟩, hbc, h'⟩ := this
-    rw [Finsupp.mem_antidiagonal] at hbc 
-    sorry
-    /- simp only [coe_product, coe_biUnion, mem_coe, Finsupp.mem_antidiagonal, Finite.coe_toFinset,
-      prod_mk_mem_set_prod_eq, mem_Union, Function.mem_support, Ne.def, exists_prop, Prod.exists]
+    simp only [Finsupp.mem_antidiagonal] at hbc 
+    erw [Finset.mem_product]
+    simp only [Finset.mem_biUnion, Finsupp.mem_antidiagonal, Finite.mem_toFinset, mem_support, 
+      ne_eq, Prod.exists]
     constructor
-    use b; use c; apply And.intro hbc; intro h₁; apply h'; rw [h₁]; rw [MulZeroClass.zero_mul]
-    use b; use c; apply And.intro hbc; intro h₂; apply h'; rw [h₂]; rw [MulZeroClass.mul_zero] -/
+    . use b, c, hbc
+      intro h₁
+      apply h'
+      rw [h₁, MulZeroClass.zero_mul]
+    . use b, c, hbc
+      intro h₂
+      apply h'
+      rw [h₂, MulZeroClass.mul_zero] 
   · by_contra' h'
     exact h (sum_eq_zero h')
 #align mv_power_series.strongly_summable.support_mul MvPowerSeries.StronglySummable.support_mul
@@ -275,11 +276,10 @@ theorem coeff_sum {f : ι → MvPowerSeries σ α} {hf : StronglySummable f} (d 
 theorem sum_congr {f g : ι → MvPowerSeries σ α} {hf : StronglySummable f} {hg : StronglySummable g}
     (h : f = g) : hf.sum = hg.sum := by
   ext d
-  rw [coeffSum.def]
-  sorry
-  /- refine' sum_congr _ fun i hi => by rw [h]
+  simp only [coeffSum.def]
+  refine' Finset.sum_congr _ fun i _ => by rw [h]
   ext i
-  simp only [finite.mem_to_finset, mem_support, Ne.def, h] -/
+  simp only [Finite.mem_toFinset, mem_support, Ne.def, h] 
 #align mv_power_series.strongly_summable.sum_congr MvPowerSeries.StronglySummable.sum_congr
 
 theorem sum_add {f g : ι → MvPowerSeries σ α} (hf : StronglySummable f) (hg : StronglySummable g)
@@ -301,12 +301,15 @@ theorem sum_mul {f : ι → MvPowerSeries σ α} {κ : Type _} {g : κ → MvPow
   ext d
   simp_rw [coeff_sum d _ (support_mul hf hg d), coeff_mul]
   rw [sum_comm]
-  apply Finset.sum_congr rfl
+  apply Finset.sum_congr rfl 
   intro bc hbc
+  --simp only [Finsupp.mem_antidiagonal] at hbc 
   rw [coeff_sum bc.fst, coeff_sum bc.snd, sum_mul_sum]
+  rfl
   all_goals
-    simp only [coe_biUnion, Finite.coe_toFinset, mem_coe]
-    sorry --exact @Set.subset_biUnion_of_mem _ _ _ _ bc hbc
+    intro x hx
+    apply @Finset.subset_biUnion_of_mem _ _ _ _ _ bc hbc
+    exact (Finite.mem_toFinset _).mpr hx
 #align mv_power_series.strongly_summable.sum_mul MvPowerSeries.StronglySummable.sum_mul
 
 theorem of_indicator {f : ι → MvPowerSeries σ α} (hf : StronglySummable f) (s : Set ι) :
@@ -316,8 +319,10 @@ theorem of_indicator {f : ι → MvPowerSeries σ α} (hf : StronglySummable f) 
   intro i
   simp only [mem_support, Ne.def, not_imp_not]
   intro hi
-  sorry --cases s.indicator_eq_zero_or_self f i <;> simp only [h, hi, map_zero]
-#align mv_power_series.strongly_summable.of_indicator MvPowerSeries.StronglySummable.of_indicator
+  cases' s.indicator_eq_zero_or_self f i with h h <;>
+  . simp only [h, hi, map_zero]
+#align mv_power_series.strongly_summable.of_indicator
+  MvPowerSeries.StronglySummable.of_indicator
 
 theorem add_compl {f : ι → MvPowerSeries σ α} (hf : StronglySummable f) (s : Set ι) :
     hf.sum = (hf.of_indicator s).sum + (hf.of_indicator (sᶜ)).sum := by
@@ -333,8 +338,8 @@ theorem on_subtype {f : ι → MvPowerSeries σ α} (hf : StronglySummable f) (s
   apply Finite.of_finite_image _ (injOn_of_injective Subtype.coe_injective _)
   apply (hf d).subset
   rintro i ⟨j, hj, rfl⟩
-  sorry/- simp only [comp_app, mem_support, Ne.def] at hj ⊢
-  exact hj -/
+  simp only [comp_apply, mem_support, Ne.def] at hj ⊢
+  exact hj
 #align mv_power_series.strongly_summable.on_subtype MvPowerSeries.StronglySummable.on_subtype
 
 theorem hasSum_coeff [TopologicalSpace α] {f : ι → MvPowerSeries σ α} (hf : StronglySummable f)
@@ -343,12 +348,14 @@ theorem hasSum_coeff [TopologicalSpace α] {f : ι → MvPowerSeries σ α} (hf 
   intro b hb
   rw [Finite.mem_toFinset, Function.mem_support, Classical.not_not] at hb 
   exact hb
-#align mv_power_series.strongly_summable.has_sum_coeff MvPowerSeries.StronglySummable.hasSum_coeff
+#align mv_power_series.strongly_summable.has_sum_coeff
+  MvPowerSeries.StronglySummable.hasSum_coeff
 
 theorem summable_coeff [TopologicalSpace α] {f : ι → MvPowerSeries σ α} (hf : StronglySummable f)
     (d : σ →₀ ℕ) : Summable fun i => coeff α d (f i) :=
   ⟨coeff α d hf.sum, hf.hasSum_coeff d⟩
-#align mv_power_series.strongly_summable.summable_coeff MvPowerSeries.StronglySummable.summable_coeff
+#align mv_power_series.strongly_summable.summable_coeff
+  MvPowerSeries.StronglySummable.summable_coeff
 
 end StronglySummable
 
@@ -362,18 +369,20 @@ theorem homogeneous_components_self_stronglySummable (w : σ → ℕ) (f : MvPow
     ite_eq_right_iff, not_forall, exists_prop, and_imp]
   intro h _
   exact h.symm
-#align mv_power_series.homogeneous_components_self_strongly_summable MvPowerSeries.homogeneous_components_self_stronglySummable
+#align mv_power_series.homogeneous_components_self_strongly_summable
+  MvPowerSeries.homogeneous_components_self_stronglySummable
 
 theorem as_sum_of_homogeneous_components (w : σ → ℕ) (f : MvPowerSeries σ α) :
     ∀ hf : StronglySummable fun p => homogeneousComponent w p f, f = hf.sum := by
   intro hf
   ext d
-  simp only [StronglySummable.sum, coeff_apply, coeff_homogeneousComponent]
-  sorry
-  /- rw [sum_eq_single (weight w d)]
+  simp_rw [coeff_apply, StronglySummable.sum, coeff_homogeneousComponent]
+  rw [sum_eq_single (weight w d)]
   · simp only [eq_self_iff_true, if_true]
-  · intro b h h'; rw [if_neg (Ne.symm h')]
-  · simp only [finite.mem_to_finset, Function.mem_support, Classical.not_not, imp_self] -/
+    rfl
+  · intro b _ h'
+    rw [if_neg (Ne.symm h')]
+  · simp only [Finite.mem_toFinset, Function.mem_support, Classical.not_not, imp_self]
 #align mv_power_series.as_sum_of_homogeneous_components
   MvPowerSeries.as_sum_of_homogeneous_components
 
@@ -419,31 +428,31 @@ theorem StronglySummable.support_partialProduct_le [DecidableEq ι] (hf : Strong
   simp only [mem_support, Ne.def, coe_powerset, Set.mem_preimage, Set.mem_powerset_iff, coe_subset,
     not_imp_comm, Finset.not_subset]
   rintro ⟨i, hi, h⟩
-  sorry
-  /- rw [StronglySummable.not_mem_union_of_support_of_coeff_le_iff] at h 
-  simp only [partial_product, prod_eq_mul_prod_diff_singleton hi, coeff_mul]
+  rw [StronglySummable.not_mem_unionOfSupportOfCoeffLe_iff] at h 
+  simp only [partialProduct, prod_eq_mul_prod_diff_singleton hi, coeff_mul]
   apply sum_eq_zero
   rintro ⟨x, y⟩
   rw [Finsupp.mem_antidiagonal]
   intro hxy
   rw [h x _, MulZeroClass.zero_mul]
-  simp only [← hxy, Finsupp.le_def, Finsupp.coe_add, Pi.add_apply, le_self_add] -/
-#align mv_power_series.strongly_summable.support_partial_product_le MvPowerSeries.StronglySummable.support_partialProduct_le
+  simp only [← hxy, Finsupp.le_def, Finsupp.coe_add, Pi.add_apply, le_self_add]
+#align mv_power_series.strongly_summable.support_partial_product_le
+  MvPowerSeries.StronglySummable.support_partialProduct_le
 
 theorem StronglySummable.to_stronglyMultipliable (hf : StronglySummable f) :
     StronglyMultipliable f := by
   classical exact fun d => Finite.subset (finite_toSet _) (hf.support_partialProduct_le d)
-#align mv_power_series.strongly_summable.to_strongly_multipliable MvPowerSeries.StronglySummable.to_stronglyMultipliable
+#align mv_power_series.strongly_summable.to_strongly_multipliable
+  MvPowerSeries.StronglySummable.to_stronglyMultipliable
 
 --TODO: move
 theorem Finset.prod_one_add' {ι α : Type _} [CommRing α] {f : ι → α} (s : Finset ι) :
     (s.prod fun i => 1 + f i) = s.powerset.sum fun t => t.prod f := by
   simp_rw [add_comm, prod_add]
   apply congr_arg
-  ext t
-  sorry
- /-  convert mul_one _
-  exact prod_eq_one fun i hi => rfl -/
+  ext t 
+  convert mul_one ((Finset.prod t fun a => f a)) 
+  exact prod_eq_one fun i _ => rfl
 #align mv_power_series.finset.prod_one_add' MvPowerSeries.Finset.prod_one_add'
 
 theorem StronglyMultipliable.finset_prod_eq (s : Finset ι) (hf : StronglyMultipliable f) :
@@ -455,24 +464,27 @@ theorem StronglyMultipliable.finset_prod_eq (s : Finset ι) (hf : StronglyMultip
     intro t ht
     apply congr_arg
     rw [indicator, if_pos]; rfl
-    · sorry --exact finset.mem_powerset.mp ht
+    · exact Finset.mem_powerset.mp ht
   · intro t
     rw [mem_support, Ne.def, mem_coe, Finset.mem_powerset, not_imp_comm]
     intro ht'
     rw [indicator, if_neg, map_zero]
     exact ht'
-#align mv_power_series.strongly_multipliable.finset_prod_eq MvPowerSeries.StronglyMultipliable.finset_prod_eq
+#align mv_power_series.strongly_multipliable.finset_prod_eq
+  MvPowerSeries.StronglyMultipliable.finset_prod_eq
 
 theorem StronglyMultipliable.prod_eq_sum_add_sum (hf : StronglyMultipliable f) (s : Set ι) :
     hf.prod = (hf.of_indicator {I : Finset ι | ↑I ⊆ s}).sum +
       (hf.of_indicator ({I : Finset ι | ↑I ⊆ s}ᶜ)).sum :=
   by rw [hf.prod_eq, ← hf.add_compl]
-#align mv_power_series.strongly_multipliable.prod_eq_sum_add_sum MvPowerSeries.StronglyMultipliable.prod_eq_sum_add_sum
+#align mv_power_series.strongly_multipliable.prod_eq_sum_add_sum
+  MvPowerSeries.StronglyMultipliable.prod_eq_sum_add_sum
 
 theorem StronglyMultipliable.prod_eq_finset_prod_add (hf : StronglyMultipliable f) (s : Finset ι) :
     hf.prod = (s.prod fun i => 1 + f i) + (hf.of_indicator ({I : Finset ι | I ⊆ s}ᶜ)).sum := by
   rw [hf.prod_eq_sum_add_sum s, hf.finset_prod_eq s]
-#align mv_power_series.strongly_multipliable.prod_eq_finset_prod_add MvPowerSeries.StronglyMultipliable.prod_eq_finset_prod_add
+#align mv_power_series.strongly_multipliable.prod_eq_finset_prod_add
+  MvPowerSeries.StronglyMultipliable.prod_eq_finset_prod_add
 
 theorem StronglySummable.Finset.prod_of_one_add_eq [DecidableEq ι] (hf : StronglySummable f)
     (d : σ →₀ ℕ) (J : Finset ι) (hJ : hf.unionOfSupportOfCoeffLe d ⊆ J) :
@@ -480,24 +492,22 @@ theorem StronglySummable.Finset.prod_of_one_add_eq [DecidableEq ι] (hf : Strong
   rw [hf.to_stronglyMultipliable.prod_eq_finset_prod_add J, map_add, self_eq_add_right,
     StronglySummable.coeffSum.def]
   apply sum_eq_zero
-  intro t ht
-  rw [indicator]
-  sorry
-  /- split_ifs with h
-  · rw [mem_compl_iff, mem_set_of_eq, Finset.not_subset] at h 
+  intro t _
+  simp only [indicator, mem_compl_iff, mem_setOf_eq]
+  split_ifs with h
+  ·  rw [map_zero] 
+  . simp only [Finset.not_subset] at h
     obtain ⟨i, hit, hiJ⟩ := h
-    simp only [partial_product, prod_eq_mul_prod_diff_singleton hit, coeff_mul]
+    simp only [partialProduct, prod_eq_mul_prod_diff_singleton hit, coeff_mul]
     apply sum_eq_zero
-    rintro ⟨x, y⟩
-    rw [Finsupp.mem_antidiagonal]
-    intro hxy
-    rw [(hf.not_mem_union_of_support_of_coeff_le_iff d i).mp (fun hi => hiJ (hJ hi)) x _,
+    rintro ⟨x, y⟩ hxy
+    rw [Finsupp.mem_antidiagonal] at hxy
+    rw [(hf.not_mem_unionOfSupportOfCoeffLe_iff d i).mp (fun hi => hiJ (hJ hi)) x _,
       MulZeroClass.zero_mul]
-    simp only [← hxy, Finsupp.le_def, Finsupp.coe_add, Pi.add_apply, le_self_add]
-  · rw [map_zero] -/
-#align mv_power_series.strongly_summable.finset.prod_of_one_add_eq MvPowerSeries.StronglySummable.Finset.prod_of_one_add_eq
+    simp only [← hxy, Finsupp.le_def, Finsupp.coe_add, Pi.add_apply, le_self_add] 
+#align mv_power_series.strongly_summable.finset.prod_of_one_add_eq
+  MvPowerSeries.StronglySummable.Finset.prod_of_one_add_eq
 
 end StronglyMultipliable
 
 end MvPowerSeries
-
