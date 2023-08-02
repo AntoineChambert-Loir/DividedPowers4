@@ -1189,7 +1189,7 @@ theorem isHomogeneousOfDegree_iff
     rw [not_imp_comm]
     intro hk
 
-    suffices : ∃ (l : ι →₀ ℕ), true
+    suffices : ∃ (l : ι →₀ ℕ), ∀ (a b), a ∈ (coeff m f).support → (Finset.univ.sum a) • l + a = p • l + b → Finset.univ.sum b = p
     obtain ⟨l, hl⟩ := this
 
     specialize hf (MvPolynomial ι R) (MvPolynomial.monomial l 1)
@@ -1252,9 +1252,11 @@ theorem isHomogeneousOfDegree_iff
     . intro x hx
       rw [if_neg]
       intro hx'
+      apply hk
       -- This is where the condition on l should be introduced
       -- It will suffice to take l of large degree 
-      sorry
+      exact hl x k hx hx'
+      
     . intro y _ hy
       rw [if_neg]
       intro hy'
@@ -1268,7 +1270,9 @@ theorem isHomogeneousOfDegree_iff
 
 
     . -- The choice of l 
-      sorry
+      by_cases hι : Nonempty ι
+      . sorry
+      . sorry
 
   · -- Trivial direction
     intro hf S _ _ c m
