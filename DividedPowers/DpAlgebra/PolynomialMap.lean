@@ -1170,17 +1170,9 @@ lemma _root_.Finsupp.eq_sum_single_apply {α : Type _} [DecidableEq α] [Fintype
   . simp only [Finset.mem_univ a]
     apply False.elim
 
-
-lemma aux {a b c d L : ℕ} (hb : b < L) (hd : d < L) (h : a * L + b = c * L + d) :
-  a = c := by
-  suffices : ∀ a b, b < L → (a * L + b) / L = a
-  rw [← this a b hb, ← this c d hd, h]
-  intro a b hb
-  sorry
-
-
-
-
+/-- (Roby, Prop. I.1)
+  A PolynomialMap is Homogeneous of degree p 
+  iff all its nonzero coefficients have degree p -/
 theorem isHomogeneousOfDegree_iff
     (p : ℕ) (f : PolynomialMap R M N) :
   f.IsHomogeneousOfDegree p ↔
@@ -1234,23 +1226,8 @@ theorem isHomogeneousOfDegree_iff
         Take x = k + p • l
         RHS : only term is given by y = k, gives coeff m f k
         LHS ? : y + deg (y) • l = k + p • l
-          y = k + (p - d) • l
-          d = deg (y) = deg(k) + (p - d) deg(l)
-          d (1 + deg(l)) = deg(k) + p deg(l)
-          deg(k) = p → d = deg(k) = p, y = k
-          deg(k) ≠ p : ? choisir l pour que 1 + deg(l) ne divise pas q + p deg(l)
-            q + p d = (q-p) + p (1+d)
-            1 + d ne divise pas q - p
-            |d| = q - p
-
-          k + p • l = y + deg (y) • l  = y' + deg(y') • l
-          y - y' = deg(y) - deg(y') • l
-          deg (y-y') = deg(y-y') deg(l)
-          ? deg(l) ≠ 1  : deg(y-y')= 0, y = y'
-          ? deg(l) = 1 : y ' = y + (deg(y') - deg(y)) • l
-            
-
-
+          for deg(l) large enough, 
+          this will imply y = k
       
         -/
 
@@ -1312,29 +1289,21 @@ theorem isHomogeneousOfDegree_iff
           = Finset.univ.sum (fun i ↦ p • (l i) + b i) at h'
         simp only [Finset.sum_add_distrib] at h'
         simp only [Finset.sum_nsmul] at h'
-        simp only [nsmul_eq_mul] at h'
-        -- simp? [Finset.sum_add_distrib] at h'
+        simp only [smul_eq_mul] at h'
 
         rw [Nat.succ_le_iff] at hl
-        /- suffices : ∀ {a b c d L : ℕ}, a * L + b = c * L + d →
-          b < L → d < L → a = c -/
-        apply aux _ _ h'
-        apply lt_of_le_of_lt _ hl
-        apply Finset.le_sup ha
-        apply lt_of_le_of_lt _ hl
-        apply Finset.le_sup hb
-        
-
-
-        
-
-
-
-
-
-
-
-
+        let h'' := congr_arg (fun x ↦ x % (Finset.univ.sum l)) h'
+        dsimp at h''
+        rw [Nat.mul_add_mod_of_lt (lt_of_le_of_lt (Finset.le_sup ha) hl)] at h''
+        rw [Nat.mul_add_mod_of_lt (lt_of_le_of_lt (Finset.le_sup hb) hl)] at h''
+        rw [h'', add_right_cancel_iff] at h' 
+        rw [mul_eq_mul_right_iff] at h' 
+        cases h' with
+        | inl h' => rw [h'', h']
+        | inr h' =>
+            exfalso
+            rw [h'] at hl
+            exact Nat.not_lt_zero _ hl
     . -- when ι is Empty
       simp only [not_nonempty_iff] at hι 
       simp only [Finset.univ_eq_empty, Finset.sum_empty]
