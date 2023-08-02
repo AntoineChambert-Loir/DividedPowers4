@@ -1171,6 +1171,13 @@ lemma _root_.Finsupp.eq_sum_single_apply {α : Type _} [DecidableEq α] [Fintype
     apply False.elim
 
 
+lemma aux {a b c d L : ℕ} (hb : b < L) (hd : d < L) (h : a * L + b = c * L + d) :
+  a = c := by
+  suffices : ∀ a b, b < L → (a * L + b) / L = a
+  rw [← this a b hb, ← this c d hd, h]
+  intro a b hb
+  sorry
+
 
 
 
@@ -1187,93 +1194,161 @@ theorem isHomogeneousOfDegree_iff
     intro hf
     intro ι _ _ m k
     rw [not_imp_comm]
-    intro hk
+    by_cases hι : Nonempty ι
+    . intro hk
 
-    suffices : ∃ (l : ι →₀ ℕ), ∀ (a b), a ∈ (coeff m f).support → (Finset.univ.sum a) • l + a = p • l + b → Finset.univ.sum b = p
-    obtain ⟨l, hl⟩ := this
+      suffices : ∀ (s : Finset (ι →₀ ℕ)), ∃ (l : ι →₀ ℕ), 
+        ∀ a ∈ s, ∀ b ∈ s,
+        (Finset.univ.sum a) • l + a = p • l + b → 
+        (Finset.univ.sum a = p ∧ a = b)
+      obtain ⟨l, hl⟩ := this (insert k (coeff m f).support)
 
-    specialize hf (MvPolynomial ι R) (MvPolynomial.monomial l 1)
-      (Finset.sum Finset.univ fun i => MvPolynomial.X i ⊗ₜ[R] m i)
-    simp only [Finset.smul_sum, TensorProduct.smul_tmul', image_eq_coeff_sum] at hf
-    simp only [Finsupp.smul_sum, TensorProduct.smul_tmul'] at hf
-    -- write the summands as monomials
-    simp_rw [smul_eq_mul, mul_pow, Finset.prod_mul_distrib, 
-      Finset.prod_pow_eq_pow_sum, MvPolynomial.monomial_pow,
-      one_pow] at hf
-    suffices : ∀ (c : ι →₀ ℕ), 
-      MvPolynomial.monomial c (1 : R) = Finset.univ.prod (fun i ↦ MvPolynomial.X i ^ c i)
-    simp_rw [← this] at hf
-    simp_rw [MvPolynomial.monomial_mul, mul_one] at hf
+      specialize hf (MvPolynomial ι R) (MvPolynomial.monomial l 1)
+        (Finset.sum Finset.univ fun i => MvPolynomial.X i ⊗ₜ[R] m i)
+      simp only [Finset.smul_sum, TensorProduct.smul_tmul', image_eq_coeff_sum] at hf
+      simp only [Finsupp.smul_sum, TensorProduct.smul_tmul'] at hf
+      -- write the summands as monomials
+      simp_rw [smul_eq_mul, mul_pow, Finset.prod_mul_distrib, 
+        Finset.prod_pow_eq_pow_sum, MvPolynomial.monomial_pow,
+        one_pow] at hf
+      suffices : ∀ (c : ι →₀ ℕ), 
+        MvPolynomial.monomial c (1 : R) = Finset.univ.prod (fun i ↦ MvPolynomial.X i ^ c i)
+      simp_rw [← this] at hf
+      simp_rw [MvPolynomial.monomial_mul, mul_one] at hf
 
-    let hf' := (zooEquiv ι R N).symm.congr_arg hf
-    rw [FunLike.ext_iff] at hf'
-    simp only [_root_.map_finsupp_sum] at hf'
-    simp only [Finsupp.sum_apply] at hf' 
-    simp only [zooEquiv_symm_apply_tmul] at hf'
-    simp only [MvPolynomial.coeff_monomial] at hf'
-    simp only [ite_smul, one_smul, zero_smul] at hf'
+      let hf' := (zooEquiv ι R N).symm.congr_arg hf
+      rw [FunLike.ext_iff] at hf'
+      simp only [_root_.map_finsupp_sum] at hf'
+      simp only [Finsupp.sum_apply] at hf' 
+      simp only [zooEquiv_symm_apply_tmul] at hf'
+      simp only [MvPolynomial.coeff_monomial] at hf'
+      simp only [ite_smul, one_smul, zero_smul] at hf'
 
-    
-
-    /- For all x, 
-      hf' proves the equality of the sums for y in the support of (coeff m f):
-      * LHS : if x = y + deg (y) • l,  coeff m f y
-      * RHS : if x = y + p • l, coeff m f y
-
-      Take x = k + p • l
-      RHS : only term is given by y = k, gives coeff m f k
-      LHS ? : y + deg (y) • l = k + p • l
-        y = k + (p - d) • l
-        d = deg (y) = deg(k) + (p - d) deg(l)
-        d (1 + deg(l)) = deg(k) + p deg(l)
-        deg(k) = p → d = deg(k) = p, y = k
-        deg(k) ≠ p : ? choisir l pour que 1 + deg(l) ne divise pas q + p deg(l)
-          q + p d = (q-p) + p (1+d)
-          1 + d ne divise pas q - p
-          |d| = q - p
-
-        k + p • l = y + deg (y) • l  = y' + deg(y') • l
-        y - y' = deg(y) - deg(y') • l
-        deg (y-y') = deg(y-y') deg(l)
-        ? deg(l) ≠ 1  : deg(y-y')= 0, y = y'
-        ? deg(l) = 1 : y ' = y + (deg(y') - deg(y)) • l
-          
-
-
-    
-       -/
-
-
-    specialize hf' (p • l + k)
-    rw [eq_comm] at hf'
-    rw [Finsupp.sum, Finset.sum_eq_single k, if_pos rfl] at hf'
-    rw [hf']
-    rw [Finsupp.sum, Finset.sum_eq_zero]
-    . intro x hx
-      rw [if_neg]
-      intro hx'
-      apply hk
-      -- This is where the condition on l should be introduced
-      -- It will suffice to take l of large degree 
-      exact hl x k hx hx'
       
-    . intro y _ hy
-      rw [if_neg]
-      intro hy'
-      apply hy
-      exact add_left_cancel hy'
-    . rw [if_pos rfl]
-      simp only [Finsupp.mem_support_iff, ne_eq, not_not, imp_self]
 
-    . intro c
-      simp only [MvPolynomial.monomial_eq, map_one, Finsupp.prod_pow, one_mul]
+      /- For all x, 
+        hf' proves the equality of the sums for y in the support of (coeff m f):
+        * LHS : if x = y + deg (y) • l,  coeff m f y
+        * RHS : if x = y + p • l, coeff m f y
+
+        Take x = k + p • l
+        RHS : only term is given by y = k, gives coeff m f k
+        LHS ? : y + deg (y) • l = k + p • l
+          y = k + (p - d) • l
+          d = deg (y) = deg(k) + (p - d) deg(l)
+          d (1 + deg(l)) = deg(k) + p deg(l)
+          deg(k) = p → d = deg(k) = p, y = k
+          deg(k) ≠ p : ? choisir l pour que 1 + deg(l) ne divise pas q + p deg(l)
+            q + p d = (q-p) + p (1+d)
+            1 + d ne divise pas q - p
+            |d| = q - p
+
+          k + p • l = y + deg (y) • l  = y' + deg(y') • l
+          y - y' = deg(y) - deg(y') • l
+          deg (y-y') = deg(y-y') deg(l)
+          ? deg(l) ≠ 1  : deg(y-y')= 0, y = y'
+          ? deg(l) = 1 : y ' = y + (deg(y') - deg(y)) • l
+            
 
 
-    . -- The choice of l 
-      by_cases hι : Nonempty ι
-      . sorry
-      . sorry
+      
+        -/
 
+
+      specialize hf' (p • l + k)
+      rw [eq_comm] at hf'
+      rw [Finsupp.sum, Finset.sum_eq_single k, if_pos rfl] at hf'
+      rw [hf']
+      rw [Finsupp.sum, Finset.sum_eq_zero]
+      . intro x hx
+        rw [if_neg]
+        intro hx'
+        apply hk
+        -- This is where the condition on l should be introduced
+        -- It will suffice to take l of large degree 
+        
+        let hl' := hl x (Finset.mem_insert_of_mem hx) 
+          k (Finset.mem_insert_self _ _) hx'
+        rw [← hl'.2, hl'.1]
+
+      . intro y _ hy
+        rw [if_neg]
+        intro hy'
+        apply hy
+        exact add_left_cancel hy'
+      . rw [if_pos rfl]
+        simp only [Finsupp.mem_support_iff, ne_eq, not_not, imp_self]
+
+      . intro c
+        simp only [MvPolynomial.monomial_eq, map_one, Finsupp.prod_pow, one_mul]
+
+
+      . -- The choice of l 
+        intro s
+        suffices : ∃ N, ∀ (l : ι →₀ ℕ), 
+          N ≤ Finset.univ.sum l →
+          ∀ a ∈ s, ∀ b ∈ s, 
+            Finset.univ.sum a • l + a = p • l + b →
+            Finset.univ.sum a = p ∧ a = b
+          
+        obtain ⟨N, hN⟩ := this
+        obtain ⟨i : ι⟩ := hι
+        use Finsupp.single i N
+        apply hN
+        simp only [Finsupp.sum_univ_single, le_refl]
+        
+        use (s.sup (fun a ↦ Finset.univ.sum a)).succ
+        intro l hl a ha b hb h
+        suffices : Finset.univ.sum a = p
+        . constructor
+          exact this
+          rw [this] at h
+          apply add_left_cancel h
+
+        
+        let h' := congr_arg (fun (x : ι →₀ ℕ) ↦ Finset.univ.sum x) h
+        dsimp at h'
+        change Finset.univ.sum (fun i ↦ Finset.univ.sum a • (l i) + a i)
+          = Finset.univ.sum (fun i ↦ p • (l i) + b i) at h'
+        simp only [Finset.sum_add_distrib] at h'
+        simp only [Finset.sum_nsmul] at h'
+        simp only [nsmul_eq_mul] at h'
+        -- simp? [Finset.sum_add_distrib] at h'
+
+        rw [Nat.succ_le_iff] at hl
+        /- suffices : ∀ {a b c d L : ℕ}, a * L + b = c * L + d →
+          b < L → d < L → a = c -/
+        apply aux _ _ h'
+        apply lt_of_le_of_lt _ hl
+        apply Finset.le_sup ha
+        apply lt_of_le_of_lt _ hl
+        apply Finset.le_sup hb
+        
+
+
+        
+
+
+
+
+
+
+
+
+    . -- when ι is Empty
+      simp only [not_nonempty_iff] at hι 
+      simp only [Finset.univ_eq_empty, Finset.sum_empty]
+      intro hp
+      specialize hf (MvPolynomial ι R) (0)
+        (Finset.sum Finset.univ fun i => MvPolynomial.X i ⊗ₜ[R] m i)
+      simp only [zero_pow' p (ne_comm.mp hp), zero_smul] at hf 
+      simp only [coeff, coe_comp, LinearEquiv.coe_coe, Function.comp_apply,
+        zooEquiv_symm_apply, AddEquivClass.map_eq_zero_iff] 
+      suffices : generize R N m f = 0
+      . simp only [this, map_zero]
+      . simp only [generize._eq_1, Finset.univ_eq_empty, Finset.sum_empty, 
+          coe_mk, AddHom.coe_mk]
+        exact hf
   · -- Trivial direction
     intro hf S _ _ c m
     obtain ⟨n, _, r, m, rfl⟩ := TensorProduct.is_finsupp_sum_tmul'' m
