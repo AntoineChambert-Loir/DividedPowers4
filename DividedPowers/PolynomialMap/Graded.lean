@@ -502,6 +502,9 @@ noncomputable def component (p : ℕ) (f : PolynomialMap R M N) :
     simp only [coe_comp, coe_restrictScalars, Function.comp_apply, AlgHom.toLinearMap_apply]
     rw [test3_monomial]
 
+-- TODO : 
+-- * prove that the family of components is locally finite 
+--  * prove that its sum is the initial polynomial map
 
 end PolynomialMap
 
