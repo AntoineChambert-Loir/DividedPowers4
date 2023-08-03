@@ -118,18 +118,20 @@ variable {R : Type _} [CommSemiring R] {ι : Type _}
 
 -- I think it makes more sense to have this in the `mv_polynomial` namespace
 --def linear_map.mv_polynomial.coeff (k : ι →₀ ℕ) : mv_polynomial ι A →ₗ[A] A :=
-def coeffLinearMap (k : ι →₀ ℕ) : MvPolynomial ι R →ₗ[R] R
+def lcoeff (k : ι →₀ ℕ) : MvPolynomial ι R →ₗ[R] R
     where
   -- or `coeff_linear_map`
   toFun := coeff k
   map_add' := coeff_add k
   map_smul' := coeff_smul k
-#align mv_polynomial.coeff_hom MvPolynomial.coeffLinearMap
+#align mv_polynomial.coeff_hom MvPolynomial.lcoeff
 
-theorem coeffLinearMap_apply (k : ι →₀ ℕ) (f : MvPolynomial ι R) :
-    coeffLinearMap k f = MvPolynomial.coeff k f :=
+#check MvPolynomial.lcoeff
+
+theorem lcoeff_apply (k : ι →₀ ℕ) (f : MvPolynomial ι R) :
+    lcoeff k f = MvPolynomial.coeff k f :=
   rfl
-#align mv_polynomial.coeff_hom_apply MvPolynomial.coeffLinearMap_apply
+#align mv_polynomial.coeff_hom_apply MvPolynomial.lcoeff_apply
 
 end MvPolynomial
 
@@ -272,7 +274,7 @@ theorem zooEquiv_symm_apply_tmul (p : MvPolynomial σ R) (n : N) :
 theorem zooEquiv_symm_apply (pn) :
   (zooEquiv σ R N).symm pn k =
     (TensorProduct.lid R N)
-      ((rTensor N (MvPolynomial.coeffLinearMap k)) pn) := by
+      ((rTensor N (MvPolynomial.lcoeff k)) pn) := by
   induction pn using TensorProduct.induction_on with
   | C0 => simp only [map_zero, coe_zero, Pi.zero_apply]
   | C1 p n =>
