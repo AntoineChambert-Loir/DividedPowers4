@@ -3,32 +3,12 @@
 -/
 
 import DividedPowers.ForMathlib.WeightedHomogeneous
-
 import Mathlib.Algebra.RingQuot
 import Mathlib.Algebra.TrivSqZeroExt
 import Mathlib.Algebra.Algebra.Operations
 import Mathlib.Data.MvPolynomial.Supported
 import Mathlib.Data.MvPolynomial.CommRing
 
--- import algebra.free_algebra
--- import linear_algebra.multilinear.basic
--- import linear_algebra.multilinear.basic
--- import ring_theory.graded_algebra.basic
--- import ring_theory.graded_algebra.basic
--- import ring_theory.tensor_product
--- import ring_theory.tensor_product
--- import data.rel
--- import data.rel
--- import data.nat.order.basic
--- import data.nat.order.basic
--- import algebra.order.monoid.canonical.defs
--- import algebra.order.monoid.canonical.defs
--- Modified version of PR #17855
--- Modified version of PR #17855
--- import ..graded_ring_quot -- Quotients of graded rings
--- import ..graded_ring_quot -- Quotients of graded rings
--- import ..graded_module_quot
--- import ..graded_module_quot
 noncomputable section
 
 open Finset MvPolynomial RingQuot DirectSum Ideal Ideal.Quotient
