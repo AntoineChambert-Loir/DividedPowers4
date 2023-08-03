@@ -125,7 +125,7 @@ theorem generize_eq (m : ι → M) (f : PolynomialMap R M N)  :
 theorem coeff_eq (m : ι → M) (k : ι →₀ ℕ) (f : PolynomialMap R M N) :
   coeff m f k =
     (TensorProduct.lid R N)
-      ((LinearMap.rTensor N (MvPolynomial.coeffLinearMap k))
+      ((LinearMap.rTensor N (MvPolynomial.lcoeff k))
         (f.toFun (MvPolynomial ι R) (Finset.univ.sum
           fun i : ι => MvPolynomial.X i ⊗ₜ[R] m i))) := by
   simp only [coeff, coe_comp, LinearEquiv.coe_coe, Function.comp_apply]
@@ -167,7 +167,7 @@ theorem coeff_comp_equiv {ι : Type u} [DecidableEq ι] [Fintype ι]
   ext p
   simp only [coe_comp, Function.comp_apply, AlgHom.toLinearMap_apply]
   simp only [MvPolynomial.aeval_monomial, _root_.map_one, Finsupp.prod_pow, 
-    _root_.one_mul, MvPolynomial.coeffLinearMap_apply]
+    _root_.one_mul, MvPolynomial.lcoeff_apply]
   suffices : Finset.prod Finset.univ (fun x ↦ MvPolynomial.X (e x) ^ p x) = MvPolynomial.monomial (Finsupp.equivMapDomain e p) (1 : R)
   simp only [this, MvPolynomial.coeff_monomial]
   by_cases h : p = k
