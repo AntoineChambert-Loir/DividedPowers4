@@ -59,13 +59,13 @@ open scoped TensorProduct
 
 section Algebra
 
-variable (A : Type _) [CommSemiring A] 
-  (R : Type _) [CommSemiring R] [Algebra A R]
+variable (R : Type _) [CommSemiring R] 
+  (S : Type _) [CommSemiring S] [Algebra R S]
 
 namespace Algebra.TensorProduct
 
--- The natural `R`-algebra map from `R ⊗[A] A` to `R`.
-def rid' : R ⊗[A] A →ₐ[R] R := { Algebra.TensorProduct.rid A R with
+-- The natural `R`-algebra map from `S ⊗[R] R` to `S`.
+def rid' : S ⊗[R] R →ₐ[S] S := { Algebra.TensorProduct.rid R S with
   map_one' := by simp only [AlgEquiv.toFun_eq_coe, map_one]
   map_zero' := by simp only [AlgEquiv.toFun_eq_coe, map_zero]
   commutes' := fun r => by
@@ -73,34 +73,33 @@ def rid' : R ⊗[A] A →ₐ[R] R := { Algebra.TensorProduct.rid A R with
 #align algebra.tensor_product.rid' Algebra.TensorProduct.rid'
 
 @[simp]
-theorem rid'_tmul (a : A) (r : R) : (rid' A R) (r ⊗ₜ[A] a) = a • r :=
-  rfl
+theorem rid'_tmul (r : R) (s : S) : (rid' R S) (s ⊗ₜ[R] r) = r • s := rfl
 #align algebra.tensor_product.rid'_tmul Algebra.TensorProduct.rid'_tmul
 
 end Algebra.TensorProduct
 
-variable (M : Type _) [AddCommMonoid M] [Module A M]
+variable (M : Type _) [AddCommMonoid M] [Module R M]
 
 -- Q (not important): I am not sure if `linear_form` is used in mathlib.
 namespace LinearForm
 
 open Algebra.TensorProduct LinearMap
 
-def baseChange (f : M →ₗ[A] A) : R ⊗[A] M →ₗ[R] R :=
-  (rid' A R).toLinearMap.comp (LinearMap.baseChange R f)
+def baseChange (f : M →ₗ[R] R) : S ⊗[R] M →ₗ[S] S :=
+  (rid' R S).toLinearMap.comp (LinearMap.baseChange S f)
 #align linear_form.base_change LinearForm.baseChange
 
-theorem baseChange_apply_tmul (f : M →ₗ[A] A) (r : R) (m : M) :
-  baseChange A R M f (r ⊗ₜ[A] m) = r * ((f m) • (1 : R)) := by
+theorem baseChange_apply_tmul (f : M →ₗ[R] R) (r : S) (m : M) :
+  baseChange R S M f (r ⊗ₜ[R] m) = r * ((f m) • (1 : S)) := by
   simp only [baseChange, coe_comp, Function.comp_apply, baseChange_tmul, 
     AlgHom.toLinearMap_apply, rid'_tmul, Algebra.mul_smul_comm, _root_.mul_one]
 #align linear_form.base_change_apply_tmul LinearForm.baseChange_apply_tmul
 
-variable (R' : Type _) [CommSemiring R'] [Algebra A R'] (φ : R →ₐ[A] R')
+variable (S' : Type _) [CommSemiring S'] [Algebra R S'] (φ : S →ₐ[R] S')
 
-theorem baseChange_compat_apply (f : M →ₗ[A] A) (m : R ⊗[A] M) :
-  φ (baseChange A R M f m) =
-    (baseChange A R' M f) ((rTensor M φ.toLinearMap) m) := by
+theorem baseChange_compat_apply (f : M →ₗ[R] R) (m : S ⊗[R] M) :
+  φ (baseChange R S M f m) =
+    (baseChange R S' M f) ((rTensor M φ.toLinearMap) m) := by
   induction' m using TensorProduct.induction_on with r m x y hx hy
   · simp only [map_zero]
   · simp only [baseChange, coe_comp, Function.comp_apply, baseChange_tmul, 
@@ -312,14 +311,41 @@ section Apply
 variable {R : Type u} {M N : Type _} [CommSemiring R]
   [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module R N]
 
+example : R ⊗[R] M ≃ₗ[R] M := by 
+  exact TensorProduct.lid R M
+
+/-- The map M → N associated with a PolynomialMap R M N (essentially, toFun R)-/
+def ground (f : PolynomialMap R M N) : M → N :=
+  (TensorProduct.lid R N) ∘ (f.toFun R) ∘ (TensorProduct.lid R M).symm
+
 theorem isCompat_apply (f : PolynomialMap R M N)
     {S : Type u} [CommSemiring S] [Algebra R S]
     {S' : Type u} [CommSemiring S'] [Algebra R S']
     (φ : S →ₐ[R] S') (x : S ⊗[R] M) :
-    (φ.toLinearMap.rTensor N) ((f.toFun S) x) = 
+  (φ.toLinearMap.rTensor N) ((f.toFun S) x) = 
       (f.toFun S') (φ.toLinearMap.rTensor M x) := by
   simpa only using congr_fun (f.isCompat φ) x
 #align polynomial_map.is_compat_apply PolynomialMap.isCompat_apply
+
+variable {S : Type u} [CommSemiring S] [Algebra R S]
+
+-- Give this a name ?
+example : N →ₗ[R] S ⊗[R] N where
+  toFun := fun n ↦ 1 ⊗ₜ n
+  map_add' := sorry
+  map_smul' := sorry
+
+variable (R)
+def algebraMap' (S : Type u) [Semiring S] [Algebra R S] : R →ₐ[R] S where
+  toRingHom := algebraMap R S
+  commutes' := fun _ ↦ rfl
+
+variable {R}
+theorem isCompat_apply_ground (f : PolynomialMap R M N)
+    {S : Type u} [CommSemiring S] [Algebra R S]
+    (x : M) : 
+  1 ⊗ₜ (f.ground x) = (f.toFun S) (1 ⊗ₜ x) := 
+  sorry
 
 end Apply
 
@@ -455,6 +481,39 @@ theorem comp_assoc (f : PolynomialMap R M N) (g : PolynomialMap R N P)
 
 end Comp
 
+section Homogeneous
+
+universe u
+
+variable {R M N : Type _} [CommSemiring R]
+  [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module R N]
+
+/-- A polynomial map is homogeneous if all its toFun are homogeneous -/
+def IsHomogeneousOfDegree
+    (p : ℕ) (f : PolynomialMap R M N) : Prop :=
+  ∀ (S : Type u) [CommSemiring S] [Algebra R S] (r : S) (m : S ⊗[R] M),
+    f.toFun S (r • m) = r ^ p • f.toFun S m
+#align polynomial_map.is_homogeneous_of_degree PolynomialMap.IsHomogeneousOfDegree
+
+theorem IsHomogeneousOfDegree_add (p : ℕ) {f g : PolynomialMap R M N}
+  (hf : f.IsHomogeneousOfDegree p) (hg : g.IsHomogeneousOfDegree p) :
+  (f + g).IsHomogeneousOfDegree p := sorry
+
+theorem IsHomogeneousOfDegree_smul (p : ℕ) (r : R) {f : PolynomialMap R M N}
+  (hf : f.IsHomogeneousOfDegree p) :
+  (r • f).IsHomogeneousOfDegree p := sorry
+
+/-- The submodule of Homogeneous Polynomial maps -/
+def grade (p : ℕ) : Submodule R (PolynomialMap R M N) where
+  carrier   := IsHomogeneousOfDegree p
+  add_mem' hf hg := IsHomogeneousOfDegree_add p hf hg
+  smul_mem' r f hf := IsHomogeneousOfDegree_smul p r hf
+  zero_mem' := by
+    intro S _ _ r _
+    simp only [zero_def, Pi.zero_apply, smul_zero]
+
+end Homogeneous
+
 section ConstantMap
 
 variable {R : Type u} [CommSemiring R]
@@ -470,6 +529,21 @@ def ofConstant (n : N) : PolynomialMap R M N where
 
 #align polynomial_map.of_constant PolynomialMap.ofConstant
 
+/-- Homogeneous Polynomial maps of degree 0 are constant maps -/
+def ofConstantHom : N →ₗ[R] (grade 0 : Submodule R (PolynomialMap R M N)) := {
+  toFun := fun n ↦ { 
+    val := ofConstant n 
+    property := sorry }
+  map_add' := sorry
+  map_smul' := sorry }
+
+/-- Homogeneous Polynomial maps of degree 0 are constant maps -/
+def ofConstantEquiv : N ≃ₗ[R] (grade 0 : Submodule R (PolynomialMap R M N)) := {
+  ofConstantHom with 
+  invFun := fun f ↦ f.val.ground 0
+  left_inv := sorry
+  right_inv := sorry  }
+  
 end ConstantMap
 
 section Linear
@@ -491,13 +565,15 @@ theorem ofLinearMap_toFun (u : M →ₗ[R] N)
   (ofLinearMap u).toFun S = baseChange S u := rfl
 #align polynomial_map.of_linear_map_to_fun PolynomialMap.ofLinearMap_toFun
 
-def ofLinearMapHom : (M →ₗ[R] N) →ₗ[R] PolynomialMap R M N
+def ofLinearMapHom : 
+  (M →ₗ[R] N) →ₗ[R] (grade 1 : Submodule R (PolynomialMap R M N))
     where
-  toFun := ofLinearMap
+  toFun := fun u ↦ {
+    val := ofLinearMap u
+    property := sorry }
   map_add' u v := by
     ext S _ _ m
-    simp only [PolynomialMap.add_def, ofLinearMap_toFun, Pi.add_apply, 
-      baseChange_add, add_apply]
+    simp only [ofLinearMap_toFun, baseChange_add, add_apply, AddSubmonoid.mk_add_mk, add_def_apply]
   map_smul' a v := by 
     ext S _ _ m
     simp only [smul_def, ofLinearMap_toFun, baseChange_smul]
@@ -508,6 +584,13 @@ theorem ofLinearMapHom_apply (v : M →ₗ[R] N) :
   ofLinearMapHom v = ofLinearMap v := rfl
 #align polynomial_map.of_linear_map_hom_apply PolynomialMap.ofLinearMapHom_apply
 
+theorem ofLinearMapEquiv : 
+  (M →ₗ[R] N) ≃ₗ[R] (grade 1 : Submodule R (PolynomialMap R M N)) := {
+  ofLinearMapHom with
+  invFun := sorry
+  left_inv := sorry
+  right_inv := sorry }
+  
 end Linear
 
 /-
@@ -545,16 +628,16 @@ section LocallyFinite
 variable {R : Type u} [CommSemiring R]
   {M N : Type _} [AddCommMonoid M] [AddCommMonoid N] [Module R M] [Module R N]
 
-def Locfinsupp {ι : Type _} (f : ι → PolynomialMap R M N) :=
+def LocFinsupp {ι : Type _} (f : ι → PolynomialMap R M N) :=
   ∀ (S : Type u) [CommSemiring S] [Algebra R S] (m : S ⊗[R] M),
     (Function.support fun i => (f i).toFun S m).Finite
-#align polynomial_map.locfinsupp PolynomialMap.Locfinsupp
+#align polynomial_map.locfinsupp PolynomialMap.LocFinsupp
 
 variable (R M N)
 
-def withLocfinsupp (ι : Type _) :
+def withLocFinsupp (ι : Type _) :
   Submodule R (ι → PolynomialMap R M N) where
-  carrier := Locfinsupp
+  carrier := LocFinsupp
   add_mem' := by
     intro a b ha hb S _ _ m
     exact Set.Finite.subset (Set.finite_union.mpr ⟨ha S m, hb S m⟩) 
@@ -566,14 +649,14 @@ def withLocfinsupp (ι : Type _) :
   smul_mem' a f hf S _ _ m := by
     skip
     exact Set.Finite.subset (hf S m) (Function.support_smul_subset_right a _)
-#align polynomial_map.with_locfinsupp PolynomialMap.withLocfinsupp
+#align polynomial_map.with_locfinsupp PolynomialMap.withLocFinsupp
 
-namespace Locfinsupp
+namespace LocFinsupp
 
 variable {R M N}
 
 noncomputable def sum {ι : Type _} (f : ι → PolynomialMap R M N)
-    (hf : Locfinsupp f) :
+    (hf : LocFinsupp f) :
   PolynomialMap R M N where
   toFun S _ _ m := (Finsupp.ofSupportFinite _ (hf S m)).sum fun _ m => m
   isCompat {S _ _ S' _ _} φ := by
@@ -592,26 +675,26 @@ noncomputable def sum {ι : Type _} (f : ι → PolynomialMap R M N)
         Set.Finite.mem_toFinset, Function.mem_support, ← isCompat_apply]
       intro hi
       rw [hi, map_zero]
-#align polynomial_map.locfinsupp.sum PolynomialMap.Locfinsupp.sum
+#align polynomial_map.locfinsupp.sum PolynomialMap.LocFinsupp.sum
 
 theorem sum_eq {ι : Type _} (f : ι → PolynomialMap R M N)
-    (hf : Locfinsupp f)
+    (hf : LocFinsupp f)
     (S : Type _) [CommSemiring S] [Algebra R S] (m : S ⊗[R] M) :
-  (Locfinsupp.sum f hf).toFun S m =
+  (LocFinsupp.sum f hf).toFun S m =
     (Finsupp.ofSupportFinite _ (hf S m)).sum fun _ m => m := rfl
-#align polynomial_map.locfinsupp.sum_eq PolynomialMap.Locfinsupp.sum_eq
+#align polynomial_map.locfinsupp.sum_eq PolynomialMap.LocFinsupp.sum_eq
 
-end Locfinsupp
+end LocFinsupp
 
 --TODO: I don't think this is in the right namespace, but I don't know how to rename it.
-noncomputable def LinearMap.Locfinsupp.sum {ι : Type _} [DecidableEq ι] :
-    withLocfinsupp R M N ι →ₗ[R] PolynomialMap R M N
+noncomputable def LinearMap.LocFinsupp.sum {ι : Type _} [DecidableEq ι] :
+    withLocFinsupp R M N ι →ₗ[R] PolynomialMap R M N
     where
-  toFun fhf := PolynomialMap.Locfinsupp.sum fhf.val fhf.prop
+  toFun fhf := PolynomialMap.LocFinsupp.sum fhf.val fhf.prop
   map_add' := fun ⟨f, hf⟩ ⟨g, hg⟩ => by
     ext S _ _ m
     skip
-    simp only [AddMemClass.mk_add_mk, PolynomialMap.Locfinsupp.sum_eq, Pi.add_apply, add_def_apply]
+    simp only [AddMemClass.mk_add_mk, PolynomialMap.LocFinsupp.sum_eq, Pi.add_apply, add_def_apply]
     rw [@Finsupp.sum_of_support_subset _ _ _ _ _ _ ((hf S m).toFinset ∪ (hg S m).toFinset),
       Finsupp.sum_of_support_subset _ (Finset.subset_union_left _ _),
       Finsupp.sum_of_support_subset _ (Finset.subset_union_right _ _), ← Finset.sum_add_distrib]
@@ -626,7 +709,7 @@ noncomputable def LinearMap.Locfinsupp.sum {ι : Type _} [DecidableEq ι] :
   map_smul' a fhf := by
     ext S _ _ m
     skip
-    simp only [smul_def, PolynomialMap.Locfinsupp.sum_eq, Submodule.coe_smul_of_tower,
+    simp only [smul_def, PolynomialMap.LocFinsupp.sum_eq, Submodule.coe_smul_of_tower,
       Pi.smul_apply, RingHom.id_apply]
     rw [Finsupp.sum_of_support_subset]
     · rw [Finsupp.smul_sum, Finsupp.sum]
@@ -636,7 +719,7 @@ noncomputable def LinearMap.Locfinsupp.sum {ι : Type _} [DecidableEq ι] :
       intro hi
       rw [hi, smul_zero]
     · intro i _ ; rfl
-#align polynomial_map.linear_map.locfinsupp.sum PolynomialMap.LinearMap.Locfinsupp.sum
+#align polynomial_map.linear_map.locfinsupp.sum PolynomialMap.LinearMap.LocFinsupp.sum
 
 end LocallyFinite
 

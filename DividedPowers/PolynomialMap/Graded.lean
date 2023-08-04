@@ -67,12 +67,6 @@ universe u v w
 variable {R : Type u} {M N : Type _} [CommSemiring R]
   [AddCommMonoid M] [AddCommMonoid N] [Module R M] [Module R N]
 
-def IsHomogeneousOfDegree
-    (p : ℕ) (f : PolynomialMap R M N) : Prop :=
-  ∀ (S : Type u) [CommSemiring S] [Algebra R S] (r : S) (m : S ⊗[R] M),
-    f.toFun S (r • m) = r ^ p • f.toFun S m
-#align polynomial_map.is_homogeneous_of_degree PolynomialMap.IsHomogeneousOfDegree
-
 theorem TensorProduct.is_finsupp_sum_tmul {R S : Type _}
     [CommSemiring R] [CommSemiring S] [Algebra R S] [Module R M]
     (m : S ⊗[R] M) :
@@ -534,15 +528,6 @@ variable {R : Type u} [CommSemiring R]
     rw [test3_monomial]
  -/
 
-
--- TODO : 
--- * prove that the family of components is locally finite 
---  * prove that its sum is the initial polynomial map
--- * prove that they are homogeneous
--- * prove that the component map is R-linear
-  
-
-
 /-- The homogeneous components of a `PolynomialMap` -/
 noncomputable def component (p : ℕ) (f : PolynomialMap R M N) :
   PolynomialMap R M N where
@@ -626,6 +611,22 @@ lemma componentIsHomogeneous (p : ℕ) (f : PolynomialMap R M N) :
       TensorProduct.mk_apply]
     rw [TensorProduct.smul_tmul', smul_eq_mul]
 
+theorem component_add (p : ℕ) (f g : PolynomialMap R M N) :
+  (f + g).component p = f.component p + g.component p := sorry
+
+theorem component_smul (r : R) (f : PolynomialMap R M N) :
+  (r • f).component p = r • f.component p := sorry
+
+theorem LocFinsupp_component (f : PolynomialMap R M N) :
+  LocFinsupp (fun p ↦ f.component p) := sorry
+
+/-- A polynomial map is the locally finite sum of its homogeneous components.
+(PolynomialMap lies in between the direct sum and the product of its graded submodules, hence there is no graded module structure.) -/
+theorem recompose_component (f : PolynomialMap R M N) :
+  f.LocFinsupp_component.sum = f := sorry
+
+
+#exit
 
 section test
 
