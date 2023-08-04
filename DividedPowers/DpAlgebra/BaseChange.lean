@@ -12,6 +12,8 @@ open scoped TensorProduct
 
 namespace DividedPowerAlgebra
 
+open Algebra.TensorProduct DividedPowers DividedPowerAlgebra 
+
 def AlgHom.baseChange 
     {R A B C : Type _} [CommRing R] [CommRing A] [Algebra R A]
     [CommRing B] [Algebra R B] 
@@ -21,8 +23,15 @@ def AlgHom.baseChange
     commutes' := fun r => by
       simp only [Algebra.TensorProduct.algebraMap_apply, Algebra.id.map_eq_id, RingHom.id_apply,
         AlgHom.toFun_eq_coe, Algebra.TensorProduct.productMap_apply_tmul,
-        IsScalarTower.coe_toAlgHom', map_one, mul_one] }
+        IsScalarTower.coe_toAlgHom', map_one, _root_.mul_one] }
 #align alg_hom.base_change DividedPowerAlgebra.AlgHom.baseChange
+
+def _root_.TensorProduct.includeRight {R S N : Type _} [CommSemiring R] [CommSemiring S] [Algebra R S] [AddCommMonoid N] [Module R N] : 
+  N →ₗ[R] S ⊗[R] N where
+  toFun := fun n ↦ 1 ⊗ₜ n
+  map_add' := fun x y ↦ TensorProduct.tmul_add 1 x y
+  map_smul' := fun r x ↦ by 
+    simp only [TensorProduct.tmul_smul, TensorProduct.smul_tmul', RingHom.id_apply]
 
 noncomputable def dpScalarExtension' 
     (R : Type u) [CommRing R] 
@@ -59,10 +68,11 @@ def dpScalarExtension (A : Type _) [CommRing A] (R : Type _) [CommRing R]
 def dpScalarExtensionInv (R : Type _) [CommRing R] 
     (S : Type _) [CommRing S] [Algebra R S]
     (M : Type _) [AddCommGroup M] [Module R M] :
-  DividedPowerAlgebra S (S ⊗[R] M) →ₐ[S] S ⊗[R] DividedPowerAlgebra R M :=
-  by
+  DividedPowerAlgebra S (S ⊗[R] M) →ₐ[S] S ⊗[R] DividedPowerAlgebra R M := by
   -- TODO: Roby's proof uses the exponential module
   sorry
+  
+  
 #align divided_power_algebra.dp_scalar_extension_inv DividedPowerAlgebra.dpScalarExtensionInv
 
 instance (R : Type _) [CommSemiring R] 
@@ -83,7 +93,7 @@ instance (R : Type _) [CommSemiring R]
 noncomputable 
 def dpScalarExtensionEquiv (R : Type _) [CommRing R] 
     (S : Type _) [CommRing S] [Algebra R S]
-    (M : Type _) [AddCommGroup M] [Module R M] [Module S M] [IsScalarTower R S M] :
+    (M : Type _) [AddCommGroup M] [Module R M] :
   S ⊗[R] DividedPowerAlgebra R M ≃ₐ[S] DividedPowerAlgebra S (S ⊗[R] M) := 
   AlgEquiv.ofAlgHom 
     (dpScalarExtension R S M)
