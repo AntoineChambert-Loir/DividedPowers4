@@ -294,12 +294,12 @@ section PolynomialMap
 /-- A polynomial map M → N between A-modules is a functorial family
 of maps R ⊗[A] M → R ⊗[A] N, for all A-algebras R -/
 @[ext]
-structure PolynomialMap (R : Type u) [CommSemiring R]
+structure PolynomialMap (R : Type u) [CommRing R]
     (M : Type _) [AddCommMonoid M] [Module R M]
     (N : Type _) [AddCommMonoid N] [Module R N] where
-  toFun (S : Type u) [CommSemiring S] [Algebra R S] : S ⊗[R] M → S ⊗[R] N
-  isCompat {S : Type u} [CommSemiring S] [Algebra R S]
-    {S' : Type u} [CommSemiring S'] [Algebra R S'] (φ : S →ₐ[R] S') :
+  toFun (S : Type u) [CommRing S] [Algebra R S] : S ⊗[R] M → S ⊗[R] N
+  isCompat {S : Type u} [CommRing S] [Algebra R S]
+    {S' : Type u} [CommRing S'] [Algebra R S'] (φ : S →ₐ[R] S') :
     φ.toLinearMap.rTensor N ∘ toFun S =
       toFun S' ∘ φ.toLinearMap.rTensor M
 #align polynomial_map PolynomialMap
@@ -308,7 +308,7 @@ namespace PolynomialMap
 
 section Apply
 
-variable {R : Type u} {M N : Type _} [CommSemiring R]
+variable {R : Type u} {M N : Type _} [CommRing R]
   [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module R N]
 
 example : R ⊗[R] M ≃ₗ[R] M := by 
@@ -319,15 +319,15 @@ def ground (f : PolynomialMap R M N) : M → N :=
   (TensorProduct.lid R N) ∘ (f.toFun R) ∘ (TensorProduct.lid R M).symm
 
 theorem isCompat_apply (f : PolynomialMap R M N)
-    {S : Type u} [CommSemiring S] [Algebra R S]
-    {S' : Type u} [CommSemiring S'] [Algebra R S']
+    {S : Type u} [CommRing S] [Algebra R S]
+    {S' : Type u} [CommRing S'] [Algebra R S']
     (φ : S →ₐ[R] S') (x : S ⊗[R] M) :
   (φ.toLinearMap.rTensor N) ((f.toFun S) x) = 
       (f.toFun S') (φ.toLinearMap.rTensor M x) := by
   simpa only using congr_fun (f.isCompat φ) x
 #align polynomial_map.is_compat_apply PolynomialMap.isCompat_apply
 
-variable {S : Type u} [CommSemiring S] [Algebra R S]
+variable {S : Type u} [CommRing S] [Algebra R S]
 
 -- Give this a name ?
 example : N →ₗ[R] S ⊗[R] N where
@@ -342,7 +342,7 @@ def algebraMap' (S : Type u) [Semiring S] [Algebra R S] : R →ₐ[R] S where
 
 variable {R}
 theorem isCompat_apply_ground (f : PolynomialMap R M N)
-    {S : Type u} [CommSemiring S] [Algebra R S]
+    {S : Type u} [CommRing S] [Algebra R S]
     (x : M) : 
   1 ⊗ₜ (f.ground x) = (f.toFun S) (1 ⊗ₜ x) := 
   sorry
@@ -351,7 +351,7 @@ end Apply
 
 section Module
 
-variable {R : Type u} [CommSemiring R]
+variable {R : Type u} [CommRing R]
   {M N : Type _} [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module R N]
 
 def add (f g : PolynomialMap R M N) : PolynomialMap R M N
@@ -359,6 +359,7 @@ def add (f g : PolynomialMap R M N) : PolynomialMap R M N
   toFun S _ _ := f.toFun S + g.toFun S
   isCompat φ := by
     ext
+    simp only [Function.comp_apply, Pi.add_apply, map_add]
     simp only [Function.comp_apply, Pi.add_apply, map_add, isCompat_apply]
 
 #align polynomial_map.add PolynomialMap.add
@@ -368,7 +369,7 @@ instance : Zero (PolynomialMap R M N) :=
       isCompat := fun _ => rfl }⟩
 
 @[simp]
-theorem zero_def (S : Type _) [CommSemiring S] [Algebra R S] :
+theorem zero_def (S : Type _) [CommRing S] [Algebra R S] :
     (0 : PolynomialMap R M N).toFun S = 0 :=
   rfl
 #align polynomial_map.zero_def PolynomialMap.zero_def
@@ -381,13 +382,13 @@ instance : Add (PolynomialMap R M N) :=
 
 @[simp]
 theorem add_def (f g : PolynomialMap R M N)
-    (S : Type u) [CommSemiring S] [Algebra R S] :
+    (S : Type u) [CommRing S] [Algebra R S] :
   (f + g).toFun S = f.toFun S + g.toFun S := rfl
 #align polynomial_map.add_def PolynomialMap.add_def
 
 @[simp]
 theorem add_def_apply (f g : PolynomialMap R M N)
-    (S : Type _) [CommSemiring S] [Algebra R S] (m : S ⊗[R] M) :
+    (S : Type _) [CommRing S] [Algebra R S] (m : S ⊗[R] M) :
   (f + g).toFun S m = f.toFun S m + g.toFun S m := rfl
 #align polynomial_map.add_def_apply PolynomialMap.add_def_apply
 
@@ -425,7 +426,7 @@ instance hasSmul : SMul R (PolynomialMap R M N) :=
 #align polynomial_map.has_smul PolynomialMap.hasSmul
 
 theorem smul_def (f : PolynomialMap R M N) 
-    (r : R) (S : Type u) [CommSemiring S] [Algebra R S] :
+    (r : R) (S : Type u) [CommRing S] [Algebra R S] :
   (r • f).toFun S = r • f.toFun S :=
   rfl
 #align polynomial_map.smul_def PolynomialMap.smul_def
@@ -450,7 +451,7 @@ end Module
 
 section Comp
 
-variable {R M N : Type _} [CommSemiring R]
+variable {R M N : Type _} [CommRing R]
   [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module R N]
 
 variable {P : Type _} [AddCommMonoid P] [Module R P]
@@ -462,12 +463,12 @@ def comp (g : PolynomialMap R N P) (f : PolynomialMap R M N) :
 #align polynomial_map.comp PolynomialMap.comp
 
 theorem comp_toFun (f : PolynomialMap R M N) (g : PolynomialMap R N P)
-    (S : Type _) [CommSemiring S] [Algebra R S] :
+    (S : Type _) [CommRing S] [Algebra R S] :
   (g.comp f).toFun S = (g.toFun S).comp (f.toFun S) := rfl
 #align polynomial_map.comp_to_fun PolynomialMap.comp_toFun
 
 theorem comp_apply (f : PolynomialMap R M N) (g : PolynomialMap R N P)
-    (S : Type u) [CommSemiring S] [Algebra R S] (m : S ⊗[R] M) :
+    (S : Type u) [CommRing S] [Algebra R S] (m : S ⊗[R] M) :
   (g.comp f).toFun S m = (g.toFun S) (f.toFun S m) := rfl
 #align polynomial_map.comp_apply PolynomialMap.comp_apply
 
@@ -485,13 +486,13 @@ section Homogeneous
 
 universe u
 
-variable {R M N : Type _} [CommSemiring R]
+variable {R M N : Type _} [CommRing R]
   [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module R N]
 
 /-- A polynomial map is homogeneous if all its toFun are homogeneous -/
 def IsHomogeneousOfDegree
     (p : ℕ) (f : PolynomialMap R M N) : Prop :=
-  ∀ (S : Type u) [CommSemiring S] [Algebra R S] (r : S) (m : S ⊗[R] M),
+  ∀ (S : Type u) [CommRing S] [Algebra R S] (r : S) (m : S ⊗[R] M),
     f.toFun S (r • m) = r ^ p • f.toFun S m
 #align polynomial_map.is_homogeneous_of_degree PolynomialMap.IsHomogeneousOfDegree
 
@@ -516,7 +517,7 @@ end Homogeneous
 
 section ConstantMap
 
-variable {R : Type u} [CommSemiring R]
+variable {R : Type u} [CommRing R]
   {M N : Type _} [AddCommMonoid M] [AddCommMonoid N] [Module R M] [Module R N]
 
 open scoped TensorProduct
@@ -550,7 +551,7 @@ section Linear
 
 open scoped TensorProduct
 
-variable {R : Type u} [CommSemiring R] 
+variable {R : Type u} [CommRing R] 
   {M N : Type _} [AddCommMonoid M] [AddCommMonoid N] [Module R M] [Module R N]
 
 def ofLinearMap (v : M →ₗ[R] N) : PolynomialMap R M N where
@@ -561,7 +562,7 @@ def ofLinearMap (v : M →ₗ[R] N) : PolynomialMap R M N where
 #align polynomial_map.of_linear_map PolynomialMap.ofLinearMap
 
 theorem ofLinearMap_toFun (u : M →ₗ[R] N)
-    (S : Type _) [CommSemiring S] [Algebra R S] :
+    (S : Type _) [CommRing S] [Algebra R S] :
   (ofLinearMap u).toFun S = baseChange S u := rfl
 #align polynomial_map.of_linear_map_to_fun PolynomialMap.ofLinearMap_toFun
 
@@ -625,11 +626,11 @@ end multilinear
 -/
 section LocallyFinite
 
-variable {R : Type u} [CommSemiring R]
+variable {R : Type u} [CommRing R]
   {M N : Type _} [AddCommMonoid M] [AddCommMonoid N] [Module R M] [Module R N]
 
 def LocFinsupp {ι : Type _} (f : ι → PolynomialMap R M N) :=
-  ∀ (S : Type u) [CommSemiring S] [Algebra R S] (m : S ⊗[R] M),
+  ∀ (S : Type u) [CommRing S] [Algebra R S] (m : S ⊗[R] M),
     (Function.support fun i => (f i).toFun S m).Finite
 #align polynomial_map.locfinsupp PolynomialMap.LocFinsupp
 
@@ -679,7 +680,7 @@ noncomputable def sum {ι : Type _} (f : ι → PolynomialMap R M N)
 
 theorem sum_eq {ι : Type _} (f : ι → PolynomialMap R M N)
     (hf : LocFinsupp f)
-    (S : Type _) [CommSemiring S] [Algebra R S] (m : S ⊗[R] M) :
+    (S : Type _) [CommRing S] [Algebra R S] (m : S ⊗[R] M) :
   (LocFinsupp.sum f hf).toFun S m =
     (Finsupp.ofSupportFinite _ (hf S m)).sum fun _ m => m := rfl
 #align polynomial_map.locfinsupp.sum_eq PolynomialMap.LocFinsupp.sum_eq
@@ -743,11 +744,11 @@ an S'-isomorphism which Mathlib doesn't know (yet)
 What follows is draft
 
 -/
-variable {R : Type u} {M N : Type _} [CommSemiring R]
+variable {R : Type u} {M N : Type _} [CommRing R]
   [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module R N]
 
-variable {R' : Type u} [CommSemiring R'] [Algebra R R']
-variable {S' : Type u} [CommSemiring S'] [Algebra R' S']
+variable {R' : Type u} [CommRing R'] [Algebra R R']
+variable {S' : Type u} [CommRing S'] [Algebra R' S']
 
 variable [Algebra R S'] [IsScalarTower R R' S']
 

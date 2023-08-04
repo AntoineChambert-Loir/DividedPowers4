@@ -3,11 +3,11 @@ import Mathlib.RingTheory.TensorProduct
 import Mathlib.Data.MvPolynomial.Basic
 import Mathlib.Data.Polynomial.Basic
 
-section rTensor
-
 open TensorProduct LinearMap
 
 open scoped TensorProduct
+
+section 
 
 variable {R : Type _} [CommSemiring R]
   {S : Type _} [CommSemiring S] [Algebra R S]
@@ -15,6 +15,8 @@ variable {R : Type _} [CommSemiring R]
   {N : Type _} [AddCommMonoid N] [Module S N] [Module R N] [IsScalarTower R S N]
   {P : Type _} [AddCommMonoid P] [Module R P]
   {Q : Type _} [AddCommMonoid Q] [Module R Q]
+
+section rTensor
 
 def TensorProduct.map' (f : M →ₗ[S] N) (g : P →ₗ[R] Q) :
   M ⊗[R] P →ₗ[S] N ⊗[R] Q := {
@@ -54,13 +56,9 @@ lemma TensorProduct.rTensor_smul' (f : M →ₗ[S] N) (s : S) (t : M ⊗[R] P) :
 
 end rTensor
 
-section Homogeneous
+section TensorProduct
 
-open Algebra Function LinearMap
-
-open scoped TensorProduct
-
-namespace PolynomialMap
+open LinearMap Function TensorProduct
 
 universe u v w
 
@@ -82,7 +80,7 @@ theorem TensorProduct.is_finsupp_sum_tmul {R S : Type _}
     rw [Finsupp.sum_add_index']
     · intro a; simp only [TensorProduct.zero_tmul]
     · intro m r₁ r₂; rw [TensorProduct.add_tmul]
-#align tensor_product.is_finsupp_sum_tmul PolynomialMap.TensorProduct.is_finsupp_sum_tmul
+#align tensor_product.is_finsupp_sum_tmul TensorProduct.is_finsupp_sum_tmul
 
 theorem TensorProduct.is_finsupp_sum_tmul' {R S : Type _}
     [CommSemiring R] [CommSemiring S] [Algebra R S] [Module R M]
@@ -119,7 +117,7 @@ theorem TensorProduct.is_finsupp_sum_tmul' {R S : Type _}
 
 example (α : Type _) [Fintype α] : Fintype (ULift α) := by exact ULift.fintype α
 
-example (α : Type _) : α ≃ ULift α := by apply?
+example (α : Type _) : α ≃ ULift α := by exact Equiv.ulift.symm
 
 theorem ULift.fintype_sum (α : Type _) [Fintype α] (f : α → ℕ) :
   Finset.univ.sum f = 
@@ -181,7 +179,8 @@ lemma _root_.MvPolynomial.prod_monomial_eq {α : Type _} [DecidableEq α]
   = MvPolynomial.monomial (s.sum k) (s.prod c) := by
   induction s using Finset.induction_on with
   | empty => 
-    simp only [Finset.prod_empty, Finset.sum_empty, MvPolynomial.monomial_zero', map_one] 
+    simp only [Finset.prod_empty, Finset.sum_empty, MvPolynomial.monomial_zero', 
+      _root_.map_one] 
   | insert ha hs => 
       rw [Finset.prod_insert ha, hs, MvPolynomial.monomial_mul, 
         Finset.sum_insert ha, Finset.prod_insert ha]
@@ -189,7 +188,7 @@ lemma _root_.MvPolynomial.prod_monomial_eq {α : Type _} [DecidableEq α]
 lemma _root_.MvPolynomial.monomial_one_eq {α : Type _} [DecidableEq α]  
     (c : α →₀ ℕ) :
     MvPolynomial.monomial c (1 : R) = c.prod fun a n => MvPolynomial.X a ^ n := by
-    rw [MvPolynomial.monomial_eq, map_one, one_mul]
+    rw [MvPolynomial.monomial_eq, _root_.map_one, one_mul]
     
 lemma _root_.Finsupp.eq_sum_single_apply {α : Type _} [DecidableEq α] [Fintype α] 
     (c : α →₀ ℕ) :
@@ -201,6 +200,22 @@ lemma _root_.Finsupp.eq_sum_single_apply {α : Type _} [DecidableEq α] [Fintype
     simp only [Finsupp.single_eq_of_ne hb]
   . simp only [Finset.mem_univ a]
     apply False.elim
+
+end TensorProduct
+
+end
+
+section Homogeneous
+
+namespace PolynomialMap
+
+
+
+universe u v w
+
+variable {R : Type u}[CommRing R]
+    {M : Type _} [AddCommGroup M] [Module R M] 
+    {N : Type _}  [AddCommGroup N] [Module R N]
 
 /-- (Roby, Prop. I.1)
   A PolynomialMap is Homogeneous of degree p 
@@ -289,7 +304,7 @@ theorem isHomogeneousOfDegree_iff
         simp only [Finsupp.mem_support_iff, ne_eq, not_not, imp_self]
 
       . intro c
-        simp only [MvPolynomial.monomial_eq, map_one, Finsupp.prod_pow, one_mul]
+        simp only [MvPolynomial.monomial_eq, _root_.map_one, Finsupp.prod_pow, one_mul]
 
 
       . -- The choice of l 
@@ -372,6 +387,7 @@ theorem isHomogeneousOfDegree_iff
       simp only [TensorProduct.tmul_zero, smul_zero]
 
 #align polynomial_map.is_homogeneous_of_degree_iff PolynomialMap.isHomogeneousOfDegree_iff
+
 
 end PolynomialMap
 
@@ -475,8 +491,8 @@ lemma coeff_test3_apply_eq {S S' : Type _} [CommSemiring S] [Algebra R S]
   | h_monomial n r _ => 
       simp only [Polynomial.eval₂_mul, Polynomial.eval₂_C, RingHom.coe_comp, 
         RingHom.coe_coe, Function.comp_apply, eval₂_X_pow, 
-        Polynomial.coeff_C_mul, map_mul, Polynomial.coeff_X_pow]
-      rw [apply_ite φ, map_one, map_zero]
+        Polynomial.coeff_C_mul, _root_.map_mul, Polynomial.coeff_X_pow]
+      rw [apply_ite φ, _root_.map_one, map_zero]
 
 lemma coeff_comp_test3_eq {S S' : Type _} [CommSemiring S] [Algebra R S] 
     [CommSemiring S'] [Algebra R S'] (φ : S →ₐ[R] S') : 
@@ -500,9 +516,9 @@ lemma test3_monomial {S S' : Type _} [CommSemiring S] [Algebra R S]
 
 end Polynomial
 
-variable {R : Type u} [CommSemiring R]
-  {M : Type _} [AddCommMonoid M] [Module R M]
-  {N : Type _} [AddCommMonoid N] [Module R N]
+variable {R : Type u} [CommRing R]
+  {M : Type _} [AddCommGroup M] [Module R M]
+  {N : Type _} [AddCommGroup N] [Module R N]
 
 /- noncomputable def component' (p : ℕ) (f : PolynomialMap R M N) :
   PolynomialMap R M N where

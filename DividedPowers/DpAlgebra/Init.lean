@@ -26,6 +26,7 @@ The divided power algebra of a module -/
 
 section
 
+/- Here, we need CommRing and AddCommGroup, because of RingQuot -/
 variable (R M : Type _) [CommRing R] [AddCommGroup M] [Module R M]
 
 namespace DividedPowerAlgebra

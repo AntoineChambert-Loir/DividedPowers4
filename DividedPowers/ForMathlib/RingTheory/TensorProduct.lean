@@ -5,9 +5,9 @@ Authors: Scott Morrison, Johan Commelin
 
 ! This file was ported from Lean 3 source module for_mathlib.ring_theory.tensor_product
 -/
-import Mathbin.LinearAlgebra.FiniteDimensional
-import Mathbin.RingTheory.Adjoin.Basic
-import Mathbin.LinearAlgebra.DirectSum.Finsupp
+import Mathlib.LinearAlgebra.FiniteDimensional
+import Mathlib.RingTheory.Adjoin.Basic
+import Mathlib.LinearAlgebra.DirectSum.Finsupp
 
 /-!
 # The tensor product of R-algebras
