@@ -9,6 +9,9 @@ open Finset
 
 namespace DividedPowers
 
+/- We need A to be a ring, until we can prove `dpow_factorsThrough` with semiring 
+ The better proof using the exponential module should work in the general case -/
+ 
 variable {A : Type _} [CommRing A] {I : Ideal A} (hI : DividedPowers I)
 
 namespace IdealAdd
@@ -42,6 +45,7 @@ theorem dpow_factorsThrough {J : Ideal A} (hJ : DividedPowers J)
   dsimp [Function.FactorsThrough]
   rintro ⟨⟨a, ha⟩, ⟨b, hb⟩⟩ ⟨⟨a', ha'⟩, ⟨b', hb'⟩⟩ H
   dsimp only at H ⊢
+  -- Needs A to be a ring
   let c := a - a'
   suffices haa' : a = a' + c
   suffices hbb' : b' = b + c
@@ -521,7 +525,7 @@ open Polynomial
 
 open scoped Classical
 
-theorem Polynomial.inv_C_eq_C_inv {R : Type _} [CommRing R] (a : R) :
+theorem Polynomial.inv_C_eq_C_inv {R : Type _} [CommSemiring R] (a : R) :
     Ring.inverse (C a) = C (Ring.inverse a) :=
   by
   simp only [Ring.inverse]
