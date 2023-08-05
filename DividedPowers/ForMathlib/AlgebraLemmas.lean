@@ -19,7 +19,7 @@ end Induction
 
 section Factorial
 
-variable {A : Type _} [CommRing A] {I : Ideal A}
+variable {A : Type _} [CommSemiring A] {I : Ideal A}
 
 theorem factorial_isUnit {n : ℕ} (hn_fac : IsUnit ((n - 1).factorial : A)) {m : ℕ} (hmn : m < n) :
     IsUnit (m.factorial : A) := by
@@ -53,7 +53,7 @@ end Ring
 
 end Inverse
 
-theorem Ideal.mem_pow_eq_zero {A : Type _} [CommRing A] {I : Ideal A} (n m : ℕ) (hnI : I ^ n = 0)
+theorem Ideal.mem_pow_eq_zero {A : Type _} [CommSemiring A] {I : Ideal A} (n m : ℕ) (hnI : I ^ n = 0)
     (hmn : n ≤ m) {x : A} (hx : x ∈ I) : x ^ m = 0 :=
   by
   have hxn : x ^ n = 0 := by

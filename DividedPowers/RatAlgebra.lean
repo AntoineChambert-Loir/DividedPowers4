@@ -7,7 +7,7 @@ lemma Nat.isUnitFactorial (n : ℕ) : IsUnit (n.factorial : ℚ) := by
   rw [isUnit_iff_ne_zero, ne_eq, Nat.cast_eq_zero]
   apply Nat.factorial_ne_zero
 
-lemma Nat.inv_smul_eq_invCast_mul {A : Type _} [CommRing A] [Algebra ℚ A] (n : ℕ) (a : A) :
+lemma Nat.inv_smul_eq_invCast_mul {A : Type _} [CommSemiring A] [Algebra ℚ A] (n : ℕ) (a : A) :
   Ring.inverse (n : ℚ) • a = Ring.inverse (n : A) * a := by
   cases' Nat.eq_zero_or_pos n with hn hn
   . simp only [hn, Nat.cast_zero, isUnit_zero_iff, not_false_eq_true, Ring.inverse_non_unit, zero_smul,
@@ -32,7 +32,7 @@ namespace DividedPowers
 
 namespace OfInvertibleFactorial
 
-variable {A : Type _} [CommRing A] {I : Ideal A}
+variable {A : Type _} [CommSemiring A] {I : Ideal A}
 
 open scoped Classical
 
@@ -225,7 +225,7 @@ end OfInvertibleFactorial
 
 namespace OfSquareZero
 
-variable {A : Type _} [CommRing A] {I : Ideal A} (hI2 : I ^ 2 = 0)
+variable {A : Type _} [CommSemiring A] {I : Ideal A} (hI2 : I ^ 2 = 0)
 
 noncomputable def dividedPowers : DividedPowers I :=
   OfInvertibleFactorial.dividedPowers (by simp) hI2
@@ -247,7 +247,7 @@ end OfSquareZero
 -- Instead of 1.2.1, I formalize example 2 from [BO], Section 3.
 namespace RatAlgebra
 
-variable {R : Type _} [CommRing R] (I : Ideal R)
+variable {R : Type _} [CommSemiring R] (I : Ideal R)
 
 noncomputable def dpow : ℕ → R → R := fun n => OfInvertibleFactorial.dpow I n
 #align divided_powers.rat_algebra.dpow DividedPowers.RatAlgebra.dpow
