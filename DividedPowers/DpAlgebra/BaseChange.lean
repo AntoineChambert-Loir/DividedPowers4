@@ -15,9 +15,9 @@ namespace DividedPowerAlgebra
 open Algebra.TensorProduct DividedPowers DividedPowerAlgebra 
 
 def AlgHom.baseChange 
-    {R A B C : Type _} [CommRing R] [CommRing A] [Algebra R A]
-    [CommRing B] [Algebra R B] 
-    [CommRing C] [Algebra R C] [Algebra A C] [IsScalarTower R A C] (φ : B →ₐ[R] C) :
+    {R A B C : Type _} [CommSemiring R] [CommSemiring A] [Algebra R A]
+    [CommSemiring B] [Algebra R B] 
+    [CommSemiring C] [Algebra R C] [Algebra A C] [IsScalarTower R A C] (φ : B →ₐ[R] C) :
     A ⊗[R] B →ₐ[A] C :=
   { Algebra.TensorProduct.productMap (IsScalarTower.toAlgHom R A C) φ with
     commutes' := fun r => by
@@ -34,9 +34,9 @@ def _root_.TensorProduct.includeRight {R S N : Type _} [CommSemiring R] [CommSem
     simp only [TensorProduct.tmul_smul, TensorProduct.smul_tmul', RingHom.id_apply]
 
 noncomputable def dpScalarExtension' 
-    (R : Type u) [CommRing R] 
-    (S : Type _) [CommRing S] [Algebra R S] 
-    (M : Type _) [AddCommGroup M] [Module R M] [Module S M] [IsScalarTower R S M] :
+    (R : Type u) [CommSemiring R] 
+    (S : Type _) [CommSemiring S] [Algebra R S] 
+    (M : Type _) [AddCommMonoid M] [Module R M] [Module S M] [IsScalarTower R S M] :
     S ⊗[R] DividedPowerAlgebra R M →ₐ[S] DividedPowerAlgebra S M :=
   by
   apply AlgHom.baseChange
@@ -49,8 +49,8 @@ noncomputable def dpScalarExtension'
 #align divided_power_algebra.dp_scalar_extension' DividedPowerAlgebra.dpScalarExtension'
 
 noncomputable 
-def dpScalarExtension (A : Type _) [CommRing A] (R : Type _) [CommRing R]
-    [Algebra A R] (M : Type _) [AddCommGroup M] [Module A M] :
+def dpScalarExtension (A : Type _) [CommSemiring A] (R : Type _) [CommSemiring R]
+    [Algebra A R] (M : Type _) [AddCommMonoid M] [Module A M] :
     R ⊗[A] DividedPowerAlgebra A M →ₐ[R] DividedPowerAlgebra R (R ⊗[A] M) :=
   by
   apply AlgHom.baseChange
@@ -65,9 +65,9 @@ def dpScalarExtension (A : Type _) [CommRing A] (R : Type _) [CommRing R]
 #align divided_power_algebra.dp_scalar_extension DividedPowerAlgebra.dpScalarExtension
 
 --noncomputable
-def dpScalarExtensionInv (R : Type _) [CommRing R] 
-    (S : Type _) [CommRing S] [Algebra R S]
-    (M : Type _) [AddCommGroup M] [Module R M] :
+def dpScalarExtensionInv (R : Type _) [CommSemiring R] 
+    (S : Type _) [CommSemiring S] [Algebra R S]
+    (M : Type _) [AddCommMonoid M] [Module R M] :
   DividedPowerAlgebra S (S ⊗[R] M) →ₐ[S] S ⊗[R] DividedPowerAlgebra R M := by
   -- TODO: Roby's proof uses the exponential module
   sorry
@@ -91,9 +91,9 @@ instance (R : Type _) [CommSemiring R]
   { intros n x y, dsimp only, simp_rw [← map_mul, ← map_sum], rw dp_add, } -/
 -- TODO ! But in Roby, this follows from the exponential power series interpretation
 noncomputable 
-def dpScalarExtensionEquiv (R : Type _) [CommRing R] 
-    (S : Type _) [CommRing S] [Algebra R S]
-    (M : Type _) [AddCommGroup M] [Module R M] :
+def dpScalarExtensionEquiv (R : Type _) [CommSemiring R] 
+    (S : Type _) [CommSemiring S] [Algebra R S]
+    (M : Type _) [AddCommMonoid M] [Module R M] :
   S ⊗[R] DividedPowerAlgebra R M ≃ₐ[S] DividedPowerAlgebra S (S ⊗[R] M) := 
   AlgEquiv.ofAlgHom 
     (dpScalarExtension R S M)

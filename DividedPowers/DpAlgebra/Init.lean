@@ -27,7 +27,7 @@ The divided power algebra of a module -/
 section
 
 /- Here, we need CommRing and AddCommGroup, because of RingQuot -/
-variable (R M : Type _) [CommRing R] [AddCommGroup M] [Module R M]
+variable (R M : Type _) [CommSemiring R] [AddCommMonoid M] [Module R M]
 
 namespace DividedPowerAlgebra
 
@@ -74,10 +74,11 @@ def DividedPowerAlgebra : Type _ :=
 
 namespace DividedPowerAlgebra
 
-instance : Ring (DividedPowerAlgebra R M) := RingQuot.instRing _
+/-- The divided power algebra is a commutative semiring -/
+instance : CommSemiring (DividedPowerAlgebra R M) := RingQuot.instCommSemiring _
 
 /-- The divided power algebra is a commutative ring -/
-instance : CommRing (DividedPowerAlgebra R M) :=  
+instance (R M : Type _) [CommRing R] [AddCommMonoid M] [Module R M] : CommRing (DividedPowerAlgebra R M) :=  
   RingQuot.instCommRingRingQuotToSemiringToCommSemiring _
 
 instance : Zero (DividedPowerAlgebra R M) := AddMonoid.toZero
@@ -88,12 +89,12 @@ instance : Inhabited (DividedPowerAlgebra R M) :=
   RingQuot.instInhabitedRingQuot _
 
 /-- If `R` is a `k`-algebra, then `divided_power_algebra R M` inherits a `k`-algebra structure. -/
-instance algebra (k : Type _) [CommRing k] [Algebra k R] : 
+instance algebra (k : Type _) [CommSemiring k] [Algebra k R] : 
   Algebra k (DividedPowerAlgebra R M) := 
   RingQuot.instAlgebraRingQuotInstSemiring _
 -- #align divided_power_algebra.algebra' 
 
-instance (k : Type _) [CommRing k] [Algebra k R] : 
+instance (k : Type _) [CommSemiring k] [Algebra k R] : 
   IsScalarTower k R (DividedPowerAlgebra R M) where
   smul_assoc := by 
     rintro a r ⟨⟨x⟩⟩
@@ -103,7 +104,8 @@ open MvPolynomial
 
 variable {R M}
 
-theorem sub_mem_rel_of_rel {a b : MvPolynomial (ℕ × M) R} (h : Rel R M a b) : 
+theorem sub_mem_rel_of_rel {R M : Type _} [CommRing R] [AddCommMonoid M] [Module R M] 
+    {a b : MvPolynomial (ℕ × M) R} (h : Rel R M a b) : 
   a - b ∈ RelI R M :=
   Submodule.subset_span ⟨a, b, h, by rw [sub_add_cancel]⟩
 #align divided_power_algebra.sub_mem_rel_of_rel DividedPowerAlgebra.sub_mem_rel_of_rel
@@ -194,7 +196,7 @@ theorem dp_sum_smul {ι : Type _} [DecidableEq ι] (s : Finset ι)
 #align divided_power_algebra.dp_sum_smul DividedPowerAlgebra.dp_sum_smul
 
 variable {R}
-theorem ext_iff {A : Type _} [CommRing A] [Algebra R A] 
+theorem ext_iff {A : Type _} [CommSemiring A] [Algebra R A] 
     {f g : DividedPowerAlgebra R M →ₐ[R] A} :
     (f = g) ↔ (∀ n m, f (dp R n m) = g (dp R n m)) := by
   constructor
@@ -207,7 +209,7 @@ theorem ext_iff {A : Type _} [CommRing A] [Algebra R A]
     exact MvPolynomial.algHom_ext fun ⟨n, m⟩ => h n m
 
 @[ext]
-theorem ext {A : Type _} [CommRing A] [Algebra R A] 
+theorem ext {A : Type _} [CommSemiring A] [Algebra R A] 
     {f g : DividedPowerAlgebra R M →ₐ[R] A} 
     (h : ∀ n m, f (dp R n m) = g (dp R n m)) : f = g :=
   DividedPowerAlgebra.ext_iff.mpr h
@@ -219,7 +221,7 @@ section UniversalProperty
 
 variable (M)
 
-variable {A : Type _} [CommRing A] [Algebra R A]
+variable {A : Type _} [CommSemiring A] [Algebra R A]
 
 /- -- General purpose lifting lemma
 theorem lift_rel_le_ker (f : ℕ × M → A) (hf_zero : ∀ m, f (0, m) = 1)

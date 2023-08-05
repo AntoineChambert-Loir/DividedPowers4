@@ -317,7 +317,7 @@ theorem dpow_sum_aux (dpow : ℕ → A → A) (dpow_zero : ∀ {x} (_ : x ∈ I)
 
 /-- A generic “multinomial” theorem for divided powers — but without multinomial coefficients 
   — using only dpow_zero, dpow_add and dpow_eval_zero  -/
-theorem dpow_sum_aux' {M D : Type _} [AddCommGroup M] [CommSemiring D] (dp : ℕ → M → D)
+theorem dpow_sum_aux' {M D : Type _} [AddCommMonoid M] [CommSemiring D] (dp : ℕ → M → D)
     (dpow_zero : ∀ x, dp 0 x = 1)
     (dpow_add : ∀ n x y, dp n (x + y) = 
       Finset.sum (Finset.range (n + 1)) fun k => dp k x * dp (n - k) y)
