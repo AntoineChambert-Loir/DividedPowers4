@@ -12,7 +12,7 @@ namespace PolynomialMap
 
 section Coefficients
 
-variable {R : Type u} {M N : Type _} [CommRing R]
+variable {R : Type u} {M N : Type _} [CommSemiring R]
   [AddCommMonoid M] [AddCommMonoid N] [Module R M] [Module R N]
 
 variable {ι : Type u} [DecidableEq ι] [Fintype ι]
@@ -193,7 +193,7 @@ theorem coeff_comp_equiv {ι : Type u} [DecidableEq ι] [Fintype ι]
 theorem image_eq_coeff_sum
     (m : ι → M)
     (f : PolynomialMap R M N)
-    (S : Type u) [CommRing S] [Algebra R S] (r : ι → S) :
+    (S : Type u) [CommSemiring S] [Algebra R S] (r : ι → S) :
   f.toFun S (Finset.univ.sum fun i => r i ⊗ₜ[R] m i) =
     (coeff m f).sum
       (fun k n => (Finset.univ.prod fun i => r i ^ k i) ⊗ₜ[R] n) := by
@@ -217,7 +217,7 @@ theorem image_eq_coeff_sum
 theorem image_eq_coeff_finset_sum {ι : Type u} [DecidableEq ι]
     (m : ι → M)
     (f : PolynomialMap R M N)
-    (S : Type u) [CommRing S] [Algebra R S]
+    (S : Type u) [CommSemiring S] [Algebra R S]
     (r : ι → S) (s : Finset ι):
   f.toFun S (s.sum fun i => r i ⊗ₜ[R] m i) =
     (coeff (fun i : s => m i) f).sum
@@ -241,7 +241,7 @@ theorem image_eq_coeff_finset_sum {ι : Type u} [DecidableEq ι]
 /-- Variant of `image_eq_coeff_sum'` with a `Finsupp`-/
 theorem image_eq_coeff_sum' {ι : Type u} [DecidableEq ι] (m : ι → M)
     (f : PolynomialMap R M N)
-    (S : Type u) [CommRing S] [Algebra R S] (r : ι →₀ S) :
+    (S : Type u) [CommSemiring S] [Algebra R S] (r : ι →₀ S) :
     f.toFun S (r.sum fun i a => a ⊗ₜ[R] m i) =
       (coeff (fun i : r.support => m i) f).sum
         (fun k n =>
@@ -252,7 +252,7 @@ theorem image_eq_coeff_sum' {ι : Type u} [DecidableEq ι] (m : ι → M)
   rw [image_eq_coeff_finset_sum]
 #align polynomial_map.image_eq_coeff_sum' PolynomialMap.image_eq_coeff_sum'
 
-variable {S : Type _} [CommRing S] [Algebra R S]
+variable {S : Type _} [CommSemiring S] [Algebra R S]
 
 theorem span_tensorProduct_eq_top_of_span_eq_top
     (σ : Type _) (e : σ → M)

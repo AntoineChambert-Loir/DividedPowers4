@@ -13,8 +13,8 @@ open scoped TensorProduct
 
 universe u
 
-variable (R : Type u) [CommRing R]
-variable (M : Type _) [AddCommGroup M] [Module R M]
+variable (R : Type u) [CommSemiring R]
+variable (M : Type _) [AddCommMonoid M] [Module R M]
 
 /- -- To turn an algebra into an add group if the
 coefficient semiring is a ring

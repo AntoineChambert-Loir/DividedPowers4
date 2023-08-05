@@ -213,9 +213,9 @@ namespace PolynomialMap
 
 universe u v w
 
-variable {R : Type u}[CommRing R]
-    {M : Type _} [AddCommGroup M] [Module R M] 
-    {N : Type _}  [AddCommGroup N] [Module R N]
+variable {R : Type u}[CommSemiring R]
+    {M : Type _} [AddCommMonoid M] [Module R M] 
+    {N : Type _}  [AddCommMonoid N] [Module R N]
 
 /-- (Roby, Prop. I.1)
   A PolynomialMap is Homogeneous of degree p 
@@ -425,13 +425,13 @@ example : S ⊗[R] M →ₗ[S] S[X] ⊗[R] M :=
   TensorProduct.map' (Polynomial.monomial 1) (LinearMap.id)
 
 
-noncomputable def test'' (S S' : Type _) [CommRing S] [CommRing S'] [Algebra S S'] :
+noncomputable def test'' (S S' : Type _) [CommSemiring S] [CommSemiring S'] [Algebra S S'] :
   S[X] →ₐ[S] S'[X] := Polynomial.aeval X
 
-noncomputable def test' (S S' : Type _) [CommRing S] [CommRing S'] (φ : S →+* S') :
+noncomputable def test' (S S' : Type _) [CommSemiring S] [CommSemiring S'] (φ : S →+* S') :
   S[X] →+* S'[X] := Polynomial.eval₂RingHom (Polynomial.C.comp φ) X
   
-variable (S S' : Type _) [CommRing S] [Algebra R S] [CommRing S'] [Algebra R S']
+variable (S S' : Type _) [CommSemiring S] [Algebra R S] [CommSemiring S'] [Algebra R S']
   (φ : S →ₐ[R] S') -/
 
 lemma _root_.Polynomial.C_eq_algebraMap' 
@@ -516,9 +516,9 @@ lemma test3_monomial {S S' : Type _} [CommSemiring S] [Algebra R S]
 
 end Polynomial
 
-variable {R : Type u} [CommRing R]
-  {M : Type _} [AddCommGroup M] [Module R M]
-  {N : Type _} [AddCommGroup N] [Module R N]
+variable {R : Type u} [CommSemiring R]
+  {M : Type _} [AddCommMonoid M] [Module R M]
+  {N : Type _} [AddCommMonoid N] [Module R N]
 
 /- noncomputable def component' (p : ℕ) (f : PolynomialMap R M N) :
   PolynomialMap R M N where
