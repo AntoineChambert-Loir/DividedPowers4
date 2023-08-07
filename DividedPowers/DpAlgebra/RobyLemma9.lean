@@ -1,18 +1,15 @@
-import Oneshot.ForMathlib.RingTheory.TensorProduct
-import Mathbin.RingTheory.Ideal.QuotientOperations
-import Mathbin.Algebra.Algebra.Subalgebra.Basic
+import Mathlib.RingTheory.TensorProduct
+import Mathlib.LinearAlgebra.TensorProduct.Tower
+import Mathlib.RingTheory.Ideal.QuotientOperations
+import Mathlib.Algebra.Algebra.Subalgebra.Basic
 
--- import ...generalisation.generalisation_linter
--- import ...generalisation.generalisation_linter
 open scoped TensorProduct
-
-local notation:100 M " ⊗[" R "] " N:100 => TensorProduct R M N
 
 -- The goal is to prove lemma 9 in Roby (1965)
 section RingHom
 
 theorem RingHom.ker_eq_ideal_iff {A B : Type _} [CommRing A] [CommRing B] (f : A →+* B)
-    (I : Ideal A) : f.ker = I ↔ ∃ h : I ≤ f.ker, Function.Injective (Ideal.Quotient.lift I f h) :=
+    (I : Ideal A) : RingHom.ker f = I ↔ ∃ h : I ≤ RingHom.ker f, Function.Injective (Ideal.Quotient.lift I f h) :=
   by
   constructor
   · intro hI; use le_of_eq hI.symm
@@ -32,14 +29,14 @@ theorem AlgHom.ker_eq_ideal_iff {R A B : Type _} [CommRing R] [CommRing A] [Alge
     [CommRing B] [Algebra R B] (f : A →ₐ[R] B) (I : Ideal A) :
     RingHom.ker f = I ↔ ∃ h : I ≤ RingHom.ker f, Function.Injective (Ideal.Quotient.liftₐ I f h) :=
   by
-  have : RingHom.ker f = RingHom.ker f.to_ring_hom; rfl
+  have : RingHom.ker f = RingHom.ker f.toRingHom; rfl
   constructor
   · intro hI; use le_of_eq hI.symm
-    suffices : Function.Injective (Ideal.Quotient.lift I f.to_ring_hom (le_of_eq hI.symm))
+    suffices : Function.Injective (Ideal.Quotient.lift I f.toRingHom (le_of_eq hI.symm))
     intro x y hxy; apply this
     simpa only [Ideal.Quotient.liftₐ_apply] using hxy
     apply RingHom.lift_injective_of_ker_le_ideal
-    rw [← hI, ← this]; exact le_refl _
+    rw [← hI, ← this]
   · rintro ⟨hI, h⟩
     rw [this]; rw [RingHom.ker_eq_ideal_iff]
     rw [this] at hI ; use hI
@@ -52,8 +49,8 @@ end AlgHom
 
 variable (R : Type _) [CommRing R] (S : Type _) [CommRing S]
 
-variable (M : Type _) [CommRing M] [Algebra R M] [Algebra S M] (N : Type _) [CommRing N]
-  [Algebra R N] [Algebra S N]
+variable (M : Type _) [CommRing M] [Algebra R M] [Algebra S M] 
+  (N : Type _) [CommRing N] [Algebra R N] [Algebra S N]
 
 variable [Algebra R S] [IsScalarTower R S M] [IsScalarTower R S N]
 
@@ -66,17 +63,21 @@ def φ : M ⊗[R] N →ₐ[R] M ⊗[S] N :=
 #align φ φ
 
 theorem φ_apply (m : M) (n : N) : φ R S M N (m ⊗ₜ[R] n) = m ⊗ₜ[S] n := by
-  simp only [φ, product_map_apply_tmul, AlgHom.coe_restrictScalars', include_left_apply,
-    include_right_apply, tmul_mul_tmul, _root_.mul_one, _root_.one_mul]
+  simp only [φ, productMap_apply_tmul, AlgHom.coe_restrictScalars', includeLeft_apply,
+    includeRight_apply, tmul_mul_tmul, _root_.mul_one, _root_.one_mul]
 #align φ_apply φ_apply
 
 theorem φ_surjective : Function.Surjective (φ R S M N) :=
   by
   intro z
-  apply TensorProduct.induction_on z
-  use 0; simp only [map_zero]
-  intro m n; use m ⊗ₜ n; simp only [φ_apply]
-  rintro _ _ ⟨x, rfl⟩ ⟨y, rfl⟩; use x + y; simp only [map_add]
+  induction z using TensorProduct.induction_on with
+  | C0 => use 0; simp only [map_zero]
+  | C1 m n => use m ⊗ₜ n; simp only [φ_apply]
+  | Cp x y hx hy => 
+      obtain ⟨a, rfl⟩ := hx
+      obtain ⟨b, rfl⟩ := hy
+      use a + b
+      simp only [map_add]
 #align φ_surjective φ_surjective
 
 def kerφ : Ideal (M ⊗[R] N) :=
@@ -99,9 +100,9 @@ def ψLeft : M →ₐ[S] M ⊗[R] N ⧸ kerφ R S M N :=
     commutes' := fun s =>
       by
       simp only [AlgHom.toFun_eq_coe, AlgHom.coe_comp, AlgHom.coe_restrictScalars',
-        Function.comp_apply, include_left_apply]
+        Function.comp_apply, includeLeft_apply]
       simp only [Algebra.algebraMap_eq_smul_one]
-      suffices : (s • (1 : M)) ⊗ₜ[R] (1 : N) = s • 1
+      suffices : (s • (1 : M)) ⊗ₜ[R] (1 : N) = s • (1 : M ⊗[R] N)
       rw [this, AlgHom.map_smul, AlgHom.map_one]
       rfl }
 #align ψ_left ψLeft
@@ -112,7 +113,7 @@ def ψRight : N →ₐ[S] M ⊗[R] N ⧸ kerφ R S M N :=
     commutes' := fun s =>
       by
       simp only [AlgHom.toFun_eq_coe, AlgHom.coe_comp, Ideal.Quotient.mkₐ_eq_mk,
-        Function.comp_apply, include_right_apply]
+        Function.comp_apply, includeRight_apply]
       simp only [Algebra.algebraMap_eq_smul_one]
       rw [← (Ideal.Quotient.mk (kerφ R S M N)).map_one, ← Ideal.Quotient.mkₐ_eq_mk S, ←
         AlgHom.map_smul]
@@ -126,17 +127,20 @@ def ψ : M ⊗[S] N →ₐ[S] M ⊗[R] N ⧸ kerφ R S M N :=
   productMap (ψLeft R S M N) (ψRight R S M N)
 #align ψ ψ
 
-theorem ψ_apply (m : M) (n : N) : ψ R S M N (m ⊗ₜ[S] n) = Ideal.Quotient.mk _ (m ⊗ₜ[R] n) :=
+#check Ideal.Quotient.mk
+
+theorem ψ_apply (m : M) (n : N) : 
+  ψ R S M N (m ⊗ₜ[S] n) = 
+    Ideal.Quotient.mk (kerφ R S M N) (m ⊗ₜ[R] n) :=
   by
   simp only [ψ, ψLeft, ψRight]
-  simp only [AlgHom.toFun_eq_coe, AlgHom.coe_comp, AlgHom.coe_restrictScalars',
-    Ideal.Quotient.mkₐ_eq_mk, product_map_apply_tmul, AlgHom.coe_mks, Function.comp_apply,
-    include_left_apply, include_right_apply]
+  simp only [AlgHom.toRingHom_eq_coe, productMap_apply_tmul, AlgHom.coe_mk, RingHom.coe_coe, AlgHom.coe_comp,
+    AlgHom.coe_restrictScalars', Ideal.Quotient.mkₐ_eq_mk, Function.comp_apply, includeLeft_apply, includeRight_apply]
   rw [← RingHom.map_mul]
   simp only [tmul_mul_tmul, _root_.mul_one, _root_.one_mul]
 #align ψ_apply ψ_apply
 
-theorem kerφ_eq : (φ R S M N).toRingHom.ker = kerφ R S M N :=
+theorem kerφ_eq : RingHom.ker (φ R S M N).toRingHom = kerφ R S M N :=
   by
   suffices h : kerφ R S M N ≤ RingHom.ker (φ R S M N).toRingHom
   rw [RingHom.ker_eq_ideal_iff]
@@ -150,13 +154,11 @@ theorem kerφ_eq : (φ R S M N).toRingHom.ker = kerφ R S M N :=
     intro z
     obtain ⟨y, rfl⟩ := Ideal.Quotient.mk_surjective z
     simp only [AlgHom.toRingHom_eq_coe, Ideal.Quotient.lift_mk, AlgHom.coe_toRingHom]
-    apply TensorProduct.induction_on y
-    simp only [RingHom.map_zero, AlgHom.map_zero]
-    intro m n; simp only [ψ_apply, φ_apply]
-    intro x y hx hy
-    simp only [RingHom.map_add, AlgHom.map_add, ← Ideal.Quotient.mkₐ_eq_mk, hx, hy]
-  -- { -- right_inverse  sorry }
-  -- h
+    induction y using TensorProduct.induction_on with
+    | C0 => simp only [RingHom.map_zero, AlgHom.map_zero]
+    | C1 m n => simp only [ψ_apply, φ_apply]
+    | Cp x y hx hy =>
+      simp only [RingHom.map_add, AlgHom.map_add, ← Ideal.Quotient.mkₐ_eq_mk, hx, hy]
   simp only [kerφ]
   rw [Ideal.span_le]
   intro z hz
