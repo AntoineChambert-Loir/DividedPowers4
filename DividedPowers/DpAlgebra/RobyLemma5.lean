@@ -105,16 +105,25 @@ private noncomputable def inv_f (hf : Function.Surjective f) :
   map_zero' := inv_f_map_zero' g hf 
   commutes' := inv_f_commutes' g hf }
 
+lemma inv_f_apply {hf : Function.Surjective f} (r : R) :
+  (inv_f g hf) (f r) = Ideal.Quotient.mkₐ A (I f g) (Algebra.TensorProduct.includeLeft (R := A) (A := R) (B := S) r) := 
+  hinv_f g hf r
+
 variable (f)
 
 variable {g}
 
-private noncomputable def inv_g_fun (hg : Function.Surjective g) := fun s =>
-  Ideal.Quotient.mkₐ A (I f g) (Algebra.TensorProduct.includeRight (hg s).some)
+
+private noncomputable def inv_g_fun (hg : Function.Surjective g) :
+  S' → (R ⊗[A] S) ⧸ (I f g) := fun s' => 
+  Ideal.Quotient.mkₐ A (I f g) 
+    (@Algebra.TensorProduct.includeRight A _ R _ _ S _ _ 
+      (hg s').choose)
+
 
 private theorem hinv_g (hg : Function.Surjective g) :
     ∀ s,
-      (invGFun f hg) (g s) = Ideal.Quotient.mkₐ A (i f g) (Algebra.TensorProduct.includeRight s) :=
+      (inv_g_fun f hg) (g s) = Ideal.Quotient.mkₐ A (I f g) (Algebra.TensorProduct.includeRight (R := A) (A := R) (B := S) s) :=
   by
   intro s
   simp only [inv_g_fun]
@@ -127,39 +136,68 @@ private theorem hinv_g (hg : Function.Surjective g) :
   rw [RingHom.mem_ker, map_sub, AlgHom.toRingHom_eq_coe, AlgHom.coe_toRingHom,
     (hg (g s)).choose_spec, sub_self]
 
-private noncomputable def inv_g (hg : Function.Surjective g) : S' →ₐ[A] R ⊗[A] S ⧸ i f g
-    where
-  toFun := invGFun f hg
-  map_one' := by rw [← g.map_one, hinv_g f hg] <;> exact map_one (Ideal.Quotient.mkₐ A (I f g))
-  map_mul' x' y' := by
-    obtain ⟨x, rfl⟩ := hg x'; obtain ⟨y, rfl⟩ := hg y'
-    rw [← map_mul]
-    simp only [hinv_g f hg]
-    rw [← map_mul]; apply congr_arg; rw [map_mul]
-  map_add' x' y' := by
-    obtain ⟨x, rfl⟩ := hg x'; obtain ⟨y, rfl⟩ := hg y'
-    rw [← g.map_add]
-    simp only [hinv_g f hg]
-    rw [← map_add]; apply congr_arg; rw [map_add]
-  map_zero' := by rw [← g.map_zero, hinv_g f hg]; apply congr_arg; rw [map_zero]
-  commutes' a := by
-    rw [← g.commutes a, hinv_g f hg]
-    rw [Algebra.TensorProduct.includeRight.commutes]
-    rw [(Ideal.Quotient.mkₐ A (I f g)).commutes]
+lemma inv_g_map_add' (hg : Function.Surjective g) : ∀ x' y',
+  inv_g_fun f hg (x' + y') = inv_g_fun f hg x' + inv_g_fun f hg y' := by
+  intro x' y'
+  obtain ⟨x, rfl⟩ := hg x' 
+  obtain ⟨y, rfl⟩ := hg y'
+  rw [← g.map_add]
+  simp only [hinv_g f hg]
+  apply congr_arg
+  rw [map_add]
 
-variable {f g}
+lemma inv_g_map_mul' (hg : Function.Surjective g) : ∀ x' y',
+  inv_g_fun f hg (x' * y') = inv_g_fun f hg x' * inv_g_fun f hg y' := by
+  intro x' y'
+  obtain ⟨x, rfl⟩ := hg x' 
+  obtain ⟨y, rfl⟩ := hg y'
+  rw [← g.map_mul]
+  simp only [hinv_g f hg]
+  apply congr_arg
+  rw [map_mul]
+
+lemma inv_g_map_one' (hg : Function.Surjective g) :
+  inv_g_fun f hg 1 = 1 := by 
+  rw [← g.map_one, hinv_g f hg]
+  exact map_one (Ideal.Quotient.mkₐ A (I f g))
+
+lemma inv_g_map_zero' (hg : Function.Surjective g) :
+  inv_g_fun f hg 0 = 0 := by 
+  rw [← g.map_zero]
+  simp only [hinv_g f hg]
+  apply congr_arg
+  rw [map_zero]
+
+lemma inv_g_commutes' (hg : Function.Surjective g) (a : A) :
+  inv_g_fun f hg (algebraMap A S' a) = algebraMap A _ a := by
+  rw [← g.commutes a, hinv_g f hg]
+  rw [Algebra.TensorProduct.includeRight.commutes]
+  rw [(Ideal.Quotient.mkₐ A (I f g)).commutes]
+
+
+private noncomputable def inv_g (hg : Function.Surjective g) : 
+  S' →ₐ[A] R ⊗[A] S ⧸ (I f g) := {
+  toFun := inv_g_fun f hg
+  map_one' := inv_g_map_one' f hg
+  map_add' := inv_g_map_add' f hg
+  map_mul' := inv_g_map_mul' f hg
+  map_zero' := inv_g_map_zero' f hg 
+  commutes' := inv_g_commutes' f hg }
+
+lemma inv_g_apply {hg : Function.Surjective g} (s : S) :
+  (inv_g f hg) (g s) = Ideal.Quotient.mkₐ A (I f g) (Algebra.TensorProduct.includeRight (R := A) (A := R) (B := S) s) := 
+  hinv_g f hg s
+
+variable {f}
 
 private theorem hinv_f_tens_g (hf : Function.Surjective f) (hg : Function.Surjective g) (r : R)
-    (s : S) : (invF g hf) (f r) * (invG f hg) (g s) = (Ideal.Quotient.mk (i f g)) (r ⊗ₜ[A] s) :=
+    (s : S) : (inv_f g hf) (f r) * (inv_g f hg) (g s) = (Ideal.Quotient.mk (I f g)) (r ⊗ₜ[A] s) :=
   by
-  simp only [inv_f, inv_g]
-  dsimp
-  rw [hinv_f g hf]; rw [hinv_g f hg]; rw [← map_mul]
-  rw [Ideal.Quotient.mkₐ_eq_mk]
-  apply congr_arg
-  simp only [Algebra.TensorProduct.includeLeft_apply, Algebra.TensorProduct.includeRight_apply,
-    Algebra.TensorProduct.tmul_mul_tmul, _root_.mul_one r, _root_.one_mul s]
-
+  rw [inv_f_apply, inv_g_apply]
+  simp only [includeLeft_apply, Ideal.Quotient.mkₐ_eq_mk, includeRight_apply]
+  rw [← map_mul]
+  simp only [tmul_mul_tmul, mul_one, one_mul]
+  
 /- example (hf : function.surjective f) (hg : function.surjective g)  : 
 function.left_inverse (algebra.tensor_product.product_map
   (inv_f f g hf) (inv_g f g hg)) id := sorry
