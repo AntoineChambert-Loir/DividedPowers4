@@ -198,16 +198,14 @@ private theorem hinv_f_tens_g (hf : Function.Surjective f) (hg : Function.Surjec
   rw [← map_mul]
   simp only [tmul_mul_tmul, mul_one, one_mul]
   
-/- example (hf : function.surjective f) (hg : function.surjective g)  : 
-function.left_inverse (algebra.tensor_product.product_map
-  (inv_f f g hf) (inv_g f g hg)) id := sorry
- -/
---set_option profiler true
 -- Roby, lemma 5
-theorem ker_tens (hf : Function.Surjective f) (hg : Function.Surjective g) :
-    RingHom.ker (Algebra.TensorProduct.map f g) =
-      f.toRingHom.ker.map (Algebra.TensorProduct.includeLeft : R →ₐ[A] R ⊗[A] S) ⊔
-        g.toRingHom.ker.map (Algebra.TensorProduct.includeRight : S →ₐ[A] R ⊗[A] S) :=
+theorem ker_tens 
+    (hf : Function.Surjective f) (hg : Function.Surjective g) :
+  RingHom.ker (Algebra.TensorProduct.map f g) =
+    f.toRingHom.ker.map 
+      (Algebra.TensorProduct.includeLeft : R →ₐ[A] R ⊗[A] S) ⊔
+        g.toRingHom.ker.map 
+          (Algebra.TensorProduct.includeRight : S →ₐ[A] R ⊗[A] S) :=
   by
   rw [← I]
   -- change _ = I f g,
