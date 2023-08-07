@@ -10,7 +10,6 @@ import Mathlib.Algebra.TrivSqZeroExt
 -- Quotients of graded rings
 -- Quotients of graded rings
 variable (R M : Type _) [CommRing R] [AddCommGroup M] [Module R M] 
-  [DecidableEq R] [DecidableEq M]
 
 noncomputable section
 
@@ -25,6 +24,8 @@ open Ideal DirectSum
 open RingQuot
 
 section DecidableEq
+
+variable [DecidableEq R] [DecidableEq M]
 
 example : GradedAlgebra (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) := inferInstance
 -- weightedGradedAlgebra R (Prod.fst : ℕ × M → ℕ)
@@ -92,27 +93,22 @@ theorem one_mem : (1 : DividedPowerAlgebra R M) ∈ grade R M 0 :=
 #align divided_power_algebra.one_mem DividedPowerAlgebra.one_mem
 
 /-- The canonical decomposition of `divided_power_algebra R M` -/
-def decomposition : DirectSum.Decomposition (grade R M) :=
-  quotDecomposition R 
+def decomposition : 
+  DirectSum.Decomposition (M := DividedPowerAlgebra R M) (grade R M) := 
+  _root_.quotDecomposition R 
     (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ))
     (DividedPowerAlgebra.Rel R M) (Rel_isHomogeneous R M)
 #align divided_power_algebra.decomposition DividedPowerAlgebra.decomposition
 
-end DecidableEq
 
 /-- The graded algebra structure on the divided power algebra-/
-def GAlgebra [DecidableEq R] [DecidableEq M] :
-    GradedAlgebra (DividedPowerAlgebra.grade R M) :=
+def GAlgebra : GradedAlgebra (DividedPowerAlgebra.grade R M) :=
   DirectSum.Decomposition_RingQuot R 
     (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) 
     (DividedPowerAlgebra.Rel R M) (Rel_isHomogeneous R M)
 #align divided_power_algebra.divided_power_galgebra DividedPowerAlgebra.GAlgebra
 
 open MvPolynomial
-
-section DecidableEq
-
-variable [DecidableEq R] [DecidableEq M]
 
 -- Do we need both versions?
 theorem dp_mem_grade (n : ℕ) (m : M) : dp R n m ∈ grade R M n :=
@@ -137,8 +133,6 @@ def decompose : DividedPowerAlgebra R M → DirectSum ℕ fun i : ℕ => ↥(gra
 -- graded_algebra (grade R M )
 instance : GradedAlgebra (DividedPowerAlgebra.grade R M) :=
   GAlgebra R M
-
-end DecidableEq
 
 theorem mk_comp_toSupported :
     (@mk R M).comp ((Subalgebra.val _).comp (toSupported R)) = mk :=
@@ -165,7 +159,7 @@ theorem surjective_of_supported :
   rw [← AlgHom.comp_apply, AlgHom.comp_assoc, mk_comp_toSupported, ← hp']
 #align divided_power_algebra.surjective_of_supported DividedPowerAlgebra.surjective_of_supported
 
-theorem surjective_of_supported' -- [DecidableEq R] [DecidableEq M] 
+theorem surjective_of_supported' 
     {n : ℕ} (p : grade R M n) :
   ∃ q : supported R {nm : ℕ × M | 0 < nm.1},
     IsWeightedHomogeneous Prod.fst q.1 n ∧ (@mk R M) q.1 = ↑p :=
@@ -197,8 +191,6 @@ theorem mem_grade_iff' {n : ℕ} (p : DividedPowerAlgebra R M) :
     rw [mem_grade_iff]
     exact ⟨q, hq, rfl⟩
 
-variable {M}
-
 /-- The canonical linear map `M →ₗ[R] divided_power_algebra R M`. -/
 def ι : M →ₗ[R] DividedPowerAlgebra R M
     where
@@ -210,7 +202,7 @@ def ι : M →ₗ[R] DividedPowerAlgebra R M
     simp only [dp_smul, pow_one, RingHom.id_apply]
 #align divided_power_algebra.ι DividedPowerAlgebra.ι
 
-theorem ι_def (m : M) : ι R m = dp R 1 m :=
+theorem ι_def (m : M) : ι R M m = dp R 1 m :=
   rfl
 #align divided_power_algebra.ι_def DividedPowerAlgebra.ι_def
 
@@ -228,7 +220,7 @@ theorem mk_alg_hom_mv_polynomial_ι_eq_ι' (m : M) : dp R 1 m = ι R m :=
 theorem ι_comp_lift {A : Type _} [CommRing A] [Algebra R A] 
     {I : Ideal A} (hI : DividedPowers I) 
     (φ : M →ₗ[R] A) (hφ : ∀ m, φ m ∈ I) : 
-  (DividedPowerAlgebra.lift hI φ hφ).toLinearMap.comp (ι R) = φ := by
+  (DividedPowerAlgebra.lift hI φ hφ).toLinearMap.comp (ι R M) = φ := by
   ext m
   simp only [LinearMap.coe_comp, Function.comp_apply, AlgHom.toLinearMap_apply]
   simp only [ι_def]
@@ -238,12 +230,10 @@ theorem ι_comp_lift {A : Type _} [CommRing A] [Algebra R A]
 
 @[simp]
 theorem lift_ι_apply {A : Type _} [CommRing A] [Algebra R A] {I : Ideal A} (hI : DividedPowers I)
-    (φ : M →ₗ[R] A) (hφ : ∀ m, φ m ∈ I) (x) : lift hI φ hφ (ι R x) = φ x := by
-  conv_rhs => rw [← ι_comp_lift R hI φ hφ]; rfl
+    (φ : M →ₗ[R] A) (hφ : ∀ m, φ m ∈ I) (x : M) : lift hI φ hφ (ι R M x) = φ x := by
+  conv_rhs => rw [← ι_comp_lift R M hI φ hφ]; rfl
 #align divided_power_algebra.lift_ι_apply DividedPowerAlgebra.lift_ι_apply
 
-
-variable (M)
 
 variable {R}
 
@@ -255,7 +245,8 @@ def HasGradedDpow {A : Type _} [CommRing A] [Algebra R A] (𝒜 : ℕ → Submod
 
 section DecidableEq
 
-variable (R) [DecidableEq R] [DecidableEq M]
+variable (R) 
+
 
 variable (S : Type _) [CommRing S] [Algebra R S] 
 
@@ -296,21 +287,30 @@ theorem lift_isHomogeneous {A : Type _} [CommRing A] [Algebra R A]
   simpa only [Algebra.id.smul_eq_mul, mul_one] using hI' (φ m) (hφ m) 1 (hφ' m) n
 #align divided_power_algebra.lift_is_homogeneous DividedPowerAlgebra.lift_isHomogeneous
 
-variable (S : Type _) [CommRing S] [Algebra R S] 
+variable -- (S : Type _) [CommRing S] [Algebra R S] 
   {N : Type _} [AddCommGroup N] 
+  [DecidableEq S] [DecidableEq N]
   [Module R N] [Module S N] [IsScalarTower R S N] 
   [Algebra R (DividedPowerAlgebra S N)]
   [IsScalarTower R S (DividedPowerAlgebra S N)] 
-variable [DecidableEq S] [DecidableEq N]
-
-theorem lift'_isHomogeneous 
-    (f : M →ₗ[R] N) :
-    GalgHom.IsHomogeneous 
+  
+theorem lift'_isHomogeneous (f : M →ₗ[R] N) :
+  GalgHom.IsHomogeneous 
     (DividedPowerAlgebra.grade R M) (DividedPowerAlgebra.grade S N)
-      (LinearMap.lift R S f) :=
+    (LinearMap.lift R S f) :=
   by
-  apply liftAux_isHomogeneous
-    (hf_zero := fun m => by rw [dp_zero])
+  have : GradedAlgebra (DividedPowerAlgebra.grade S N) := GAlgebra S N
+  let hzz := @DividedPowerAlgebra.liftAux_isHomogeneous R M _ _ _ 
+    S _ _ (DividedPowerAlgebra S N) _ _ _ _
+    (DividedPowerAlgebra.grade S N)  
+    -- (fun n m ↦ dp S n (f m))
+
+  sorry
+  apply hzz
+  | hf_zero m := 
+      dsimp
+      rw [dp_zero]
+  sorry
     (hf_smul := fun n r m => by 
       dsimp
       rw [LinearMap.map_smul, algebra_compatible_smul S r, 
@@ -323,6 +323,7 @@ theorem lift'_isHomogeneous
 /- We need the projections (divided_power_algebra R M) → grade R M n ,
 more generally for graded algebras -/
 variable (R)
+
 
 def proj' (n : ℕ) : DividedPowerAlgebra R M →ₗ[R] grade R M n :=
   proj (grade R M) n
