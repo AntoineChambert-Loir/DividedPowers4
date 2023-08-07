@@ -9,7 +9,6 @@ import Mathlib.Algebra.TrivSqZeroExt
 -- Modified version of PR #17855
 -- Quotients of graded rings
 -- Quotients of graded rings
-variable (R M : Type _) [CommRing R] [AddCommGroup M] [Module R M] 
 
 noncomputable section
 
@@ -23,12 +22,13 @@ open Ideal DirectSum
 
 open RingQuot
 
-section DecidableEq
+variable (R M : Type _) [CommRing R] [AddCommGroup M] [Module R M] 
 
 variable [DecidableEq R] [DecidableEq M]
 
-example : GradedAlgebra (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) := inferInstance
--- weightedGradedAlgebra R (Prod.fst : ℕ × M → ℕ)
+local instance : 
+  GradedAlgebra (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) :=
+  weightedGradedAlgebra R (Prod.fst : ℕ × M → ℕ)
 
 theorem rel_isPureHomogeneous : 
   RelIsPureHomogeneous 
@@ -61,10 +61,15 @@ theorem Rel_isHomogeneous : RelIsHomogeneous
   (Rel R M) :=  by 
   apply RelIsHomogeneous_of_isPureHomogeneous
   apply rel_isPureHomogeneous
+  sorry -- Rel 0 0
 
-theorem RelI_isHomogeneous :
+theorem RelI_isHomogeneous 
+    (R M : Type _) [CommRing R] [AddCommGroup M] [Module R M] 
+    [DecidableEq R] [DecidableEq M] :
   (RelI R M).IsHomogeneous (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) :=  by 
-  apply IsHomogeneous_of_rel_isPureHomogeneous
+  apply IsHomogeneous_of_rel_isPureHomogeneous 
+    (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) 
+    (Rel R M)
   apply rel_isPureHomogeneous
   
 set_option linter.uppercaseLean3 false
@@ -192,18 +197,16 @@ theorem mem_grade_iff' {n : ℕ} (p : DividedPowerAlgebra R M) :
     exact ⟨q, hq, rfl⟩
 
 /-- The canonical linear map `M →ₗ[R] divided_power_algebra R M`. -/
-def ι : M →ₗ[R] DividedPowerAlgebra R M
-    where
-  toFun m := dp R 1 m
-  map_add' x y := by
+def ι : M →ₗ[R] DividedPowerAlgebra R M := {
+  toFun     := fun m ↦ dp R 1 m
+  map_add'  := fun x y ↦ by
     simp only [dp_add, sum_range_succ', sum_range_zero, zero_add, Nat.sub_zero, Nat.sub_self,
       dp_zero, mul_one, one_mul]
-  map_smul' r x := by 
-    simp only [dp_smul, pow_one, RingHom.id_apply]
+  map_smul' := fun r x ↦ by
+    simp only [dp_smul, pow_one, RingHom.id_apply] }
 #align divided_power_algebra.ι DividedPowerAlgebra.ι
 
-theorem ι_def (m : M) : ι R M m = dp R 1 m :=
-  rfl
+theorem ι_def (m : M) : ι R M m = dp R 1 m := rfl
 #align divided_power_algebra.ι_def DividedPowerAlgebra.ι_def
 
 /-
@@ -216,10 +219,11 @@ theorem mk_alg_hom_mv_polynomial_ι_eq_ι' (m : M) : dp R 1 m = ι R m :=
 #align divided_power_algebra.mk_alg_hom_mv_polynomial_ι_eq_ι' DividedPowerAlgebra.mk_alg_hom_mv_polynomial_ι_eq_ι'
 -/
 
+variable {M} 
 @[simp]
 theorem ι_comp_lift {A : Type _} [CommRing A] [Algebra R A] 
     {I : Ideal A} (hI : DividedPowers I) 
-    (φ : M →ₗ[R] A) (hφ : ∀ m, φ m ∈ I) : 
+    {φ : M →ₗ[R] A} (hφ : ∀ (m : M), φ m ∈ I) : 
   (DividedPowerAlgebra.lift hI φ hφ).toLinearMap.comp (ι R M) = φ := by
   ext m
   simp only [LinearMap.coe_comp, Function.comp_apply, AlgHom.toLinearMap_apply]
@@ -229,17 +233,18 @@ theorem ι_comp_lift {A : Type _} [CommRing A] [Algebra R A]
 #align divided_power_algebra.ι_comp_lift DividedPowerAlgebra.ι_comp_lift
 
 @[simp]
-theorem lift_ι_apply {A : Type _} [CommRing A] [Algebra R A] {I : Ideal A} (hI : DividedPowers I)
-    (φ : M →ₗ[R] A) (hφ : ∀ m, φ m ∈ I) (x : M) : lift hI φ hφ (ι R M x) = φ x := by
-  conv_rhs => rw [← ι_comp_lift R M hI φ hφ]; rfl
+theorem lift_ι_apply {A : Type _} [CommRing A] [Algebra R A] {I : Ideal A} 
+    (hI : DividedPowers I) (φ : M →ₗ[R] A) (hφ : ∀ m, φ m ∈ I) (x : M) : 
+  lift hI φ hφ (ι R M x) = φ x := by
+  conv_rhs => rw [← ι_comp_lift R hI hφ]; rfl
 #align divided_power_algebra.lift_ι_apply DividedPowerAlgebra.lift_ι_apply
 
 
 variable {R}
 
 --  [graded_algebra 𝒜] --not used in this def
-def HasGradedDpow {A : Type _} [CommRing A] [Algebra R A] (𝒜 : ℕ → Submodule R A) {I : Ideal A}
-    (hI : DividedPowers I) :=
+def HasGradedDpow {A : Type _} [CommRing A] [Algebra R A] 
+    (𝒜 : ℕ → Submodule R A) {I : Ideal A} (hI : DividedPowers I) :=
   ∀ a ∈ I, ∀ (i : ℕ) (_ : a ∈ 𝒜 i) (n : ℕ), hI.dpow n a ∈ 𝒜 (n • i)
 #align divided_power_algebra.has_graded_dpow DividedPowerAlgebra.HasGradedDpow
 
@@ -276,6 +281,8 @@ theorem liftAux_isHomogeneous {A : Type _} [CommRing A] [Algebra R A]
 
 variable {R}
 
+instance : GradedAlgebra (DividedPowerAlgebra.grade R M) := GAlgebra R M
+
 theorem lift_isHomogeneous {A : Type _} [CommRing A] [Algebra R A] 
     (𝒜 : ℕ → Submodule R A) [GradedAlgebra 𝒜] 
     {I : Ideal A} (hI : DividedPowers I) (hI' : HasGradedDpow 𝒜 hI)
@@ -287,7 +294,16 @@ theorem lift_isHomogeneous {A : Type _} [CommRing A] [Algebra R A]
   simpa only [Algebra.id.smul_eq_mul, mul_one] using hI' (φ m) (hφ m) 1 (hφ' m) n
 #align divided_power_algebra.lift_is_homogeneous DividedPowerAlgebra.lift_isHomogeneous
 
-variable -- (S : Type _) [CommRing S] [Algebra R S] 
+theorem lift'_isHomogeneous₁ (N : Type _) [AddCommGroup N] [DecidableEq N]
+  [Module R N] (f : M →ₗ[R] N) :
+   GalgHom.IsHomogeneous 
+    (DividedPowerAlgebra.grade R M) (DividedPowerAlgebra.grade R N)
+    (LinearMap.lift R R f) := by
+  have : GradedRing (grade R N) := GAlgebra R N
+  apply liftAux_isHomogeneous
+
+
+variable 
   {N : Type _} [AddCommGroup N] 
   [DecidableEq S] [DecidableEq N]
   [Module R N] [Module S N] [IsScalarTower R S N] 
@@ -299,14 +315,14 @@ theorem lift'_isHomogeneous (f : M →ₗ[R] N) :
     (DividedPowerAlgebra.grade R M) (DividedPowerAlgebra.grade S N)
     (LinearMap.lift R S f) :=
   by
-  have : GradedAlgebra (DividedPowerAlgebra.grade S N) := GAlgebra S N
+  apply liftAux_isHomogeneous
+/-   have : GradedAlgebra (DividedPowerAlgebra.grade S N) := GAlgebra S N
   let hzz := @DividedPowerAlgebra.liftAux_isHomogeneous R M _ _ _ 
     S _ _ (DividedPowerAlgebra S N) _ _ _ _
     (DividedPowerAlgebra.grade S N)  
-    -- (fun n m ↦ dp S n (f m))
-
-  sorry
-  apply hzz
+    (fun n m ↦ dp S n (f m))
+-/
+  sorry 
   | hf_zero m := 
       dsimp
       rw [dp_zero]

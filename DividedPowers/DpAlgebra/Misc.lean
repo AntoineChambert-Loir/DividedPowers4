@@ -66,9 +66,9 @@ end MvPolynomial
 
 section IdealsAndRel
 
-theorem quotient_mk_eq_ofRel {A : Type _} [CommRing A] {r : A → A → Prop} {a b : A} (h : r a b) :
-    mk (ofRel r) a = mk (ofRel r) b :=
-  by
+theorem quotient_mk_eq_ofRel {A : Type _} [CommRing A] {r : A → A → Prop} 
+    {a b : A} (h : r a b) :
+  mk (ofRel r) a = mk (ofRel r) b := by
   suffices hinj : Function.Injective (RingQuot.ringQuotEquivIdealQuotient r).invFun
   · apply hinj; exact mkRingHom_rel h
   rw [Function.injective_iff_hasLeftInverse]
@@ -359,9 +359,9 @@ section
 
 open MvPolynomial
 
-variable {R M : Type _} [CommRing R]  
+variable {R M : Type _} [CommSemiring R]  
 
-instance [DecidableEq R] [DecidableEq M] : 
+local instance [DecidableEq R] [DecidableEq M] : 
   GradedAlgebra (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) :=
   weightedGradedAlgebra _ _
 
