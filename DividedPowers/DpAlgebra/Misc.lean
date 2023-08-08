@@ -143,9 +143,11 @@ open Ideal Ideal.Quotient TrivSqZeroExt
 
 section GradedAlgebra
 
-variable {R : Type _} [CommRing R]
+section CommSemiring
 
-variable {A : Type _} [CommRing A] [Algebra R A]
+variable {R : Type _} [CommSemiring R]
+
+variable {A : Type _} [CommSemiring A] [Algebra R A]
 
 variable {ι : Type _} [CanonicallyOrderedAddMonoid ι]
 
@@ -192,14 +194,10 @@ theorem one_mem : (1 : A) ∈ 𝒜 0 :=
 example : AddCommMonoid (𝒜 0) :=
   inferInstance
 
-example : Neg (𝒜 0) :=
-  AddSubgroupClass.neg
-
-instance gradeZeroCommRing : CommRing (𝒜 0) :=
-  { (inferInstance : AddCommGroup (𝒜 0)) with
+instance gradeZeroCommSemiring : CommSemiring (𝒜 0) :=
+  { (inferInstance : AddCommMonoid (𝒜 0)) with
     add := (· + ·)
     zero := 0
-    neg := Neg.neg
     one := 1
     mul := (· * ·)
     zero_mul := fun x => by
@@ -227,7 +225,6 @@ instance gradeZeroCommRing : CommRing (𝒜 0) :=
       ext
       simp only [gradeZero_coe_mul, mul_comm]
      }
-#align grade_zero_comm_ring gradeZeroCommRing
 
 instance gradeZeroAlgebra : Algebra R (𝒜 0) :=
   Algebra.ofModule'
@@ -264,6 +261,65 @@ def projZeroRingHom' : A →+* 𝒜 0 where
     simp only [proj, LinearMap.coe_mk, AddHom.coe_mk, SetLike.coe_eq_coe,
       gradeZero_coe_mul, ← GradedRing.projZeroRingHom_apply 𝒜, ← _root_.map_mul]
 #align proj_zero_ring_hom' projZeroRingHom'
+
+end CommSemiring
+
+section CommRing
+
+variable {R : Type _} [CommRing R]
+
+variable {A : Type _} [CommRing A] [Algebra R A]
+
+variable {ι : Type _} [CanonicallyOrderedAddMonoid ι]
+
+variable (𝒜 : ι → Submodule R A) [DecidableEq ι] [GradedAlgebra 𝒜]
+
+example : Neg (𝒜 0) :=
+  AddSubgroupClass.neg
+
+/- instance gradeZeroCommRing : CommRing (𝒜 0) :=
+  { (inferInstance : CommSemiring (𝒜 0)) , (inferInstance : AddCommGroup (𝒜 0)) with
+    add := (· + ·)
+    zero := 0
+    one := 1
+    mul := (· * ·)
+    neg := Neg.neg
+    sub := (· - ·) }
+#align grade_zero_comm_ring gradeZeroCommRing -/
+
+instance gradeZeroCommRing : CommRing (𝒜 0) :=
+  { (inferInstance : AddCommGroup (𝒜 0)) with
+    add := (· + ·)
+    zero := 0
+    one := 1
+    mul := (· * ·)
+    zero_mul := fun x => by
+      ext
+      rw [gradeZero_coe_mul, gradeZero_coe_zero, zero_mul]
+    mul_zero := fun x => by
+      ext
+      rw [gradeZero_coe_mul, gradeZero_coe_zero, mul_zero]
+    mul_assoc := fun x y z => by 
+      ext
+      simp only [gradeZero_coe_mul, mul_assoc]
+    one_mul := fun x => by 
+      ext
+      rw [gradeZero_coe_mul, gradeZero_coe_one, one_mul]
+    mul_one := fun x => by 
+      ext
+      rw [gradeZero_coe_mul, gradeZero_coe_one, mul_one]
+    left_distrib := fun x y z => by
+      ext
+      simp only [Submodule.coe_add, gradeZero_coe_mul, left_distrib]
+    right_distrib := fun x y z => by
+      ext
+      simp only [Submodule.coe_add, gradeZero_coe_mul, right_distrib]
+    mul_comm := fun x y => by 
+      ext
+      simp only [gradeZero_coe_mul, mul_comm]
+     }
+
+end CommRing
 
 end GradedAlgebra
 
