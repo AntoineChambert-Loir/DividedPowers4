@@ -26,7 +26,6 @@ The divided power algebra of a module -/
 
 section
 
-/- Here, we need CommRing and AddCommGroup, because of RingQuot -/
 variable (R M : Type _) [CommSemiring R] [AddCommMonoid M] [Module R M]
 
 namespace DividedPowerAlgebra
@@ -39,6 +38,8 @@ namespace DividedPowerAlgebra
 /-- The type coding the basic relations that will give rise to the divided power algebra. 
   The class of X (n, a) will be equal to dpow n a, with a ∈ M. --/
 inductive Rel : (MvPolynomial (ℕ × M) R) → (MvPolynomial (ℕ × M) R) → Prop 
+/-- rfl 0 -/
+  | rfl_zero : Rel 0 0
 /-- dpow_zero -/ 
   | zero {a : M} : Rel (X (0, a)) 1
 /-- dpow_smul -/
@@ -78,7 +79,8 @@ namespace DividedPowerAlgebra
 instance : CommSemiring (DividedPowerAlgebra R M) := RingQuot.instCommSemiring _
 
 /-- The divided power algebra is a commutative ring -/
-instance (R M : Type _) [CommRing R] [AddCommMonoid M] [Module R M] : CommRing (DividedPowerAlgebra R M) :=  
+instance (R M : Type _) [CommRing R] [AddCommMonoid M] [Module R M] : 
+  CommRing (DividedPowerAlgebra R M) :=  
   RingQuot.instCommRingRingQuotToSemiringToCommSemiring _
 
 instance : Zero (DividedPowerAlgebra R M) := AddMonoid.toZero
@@ -104,11 +106,18 @@ open MvPolynomial
 
 variable {R M}
 
+theorem _root_.Ideal.sub_mem_ofRel_of_rel {R : Type _} [Ring R] 
+  (r : R → R → Prop) {a b : R} (hr : r a b) : 
+  a - b ∈ Ideal.ofRel r := 
+  Submodule.subset_span ⟨a, b, hr, by rw [sub_add_cancel]⟩
+
+/- -- generalized
 theorem sub_mem_rel_of_rel {R M : Type _} [CommRing R] [AddCommMonoid M] [Module R M] 
     {a b : MvPolynomial (ℕ × M) R} (h : Rel R M a b) : 
   a - b ∈ RelI R M :=
   Submodule.subset_span ⟨a, b, h, by rw [sub_add_cancel]⟩
 #align divided_power_algebra.sub_mem_rel_of_rel DividedPowerAlgebra.sub_mem_rel_of_rel
+-/
 
 /- -- Useless 
 theorem mkRingHom_eq {a b : MvPolynomial (ℕ × M) R} (h : Rel R M a b) :
@@ -342,8 +351,8 @@ end UniversalProperty
 
 section Functoriality
 
-variable (S : Type _) [CommRing S] [Algebra R S] 
-  {N : Type _} [AddCommGroup N] [Module R N]
+variable (S : Type _) [CommSemiring S] [Algebra R S] 
+  {N : Type _} [AddCommMonoid N] [Module R N]
   [Module S N] [IsScalarTower R S N] [Algebra R (DividedPowerAlgebra S N)]
   [IsScalarTower R S (DividedPowerAlgebra S N)] (f : M →ₗ[R] N)
 

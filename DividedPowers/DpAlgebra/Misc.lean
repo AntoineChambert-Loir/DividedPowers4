@@ -13,9 +13,9 @@ noncomputable section
 
 open Finset MvPolynomial RingQuot DirectSum Ideal Ideal.Quotient
 
-theorem Ideal.pow_eq_bot {R : Type _} [CommSemiring R] [NoZeroDivisors R] {I : Ideal R} {n : ℕ}
-    (hn : n ≠ 0) : I ^ n = ⊥ ↔ I = ⊥ :=
-  by
+theorem Ideal.pow_eq_bot {R : Type _} [CommSemiring R] [NoZeroDivisors R] 
+    {I : Ideal R} {n : ℕ} (hn : n ≠ 0) : 
+  I ^ n = ⊥ ↔ I = ⊥ := by
   induction' n with n ih
   · exfalso; exact hn (Eq.refl _)
   · by_cases hn0 : n = 0
@@ -37,7 +37,7 @@ variable [Algebra R S]
 
 variable (R)
 
-/-- `mv_polynomial.eval₂ (algebra_map R S) g` as an `R`-algebra homomorphism. -/
+/-- `MvPolynomial.eval₂ (algebraMap R S) g` as an `R`-algebra homomorphism. -/
 def eval₂AlgHom (g : σ → S) : MvPolynomial σ R →ₐ[R] S :=
   { eval₂Hom (algebraMap R S) g with
     commutes' := fun r => by rw [RingHom.toFun_eq_coe, coe_eval₂Hom, algebraMap_eq, eval₂_C] }
@@ -46,18 +46,17 @@ def eval₂AlgHom (g : σ → S) : MvPolynomial σ R →ₐ[R] S :=
 variable {R}
 
 theorem eval₂AlgHom_apply (g : σ → S) (P : MvPolynomial σ R) :
-    eval₂AlgHom R g P = eval₂Hom (algebraMap R S) g P :=
-  rfl
+  eval₂AlgHom R g P = eval₂Hom (algebraMap R S) g P := rfl
 #align mv_polynomial.eval₂_alg_hom_apply MvPolynomial.eval₂AlgHom_apply
 
 @[simp]
-theorem coe_eval₂AlgHom (g : σ → S) : ⇑(eval₂AlgHom R g) = eval₂ (algebraMap R S) g :=
-  rfl
+theorem coe_eval₂AlgHom (g : σ → S) : 
+  ⇑(eval₂AlgHom R g) = eval₂ (algebraMap R S) g := rfl
 #align mv_polynomial.coe_eval₂_alg_hom MvPolynomial.coe_eval₂AlgHom
 
 @[simp]
-theorem eval₂AlgHom_X' (g : σ → S) (i : σ) : eval₂AlgHom R g (X i : MvPolynomial σ R) = g i :=
-  eval₂_X (algebraMap R S) g i
+theorem eval₂AlgHom_X' (g : σ → S) (i : σ) : 
+  eval₂AlgHom R g (X i : MvPolynomial σ R) = g i := eval₂_X (algebraMap R S) g i
 set_option linter.uppercaseLean3 false
 #align mv_polynomial.eval₂_alg_hom_X' MvPolynomial.eval₂AlgHom_X'
 set_option linter.uppercaseLean3 true
@@ -270,21 +269,22 @@ end GradedAlgebra
 
 section GradedAlgebra
 
-variable {R : Type _} [CommRing R]
-variable {S : Type _} [CommRing S] [Algebra R S]
+variable {R : Type _} [CommSemiring R]
+variable {S : Type _} [CommSemiring S] [Algebra R S]
 
 def GalgHom.IsHomogeneous {ι : Type _} 
-    {A : Type _} [CommRing A] [Algebra R A] (𝒜 : ι → Submodule R A) 
-    {B : Type _} [CommRing B] [Algebra S B] [Algebra R B] 
-    [IsScalarTower R S B] (ℬ : ι → Submodule S B)
-    (f : A →ₐ[R] B) :=
+    {A : Type _} [CommSemiring A] [Algebra R A] (𝒜 : ι → Submodule R A) 
+    {B : Type _} [CommSemiring B] [Algebra S B] [Algebra R B] [IsScalarTower R S B] 
+    (ℬ : ι → Submodule S B) (f : A →ₐ[R] B) :=
   ∀ i a, a ∈ 𝒜 i → f a ∈ ℬ i
 #align galg_hom.is_homogeneous GalgHom.IsHomogeneous
 
-theorem Finsupp.prod.mem_grade {κ A : Type _} [AddCommMonoid κ] [DecidableEq κ] [CommRing A]
-    [Algebra R A] (𝒜 : κ → Submodule R A) [GradedAlgebra 𝒜] {σ : Type _} (c : σ →₀ ℕ) (f : σ → A)
-    (d : σ → κ) (hc : ∀ s ∈ c.support, f s ∈ 𝒜 (d s)) :
-    (c.prod fun s e => f s ^ e) ∈ 𝒜 (c.sum fun s e => e • d s) := by
+theorem Finsupp.prod.mem_grade 
+    {κ A : Type _} [AddCommMonoid κ] [DecidableEq κ] [CommSemiring A] [Algebra R A] 
+    (𝒜 : κ → Submodule R A) [GradedAlgebra 𝒜] 
+    {σ : Type _} (c : σ →₀ ℕ) (f : σ → A) (d : σ → κ) 
+    (hc : ∀ s ∈ c.support, f s ∈ 𝒜 (d s)) :
+  (c.prod fun s e => f s ^ e) ∈ 𝒜 (c.sum fun s e => e • d s) := by
   classical
   rw [Finsupp.prod, Finsupp.sum]
   let p : Finset σ → Prop := fun s =>
@@ -299,25 +299,19 @@ theorem Finsupp.prod.mem_grade {κ A : Type _} [AddCommMonoid κ] [DecidableEq �
   · exact subset_rfl
 #align finsupp.prod.mem_grade Finsupp.prod.mem_grade
 
-def GalgHom.isHomogeneous' {ι κ : Type _}
-    -- [add_comm_monoid ι] [decidable_eq ι]
-    (A : Type _)
-    [CommRing A] [Algebra R A] (𝒜 : ι → Submodule R A)
-    -- [graded_algebra 𝒜]
-    (B : Type _)
-    [CommRing B] [Algebra R B] [Algebra S B] [IsScalarTower R S B]
-    (ℬ : κ → Submodule S B)
-    -- [graded_algebra ℬ]
-    (φ : ι → κ)
-    (f : A →ₐ[R] B) :=
+def GalgHom.isHomogeneous' 
+    {ι κ : Type _} (A : Type _) [CommSemiring A] [Algebra R A] 
+    (𝒜 : ι → Submodule R A)
+    (B : Type _) [CommSemiring B] [Algebra R B] [Algebra S B] [IsScalarTower R S B]
+    (ℬ : κ → Submodule S B) (φ : ι → κ) (f : A →ₐ[R] B) :=
   ∀ i a, a ∈ 𝒜 i → f a ∈ ℬ (φ i)
 #align galg_hom.is_homogeneous' GalgHom.isHomogeneous'
 
 /-- The evaluation of a weighted homogeneous polynomial at
   elements of adequate grades is homogeneous -/
-theorem GalgHom.isHomogeneous'_aeval (σ : Type _) {ι κ : Type _} [AddCommMonoid ι]
-    [AddCommMonoid κ] [DecidableEq κ] 
-    (A : Type _) [CommRing A] [Algebra R A] 
+theorem GalgHom.isHomogeneous'_aeval (σ : Type _) 
+    {ι κ : Type _} [AddCommMonoid ι] [AddCommMonoid κ] [DecidableEq κ] 
+    (A : Type _) [CommSemiring A] [Algebra R A] 
     (𝒜 : κ → Submodule R A) [GradedAlgebra 𝒜] 
     (w : σ → ι) (φ : ι →+ κ) (f : σ → A) (h : ∀ s : σ, f s ∈ 𝒜 (φ (w s))) :
     GalgHom.isHomogeneous' (MvPolynomial σ R)
