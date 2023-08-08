@@ -782,12 +782,12 @@ example : S' ⊗[R'] (R' ⊗[R] M) →ₗ[S'] S' ⊗[R] M := by
     map_smul' := sorry
   }
 
-
+--Universe error
 def baseChange (f : PolynomialMap R M N) : PolynomialMap R' (R' ⊗[R] M) (R' ⊗[R] N) where
   toFun S' _ _ := by
-    have : Algebra R S' := RingHom.toAlgebra ((algebraMap R' S').comp (algebraMap R R'))
+    /- have : Algebra R S' := RingHom.toAlgebra ((algebraMap R' S').comp (algebraMap R R'))
     let fS' := toFun f S' 
-    let u := Algebra.TensorProduct.rid R' S'
+    let u := Algebra.TensorProduct.rid R' S' -/
     
     sorry
   isCompat := sorry
