@@ -2,7 +2,7 @@ import Mathlib.Topology.Algebra.Ring.Basic
 import DividedPowers.ForMathlib.InfiniteSum.Basic
 import DividedPowers.ForMathlib.Antidiagonal
 
-theorem Finset.prod_one_add {ι α : Type _} [CommRing α] {f : ι → α} (s : Finset ι) :
+theorem Finset.prod_one_add {ι α : Type _} [DecidableEq ι] [CommRing α] {f : ι → α} (s : Finset ι) :
     (s.prod fun i => 1 + f i) = s.powerset.sum fun t => t.prod f := by
   simp_rw [add_comm, Finset.prod_add]
   congr
