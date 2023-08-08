@@ -1,5 +1,5 @@
-import Oneshot.DividedPowers.DpAlgebra.Dpow
-import Oneshot.AlgebraComp
+import DividedPowers.DpAlgebra.Dpow
+import DividedPowers.ForMathlib.AlgebraComp
 
 universe u v w
 
@@ -9,24 +9,24 @@ def IsCompatibleWith {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers
     [CommRing B] {J : Ideal B} (hJ : DividedPowers J) (f : A →+* B) : Prop :=
   ∃ hI' : DividedPowers (I.map f),
     (∀ (n : ℕ) (a : A), hI'.dpow n (f a) = f (hI.dpow n a)) ∧
-      ∀ (n : ℕ) (b : B) (hb : b ∈ J ⊓ I.map f), hJ.dpow n b = hI'.dpow n b
+      ∀ (n : ℕ) (b : B) (_ : b ∈ J ⊓ I.map f), hJ.dpow n b = hI'.dpow n b
 #align is_compatible_with IsCompatibleWith
 
 -- I added hext (compatibility condition) and replaced `g` `h` and `h_comp` by 
 -- `[algebra A C] [algebra B C] [is_scalar_tower A B C]`
 def IsUniversal {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I) {B : Type v}
     [CommRing B] [Algebra A B] (J : Ideal B) {D : Type v} [CommRing D] (J' : Ideal D)
-    (hJ' : DividedPowers J') (ψ : B →+* D) (hψ : J.map ψ ≤ J') :=
+    (hJ' : DividedPowers J') (ψ : B →+* D) (_ : J.map ψ ≤ J') :=
   ∀ (C : Type w) [CommRing C],
     ∀ [Algebra A C] [Algebra B C],
       ∀ [IsScalarTower A B C],
         ∀ (K : Ideal C) (hK : DividedPowers K)
           -- (g : pd_morphism hI hK) 
           -- (h : B →+* C)
-          (hh : J.map (algebraMap B C) ≤ K)
+          (_ : J.map (algebraMap B C) ≤ K)
           -- (hcomp : h ∘ (algebra_map A B) = algebra_map A C)
-          (hext : IsCompatibleWith hI hK (algebraMap A C)),
-          ∃! φ : pd_morphism hJ' hK, φ.toRingHom ∘ ψ = algebraMap B C
+          (_ : IsCompatibleWith hI hK (algebraMap A C)),
+          ∃! φ : dpMorphism hJ' hK, φ.toRingHom ∘ ψ = algebraMap B C
 #align is_universal IsUniversal
 
 namespace DividedPowerEnvelope
@@ -41,9 +41,10 @@ open DividedPowers DividedPowerAlgebra
 variable (hIJ : I.map (algebraMap A B) ≤ J)
 
 inductive rel1 : Rel (DividedPowerAlgebra B J) (DividedPowerAlgebra B J)
-  | Rel {x : J} : rel1 (DividedPowerAlgebra.ι B x) (algebraMap _ _ (x : B))
+  | Rel {x : J} : rel1 (DividedPowerAlgebra.ι B J x) (algebraMap _ _ (x : B))
 #align divided_power_envelope.rel1 DividedPowerEnvelope.rel1
 
+set_option linter.uppercaseLean3 false
 noncomputable def j1 : Ideal (DividedPowerAlgebra B J) :=
   ofRel (rel1 J)
 #align divided_power_envelope.J1 DividedPowerEnvelope.j1
@@ -55,6 +56,7 @@ inductive rel2 : Rel (DividedPowerAlgebra B J) (DividedPowerAlgebra B J)
       (algebraMap _ _ (algebraMap A B (dpow hI n x)))
 #align divided_power_envelope.rel2 DividedPowerEnvelope.rel2
 
+set_option linter.uppercaseLean3 false
 noncomputable def j2 : Ideal (DividedPowerAlgebra B J) :=
   ofRel (rel2 hI J hIJ)
 #align divided_power_envelope.J2 DividedPowerEnvelope.j2
@@ -63,8 +65,8 @@ noncomputable def j12 : Ideal (DividedPowerAlgebra B J) :=
   j1 J + j2 hI J hIJ
 #align divided_power_envelope.J12 DividedPowerEnvelope.j12
 
-theorem j12_isSubPdIdeal :
-    IsSubPdIdeal (DividedPowerAlgebra.dividedPowers' B J)
+theorem j12_isSubPdIdeal [DecidableEq B] :
+    isSubDpIdeal (DividedPowerAlgebra.dividedPowers' B J)
       (j12 hI J hIJ ⊓ DividedPowerAlgebra.augIdeal B J) :=
   sorry
 #align divided_power_envelope.J12_is_sub_pd_ideal DividedPowerEnvelope.j12_isSubPdIdeal
@@ -87,33 +89,36 @@ instance isScalarTower_of_included : IsScalarTower A B (DpEnvelopeOfIncluded hI 
   IsScalarTower.comp A B (DpEnvelopeOfIncluded hI J hIJ)
 #align divided_power_envelope.is_scalar_tower_of_included DividedPowerEnvelope.isScalarTower_of_included
 
-noncomputable def dpIdealOfIncluded : Ideal (DpEnvelopeOfIncluded hI J hIJ) :=
+noncomputable def dpIdealOfIncluded [DecidableEq B] : Ideal (DpEnvelopeOfIncluded hI J hIJ) :=
   map (Ideal.Quotient.mk (j12 hI J hIJ)) (DividedPowerAlgebra.augIdeal B J)
 #align divided_power_envelope.dp_ideal_of_included DividedPowerEnvelope.dpIdealOfIncluded
 
-theorem sub_ideal_dpIdealOfIncluded :
+theorem sub_ideal_dpIdealOfIncluded [DecidableEq B] :
     J.map (algebraMap B (DpEnvelopeOfIncluded hI J hIJ)) ≤ dpIdealOfIncluded hI J hIJ :=
   by
   intro x hx
-  rw [dp_ideal_of_included]
+  rw [dpIdealOfIncluded]
   rw [Ideal.mem_map_iff_of_surjective]
   sorry
-  exact quotient.mk_surjective
+  exact Quotient.mk_surjective
 #align divided_power_envelope.sub_ideal_dp_ideal_of_included DividedPowerEnvelope.sub_ideal_dpIdealOfIncluded
 
-theorem dpEnvelopeOfIncluded_isUniversal :
+--TODO : fix
+/- theorem dpEnvelopeOfIncluded_isUniversal [DecidableEq B] :
     IsUniversal hI J (dpIdealOfIncluded hI J hIJ)
       (Quotient.dividedPowers (DividedPowerAlgebra.dividedPowers' B J) (j12_isSubPdIdeal hI J hIJ))
       (algebraMap B (DpEnvelopeOfIncluded hI J hIJ)) (sub_ideal_dpIdealOfIncluded hI J hIJ) :=
   sorry
-#align divided_power_envelope.dp_envelope_of_included_is_universal DividedPowerEnvelope.dpEnvelopeOfIncluded_isUniversal
-
+#align divided_power_envelope.dp_envelope_of_included_is_universal 
+  DividedPowerEnvelope.dpEnvelopeOfIncluded_isUniversal
+ -/
 end Included
 
 section General
 
 variable (I)
 
+set_option linter.uppercaseLean3 false
 def j' : Ideal B :=
   J + I.map (algebraMap A B)
 #align divided_power_envelope.J' DividedPowerEnvelope.j'
@@ -141,12 +146,13 @@ noncomputable instance algebra' : Algebra A (DpEnvelope hI J) :=
 instance : IsScalarTower A B (DpEnvelope hI J) :=
   IsScalarTower.comp A B (DpEnvelope hI J)
 
-noncomputable def dpIdeal : Ideal (DpEnvelope hI J) :=
+noncomputable def dpIdeal [DecidableEq B] : Ideal (DpEnvelope hI J) :=
   Ideal.map (Ideal.Quotient.mk (j12 hI (j' I J) (sub_ideal_j' I J)))
     (DividedPowerAlgebra.augIdeal B (j' I J))
 #align divided_power_envelope.dp_ideal DividedPowerEnvelope.dpIdeal
 
-theorem sub_ideal_dpIdeal : J.map (algebraMap B (DpEnvelope hI J)) ≤ dpIdeal hI J :=
+theorem sub_ideal_dpIdeal [DecidableEq B] : 
+    J.map (algebraMap B (DpEnvelope hI J)) ≤ dpIdeal hI J :=
   sorry
 #align divided_power_envelope.sub_ideal_dp_ideal DividedPowerEnvelope.sub_ideal_dpIdeal
 
@@ -174,7 +180,11 @@ section
 
 
 end -/
-theorem dpEnvelope_isUniversal :
+
+#exit 
+
+
+theorem dpEnvelope_isUniversal [DecidableEq B] :
     IsUniversal hI J (dpIdeal hI J)
       (Quotient.dividedPowers (DividedPowerAlgebra.dividedPowers' B (j' I J))
         (j12_isSubPdIdeal hI (j' I J) (sub_ideal_j' I J)))
