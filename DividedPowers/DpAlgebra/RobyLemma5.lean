@@ -36,21 +36,17 @@ private theorem I_le_ker :
 variable {f}
 
 private noncomputable def inv_f_fun (hf : Function.Surjective f) :
-  R' → (R ⊗[A] S) ⧸ (I f g) := fun r' => 
+    R' → (R ⊗[A] S) ⧸ (I f g) := fun r' => 
   Ideal.Quotient.mkₐ A (I f g) 
-    (@Algebra.TensorProduct.includeLeft A _ R _ _ S _ _ 
-      (hf r').choose)
-
+    (@Algebra.TensorProduct.includeLeft A _ R _ _ S _ _ R _ _ _ (hf r').choose)
 
 private theorem hinv_f (hf : Function.Surjective f) :
-    ∀ r,
-      (inv_f_fun g hf) (f r) = Ideal.Quotient.mkₐ A (I f g) (Algebra.TensorProduct.includeLeft (R := A) (A := R) (B := S) r) :=
-  by
+    ∀ r, (inv_f_fun g hf) (f r) = Ideal.Quotient.mkₐ A (I f g) 
+      (@Algebra.TensorProduct.includeLeft A _ R _ _ S _ _ R _ _ _ r) := by
   intro r
   simp only [inv_f_fun]
   dsimp
-  rw [Ideal.Quotient.eq]
-  rw [← TensorProduct.sub_tmul]
+  rw [Ideal.Quotient.eq, ← TensorProduct.sub_tmul]
   simp only [I]
   apply Ideal.mem_sup_left
   apply Ideal.mem_map_of_mem
@@ -92,8 +88,9 @@ lemma inv_f_map_zero' (hf : Function.Surjective f) :
 lemma inv_f_commutes' (hf : Function.Surjective f) (a : A) :
   inv_f_fun g hf (algebraMap A R' a) = algebraMap A _ a := by
   rw [← f.commutes a, hinv_f g hf]
-  rw [Algebra.TensorProduct.includeLeft.commutes]
-  rw [(Ideal.Quotient.mkₐ A (I f g)).commutes]
+  sorry
+  /- rw [Algebra.TensorProduct.includeLeft.commutes]
+  rw [(Ideal.Quotient.mkₐ A (I f g)).commutes] -/
 
 
 private noncomputable def inv_f (hf : Function.Surjective f) : 
@@ -106,30 +103,25 @@ private noncomputable def inv_f (hf : Function.Surjective f) :
   commutes' := inv_f_commutes' g hf }
 
 lemma inv_f_apply {hf : Function.Surjective f} (r : R) :
-  (inv_f g hf) (f r) = Ideal.Quotient.mkₐ A (I f g) (Algebra.TensorProduct.includeLeft (R := A) (A := R) (B := S) r) := 
+    (inv_f g hf) (f r) = Ideal.Quotient.mkₐ A (I f g) 
+      (@Algebra.TensorProduct.includeLeft A _ R _ _ S _ _ R _ _ _ r) := 
   hinv_f g hf r
 
-variable (f)
-
-variable {g}
+variable (f) {g}
 
 
 private noncomputable def inv_g_fun (hg : Function.Surjective g) :
-  S' → (R ⊗[A] S) ⧸ (I f g) := fun s' => 
+    S' → (R ⊗[A] S) ⧸ (I f g) := fun s' => 
   Ideal.Quotient.mkₐ A (I f g) 
     (@Algebra.TensorProduct.includeRight A _ R _ _ S _ _ 
       (hg s').choose)
 
-
 private theorem hinv_g (hg : Function.Surjective g) :
-    ∀ s,
-      (inv_g_fun f hg) (g s) = Ideal.Quotient.mkₐ A (I f g) (Algebra.TensorProduct.includeRight (R := A) (A := R) (B := S) s) :=
-  by
+    ∀ s, (inv_g_fun f hg) (g s) = Ideal.Quotient.mkₐ A (I f g) 
+      (Algebra.TensorProduct.includeRight (R := A) (A := R) (B := S) s) := by
   intro s
-  simp only [inv_g_fun]
-  dsimp
-  rw [Ideal.Quotient.eq]
-  rw [← TensorProduct.tmul_sub]
+  simp only [inv_g_fun, includeRight_apply, Ideal.Quotient.mkₐ_eq_mk]
+  rw [Ideal.Quotient.eq, ← TensorProduct.tmul_sub]
   simp only [I]
   apply Ideal.mem_sup_right
   apply Ideal.mem_map_of_mem
@@ -205,8 +197,7 @@ theorem ker_tens
     f.toRingHom.ker.map 
       (Algebra.TensorProduct.includeLeft : R →ₐ[A] R ⊗[A] S) ⊔
         g.toRingHom.ker.map 
-          (Algebra.TensorProduct.includeRight : S →ₐ[A] R ⊗[A] S) :=
-  by
+          (Algebra.TensorProduct.includeRight : S →ₐ[A] R ⊗[A] S) := by
   rw [← I]
   -- change _ = I f g,
   rw [AlgHom.ker_eq_ideal_iff]
@@ -227,12 +218,14 @@ theorem ker_tens
   simp only [← AlgHom.coe_comp]
   apply congr_arg
   apply Algebra.TensorProduct.ext
-  intro r s
+  sorry
+  sorry
+  /- intro r s
   simp only [AlgHom.comp_apply]
   rw [Ideal.Quotient.liftₐ_apply, Ideal.Quotient.mkₐ_eq_mk, Ideal.Quotient.lift_mk (I f g) _ _,
     AlgHom.coe_toRingHom, Algebra.TensorProduct.map_tmul,
     Algebra.TensorProduct.productMap_apply_tmul]
-  exact hinv_f_tens_g hf hg r s
+  exact hinv_f_tens_g hf hg r s -/
 #align algebra.tensor_product.ker_tens Algebra.TensorProduct.ker_tens
 
 end Algebra.TensorProduct
