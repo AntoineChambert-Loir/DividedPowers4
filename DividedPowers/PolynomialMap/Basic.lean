@@ -65,11 +65,11 @@ variable (R : Type _) [CommSemiring R]
 namespace Algebra.TensorProduct
 
 -- The natural `R`-algebra map from `S ⊗[R] R` to `S`.
-def rid' : S ⊗[R] R →ₐ[S] S := { Algebra.TensorProduct.rid R S with
+def rid' : S ⊗[R] R →ₐ[S] S := Algebra.TensorProduct.rid R S S/- with
   map_one' := by simp only [AlgEquiv.toFun_eq_coe, map_one]
   map_zero' := by simp only [AlgEquiv.toFun_eq_coe, map_zero]
   commutes' := fun r => by
-    simp only [algebraMap_apply, AlgEquiv.toFun_eq_coe, rid_tmul, one_smul] }
+    simp only [algebraMap_apply, AlgEquiv.toFun_eq_coe, rid_tmul, one_smul] } -/
 #align algebra.tensor_product.rid' Algebra.TensorProduct.rid'
 
 @[simp]
@@ -117,15 +117,14 @@ variable {R : Type _} [CommSemiring R] {ι : Type _}
 
 -- I think it makes more sense to have this in the `mv_polynomial` namespace
 --def linear_map.mv_polynomial.coeff (k : ι →₀ ℕ) : mv_polynomial ι A →ₗ[A] A :=
-def lcoeff (k : ι →₀ ℕ) : MvPolynomial ι R →ₗ[R] R
-    where
+def lcoeff (k : ι →₀ ℕ) : MvPolynomial ι R →ₗ[R] R where
   -- or `coeff_linear_map`
-  toFun := coeff k
-  map_add' := coeff_add k
+  toFun     := coeff k
+  map_add'  := coeff_add k
   map_smul' := coeff_smul k
 #align mv_polynomial.coeff_hom MvPolynomial.lcoeff
 
-#check MvPolynomial.lcoeff
+--#check MvPolynomial.lcoeff
 
 theorem lcoeff_apply (k : ι →₀ ℕ) (f : MvPolynomial ι R) :
     lcoeff k f = MvPolynomial.coeff k f :=
