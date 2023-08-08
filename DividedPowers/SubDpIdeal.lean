@@ -217,7 +217,7 @@ theorem isSubDpIdeal_iSup {ι : Type _}
 #align divided_powers.is_sub_pd_ideal_supr DividedPowers.isSubDpIdeal_iSup
 
 theorem isSubDpIdeal_map {B : Type _} [CommSemiring B] {J : Ideal B} (hJ : DividedPowers J)
-    {f : A →+* B} (hf : is_dpMorphism hI hJ f) 
+    {f : A →+* B} (hf : isDPMorphism hI hJ f) 
     (K : Ideal A) (hK : isSubDpIdeal hI K) :
     isSubDpIdeal hJ (Ideal.map f K) := by
   simp only [Ideal.map]
@@ -543,11 +543,11 @@ section Ker
 variable {A : Type _} [CommRing A] {I : Ideal A} (hI : DividedPowers I)
   {B : Type _} [CommRing B] {J : Ideal B} (hJ : DividedPowers J)
 
-theorem isSubDpIdeal_ker {f : A →+* B} (hf : is_dpMorphism hI hJ f) :
+theorem isSubDpIdeal_ker {f : A →+* B} (hf : isDPMorphism hI hJ f) :
     isSubDpIdeal hI (RingHom.ker f ⊓ I) :=
   by
   rw [isSubDpIdeal_inf_iff]
-  simp only [is_dpMorphism] at hf 
+  simp only [isDPMorphism] at hf 
   intro n a b ha hb
   simp only [RingHom.sub_mem_ker_iff]
   rw [← hf.2 n a ha, ← hf.2 n b hb]
@@ -562,7 +562,7 @@ def PdMorphism.ker (f : dpMorphism hI hJ) : SubDpIdeal hI
     by
     simp only [Ideal.mem_inf, and_imp, RingHom.mem_ker]
     intro ha ha'
-    rw [← f.is_dpMorphism.2 n a ha', ha]
+    rw [← f.isDPMorphism.2 n a ha', ha]
     exact ⟨dpow_eval_zero hJ hn, hI.dpow_mem hn ha'⟩
 #align divided_powers.pd_morphism.ker DividedPowers.PdMorphism.ker
 
@@ -642,7 +642,7 @@ theorem pdEqualizer_is_pd_ideal_right {A : Type _} [CommSemiring A] {I : Ideal A
 
 theorem le_equalizer_of_pd_morphism {A : Type _} [CommSemiring A] {I : Ideal A} (hI : DividedPowers I)
     {B : Type _} [CommSemiring B] (f : A →+* B) {K : Ideal B} (hI_le_K : Ideal.map f I ≤ K)
-    (hK hK' : DividedPowers K) (hIK : is_dpMorphism hI hK f) (hIK' : is_dpMorphism hI hK' f) :
+    (hK hK' : DividedPowers K) (hIK : isDPMorphism hI hK f) (hIK' : isDPMorphism hI hK' f) :
     Ideal.map f I ≤ dpEqualizer hK hK' := by
   rw [Ideal.map]; rw [Ideal.span_le]
   rintro b ⟨a, ha, rfl⟩
@@ -650,7 +650,7 @@ theorem le_equalizer_of_pd_morphism {A : Type _} [CommSemiring A] {I : Ideal A} 
   rw [mem_dpEqualizer_iff]
   constructor
   apply hI_le_K; exact Ideal.mem_map_of_mem f ha
-  simp only [is_dpMorphism, Ideal.map_id, RingHom.id_apply] at hIK hIK' 
+  simp only [isDPMorphism, Ideal.map_id, RingHom.id_apply] at hIK hIK' 
   intro n
   rw [hIK.2 n a ha, hIK'.2 n a ha]
 #align divided_powers.le_equalizer_of_pd_morphism DividedPowers.le_equalizer_of_pd_morphism
@@ -782,14 +782,14 @@ theorem dpow_apply {n : ℕ} {a : A} (ha : a ∈ I) :
   rw [dpow_def, dpow_apply' hI hIf ha]
 #align divided_powers.quotient.of_surjective.dpow_apply DividedPowers.Quotient.OfSurjective.dpow_apply
 
-theorem is_dpMorphism : is_dpMorphism hI (dividedPowers hI hf hIf) f :=
+theorem isDPMorphism : isDPMorphism hI (dividedPowers hI hf hIf) f :=
   by
   constructor
   exact le_refl (Ideal.map f I)
   intro n a ha; rw [dpow_apply hI hf hIf ha]
-#align divided_powers.quotient.of_surjective.is_pd_morphism DividedPowers.Quotient.OfSurjective.is_dpMorphism
+#align divided_powers.quotient.of_surjective.is_pd_morphism DividedPowers.Quotient.OfSurjective.isDPMorphism
 
-theorem unique (hquot : DividedPowers (I.map f)) (hm : DividedPowers.is_dpMorphism hI hquot f) :
+theorem unique (hquot : DividedPowers (I.map f)) (hm : DividedPowers.isDPMorphism hI hquot f) :
     hquot = dividedPowers hI hf hIf :=
   eq_of_eq_on_ideal _ _ fun n x hx =>
     by
@@ -828,13 +828,13 @@ theorem dpow_apply {n : ℕ} {a : A} (ha : a ∈ I) :
     (isSubDpIdeal_aux hI hIJ) ha
 #align divided_powers.quotient.dpow_apply DividedPowers.Quotient.dpow_apply
 
-theorem isPdMorphism : DividedPowers.is_dpMorphism hI (dividedPowers hI hIJ) (Ideal.Quotient.mk J) :=
-  DividedPowers.Quotient.OfSurjective.is_dpMorphism hI Ideal.Quotient.mk_surjective
+theorem isPdMorphism : DividedPowers.isDPMorphism hI (dividedPowers hI hIJ) (Ideal.Quotient.mk J) :=
+  DividedPowers.Quotient.OfSurjective.isDPMorphism hI Ideal.Quotient.mk_surjective
     (isSubDpIdeal_aux hI hIJ)
 #align divided_powers.quotient.is_pd_morphism DividedPowers.Quotient.isPdMorphism
 
 theorem unique (hquot : DividedPowers (I.map (Ideal.Quotient.mk J)))
-    (hm : DividedPowers.is_dpMorphism hI hquot (Ideal.Quotient.mk J)) :
+    (hm : DividedPowers.isDPMorphism hI hquot (Ideal.Quotient.mk J)) :
     hquot = dividedPowers hI hIJ :=
   DividedPowers.Quotient.OfSurjective.unique hI Ideal.Quotient.mk_surjective (isSubDpIdeal_aux hI hIJ)
     hquot hm
