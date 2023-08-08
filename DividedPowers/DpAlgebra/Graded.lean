@@ -332,10 +332,8 @@ more generally for graded algebras -/
 variable (R)
 
 
-def proj' (n : ℕ) : DividedPowerAlgebra R M →ₗ[R] grade R M n :=
-  by
-  let hzz := proj (grade R M) n
-  
+def proj' (n : ℕ) : DividedPowerAlgebra R M →ₗ[R] grade R M n := proj (grade R M) n
+
 #align divided_power_algebra.proj' DividedPowerAlgebra.proj'
 
 theorem proj'_zero_one : (proj' R M 0) 1 = 1 := by
