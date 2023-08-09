@@ -4,11 +4,12 @@ noncomputable section
 
 namespace DividedPowerAlgebra
 
+
 open DirectSum Finset Function Ideal Ideal.Quotient MvPolynomial RingEquiv RingQuot TrivSqZeroExt 
 
 section CommSemiring
 
-variable (R M : Type _) [CommSemiring R] [AddCommMonoid M] [Module R M] 
+variable (R : Type u) (M : Type v) [CommSemiring R] [AddCommMonoid M] [Module R M] 
 
 variable [DecidableEq R] [DecidableEq M]
 
@@ -115,7 +116,7 @@ end CommSemiring
 
 section CommRing
 
-variable (R M : Type _) [CommRing R] [AddCommMonoid M] [Module R M] 
+variable (R : Type u) (M : Type v) [CommRing R] [AddCommMonoid M] [Module R M] 
 
 variable [DecidableEq R] [DecidableEq M]
 
@@ -128,7 +129,8 @@ def IsAugmentationIdeal (A : Type _) [CommRing A] (J : Ideal A) : Prop :=
 #align is_augmentation_ideal DividedPowerAlgebra.IsAugmentationIdeal
 
 /-- The augmentation ideal in the divided_power_algebra -/
-def augIdeal : Ideal (DividedPowerAlgebra R M) := RingHom.ker (algebraMapInv R M)
+def augIdeal : (Ideal (DividedPowerAlgebra R M) : Type (max u v)) := 
+  RingHom.ker (algebraMapInv R M)
 #align divided_power_algebra.aug_ideal DividedPowerAlgebra.augIdeal
 
 theorem mem_augIdeal_iff (f : DividedPowerAlgebra R M) :
@@ -143,10 +145,18 @@ theorem ι_mem_augIdeal (m : M) : ι R M m ∈ augIdeal R M := by
 
 -- This is apparently not an instance?
 
+count_heartbeats in -- prints heartbeat count in the declaration (and sets `maxHeartbeats` to infinity)
+set_option synthInstance.maxHeartbeats 100000 in
+set_option trace.profiler true in -- prints wall clock times in the declaration
+set_option pp.proofs.withType false in -- makes output much shorter
+
 instance : CommRing (DividedPowerAlgebra R M ⧸ augIdeal R M) := Ideal.Quotient.commRing _  -- Slow
 
-instance : Algebra R (DividedPowerAlgebra R M ⧸ augIdeal R M) := Quotient.algebra R -- Slow
+#exit
+instance (priority := 10000)  : Algebra R (DividedPowerAlgebra R M ⧸ augIdeal R M) := Quotient.algebra R -- Slow
 
+
+#exit
 --The next two lemmas timeout (due to an inference problem, I think) 
 lemma augIdeal_isAugmentationIdeal' : 
   Function.RightInverse 
@@ -154,9 +164,8 @@ lemma augIdeal_isAugmentationIdeal' :
     (algebraMap R (DividedPowerAlgebra R M ⧸ augIdeal R M)) := by
   refine' Function.rightInverse_of_injective_of_leftInverse (RingHom.kerLift_injective _) _
   intro r
-  sorry
-  /- simp only [AlgHom.toRingHom_eq_coe]
-  apply AlgHomClass.commutes  -/
+  simp only [AlgHom.toRingHom_eq_coe]
+  apply AlgHomClass.commutes 
 
 -- We prove that the augmentation is an augmentation ideal, namely there is a section
 theorem augIdeal_isAugmentationIdeal :
@@ -255,7 +264,7 @@ theorem right_inv' (x : R) :
 theorem left_inv' (x : grade R M 0) :
     (proj' R M 0 ∘ algebraMap R (DividedPowerAlgebra R M)) ((algebraMapInv R M) x.val) = x := by
   ext
-  simp only [proj'._eq_1, proj._eq_1, LinearMap.coe_mk, AddHom.coe_mk, Function.comp_apply]
+  simp only [proj', proj, LinearMap.coe_mk, AddHom.coe_mk, Function.comp_apply]
   conv_rhs => rw [← DirectSum.decompose_of_mem_same _ x.2]
   simp only [algebraMap_right_inv_of_degree_zero R M x, decompose_coe, of_eq_same]
 #align divided_power_algebra.left_inv' DividedPowerAlgebra.left_inv'

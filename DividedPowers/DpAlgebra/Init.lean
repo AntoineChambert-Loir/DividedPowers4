@@ -75,8 +75,11 @@ def DividedPowerAlgebra : Type _ :=
 
 namespace DividedPowerAlgebra
 
+/-- The divided power algebra is a semiring -/
+instance (priority := high) : Semiring (DividedPowerAlgebra R M) := RingQuot.instSemiring _
+
 /-- The divided power algebra is a commutative semiring -/
-instance : CommSemiring (DividedPowerAlgebra R M) := RingQuot.instCommSemiring _
+instance  : CommSemiring (DividedPowerAlgebra R M) := RingQuot.instCommSemiring _
 
 /-- The divided power algebra is a commutative ring -/
 instance (R M : Type _) [CommRing R] [AddCommMonoid M] [Module R M] : 
