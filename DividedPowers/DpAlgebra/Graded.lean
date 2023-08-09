@@ -410,10 +410,14 @@ theorem ι_mem_augIdeal (m : M) : ι R M m ∈ augIdeal R M := by
 #align divided_power_algebra.ι_mem_aug_ideal DividedPowerAlgebra.ι_mem_augIdeal
 
 -- This is apparently not an instance?
-instance : CommRing (DividedPowerAlgebra R M ⧸ augIdeal R M) := Ideal.Quotient.commRing _ -- Slow
+set_option profiler true
+
+instance : CommRing (DividedPowerAlgebra R M ⧸ augIdeal R M) := Ideal.Quotient.commRing _  -- Slow
 
 instance : Algebra R (DividedPowerAlgebra R M ⧸ augIdeal R M) := Quotient.algebra R -- Slow
 
+
+#exit
 --The next two lemmas timeout (due to an inference problem, I think) 
 lemma augIdeal_isAugmentationIdeal' : 
   Function.RightInverse 
