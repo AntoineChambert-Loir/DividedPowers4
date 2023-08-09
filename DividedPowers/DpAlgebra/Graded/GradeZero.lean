@@ -1,5 +1,7 @@
 import DividedPowers.DpAlgebra.Graded.Basic
 
+import Mathlib.LinearAlgebra.TensorAlgebra.Basic
+
 noncomputable section
 
 namespace DividedPowerAlgebra
@@ -133,6 +135,7 @@ def augIdeal : (Ideal (DividedPowerAlgebra R M) : Type (max u v)) :=
   RingHom.ker (algebraMapInv R M)
 #align divided_power_algebra.aug_ideal DividedPowerAlgebra.augIdeal
 
+
 theorem mem_augIdeal_iff (f : DividedPowerAlgebra R M) :
     f ∈ augIdeal R M ↔ algebraMapInv R M f = 0 := by 
   rw [augIdeal, RingHom.mem_ker]
@@ -143,20 +146,31 @@ theorem ι_mem_augIdeal (m : M) : ι R M m ∈ augIdeal R M := by
   simp only [mem_augIdeal_iff, ι_def, dp, algebraMapInv_eq, aeval_X, zero_lt_one, ite_true]
 #align divided_power_algebra.ι_mem_aug_ideal DividedPowerAlgebra.ι_mem_augIdeal
 
--- This is apparently not an instance?
+--instance : CommRing (DividedPowerAlgebra R M ⧸ augIdeal R M) := inferInstance
+  /- Ideal.Quotient.commRing (augIdeal R M)  -/-- Slow
+  /- @Ideal.Quotient.commRing (DividedPowerAlgebra R M)
+    (DividedPowerAlgebra.instCommRing R M) (augIdeal R M) -/ 
+
+set_option profiler true
+
+example : HasQuotient (TensorAlgebra R M) (Ideal (TensorAlgebra R M)) := 
+  Submodule.hasQuotient
+
+example : HasQuotient (DividedPowerAlgebra R M) (Ideal (DividedPowerAlgebra R M)) := 
+  Submodule.hasQuotient
+
+example : CommRing (DividedPowerAlgebra R M ⧸ augIdeal R M) := 
+  Quotient.commRing (augIdeal R M)
+
+
+-- This one is still too slow
+instance (priority := high) instAlgebra' : Algebra R (DividedPowerAlgebra R M ⧸ augIdeal R M) := 
+Quotient.algebra R
 
 count_heartbeats in -- prints heartbeat count in the declaration (and sets `maxHeartbeats` to infinity)
 set_option synthInstance.maxHeartbeats 100000 in
 set_option trace.profiler true in -- prints wall clock times in the declaration
-set_option pp.proofs.withType false in -- makes output much shorter
-
-instance : CommRing (DividedPowerAlgebra R M ⧸ augIdeal R M) := Ideal.Quotient.commRing _  -- Slow
-
-#exit
-instance (priority := 10000)  : Algebra R (DividedPowerAlgebra R M ⧸ augIdeal R M) := Quotient.algebra R -- Slow
-
-
-#exit
+set_option pp.proofs.withType false in
 --The next two lemmas timeout (due to an inference problem, I think) 
 lemma augIdeal_isAugmentationIdeal' : 
   Function.RightInverse 
@@ -166,6 +180,9 @@ lemma augIdeal_isAugmentationIdeal' :
   intro r
   simp only [AlgHom.toRingHom_eq_coe]
   apply AlgHomClass.commutes 
+
+
+#exit
 
 -- We prove that the augmentation is an augmentation ideal, namely there is a section
 theorem augIdeal_isAugmentationIdeal :
