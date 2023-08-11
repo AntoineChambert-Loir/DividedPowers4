@@ -1,7 +1,7 @@
 import Mathlib.Algebra.RingQuot
 import Mathlib.Algebra.Algebra.Operations
 import Mathlib.Data.Rel
-import Mathlib.RingTheory.Ideal.Quotient
+import Mathlib.RingTheory.Ideal.QuotientOperations
 
 import Mathlib.Data.MvPolynomial.CommRing
 
@@ -14,10 +14,9 @@ open Finset MvPolynomial Ideal.Quotient Ideal RingQuot
 /-! 
 The divided power algebra of a module -/
 
-
 namespace MvPolynomial
 
-variable (R M : Type _) [CommRing R]
+variable (R M : Type _) [CommSemiring R]
 
 inductive r : (MvPolynomial M R) → (MvPolynomial M R) → Prop 
 
@@ -25,12 +24,19 @@ def Quot_r : Type _ := RingQuot (r R M)
 
 instance (priority := 999) : Semiring (Quot_r R M) := RingQuot.instSemiring _
 
+/- We have to make the priority of CommSemiring very low, or else the `HasQuotient` instance
+  below takes about 3s. -/
+instance (priority := 10) : CommSemiring (Quot_r R M) := RingQuot.instCommSemiring _
+
+instance {S : Type _} [CommRing S] : CommRing (Quot_r S M) :=
+  RingQuot.instCommRingRingQuotToSemiringToCommSemiring _
+
 instance instAlgebra  {R A M} [CommSemiring R] [CommRing A] [Algebra R A] :
     Algebra R (Quot_r A M) :=
   RingQuot.instAlgebraRingQuotInstSemiring _
 
 -- verify there is no diamond
-example: (algebraNat : Algebra ℕ (Quot_r R M)) = instAlgebra := rfl
+example (R : Type _) [CommRing R] : (algebraNat : Algebra ℕ (Quot_r R M)) = instAlgebra := rfl
 
 instance {R S A M} [CommRing R] [CommRing S] [CommRing A]
     [Algebra R A] [Algebra S A] [SMulCommClass R S A] :
@@ -42,16 +48,26 @@ instance {R S A M} [CommRing R] [CommRing S] [CommRing A]
     IsScalarTower R S  (Quot_r A M) :=
   RingQuot.instIsScalarTowerRingQuotInstSMulRingQuotInstSMulRingQuot _
 
-instance {S : Type _} [CommRing S] : Ring (Quot_r S M) :=
-  RingQuot.instRing (r S M) 
+
+/- count_heartbeats in 
+set_option synthInstance.maxHeartbeats 100000 in
+set_option trace.profiler true in 
+set_option pp.proofs.withType false in -/
+instance (R M : Type _) [CommRing R] : 
+    HasQuotient (Quot_r R M) (Ideal (Quot_r R M)) := 
+  Submodule.hasQuotient
+
+example (R M : Type _) [CommRing R] (I : Ideal (Quot_r R M)) : CommRing ((Quot_r R M) ⧸ I) := 
+  Quotient.commRing I
 
 count_heartbeats in 
 set_option synthInstance.maxHeartbeats 100000 in
 set_option trace.profiler true in 
 set_option pp.proofs.withType false in
-instance (R M : Type _) [CommRing R] : 
-    HasQuotient (Quot_r R M) (Ideal (Quot_r R M)) := 
-  Submodule.hasQuotient
+-- This one is still too slow
+instance instAlgebra' (R M : Type _) [CommRing R] (I : Ideal (Quot_r R M)) : 
+  Algebra R ((Quot_r R M) ⧸ I) := 
+Quotient.algebra R
 
 /- 
 Used 52680 heartbeats, which is less than the current maximum of 200000.
@@ -65,7 +81,7 @@ end MvPolynomial
 
 namespace FreeAlgebra'
 
-variable (R M : Type _) [CommRing R]
+variable (R M : Type _) [CommSemiring R]
 
 inductive r : (FreeAlgebra R M) → (FreeAlgebra R M) → Prop 
 
@@ -78,7 +94,7 @@ instance instAlgebra {R A M} [CommSemiring R] [CommRing A] [Algebra R A] :
   RingQuot.instAlgebraRingQuotInstSemiring _
 
 -- verify there is no diamond
-example: (algebraNat : Algebra ℕ (Quot_r R M)) = instAlgebra := rfl
+example (R : Type _) [CommRing R] : (algebraNat : Algebra ℕ (Quot_r R M)) = instAlgebra := rfl
 
 instance {R S A M} [CommRing R] [CommRing S] [CommRing A]
     [Algebra R A] [Algebra S A] [SMulCommClass R S A] :
