@@ -1,42 +1,53 @@
-import Mathlib.Algebra.RingQuot
-import Mathlib.Algebra.Algebra.Operations
-import Mathlib.Data.Rel
-import Mathlib.RingTheory.Ideal.QuotientOperations
+-- import Mathlib.Algebra.Algebra.Operations
+-- import Mathlib.Data.Rel
+-- import Mathlib.Algebra.FreeAlgebra
 
+import Mathlib.Algebra.RingQuot
+import Mathlib.RingTheory.Ideal.QuotientOperations
 import Mathlib.Data.MvPolynomial.CommRing
 
-import Mathlib.Algebra.FreeAlgebra
 
 noncomputable section
 
 open Finset MvPolynomial Ideal.Quotient Ideal RingQuot
 
-/-! 
-The divided power algebra of a module -/
+-- Defining an algebra as a quotient of polynomials
+-- Experiments
 
-namespace MvPolynomial
+variable (R : Type u) [CommSemiring R] (M : Type v)
 
-variable (R M : Type _) [CommSemiring R]
-
+-- A trivial relation is enough to show problems
 inductive r : (MvPolynomial M R) → (MvPolynomial M R) → Prop 
 
-def Quot_r : Type _ := RingQuot (r R M)
+set_option trace.profiler true
 
-instance (priority := 999) : Semiring (Quot_r R M) := RingQuot.instSemiring _
+def Quot_r := RingQuot (r R M)
 
-/- We have to make the priority of CommSemiring very low, or else the `HasQuotient` instance
-  below takes about 3s. -/
-instance (priority := 10) : CommSemiring (Quot_r R M) := RingQuot.instCommSemiring _
+instance (priority := 999) : 
+    Semiring (Quot_r R M) := 
+  RingQuot.instSemiring _
 
-instance {S : Type _} [CommRing S] : CommRing (Quot_r S M) :=
+/- We have to make the priority of CommSemiring very low, 
+  or else the `HasQuotient` instance below takes about 3s. -/
+instance (priority := 10) :
+    CommSemiring (Quot_r R M) := RingQuot.instCommSemiring _
+
+count_heartbeats in 
+set_option synthInstance.maxHeartbeats 100000 in
+set_option trace.profiler true in 
+set_option pp.proofs.withType false in
+instance {S : Type w} [CommRing S] : CommRing (Quot_r S M) :=
   RingQuot.instCommRingRingQuotToSemiringToCommSemiring _
 
-instance instAlgebra  {R A M} [CommSemiring R] [CommRing A] [Algebra R A] :
+instance instAlgebra 
+    {R A M} [CommSemiring R] [CommRing A] [Algebra R A] :
     Algebra R (Quot_r A M) :=
   RingQuot.instAlgebraRingQuotInstSemiring _
 
 -- verify there is no diamond
-example (R : Type _) [CommRing R] : (algebraNat : Algebra ℕ (Quot_r R M)) = instAlgebra := rfl
+example (R : Type u) [CommRing R] : 
+    (algebraNat : Algebra ℕ (Quot_r R M)) = instAlgebra :=
+  rfl
 
 instance {R S A M} [CommRing R] [CommRing S] [CommRing A]
     [Algebra R A] [Algebra S A] [SMulCommClass R S A] :
@@ -48,16 +59,12 @@ instance {R S A M} [CommRing R] [CommRing S] [CommRing A]
     IsScalarTower R S  (Quot_r A M) :=
   RingQuot.instIsScalarTowerRingQuotInstSMulRingQuotInstSMulRingQuot _
 
-
-/- count_heartbeats in 
-set_option synthInstance.maxHeartbeats 100000 in
-set_option trace.profiler true in 
-set_option pp.proofs.withType false in -/
-instance (R M : Type _) [CommRing R] : 
+instance (R : Type u) [CommRing R] (M : Type v) : 
     HasQuotient (Quot_r R M) (Ideal (Quot_r R M)) := 
   Submodule.hasQuotient
 
-example (R M : Type _) [CommRing R] (I : Ideal (Quot_r R M)) : CommRing ((Quot_r R M) ⧸ I) := 
+example (R : Type u) [CommRing R] (M : Type v) (I : Ideal (Quot_r R M)) : 
+    CommRing ((Quot_r R M) ⧸ I) := 
   Quotient.commRing I
 
 count_heartbeats in 
@@ -65,8 +72,9 @@ set_option synthInstance.maxHeartbeats 100000 in
 set_option trace.profiler true in 
 set_option pp.proofs.withType false in
 -- This one is still too slow
-instance instAlgebra' (R M : Type _) [CommRing R] (I : Ideal (Quot_r R M)) : 
-  Algebra R ((Quot_r R M) ⧸ I) := 
+instance instAlgebra' (
+    R M : Type _) [CommRing R] (I : Ideal (Quot_r R M)) : 
+    Algebra R ((Quot_r R M) ⧸ I) := 
 Quotient.algebra R
 
 /- 
@@ -77,7 +85,7 @@ Used 52680 heartbeats, which is less than the current maximum of 200000.
       Submodule.hasQuotient
 -/
 
-end MvPolynomial
+#exit
 
 namespace FreeAlgebra'
 
