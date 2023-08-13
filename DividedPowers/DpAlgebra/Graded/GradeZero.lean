@@ -176,23 +176,21 @@ lemma augIdeal_isAugmentationIdeal' :
   Function.RightInverse 
     (kerLiftAlg (algebraMapInv R M))
     (algebraMap R (DividedPowerAlgebra R M ⧸ augIdeal R M)) := by
+  sorry
   refine' Function.rightInverse_of_injective_of_leftInverse (RingHom.kerLift_injective _) _
   intro r
   simp only [AlgHom.toRingHom_eq_coe]
   apply AlgHomClass.commutes 
 
-
-#exit
-
 -- We prove that the augmentation is an augmentation ideal, namely there is a section
 theorem augIdeal_isAugmentationIdeal :
   IsAugmentationIdeal (DividedPowerAlgebra R M) (augIdeal R M) := by
   sorry
-  /- use (algebraMap R (DividedPowerAlgebra R M)).comp (kerLiftAlg (algebraMapInv R M)).toRingHom
+  use (algebraMap R (DividedPowerAlgebra R M)).comp (kerLiftAlg (algebraMapInv R M)).toRingHom
   ext x
   simp only [AlgHom.toRingHom_eq_coe, RingHom.coe_comp, RingHom.coe_coe, Function.comp_apply, 
     mk_algebraMap, id_eq]
-  apply augIdeal_isAugmentationIdeal' -/
+  apply augIdeal_isAugmentationIdeal' 
 #align divided_power_algebra.aug_ideal_is_augmentation_ideal 
   DividedPowerAlgebra.augIdeal_isAugmentationIdeal
 
