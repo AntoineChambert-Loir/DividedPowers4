@@ -146,17 +146,6 @@ theorem ι_mem_augIdeal (m : M) : ι R M m ∈ augIdeal R M := by
   simp only [mem_augIdeal_iff, ι_def, dp, algebraMapInv_eq, aeval_X, zero_lt_one, ite_true]
 #align divided_power_algebra.ι_mem_aug_ideal DividedPowerAlgebra.ι_mem_augIdeal
 
-
-/-
--- This one is still too slow
-count_heartbeats in 
--- prints heartbeat count in the declaration (and sets `maxHeartbeats` to infinity)
-set_option synthInstance.maxHeartbeats 100000 in
-set_option trace.profiler true in -- prints wall clock times in the declaration
--/
-
-set_option trace.profiler true
-
 def kerLiftAlg_algebraMapInv := kerLiftAlg (algebraMapInv R M) 
 --  better type would be : (DividedPowerAlgebra R M ⧸ augIdeal R M) →ₐ[R] R 
 
