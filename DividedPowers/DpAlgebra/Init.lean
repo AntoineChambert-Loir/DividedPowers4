@@ -194,13 +194,13 @@ open MvPolynomial
 
 variable {R M}
 
-theorem _root_.Ideal.sub_mem_ofRel_of_rel {R : Type _} [Ring R] 
+theorem _root_.Ideal.sub_mem_ofRel_of_rel {R : Type*} [Ring R] 
   (r : R → R → Prop) {a b : R} (hr : r a b) : 
   a - b ∈ Ideal.ofRel r := 
   Submodule.subset_span ⟨a, b, hr, by rw [sub_add_cancel]⟩
 
 /- -- generalized
-theorem sub_mem_rel_of_rel {R M : Type _} [CommRing R] [AddCommMonoid M] [Module R M] 
+theorem sub_mem_rel_of_rel {R M : Type*} [CommRing R] [AddCommMonoid M] [Module R M] 
     {a b : MvPolynomial (ℕ × M) R} (h : Rel R M a b) : 
   a - b ∈ RelI R M :=
   Submodule.subset_span ⟨a, b, h, by rw [sub_add_cancel]⟩
@@ -274,7 +274,7 @@ theorem dp_add (n : ℕ) (x y : M) :
   
 #align divided_power_algebra.dp_add DividedPowerAlgebra.dp_add
 
-theorem dp_sum {ι : Type _} [DecidableEq ι] (s : Finset ι) (q : ℕ) (x : ι → M) :
+theorem dp_sum {ι : Type*} [DecidableEq ι] (s : Finset ι) (q : ℕ) (x : ι → M) :
   dp R q (s.sum x) =
     (Finset.sym s q).sum 
       fun k => s.prod fun i => dp R (Multiset.count i k) (x i) :=  by
@@ -284,7 +284,7 @@ theorem dp_sum {ι : Type _} [DecidableEq ι] (s : Finset ι) (q : ℕ) (x : ι 
   · intro n hn; rw [dp_null R n, if_neg hn]
 #align divided_power_algebra.dp_sum DividedPowerAlgebra.dp_sum
 
-theorem dp_sum_smul {ι : Type _} [DecidableEq ι] (s : Finset ι)
+theorem dp_sum_smul {ι : Type*} [DecidableEq ι] (s : Finset ι)
     (q : ℕ) (a : ι → R) (x : ι → M) :
     dp R q (s.sum fun i => a i • x i) =
       (Finset.sym s q).sum fun k =>
@@ -294,7 +294,7 @@ theorem dp_sum_smul {ι : Type _} [DecidableEq ι] (s : Finset ι)
 #align divided_power_algebra.dp_sum_smul DividedPowerAlgebra.dp_sum_smul
 
 variable {R}
-theorem ext_iff {A : Type _} [CommSemiring A] [Algebra R A] 
+theorem ext_iff {A : Type u_3} [CommSemiring A] [Algebra R A] 
     {f g : DividedPowerAlgebra R M →ₐ[R] A} :
     (f = g) ↔ (∀ n m, f (dp R n m) = g (dp R n m)) := by
   constructor
@@ -303,11 +303,12 @@ theorem ext_iff {A : Type _} [CommSemiring A] [Algebra R A]
   . intro h
     rw [FunLike.ext'_iff]
     apply Function.Surjective.injective_comp_right (mkAlgHom_surjective R (Rel R M))
-    simp only [← AlgHom.coe_comp, ← FunLike.ext'_iff]
+    dsimp only
+    rw [← AlgHom.coe_comp, ← AlgHom.coe_comp, ← FunLike.ext'_iff]
     exact MvPolynomial.algHom_ext fun ⟨n, m⟩ => h n m
 
 @[ext]
-theorem ext {A : Type _} [CommSemiring A] [Algebra R A] 
+theorem ext {A : Type*} [CommSemiring A] [Algebra R A] 
     {f g : DividedPowerAlgebra R M →ₐ[R] A} 
     (h : ∀ n m, f (dp R n m) = g (dp R n m)) : f = g :=
   DividedPowerAlgebra.ext_iff.mpr h
@@ -319,7 +320,7 @@ section UniversalProperty
 
 variable (M)
 
-variable {A : Type _} [CommSemiring A] [Algebra R A]
+variable {A : Type*} [CommSemiring A] [Algebra R A]
 
 /- -- General purpose lifting lemma
 theorem lift_rel_le_ker (f : ℕ × M → A) (hf_zero : ∀ m, f (0, m) = 1)
@@ -440,8 +441,8 @@ end UniversalProperty
 
 section Functoriality
 
-variable (S : Type _) [CommSemiring S] [Algebra R S] 
-  {N : Type _} [AddCommMonoid N] [Module R N]
+variable (S : Type*) [CommSemiring S] [Algebra R S] 
+  {N : Type*} [AddCommMonoid N] [Module R N]
   [Module S N] [IsScalarTower R S N] 
   (f : M →ₗ[R] N)
 
