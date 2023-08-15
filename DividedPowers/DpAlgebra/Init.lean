@@ -26,7 +26,7 @@ The divided power algebra of a module -/
 
 section
 
-variable (R M : Type _) [CommSemiring R] [AddCommMonoid M] [Module R M]
+variable (R M : Type*) [CommSemiring R] [AddCommMonoid M] [Module R M]
 
 namespace DividedPowerAlgebra
 
@@ -76,14 +76,49 @@ def DividedPowerAlgebra : Type _ :=
 namespace DividedPowerAlgebra
 
 /-- The divided power algebra is a semiring -/
-instance (priority := 999) : Semiring (DividedPowerAlgebra R M) := RingQuot.instSemiring _
+instance instCommSemiring : CommSemiring (DividedPowerAlgebra R M) := by
+  dsimp only [DividedPowerAlgebra]
+  -- exact RingQuot.instSemiring (Rel R M)
+  infer_instance
 
--- `IsScalarTower` is not needed, but the instance isn't really canonical without it.
---@[nolint unusedArguments]
- instance instAlgebra  {R A M} [CommSemiring R] [AddCommMonoid M] [CommSemiring A]
+/-- If M is an A-module and A is an R-algebra, 
+  then divided power algebra is an R-algebra -/
+instance instAlgebra {R A M : Type*} 
+    [CommSemiring R] [AddCommMonoid M] [CommSemiring A]
     [Algebra R A] [Module R M] [Module A M] [IsScalarTower R A M]  :
-    Algebra R (DividedPowerAlgebra A M) :=
-  RingQuot.instAlgebraRingQuotInstSemiring _
+    Algebra R (DividedPowerAlgebra A M) := by
+  dsimp only [DividedPowerAlgebra]
+  -- exact instAlgebraRingQuot (Rel A M)
+  infer_instance
+
+-- verify there is no diamond
+example : (algebraNat : Algebra ℕ (DividedPowerAlgebra R M)) = instAlgebra := rfl
+
+instance instIsScalarTower {R A M : Type*}
+    [CommSemiring R] [AddCommMonoid M] [CommSemiring A] 
+    [Algebra R A] [Module R M] [Module A M] [IsScalarTower R A M]  :
+    IsScalarTower R A (DividedPowerAlgebra A M) := by
+  dsimp only [DividedPowerAlgebra]
+  -- exact instIsScalarTowerRingQuot (Rel A M)
+  infer_instance
+
+/-- If R is a ring, then the divided power algebra is a semiring -/
+instance instCommRing {R  M : Type*} 
+    [CommRing R] [AddCommMonoid M] [Module R M] :
+    CommRing (DividedPowerAlgebra R M) := by
+  dsimp only [DividedPowerAlgebra]
+  -- exact instCommRingRingQuotToSemiringToCommSemiring (Rel R M)
+  infer_instance
+
+-- verify there is no diamond
+variable (S M : Type) [CommRing S] [AddCommGroup M] [Module S M] in
+example : (algebraInt _ : Algebra ℤ (DividedPowerAlgebra S M)) = instAlgebra := rfl
+
+
+/- 
+-- /-- The divided power algebra is a semiring -/
+-- instance (priority := 999) : Semiring (DividedPowerAlgebra R M) :=
+--  RingQuot.instSemiring _
 
 -- verify there is no diamond
 example : (algebraNat : Algebra ℕ (DividedPowerAlgebra R M)) = instAlgebra := rfl
@@ -92,16 +127,19 @@ instance {R S A M} [CommSemiring R] [CommSemiring S] [AddCommMonoid M] [CommSemi
     [Algebra R A] [Algebra S A] [Module R M] [Module S M] [Module A M]
     [IsScalarTower R A M] [IsScalarTower S A M] [SMulCommClass R S A] :
     SMulCommClass R S (DividedPowerAlgebra A M)  :=
-  RingQuot.instSMulCommClassRingQuotInstSMulRingQuotInstSMulRingQuot _
+  inferInstance 
+-- instSMulCommClassRingQuotInstSMulRingQuotInstSMulRingQuot _
 
 instance {R S A M} [CommSemiring R] [CommSemiring S] [AddCommMonoid M] [CommSemiring A]
     [SMul R S] [Algebra R A] [Algebra S A] [Module R M] [Module S M] [Module A M]
     [IsScalarTower R A M] [IsScalarTower S A M] [IsScalarTower R S A] :
     IsScalarTower R S  (DividedPowerAlgebra A M) :=
-  RingQuot.instIsScalarTowerRingQuotInstSMulRingQuotInstSMulRingQuot _
+  inferInstance
+--  RingQuot.instIsScalarTowerRingQuotInstSMulRingQuotInstSMulRingQuot _
 
 instance (priority := 999) {S : Type _} [CommRing S] [Module S M] : Ring (DividedPowerAlgebra S M) :=
-  RingQuot.instRing (Rel S M)
+  inferInstance
+--  RingQuot.instRing (Rel S M)
 
 -- verify there is no diamond
 variable (S M : Type) [CommRing S] [AddCommGroup M] [Module S M] in
@@ -111,34 +149,46 @@ example : (algebraInt _ : Algebra ℤ (DividedPowerAlgebra S M)) = instAlgebra :
 /- The divided power algebra is a commutative ring -/
 instance instCommRing (R M : Type _) [CommRing R] [AddCommMonoid M] [Module R M] : 
     CommRing (DividedPowerAlgebra R M) :=  
-  RingQuot.instCommRingRingQuotToSemiringToCommSemiring _
+  inferInstance
+--  RingQuot.instCommRingRingQuotToSemiringToCommSemiring _
 
-/- The divided power algebra is a commutative semiring -/
-instance (priority := 10) : CommSemiring (DividedPowerAlgebra R M) := RingQuot.instCommSemiring _
+-- /- The divided power algebra is a commutative semiring -/
+-- instance (priority := 10) : CommSemiring (DividedPowerAlgebra R M) :=
+-- inferInstance 
+--  -- RingQuot.instCommSemiring _
 
 /- instance : Zero (DividedPowerAlgebra R M) := AddMonoid.toZero
 
-instance : One (DividedPowerAlgebra R M) := Monoid.toOne -/
+-- instance : One (DividedPowerAlgebra R M) := Monoid.toOne -/
 
-instance : Inhabited (DividedPowerAlgebra R M) := 
-  RingQuot.instInhabitedRingQuot _
+-- instance : Inhabited (DividedPowerAlgebra R M) :=  RingQuot.instInhabitedRingQuot _
 
 --set_option profiler true
 /- instance (R M : Type _) [CommRing R] [AddCommMonoid M] [Module R M] : 
     HasQuotient (DividedPowerAlgebra R M) (Ideal (DividedPowerAlgebra R M)) := 
   inferInstance -/
 
-/- /-- If `R` is a `k`-algebra, then `divided_power_algebra R M` inherits a `k`-algebra structure. -/
+-/
+
+/- 
+/-- If `R` is a `k`-algebra, then `divided_power_algebra R M` inherits a `k`-algebra structure. -/
 instance algebra (k : Type _) [CommSemiring k] [Algebra k R] : 
-  Algebra k (DividedPowerAlgebra R M) := 
-  RingQuot.instAlgebraRingQuotInstSemiring _
+    Algebra k (DividedPowerAlgebra R M) := 
+  instAlgebraRingQuot (Rel R M)
+  -- inferInstance
+  -- RingQuot.instAlgebraRingQuotInstSemiring _
 -- #align divided_power_algebra.algebra' 
 
 instance (k : Type _) [CommSemiring k] [Algebra k R] : 
-  IsScalarTower k R (DividedPowerAlgebra R M) where
+  IsScalarTower k R (DividedPowerAlgebra R M) :=
+  instIsScalarTowerRingQuot (Rel R M)
+  -- inferInstance
+/-   where
   smul_assoc := by 
     rintro a r ⟨⟨x⟩⟩
     rw [smul_quot, smul_quot, smul_quot, smul_assoc] -/
+
+-/
 
 open MvPolynomial
 
@@ -219,8 +269,9 @@ theorem dp_add (n : ℕ) (x y : M) :
   dp R n (x + y) = 
     (range (n + 1)).sum fun k => dp R k x * dp R (n - k) y := by
   simp only [dp_def]
-  simp only [← _root_.map_mul, ← AlgHom.map_sum]
-  exact mkAlgHom_rel R Rel.add
+  rw [mkAlgHom_rel (A := MvPolynomial (ℕ × M) R) R Rel.add]
+  simp_rw [AlgHom.map_sum, AlgHom.map_mul]
+  
 #align divided_power_algebra.dp_add DividedPowerAlgebra.dp_add
 
 theorem dp_sum {ι : Type _} [DecidableEq ι] (s : Finset ι) (q : ℕ) (x : ι → M) :
@@ -391,8 +442,8 @@ section Functoriality
 
 variable (S : Type _) [CommSemiring S] [Algebra R S] 
   {N : Type _} [AddCommMonoid N] [Module R N]
-  [Module S N] [IsScalarTower R S N] [Algebra R (DividedPowerAlgebra S N)]
-  [IsScalarTower R S (DividedPowerAlgebra S N)] (f : M →ₗ[R] N)
+  [Module S N] [IsScalarTower R S N] 
+  (f : M →ₗ[R] N)
 
 /- 
 theorem lift'_rel_le_ker :
@@ -425,7 +476,7 @@ lemma LinearMap.dp_smul (r : R) (n : ℕ) (a : M) :
   dp S n (f (r • a)) = r ^ n • dp S n (f a) := by
   rw [f.map_smul, algebra_compatible_smul S r (f a)]
   rw [DividedPowerAlgebra.dp_smul S ((algebraMap R S) r) n (f a)]
-  rw [← map_pow, ← algebra_compatible_smul]
+  rw [← map_pow, algebraMap_smul]
   
 lemma LinearMap.dp_mul (m n : ℕ) (a : M) :
   dp S m (f a) * dp S n (f a) = (Nat.choose (m + n) m) • dp S (m + n) (f a) := 
@@ -445,7 +496,7 @@ lemma LinearMap.dp_add (n : ℕ) (a b : M) :
 def LinearMap.lift : DividedPowerAlgebra R M →ₐ[R] DividedPowerAlgebra S N := by
   apply DividedPowerAlgebra.lift' (fun nm => dp S nm.fst (f nm.snd))
   . intro m ; apply LinearMap.dp_zero
-  . intro n r a ; apply LinearMap.dp_smul
+  . intro n r a ; apply LinearMap.dp_smul 
   . intro m n a ; apply LinearMap.dp_mul
   . intro n a b ; apply LinearMap.dp_add
 #align divided_power_algebra.lift' DividedPowerAlgebra.LinearMap.lift
