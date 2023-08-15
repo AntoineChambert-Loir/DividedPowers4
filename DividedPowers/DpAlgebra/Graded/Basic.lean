@@ -248,8 +248,8 @@ theorem lift_isHomogeneous {A : Type w} [CommSemiring A] [Algebra R A] (𝒜 : �
 #align divided_power_algebra.lift_is_homogeneous DividedPowerAlgebra.lift_isHomogeneous
 
 variable {N : Type v'} [AddCommMonoid N] [DecidableEq S] [DecidableEq N] [Module R N] [Module S N] 
-  [IsScalarTower R S N] [Algebra R (DividedPowerAlgebra S N)]
-  [IsScalarTower R S (DividedPowerAlgebra S N)] 
+  [IsScalarTower R S N] 
+
   
 theorem lift'_isHomogeneous (f : M →ₗ[R] N) :
     GalgHom.IsHomogeneous (DividedPowerAlgebra.grade R M) (DividedPowerAlgebra.grade S N)

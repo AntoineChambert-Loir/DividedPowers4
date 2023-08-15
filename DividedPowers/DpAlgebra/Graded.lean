@@ -13,7 +13,7 @@ open DirectSum Finset Function Ideal Ideal.Quotient MvPolynomial RingEquiv RingQ
 
 section CommSemiring
 
-variable (R M : Type _) [CommSemiring R] [AddCommMonoid M] [Module R M] 
+variable (R M : Type*) [CommSemiring R] [AddCommMonoid M] [Module R M] 
 
 variable [DecidableEq R] [DecidableEq M]
 
@@ -49,7 +49,7 @@ theorem Rel_isHomogeneous :
     RelIsHomogeneous (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) (Rel R M) := 
   RelIsHomogeneous_of_isPureHomogeneous _ (rel_isPureHomogeneous R M) Rel.rfl_zero
 
-theorem RelI_isHomogeneous (R M : Type _) [CommRing R] [AddCommGroup M] [Module R M] 
+theorem RelI_isHomogeneous (R M : Type*) [CommRing R] [AddCommGroup M] [Module R M] 
     [DecidableEq R] [DecidableEq M] :
     (RelI R M).IsHomogeneous (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) := 
   IsHomogeneous_of_rel_isPureHomogeneous (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) 
@@ -184,7 +184,7 @@ theorem mk_alg_hom_mv_polynomial_ι_eq_ι' (m : M) : dp R 1 m = ι R m :=
 -/
 
 variable {M} 
-@[simp] theorem ι_comp_lift {A : Type _} [CommRing A] [Algebra R A] {I : Ideal A} 
+@[simp] theorem ι_comp_lift {A : Type*} [CommRing A] [Algebra R A] {I : Ideal A} 
     (hI : DividedPowers I) {φ : M →ₗ[R] A} (hφ : ∀ (m : M), φ m ∈ I) : 
     (DividedPowerAlgebra.lift hI φ hφ).toLinearMap.comp (ι R M) = φ := by
   ext m
@@ -193,7 +193,7 @@ variable {M}
   exact hI.dpow_one (hφ m)
 #align divided_power_algebra.ι_comp_lift DividedPowerAlgebra.ι_comp_lift
 
-@[simp] theorem lift_ι_apply {A : Type _} [CommRing A] [Algebra R A] {I : Ideal A} 
+@[simp] theorem lift_ι_apply {A : Type*} [CommRing A] [Algebra R A] {I : Ideal A} 
     (hI : DividedPowers I) (φ : M →ₗ[R] A) (hφ : ∀ m, φ m ∈ I) (x : M) : 
     lift hI φ hφ (ι R M x) = φ x := by
   conv_rhs => rw [← ι_comp_lift R hI hφ]; rfl
@@ -202,7 +202,7 @@ variable {M}
 
 variable {R}
 
-def HasGradedDpow {A : Type _} [CommSemiring A] [Algebra R A] 
+def HasGradedDpow {A : Type*} [CommSemiring A] [Algebra R A] 
     (𝒜 : ℕ → Submodule R A) {I : Ideal A} (hI : DividedPowers I) :=
   ∀ a ∈ I, ∀ (i : ℕ) (_ : a ∈ 𝒜 i) (n : ℕ), hI.dpow n a ∈ 𝒜 (n • i)
 #align divided_power_algebra.has_graded_dpow DividedPowerAlgebra.HasGradedDpow
@@ -211,9 +211,9 @@ section DecidableEq
 
 variable (R)
 
-variable (S : Type _) [CommSemiring S] [Algebra R S] 
+variable (S : Type*) [CommSemiring S] [Algebra R S] 
 
-theorem liftAux_isHomogeneous {A : Type _} [CommSemiring A] [Algebra R A]
+theorem liftAux_isHomogeneous {A : Type*} [CommSemiring A] [Algebra R A]
     [Algebra S A] [IsScalarTower R S A] (𝒜 : ℕ → Submodule S A)
     [GradedAlgebra 𝒜] (f : ℕ × M → A) (hf_zero : ∀ m, f (0, m) = 1)
     (hf_smul : ∀ (n : ℕ) (r : R) (m : M), f ⟨n, r • m⟩ = r ^ n • f ⟨n, m⟩)
@@ -238,7 +238,7 @@ variable {R}
 
 instance : GradedAlgebra (DividedPowerAlgebra.grade R M) := GAlgebra R M
 
-theorem lift_isHomogeneous {A : Type _} [CommSemiring A] [Algebra R A] (𝒜 : ℕ → Submodule R A) 
+theorem lift_isHomogeneous {A : Type*} [CommSemiring A] [Algebra R A] (𝒜 : ℕ → Submodule R A) 
     [GradedAlgebra 𝒜] {I : Ideal A} (hI : DividedPowers I) (hI' : HasGradedDpow 𝒜 hI)
     (φ : M →ₗ[R] A) (hφ : ∀ m, φ m ∈ I) (hφ' : ∀ m, φ m ∈ 𝒜 1) :
     GalgHom.IsHomogeneous (DividedPowerAlgebra.grade R M) 𝒜 (lift hI φ hφ) := by
@@ -247,7 +247,7 @@ theorem lift_isHomogeneous {A : Type _} [CommSemiring A] [Algebra R A] (𝒜 : �
   simpa only [Algebra.id.smul_eq_mul, mul_one] using hI' (φ m) (hφ m) 1 (hφ' m) n
 #align divided_power_algebra.lift_is_homogeneous DividedPowerAlgebra.lift_isHomogeneous
 
-variable {N : Type _} [AddCommMonoid N] [DecidableEq S] [DecidableEq N] [Module R N] [Module S N] 
+variable {N : Type*} [AddCommMonoid N] [DecidableEq S] [DecidableEq N] [Module R N] [Module S N] 
   [IsScalarTower R S N] [Algebra R (DividedPowerAlgebra S N)]
   [IsScalarTower R S (DividedPowerAlgebra S N)] 
   
@@ -331,13 +331,13 @@ theorem algebraMap_leftInverse :
   map_eq_one_iff (algebraMap _ _) (algebraMap_leftInverse _ _).injective
 #align divided_power_algebra.algebra_map_eq_one_iff DividedPowerAlgebra.algebraMap_eq_one_iff
 
-theorem mkₐ_eq_aeval {C : Type _} [CommRing C] {D : Type _} (I : Ideal (MvPolynomial D C)) :
+theorem mkₐ_eq_aeval {C : Type*} [CommRing C] {D : Type*} (I : Ideal (MvPolynomial D C)) :
     Ideal.Quotient.mkₐ C I = aeval fun d : D => Ideal.Quotient.mk I (X d) := by
   ext d
   simp only [mkₐ_eq_mk, aeval_X]
 #align divided_power_algebra.mkₐ_eq_aeval DividedPowerAlgebra.mkₐ_eq_aeval
 
-theorem mk_eq_eval₂ {C : Type _} [CommRing C] {D : Type _} (I : Ideal (MvPolynomial D C)) :
+theorem mk_eq_eval₂ {C : Type*} [CommRing C] {D : Type*} (I : Ideal (MvPolynomial D C)) :
     (Ideal.Quotient.mk I).toFun =
       eval₂ (algebraMap C (MvPolynomial D C ⧸ I)) fun d : D => Ideal.Quotient.mk I (X d) := by 
   ext d
@@ -383,7 +383,7 @@ end CommSemiring
 
 section CommRing
 
-variable (R M : Type _) [CommRing R] [AddCommMonoid M] [Module R M] 
+variable (R M : Type*) [CommRing R] [AddCommMonoid M] [Module R M] 
 
 variable [DecidableEq R] [DecidableEq M]
 
@@ -391,7 +391,7 @@ section GradeZero
 
 /-- An ideal J of a commutative ring A is an augmentation ideal
 if ideal.quotient.mk J has a right inverse which is a RingHom -/
-def IsAugmentationIdeal (A : Type _) [CommRing A] (J : Ideal A) : Prop :=
+def IsAugmentationIdeal (A : Type*) [CommRing A] (J : Ideal A) : Prop :=
   ∃ g : A ⧸ J →+* A, Ideal.Quotient.mk J ∘ g = id
 #align is_augmentation_ideal DividedPowerAlgebra.IsAugmentationIdeal
 
@@ -531,7 +531,7 @@ theorem left_inv' (x : grade R M 0) :
   simp only [algebraMap_right_inv_of_degree_zero R M x, decompose_coe, of_eq_same]
 #align divided_power_algebra.left_inv' DividedPowerAlgebra.left_inv'
 
-theorem lift_augIdeal_le {A : Type _} [CommRing A] [Algebra R A] {I : Ideal A}
+theorem lift_augIdeal_le {A : Type*} [CommRing A] [Algebra R A] {I : Ideal A}
     (hI : DividedPowers I) (φ : M →ₗ[R] A) (hφ : ∀ m, φ m ∈ I) :
     Ideal.map (lift hI φ hφ) (augIdeal R M) ≤ I := by
   simp only [augIdeal_eq_span, Ideal.map_span, Ideal.span_le, SetLike.mem_coe]
@@ -540,7 +540,7 @@ theorem lift_augIdeal_le {A : Type _} [CommRing A] [Algebra R A] {I : Ideal A}
   exact hI.dpow_mem (ne_of_gt hn) (hφ m)
 #align divided_power_algebra.lift_aug_ideal_le DividedPowerAlgebra.lift_augIdeal_le
 
-theorem lift_mem_of_mem_augIdeal {A : Type _} [CommRing A] [Algebra R A] {I : Ideal A}
+theorem lift_mem_of_mem_augIdeal {A : Type*} [CommRing A] [Algebra R A] {I : Ideal A}
     (hI : DividedPowers I) (φ : M →ₗ[R] A) (hφ : ∀ m, φ m ∈ I) (x : DividedPowerAlgebra R M)
     (hx : x ∈ augIdeal R M) : lift hI φ hφ x ∈ I :=
   (lift_augIdeal_le R M hI φ hφ) (mem_map_of_mem _ hx)

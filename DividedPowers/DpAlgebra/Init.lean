@@ -67,7 +67,7 @@ end DividedPowerAlgebra
   Note that also we don't know yet that `divided_power_algebra R M` 
   has divided powers, 
   it has a weak universal property for morphisms to rings with divided_powers. -/
-def DividedPowerAlgebra : Type _ :=
+abbrev DividedPowerAlgebra : Type _ :=
   RingQuot (DividedPowerAlgebra.Rel R M)
 #align divided_power_algebra DividedPowerAlgebra
 
@@ -75,6 +75,7 @@ def DividedPowerAlgebra : Type _ :=
 
 namespace DividedPowerAlgebra
 
+/- -- If using abbrev, instances should not be there 
 /-- The divided power algebra is a semiring -/
 instance instCommSemiring : CommSemiring (DividedPowerAlgebra R M) := by
   dsimp only [DividedPowerAlgebra]
@@ -114,6 +115,7 @@ instance instCommRing {R  M : Type*}
 variable (S M : Type) [CommRing S] [AddCommGroup M] [Module S M] in
 example : (algebraInt _ : Algebra ℤ (DividedPowerAlgebra S M)) = instAlgebra := rfl
 
+-/
 
 /- 
 -- /-- The divided power algebra is a semiring -/
@@ -270,8 +272,11 @@ theorem dp_add (n : ℕ) (x y : M) :
     (range (n + 1)).sum fun k => dp R k x * dp R (n - k) y := by
   simp only [dp_def]
   rw [mkAlgHom_rel (A := MvPolynomial (ℕ × M) R) R Rel.add]
-  simp_rw [AlgHom.map_sum, AlgHom.map_mul]
-  
+  rw [AlgHom.map_sum]
+  apply Finset.sum_congr rfl
+  intro k _
+  rw [AlgHom.map_mul]
+
 #align divided_power_algebra.dp_add DividedPowerAlgebra.dp_add
 
 theorem dp_sum {ι : Type*} [DecidableEq ι] (s : Finset ι) (q : ℕ) (x : ι → M) :

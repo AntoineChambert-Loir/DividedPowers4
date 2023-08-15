@@ -37,7 +37,7 @@ theorem algebraMapInv_eq (f : MvPolynomial (ℕ × M) R) :
       DividedPowers.dpow_zero _ (mem_bot.mpr rfl)]
 #align divided_power_algebra.algebra_map_inv_eq DividedPowerAlgebra.algebraMapInv_eq
 
-theorem proj'_zero_comp_algebraMap [DecidableEq R] [DecidableEq M] (x : R) :
+theorem proj'_zero_comp_algebraMap (x : R) :
   ((proj' R M 0 ∘ algebraMap R (DividedPowerAlgebra R M)) x).val =
     (algebraMap R (DividedPowerAlgebra R M)) x := by
   simp only [proj', proj, LinearMap.coe_mk, AddHom.coe_mk, Function.comp_apply, 
@@ -66,13 +66,13 @@ theorem algebraMap_leftInverse :
   map_eq_one_iff (algebraMap _ _) (algebraMap_leftInverse _ _).injective
 #align divided_power_algebra.algebra_map_eq_one_iff DividedPowerAlgebra.algebraMap_eq_one_iff
 
-theorem mkₐ_eq_aeval {C : Type _} [CommRing C] {D : Type _} (I : Ideal (MvPolynomial D C)) :
+theorem mkₐ_eq_aeval {C : Type*} [CommRing C] {D : Type*} (I : Ideal (MvPolynomial D C)) :
     Ideal.Quotient.mkₐ C I = aeval fun d : D => Ideal.Quotient.mk I (X d) := by
   ext d
   simp only [mkₐ_eq_mk, aeval_X]
 #align divided_power_algebra.mkₐ_eq_aeval DividedPowerAlgebra.mkₐ_eq_aeval
 
-theorem mk_eq_eval₂ {C : Type _} [CommRing C] {D : Type _} (I : Ideal (MvPolynomial D C)) :
+theorem mk_eq_eval₂ {C : Type*} [CommRing C] {D : Type*} (I : Ideal (MvPolynomial D C)) :
     (Ideal.Quotient.mk I).toFun =
       eval₂ (algebraMap C (MvPolynomial D C ⧸ I)) fun d : D => Ideal.Quotient.mk I (X d) := by 
   ext d
@@ -126,19 +126,19 @@ section GradeZero
 
 /-- An ideal J of a commutative ring A is an augmentation ideal
 if ideal.quotient.mk J has a right inverse which is a RingHom -/
-def IsAugmentationIdeal (A : Type _) [CommRing A] (J : Ideal A) : Prop :=
-  ∃ g : A ⧸ J →+* A, Ideal.Quotient.mk J ∘ g = id
+def IsAugmentationIdeal (A : Type*) [CommRing A] (J : Ideal A) : Prop :=
+  ∃ g : A ⧸ J →+* A, Function.RightInverse g (Ideal.Quotient.mk J)
 #align is_augmentation_ideal DividedPowerAlgebra.IsAugmentationIdeal
 
 /-- The augmentation ideal in the divided_power_algebra -/
 def augIdeal : (Ideal (DividedPowerAlgebra R M) : Type (max u v)) := 
-  RingHom.ker (algebraMapInv R M)
+  RingHom.ker (algebraMapInv R M).toRingHom
 #align divided_power_algebra.aug_ideal DividedPowerAlgebra.augIdeal
 
 
 theorem mem_augIdeal_iff (f : DividedPowerAlgebra R M) :
     f ∈ augIdeal R M ↔ algebraMapInv R M f = 0 := by 
-  rw [augIdeal, RingHom.mem_ker]
+  rw [augIdeal, AlgHom.toRingHom_eq_coe, RingHom.mem_ker, RingHom.coe_coe]
 #align divided_power_algebra.mem_aug_ideal_iff DividedPowerAlgebra.mem_augIdeal_iff
 
 /-- The image of ι is contained in the augmentation ideal -/
@@ -146,51 +146,61 @@ theorem ι_mem_augIdeal (m : M) : ι R M m ∈ augIdeal R M := by
   simp only [mem_augIdeal_iff, ι_def, dp, algebraMapInv_eq, aeval_X, zero_lt_one, ite_true]
 #align divided_power_algebra.ι_mem_aug_ideal DividedPowerAlgebra.ι_mem_augIdeal
 
---instance : CommRing (DividedPowerAlgebra R M ⧸ augIdeal R M) := inferInstance
-  /- Ideal.Quotient.commRing (augIdeal R M)  -/-- Slow
-  /- @Ideal.Quotient.commRing (DividedPowerAlgebra R M)
-    (DividedPowerAlgebra.instCommRing R M) (augIdeal R M) -/ 
 
-set_option profiler true
-
-example : HasQuotient (TensorAlgebra R M) (Ideal (TensorAlgebra R M)) := 
-  Submodule.hasQuotient
-
-example : HasQuotient (DividedPowerAlgebra R M) (Ideal (DividedPowerAlgebra R M)) := 
-  Submodule.hasQuotient
-
-example : CommRing (DividedPowerAlgebra R M ⧸ augIdeal R M) := 
-  Quotient.commRing (augIdeal R M)
-
-
+/-
 -- This one is still too slow
-instance (priority := high) instAlgebra' : Algebra R (DividedPowerAlgebra R M ⧸ augIdeal R M) := 
-Quotient.algebra R
+count_heartbeats in 
+-- prints heartbeat count in the declaration (and sets `maxHeartbeats` to infinity)
+set_option synthInstance.maxHeartbeats 100000 in
+set_option trace.profiler true in -- prints wall clock times in the declaration
+-/
 
+set_option trace.profiler true
+
+def kerLiftAlg_algebraMapInv := kerLiftAlg (algebraMapInv R M) 
+--  better type would be : (DividedPowerAlgebra R M ⧸ augIdeal R M) →ₐ[R] R 
+
+def algebraMap_mod_augIdeal : 
+    R →+* (DividedPowerAlgebra R M ⧸ augIdeal R M) := 
+  algebraMap R (DividedPowerAlgebra R M ⧸ augIdeal R M)
+
+-- The next two lemmas timeout (due to an inference problem, I think) 
+
+lemma kerLiftAlg_leftInverse : 
+    Function.LeftInverse (kerLiftAlg_algebraMapInv R M) (algebraMap_mod_augIdeal R M) := by
+  intro r
+  exact AlgHom.commutes (kerLiftAlg (algebraMapInv R M)) r
+
+lemma kerLiftAlg_rightInverse : 
+    Function.RightInverse (kerLiftAlg_algebraMapInv R M) (algebraMap_mod_augIdeal R M) := by
+  apply Function.rightInverse_of_injective_of_leftInverse
+  · apply RingHom.kerLift_injective
+  · apply kerLiftAlg_leftInverse
+
+def algebraMap_comp_kerLiftAlg := 
+  (algebraMap R (DividedPowerAlgebra R M)).comp (kerLiftAlg_algebraMapInv R M).toRingHom
+
+-- uses around 260000 heartbeats
+set_option maxHeartbeats 300000 in 
+lemma augIdeal_isAugmentationIdeal' : 
+    Function.LeftInverse (Ideal.Quotient.mk (augIdeal R M))
+      (algebraMap_comp_kerLiftAlg R M) := by
+  intro r
+  dsimp only [algebraMap_comp_kerLiftAlg]
+  rw [RingHom.coe_comp, Function.comp_apply, Ideal.Quotient.mk_algebraMap]
+  apply kerLiftAlg_rightInverse
+
+-- uses aroung a million heartbeats!
 count_heartbeats in -- prints heartbeat count in the declaration (and sets `maxHeartbeats` to infinity)
 set_option synthInstance.maxHeartbeats 100000 in
 set_option trace.profiler true in -- prints wall clock times in the declaration
 set_option pp.proofs.withType false in
---The next two lemmas timeout (due to an inference problem, I think) 
-lemma augIdeal_isAugmentationIdeal' : 
-  Function.RightInverse 
-    (kerLiftAlg (algebraMapInv R M))
-    (algebraMap R (DividedPowerAlgebra R M ⧸ augIdeal R M)) := by
-  sorry
-  refine' Function.rightInverse_of_injective_of_leftInverse (RingHom.kerLift_injective _) _
-  intro r
-  simp only [AlgHom.toRingHom_eq_coe]
-  apply AlgHomClass.commutes 
-
 -- We prove that the augmentation is an augmentation ideal, namely there is a section
 theorem augIdeal_isAugmentationIdeal :
   IsAugmentationIdeal (DividedPowerAlgebra R M) (augIdeal R M) := by
-  sorry
-  use (algebraMap R (DividedPowerAlgebra R M)).comp (kerLiftAlg (algebraMapInv R M)).toRingHom
-  ext x
-  simp only [AlgHom.toRingHom_eq_coe, RingHom.coe_comp, RingHom.coe_coe, Function.comp_apply, 
-    mk_algebraMap, id_eq]
-  apply augIdeal_isAugmentationIdeal' 
+  dsimp only [IsAugmentationIdeal]
+  use algebraMap_comp_kerLiftAlg R M
+  exact augIdeal_isAugmentationIdeal' R M 
 #align divided_power_algebra.aug_ideal_is_augmentation_ideal 
   DividedPowerAlgebra.augIdeal_isAugmentationIdeal
 
@@ -198,7 +208,7 @@ theorem augIdeal_isAugmentationIdeal :
 theorem coeff_zero_of_mem_augIdeal {f : MvPolynomial (ℕ × M) R}
     (hf : f ∈ supported R {nm : ℕ × M | 0 < nm.fst}) (hf0 : mk f ∈ augIdeal R M) :
     coeff 0 f = 0 := by
-  rw [augIdeal, RingHom.mem_ker] at hf0 
+  simp only [augIdeal, AlgHom.toRingHom_eq_coe, RingHom.mem_ker, RingHom.coe_coe] at hf0  
   rw [← hf0, algebraMapInv_eq R M, eq_comm]
   conv_lhs => rw [f.as_sum]
   rw [map_sum, Finset.sum_eq_single 0]
@@ -284,7 +294,7 @@ theorem left_inv' (x : grade R M 0) :
   simp only [algebraMap_right_inv_of_degree_zero R M x, decompose_coe, of_eq_same]
 #align divided_power_algebra.left_inv' DividedPowerAlgebra.left_inv'
 
-theorem lift_augIdeal_le {A : Type _} [CommRing A] [Algebra R A] {I : Ideal A}
+theorem lift_augIdeal_le {A : Type*} [CommRing A] [Algebra R A] {I : Ideal A}
     (hI : DividedPowers I) (φ : M →ₗ[R] A) (hφ : ∀ m, φ m ∈ I) :
     Ideal.map (lift hI φ hφ) (augIdeal R M) ≤ I := by
   simp only [augIdeal_eq_span, Ideal.map_span, Ideal.span_le, SetLike.mem_coe]
@@ -293,7 +303,7 @@ theorem lift_augIdeal_le {A : Type _} [CommRing A] [Algebra R A] {I : Ideal A}
   exact hI.dpow_mem (ne_of_gt hn) (hφ m)
 #align divided_power_algebra.lift_aug_ideal_le DividedPowerAlgebra.lift_augIdeal_le
 
-theorem lift_mem_of_mem_augIdeal {A : Type _} [CommRing A] [Algebra R A] {I : Ideal A}
+theorem lift_mem_of_mem_augIdeal {A : Type*} [CommRing A] [Algebra R A] {I : Ideal A}
     (hI : DividedPowers I) (φ : M →ₗ[R] A) (hφ : ∀ m, φ m ∈ I) (x : DividedPowerAlgebra R M)
     (hx : x ∈ augIdeal R M) : lift hI φ hφ x ∈ I :=
   (lift_augIdeal_le R M hI φ hφ) (mem_map_of_mem _ hx)
