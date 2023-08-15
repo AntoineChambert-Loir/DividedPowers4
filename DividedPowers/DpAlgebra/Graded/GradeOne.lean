@@ -6,9 +6,9 @@ namespace DividedPowerAlgebra
 
 open DirectSum Finset Function Ideal Ideal.Quotient MvPolynomial RingEquiv RingQuot TrivSqZeroExt 
 
-section CommSemiring
+section CommRing
 
-variable (R M : Type _) [CommSemiring R] [AddCommMonoid M] [Module R M] 
+variable (R M : Type _) [CommRing R] [AddCommGroup M] [Module R M] 
 
 variable [DecidableEq R] [DecidableEq M]
 
@@ -23,8 +23,9 @@ theorem ι_mem_grade_one (m : M) : ι R M m ∈ grade R M 1 := by
 
 variable [Module Rᵐᵒᵖ M] [IsCentralScalar R M] 
 
-/-- The canonical map from `divided_power_algebra R M` into `triv_sq_zero_ext R M` that sends
-`divided_power_algebra.ι` to `triv_sq_zero_ext.inr`. -/
+
+/-- The canonical map from `divided_power_algebra R M` into `triv_sq_zero_ext R M` 
+  that sends `DividedPowerAlgebra.ι` to `TrivSqZeroExt.inr`. -/
 def toTrivSqZeroExt : DividedPowerAlgebra R M →ₐ[R] TrivSqZeroExt R M := 
   lift (DividedPowers.OfSquareZero.dividedPowers 
       (TrivSqZeroExt.sqZero R M) : DividedPowers (kerIdeal R M))
@@ -32,8 +33,8 @@ def toTrivSqZeroExt : DividedPowerAlgebra R M →ₐ[R] TrivSqZeroExt R M :=
 #align divided_power_algebra.to_triv_sq_zero_ext DividedPowerAlgebra.toTrivSqZeroExt
 
 @[simp] theorem toTrivSqZeroExt_ι (x : M) :
-    toTrivSqZeroExt R M (ι R M x) = inr x := by
-  sorry -- lift_ι_apply R _ _ _ x
+    toTrivSqZeroExt R M (ι R M x) = inr x := lift_ι_apply R _ _ _ x
+  
 #align divided_power_algebra.to_triv_sq_zero_ext_ι DividedPowerAlgebra.toTrivSqZeroExt_ι
 
 theorem toTrivSqZeroExt_apply_dp_of_two_le (n : ℕ) (m : M) (hn : 2 ≤ n) :
@@ -44,7 +45,7 @@ theorem toTrivSqZeroExt_apply_dp_of_two_le (n : ℕ) (m : M) (hn : 2 ≤ n) :
 theorem deg_one_left_inv :
     LeftInverse (fun x : grade R M 1 => (toTrivSqZeroExt R M x.1).snd) (proj' R M 1 ∘ ι R M) := by
   intro m
-  simp only [proj'._eq_1, proj._eq_1, LinearMap.coe_mk, AddHom.coe_mk, ι, Function.comp_apply]
+  simp only [proj', proj, LinearMap.coe_mk, AddHom.coe_mk, ι, Function.comp_apply]
   rw [← TrivSqZeroExt.snd_inr R m, ← ι_def]
   apply congr_arg
   rw [snd_inr, decompose_of_mem_same, toTrivSqZeroExt_ι]
@@ -98,7 +99,7 @@ theorem deg_one_right_inv :
   rw [FunLike.coe_injective.eq_iff]
   apply LinearMap.ext_on_range (grade_one_eq_span' R M).symm
   intro m
-  simp only [proj'._eq_1, proj._eq_1, ι, LinearMap.coe_comp, LinearMap.coe_mk, AddHom.coe_mk, 
+  simp only [proj', proj, ι, LinearMap.coe_comp, LinearMap.coe_mk, AddHom.coe_mk, 
     Submodule.coeSubtype, comp_apply, AlgHom.toLinearMap_apply, sndHom_apply,
     LinearMap.id_coe, id_eq]
   ext
