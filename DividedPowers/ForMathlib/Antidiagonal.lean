@@ -3,6 +3,7 @@
 ! This file was ported from Lean 3 source module antidiagonal
 -/
 import Mathlib.Data.Finset.Basic
+import Mathlib.Data.Multiset.Interval
 import Mathlib.RingTheory.PowerSeries.Basic
 import DividedPowers.ForMathlib.MvPowerSeries.Order
 
@@ -20,7 +21,45 @@ variable {α : Type _} [CommSemiring α]
 
 namespace Finset
 
-/-- The finset of functions `ι → μ` whose support is contained in `s`
+#check Finsupp
+/- We may wish to redefine : 
+
+def Finsupp.antidiagonal (n : μ) : Set (ι →₀ μ) := sorry
+
+so that it is valid in this generality
+
+maybe not
+
+-- almost as cut except the type
+Finsupp.antidiagonal_with_support (s : Finset ι) (n : μ) : Finset (ι →₀ μ) := sorry
+
+--  do not rewrite Multiset.antidiagonal using general antidiagonal with μ := Multiset α
+Note that Multiset α ≃ (α →₀ ℕ),  s  ↦  (a ↦ s.count a), so it is a canonically ordered add monoid, with locally finite order
+but we get different stuff
+
+def s : Multiset ℕ := {0, 0, 0}
+
+#eval (Finset.antidiagonal s).card
+-- 4
+
+#eval Multiset.card (Multiset.antidiagonal s)
+-- 8
+
+-- List.Nat.antidiagonal
+returns a list and not only a finset
+does not need to be rewritten (cool!)
+
+-- Multiset.Nat.antidiagonal is defined using List.Nat.antidiagonal
+
+-- Finset.Nat.antidiagonal is defined using Multiset.Nat.antidiagonal
+maybe do not rewrite, but prove that it coincides
+
+
+  
+-/
+#check Finset.Nat.antidiagonal
+-- rename cut as Pi.antidiagonal
+/-- The Finset of functions `ι → μ` whose support is contained in `s`
   and whose sum is `n` -/
 def cut (s : Finset ι) (n : μ) : Finset (ι → μ) :=
   Finset.filter (fun f => s.sum f = n)
@@ -29,11 +68,17 @@ def cut (s : Finset ι) (n : μ) : Finset (ι → μ) :=
         fun f g h => by ext i hi; simpa only [dif_pos hi] using congr_fun h i⟩)
 #align finset.cut Finset.cut
 
-/-- The finset of pairs of elements of `μ` with sum `n` -/
+/-- For `n: μ`, the set of all finitely supported functions `ι →₀ μ` with sum `n`-/
+def cut₀ (n : μ) : Set (ι →₀ μ) := { f | f.sum (fun _ x ↦ x) = n }
+
+
+/-- The Finset of pairs of elements of `μ` with sum `n` -/
 def antidiagonal (n : μ) : Finset (μ × μ) :=
   Finset.filter (fun uv => uv.fst + uv.snd = n) (Finset.product (Iic n) (Iic n))
 #align finset.antidiagonal Finset.antidiagonal
 
+
+@[simp]
 theorem mem_antidiagonal (n : μ) (a : μ × μ) : a ∈ antidiagonal n ↔ a.fst + a.snd = n := by
   simp only [antidiagonal, Prod.forall, mem_filter, and_iff_right_iff_imp]
   intro h; rw [← h]
@@ -43,9 +88,9 @@ theorem mem_antidiagonal (n : μ) (a : μ × μ) : a ∈ antidiagonal n ↔ a.fs
 
 /- ./././Mathport/Syntax/Translate/Basic.lean:638:2: warning: 
   expanding binder collection (i «expr ∉ » s) -/
+@[simp]
 theorem mem_cut (s : Finset ι) (n : μ) (f : ι → μ) :
-    f ∈ cut s n ↔ s.sum f = n ∧ ∀ (i) (_ : i ∉ s), f i = 0 :=
-  by
+    f ∈ cut s n ↔ s.sum f = n ∧ ∀ (i) (_ : i ∉ s), f i = 0 := by
   rw [cut, mem_filter, and_comm, and_congr_right]
   intro h
   simp only [mem_map, exists_prop, Function.Embedding.coeFn_mk, mem_pi]
@@ -65,16 +110,14 @@ theorem mem_cut (s : Finset ι) (n : μ) (f : ι → μ) :
 #align finset.mem_cut Finset.mem_cut
 
 theorem cut_equiv_antidiagonal (n : μ) :
-    Equiv.finsetCongr (Equiv.boolArrowEquivProd _) (cut univ n) = antidiagonal n :=
-  by
+    Equiv.finsetCongr (Equiv.boolArrowEquivProd _) (cut univ n) = antidiagonal n := by
   ext ⟨x₁, x₂⟩
   simp_rw [Equiv.finsetCongr_apply, mem_map, Equiv.toEmbedding, Function.Embedding.coeFn_mk, ←
     Equiv.eq_symm_apply]
   simp [mem_cut, add_comm, mem_antidiagonal]
 #align finset.cut_equiv_antidiagonal Finset.cut_equiv_antidiagonal
 
-theorem cut_zero (s : Finset ι) : cut s (0 : μ) = {0} :=
-  by
+theorem cut_zero (s : Finset ι) : cut s (0 : μ) = {0} := by
   ext f
   rw [mem_cut, mem_singleton, sum_eq_zero_iff, ← forall_and, funext_iff]
   apply forall_congr'
@@ -82,8 +125,7 @@ theorem cut_zero (s : Finset ι) : cut s (0 : μ) = {0} :=
   simp only [← or_imp, em (i ∈ s), forall_true_left, Pi.zero_apply]
 #align finset.cut_zero Finset.cut_zero
 
-theorem cut_empty (n : μ) : cut (∅ : Finset ι) n = if n = 0 then {0} else ∅ :=
-  by
+theorem cut_empty (n : μ) : cut (∅ : Finset ι) n = if n = 0 then {0} else ∅ := by
   ext f
   rw [mem_cut]
   simp only [sum_empty, not_mem_empty, not_false_iff, forall_true_left]
@@ -96,8 +138,7 @@ theorem cut_empty (n : μ) : cut (∅ : Finset ι) n = if n = 0 then {0} else �
 theorem cut_insert (n : μ) (a : ι) (s : Finset ι) (h : a ∉ s) :
     cut (insert a s) n =
       (antidiagonal n).biUnion fun p : μ × μ =>
-        (cut s p.snd).image fun f => Function.update f a p.fst :=
-  by
+        (cut s p.snd).image fun f => Function.update f a p.fst := by
   ext f
   rw [mem_cut, mem_biUnion, sum_insert h]
   constructor
@@ -144,6 +185,18 @@ theorem Finsupp.antidiagonal_eq_antidiagonal (d : σ →₀ ℕ) :
   ext x
   rw [Finsupp.mem_antidiagonal, Finset.mem_antidiagonal]
 #align finsupp.antidiagonal_eq_antidiagonal Finsupp.antidiagonal_eq_antidiagonal
+
+example (n : ℕ) : Finset.Nat.antidiagonal n = Finset.antidiagonal n := by
+    ext ⟨p,q⟩
+    simp only [Nat.mem_antidiagonal, Finset.mem_antidiagonal]
+
+example (α : Type*) [DecidableEq α] (s p q: Multiset α) :
+    ⟨p, q⟩ ∈ Finset.antidiagonal s ↔
+      ⟨p, q⟩ ∈ s.antidiagonal := by 
+  simp only [Multiset.mem_antidiagonal, Finset.mem_antidiagonal]
+
+
+#exit
 
 -- TODO : move elsewhere
 namespace MvPowerSeries
