@@ -25,12 +25,12 @@ def TensorProduct.map' (f : M →ₗ[S] N) (g : P →ₗ[R] Q) :
   map_smul' := fun s x ↦ by
     dsimp
     induction x using TensorProduct.induction_on with
-    | C0 => 
+    | zero => 
         simp only [smul_zero, map_zero]
-    | C1 x y => 
+    | tmul x y => 
         simp only [TensorProduct.smul_tmul', TensorProduct.map_tmul]
         simp only [coe_restrictScalars, map_smul]
-    | Cp x y hx hy => 
+    | add x y hx hy => 
         simp only [smul_add, map_add, hx, hy] }
 
 lemma TensorProduct.map'_smul (f : M →ₗ[S] N) (g : P →ₗ[R] Q)
