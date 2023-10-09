@@ -1,5 +1,5 @@
 import DividedPowers.PolynomialMap.Graded
-import DividedPowers.DpAlgebra.Graded
+import DividedPowers.DpAlgebra.Graded.Basic
 import DividedPowers.DpAlgebra.BaseChange
 
 
