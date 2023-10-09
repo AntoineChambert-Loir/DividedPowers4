@@ -5,7 +5,7 @@ import Oneshot.DividedPowers.Basic
 
 -- import algebra.ring
 class DividedPowerRing (A : Type _) extends CommRing A where
-  pdIdeal : Ideal A
+  dpIdeal : Ideal A
   dpow : ℕ → pd_ideal → A
   dpow_zero : dpow 0 = 1
   dpow_one : dpow 1 = coe
@@ -25,9 +25,9 @@ variable {A : Type _} [CommRing A] [hA : DividedPowerRing A] [hA' : DividedPower
 --notation `(` A `,` I, `,` hI `)` →ₚ  `(` B `,` J, `,` hJ `)` := pd_morphism hI hJ
 structure IsPdMorphism' {A B : Type _} [hA : DividedPowerRing A] [hB : DividedPowerRing B]
     (f : A →+* B) where
-  ideal_comp : ∀ a : hA.pdIdeal, f a ∈ hB.pdIdeal
+  ideal_comp : ∀ a : hA.dpIdeal, f a ∈ hB.dpIdeal
   dpow_comp :
-    ∀ (n : ℕ) (a : hA.pdIdeal),
+    ∀ (n : ℕ) (a : hA.dpIdeal),
       DividedPowerRing.dpow n ⟨f a, ideal_comp a⟩ = f (DividedPowerRing.dpow n a)
 #align is_pd_morphism' IsPdMorphism'
 

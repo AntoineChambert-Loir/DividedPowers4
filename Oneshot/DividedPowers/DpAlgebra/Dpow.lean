@@ -1,7 +1,7 @@
 import Oneshot.DividedPowers.DPAlgebra.Init
 import Oneshot.DividedPowers.DPAlgebra.Graded
 import Oneshot.DividedPowers.RatAlgebra
-import Oneshot.DividedPowers.SubPdIdeal
+import Oneshot.DividedPowers.SubDPIdeal
 import Oneshot.DividedPowers.IdealAdd
 import Oneshot.DividedPowers.DPAlgebra.RobyLemma5
 import Oneshot.DividedPowers.DPAlgebra.RobyLemma9

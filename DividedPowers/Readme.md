@@ -10,7 +10,7 @@
 ✓ IdealAdd : divided powers on the sum of two ideals
 ✓ RatAlgebra : divided powers when factorials are invertible 
 ✕ Ring : notion of DP ring (unused)
-✓ SubDpIdeal : sub DP ideal 
+✓ SubDPIdeal : sub DP ideal 
 ✕ TensorProduct : tensor product (obsolete)
 
 ## The Divided power algebra

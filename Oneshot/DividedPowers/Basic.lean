@@ -112,14 +112,14 @@ theorem coe_to_fun_apply {A : Type _} [CommRing A] (I : Ideal A) (hI : DividedPo
 #align coe_to_fun_apply coe_to_fun_apply
 
 structure PdRing (A : Type _) extends CommRing A where
-  pdIdeal : Ideal A
+  dpIdeal : Ideal A
   DividedPowers : DividedPowers pd_ideal
 #align pd_ring PdRing
 
 instance {A : Type _} [CommRing A] [DecidableEq A] : Inhabited (PdRing A)
     where default :=
     { toCommRing := inferInstance
-      pdIdeal := ⊥
+      dpIdeal := ⊥
       DividedPowers := dividedPowersBot A }
 
 end DividedPowersDefinition
