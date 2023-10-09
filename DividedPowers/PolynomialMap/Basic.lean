@@ -274,12 +274,12 @@ theorem zooEquiv_symm_apply (pn) :
     (TensorProduct.lid R N)
       ((rTensor N (MvPolynomial.lcoeff k)) pn) := by
   induction pn using TensorProduct.induction_on with
-  | C0 => simp only [map_zero, coe_zero, Pi.zero_apply]
-  | C1 p n =>
+  | zero => simp only [map_zero, coe_zero, Pi.zero_apply]
+  | tmul p n =>
       simp only [rTensor_tmul, TensorProduct.lid_tmul]
       simp only [zooEquiv_symm_apply_tmul]
       rfl
-  | Cp p q h h' =>
+  | add p q h h' =>
       simp only [map_add, coe_add, Pi.add_apply]
       simp only [h, h']
 
