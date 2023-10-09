@@ -22,7 +22,7 @@ namespace Finset
 
 /-- The finset of functions `ι → μ` whose support is contained in `s`
   and whose sum is `n` -/
-def cut (s : Finset ι) (n : μ) : Finset (ι → μ) :=
+def cut (s : Finset ι) (n : μ) : Finset (ι → μ) := --TODO: rename Pi.antidiagonal
   Finset.filter (fun f => s.sum f = n)
     ((s.pi fun _ => Iic n).map
       ⟨fun f i => if h : i ∈ s then f i h else 0, 
@@ -103,8 +103,7 @@ theorem cut_insert (n : μ) (a : ι) (s : Finset ι) (h : a ∉ s) :
   constructor
   · rintro ⟨rfl, h₁⟩
     simp only [exists_prop, Function.Embedding.coeFn_mk, mem_map, mem_antidiagonal, Prod.exists]
-    use f a
-    use s.sum f
+    use f a, s.sum f
     constructor; rfl
     rw [mem_image]
     use Function.update f a 0
@@ -117,8 +116,7 @@ theorem cut_insert (n : μ) (a : ι) (s : Finset ι) (h : a ∉ s) :
       rfl
       apply h₁; simp only [mem_insert, not_or]; exact ⟨hia, hi⟩
     · ext i
-      rw [Function.update_apply (update f a 0)]
-      rw [Function.update_apply]
+      rw [Function.update_apply (update f a 0), Function.update_apply]
       split_ifs with hia
       rw [hia]
       rfl
