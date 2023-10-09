@@ -1,5 +1,5 @@
 import DividedPowers.DpAlgebra.Init
-import DividedPowers.DpAlgebra.Graded
+import DividedPowers.DpAlgebra.Graded.GradeZero
 import DividedPowers.RatAlgebra
 import DividedPowers.SubDpIdeal
 import DividedPowers.IdealAdd
