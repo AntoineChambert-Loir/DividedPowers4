@@ -196,7 +196,7 @@ theorem dpEnvelope_isUniversal [DecidableEq B] :
   skip
   set K1 : Ideal C := K + I.map (algebraMap A C) with hK1
   set h1 : DividedPowers K1 := ideal_add.divided_powers hK hI' hI'_int with h1_def
-  set g' : hI.pd_morphism h1 :=
+  set g' : hI.dp_morphism h1 :=
     { toRingHom := algebraMap A C
       ideal_comp := le_sup_of_le_right (le_refl _)
       dpow_comp := fun n a ha =>

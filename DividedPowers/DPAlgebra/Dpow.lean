@@ -111,8 +111,8 @@ theorem on_tensorProduct_unique (hK hK' : DividedPowers (k A I J))
   dsimp only [k]
   rw [sup_le_iff]
   constructor
-  apply le_equalizer_of_pd_morphism hI (i1 A R S).toRingHom le_sup_left hK hK' hIK hIK'
-  apply le_equalizer_of_pd_morphism hJ (i2 A R S).toRingHom le_sup_right hK hK' hJK hJK'
+  apply le_equalizer_of_dp_morphism hI (i1 A R S).toRingHom le_sup_left hK hK' hIK hIK'
+  apply le_equalizer_of_dp_morphism hJ (i2 A R S).toRingHom le_sup_right hK hK' hJK hJK'
 #align divided_power_algebra.on_tensor_product_unique DividedPowerAlgebra.on_tensorProduct_unique
 
 def Condτ (A : Type u) [CommRing A] {R : Type u} [CommRing R] [Algebra A R] {S : Type u}
