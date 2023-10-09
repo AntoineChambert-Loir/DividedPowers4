@@ -1,4 +1,4 @@
-import Oneshot.DividedPowers.DpAlgebra.Dpow
+import Oneshot.DividedPowers.DPAlgebra.Dpow
 import Oneshot.AlgebraComp
 
 universe u v w

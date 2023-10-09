@@ -1,4 +1,4 @@
-import DividedPowers.DpAlgebra.Init
+import DividedPowers.DPAlgebra.Init
 import DividedPowers.RatAlgebra
 import DividedPowers.ForMathlib.WeightedHomogeneous
 import DividedPowers.ForMathlib.GradedRingQuot

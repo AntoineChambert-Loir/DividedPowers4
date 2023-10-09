@@ -1,10 +1,10 @@
-import Oneshot.DividedPowers.DpAlgebra.Init
-import Oneshot.DividedPowers.DpAlgebra.Graded
+import Oneshot.DividedPowers.DPAlgebra.Init
+import Oneshot.DividedPowers.DPAlgebra.Graded
 import Oneshot.DividedPowers.RatAlgebra
 import Oneshot.DividedPowers.SubPdIdeal
 import Oneshot.DividedPowers.IdealAdd
-import Oneshot.DividedPowers.DpAlgebra.RobyLemma5
-import Oneshot.DividedPowers.DpAlgebra.RobyLemma9
+import Oneshot.DividedPowers.DPAlgebra.RobyLemma5
+import Oneshot.DividedPowers.DPAlgebra.RobyLemma9
 import Mathbin.RingTheory.MvPolynomial.Basic
 import Oneshot.ForMathlib.RingTheory.Ideal
 

@@ -1,4 +1,4 @@
-import Oneshot.DividedPowers.DpAlgebra.Init
+import Oneshot.DividedPowers.DPAlgebra.Init
 import Oneshot.MvPowerSeries.Order
 import Oneshot.MvPowerSeries.Topology
 

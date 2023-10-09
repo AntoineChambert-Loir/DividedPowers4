@@ -1,4 +1,4 @@
-import DividedPowers.DpAlgebra.Init
+import DividedPowers.DPAlgebra.Init
 import DividedPowers.ForMathlib.MvPowerSeries.Order
 import DividedPowers.ForMathlib.MvPowerSeries.Topology
 

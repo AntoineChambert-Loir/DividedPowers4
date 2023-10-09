@@ -1,5 +1,5 @@
-import Oneshot.DividedPowers.DpAlgebra.Init
-import Oneshot.DividedPowers.DpAlgebra.Misc
+import Oneshot.DividedPowers.DPAlgebra.Init
+import Oneshot.DividedPowers.DPAlgebra.Misc
 import Mathbin.Algebra.Algebra.Operations
 import Mathbin.RingTheory.MvPolynomial.Basic
 import Oneshot.ForMathlib.RingTheory.TensorProduct

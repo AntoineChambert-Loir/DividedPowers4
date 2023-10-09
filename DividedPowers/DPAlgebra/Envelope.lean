@@ -1,4 +1,4 @@
-import DividedPowers.DpAlgebra.Dpow
+import DividedPowers.DPAlgebra.Dpow
 import DividedPowers.ForMathlib.AlgebraComp
 
 universe u v w

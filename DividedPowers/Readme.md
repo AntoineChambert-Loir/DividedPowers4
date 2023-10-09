@@ -15,16 +15,16 @@
 
 ## The Divided power algebra
 
-✕ DpAlgebra/BaseChange
-✕ DpAlgebra/Dpow
-✕ DpAlgebra/Envelope
-✕ DpAlgebra/Exponential
-✓ DpAlgebra/Graded
-✓ DpAlgebra/Init
-✓ DpAlgebra/Misc
-✓ DpAlgebra/PolynomialMap
-✓ DpAlgebra/RobyLemma5
-✓ DpAlgebra/RobyLemma9
+✕ DPAlgebra/BaseChange
+✕ DPAlgebra/Dpow
+✕ DPAlgebra/Envelope
+✕ DPAlgebra/Exponential
+✓ DPAlgebra/Graded
+✓ DPAlgebra/Init
+✓ DPAlgebra/Misc
+✓ DPAlgebra/PolynomialMap
+✓ DPAlgebra/RobyLemma5
+✓ DPAlgebra/RobyLemma9
 
 ## Additional files for Mathlib
 

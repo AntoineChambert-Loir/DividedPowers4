@@ -1,10 +1,10 @@
-import DividedPowers.DpAlgebra.Init
-import DividedPowers.DpAlgebra.Graded.GradeZero
+import DividedPowers.DPAlgebra.Init
+import DividedPowers.DPAlgebra.Graded.GradeZero
 import DividedPowers.RatAlgebra
 import DividedPowers.SubDpIdeal
 import DividedPowers.IdealAdd
-import DividedPowers.DpAlgebra.RobyLemma5
-import DividedPowers.DpAlgebra.RobyLemma9
+import DividedPowers.DPAlgebra.RobyLemma5
+import DividedPowers.DPAlgebra.RobyLemma9
 import Mathlib.RingTheory.MvPolynomial.Basic
 import DividedPowers.ForMathlib.RingTheory.Ideal
 

@@ -32,5 +32,5 @@ SubPdIdeal.lean
 Ring.lean
 RatAlgebra.lean
 IdealAdd.lean
-DpAlgebra/
+DPAlgebra/
 Basic.lean

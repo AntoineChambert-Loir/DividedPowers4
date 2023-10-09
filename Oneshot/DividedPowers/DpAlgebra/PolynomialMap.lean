@@ -1,5 +1,5 @@
-import Oneshot.DividedPowers.DpAlgebra.Init
-import Oneshot.DividedPowers.DpAlgebra.Graded
+import Oneshot.DividedPowers.DPAlgebra.Init
+import Oneshot.DividedPowers.DPAlgebra.Graded
 import Mathbin.RingTheory.PowerSeries.Basic
 import Mathbin.RingTheory.TensorProduct
 import Mathbin.LinearAlgebra.Multilinear.Basic
