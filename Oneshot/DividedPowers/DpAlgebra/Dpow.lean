@@ -98,8 +98,8 @@ variable {I J}
 
 -- Lemma 1 : uniqueness of the dp structure on R ⊗ S for I + J
 theorem on_tensorProduct_unique (hK hK' : DividedPowers (k A I J))
-    (hIK : IsPdMorphism hI hK (i1 A R S)) (hIK' : IsPdMorphism hI hK' (i1 A R S))
-    (hJK : IsPdMorphism hJ hK (i2 A R S)) (hJK' : IsPdMorphism hJ hK' (i2 A R S)) : hK = hK' :=
+    (hIK : IsDPMorphism hI hK (i1 A R S)) (hIK' : IsDPMorphism hI hK' (i1 A R S))
+    (hJK : IsDPMorphism hJ hK (i2 A R S)) (hJK' : IsDPMorphism hJ hK' (i2 A R S)) : hK = hK' :=
   by
   apply eq_of_eq_on_ideal
   intro n x hx
@@ -116,7 +116,7 @@ theorem on_tensorProduct_unique (hK hK' : DividedPowers (k A I J))
 def Condτ (A : Type u) [CommRing A] {R : Type u} [CommRing R] [Algebra A R] {S : Type u}
     [CommRing S] [Algebra A S] {I : Ideal R} {J : Ideal S} (hI : DividedPowers I)
     (hJ : DividedPowers J) : Prop :=
-  ∃ hK : DividedPowers (k A I J), IsPdMorphism hI hK (i1 A R S) ∧ IsPdMorphism hJ hK (i2 A R S)
+  ∃ hK : DividedPowers (k A I J), IsDPMorphism hI hK (i1 A R S) ∧ IsDPMorphism hJ hK (i2 A R S)
 #align divided_power_algebra.cond_τ DividedPowerAlgebra.Condτ
 
 def CondT (A : Type u) [CommRing A] : Prop :=
@@ -170,7 +170,7 @@ include M  h -/
 theorem cond_D_uniqueness {M : Type u} [AddCommGroup M] [Module R M]
     (h : DividedPowers (augIdeal R M)) (hh : ∀ (n : ℕ) (x : M), h.dpow n (ι R x) = dp R n x)
     {S : Type _} [CommRing S] [Algebra R S] {J : Ideal S} (hJ : DividedPowers J) (f : M →ₗ[R] S)
-    (hf : ∀ m, f m ∈ J) : IsPdMorphism h hJ (DividedPowerAlgebra.lift R M hJ f hf) :=
+    (hf : ∀ m, f m ∈ J) : IsDPMorphism h hJ (DividedPowerAlgebra.lift R M hJ f hf) :=
   by
   constructor
   · rw [aug_ideal_eq_span]
@@ -391,9 +391,9 @@ theorem algebra.TensorProduct.map_surjective (A : Type _) [CommRing A] {R S R' S
 theorem condτ_rel (A : Type _) [CommRing A] {R S R' S' : Type _} [CommRing R] [CommRing S]
     [CommRing R'] [CommRing S'] [Algebra A R] [Algebra A S] [Algebra A R'] [Algebra A S']
     (f : R →ₐ[A] R') (hf : Function.Surjective f) {I : Ideal R} (hI : DividedPowers I)
-    {I' : Ideal R'} (hI' : DividedPowers I') (hf' : IsPdMorphism hI hI' f) (hI'I : I' = I.map f)
+    {I' : Ideal R'} (hI' : DividedPowers I') (hf' : IsDPMorphism hI hI' f) (hI'I : I' = I.map f)
     (g : S →ₐ[A] S') (hg : Function.Surjective g) {J : Ideal S} (hJ : DividedPowers J)
-    {J' : Ideal S'} (hJ' : DividedPowers J') (hg' : IsPdMorphism hJ hJ' g) (hJ'J : J' = J.map g)
+    {J' : Ideal S'} (hJ' : DividedPowers J') (hg' : IsDPMorphism hJ hJ' g) (hJ'J : J' = J.map g)
     (roby :
       RingHom.ker (Algebra.TensorProduct.map f g) ⊓ k A I J =
         map (Algebra.TensorProduct.includeLeft : R →ₐ[A] R ⊗[A] S) (RingHom.ker f ⊓ I) ⊔
@@ -596,7 +596,7 @@ theorem dp_comp (A : Type _) [CommRing A] (M : Type _) [AddCommGroup M] [Module 
 theorem roby_theorem_2 (R : Type _) [CommRing R] (M : Type _) [AddCommGroup M] [Module R M]
     {A : Type _} [CommRing A] [Algebra R A] {I : Ideal A} (hI : DividedPowers I) {φ : M →ₗ[R] A}
     (hφ : ∀ m, φ m ∈ I) :
-    IsPdMorphism (dividedPowers' R M) hI (DividedPowerAlgebra.lift R M hI φ hφ) :=
+    IsDPMorphism (dividedPowers' R M) hI (DividedPowerAlgebra.lift R M hI φ hφ) :=
   by
   apply cond_D_uniqueness
   intro m n
@@ -639,7 +639,7 @@ theorem lift'_eq_dp_lift (R : Type u) [CommRing R] {M : Type v} [AddCommGroup M]
 theorem roby_prop_8 (R : Type u) [CommRing R] {M : Type u} [AddCommGroup M] [Module R M]
     (S : Type u) [CommRing S] [Algebra R S] {N : Type u} [AddCommGroup N] [Module R N] [Module S N]
     [IsScalarTower R S N] (f : M →ₗ[R] N) :
-    IsPdMorphism (dividedPowers' R M) (dividedPowers' S N) (DividedPowerAlgebra.lift' R S f) :=
+    IsDPMorphism (dividedPowers' R M) (dividedPowers' S N) (DividedPowerAlgebra.lift' R S f) :=
   by
   let φ := ((ι S).restrictScalars R).comp f
   suffices hφ : ∀ m, φ m ∈ aug_ideal S N

@@ -217,7 +217,7 @@ theorem dpEnvelope_isUniversal :
   -- TODO: generalize (map to sub-pd-structure)
   set ψ :
     (quotient.divided_powers (DividedPowerAlgebra.dividedPowers' B (J' I J))
-          (J12_is_sub_pd_ideal hI (J' I J) (sub_ideal_J' I J))).PdMorphism
+          (J12_is_sub_pd_ideal hI (J' I J) (sub_ideal_J' I J))).DPMorphism
       hK :=
     { toRingHom := φ.to_ring_hom
       ideal_comp := sorry

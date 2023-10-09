@@ -23,11 +23,11 @@ class DividedPowerRing (A : Type _) extends CommRing A where
 variable {A : Type _} [CommRing A] [hA : DividedPowerRing A] [hA' : DividedPowerRing A]
 
 --notation `(` A `,` I, `,` hI `)` →ₚ  `(` B `,` J, `,` hJ `)` := pd_morphism hI hJ
-structure IsPdMorphism' {A B : Type _} [hA : DividedPowerRing A] [hB : DividedPowerRing B]
+structure IsDPMorphism' {A B : Type _} [hA : DividedPowerRing A] [hB : DividedPowerRing B]
     (f : A →+* B) where
   ideal_comp : ∀ a : hA.dpIdeal, f a ∈ hB.dpIdeal
   dpow_comp :
     ∀ (n : ℕ) (a : hA.dpIdeal),
       DividedPowerRing.dpow n ⟨f a, ideal_comp a⟩ = f (DividedPowerRing.dpow n a)
-#align is_pd_morphism' IsPdMorphism'
+#align is_pd_morphism' IsDPMorphism'
 
