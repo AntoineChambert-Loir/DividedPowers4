@@ -5,7 +5,7 @@ import Mathbin.Algebra.RingQuot
 import Mathbin.Algebra.Algebra.Operations
 import Mathbin.Data.Rel
 import Oneshot.DividedPowers.Basic
-import Oneshot.DividedPowers.DpAlgebra.Misc
+import Oneshot.DividedPowers.DPAlgebra.Misc
 
 -- import algebra.free_algebra
 -- import algebra.triv_sq_zero_ext

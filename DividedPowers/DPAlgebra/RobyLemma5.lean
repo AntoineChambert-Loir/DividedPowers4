@@ -1,4 +1,4 @@
-import DividedPowers.DpAlgebra.RobyLemma9
+import DividedPowers.DPAlgebra.RobyLemma9
 import Mathlib.RingTheory.TensorProduct
 import Mathlib.LinearAlgebra.TensorProduct.Tower
 import Mathlib.RingTheory.Ideal.QuotientOperations

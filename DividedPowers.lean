@@ -28,9 +28,9 @@ RingTheory/
 DividedPowers:
 Topology/
 TensorProduct.lean
-SubPdIdeal.lean
+SubDPIdeal.lean
 Ring.lean
 RatAlgebra.lean
 IdealAdd.lean
-DpAlgebra/
+DPAlgebra/
 Basic.lean

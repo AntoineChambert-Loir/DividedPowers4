@@ -1,10 +1,10 @@
-import DividedPowers.DpAlgebra.Init
-import DividedPowers.DpAlgebra.Graded
+import DividedPowers.DPAlgebra.Init
+import DividedPowers.DPAlgebra.Graded.GradeZero
 import DividedPowers.RatAlgebra
-import DividedPowers.SubDpIdeal
+import DividedPowers.SubDPIdeal
 import DividedPowers.IdealAdd
-import DividedPowers.DpAlgebra.RobyLemma5
-import DividedPowers.DpAlgebra.RobyLemma9
+import DividedPowers.DPAlgebra.RobyLemma5
+import DividedPowers.DPAlgebra.RobyLemma9
 import Mathlib.RingTheory.MvPolynomial.Basic
 import DividedPowers.ForMathlib.RingTheory.Ideal
 
@@ -111,8 +111,8 @@ theorem on_tensorProduct_unique (hK hK' : DividedPowers (k A I J))
   dsimp only [k]
   rw [sup_le_iff]
   constructor
-  apply le_equalizer_of_pd_morphism hI (i1 A R S).toRingHom le_sup_left hK hK' hIK hIK'
-  apply le_equalizer_of_pd_morphism hJ (i2 A R S).toRingHom le_sup_right hK hK' hJK hJK'
+  apply le_equalizer_of_dp_morphism hI (i1 A R S).toRingHom le_sup_left hK hK' hIK hIK'
+  apply le_equalizer_of_dp_morphism hJ (i2 A R S).toRingHom le_sup_right hK hK' hJK hJK'
 #align divided_power_algebra.on_tensor_product_unique DividedPowerAlgebra.on_tensorProduct_unique
 
 def Condτ (A : Type u) [CommRing A] {R : Type u} [CommRing R] [Algebra A R] {S : Type u}
@@ -416,7 +416,7 @@ theorem condτ_rel (A : Type _) [CommRing A] {R S R' S' : Type _} [CommRing R] [
     sorry --Algebra.TensorProduct.mapSurjective A f hf g hg
   suffices hK_map : k A I' J' = (k A I J).map fg
   rw [hK_map]
-  suffices hK'_pd : isSubDpIdeal hK (RingHom.ker fg.toRingHom ⊓ k A I J)
+  suffices hK'_pd : isSubDPIdeal hK (RingHom.ker fg.toRingHom ⊓ k A I J)
   let hK' := DividedPowers.Quotient.OfSurjective.dividedPowers hK s_fg hK'_pd
   use hK'
   constructor
@@ -477,13 +477,13 @@ theorem condτ_rel (A : Type _) [CommRing A] {R S R' S' : Type _} [CommRing R] [
         simp only [AlgHom.toRingHom_eq_coe, AlgHom.coe_toRingHom]
         exact hg -/
   · -- ring_hom.ker fg is a “divised ideal”
-    change isSubDpIdeal hK (RingHom.ker (Algebra.TensorProduct.map f g) ⊓ k A I J)
+    change isSubDPIdeal hK (RingHom.ker (Algebra.TensorProduct.map f g) ⊓ k A I J)
     rw [roby]
-    apply isSubDpIdeal_sup
-    apply isSubDpIdeal_map hI hK hK_pd.1
-    exact isSubDpIdeal_ker hI hI' hf'
-    apply isSubDpIdeal_map hJ hK hK_pd.2
-    exact isSubDpIdeal_ker hJ hJ' hg'
+    apply isSubDPIdeal_sup
+    apply isSubDPIdeal_map hI hK hK_pd.1
+    exact isSubDPIdeal_ker hI hI' hf'
+    apply isSubDPIdeal_map hJ hK hK_pd.2
+    exact isSubDPIdeal_ker hJ hJ' hg'
   · -- K A I' J' = map fg (K A I J)
     /- simp only [k, fg, hI'I, hJ'J] -- invalid 'simp', proposition expected ??
     rw [Ideal.map_sup]

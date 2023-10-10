@@ -3,7 +3,7 @@
 -/
 
 import DividedPowers.Basic
-import DividedPowers.DpAlgebra.Misc
+import DividedPowers.DPAlgebra.Misc
 
 import Mathlib.Algebra.RingQuot
 import Mathlib.Algebra.Algebra.Operations

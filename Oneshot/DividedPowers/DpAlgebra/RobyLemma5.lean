@@ -1,7 +1,7 @@
 import Oneshot.ForMathlib.RingTheory.TensorProduct
 import Mathbin.RingTheory.Ideal.QuotientOperations
 import Mathbin.Algebra.Algebra.Subalgebra.Basic
-import Oneshot.DividedPowers.DpAlgebra.RobyLemma9
+import Oneshot.DividedPowers.DPAlgebra.RobyLemma9
 
 -- import ...generalisation.generalisation_linter
 -- import ...generalisation.generalisation_linter

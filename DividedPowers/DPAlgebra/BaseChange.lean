@@ -1,5 +1,5 @@
-import DividedPowers.DpAlgebra.Init
-import DividedPowers.DpAlgebra.Misc
+import DividedPowers.DPAlgebra.Init
+import DividedPowers.DPAlgebra.Misc
 import Mathlib.Algebra.Algebra.Operations
 import Mathlib.RingTheory.MvPolynomial.Basic
 import Mathlib.RingTheory.TensorProduct

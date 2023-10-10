@@ -330,8 +330,8 @@ variable {S : Type u} [CommSemiring S] [Algebra R S]
 -- Give this a name ?
 example : N →ₗ[R] S ⊗[R] N where
   toFun := fun n ↦ 1 ⊗ₜ n
-  map_add' := sorry
-  map_smul' := sorry
+  map_add'  := fun x y ↦ TensorProduct.tmul_add 1 x y
+  map_smul' := fun r x ↦ TensorProduct.tmul_smul r 1 x
 
 variable (R)
 def algebraMap' (S : Type u) [Semiring S] [Algebra R S] : R →ₐ[R] S where
@@ -340,9 +340,16 @@ def algebraMap' (S : Type u) [Semiring S] [Algebra R S] : R →ₐ[R] S where
 
 variable {R}
 theorem isCompat_apply_ground (f : PolynomialMap R M N)
-    {S : Type u} [CommSemiring S] [Algebra R S]
-    (x : M) : 
-  1 ⊗ₜ (f.ground x) = (f.toFun S) (1 ⊗ₜ x) := 
+    {S : Type u} [CommSemiring S] [Algebra R S] (x : M) : 
+    1 ⊗ₜ (f.ground x) = (f.toFun S) (1 ⊗ₜ x) := by
+  simp only [ground] 
+  simp only [Function.comp_apply, TensorProduct.lid_symm_apply]
+  
+  /- simp only [TensorProduct.lid, LinearEquiv.ofLinear_apply]
+  simp only [TensorProduct.lift, ZeroHom.toFun_eq_coe, AddMonoidHom.toZeroHom_coe, coe_mk, 
+    AddHom.coe_mk]
+  simp only [TensorProduct.liftAux, lsmul_apply] -/
+  
   sorry
 
 end Apply
@@ -495,12 +502,14 @@ def IsHomogeneousOfDegree
 #align polynomial_map.is_homogeneous_of_degree PolynomialMap.IsHomogeneousOfDegree
 
 theorem IsHomogeneousOfDegree_add (p : ℕ) {f g : PolynomialMap R M N}
-  (hf : f.IsHomogeneousOfDegree p) (hg : g.IsHomogeneousOfDegree p) :
-  (f + g).IsHomogeneousOfDegree p := sorry
+    (hf : f.IsHomogeneousOfDegree p) (hg : g.IsHomogeneousOfDegree p) :
+    (f + g).IsHomogeneousOfDegree p := fun S _ _ s m ↦ by
+  simp only [add_def_apply, smul_add, hf S s m, hg S s m]
 
 theorem IsHomogeneousOfDegree_smul (p : ℕ) (r : R) {f : PolynomialMap R M N}
-  (hf : f.IsHomogeneousOfDegree p) :
-  (r • f).IsHomogeneousOfDegree p := sorry
+    (hf : f.IsHomogeneousOfDegree p) : (r • f).IsHomogeneousOfDegree p := fun S _ _ s m ↦ by
+  simp only [smul_def, Pi.smul_apply, hf S]
+  exact smul_comm r (s ^ p) (toFun f S m)
 
 /-- The submodule of Homogeneous Polynomial maps -/
 def grade (p : ℕ) : Submodule R (PolynomialMap R M N) where
@@ -532,9 +541,19 @@ def ofConstant (n : N) : PolynomialMap R M N where
 def ofConstantHom : N →ₗ[R] (grade 0 : Submodule R (PolynomialMap R M N)) := {
   toFun := fun n ↦ { 
     val := ofConstant n 
-    property := sorry }
-  map_add' := sorry
-  map_smul' := sorry }
+    property := by
+      simp only [grade, Submodule.mem_mk, AddSubmonoid.mem_mk, AddSubsemigroup.mem_mk] 
+      simp only [IsHomogeneousOfDegree, pow_zero, one_smul]
+      intros S _ _ s m 
+      rfl }
+  map_add'  := fun x y ↦ by
+    simp only [AddSubmonoid.mk_add_mk, Subtype.mk.injEq, ofConstant]
+    ext
+    simp only [add_def_apply, TensorProduct.tmul_add]
+  map_smul' := fun r x ↦ by
+    simp only [RingHom.id_apply, SetLike.mk_smul_mk, Subtype.mk.injEq, ofConstant,
+      TensorProduct.tmul_smul]
+    rfl }
 
 /-- Homogeneous Polynomial maps of degree 0 are constant maps -/
 def ofConstantEquiv : N ≃ₗ[R] (grade 0 : Submodule R (PolynomialMap R M N)) := {

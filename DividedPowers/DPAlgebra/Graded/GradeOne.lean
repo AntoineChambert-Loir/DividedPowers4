@@ -1,4 +1,4 @@
-import DividedPowers.DpAlgebra.Graded.Basic
+import DividedPowers.DPAlgebra.Graded.Basic
 
 noncomputable section
 

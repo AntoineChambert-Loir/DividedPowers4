@@ -75,18 +75,18 @@ end Subideal
 
 namespace DividedPowers
 
-/-- The structure of a sub-pd-ideal of a pd-ideal -/
-structure isSubDpIdeal {A : Type _} [CommSemiring A] {I : Ideal A} (hI : DividedPowers I)
+/-- The structure of a sub-dp-ideal of a dp-ideal -/
+structure isSubDPIdeal {A : Type _} [CommSemiring A] {I : Ideal A} (hI : DividedPowers I)
   (J : Ideal A) : Prop where
   isSubIdeal : J ≤ I
   dpow_mem : ∀ n (_ : n ≠ 0), ∀ j ∈ J, hI.dpow n j ∈ J
-#align divided_powers.is_sub_pd_ideal DividedPowers.isSubDpIdeal
+#align divided_powers.is_sub_pd_ideal DividedPowers.isSubDPIdeal
 
-section isSubDpIdeal
+section isSubDPIdeal
 
 variable {A : Type _} [CommSemiring A] {I : Ideal A} (hI : DividedPowers I)
 
-def isSubDpIdeal.dividedPowers {J : Ideal A} (hJ : isSubDpIdeal hI J) [∀ x, Decidable (x ∈ J)] :
+def isSubDPIdeal.dividedPowers {J : Ideal A} (hJ : isSubDPIdeal hI J) [∀ x, Decidable (x ∈ J)] :
     DividedPowers J where
   dpow n x := if x ∈ J then hI.dpow n x else 0
   dpow_null {n x} hx := by dsimp; rw [if_neg hx]
@@ -105,17 +105,17 @@ def isSubDpIdeal.dividedPowers {J : Ideal A} (hJ : isSubDpIdeal hI J) [∀ x, De
     simp_rw [if_pos hx]
     rw [if_pos (hJ.dpow_mem n hn x hx)]
     exact hI.dpow_comp m hn (hJ.isSubIdeal hx)
-#align divided_powers.is_sub_pd_ideal.divided_powers DividedPowers.isSubDpIdeal.dividedPowers
+#align divided_powers.is_sub_pd_ideal.divided_powers DividedPowers.isSubDPIdeal.dividedPowers
 
 -- TODO : CommSemiring ? 
 
-/-- The ideal J ⊓ I is a sub-pd-ideal of I, 
+/-- The ideal J ⊓ I is a sub-dp-ideal of I, 
   if and only if (on I) the divided powers have some compatiblity mod J. 
   (The necessity was proved as a sanity check.) -/
-theorem isSubDpIdeal_inf_iff 
+theorem isSubDPIdeal_inf_iff 
     {A : Type _} [CommRing A] {I : Ideal A} (hI : DividedPowers I) 
     (J : Ideal A) :
-    isSubDpIdeal hI (J ⊓ I) ↔
+    isSubDPIdeal hI (J ⊓ I) ↔
       ∀ (n : ℕ) (a b : A) (_ : a ∈ I) (_ : b ∈ I) (_ : a - b ∈ J),
         hI.dpow n a - hI.dpow n b ∈ J :=
   by
@@ -134,11 +134,11 @@ theorem isSubDpIdeal_inf_iff
   · refine' ⟨SemilatticeInf.inf_le_right J I, fun n hn a ha => ⟨_, hI.dpow_mem hn ha.right⟩⟩
     rw [← sub_zero (hI.dpow n a), ← hI.dpow_eval_zero hn]
     exact hIJ n a 0 ha.right I.zero_mem (J.sub_mem ha.left J.zero_mem)
-#align divided_powers.is_sub_pd_ideal_inf_iff DividedPowers.isSubDpIdeal_inf_iff
+#align divided_powers.is_sub_pd_ideal_inf_iff DividedPowers.isSubDPIdeal_inf_iff
 
 /-- Lemma 3.6 of [BO] (Antoine) -/
-theorem span_isSubDpIdeal_iff (S : Set A) (hS : S ⊆ I) :
-  isSubDpIdeal hI (Ideal.span S) ↔ 
+theorem span_isSubDPIdeal_iff (S : Set A) (hS : S ⊆ I) :
+  isSubDPIdeal hI (Ideal.span S) ↔ 
     ∀ (n : ℕ) (_ : n ≠ 0), ∀ s ∈ S, hI.dpow n s ∈ Ideal.span S :=
   by
   constructor
@@ -148,7 +148,7 @@ theorem span_isSubDpIdeal_iff (S : Set A) (hS : S ⊆ I) :
   · -- interesting direction,
     intro hhI
     have hSI := Ideal.span_le.mpr hS
-    apply isSubDpIdeal.mk hSI
+    apply isSubDPIdeal.mk hSI
     intro n hn z hz; revert n
     apply Submodule.span_induction' _ _  _ _ hz
     ·-- case of elements of S
@@ -171,7 +171,7 @@ theorem span_isSubDpIdeal_iff (S : Set A) (hS : S ⊆ I) :
       simp only [Algebra.id.smul_eq_mul]
       rw [hI.dpow_smul n (hSI hxI)]
       exact Ideal.mul_mem_left (Ideal.span S) (a ^ n) (hx n hn)
-#align divided_powers.span_is_sub_pd_ideal_iff DividedPowers.span_isSubDpIdeal_iff
+#align divided_powers.span_is_sub_pd_ideal_iff DividedPowers.span_isSubDPIdeal_iff
 
 theorem generated_dpow_isSubIdeal {S : Set A} (hS : S ⊆ I) :
     Ideal.span {y : A | ∃ (n : ℕ) (_ : n ≠ 0) (x : A) (_ : x ∈ S), y = hI.dpow n x} ≤ I :=
@@ -182,11 +182,11 @@ theorem generated_dpow_isSubIdeal {S : Set A} (hS : S ⊆ I) :
   exact hI.dpow_mem hn (hS hx)
 #align divided_powers.generated_dpow_is_sub_ideal DividedPowers.generated_dpow_isSubIdeal
 
-theorem isSubDpIdeal_sup {J K : Ideal A} 
-  (hJ : isSubDpIdeal hI J) (hK : isSubDpIdeal hI K) :
-  isSubDpIdeal hI (J ⊔ K) :=
+theorem isSubDPIdeal_sup {J K : Ideal A} 
+  (hJ : isSubDPIdeal hI J) (hK : isSubDPIdeal hI K) :
+  isSubDPIdeal hI (J ⊔ K) :=
   by
-  rw [← J.span_eq, ← K.span_eq, ← Ideal.span_union, span_isSubDpIdeal_iff]
+  rw [← J.span_eq, ← K.span_eq, ← Ideal.span_union, span_isSubDPIdeal_iff]
   · intro n hn a ha
     cases' ha with ha ha
     . apply Ideal.span_mono (Set.subset_union_left _ _)
@@ -194,7 +194,7 @@ theorem isSubDpIdeal_sup {J K : Ideal A}
     . apply Ideal.span_mono (Set.subset_union_right _ _)
       rw [K.span_eq]; exact hK.2 n hn a ha
   . rw [Set.union_subset_iff]; exact ⟨hJ.1, hK.1⟩
-#align divided_powers.is_sub_pd_ideal_sup DividedPowers.isSubDpIdeal_sup
+#align divided_powers.is_sub_pd_ideal_sup DividedPowers.isSubDPIdeal_sup
 
 
 theorem Ideal.iSup_eq_span {ι : Type _} (p : ι → Ideal A) : (⨆ i, p i) = Ideal.span (⋃ i, ↑(p i)) :=
@@ -202,11 +202,11 @@ theorem Ideal.iSup_eq_span {ι : Type _} (p : ι → Ideal A) : (⨆ i, p i) = I
 #align divided_powers.ideal.supr_eq_span DividedPowers.Ideal.iSup_eq_span
 
 
-theorem isSubDpIdeal_iSup {ι : Type _} 
-  {J : ι → Ideal A} (hJ : ∀ i, isSubDpIdeal hI (J i)) :
-  isSubDpIdeal hI (iSup J) := by
+theorem isSubDPIdeal_iSup {ι : Type _} 
+  {J : ι → Ideal A} (hJ : ∀ i, isSubDPIdeal hI (J i)) :
+  isSubDPIdeal hI (iSup J) := by
   rw [Ideal.iSup_eq_span] 
-  rw [span_isSubDpIdeal_iff]
+  rw [span_isSubDPIdeal_iff]
   · rintro n hn a
     rw [Set.mem_iUnion]
     rintro ⟨i, ha⟩
@@ -214,81 +214,81 @@ theorem isSubDpIdeal_iSup {ι : Type _}
     rw [Ideal.span_eq]; exact (hJ i).2 n hn a ha
   · rw [Set.iUnion_subset_iff]
     intro i; exact (hJ i).1
-#align divided_powers.is_sub_pd_ideal_supr DividedPowers.isSubDpIdeal_iSup
+#align divided_powers.is_sub_pd_ideal_supr DividedPowers.isSubDPIdeal_iSup
 
-theorem isSubDpIdeal_map {B : Type _} [CommSemiring B] {J : Ideal B} (hJ : DividedPowers J)
+theorem isSubDPIdeal_map {B : Type _} [CommSemiring B] {J : Ideal B} (hJ : DividedPowers J)
     {f : A →+* B} (hf : isDPMorphism hI hJ f) 
-    (K : Ideal A) (hK : isSubDpIdeal hI K) :
-    isSubDpIdeal hJ (Ideal.map f K) := by
+    (K : Ideal A) (hK : isSubDPIdeal hI K) :
+    isSubDPIdeal hJ (Ideal.map f K) := by
   simp only [Ideal.map]
-  rw [span_isSubDpIdeal_iff]
+  rw [span_isSubDPIdeal_iff]
   rintro n hn y ⟨x, hx, rfl⟩
   rw [hf.2 n x (hK.1 hx)]
   apply Ideal.mem_map_of_mem
   exact hK.2 n hn x hx
   rintro y ⟨x, hx, rfl⟩
   exact hf.1 (Ideal.mem_map_of_mem f (hK.1 hx))
-#align divided_powers.is_sub_pd_ideal_map DividedPowers.isSubDpIdeal_map
+#align divided_powers.is_sub_pd_ideal_map DividedPowers.isSubDPIdeal_map
 
-end isSubDpIdeal
+end isSubDPIdeal
 
-/-- A `sub-pd-ideal` of `I` is a sub-ideal `J` of `I` such that for all `n ∈ ℕ ≥ 0` and all
+/-- A `sub-dp-ideal` of `I` is a sub-ideal `J` of `I` such that for all `n ∈ ℕ ≥ 0` and all
   `j ∈ J`, `hI.dpow n j ∈ J`. -/
 @[ext]
-structure SubDpIdeal {A : Type _} [CommSemiring A] {I : Ideal A} (hI : DividedPowers I) where
+structure SubDPIdeal {A : Type _} [CommSemiring A] {I : Ideal A} (hI : DividedPowers I) where
   carrier : Ideal A
   isSubIdeal : carrier ≤ I
   dpow_mem : ∀ (n : ℕ) (_ : n ≠ 0), ∀ j ∈ carrier, hI.dpow n j ∈ carrier
-#align divided_powers.sub_pd_ideal DividedPowers.SubDpIdeal
+#align divided_powers.sub_pd_ideal DividedPowers.SubDPIdeal
 
-namespace SubDpIdeal
+namespace SubDPIdeal
 
 variable {A : Type _} [CommSemiring A] {I : Ideal A} (hI : DividedPowers I)
 
-def mk' (J : Ideal A) (hJ : hI.isSubDpIdeal J) : hI.SubDpIdeal :=
+def mk' (J : Ideal A) (hJ : hI.isSubDPIdeal J) : hI.SubDPIdeal :=
   ⟨J, hJ.1, hJ.2⟩
-#align divided_powers.sub_pd_ideal.mk' DividedPowers.SubDpIdeal.mk'
+#align divided_powers.sub_pd_ideal.mk' DividedPowers.SubDPIdeal.mk'
 
-instance : SetLike (SubDpIdeal hI) A where
+instance : SetLike (SubDPIdeal hI) A where
   coe s := s.carrier
   coe_injective' p q h := by 
     rw [SetLike.coe_set_eq] at h
     cases p ; cases q ; congr
 
 @[coe]
-def toIdeal (J : hI.SubDpIdeal) : Ideal A := J.carrier
+def toIdeal (J : hI.SubDPIdeal) : Ideal A := J.carrier
 
-instance : CoeOut (hI.SubDpIdeal) (Ideal A) :=
+instance : CoeOut (hI.SubDPIdeal) (Ideal A) :=
   ⟨fun J => J.toIdeal⟩
 
-theorem coe_def (J : SubDpIdeal hI) : J.toIdeal = J.carrier :=
+theorem coe_def (J : SubDPIdeal hI) : J.toIdeal = J.carrier :=
   rfl
-#align divided_powers.sub_pd_ideal.coe_def DividedPowers.SubDpIdeal.coe_def
+#align divided_powers.sub_pd_ideal.coe_def DividedPowers.SubDPIdeal.coe_def
 
 @[simp]
-theorem memCarrier {s : SubDpIdeal hI} {x : A} : x ∈ s.carrier ↔ x ∈ s :=
+theorem memCarrier {s : SubDPIdeal hI} {x : A} : x ∈ s.carrier ↔ x ∈ s :=
   Iff.rfl
-#align divided_powers.sub_pd_ideal.mem_carrier DividedPowers.SubDpIdeal.memCarrier
+#align divided_powers.sub_pd_ideal.mem_carrier DividedPowers.SubDPIdeal.memCarrier
 
 variable {hI}
-def toIsSubDpIdeal (J : SubDpIdeal hI) : isSubDpIdeal hI J.carrier := {
+def toIsSubDPIdeal (J : SubDPIdeal hI) : isSubDPIdeal hI J.carrier := {
   isSubIdeal := J.isSubIdeal, 
   dpow_mem := J.dpow_mem }
-#align divided_powers.sub_pd_ideal.is_sub_pd_ideal DividedPowers.SubDpIdeal.toIsSubDpIdeal
+#align divided_powers.sub_pd_ideal.is_sub_pd_ideal DividedPowers.SubDPIdeal.toIsSubDPIdeal
 
-def SubDpIdeal.mk' (J : Ideal A) (hJ : isSubDpIdeal hI J) : SubDpIdeal hI := 
+def SubDPIdeal.mk' (J : Ideal A) (hJ : isSubDPIdeal hI J) : SubDPIdeal hI := 
 { carrier := J,
   isSubIdeal := hJ.isSubIdeal, 
   dpow_mem := hJ.dpow_mem }
 
-lemma IsSubDpIdeal_of_SubDpIdeal (J : SubDpIdeal hI) : 
-  SubDpIdeal.mk' J.carrier J.toIsSubDpIdeal = J := rfl
+lemma IsSubDPIdeal_of_SubDPIdeal (J : SubDPIdeal hI) : 
+  SubDPIdeal.mk' J.carrier J.toIsSubDPIdeal = J := rfl
 
-lemma SubDpIdeal_of_IsSubDpIdeal {J  : Ideal A} (hJ : isSubDpIdeal hI J) :
-  (SubDpIdeal.mk' J hJ).toIsSubDpIdeal = hJ := rfl
+lemma SubDPIdeal_of_IsSubDPIdeal {J  : Ideal A} (hJ : isSubDPIdeal hI J) :
+  (SubDPIdeal.mk' J hJ).toIsSubDPIdeal = hJ := rfl
 
-/-- If J is an ideal of A, then J ⬝ I is a sub-pd-ideal of I. (Berthelot, 1.6.1 (i)) -/
-def prod (J : Ideal A) : SubDpIdeal hI
+/-- If J is an ideal of A, then J ⬝ I is a sub-dp-ideal of I. (Berthelot, 1.6.1 (i)) -/
+def prod (J : Ideal A) : SubDPIdeal hI
     where
   carrier := I • J
   isSubIdeal := Ideal.mul_le_right
@@ -307,60 +307,60 @@ def prod (J : Ideal A) : SubDpIdeal hI
       by_cases hk0 : k = 0
       · rw [hk0]; apply Ideal.mul_mem_left (I • J); exact hy' _ hn
       · apply Ideal.mul_mem_right _ (I • J); exact hx' k hk0
-#align divided_powers.sub_pd_ideal.prod DividedPowers.SubDpIdeal.prod
+#align divided_powers.sub_pd_ideal.prod DividedPowers.SubDPIdeal.prod
 
 section CompleteLattice
 
-instance : CoeOut (SubDpIdeal hI) { J : Ideal A // J ≤ I } :=
+instance : CoeOut (SubDPIdeal hI) { J : Ideal A // J ≤ I } :=
   ⟨fun J => ⟨J.carrier, J.isSubIdeal⟩⟩
 
-instance : LE (SubDpIdeal hI) :=
+instance : LE (SubDPIdeal hI) :=
   ⟨fun J J' => J.carrier ≤ J'.carrier⟩
 
-theorem le_iff {J J' : SubDpIdeal hI} : J ≤ J' ↔ J.carrier ≤ J'.carrier :=
+theorem le_iff {J J' : SubDPIdeal hI} : J ≤ J' ↔ J.carrier ≤ J'.carrier :=
   Iff.rfl
-#align divided_powers.sub_pd_ideal.le_iff DividedPowers.SubDpIdeal.le_iff
+#align divided_powers.sub_pd_ideal.le_iff DividedPowers.SubDPIdeal.le_iff
 
-instance : LT (SubDpIdeal hI) :=
+instance : LT (SubDPIdeal hI) :=
   ⟨fun J J' => J.carrier < J'.carrier⟩
 
-theorem lt_iff {J J' : SubDpIdeal hI} : J < J' ↔ J.carrier < J'.carrier :=
+theorem lt_iff {J J' : SubDPIdeal hI} : J < J' ↔ J.carrier < J'.carrier :=
   Iff.rfl
-#align divided_powers.sub_pd_ideal.lt_iff DividedPowers.SubDpIdeal.lt_iff
+#align divided_powers.sub_pd_ideal.lt_iff DividedPowers.SubDPIdeal.lt_iff
 
-/-- I is a sub-pd-ideal ot itself. -/
-instance : Top (SubDpIdeal hI) :=
+/-- I is a sub-dp-ideal ot itself. -/
+instance : Top (SubDPIdeal hI) :=
   ⟨{  carrier := I
       isSubIdeal := le_refl _
       dpow_mem := fun _ hn _x hx => hI.dpow_mem hn hx }⟩
 
-instance inhabited : Inhabited hI.SubDpIdeal :=
+instance inhabited : Inhabited hI.SubDPIdeal :=
   ⟨⊤⟩
-#align divided_powers.sub_pd_ideal.inhabited DividedPowers.SubDpIdeal.inhabited
+#align divided_powers.sub_pd_ideal.inhabited DividedPowers.SubDPIdeal.inhabited
 
-/-- (0) is a sub-pd-ideal ot the pd-ideal I. -/
-instance : Bot (SubDpIdeal hI) :=
+/-- (0) is a sub-dp-ideal ot the dp-ideal I. -/
+instance : Bot (SubDPIdeal hI) :=
   ⟨{  carrier := ⊥
       isSubIdeal := bot_le
       dpow_mem := fun n hn x hx => by
         rw [Ideal.mem_bot.mp hx, hI.dpow_eval_zero hn, Ideal.mem_bot] }⟩
 
 --Section 1.8 of [B]
--- The intersection of two sub-PD ideals is a sub-PD ideal.
-instance : Inf (SubDpIdeal hI) :=
+-- The intersection of two sub-dp-ideals is a sub-dp-ideal.
+instance : Inf (SubDPIdeal hI) :=
   ⟨fun J J' =>
     { carrier := J.carrier ⊓ J'.carrier
       isSubIdeal := fun _ hx => J.isSubIdeal hx.1
       dpow_mem := fun n hn x hx =>
         ⟨J.dpow_mem n hn x hx.1, J'.dpow_mem n hn x hx.2⟩ }⟩
 
-theorem inf_carrier_def (J J' : SubDpIdeal hI) : (J ⊓ J').carrier = J.carrier ⊓ J'.carrier :=
+theorem inf_carrier_def (J J' : SubDPIdeal hI) : (J ⊓ J').carrier = J.carrier ⊓ J'.carrier :=
   rfl
-#align divided_powers.sub_pd_ideal.inf_carrier_def DividedPowers.SubDpIdeal.inf_carrier_def
+#align divided_powers.sub_pd_ideal.inf_carrier_def DividedPowers.SubDPIdeal.inf_carrier_def
 
-instance : InfSet (SubDpIdeal hI) :=
+instance : InfSet (SubDPIdeal hI) :=
   ⟨fun S =>
-    { carrier := ⨅ s ∈ Insert.insert ⊤ S, (s : hI.SubDpIdeal).carrier
+    { carrier := ⨅ s ∈ Insert.insert ⊤ S, (s : hI.SubDPIdeal).carrier
       isSubIdeal := fun x hx => by
         simp only [Ideal.mem_iInf] at hx 
         exact hx ⊤ (Set.mem_insert ⊤ S)
@@ -370,22 +370,22 @@ instance : InfSet (SubDpIdeal hI) :=
         intro s hs
         exact s.dpow_mem n hn x (hx s hs) }⟩
 
-theorem sInf_carrier_def (S : Set (SubDpIdeal hI)) :
-    (sInf S).carrier = ⨅ s ∈ Insert.insert ⊤ S, (s : hI.SubDpIdeal).carrier :=
+theorem sInf_carrier_def (S : Set (SubDPIdeal hI)) :
+    (sInf S).carrier = ⨅ s ∈ Insert.insert ⊤ S, (s : hI.SubDPIdeal).carrier :=
   rfl
-#align divided_powers.sub_pd_ideal.Inf_carrier_def DividedPowers.SubDpIdeal.sInf_carrier_def
+#align divided_powers.sub_pd_ideal.Inf_carrier_def DividedPowers.SubDPIdeal.sInf_carrier_def
 
-instance : Sup (SubDpIdeal hI) :=
+instance : Sup (SubDPIdeal hI) :=
   ⟨fun J J' =>
-    SubDpIdeal.mk' (J.carrier ⊔ J'.carrier) (isSubDpIdeal_sup hI J.toIsSubDpIdeal J'.toIsSubDpIdeal)⟩
+    SubDPIdeal.mk' (J.carrier ⊔ J'.carrier) (isSubDPIdeal_sup hI J.toIsSubDPIdeal J'.toIsSubDPIdeal)⟩
 
-theorem sup_carrier_def (J J' : SubDpIdeal hI) : (J ⊔ J').carrier = J ⊔ J' :=
+theorem sup_carrier_def (J J' : SubDPIdeal hI) : (J ⊔ J').carrier = J ⊔ J' :=
   rfl
-#align divided_powers.sub_dp_ideal.sup_carrier_def DividedPowers.SubDpIdeal.sup_carrier_def
+#align divided_powers.sub_dp_ideal.sup_carrier_def DividedPowers.SubDPIdeal.sup_carrier_def
 
-instance : SupSet (SubDpIdeal hI) :=
+instance : SupSet (SubDPIdeal hI) :=
   ⟨fun S =>
-    SubDpIdeal.mk' (sSup ((fun J => J.carrier) '' S)) <|
+    SubDPIdeal.mk' (sSup ((fun J => J.carrier) '' S)) <|
       by
       have h : (⋃ (i : Ideal A) (_ : i ∈ (fun J => J.carrier) '' S), ↑i) ⊆ (I : Set A) :=
         by
@@ -395,7 +395,7 @@ instance : SupSet (SubDpIdeal hI) :=
         rw [← hJ'.2] at haJ 
         exact J'.isSubIdeal haJ.2
       rw [sSup_eq_iSup, Submodule.iSup_eq_span', Ideal.submodule_span_eq,
-        span_isSubDpIdeal_iff hI _ h]
+        span_isSubDPIdeal_iff hI _ h]
       rintro n hn x ⟨T, hT, hTx⟩
       obtain ⟨J, hJ⟩ := hT
       rw [← hJ] at hTx 
@@ -405,15 +405,15 @@ instance : SupSet (SubDpIdeal hI) :=
       obtain ⟨K, hKS, rfl⟩ := hJ'
       exact K.dpow_mem n hn x h'⟩
 
-theorem sSup_carrier_def (S : Set (SubDpIdeal hI)) :
+theorem sSup_carrier_def (S : Set (SubDPIdeal hI)) :
     (sSup S).carrier = sSup ((toIdeal hI) '' S) :=
   rfl
-#align divided_powers.sub_pd_ideal.Sup_carrier_def DividedPowers.SubDpIdeal.sSup_carrier_def
+#align divided_powers.sub_pd_ideal.Sup_carrier_def DividedPowers.SubDPIdeal.sSup_carrier_def
 
-instance : CompleteLattice (SubDpIdeal hI) := by
+instance : CompleteLattice (SubDPIdeal hI) := by
   refine' Function.Injective.completeLattice 
-    (fun J : SubDpIdeal hI => (J : { J : Ideal A // J ≤ I }))
-    (fun J J' h => by simpa only [SubDpIdeal.ext_iff, Subtype.mk.injEq] using h) 
+    (fun J : SubDPIdeal hI => (J : { J : Ideal A // J ≤ I }))
+    (fun J J' h => by simpa only [SubDPIdeal.ext_iff, Subtype.mk.injEq] using h) 
     (fun J J' => by rw [Subideal.sup_def] ; rfl) 
     (fun J J' => by rw [Subideal.inf_def] ; rfl)
     _ _ (by rw [← Subideal.top_def] ; rfl ) (by rw [← Subideal.bot_def] ; rfl)
@@ -422,7 +422,7 @@ instance : CompleteLattice (SubDpIdeal hI) := by
     rw [Subideal.sSup_def, Subtype.ext_iff]
     dsimp
     rw [sSup_carrier_def, sSup_image, sSup_image, iSup_range]
-    have : ∀ J : hI.SubDpIdeal,
+    have : ∀ J : hI.SubDPIdeal,
       ((⨆ (_ : J ∈ S), (J : { B : Ideal A // B ≤ I }) : { B : Ideal A // B ≤ I }) : Ideal A) =
         ⨆ (_ : J ∈ S), (J : Ideal A) := by
       intro J
@@ -455,14 +455,14 @@ section Generated
 
 variable (hI)
 
-/-- The sub-pd-ideal of I generated by a family of elements of A. -/
-def generated (S : Set A) : SubDpIdeal hI :=
-  sInf {J : SubDpIdeal hI | S ⊆ J.carrier}
-#align divided_powers.sub_pd_ideal.generated DividedPowers.SubDpIdeal.generated
+/-- The sub-dp-ideal of I generated by a family of elements of A. -/
+def generated (S : Set A) : SubDPIdeal hI :=
+  sInf {J : SubDPIdeal hI | S ⊆ J.carrier}
+#align divided_powers.sub_pd_ideal.generated DividedPowers.SubDPIdeal.generated
 
-/-- The sub-pd-ideal of I generated by the family `hI.dpow n x`, 
+/-- The sub-dp-ideal of I generated by the family `hI.dpow n x`, 
   where `n ≠ 0` and `x ∈ S`. -/
-def generatedDpow {S : Set A} (hS : S ⊆ I) : SubDpIdeal hI
+def generatedDpow {S : Set A} (hS : S ⊆ I) : SubDPIdeal hI
     where
   carrier := Ideal.span {y : A | ∃ (n : ℕ) (_ : n ≠ 0) (x : A) (_ : x ∈ S), y = hI.dpow n x}
   isSubIdeal := hI.generated_dpow_isSubIdeal hS
@@ -488,26 +488,26 @@ def generatedDpow {S : Set A} (hS : S ⊆ I) : SubDpIdeal hI
     · intro a x hx hx_pow n hn
       rw [smul_eq_mul, hI.dpow_smul n (hSI hx)]
       exact Ideal.mul_mem_left (Ideal.span _) (a ^ n) (hx_pow n hn)
-#align divided_powers.sub_pd_ideal.generated_dpow DividedPowers.SubDpIdeal.generatedDpow
+#align divided_powers.sub_pd_ideal.generated_dpow DividedPowers.SubDPIdeal.generatedDpow
 
 theorem generatedDpow_carrier {S : Set A} (hS : S ⊆ I) :
     (generatedDpow hI hS).carrier =
       Ideal.span {y : A | ∃ (n : ℕ) (_ : n ≠ 0) (x : A) (_ : x ∈ S), y = hI.dpow n x} :=
   rfl
-#align divided_powers.sub_pd_ideal.generated_dpow_carrier DividedPowers.SubDpIdeal.generatedDpow_carrier
+#align divided_powers.sub_pd_ideal.generated_dpow_carrier DividedPowers.SubDPIdeal.generatedDpow_carrier
 
 theorem le_generatedDpow {S : Set A} (hS : S ⊆ I) : S ⊆ (generatedDpow hI hS).carrier := fun x hx =>
   Ideal.subset_span ⟨1, one_ne_zero, x, hx, by rw [hI.dpow_one (hS hx)]⟩
-#align divided_powers.sub_pd_ideal.le_generated_dpow DividedPowers.SubDpIdeal.le_generatedDpow
+#align divided_powers.sub_pd_ideal.le_generated_dpow DividedPowers.SubDPIdeal.le_generatedDpow
 
-theorem generated_dpow_le (S : Set A) (J : SubDpIdeal hI) (hSJ : S ⊆ J.carrier) :
+theorem generated_dpow_le (S : Set A) (J : SubDPIdeal hI) (hSJ : S ⊆ J.carrier) :
     Ideal.span {y : A | ∃ (n : ℕ) (_ : n ≠ 0) (x : A) (_ : x ∈ S), y = hI.dpow n x} ≤ J.carrier :=
   by
   rw [Ideal.span_le]
   rintro y ⟨n, hn, x, hx, hxy⟩
   rw [hxy]
   exact J.dpow_mem n hn x (hSJ hx)
-#align divided_powers.sub_pd_ideal.generated_dpow_le DividedPowers.SubDpIdeal.generated_dpow_le
+#align divided_powers.sub_pd_ideal.generated_dpow_le DividedPowers.SubDPIdeal.generated_dpow_le
 
 theorem generated_carrier_eq {S : Set A} (hS : S ⊆ I) :
     (generated hI S).carrier =
@@ -515,7 +515,7 @@ theorem generated_carrier_eq {S : Set A} (hS : S ⊆ I) :
   by
   simp only [generated, sInf_carrier_def]
   apply le_antisymm
-  · have h : generatedDpow hI hS ∈ insert ⊤ {J : hI.SubDpIdeal | S ⊆ ↑J.carrier} :=
+  · have h : generatedDpow hI hS ∈ insert ⊤ {J : hI.SubDPIdeal | S ⊆ ↑J.carrier} :=
       by
       apply Set.mem_insert_of_mem
       simp only [Set.mem_setOf_eq, generatedDpow_carrier]
@@ -530,11 +530,11 @@ theorem generated_carrier_eq {S : Set A} (hS : S ⊆ I) :
     cases' hJ with hJI hJS
     · rw [hJI]; exact hS
     · exact hJS
-#align divided_powers.sub_pd_ideal.generated_carrier_eq DividedPowers.SubDpIdeal.generated_carrier_eq
+#align divided_powers.sub_pd_ideal.generated_carrier_eq DividedPowers.SubDPIdeal.generated_carrier_eq
 
 end Generated
 
-end SubDpIdeal
+end SubDPIdeal
 
 section Ker
 
@@ -543,18 +543,18 @@ section Ker
 variable {A : Type _} [CommRing A] {I : Ideal A} (hI : DividedPowers I)
   {B : Type _} [CommRing B] {J : Ideal B} (hJ : DividedPowers J)
 
-theorem isSubDpIdeal_ker {f : A →+* B} (hf : isDPMorphism hI hJ f) :
-    isSubDpIdeal hI (RingHom.ker f ⊓ I) :=
+theorem isSubDPIdeal_ker {f : A →+* B} (hf : isDPMorphism hI hJ f) :
+    isSubDPIdeal hI (RingHom.ker f ⊓ I) :=
   by
-  rw [isSubDpIdeal_inf_iff]
+  rw [isSubDPIdeal_inf_iff]
   simp only [isDPMorphism] at hf 
   intro n a b ha hb
   simp only [RingHom.sub_mem_ker_iff]
   rw [← hf.2 n a ha, ← hf.2 n b hb]
   exact congr_arg _
-#align divided_powers.is_sub_pd_ideal_ker DividedPowers.isSubDpIdeal_ker
+#align divided_powers.is_sub_pd_ideal_ker DividedPowers.isSubDPIdeal_ker
 
-def PdMorphism.ker (f : dpMorphism hI hJ) : SubDpIdeal hI
+def DPMorphism.ker (f : dpMorphism hI hJ) : SubDPIdeal hI
     where
   carrier := RingHom.ker f.toRingHom ⊓ I
   isSubIdeal := inf_le_right
@@ -564,7 +564,7 @@ def PdMorphism.ker (f : dpMorphism hI hJ) : SubDpIdeal hI
     intro ha ha'
     rw [← f.isDPMorphism.2 n a ha', ha]
     exact ⟨dpow_eval_zero hJ hn, hI.dpow_mem hn ha'⟩
-#align divided_powers.pd_morphism.ker DividedPowers.PdMorphism.ker
+#align divided_powers.pd_morphism.ker DividedPowers.DPMorphism.ker
 
 end Ker
 
@@ -573,7 +573,7 @@ section Equalizer
 variable {A : Type _} [CommSemiring A] {I : Ideal A} (hI : DividedPowers I)
 
 /- TODO : The set of elements where two divided
-powers coincide is the largest ideal which is a sub-pd-ideal in both -/
+powers coincide is the largest ideal which is a sub-dp-ideal in both -/
 def dpEqualizer {A : Type _} [CommSemiring A] {I : Ideal A} (hI hI' : DividedPowers I) : Ideal A
     where
   carrier := {a ∈ I | ∀ n : ℕ, hI.dpow n a = hI'.dpow n a}
@@ -609,10 +609,10 @@ theorem mem_dpEqualizer_iff {A : Type _} [CommSemiring A] {I : Ideal A} (hI hI' 
 
 #align divided_powers.mem_pd_equalizer_iff DividedPowers.mem_dpEqualizer_iff
 
-theorem pdEqualizer_is_pd_ideal_left {A : Type _} [CommSemiring A] {I : Ideal A}
-    (hI hI' : DividedPowers I) : DividedPowers.isSubDpIdeal hI (dpEqualizer hI hI') :=
+theorem dpEqualizer_is_dp_ideal_left {A : Type _} [CommSemiring A] {I : Ideal A}
+    (hI hI' : DividedPowers I) : DividedPowers.isSubDPIdeal hI (dpEqualizer hI hI') :=
   by
-  apply isSubDpIdeal.mk
+  apply isSubDPIdeal.mk
   · intro x hx
     rw [mem_dpEqualizer_iff] at hx 
     exact hx.1
@@ -622,12 +622,12 @@ theorem pdEqualizer_is_pd_ideal_left {A : Type _} [CommSemiring A] {I : Ideal A}
     apply hI.dpow_mem hn hx.1
     intro m
     rw [hI.dpow_comp m hn hx.1, hx.2, hx.2, hI'.dpow_comp m hn hx.1]
-#align divided_powers.pd_equalizer_is_pd_ideal_left DividedPowers.pdEqualizer_is_pd_ideal_left
+#align divided_powers.pd_equalizer_is_pd_ideal_left DividedPowers.dpEqualizer_is_dp_ideal_left
 
-theorem pdEqualizer_is_pd_ideal_right {A : Type _} [CommSemiring A] {I : Ideal A}
-    (hI hI' : DividedPowers I) : DividedPowers.isSubDpIdeal hI' (dpEqualizer hI hI') :=
+theorem dpEqualizer_is_dp_ideal_right {A : Type _} [CommSemiring A] {I : Ideal A}
+    (hI hI' : DividedPowers I) : DividedPowers.isSubDPIdeal hI' (dpEqualizer hI hI') :=
   by
-  apply isSubDpIdeal.mk
+  apply isSubDPIdeal.mk
   · intro x hx
     rw [mem_dpEqualizer_iff] at hx 
     exact hx.1
@@ -637,10 +637,10 @@ theorem pdEqualizer_is_pd_ideal_right {A : Type _} [CommSemiring A] {I : Ideal A
     apply hI'.dpow_mem hn hx.1
     intro m
     rw [← hx.2, hI.dpow_comp m hn hx.1, hx.2, hx.2, hI'.dpow_comp m hn hx.1]
-#align divided_powers.pd_equalizer_is_pd_ideal_right DividedPowers.pdEqualizer_is_pd_ideal_right
+#align divided_powers.pd_equalizer_is_pd_ideal_right DividedPowers.dpEqualizer_is_dp_ideal_right
 
 
-theorem le_equalizer_of_pd_morphism {A : Type _} [CommSemiring A] {I : Ideal A} (hI : DividedPowers I)
+theorem le_equalizer_of_dp_morphism {A : Type _} [CommSemiring A] {I : Ideal A} (hI : DividedPowers I)
     {B : Type _} [CommSemiring B] (f : A →+* B) {K : Ideal B} (hI_le_K : Ideal.map f I ≤ K)
     (hK hK' : DividedPowers K) (hIK : isDPMorphism hI hK f) (hIK' : isDPMorphism hI hK' f) :
     Ideal.map f I ≤ dpEqualizer hK hK' := by
@@ -653,14 +653,14 @@ theorem le_equalizer_of_pd_morphism {A : Type _} [CommSemiring A] {I : Ideal A} 
   simp only [isDPMorphism, Ideal.map_id, RingHom.id_apply] at hIK hIK' 
   intro n
   rw [hIK.2 n a ha, hIK'.2 n a ha]
-#align divided_powers.le_equalizer_of_pd_morphism DividedPowers.le_equalizer_of_pd_morphism
+#align divided_powers.le_equalizer_of_pd_morphism DividedPowers.le_equalizer_of_dp_morphism
 
-/-- If there is a pd-structure on I(A/J) such that the quotient map is 
-   a pd-morphism, then J ⊓ I is a sub-pd-ideal of I -/
+/-- If there is a dp-structure on I(A/J) such that the quotient map is 
+   a dp-morphism, then J ⊓ I is a sub-dp-ideal of I -/
 def interQuot {A : Type _} [CommRing A] {I : Ideal A} (hI : DividedPowers I)
     (J : Ideal A) (hJ : DividedPowers (I.map (Ideal.Quotient.mk J)))
     (φ : dpMorphism hI hJ) (hφ : φ.toRingHom = Ideal.Quotient.mk J) : 
-  SubDpIdeal hI where
+  SubDPIdeal hI where
   carrier := J ⊓ I
   isSubIdeal := by simp only [ge_iff_le, inf_le_right] 
   dpow_mem := fun n hn a ⟨haJ, haI⟩ =>
@@ -702,7 +702,7 @@ noncomputable def dpow : ℕ → B → B := fun n =>
   Function.extend (fun a => f a : I → B) (fun a => f (hI.dpow n a) : I → B) 0
 #align divided_powers.quotient.of_surjective.dpow DividedPowers.Quotient.OfSurjective.dpow
 
-variable (hIf : isSubDpIdeal hI (RingHom.ker f ⊓ I))
+variable (hIf : isSubDPIdeal hI (RingHom.ker f ⊓ I))
 
 variable {f}
 
@@ -713,7 +713,7 @@ theorem dpow_apply' {n : ℕ} {a : A} (ha : a ∈ I) : dpow hI f n (f a) = f (hI
   suffices : _
   rw [dif_pos this]
   rw [← sub_eq_zero, ← map_sub, ← RingHom.mem_ker]
-  rw [isSubDpIdeal_inf_iff] at hIf 
+  rw [isSubDPIdeal_inf_iff] at hIf 
   apply hIf n _ a _ ha
   rw [RingHom.mem_ker, map_sub, sub_eq_zero]
   rw [this.choose_spec]
@@ -722,7 +722,7 @@ theorem dpow_apply' {n : ℕ} {a : A} (ha : a ∈ I) : dpow hI f n (f a) = f (hI
 #align divided_powers.quotient.of_surjective.dpow_apply' DividedPowers.Quotient.OfSurjective.dpow_apply'
 
 /--
-When `f.ker ⊓ I` is a `sub_pd_ideal` of `I`, the dpow map for the ideal `I.map f` of the target -/
+When `f.ker ⊓ I` is a `sub_dp_ideal` of `I`, the dpow map for the ideal `I.map f` of the target -/
 noncomputable def dividedPowers : DividedPowers (I.map f)
     where
   dpow := dpow hI f
@@ -801,42 +801,42 @@ end OfSurjective
 
 end OfSurjective
 
-variable {J : Ideal A} (hIJ : isSubDpIdeal hI (J ⊓ I))
+variable {J : Ideal A} (hIJ : isSubDPIdeal hI (J ⊓ I))
 
 /- Tagged as noncomputable because it makes use of function.extend, 
-but under is_sub_pd_ideal hI (J ⊓ I), dpow_quot_eq proves that no choices are involved -/
+but under is_sub_dp_ideal hI (J ⊓ I), dpow_quot_eq proves that no choices are involved -/
 /-- The definition of divided powers on A ⧸ J -/
 noncomputable def dpow (J : Ideal A) : ℕ → A ⧸ J → A ⧸ J :=
   DividedPowers.Quotient.OfSurjective.dpow hI (Ideal.Quotient.mk J)
 #align divided_powers.quotient.dpow DividedPowers.Quotient.dpow
 
 --TODO: think about whether this should be a lemma
-private theorem isSubDpIdeal_aux : isSubDpIdeal hI (RingHom.ker (Ideal.Quotient.mk J) ⊓ I) := by
+private theorem isSubDPIdeal_aux : isSubDPIdeal hI (RingHom.ker (Ideal.Quotient.mk J) ⊓ I) := by
   simpa [Ideal.mk_ker] using hIJ
 
 -- We wish for a better API to denote I.map (ideal.quotient.mk J) as I ⧸ J
-/-- When `I ⊓ J` is a `sub_pd_ideal` of `I`, the dpow map for the ideal `I(A⧸J)` of the quotient -/
+/-- When `I ⊓ J` is a `sub_dp_ideal` of `I`, the dpow map for the ideal `I(A⧸J)` of the quotient -/
 noncomputable def dividedPowers : DividedPowers (I.map (Ideal.Quotient.mk J)) :=
   DividedPowers.Quotient.OfSurjective.dividedPowers hI Ideal.Quotient.mk_surjective
-    (isSubDpIdeal_aux hI hIJ)
+    (isSubDPIdeal_aux hI hIJ)
 #align divided_powers.quotient.divided_powers DividedPowers.Quotient.dividedPowers
 
 /-- Divided powers on the quotient are compatible with quotient map -/
 theorem dpow_apply {n : ℕ} {a : A} (ha : a ∈ I) :
     (dividedPowers hI hIJ).dpow n (Ideal.Quotient.mk J a) = (Ideal.Quotient.mk J) (hI.dpow n a) :=
   DividedPowers.Quotient.OfSurjective.dpow_apply hI Ideal.Quotient.mk_surjective
-    (isSubDpIdeal_aux hI hIJ) ha
+    (isSubDPIdeal_aux hI hIJ) ha
 #align divided_powers.quotient.dpow_apply DividedPowers.Quotient.dpow_apply
 
-theorem isPdMorphism : DividedPowers.isDPMorphism hI (dividedPowers hI hIJ) (Ideal.Quotient.mk J) :=
+theorem isDPMorphism : DividedPowers.isDPMorphism hI (dividedPowers hI hIJ) (Ideal.Quotient.mk J) :=
   DividedPowers.Quotient.OfSurjective.isDPMorphism hI Ideal.Quotient.mk_surjective
-    (isSubDpIdeal_aux hI hIJ)
-#align divided_powers.quotient.is_pd_morphism DividedPowers.Quotient.isPdMorphism
+    (isSubDPIdeal_aux hI hIJ)
+#align divided_powers.quotient.is_pd_morphism DividedPowers.Quotient.isDPMorphism
 
 theorem unique (hquot : DividedPowers (I.map (Ideal.Quotient.mk J)))
     (hm : DividedPowers.isDPMorphism hI hquot (Ideal.Quotient.mk J)) :
     hquot = dividedPowers hI hIJ :=
-  DividedPowers.Quotient.OfSurjective.unique hI Ideal.Quotient.mk_surjective (isSubDpIdeal_aux hI hIJ)
+  DividedPowers.Quotient.OfSurjective.unique hI Ideal.Quotient.mk_surjective (isSubDPIdeal_aux hI hIJ)
     hquot hm
 #align divided_powers.quotient.unique DividedPowers.Quotient.unique
 

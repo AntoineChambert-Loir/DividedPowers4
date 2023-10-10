@@ -71,9 +71,9 @@ theorem φ_apply (m : M) (n : N) : φ R S M N (m ⊗ₜ[R] n) = m ⊗ₜ[S] n :=
 theorem φ_surjective : Function.Surjective (φ R S M N) := by
   intro z
   induction z using TensorProduct.induction_on with
-  | C0 => use 0; simp only [map_zero]
-  | C1 m n => use m ⊗ₜ n; simp only [φ_apply]
-  | Cp x y hx hy => 
+  | zero => use 0; simp only [map_zero]
+  | tmul m n => use m ⊗ₜ n; simp only [φ_apply]
+  | add x y hx hy => 
       obtain ⟨a, rfl⟩ := hx
       obtain ⟨b, rfl⟩ := hy
       exact ⟨a + b, map_add _ _ _⟩
@@ -149,9 +149,9 @@ theorem kerφ_eq : RingHom.ker (φ R S M N).toRingHom = kerφ R S M N := by
     obtain ⟨y, rfl⟩ := Ideal.Quotient.mk_surjective z
     simp only [AlgHom.toRingHom_eq_coe, Ideal.Quotient.lift_mk, AlgHom.coe_toRingHom]
     induction y using TensorProduct.induction_on with
-    | C0 => simp only [RingHom.map_zero, AlgHom.map_zero]
-    | C1 m n => simp only [ψ_apply, φ_apply]
-    | Cp x y hx hy =>
+    | zero => simp only [RingHom.map_zero, AlgHom.map_zero]
+    | tmul m n => simp only [ψ_apply, φ_apply]
+    | add x y hx hy =>
       simp only [RingHom.map_add, AlgHom.map_add, ← Ideal.Quotient.mkₐ_eq_mk, hx, hy]
   simp only [kerφ]
   rw [Ideal.span_le]

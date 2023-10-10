@@ -1,4 +1,4 @@
-import Oneshot.DividedPowers.DpAlgebra.Init
+import Oneshot.DividedPowers.DPAlgebra.Init
 import Oneshot.DividedPowers.RatAlgebra
 import Mathbin.Algebra.TrivSqZeroExt
 import Oneshot.WeightedHomogeneous
