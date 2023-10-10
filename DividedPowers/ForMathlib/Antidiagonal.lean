@@ -21,7 +21,6 @@ variable {α : Type _} [CommSemiring α]
 
 namespace Finset
 
-#check Finsupp
 /- We may wish to redefine : 
 
 def Finsupp.antidiagonal (n : μ) : Set (ι →₀ μ) := sorry
@@ -57,7 +56,7 @@ maybe do not rewrite, but prove that it coincides
 
   
 -/
-#check Finset.Nat.antidiagonal
+
 -- rename cut as Pi.antidiagonal
 /-- The Finset of functions `ι → μ` whose support is contained in `s`
   and whose sum is `n` -/
@@ -192,9 +191,6 @@ example (α : Type*) [DecidableEq α] (s p q: Multiset α) :
     ⟨p, q⟩ ∈ Finset.antidiagonal s ↔
       ⟨p, q⟩ ∈ s.antidiagonal := by 
   simp only [Multiset.mem_antidiagonal, Finset.mem_antidiagonal]
-
-
-#exit
 
 -- TODO : move elsewhere
 namespace MvPowerSeries
