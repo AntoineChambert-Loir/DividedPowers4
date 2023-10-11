@@ -11,25 +11,20 @@ namespace MvPolynomial
 
 variable {σ : Type _} {τ : Type _} {R : Type _} [CommSemiring R] {S : Type _}
 
--- TODO : delete or replace below
-/-- The degree of a mooomial -/
-def degree' :=
-  weightedDegree' (1 : σ → ℕ)
-#align mv_polynomial.degree' MvPolynomial.degree'
+/-- The degree of a monomial -/
+def degree (d : σ →₀ ℕ) := ∑ i in d.support, d i
 
-theorem degree'_eq_weightedDegree' (d : σ →₀ ℕ) :
-    ∑ i in d.support, d i = weightedDegree' (1 : σ → ℕ) d := by
+theorem degree_eq_weightedDegree' (d : σ →₀ ℕ) :
+    ∑ i in d.support, d i = weightedDegree' 1 d := by
   simp [weightedDegree', Finsupp.total, Finsupp.sum]
-#align mv_polynomial.degree'_eq_weighted_degree' MvPolynomial.degree'_eq_weightedDegree'
 
 theorem unit_weight_is_nonTrivialWeight : NonTrivialWeight (1 : σ → ℕ) :=
   nonTrivialWeight_of fun _ : σ => one_ne_zero
-#align mv_polynomial.unit_weight_is_non_trivial_weight MvPolynomial.unit_weight_is_nonTrivialWeight
 
 /-- A multivariate polynomial `φ` is homogeneous of degree `n`
 if all monomials occuring in `φ` have degree `n`. -/
 def IsHomogeneous (φ : MvPolynomial σ R) (n : ℕ) :=
-  IsWeightedHomogeneous (1 : σ → ℕ) φ n
+  IsWeightedHomogeneous 1 φ n
 #align mv_polynomial.is_homogeneous MvPolynomial.IsHomogeneous
 
 variable (σ R)
@@ -63,7 +58,7 @@ variable (σ R)
 theorem homogeneousSubmodule_eq_finsupp_supported (n : ℕ) :
     homogeneousSubmodule σ R n = Finsupp.supported _ R {d | ∑ i in d.support, d i = n} :=
   by
-  simp_rw [degree'_eq_weightedDegree']
+  simp_rw [degree_eq_weightedDegree']
   exact weightedHomogeneousSubmodule_eq_finsupp_supported R 1 n
 #align mv_polynomial.homogeneous_submodule_eq_finsupp_supported
   MvPolynomial.homogeneousSubmodule_eq_finsupp_supported
@@ -80,7 +75,7 @@ section
 
 theorem isHomogeneous_monomial (d : σ →₀ ℕ) (r : R) (n : ℕ)
     (hn : ∑ i in d.support, d i = n) : IsHomogeneous (monomial d r) n := by
-  simp_rw [degree'_eq_weightedDegree'] at hn 
+  simp_rw [degree_eq_weightedDegree'] at hn 
   exact isWeightedHomogeneous_monomial 1 d r hn
 #align mv_polynomial.is_homogeneous_monomial MvPolynomial.isHomogeneous_monomial
 
@@ -107,7 +102,7 @@ end
 theorem isHomogeneous_of_totalDegree_zero_iff {p : MvPolynomial σ R} :
     p.totalDegree = 0 ↔ IsHomogeneous p 0 := by
   rw [totalDegree_eq_weightedTotalDegree,
-    isWeightedHomogeneous_of_total_weighted_degree_zero_iff, IsHomogeneous]
+    ← isWeightedHomogeneous_zero_iff_weightedTotalDegree_eq_zero, IsHomogeneous]
 #align mv_polynomial.is_homogeneous_of_total_degree_zero_iff
   MvPolynomial.isHomogeneous_of_totalDegree_zero_iff
 
@@ -146,7 +141,7 @@ variable {φ ψ : MvPolynomial σ R} {m n : ℕ}
 
 theorem coeff_eq_zero (hφ : IsHomogeneous φ n) (d : σ →₀ ℕ) (hd : ∑ i in d.support, d i ≠ n) :
     coeff d φ = 0 := by
-  simp_rw [degree'_eq_weightedDegree'] at hd
+  simp_rw [degree_eq_weightedDegree'] at hd
   exact IsWeightedHomogeneous.coeff_eq_zero hφ d hd
 #align mv_polynomial.is_homogeneous.coeff_eq_zero MvPolynomial.IsHomogeneous.coeff_eq_zero
 
@@ -244,7 +239,7 @@ variable (n : ℕ) (φ ψ : MvPolynomial σ R)
 theorem coeff_homogeneousComponent (d : σ →₀ ℕ) :
     coeff d (homogeneousComponent n φ) = if ∑ i in d.support, d i = n then coeff d φ else 0 :=
   by
-  simp_rw [degree'_eq_weightedDegree']
+  simp_rw [degree_eq_weightedDegree']
   convert coeff_weightedHomogeneousComponent n φ d
 #align mv_polynomial.coeff_homogeneous_component MvPolynomial.coeff_homogeneousComponent
 
@@ -252,7 +247,7 @@ theorem homogeneousComponent_apply :
     homogeneousComponent n φ =
       ∑ d in φ.support.filter fun d => ∑ i in d.support, d i = n, monomial d (coeff d φ) :=
   by
-  simp_rw [degree'_eq_weightedDegree']
+  simp_rw [degree_eq_weightedDegree']
   convert weightedHomogeneousComponent_apply n φ
 #align mv_polynomial.homogeneous_component_apply MvPolynomial.homogeneousComponent_apply
 
@@ -276,7 +271,7 @@ theorem homogeneousComponent_eq_zero'
     (h : ∀ d : σ →₀ ℕ, d ∈ φ.support → ∑ i in d.support, d i ≠ n) :
     homogeneousComponent n φ = 0 :=
   by
-  simp_rw [degree'_eq_weightedDegree'] at h 
+  simp_rw [degree_eq_weightedDegree'] at h 
   exact weightedHomogeneousComponent_eq_zero' n φ h
 #align mv_polynomial.homogeneous_component_eq_zero' MvPolynomial.homogeneousComponent_eq_zero'
 
@@ -325,8 +320,8 @@ def gradedAlgebra [DecidableEq σ] [DecidableEq R] : GradedAlgebra (homogeneousS
 theorem decomposition.decompose'_eq [DecidableEq σ] [DecidableEq R] :
     (decomposition σ).decompose' = fun φ : MvPolynomial σ R =>
       DirectSum.mk (fun i : ℕ => ↥(homogeneousSubmodule σ R i)) (Finset.image degree' φ.support)
-        fun m => ⟨homogeneousComponent m φ, homogeneousComponent_mem φ m⟩ :=
-  rfl
+        fun m => ⟨homogeneousComponent m φ, homogeneousComponent_mem φ m⟩ := by
+  sorry --rfl does not work anymore (?)
 #align mv_polynomial.decomposition.decompose'_eq MvPolynomial.decomposition.decompose'_eq
 
 theorem decomposition.decompose'_apply [DecidableEq σ] [DecidableEq R] (φ : MvPolynomial σ R)

@@ -779,21 +779,20 @@ theorem weightedDegree'_eq_zero_iff (hw : NonTrivialWeight w) (m : σ →₀ ℕ
 #align mv_polynomial.weighted_degree'_eq_zero_iff MvPolynomial.weightedDegree'_eq_zero_iff
 
 -- MODIF : new lemma
-theorem isWeightedHomogeneous_of_total_weighted_degree_zero_iff {p : MvPolynomial σ R} :
-    p.weightedTotalDegree w = 0 ↔ IsWeightedHomogeneous w p 0 := by
-  simp only [weightedTotalDegree] 
-  rw [← bot_eq_zero, Finset.sup_eq_bot_iff, bot_eq_zero]
-  rw [IsWeightedHomogeneous]
-  apply forall_congr'; intro m
+theorem isWeightedHomogeneous_zero_iff_weightedTotalDegree_eq_zero {p : MvPolynomial σ R} :
+    IsWeightedHomogeneous w p 0 ↔ p.weightedTotalDegree w = 0 := by
+  rw [weightedTotalDegree, ← bot_eq_zero, Finset.sup_eq_bot_iff, bot_eq_zero, IsWeightedHomogeneous]
+  apply forall_congr'
+  intro m
   rw [mem_support_iff]
-#align mv_polynomial.is_weighted_homogeneous_of_total_weighted_degree_zero_iff MvPolynomial.isWeightedHomogeneous_of_total_weighted_degree_zero_iff
+#align mv_polynomial.is_weighted_homogeneous_of_total_weighted_degree_zero_iff 
+  MvPolynomial.isWeightedHomogeneous_zero_iff_weightedTotalDegree_eq_zero
 
 -- MODIF : new lemma
 theorem weightedTotalDegree_eq_zero_iff (hw : NonTrivialWeight w) (p : MvPolynomial σ R) :
     p.weightedTotalDegree w = 0 ↔ ∀ (m : σ →₀ ℕ) (_ : m ∈ p.support) (x : σ), m x = ⊥ :=
   by
-  rw [isWeightedHomogeneous_of_total_weighted_degree_zero_iff]
-  rw [IsWeightedHomogeneous]
+  rw [← isWeightedHomogeneous_zero_iff_weightedTotalDegree_eq_zero, IsWeightedHomogeneous]
   apply forall_congr'; intro m
   rw [mem_support_iff]
   apply forall_congr'; intro hm
