@@ -170,10 +170,9 @@ noncomputable def zoo :
 #align zoo zoo
 
 noncomputable def zooInv :
-  MvPolynomial σ R ⊗[R] N →ₗ[R] (σ →₀ ℕ) →₀ N := by
-  apply TensorProduct.lift
-  exact {
-    toFun := fun p ↦
+  MvPolynomial σ R ⊗[R] N →ₗ[R] (σ →₀ ℕ) →₀ N := 
+  TensorProduct.lift
+  { toFun := fun p ↦
       { toFun := fun n ↦ Finsupp.ofSupportFinite
           (fun k ↦ MvPolynomial.coeff k p • n)
           (by

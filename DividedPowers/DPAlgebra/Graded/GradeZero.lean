@@ -189,7 +189,7 @@ theorem augIdeal_isAugmentationIdeal :
   IsAugmentationIdeal (DividedPowerAlgebra R M) (augIdeal R M) := by
   dsimp only [IsAugmentationIdeal]
   use algebraMap_comp_kerLiftAlg R M
-  exact augIdeal_isAugmentationIdeal' R M 
+  exact augIdeal_isAugmentationIdeal' R M
 #align divided_power_algebra.aug_ideal_is_augmentation_ideal 
   DividedPowerAlgebra.augIdeal_isAugmentationIdeal
 
