@@ -558,9 +558,19 @@ def ofConstantHom : N →ₗ[R] (grade 0 : Submodule R (PolynomialMap R M N)) :=
 /-- Homogeneous Polynomial maps of degree 0 are constant maps -/
 def ofConstantEquiv : N ≃ₗ[R] (grade 0 : Submodule R (PolynomialMap R M N)) := {
   ofConstantHom with 
-  invFun := fun f ↦ f.val.ground 0
-  left_inv := sorry
-  right_inv := sorry  }
+  invFun    := fun f ↦ f.val.ground 0
+  left_inv  := fun x ↦ by
+    simp only [AddHom.toFun_eq_coe, coe_toAddHom, ground, Function.comp_apply, map_zero,
+      ofConstantHom, coe_mk, AddHom.coe_mk, ofConstant, TensorProduct.lid_tmul, one_smul]
+  right_inv := fun x ↦ by
+    /- simp only [ofConstantHom, ofConstant, ground, Function.comp_apply, map_zero, 
+      AddHom.toFun_eq_coe, AddHom.coe_mk] -/
+    simp only [AddHom.toFun_eq_coe, coe_toAddHom]
+    rw [Subtype.ext_iff]
+    rw [Subtype.coe_mk]
+    
+    sorry
+      }
   
 end ConstantMap
 
@@ -602,12 +612,12 @@ theorem ofLinearMapHom_apply (v : M →ₗ[R] N) :
   ofLinearMapHom v = ofLinearMap v := rfl
 #align polynomial_map.of_linear_map_hom_apply PolynomialMap.ofLinearMapHom_apply
 
-theorem ofLinearMapEquiv : 
-  (M →ₗ[R] N) ≃ₗ[R] (grade 1 : Submodule R (PolynomialMap R M N)) := {
-  ofLinearMapHom with
-  invFun := sorry
-  left_inv := sorry
-  right_inv := sorry }
+def ofLinearMapEquiv : 
+    (M →ₗ[R] N) ≃ₗ[R] (grade 1 : Submodule R (PolynomialMap R M N)) := 
+  { ofLinearMapHom with
+    invFun := sorry
+    left_inv := sorry
+    right_inv := sorry }
   
 end Linear
 
@@ -773,8 +783,7 @@ def baseChange_include : M →ₗ[R] R' ⊗[R] M := {
   toFun     := fun m ↦ 1 ⊗ₜ[R] m
   map_add'  := fun x y ↦ TensorProduct.tmul_add 1 x y
   map_smul' := fun r m  ↦ by 
-    dsimp
-    rw [← TensorProduct.smul_tmul]
+    simp only [AddHom.toFun_eq_coe, AddHom.coe_mk, RingHom.id_apply, ← TensorProduct.smul_tmul]
     rfl }
   
 example : S' ⊗[R'] (R' ⊗[R] M) →ₗ[S'] S' ⊗[R] M := by
@@ -784,19 +793,13 @@ example : S' ⊗[R'] (R' ⊗[R] M) →ₗ[S'] S' ⊗[R] M := by
         toFun := fun r' ↦ r' • baseChange_include 
         map_add' := fun a b ↦ by simp only [add_smul]
         map_smul' := fun a b ↦ by 
-          dsimp
-          simp only [smul_assoc] }
-      map_add' := fun x y ↦ by
-        dsimp
-        
-
-        
-        
-        
-        
-        sorry
-      map_smul' := sorry }
-    map_add' := sorry
+          simp only [AddHom.toFun_eq_coe, AddHom.coe_mk, RingHom.id_apply, smul_assoc] }
+      map_add' := fun x y ↦ by rw [map_add]
+      map_smul' := fun r x ↦ by
+        simp only [RingHom.id_apply]
+        sorry }
+    map_add'  := fun x y ↦ by
+      sorry
     map_smul' := sorry
   }
 

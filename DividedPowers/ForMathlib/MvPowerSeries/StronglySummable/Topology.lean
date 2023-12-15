@@ -31,7 +31,7 @@ theorem sum_eq_tsum [TopologicalSpace α] [T2Space α] {f : ι → MvPowerSeries
   rw [tsum_def, dif_pos hf.summable]
   apply HasSum.unique (hf.hasSum_coeff d)
   apply HasSum.map
-  . split_ifs with h 
+  . split_ifs with h
     . rw [← tsum_eq_finsum h]
       exact hf.summable.hasSum
     . exact (Classical.choose_spec hf.summable)
@@ -44,16 +44,16 @@ section Ring
 
 variable [Ring α]
 
-/- 
+/-
 # Comparisons of the various convergences on `mv_power_series σ α`
 
 Ref. : Bourbaki, *Algèbre*, IV, §4, n°2, Lemme 1.
 
-* pour toute topologie : 
+* pour toute topologie :
 support fini => sommable : `strongly_summable.summable`
-sommable => tend vers 0  : `tendsto_zero_of_summable` 
+sommable => tend vers 0  : `tendsto_zero_of_summable`
 
-* pour topologie discrète : 
+* pour topologie discrète :
 tend vers 0 => support fini : `summable.tendsto_cofinite_zero`
 -/
 example [TopologicalSpace α] {f : ι → MvPowerSeries σ α} : StronglySummable f → Summable f :=
@@ -115,7 +115,7 @@ theorem hasProd_of_one_add (hf : StronglySummable f) :
   intro V hV
   simp only [Filter.mem_map, Filter.mem_atTop_sets, ge_iff_le, Finset.le_eq_subset,
     Set.mem_preimage]
-  let V₀ := Add.add hf.to_stronglyMultipliable.prod ⁻¹' V 
+  let V₀ := Add.add hf.to_stronglyMultipliable.prod ⁻¹' V
   have hV'₀ : V = Add.add (-hf.to_stronglyMultipliable.prod) ⁻¹' V₀ := by
     simp only [Add.add, ← Set.preimage_comp]
     ext x
@@ -135,7 +135,7 @@ theorem hasProd_of_one_add (hf : StronglySummable f) :
   convert mem_of_mem_nhds (ht d) using 1
   simp only [Add.add, Pi.sub_apply, neg_add_eq_sub]
   rw [Pi.zero_apply, sub_eq_zero]
-  convert StronglySummable.Finset.prod_of_one_add_eq hf d J _   
+  convert StronglySummable.Finset.prod_of_one_add_eq hf d J _
   intro i hi
   apply hIJ
   revert hi
@@ -163,14 +163,14 @@ theorem tprod_eq_of_one_add {ι : Type _} {f : ι → MvPowerSeries σ α} (hf :
 
 end StronglySummable
 
--- TODO : treat the case of arbitrary topologies on α 
-/- 
+-- TODO : treat the case of arbitrary topologies on α
+/-
   but the statement is incorrect because `tsum F` has already used
-  the given topology of `α`. 
+  the given topology of `α`.
   Except for this problem, this runs roughly as follows:
 
   let h := @has_prod_of_one_add σ α _ (default) ι _ f hf,
-  
+
   have := @has_prod.tprod_eq (mv_power_series σ α) ι _
     (@mv_power_series.topological_space σ α default)
     (@mv_power_series.t2_space σ α default (@discrete_topology.to_t2_space α default
