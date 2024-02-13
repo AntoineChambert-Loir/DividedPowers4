@@ -6,13 +6,13 @@ import DividedPowers.ForMathlib.MvPowerSeries.Topology
 
 open Set SetLike
 
-variable (σ : Type _)
+variable (σ : Type*)
 
 namespace MvPowerSeries
 
 section Ideals
 
-variable (α : Type _) [CommRing α]
+variable (α : Type*) [CommRing α]
 
 set_option linter.uppercaseLean3 false
 
@@ -88,7 +88,7 @@ section DiscreteTopology
 
 set_option linter.uppercaseLean3 false
 
-variable (α : Type _) [CommRing α] [TopologicalSpace α]
+variable (α : Type*) [CommRing α] [TopologicalSpace α]
 
 /-- If the coefficient ring `α` is endowed with the discrete topology, then for evrey `d : σ →₀ ℕ`,
   `↑(basis σ α d) ∈ nhds (0 : MvPowerSeries σ α)`. -/
@@ -139,6 +139,11 @@ theorem topology_eq_ideals_basis_topology [DiscreteTopology α] :
       exact he
     apply Finset.le_sup he'
 #align mv_power_series.topology_eq_ideals_basis_topolgy MvPowerSeries.topology_eq_ideals_basis_topology
+
+
+lemma isLinearTopology [DiscreteTopology α] :
+    IsLinearTopology (MvPowerSeries σ α) (σ →₀ ℕ) :=
+  ⟨basis σ α, idealBasis σ α, topology_eq_ideals_basis_topology σ α⟩
 
 
 /- -- TODO : problèmes d'univers
