@@ -60,18 +60,18 @@ variable (σ α)
 /-- The semiring topology on mv_power_series of a topological semiring -/
 theorem topologicalSemiring [Semiring α] [TopologicalSemiring α] :
     TopologicalSemiring (MvPowerSeries σ α) where
-    continuous_add := continuous_pi fun d => Continuous.comp continuous_add 
+    continuous_add := continuous_pi fun d => Continuous.comp continuous_add
       (Continuous.prod_mk (Continuous.fst' (continuous_component σ α d))
         (Continuous.snd' (continuous_component σ α d)))
-    continuous_mul := continuous_pi fun _ => continuous_finset_sum _ (fun i _ => Continuous.comp 
+    continuous_mul := continuous_pi fun _ => continuous_finset_sum _ (fun i _ => Continuous.comp
       continuous_mul (Continuous.prod_mk (Continuous.fst' (continuous_component σ α i.fst))
         (Continuous.snd' (continuous_component σ α i.snd))))
 #align mv_power_series.topological_semiring MvPowerSeries.topologicalSemiring
- 
+
 /-- The ring topology on mv_power_series of a topological ring -/
 theorem topologicalRing [Ring α] [TopologicalRing α] : TopologicalRing (MvPowerSeries σ α) :=
   { topologicalSemiring σ α with
-    continuous_neg := continuous_pi fun d ↦ Continuous.comp continuous_neg 
+    continuous_neg := continuous_pi fun d ↦ Continuous.comp continuous_neg
       (continuous_component σ α d) }
 #align mv_power_series.topological_ring MvPowerSeries.topologicalRing
 
@@ -79,10 +79,10 @@ theorem topologicalRing [Ring α] [TopologicalRing α] : TopologicalRing (MvPowe
 theorem t2Space [T2Space α] : T2Space (MvPowerSeries σ α) := by
   apply T2Space.mk
   intro x y h
-  rw [Function.ne_iff] at h 
+  rw [Function.ne_iff] at h
   obtain ⟨d, h⟩ := h
   obtain ⟨u, v, huv⟩ := t2_separation h
-  use (fun x => x d) ⁻¹' u, (fun x => x d) ⁻¹' v, 
+  use (fun x => x d) ⁻¹' u, (fun x => x d) ⁻¹' v,
     IsOpen.preimage (continuous_component σ α d) huv.1,
     IsOpen.preimage (continuous_component σ α d) huv.2.1, huv.2.2.1, huv.2.2.2.1
   exact Disjoint.preimage _ huv.2.2.2.2
@@ -107,10 +107,10 @@ theorem uniformContinuous_component :
 
 /-- The uniform_add_group structure on mv_power_series of a uniform_add_group -/
 theorem uniformAddGroup [AddGroup α] [UniformAddGroup α] : UniformAddGroup (MvPowerSeries σ α) where
-  uniformContinuous_sub := uniformContinuous_pi.mpr fun _ => UniformContinuous.comp 
+  uniformContinuous_sub := uniformContinuous_pi.mpr fun _ => UniformContinuous.comp
     uniformContinuous_sub
-    (UniformContinuous.prod_mk 
-      (UniformContinuous.comp (uniformContinuous_component _ _ _) uniformContinuous_fst) 
+    (UniformContinuous.prod_mk
+      (UniformContinuous.comp (uniformContinuous_component _ _ _) uniformContinuous_fst)
       (UniformContinuous.comp (uniformContinuous_component _ _ _) uniformContinuous_snd))
 #align mv_power_series.uniform_add_group MvPowerSeries.uniformAddGroup
 
@@ -137,9 +137,9 @@ theorem separatedSpace [SeparatedSpace α] : SeparatedSpace (MvPowerSeries σ α
 
 theorem uniform_topologicalRing [Ring α] [UniformAddGroup α] [TopologicalRing α] :
     TopologicalRing (MvPowerSeries σ α) :=
-  { uniformAddGroup σ α with 
+  { uniformAddGroup σ α with
     continuous_add :=  uniformContinuous_add.continuous
-    continuous_mul := continuous_pi fun _ => continuous_finset_sum _ fun i _ => Continuous.comp 
+    continuous_mul := continuous_pi fun _ => continuous_finset_sum _ fun i _ => Continuous.comp
       continuous_mul (Continuous.prod_mk (Continuous.fst' (continuous_component σ α i.fst))
         (Continuous.snd' (continuous_component σ α i.snd)))
     continuous_neg := uniformContinuous_neg.continuous }
@@ -170,13 +170,13 @@ theorem variables_tendsto_zero :
   . obtain ⟨i, rfl⟩ := h
     apply Set.Finite.subset (Set.finite_singleton i)
     intro x
-    simp only [OfNat.ofNat, Zero.zero] at hs 
+    simp only [OfNat.ofNat, Zero.zero] at hs
     rw [Set.mem_preimage, Set.mem_compl_iff, Set.mem_singleton_iff, not_imp_comm]
     intro hx
     convert mem_of_mem_nhds hs
     rw [← coeff_eq_apply (X x) (Finsupp.single i 1), coeff_X,
       if_neg (by simp only [Finsupp.single_eq_single_iff, and_true, or_false, Ne.symm hx])]
-    rfl      
+    rfl
   . convert Set.finite_empty
     rw [Set.eq_empty_iff_forall_not_mem]
     intro x
@@ -189,44 +189,41 @@ theorem variables_tendsto_zero :
       exact ⟨x, h'⟩
 #align mv_power_series.variables_tendsto_zero MvPowerSeries.variables_tendsto_zero
 
-theorem tendsto_pow_of_constantCoeff_nilpotent {f : MvPowerSeries σ α}
+theorem tendsto_pow_zero_of_constantCoeff_nilpotent {f : MvPowerSeries σ α}
     (hf : IsNilpotent (constantCoeff σ α f)) :
     Filter.Tendsto (fun n : ℕ => f ^ n) Filter.atTop (nhds 0) := by
   classical
   obtain ⟨m, hm⟩ := hf
   simp_rw [MvPowerSeries.tendsto_iff_coeff_tendsto, coeff_zero]
-  exact fun d =>  tendsto_atTop_of_eventually_const fun n hn => 
+  exact fun d =>  tendsto_atTop_of_eventually_const fun n hn =>
     coeff_eq_zero_of_constantCoeff_nilpotent f m hm d n hn
 #align mv_power_series.tendsto_pow_of_constant_coeff_nilpotent
-  MvPowerSeries.tendsto_pow_of_constantCoeff_nilpotent
+  MvPowerSeries.tendsto_pow_zero_of_constantCoeff_nilpotent
 
-theorem tendsto_pow_of_constantCoeff_zero {f : MvPowerSeries σ α} (hf : constantCoeff σ α f = 0) :
+theorem tendsto_pow_zero_of_constantCoeff_zero {f : MvPowerSeries σ α} (hf : constantCoeff σ α f = 0) :
     Filter.Tendsto (fun n : ℕ => f ^ n) Filter.atTop (nhds 0) := by
-  apply tendsto_pow_of_constantCoeff_nilpotent
+  apply tendsto_pow_zero_of_constantCoeff_nilpotent
   rw [hf]
   exact IsNilpotent.zero
 #align mv_power_series.tendsto_pow_of_constant_coeff_zero
-  MvPowerSeries.tendsto_pow_of_constantCoeff_zero
+  MvPowerSeries.tendsto_pow_zero_of_constantCoeff_zero
 
 /-- Bourbaki, Algèbre, chap. 4, §4, n°2, corollaire de la prop. 3 -/
 theorem tendsto_pow_of_constantCoeff_nilpotent_iff [DiscreteTopology α] (f : MvPowerSeries σ α) :
-    Filter.Tendsto (fun n : ℕ => f ^ n) Filter.atTop (nhds 0) ↔ 
+    Filter.Tendsto (fun n : ℕ => f ^ n) Filter.atTop (nhds 0) ↔
       IsNilpotent (constantCoeff σ α f) := by
-  refine' ⟨_, tendsto_pow_of_constantCoeff_nilpotent ⟩
+  refine' ⟨_, tendsto_pow_zero_of_constantCoeff_nilpotent ⟩
   · intro h
     suffices : Filter.Tendsto (fun n : ℕ => constantCoeff σ α (f ^ n)) Filter.atTop (nhds 0)
-    simp only [Filter.tendsto_def] at this 
+    simp only [Filter.tendsto_def] at this
     specialize this {0} _
     suffices : ∀ x : α, {x} ∈ nhds x; exact this 0
     rw [← discreteTopology_iff_singleton_mem_nhds]; infer_instance
     simp only [map_pow, Filter.mem_atTop_sets, ge_iff_le, Set.mem_preimage,
-      Set.mem_singleton_iff] at this 
+      Set.mem_singleton_iff] at this
     obtain ⟨m, hm⟩ := this
     use m
     apply hm m (le_refl m)
-    -- -- Lean4 doesn't detect that there is a composition -> change
-    -- change Filter.Tendsto (constantCoeff σ α ∘ fun n => f ^ n) Filter.atTop (nhds 0)
-    -- -- this simp works as well
     simp only [← @comp_apply _ α ℕ]
     rw [← Filter.tendsto_map'_iff]
     simp only [Filter.Tendsto, Filter.map_le_iff_le_comap] at h ⊢
@@ -280,7 +277,7 @@ theorem hasSum_of_homogeneous_components_self (w : σ → ℕ) (f : MvPowerSerie
   have hd : ∀ (b' : ℕ), b' ≠ (weight w) d → (homogeneousComponent w b') f d = 0 := by
     intro p h
     rw [← coeff_apply (homogeneousComponent w p f) d, coeff_homogeneousComponent,
-      if_neg (Ne.symm h)] 
+      if_neg (Ne.symm h)]
   convert hasSum_single (weight w d) hd using 1
   · rw [← coeff_apply f d, ← coeff_apply (homogeneousComponent w (weight w d) f) d,
       coeff_homogeneousComponent]
@@ -305,4 +302,3 @@ theorem as_tsum_of_homogeneous_components_self [T2Space α] (w : σ → ℕ) (f 
 end Summable
 
 end MvPowerSeries
-
