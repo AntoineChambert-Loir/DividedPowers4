@@ -5,7 +5,7 @@ import Mathlib.Topology.Algebra.Nonarchimedean.Bases
 section Complements
 
 -- TODO: Do we need this?
-theorem topologicalSpace_eq_iff_nhds_eq {α : Type _} (τ τ' : TopologicalSpace α) :
+theorem TopologicalSpace.eq_iff_nhds_eq {α : Type _} (τ τ' : TopologicalSpace α) :
     τ = τ' ↔ ∀ (s : Set α), ∀ a ∈ s, s ∈ @nhds α τ a ↔ s ∈ @nhds α τ' a := by
   constructor
   · intro h s a _; rw [h]
@@ -13,11 +13,11 @@ theorem topologicalSpace_eq_iff_nhds_eq {α : Type _} (τ τ' : TopologicalSpace
   simp only [@isOpen_iff_mem_nhds α τ, @isOpen_iff_mem_nhds α τ']
   apply forall_congr'; intro a
   apply imp_congr_right; exact h s a
-#align topological_space_eq_iff_nhds_eq topologicalSpace_eq_iff_nhds_eq
+#align topological_space_eq_iff_nhds_eq TopologicalSpace.eq_iff_nhds_eq
 
 -- ADDED
 /-- Two topologies on `α` are equal if and only if their neighborhood filters agree. -/
-theorem eq_iff_nhds_eq_nhds {α : Type _} (τ τ' : TopologicalSpace α) :
+theorem TopologicalSpace.eq_iff_nhds_eq_nhds {α : Type _} (τ τ' : TopologicalSpace α) :
     τ = τ' ↔ @nhds α τ = @nhds α τ'  := by
   constructor
   · intro h; rw [h]
@@ -27,7 +27,7 @@ theorem eq_iff_nhds_eq_nhds {α : Type _} (τ τ' : TopologicalSpace α) :
 
 
 -- TODO: This is similar to `le_iff_nhds`, do we need this variant?
-theorem topologicalSpace_le_iff_nhds_le {α : Type _} (τ τ' : TopologicalSpace α) :
+theorem TopologicalSpace.le_iff_nhds_le {α : Type _} (τ τ' : TopologicalSpace α) :
     τ ≤ τ' ↔ ∀ (s : Set α), ∀ a ∈ s, s ∈ @nhds α τ' a → s ∈ @nhds α τ a := by
   rw [TopologicalSpace.le_def]
   constructor
@@ -43,7 +43,7 @@ theorem topologicalSpace_le_iff_nhds_le {α : Type _} (τ τ' : TopologicalSpace
     simp only [@isOpen_iff_mem_nhds α τ, @isOpen_iff_mem_nhds α τ']
     intro hs a has
     exact h s a has (hs a has)
-#align topological_space_le_iff_nhds_le topologicalSpace_le_iff_nhds_le
+#align topological_space_le_iff_nhds_le TopologicalSpace.le_iff_nhds_le
 
 /-- If `a, b` are two elements of a topological group `α`, then a set `V` belongs to `nhds (a + b)`
   if and only if `Add.add a ⁻¹' V ∈ nhds b`.  -/
