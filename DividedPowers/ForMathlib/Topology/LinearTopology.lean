@@ -162,7 +162,7 @@ variable (α : Type*) [CommRing α]
 
 /-- Note that ideally we would want `ι` in the existencial, but this causes universe issues which
   I don't know how to solve -/
-structure IsLinearTopology [τ : TopologicalSpace α] (ι : Type*) [Nonempty ι]  : Prop where
+class IsLinearTopology [τ : TopologicalSpace α] (ι : Type*) [Nonempty ι]  : Prop where
   toLinearLopology : ∃ (J : ι → Ideal α) (hJ : IdealBasis J),
     τ = hJ.toRingSubgroupsBasis.topology
 

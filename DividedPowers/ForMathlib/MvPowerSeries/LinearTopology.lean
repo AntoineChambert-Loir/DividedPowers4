@@ -116,8 +116,7 @@ theorem topology_eq_ideals_basis_topology [DiscreteTopology α] :
     MvPowerSeries.topologicalSpace σ α = (toRingSubgroupsBasis σ α).topology := by
   let τ := MvPowerSeries.topologicalSpace σ α
   let τ' := (toRingSubgroupsBasis σ α).topology
-  change τ = τ'
-  rw [topologicalSpace_eq_iff_nhds_eq]
+  rw [TopologicalSpace.eq_iff_nhds_eq]
   suffices ∀ s, s ∈ @nhds _ τ 0 ↔ s ∈ @nhds _ τ' 0 by
     let tg := @TopologicalRing.to_topologicalAddGroup _ _ τ ( topologicalRing σ α)
     intro s a _
@@ -144,6 +143,89 @@ theorem topology_eq_ideals_basis_topology [DiscreteTopology α] :
 lemma isLinearTopology [DiscreteTopology α] :
     IsLinearTopology (MvPowerSeries σ α) (σ →₀ ℕ) :=
   ⟨basis σ α, idealBasis σ α, topology_eq_ideals_basis_topology σ α⟩
+
+lemma toSubmodulesBasis [DiscreteTopology α] : SubmodulesBasis (basis σ α) :=
+  SubmodulesBasis.mk
+    (λ d e => ⟨d + e, by
+        rw [le_inf_iff]
+        constructor
+        · exact basis_antitone _ _ (le_self_add)
+        · exact basis_antitone _ _ (le_add_self)⟩)
+    (λ f d => by {
+      rw [Filter.eventually_iff_exists_mem]
+      use ↑(basis σ α d)
+      apply And.intro (basis_mem_nhds_zero σ α d)
+      intros g hg
+      rw [smul_eq_mul, mul_comm]
+      exact Ideal.mul_mem_left _ f (SetLike.mem_coe.mp hg)})
+
+-- Proof ported from Lean 3
+lemma has_submodules_basis_topology' [DiscreteTopology α] :
+    MvPowerSeries.topologicalSpace σ α = (toSubmodulesBasis σ α).topology := by
+  let τ := MvPowerSeries.topologicalSpace σ α
+  let τ' := (toSubmodulesBasis σ α).topology
+  rw [TopologicalSpace.eq_iff_nhds_eq]
+  suffices : ∀ s, s ∈ @nhds _ τ 0 ↔ s ∈ @nhds _ τ' 0
+  -- mv nhds from 0 to a
+  · intros s a _ha -- _ha is never used
+    rw [← add_zero a]
+    letI tr := (topologicalRing σ α)
+    rw [@mem_nhds_add_iff _ _ τ, mem_nhds_add_iff]
+    exact this _
+  -- neighborhoods of 0
+  intro s
+  rw [(RingSubgroupsBasis.hasBasis_nhds (toRingSubgroupsBasis σ α) 0).mem_iff]
+  simp only [sub_zero, Submodule.mem_toAddSubgroup, exists_true_left]
+  constructor
+  { rw [nhds_pi, Filter.mem_pi]
+    rintro ⟨D, hD, t, ht, ht'⟩
+    use Finset.sup hD.toFinset id
+    simp only [true_and]
+    apply subset_trans _ ht'
+    intros f hf
+    rw [Set.mem_pi]
+    intros e he
+    change f ∈ basis σ α _ at hf
+    rw [← coeff_eq_apply f e, hf e]
+    exact mem_of_mem_nhds (ht e)
+    rw [← id.def e]
+    apply Finset.le_sup
+    simp only [id.def]
+    simp only [Set.Finite.mem_toFinset]
+    exact he }
+  { rintro ⟨d, _, hd⟩
+    exact (@nhds _ τ 0).sets_of_superset  (basis_mem_nhds_zero σ α d) hd}
+
+-- Alternative proof
+lemma has_submodules_basis_topology [DiscreteTopology α] :
+    MvPowerSeries.topologicalSpace σ α = (toSubmodulesBasis σ α).topology := by
+  let τ := MvPowerSeries.topologicalSpace σ α
+  let τ' := (toSubmodulesBasis σ α).topology
+  rw [TopologicalSpace.eq_iff_nhds_eq_nhds]
+  suffices : ∀ s, s ∈ @nhds _ τ 0 ↔ s ∈ @nhds _ τ' 0
+  -- mv nhds from 0 to a
+  · ext a s
+    rw [← add_zero a]
+    letI tr := (topologicalRing σ α)
+    rw [@mem_nhds_add_iff _ _ τ, mem_nhds_add_iff]
+    exact this _
+  -- neighborhoods of 0
+  intro s
+  rw [(RingSubgroupsBasis.hasBasis_nhds (toRingSubgroupsBasis σ α) 0).mem_iff]
+  simp only [sub_zero, Submodule.mem_toAddSubgroup, true_and]
+  constructor
+  · rw [nhds_pi, Filter.mem_pi]
+    rintro ⟨D, hD, t, ht, ht'⟩
+    use Finset.sup hD.toFinset id
+    apply subset_trans _ ht'
+    intros f hf e he
+    --change f ∈ basis σ α _ at hf
+    rw [← coeff_eq_apply f e, hf e]
+    · exact mem_of_mem_nhds (ht e)
+    · rw [← id.def e]
+      exact Finset.le_sup ((Set.Finite.mem_toFinset _).mpr he)
+  · rintro ⟨d, hd⟩
+    exact (@nhds _ τ 0).sets_of_superset  (basis_mem_nhds_zero σ α d) hd
 
 
 /- -- TODO : problèmes d'univers
@@ -209,6 +291,7 @@ begin
     exact (nhds 0).sets_of_superset (basis_mem_nhds_zero σ α d) hd,}
 end
  -/
+
 end DiscreteTopology
 
 end MvPowerSeries
