@@ -24,7 +24,7 @@ variable {A : Type _} [CommSemiring A] {I : Ideal A}
 theorem factorial_isUnit {n : ℕ} (hn_fac : IsUnit ((n - 1).factorial : A)) {m : ℕ} (hmn : m < n) :
     IsUnit (m.factorial : A) := by
   apply isUnit_of_dvd_unit _ hn_fac
-  obtain ⟨c, hc⟩ := Nat.factorial_dvd_factorial (Nat.le_pred_of_lt hmn)
+  obtain ⟨c, hc⟩ := Nat.factorial_dvd_factorial (Nat.le_sub_one_of_lt hmn)
   use (c : A)
   rw [← Nat.cast_mul, hc]
 #align factorial_is_unit factorial_isUnit
@@ -57,10 +57,9 @@ theorem Ideal.mem_pow_eq_zero {A : Type _} [CommSemiring A] {I : Ideal A} (n m :
     (hmn : n ≤ m) {x : A} (hx : x ∈ I) : x ^ m = 0 :=
   by
   have hxn : x ^ n = 0 := by
-    rw [Ideal.zero_eq_bot] at hnI 
+    rw [Ideal.zero_eq_bot] at hnI
     rw [← Ideal.mem_bot, ← hnI]
     exact Ideal.pow_mem_pow hx n
   obtain ⟨c, hc⟩ := Nat.exists_eq_add_of_le hmn
   rw [hc, pow_add, hxn, MulZeroClass.zero_mul]
 #align ideal.mem_pow_eq_zero Ideal.mem_pow_eq_zero
-
