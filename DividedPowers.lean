@@ -16,7 +16,7 @@ import DividedPowers.DPAlgebra.RobyLemma5
 import DividedPowers.DPAlgebra.RobyLemma9
 --import DividedPowers.DPMorphism
 import DividedPowers.ForMathlib.AlgebraComp
---import DividedPowers.ForMathlib.AlgebraLemmas
+import DividedPowers.ForMathlib.AlgebraLemmas
 import DividedPowers.ForMathlib.Antidiagonal
 import DividedPowers.ForMathlib.CombinatoricsLemmas
 import DividedPowers.ForMathlib.GradedAlgebra
