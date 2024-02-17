@@ -4,7 +4,8 @@ import DividedPowers.ForMathlib.MvPowerSeries.Order
 import DividedPowers.ForMathlib.InfiniteSum.Basic
 
 --TODO: move
-theorem Finset.prod_one_add {ι α : Type _} [CommRing α] {f : ι → α} (s : Finset ι) :
+--NOTE: I renamed it because `Finset.prod_one_add` is already declared in `MvPowerSeries.Topology`
+theorem Finset.prod_one_add' {ι α : Type _} [CommRing α] {f : ι → α} (s : Finset ι) :
     (s.prod fun i => 1 + f i) = s.powerset.sum fun t => t.prod f := by
   classical
   simp_rw [add_comm, prod_add]
@@ -532,19 +533,26 @@ theorem prod_eq (hf : StronglyMultipliable f) : hf.prod = hf.sum :=
   rfl
 #align mv_power_series.strongly_multipliable.prod_eq MvPowerSeries.StronglyMultipliable.prod_eq
 
+end StronglyMultipliable
+namespace StronglySummable
+
+--NOTE: renamed so that we can use dot notation
 /-- If `f = Σ f i` is strongly summable, then `Π (1 + f i)` is strongly multipliable -/
-theorem of_stronglySummable (hf : StronglySummable f) :
+theorem toStronglyMultipliable (hf : StronglySummable f) :
     StronglyMultipliable f := by
   classical
   exact fun d => Finite.subset (finite_toSet _) (support_partialProduct_subset f hf d)
 #align mv_power_series.strongly_summable.to_strongly_multipliable
-  MvPowerSeries.StronglyMultipliable.of_stronglySummable
+  MvPowerSeries.StronglySummable.toStronglyMultipliable
+
+end StronglySummable
+namespace StronglyMultipliable
 
 /-- If `f` is strongly_multipliable and `s : Finset ι`, the product of `λ i, (1 + f ι)` over `s`
   is equal to the sum of `hf.of_indicator {I : Finset ι | I ⊆ s}`.   -/
 theorem finset_prod_eq (s : Finset ι) (hf : StronglyMultipliable f) :
     (s.prod fun i => 1 + f i) = (hf.of_indicator {I : Finset ι | I ⊆ s}).sum := by
-  rw [Finset.prod_one_add]
+  rw [Finset.prod_one_add']
   ext d
   rw [map_sum, StronglySummable.coeff_sum d]
   · apply sum_congr rfl
@@ -582,8 +590,8 @@ theorem prod_eq_finset_prod_add (hf : StronglyMultipliable f) (s : Finset ι) :
   multipliable family `1 + f i` agrees with the one of `J.prod fun i => 1 + f i`. -/
 theorem coeff_prod_apply_eq_finset_prod [DecidableEq ι] [DecidableEq σ]
     (hf : StronglySummable f) {d : σ →₀ ℕ} {J : Finset ι} (hJ : hf.unionOfSupportOfCoeffLe d ⊆ J) :
-    (coeff α d) (of_stronglySummable hf).prod = (coeff α d) (J.prod fun i => 1 + f i) := by
-  rw [(of_stronglySummable hf).prod_eq_finset_prod_add J, map_add, add_right_eq_self,
+    (coeff α d) hf.toStronglyMultipliable.prod = (coeff α d) (J.prod fun i => 1 + f i) := by
+  rw [hf.toStronglyMultipliable.prod_eq_finset_prod_add J, map_add, add_right_eq_self,
     StronglySummable.coeff_sum_def]
   apply sum_eq_zero
   intro t _
