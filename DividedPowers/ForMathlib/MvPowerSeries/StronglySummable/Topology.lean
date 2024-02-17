@@ -103,20 +103,19 @@ end Summable
 section StronglyMultipliable
 
 variable {ι : Type _} {f : ι → MvPowerSeries σ α} [CommRing α]
-
 namespace StronglySummable
 
 variable [UniformSpace α] [UniformAddGroup α]
 
 theorem hasProd_of_one_add (hf : StronglySummable f) :
-    HasProd (fun i => 1 + f i) hf.to_stronglyMultipliable.prod := by
+    HasProd (fun i => 1 + f i) hf.toStronglyMultipliable.prod := by
   classical
   haveI := uniformAddGroup σ α
   intro V hV
   simp only [Filter.mem_map, Filter.mem_atTop_sets, ge_iff_le, Finset.le_eq_subset,
     Set.mem_preimage]
-  let V₀ := Add.add hf.to_stronglyMultipliable.prod ⁻¹' V
-  have hV'₀ : V = Add.add (-hf.to_stronglyMultipliable.prod) ⁻¹' V₀ := by
+  let V₀ := Add.add hf.toStronglyMultipliable.prod ⁻¹' V
+  have hV'₀ : V = Add.add (-hf.toStronglyMultipliable.prod) ⁻¹' V₀ := by
     simp only [Add.add, ← Set.preimage_comp]
     ext x
     rw [Set.mem_preimage, comp_apply, ← add_assoc, add_right_neg, zero_add]
@@ -135,7 +134,10 @@ theorem hasProd_of_one_add (hf : StronglySummable f) :
   convert mem_of_mem_nhds (ht d) using 1
   simp only [Add.add, Pi.sub_apply, neg_add_eq_sub]
   rw [Pi.zero_apply, sub_eq_zero]
-  convert StronglySummable.Finset.prod_of_one_add_eq hf d J _
+  simp only
+
+  sorry
+  /- convert StronglySummable.Finset.prod_of_one_add_eq hf d J _
   intro i hi
   apply hIJ
   revert hi
@@ -143,7 +145,7 @@ theorem hasProd_of_one_add (hf : StronglySummable f) :
   simp only [StronglySummable.not_mem_unionOfSupportOfCoeffLe_iff]
   intro h e hed
   refine' h e (le_trans hed _)
-  apply Finset.le_sup ((Set.Finite.mem_toFinset hD).mpr hd)
+  apply Finset.le_sup ((Set.Finite.mem_toFinset hD).mpr hd) -/
 #align mv_power_series.strongly_summable.has_prod_of_one_add
   MvPowerSeries.StronglySummable.hasProd_of_one_add
 
