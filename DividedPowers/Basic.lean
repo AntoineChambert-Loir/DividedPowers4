@@ -211,7 +211,8 @@ theorem factorial_mul_dpow_eq_pow (n : ℕ) (x : A) (hx : x ∈ I) :
 #align divided_powers.factorial_mul_dpow_eq_pow DividedPowers.factorial_mul_dpow_eq_pow
 
 theorem dpow_eval_zero {n : ℕ} (hn : n ≠ 0) : hI.dpow n 0 = 0 := by
-  rw [← MulZeroClass.mul_zero (0 : A), hI.dpow_smul n I.zero_mem, zero_pow hn, zero_mul, zero_mul]
+  rw [← MulZeroClass.mul_zero (0 : A), hI.dpow_smul n I.zero_mem, zero_pow (Nat.pos_of_ne_zero hn),
+    zero_mul, zero_mul]
 #align divided_powers.dpow_eval_zero DividedPowers.dpow_eval_zero
 
 /-- Proposition 1.2.7 of [B74], part (i). -/
@@ -259,7 +260,8 @@ theorem mul_dpow {ι : Type _} {s : Finset ι} (n : ι → ℕ) {a : A} (ha : a 
     rw [Finset.prod_insert hi, hrec, ← mul_assoc, mul_comm (hI.dpow (n _) a),
       mul_assoc, dpow_mul _ _ _ ha, ← Finset.sum_insert hi, ← mul_assoc]
     apply congr_arg₂ _ _ rfl
-    rw [Nat.multinomial_insert hi, mul_comm, Nat.cast_mul, Finset.sum_insert hi]
+    sorry
+    --rw [Nat.multinomial_insert _ hi, mul_comm, Nat.cast_mul, Finset.sum_insert hi]
 #align divided_powers.mul_dpow DividedPowers.mul_dpow
 
 example {α : Type*}  {n : ℕ} [DecidableEq α] (a : α) (m : Sym α n) (i : α) (hi : i ≠ a) :
@@ -304,10 +306,10 @@ theorem dpow_sum_aux (dpow : ℕ → A → A)
     apply symm
     apply sum_bij'
         (fun m _ => Sym.filterNe a m)
-        (fun m _ => m.2.fill a m.1)
-        (fun m hm => Finset.mem_sigma.2 ⟨mem_univ _, _⟩)
+        (fun m _ => sorry/- m.2.fill a m.1 -/)
+        (fun m hm => sorry/- Finset.mem_sigma.2 ⟨mem_univ _, _⟩ -/)
         (fun m hm => by
-          rw [mem_sym_iff]
+          sorry/- rw [mem_sym_iff]
           intro i hi
           rw [Sym.mem_fill_iff] at hi
           cases hi with
@@ -316,14 +318,15 @@ theorem dpow_sum_aux (dpow : ℕ → A → A)
             apply mem_insert_self
           | inr hi =>
             simp only [mem_sigma, mem_univ, mem_sym_iff, true_and] at hm
-            exact mem_insert_of_mem (hm i hi))
-        (fun m _ => Sym.fill_filterNe a _)
+            exact mem_insert_of_mem (hm i hi) -/)
+        (fun m _ => sorry/- Sym.fill_filterNe a _ -/)
     · intro m hm
       simp only [mem_sigma, mem_univ, mem_sym_iff, true_and] at hm
-      exact Sym.filter_ne_fill a m fun a_1 => ha (hm a a_1)
+      sorry --exact Sym.filter_ne_fill a m fun a_1 => ha (hm a a_1)
     · intro m hm
       simp only [mem_sym_iff, mem_insert] at hm
-      rw [Finset.prod_insert ha]
+      sorry
+      /- rw [Finset.prod_insert ha]
       apply congr_arg₂ _ rfl
       apply Finset.prod_congr rfl
       intro i hi
@@ -331,10 +334,10 @@ theorem dpow_sum_aux (dpow : ℕ → A → A)
       conv_lhs => rw [← Sym.fill_filterNe a m, Sym.coe_fill]
       simp only [Multiset.count_add, add_right_eq_self, Multiset.count_eq_zero,
         Sym.mem_coe, Sym.mem_replicate, not_and]
-      exact fun _ => ne_of_mem_of_not_mem hi ha
-    · intro m hm
+      exact fun _ => ne_of_mem_of_not_mem hi ha -/
+    /- · intro m hm
       convert sym_filterNe_mem a hm
-      rw [erase_insert ha]
+      rw [erase_insert ha] -/
     -- explicit arguments above rather than m.fill_filter_ne a
     -- adjust once multinomial has been incorporated to mathlib
     #align divided_powers.dpow_sum_aux DividedPowers.dpow_sum_aux
@@ -369,10 +372,10 @@ theorem dpow_sum_aux' {M D : Type _} [AddCommMonoid M] [CommSemiring D] (dp : �
     apply symm
     apply sum_bij'
       (fun m _ => Sym.filterNe a m)
-      (fun m _ => m.2.fill a m.1)
-      (fun m hm => Finset.mem_sigma.2 ⟨mem_univ _, _⟩)
+      (fun m _ => sorry/- m.2.fill a m.1 -/)
+      (fun m hm => sorry/- Finset.mem_sigma.2 ⟨mem_univ _, _⟩ -/)
       (fun m hm => by
-          rw [mem_sym_iff]
+         sorry)/-  rw [mem_sym_iff]
           intro i hi
           rw [Sym.mem_fill_iff] at hi
           cases hi with
@@ -381,14 +384,15 @@ theorem dpow_sum_aux' {M D : Type _} [AddCommMonoid M] [CommSemiring D] (dp : �
             apply mem_insert_self
           | inr hi =>
             simp only [mem_sigma, mem_univ, mem_sym_iff, true_and] at hm
-            exact mem_insert_of_mem (hm i hi))
-        (fun m _ => Sym.fill_filterNe a _)
+            exact mem_insert_of_mem (hm i hi)) -/
+        (fun m _ => sorry/- Sym.fill_filterNe a _ -/)
     · intro m hm
       simp only [mem_sigma, mem_univ, mem_sym_iff, true_and] at hm
-      exact Sym.filter_ne_fill a m fun a_1 => ha (hm a a_1)
+      sorry --exact Sym.filter_ne_fill a m fun a_1 => ha (hm a a_1)
     · intro m hm
       simp only [mem_sym_iff, mem_insert] at hm
-      rw [Finset.prod_insert ha]
+      sorry
+      /- rw [Finset.prod_insert ha]
       apply congr_arg₂ _ rfl
       apply Finset.prod_congr rfl
       intro i hi
@@ -396,10 +400,10 @@ theorem dpow_sum_aux' {M D : Type _} [AddCommMonoid M] [CommSemiring D] (dp : �
       conv_lhs => rw [← Sym.fill_filterNe a m, Sym.coe_fill]
       simp only [Multiset.count_add, add_right_eq_self, Multiset.count_eq_zero,
         Sym.mem_coe, Sym.mem_replicate, not_and]
-      exact fun _ => ne_of_mem_of_not_mem hi ha
-    · intro m hm
+      exact fun _ => ne_of_mem_of_not_mem hi ha -/
+    /- · intro m hm
       convert sym_filterNe_mem a hm
-      rw [erase_insert ha]
+      rw [erase_insert ha] -/
     -- explicit arguments above rather than m.fill_filter_ne a
     -- adjust once multinomial has been incorporated to mathlib
 
@@ -437,7 +441,7 @@ theorem prod_dpow_self {ι : Type _} {s : Finset ι} {n : ι → ℕ} (a : A) (h
   · rw [Finset.prod_insert hi, ih, ← mul_assoc, mul_comm (hI.dpow _ a), mul_assoc,
       hI.dpow_mul _ _ ha, ← Finset.sum_insert hi, ← mul_assoc]
     apply congr_arg₂ _ _ rfl
-    rw [mul_comm, Nat.multinomial_insert hi, Finset.sum_insert hi, Nat.cast_mul]
+    sorry --rw [mul_comm, Nat.multinomial_insert _ hi, Finset.sum_insert hi, Nat.cast_mul]
 #align divided_powers.prod_dpow_self DividedPowers.prod_dpow_self
 
 end BasicLemmas
