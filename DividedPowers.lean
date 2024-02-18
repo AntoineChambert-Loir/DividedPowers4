@@ -1,4 +1,4 @@
---import DividedPowers.Basic
+import DividedPowers.Basic
 import DividedPowers.BasicLemmas
 --import DividedPowers.DPAlgebra.BaseChange
 --import DividedPowers.DPAlgebra.Dpow
