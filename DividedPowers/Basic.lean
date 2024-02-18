@@ -296,7 +296,6 @@ theorem dpow_sum_aux (dpow : ℕ → A → A)
       rw [card_eq_zero]
       rw [sym_eq_empty]
       exact ⟨hn, rfl⟩
-      sorry -- delete once the mathlib bug in `sym_eq_empty` is corrected
   | @insert a s ha ih =>
     have hx' : ∀ i, i ∈ s → x i ∈ I := fun i hi => hx i (Finset.mem_insert_of_mem hi)
     simp_rw [sum_insert ha,
@@ -364,7 +363,6 @@ theorem dpow_sum_aux' {M D : Type _} [AddCommMonoid M] [CommSemiring D] (dp : �
       convert Finset.sum_empty
       rw [sym_eq_empty]
       exact ⟨hn, rfl⟩
-      sorry -- delete once the mathlib bug in `sym_eq_empty` is corrected
   | @insert a s ha ih =>
     simp_rw [sum_insert ha, dpow_add n, sum_range, ih, mul_sum, sum_sigma']
     apply symm
