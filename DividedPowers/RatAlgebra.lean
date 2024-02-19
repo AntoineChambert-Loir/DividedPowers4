@@ -2,8 +2,9 @@ import DividedPowers.ForMathlib.AlgebraLemmas
 import DividedPowers.Basic
 import Mathlib.Algebra.Algebra.Basic
 
+open Nat
 
-lemma Nat.isUnitFactorial (n : ℕ) : IsUnit (n.factorial : ℚ) := by
+lemma Nat.isUnitFactorial (n : ℕ) : IsUnit (n ! : ℚ) := by
   rw [isUnit_iff_ne_zero, ne_eq, Nat.cast_eq_zero]
   apply Nat.factorial_ne_zero
 
@@ -37,11 +38,11 @@ variable {A : Type _} [CommSemiring A] {I : Ideal A}
 open scoped Classical
 
 noncomputable def dpow (I : Ideal A) : ℕ → A → A := fun m x =>
-  if x ∈ I then Ring.inverse (m.factorial : A) * x ^ m else 0
+  if x ∈ I then Ring.inverse (m ! : A) * x ^ m else 0
 #align divided_powers.of_invertible_factorial.dpow DividedPowers.OfInvertibleFactorial.dpow
 
 theorem dpow_eq_of_mem {I : Ideal A} (m : ℕ) {x : A} (hx : x ∈ I) :
-  dpow I m x = Ring.inverse (m.factorial : A) * x ^ m := by 
+  dpow I m x = Ring.inverse (m ! : A) * x ^ m := by
   simp only [dpow] ; rw [if_pos hx]
 #align divided_powers.of_invertible_factorial.dpow_dif_pos DividedPowers.OfInvertibleFactorial.dpow_eq_of_mem
 
@@ -53,10 +54,8 @@ theorem dpow_null {m : ℕ} {x : A} (hx : x ∉ I) : dpow I m x = 0 := by
   simp only [dpow] ; rw [if_neg hx]
 #align divided_powers.of_invertible_factorial.dpow_null DividedPowers.OfInvertibleFactorial.dpow_null
 
-theorem dpow_zero {x : A} (hx : x ∈ I) : dpow I 0 x = 1 :=
-  by
-  simp only [dpow]
-  rw [if_pos hx, pow_zero, mul_one, Nat.factorial_zero, Nat.cast_one, Ring.inverse_one]
+theorem dpow_zero {x : A} (hx : x ∈ I) : dpow I 0 x = 1 := by
+  simp only [dpow, factorial_zero, cast_one, Ring.inverse_one, _root_.pow_zero, mul_one, if_pos hx]
 #align divided_powers.of_invertible_factorial.dpow_zero DividedPowers.OfInvertibleFactorial.dpow_zero
 
 theorem dpow_one {x : A} (hx : x ∈ I) : dpow I 1 x = x := by
@@ -69,7 +68,8 @@ theorem dpow_mem {m : ℕ} (hm : m ≠ 0) {x : A} (hx : x ∈ I) : dpow I m x �
   exact Ideal.mul_mem_left I _ (Ideal.pow_mem_of_mem I hx _ (Nat.pos_of_ne_zero hm))
 #align divided_powers.of_invertible_factorial.dpow_mem DividedPowers.OfInvertibleFactorial.dpow_mem
 
-theorem dpow_add_dif_pos {n : ℕ} (hn_fac : IsUnit ((n - 1).factorial : A)) {m : ℕ} (hmn : m < n)
+theorem dpow_add_dif_pos {n : ℕ}
+    (hn_fac : IsUnit ((n - 1) ! : A)) {m : ℕ} (hmn : m < n)
     {x y : A} (hx : x ∈ I) (hy : y ∈ I) :
     dpow I m (x + y) = (Finset.range (m + 1)).sum fun k : ℕ => dpow I k x * dpow I (m - k) y := by
   rw [dpow_eq_of_mem m (Ideal.add_mem I hx hy)]
@@ -77,33 +77,27 @@ theorem dpow_add_dif_pos {n : ℕ} (hn_fac : IsUnit ((n - 1).factorial : A)) {m 
   rw [Ring.inverse_mul_eq_iff_eq_mul _ _ _ (factorial_isUnit hn_fac hmn), Finset.mul_sum, add_pow]
   apply Finset.sum_congr rfl
   intro k hk
-  rw [Finset.mem_range, Nat.lt_succ_iff] at hk 
-  have h_ch :
-    (m.choose k : A) =
-      (m.factorial : A) * (Ring.inverse k.factorial : A) * (Ring.inverse (m - k).factorial : A) :=
-    by
-    have hadd : m = m - k + k := (tsub_add_cancel_iff_le.mpr hk).symm
-    simp only [← mul_assoc]
-    rw [Ring.eq_mul_inverse_iff_mul_eq _ _ _ 
-        (factorial_isUnit hn_fac (lt_of_le_of_lt (Nat.sub_le m k) hmn)),
-      Ring.eq_mul_inverse_iff_mul_eq _ _ _ 
-        (factorial_isUnit hn_fac (lt_of_le_of_lt hk hmn))]
-    nth_rw 1 [hadd]
-    nth_rw 3 [hadd]
-    rw [← Nat.cast_mul, ← Nat.cast_mul, Nat.add_choose_mul_factorial_mul_factorial]
-  rw [if_pos hx, if_pos hy, h_ch, ← mul_assoc, ← mul_assoc,
-    mul_comm (Ring.inverse ↑(m - k).factorial) (y ^ (m - k)), mul_assoc _ (x ^ k), ←
-    mul_assoc (x ^ k), mul_comm (x ^ k * y ^ (m - k)) (Ring.inverse ↑(m - k).factorial)]
+  rw [Finset.mem_range, Nat.lt_succ_iff] at hk
+  rw [if_pos hx, if_pos hy]
   ring_nf
+  simp only [mul_assoc]; apply congr_arg₂ _ rfl; apply congr_arg₂ _ rfl
+  rw [← mul_assoc]
+  rw [Ring.eq_mul_inverse_iff_mul_eq _ _ _
+        (factorial_isUnit hn_fac (lt_of_le_of_lt (Nat.sub_le m k) hmn)),
+      Ring.eq_mul_inverse_iff_mul_eq _ _ _
+        (factorial_isUnit hn_fac (lt_of_le_of_lt hk hmn))]
+  nth_rw 1 [← tsub_add_cancel_iff_le.mpr hk]
+  nth_rw 3 [← tsub_add_cancel_iff_le.mpr hk]
+  rw [← Nat.cast_mul, ← Nat.cast_mul, Nat.add_choose_mul_factorial_mul_factorial]
 #align divided_powers.of_invertible_factorial.dpow_add_dif_pos DividedPowers.OfInvertibleFactorial.dpow_add_dif_pos
 
-theorem dpow_add {n : ℕ} (hn_fac : IsUnit ((n - 1).factorial : A)) (hnI : I ^ n = 0) (m : ℕ) {x : A}
+theorem dpow_add {n : ℕ} (hn_fac : IsUnit ((n - 1) ! : A)) (hnI : I ^ n = 0) (m : ℕ) {x : A}
     (hx : x ∈ I) {y : A} (hy : y ∈ I) :
     dpow I m (x + y) = (Finset.range (m + 1)).sum fun k : ℕ => dpow I k x * dpow I (m - k) y :=
   by
   by_cases hmn : m < n
   · exact dpow_add_dif_pos hn_fac hmn hx hy
-  · have h_sub : I ^ m ≤ I ^ n := Ideal.pow_le_pow (not_lt.mp hmn)
+  · have h_sub : I ^ m ≤ I ^ n := Ideal.pow_le_pow_right (not_lt.mp hmn)
     rw [dpow_eq_of_mem m (Ideal.add_mem I hx hy)]
     simp only [dpow]
     have hxy : (x + y) ^ m = 0 :=
@@ -129,83 +123,70 @@ theorem dpow_add {n : ℕ} (hn_fac : IsUnit ((n - 1).factorial : A)) (hnI : I ^ 
 #align divided_powers.of_invertible_factorial.dpow_add DividedPowers.OfInvertibleFactorial.dpow_add
 
 theorem dpow_smul (m : ℕ) {a x : A} (hx : x ∈ I) : dpow I m (a * x) = a ^ m * dpow I m x := by
-  rw [dpow_eq_of_mem m (Ideal.mul_mem_left I _ hx), dpow_eq_of_mem m hx, 
+  rw [dpow_eq_of_mem m (Ideal.mul_mem_left I _ hx), dpow_eq_of_mem m hx,
     mul_pow, ← mul_assoc, mul_comm _ (a ^ m), mul_assoc]
 #align divided_powers.of_invertible_factorial.dpow_smul DividedPowers.OfInvertibleFactorial.dpow_smul
 
-theorem dpow_mul_dif_pos {n : ℕ} (hn_fac : IsUnit ((n - 1).factorial : A)) {m k : ℕ}
+theorem dpow_mul_dif_pos {n : ℕ} (hn_fac : IsUnit ((n - 1) ! : A)) {m k : ℕ}
     (hkm : m + k < n) {x : A} (hx : x ∈ I) :
-    dpow I m x * dpow I k x = ↑((m + k).choose m) * dpow I (m + k) x :=
-  by
+    dpow I m x * dpow I k x = ↑((m + k).choose m) * dpow I (m + k) x := by
   have hm : m < n := lt_of_le_of_lt le_self_add hkm
   have hk : k < n := lt_of_le_of_lt le_add_self hkm
-  have h_fac :
-    Ring.inverse (m.factorial : A) * (Ring.inverse k.factorial : A) =
-      ↑((m + k).choose m) * (Ring.inverse (m + k).factorial : A) :=
-    by
-    rw [Ring.eq_mul_inverse_iff_mul_eq _ _ _ (factorial_isUnit hn_fac hkm), 
+  rw [dpow_eq_of_mem _ hx, dpow_eq_of_mem _ hx, dpow_eq_of_mem _ hx,
+    mul_assoc, ← mul_assoc (x ^ m), mul_comm (x ^ m), mul_assoc _ (x ^ m),
+    ← pow_add, ← mul_assoc, ← mul_assoc]
+  apply congr_arg₂ _ _ rfl
+  rw [Ring.eq_mul_inverse_iff_mul_eq _ _ _ (factorial_isUnit hn_fac hkm),
       mul_assoc,
       Ring.inverse_mul_eq_iff_eq_mul _ _ _ (factorial_isUnit hn_fac hm),
       Ring.inverse_mul_eq_iff_eq_mul _ _ _ (factorial_isUnit hn_fac hk)]
-    norm_cast; apply congr_arg
-    rw [← Nat.add_choose_mul_factorial_mul_factorial, mul_comm, mul_comm _ m.factorial,
-      Nat.choose_symm_add]
-  rw [dpow_eq_of_mem _ hx, dpow_eq_of_mem _ hx, dpow_eq_of_mem _ hx, 
-    mul_assoc, ← mul_assoc (x ^ m), mul_comm (x ^ m), mul_assoc _ (x ^ m), 
-    ← pow_add, ← mul_assoc, ← mul_assoc, h_fac]
+  norm_cast; apply congr_arg
+  rw [← Nat.add_choose_mul_factorial_mul_factorial, mul_comm, mul_comm _ (m !), Nat.choose_symm_add]
 #align divided_powers.of_invertible_factorial.dpow_mul_dif_pos DividedPowers.OfInvertibleFactorial.dpow_mul_dif_pos
 
 theorem dpow_mul {n : ℕ} (hn_fac : IsUnit ((n - 1).factorial : A)) (hnI : I ^ n = 0) (m k : ℕ)
-    {x : A} (hx : x ∈ I) : dpow I m x * dpow I k x = ↑((m + k).choose m) * dpow I (m + k) x :=
-  by
+    {x : A} (hx : x ∈ I) : dpow I m x * dpow I k x = ↑((m + k).choose m) * dpow I (m + k) x := by
   by_cases hkm : m + k < n
   · exact dpow_mul_dif_pos hn_fac hkm hx
   · have hxmk : x ^ (m + k) = 0 := Ideal.mem_pow_eq_zero n (m + k) hnI (not_lt.mp hkm) hx
-    rw [dpow_eq_of_mem m hx, dpow_eq_of_mem k hx, dpow_eq_of_mem (m + k) hx, 
+    rw [dpow_eq_of_mem m hx, dpow_eq_of_mem k hx, dpow_eq_of_mem (m + k) hx,
       mul_assoc, ← mul_assoc (x ^ m), mul_comm (x ^ m), mul_assoc _ (x ^ m), ← pow_add, hxmk,
       MulZeroClass.mul_zero, MulZeroClass.mul_zero, MulZeroClass.mul_zero, MulZeroClass.mul_zero]
 #align divided_powers.of_invertible_factorial.dpow_mul DividedPowers.OfInvertibleFactorial.dpow_mul
 
-theorem dpow_comp_dif_pos {n : ℕ} (hn_fac : IsUnit ((n - 1).factorial : A)) {m k : ℕ} (hk : k ≠ 0)
+theorem dpow_comp_dif_pos {n : ℕ} (hn_fac : IsUnit ((n - 1) ! : A)) {m k : ℕ} (hk : k ≠ 0)
     (hkm : m * k < n) {x : A} (hx : x ∈ I) :
-    dpow I m (dpow I k x) = ↑(mchoose m k) * dpow I (m * k) x :=
-  by
-  have hmn : m < n := lt_of_le_of_lt (Nat.le_mul_of_pos_right (Nat.pos_of_ne_zero hk)) hkm
+    dpow I m (dpow I k x) = ↑(mchoose m k) * dpow I (m * k) x := by
+  have hmn : m < n := lt_of_le_of_lt (Nat.le_mul_of_pos_right _ (Nat.pos_of_ne_zero hk)) hkm
   rw [dpow_eq_of_mem (m * k) hx, dpow_eq_of_mem _ (dpow_mem hk hx)]
   by_cases hm0 : m = 0
-  · simp only [hm0, MulZeroClass.zero_mul, pow_zero, mul_one, mchoose_zero, Nat.cast_one, one_mul]
-  · have hkn : k < n := lt_of_le_of_lt (Nat.le_mul_of_pos_left (Nat.pos_of_ne_zero hm0)) hkm
+  · simp only [hm0, MulZeroClass.zero_mul, _root_.pow_zero, mul_one, mchoose_zero, Nat.cast_one, one_mul]
+  · have hkn : k < n := lt_of_le_of_lt (Nat.le_mul_of_pos_left _ (Nat.pos_of_ne_zero hm0)) hkm
     rw [dpow_eq_of_mem _ hx]
-    have h_fac :
-      Ring.inverse (m.factorial : A) * (Ring.inverse k.factorial : A) ^ m =
-        ↑(mchoose m k) * (Ring.inverse (m * k).factorial : A) :=
-      by
-      rw [Ring.eq_mul_inverse_iff_mul_eq _ _ _ (factorial_isUnit hn_fac hkm), 
-        mul_assoc,
-        Ring.inverse_mul_eq_iff_eq_mul _ _ _ (factorial_isUnit hn_fac hmn)]
-      rw [Ring.inverse_pow_mul_eq_iff_eq_mul _ _ (factorial_isUnit hn_fac hkn)]
-      rw [← mchoose_lemma _ hk]
-      simp only [Nat.cast_mul, Nat.cast_pow]
-      rw [mul_comm (m.factorial : A), mul_assoc]
-    rw [mul_pow, ← pow_mul, mul_comm k, ← mul_assoc, ← mul_assoc, h_fac]
+    rw [mul_pow, ← pow_mul, mul_comm k, ← mul_assoc, ← mul_assoc]
+    apply congr_arg₂ _ _ rfl
+    rw [Ring.eq_mul_inverse_iff_mul_eq _ _ _ (factorial_isUnit hn_fac hkm),
+      mul_assoc, Ring.inverse_mul_eq_iff_eq_mul _ _ _ (factorial_isUnit hn_fac hmn)]
+    rw [Ring.inverse_pow_mul_eq_iff_eq_mul _ _ (factorial_isUnit hn_fac hkn)]
+    rw [← mchoose_lemma _ hk]
+    simp only [Nat.cast_mul, Nat.cast_pow]
+    rw [mul_comm (m ! : A), mul_assoc]
 #align divided_powers.of_invertible_factorial.dpow_comp_dif_pos DividedPowers.OfInvertibleFactorial.dpow_comp_dif_pos
 
 theorem dpow_comp {n : ℕ} (hn_fac : IsUnit ((n - 1).factorial : A)) (hnI : I ^ n = 0) (m : ℕ)
     {k : ℕ} (hk : k ≠ 0) {x : A} (hx : x ∈ I) :
-    dpow I m (dpow I k x) = ↑(mchoose m k) * dpow I (m * k) x :=
-  by
+    dpow I m (dpow I k x) = ↑(mchoose m k) * dpow I (m * k) x := by
   by_cases hmk : m * k < n
   · exact dpow_comp_dif_pos hn_fac hk hmk hx
   · have hxmk : x ^ (m * k) = 0 := Ideal.mem_pow_eq_zero n (m * k) hnI (not_lt.mp hmk) hx
-    rw [dpow_eq_of_mem _ (dpow_mem hk hx), dpow_eq_of_mem _ hx, dpow_eq_of_mem _ hx, 
-      mul_pow, ← pow_mul, ← mul_assoc, mul_comm k, hxmk, 
+    rw [dpow_eq_of_mem _ (dpow_mem hk hx), dpow_eq_of_mem _ hx, dpow_eq_of_mem _ hx,
+      mul_pow, ← pow_mul, ← mul_assoc, mul_comm k, hxmk,
       MulZeroClass.mul_zero, MulZeroClass.mul_zero, MulZeroClass.mul_zero]
 #align divided_powers.of_invertible_factorial.dpow_comp DividedPowers.OfInvertibleFactorial.dpow_comp
 
 /-- Proposition 1.2.7 of [B74], part (ii). -/
 noncomputable def dividedPowers {n : ℕ} (hn_fac : IsUnit ((n - 1).factorial : A))
-    (hnI : I ^ n = 0) : DividedPowers I
-    where
+    (hnI : I ^ n = 0) : DividedPowers I where
   dpow := dpow I
   dpow_null {_ _} hx := dpow_null hx
   dpow_zero {_} hx := dpow_zero hx
@@ -218,7 +199,7 @@ noncomputable def dividedPowers {n : ℕ} (hn_fac : IsUnit ((n - 1).factorial : 
 #align divided_powers.of_invertible_factorial.divided_powers DividedPowers.OfInvertibleFactorial.dividedPowers
 
 lemma dpow_def {n : ℕ} (hn_fac : IsUnit ((n - 1).factorial : A)) (hnI : I ^ n = 0) (m : ℕ) (x : A) :
-  (dividedPowers (hn_fac) (hnI)).dpow m x = 
+  (dividedPowers (hn_fac) (hnI)).dpow m x =
     if (x ∈ I) then Ring.inverse (m.factorial : A) * x ^ m else 0 := rfl
 
 end OfInvertibleFactorial
@@ -255,7 +236,7 @@ noncomputable def dpow : ℕ → R → R := fun n => OfInvertibleFactorial.dpow 
 variable {I}
 
 -- We may not need this, but I'll leave it here for now
-theorem dpow_eq_of_mem (n : ℕ) {x : R} (hx : x ∈ I) : 
+theorem dpow_eq_of_mem (n : ℕ) {x : R} (hx : x ∈ I) :
   dpow I n x = (Ring.inverse n.factorial : R) * x ^ n := by
   rw [dpow, OfInvertibleFactorial.dpow_eq_of_mem _ hx]
 #align divided_powers.rat_algebra.dpow_def DividedPowers.RatAlgebra.dpow_eq_of_mem
@@ -306,4 +287,3 @@ theorem dividedPowers_unique (hI : DividedPowers I) : hI = dividedPowers I :=
 end RatAlgebra
 
 end DividedPowers
-
