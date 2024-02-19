@@ -7,19 +7,19 @@ noncomputable section
 namespace DividedPowerAlgebra
 
 
-open DirectSum Finset Function Ideal Ideal.Quotient MvPolynomial RingEquiv RingQuot TrivSqZeroExt 
+open DirectSum Finset Function Ideal Ideal.Quotient MvPolynomial RingEquiv RingQuot TrivSqZeroExt
 
 section CommSemiring
 
-variable (R : Type u) (M : Type v) [CommSemiring R] [AddCommMonoid M] [Module R M] 
+variable (R : Type u) (M : Type v) [CommSemiring R] [AddCommMonoid M] [Module R M]
 
 variable [DecidableEq R] [DecidableEq M]
 
 section GradeZero
 
 def algebraMapInv : DividedPowerAlgebra R M →ₐ[R] R :=
-  lift (dividedPowersBot R) (0 : M →ₗ[R] R) 
-    (fun m => by simp only [LinearMap.zero_apply, mem_bot])
+  lift (dividedPowersBot R) (0 : M →ₗ[R] R)
+    (fun _ => by simp only [LinearMap.zero_apply, mem_bot])
 #align divided_power_algebra.algebra_map_inv DividedPowerAlgebra.algebraMapInv
 
 theorem algebraMapInv_eq (f : MvPolynomial (ℕ × M) R) :
@@ -32,15 +32,15 @@ theorem algebraMapInv_eq (f : MvPolynomial (ℕ × M) R) :
   · simp only [if_pos hn, liftAlgHom_apply, LinearMap.zero_apply, aeval_X]
     rw [DividedPowers.dpow_eval_zero _ (ne_of_gt hn)]
   · rw [if_neg hn]
-    rw [not_lt, le_zero_iff] at hn 
-    simp only [hn, liftAlgHom_apply, LinearMap.zero_apply, aeval_X, 
+    rw [not_lt, le_zero_iff] at hn
+    simp only [hn, liftAlgHom_apply, LinearMap.zero_apply, aeval_X,
       DividedPowers.dpow_zero _ (mem_bot.mpr rfl)]
 #align divided_power_algebra.algebra_map_inv_eq DividedPowerAlgebra.algebraMapInv_eq
 
 theorem proj'_zero_comp_algebraMap (x : R) :
   ((proj' R M 0 ∘ algebraMap R (DividedPowerAlgebra R M)) x).val =
     (algebraMap R (DividedPowerAlgebra R M)) x := by
-  simp only [proj', proj, LinearMap.coe_mk, AddHom.coe_mk, Function.comp_apply, 
+  simp only [proj', proj, LinearMap.coe_mk, AddHom.coe_mk, Function.comp_apply,
     Algebra.algebraMap_eq_smul_one, decompose_smul, decompose_one]
   rfl
 #align divided_power_algebra.proj'_zero_comp_algebra_map
@@ -56,12 +56,12 @@ theorem algebraMap_leftInverse :
   (algebraMap_leftInverse R M).injective.eq_iff
 #align divided_power_algebra.algebra_map_inj DividedPowerAlgebra.algebraMap_inj
 
-@[simp] theorem algebraMap_eq_zero_iff (x : R) : 
+@[simp] theorem algebraMap_eq_zero_iff (x : R) :
     algebraMap R (DividedPowerAlgebra R M) x = 0 ↔ x = 0 :=
   map_eq_zero_iff (algebraMap _ _) (algebraMap_leftInverse _ _).injective
 #align divided_power_algebra.algebra_map_eq_zero_iff DividedPowerAlgebra.algebraMap_eq_zero_iff
 
-@[simp] theorem algebraMap_eq_one_iff (x : R) : 
+@[simp] theorem algebraMap_eq_one_iff (x : R) :
     algebraMap R (DividedPowerAlgebra R M) x = 1 ↔ x = 1 :=
   map_eq_one_iff (algebraMap _ _) (algebraMap_leftInverse _ _).injective
 #align divided_power_algebra.algebra_map_eq_one_iff DividedPowerAlgebra.algebraMap_eq_one_iff
@@ -74,9 +74,9 @@ theorem mkₐ_eq_aeval {C : Type*} [CommRing C] {D : Type*} (I : Ideal (MvPolyno
 
 theorem mk_eq_eval₂ {C : Type*} [CommRing C] {D : Type*} (I : Ideal (MvPolynomial D C)) :
     (Ideal.Quotient.mk I).toFun =
-      eval₂ (algebraMap C (MvPolynomial D C ⧸ I)) fun d : D => Ideal.Quotient.mk I (X d) := by 
+      eval₂ (algebraMap C (MvPolynomial D C ⧸ I)) fun d : D => Ideal.Quotient.mk I (X d) := by
   ext d
-  simp_rw [RingHom.toFun_eq_coe, ← mkₐ_eq_mk C, mkₐ_eq_aeval, aeval_X] 
+  simp_rw [RingHom.toFun_eq_coe, ← mkₐ_eq_mk C, mkₐ_eq_aeval, aeval_X]
   rfl
 #align divided_power_algebra.mk_eq_eval₂ DividedPowerAlgebra.mk_eq_eval₂
 
@@ -96,10 +96,10 @@ theorem algebraMap_right_inv_of_degree_zero (x : grade R M 0) :
     rw [eq_comm, ← Finsupp.support_eq_empty] at hexp
     obtain  ⟨nm, hnm⟩ := nonempty_of_ne_empty hexp
     specialize hp0 h
-    simp only [weightedDegree', LinearMap.toAddMonoidHom_coe, Finsupp.total_apply, Finsupp.sum, 
+    simp only [weightedDegree', LinearMap.toAddMonoidHom_coe, Finsupp.total_apply, Finsupp.sum,
       sum_eq_zero_iff] at hp0
     specialize hp0 nm hnm
-    simp only [smul_eq_mul, mul_eq_zero] at hp0 
+    simp only [smul_eq_mul, mul_eq_zero] at hp0
     cases' hp0 with hnm0 hnm0
     . simp only [Finsupp.mem_support_iff] at hnm
       exact hnm hnm0
@@ -118,7 +118,7 @@ end CommSemiring
 
 section CommRing
 
-variable (R : Type u) (M : Type v) [CommRing R] [AddCommMonoid M] [Module R M] 
+variable (R : Type u) (M : Type v) [CommRing R] [AddCommMonoid M] [Module R M]
 
 variable [DecidableEq R] [DecidableEq M]
 
@@ -131,13 +131,13 @@ def IsAugmentationIdeal (A : Type*) [CommRing A] (J : Ideal A) : Prop :=
 #align is_augmentation_ideal DividedPowerAlgebra.IsAugmentationIdeal
 
 /-- The augmentation ideal in the divided_power_algebra -/
-def augIdeal : (Ideal (DividedPowerAlgebra R M) : Type (max u v)) := 
+def augIdeal : (Ideal (DividedPowerAlgebra R M) : Type (max u v)) :=
   RingHom.ker (algebraMapInv R M).toRingHom
 #align divided_power_algebra.aug_ideal DividedPowerAlgebra.augIdeal
 
 
 theorem mem_augIdeal_iff (f : DividedPowerAlgebra R M) :
-    f ∈ augIdeal R M ↔ algebraMapInv R M f = 0 := by 
+    f ∈ augIdeal R M ↔ algebraMapInv R M f = 0 := by
   rw [augIdeal, AlgHom.toRingHom_eq_coe, RingHom.mem_ker, RingHom.coe_coe]
 #align divided_power_algebra.mem_aug_ideal_iff DividedPowerAlgebra.mem_augIdeal_iff
 
@@ -146,32 +146,30 @@ theorem ι_mem_augIdeal (m : M) : ι R M m ∈ augIdeal R M := by
   simp only [mem_augIdeal_iff, ι_def, dp, algebraMapInv_eq, aeval_X, zero_lt_one, ite_true]
 #align divided_power_algebra.ι_mem_aug_ideal DividedPowerAlgebra.ι_mem_augIdeal
 
-def kerLiftAlg_algebraMapInv := kerLiftAlg (algebraMapInv R M) 
---  better type would be : (DividedPowerAlgebra R M ⧸ augIdeal R M) →ₐ[R] R 
+def kerLiftAlg_algebraMapInv := kerLiftAlg (algebraMapInv R M)
+--  better type would be : (DividedPowerAlgebra R M ⧸ augIdeal R M) →ₐ[R] R
 
-def algebraMap_mod_augIdeal : 
-    R →+* (DividedPowerAlgebra R M ⧸ augIdeal R M) := 
+def algebraMap_mod_augIdeal :
+    R →+* (DividedPowerAlgebra R M ⧸ augIdeal R M) :=
   algebraMap R (DividedPowerAlgebra R M ⧸ augIdeal R M)
 
--- The next two lemmas timeout (due to an inference problem, I think) 
+-- The next two lemmas timeout (due to an inference problem, I think)
 
-lemma kerLiftAlg_leftInverse : 
+lemma kerLiftAlg_leftInverse :
     Function.LeftInverse (kerLiftAlg_algebraMapInv R M) (algebraMap_mod_augIdeal R M) := by
   intro r
   exact AlgHom.commutes (kerLiftAlg (algebraMapInv R M)) r
 
-lemma kerLiftAlg_rightInverse : 
+lemma kerLiftAlg_rightInverse :
     Function.RightInverse (kerLiftAlg_algebraMapInv R M) (algebraMap_mod_augIdeal R M) := by
   apply Function.rightInverse_of_injective_of_leftInverse
   · apply RingHom.kerLift_injective
   · apply kerLiftAlg_leftInverse
 
-def algebraMap_comp_kerLiftAlg := 
+def algebraMap_comp_kerLiftAlg :=
   (algebraMap R (DividedPowerAlgebra R M)).comp (kerLiftAlg_algebraMapInv R M).toRingHom
 
--- uses around 260000 heartbeats
-set_option maxHeartbeats 300000 in 
-lemma augIdeal_isAugmentationIdeal' : 
+lemma augIdeal_isAugmentationIdeal' :
     Function.LeftInverse (Ideal.Quotient.mk (augIdeal R M))
       (algebraMap_comp_kerLiftAlg R M) := by
   intro r
@@ -179,25 +177,20 @@ lemma augIdeal_isAugmentationIdeal' :
   rw [RingHom.coe_comp, Function.comp_apply, Ideal.Quotient.mk_algebraMap]
   apply kerLiftAlg_rightInverse
 
--- uses aroung a million heartbeats!
-count_heartbeats in -- prints heartbeat count in the declaration (and sets `maxHeartbeats` to infinity)
-set_option synthInstance.maxHeartbeats 100000 in
-set_option trace.profiler true in -- prints wall clock times in the declaration
-set_option pp.proofs.withType false in
 -- We prove that the augmentation is an augmentation ideal, namely there is a section
 theorem augIdeal_isAugmentationIdeal :
   IsAugmentationIdeal (DividedPowerAlgebra R M) (augIdeal R M) := by
   dsimp only [IsAugmentationIdeal]
   use algebraMap_comp_kerLiftAlg R M
   exact augIdeal_isAugmentationIdeal' R M
-#align divided_power_algebra.aug_ideal_is_augmentation_ideal 
+#align divided_power_algebra.aug_ideal_is_augmentation_ideal
   DividedPowerAlgebra.augIdeal_isAugmentationIdeal
 
 -- Q : if algebra map has a section, is the kernel an augmentation ideal?
 theorem coeff_zero_of_mem_augIdeal {f : MvPolynomial (ℕ × M) R}
     (hf : f ∈ supported R {nm : ℕ × M | 0 < nm.fst}) (hf0 : mk f ∈ augIdeal R M) :
     coeff 0 f = 0 := by
-  simp only [augIdeal, AlgHom.toRingHom_eq_coe, RingHom.mem_ker, RingHom.coe_coe] at hf0  
+  simp only [augIdeal, AlgHom.toRingHom_eq_coe, RingHom.mem_ker, RingHom.coe_coe] at hf0
   rw [← hf0, algebraMapInv_eq R M, eq_comm]
   conv_lhs => rw [f.as_sum]
   rw [map_sum, Finset.sum_eq_single 0]
@@ -213,7 +206,7 @@ theorem coeff_zero_of_mem_augIdeal {f : MvPolynomial (ℕ × M) R}
       rw [Finset.mem_coe, mem_vars]
       exact ⟨b, ⟨hb, hi⟩⟩
     rw [if_pos hi']
-    exact zero_pow (zero_lt_iff.mpr (Finsupp.mem_support_iff.mp hi))
+    exact zero_pow (Finsupp.mem_support_iff.mp hi)
   · intro hf'
     rw [monomial_zero', aeval_C, Algebra.id.map_eq_id, RingHom.id_apply, ←
       not_mem_support_iff.mp hf']
@@ -226,7 +219,7 @@ theorem coeff_zero_of_mem_augIdeal {f : MvPolynomial (ℕ × M) R}
  -/
 
 -- TODO: is it better to use ⊤ or set.univ? Is it the same?
-theorem  augIdeal_eq_span : 
+theorem  augIdeal_eq_span :
     augIdeal R M = span (Set.image2 (dp R) {n : ℕ | 0 < n} Set.univ) := by
   classical
   apply le_antisymm
@@ -248,16 +241,18 @@ theorem  augIdeal_eq_span :
         apply
           mul_mem_right _ _
             (pow_mem_of_mem _ _ _ (Nat.pos_of_ne_zero (Finsupp.mem_support_iff.mp hnm)))
-        exact subset_span ⟨n, m, by simpa only using supp_ss hnm, Set.mem_univ _, rfl⟩
+        refine subset_span ⟨n,
+          by simpa only [Set.mem_setOf_eq] using supp_ss hnm,
+          m, trivial , rfl⟩
       · -- cas où c.support est vide : c = 0 ; contradiction
-        rw [not_nonempty_iff_eq_empty, Finsupp.support_eq_empty] at hc0 
-        rw [hc0] at hc 
+        rw [not_nonempty_iff_eq_empty, Finsupp.support_eq_empty] at hc0
+        rw [hc0] at hc
         exact absurd hf0' (mem_support_iff.mp hc)
     · -- supp_ss
       intro nm hnm
       apply mem_supported.mp hf
       simp only [mem_vars, mem_coe, mem_support_iff, Ne.def, Finsupp.mem_support_iff, exists_prop]
-      rw [mem_coe, Finsupp.mem_support_iff] at hnm 
+      rw [mem_coe, Finsupp.mem_support_iff] at hnm
       exact ⟨c, ⟨mem_support_iff.mp hc, hnm⟩⟩
   · rw [span_le]
     intro f
@@ -287,9 +282,9 @@ theorem lift_augIdeal_le {A : Type*} [CommRing A] [Algebra R A] {I : Ideal A}
     (hI : DividedPowers I) (φ : M →ₗ[R] A) (hφ : ∀ m, φ m ∈ I) :
     Ideal.map (lift hI φ hφ) (augIdeal R M) ≤ I := by
   simp only [augIdeal_eq_span, Ideal.map_span, Ideal.span_le, SetLike.mem_coe]
-  rintro y ⟨x, ⟨n, m, hn, _, rfl⟩, rfl⟩
+  rintro y ⟨x, ⟨n, hn, m, _, rfl⟩, rfl⟩
   simp only [liftAlgHom_apply_dp]
-  exact hI.dpow_mem (ne_of_gt hn) (hφ m)
+  refine hI.dpow_mem (ne_of_gt hn) (hφ m)
 #align divided_power_algebra.lift_aug_ideal_le DividedPowerAlgebra.lift_augIdeal_le
 
 theorem lift_mem_of_mem_augIdeal {A : Type*} [CommRing A] [Algebra R A] {I : Ideal A}
@@ -310,13 +305,13 @@ noncomputable def ringEquivDegreeZero : RingEquiv (grade R M 0) R where
 
 def proj0RingHom : RingHom (DividedPowerAlgebra R M) R where
   toFun := (ringEquivDegreeZero R M).toFun ∘ proj' R M 0
-  map_one' := by 
+  map_one' := by
     simp only [toEquiv_eq_coe, Equiv.toFun_as_coe, coe_toEquiv, comp_apply, proj'_zero_one R M]
     exact (ringEquivDegreeZero R M).map_one
   map_mul' x y := by
     simp only [toEquiv_eq_coe, Equiv.toFun_as_coe, coe_toEquiv, comp_apply]
     rw [← _root_.map_mul, proj'_zero_mul]
-  map_zero' := by 
+  map_zero' := by
     simp only [toEquiv_eq_coe, Equiv.toFun_as_coe, coe_toEquiv, comp_apply, map_zero]
   map_add' := by
     simp only [toEquiv_eq_coe, Equiv.toFun_as_coe, coe_toEquiv, comp_apply, map_add, forall_const]

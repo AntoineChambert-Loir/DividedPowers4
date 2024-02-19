@@ -4,11 +4,11 @@ noncomputable section
 
 namespace DividedPowerAlgebra
 
-open DirectSum Finset Function Ideal Ideal.Quotient MvPolynomial RingEquiv RingQuot TrivSqZeroExt 
+open DirectSum Finset Function Ideal Ideal.Quotient MvPolynomial RingEquiv RingQuot TrivSqZeroExt
 
 section CommRing
 
-variable (R M : Type _) [CommRing R] [AddCommGroup M] [Module R M] 
+variable (R M : Type _) [CommRing R] [AddCommGroup M] [Module R M]
 
 variable [DecidableEq R] [DecidableEq M]
 
@@ -16,25 +16,24 @@ section GradeOne
 
 theorem ι_mem_grade_one (m : M) : ι R M m ∈ grade R M 1 := by
   use X ⟨1,m⟩
-  constructor
-  . simp only [mem_weightedHomogeneousSubmodule]
-    convert isWeightedHomogeneous_X R Prod.fst ⟨1,m⟩
-  . rfl
+  refine ⟨?_, rfl⟩
+  . simp only [SetLike.mem_coe, mem_weightedHomogeneousSubmodule]
+    exact isWeightedHomogeneous_X R Prod.fst ⟨1,m⟩
 
-variable [Module Rᵐᵒᵖ M] [IsCentralScalar R M] 
+variable [Module Rᵐᵒᵖ M] [IsCentralScalar R M]
 
 
-/-- The canonical map from `divided_power_algebra R M` into `triv_sq_zero_ext R M` 
+/-- The canonical map from `divided_power_algebra R M` into `triv_sq_zero_ext R M`
   that sends `DividedPowerAlgebra.ι` to `TrivSqZeroExt.inr`. -/
-def toTrivSqZeroExt : DividedPowerAlgebra R M →ₐ[R] TrivSqZeroExt R M := 
-  lift (DividedPowers.OfSquareZero.dividedPowers 
+def toTrivSqZeroExt : DividedPowerAlgebra R M →ₐ[R] TrivSqZeroExt R M :=
+  lift (DividedPowers.OfSquareZero.dividedPowers
       (TrivSqZeroExt.sqZero R M) : DividedPowers (kerIdeal R M))
     (inrHom R M) (fun m => (mem_kerIdeal_iff_exists R M _).mpr ⟨m, rfl⟩)
 #align divided_power_algebra.to_triv_sq_zero_ext DividedPowerAlgebra.toTrivSqZeroExt
 
 @[simp] theorem toTrivSqZeroExt_ι (x : M) :
     toTrivSqZeroExt R M (ι R M x) = inr x := lift_ι_apply R _ _ _ x
-  
+
 #align divided_power_algebra.to_triv_sq_zero_ext_ι DividedPowerAlgebra.toTrivSqZeroExt_ι
 
 theorem toTrivSqZeroExt_apply_dp_of_two_le (n : ℕ) (m : M) (hn : 2 ≤ n) :
@@ -53,13 +52,13 @@ theorem deg_one_left_inv :
 
 #align divided_power_algebra.deg_one_left_inv DividedPowerAlgebra.deg_one_left_inv
 
-theorem grade_one_eq_span : 
+theorem grade_one_eq_span :
     grade R M 1 = Submodule.span R (Set.range (dp R 1)) := by
   apply le_antisymm
   · intro p hp
     obtain ⟨q, hq1, hqp⟩ := surjective_of_supported' R M ⟨p, hp⟩
-    simp only at hqp 
-    simp only [IsWeightedHomogeneous, ne_eq] at hq1  
+    simp only at hqp
+    simp only [IsWeightedHomogeneous, ne_eq] at hq1
     rw [← hqp, (q : MvPolynomial (ℕ × M) R).as_sum, map_sum]
     apply Submodule.sum_mem (Submodule.span R (Set.range (dp R 1)))
     intro d hd
@@ -96,10 +95,10 @@ theorem deg_one_right_inv :
       (proj' R M 1 ∘ ι R M) := by
   --try with snd_hom , submodule.val
   simp only [Function.rightInverse_iff_comp, ← LinearMap.coe_comp, ← @LinearMap.id_coe R]
-  rw [FunLike.coe_injective.eq_iff]
+  rw [DFunLike.coe_injective.eq_iff]
   apply LinearMap.ext_on_range (grade_one_eq_span' R M).symm
   intro m
-  simp only [proj', proj, ι, LinearMap.coe_comp, LinearMap.coe_mk, AddHom.coe_mk, 
+  simp only [proj', proj, ι, LinearMap.coe_comp, LinearMap.coe_mk, AddHom.coe_mk,
     Submodule.coeSubtype, comp_apply, AlgHom.toLinearMap_apply, sndHom_apply,
     LinearMap.id_coe, id_eq]
   ext
@@ -121,14 +120,14 @@ def linearEquivDegreeOne :
 
 lemma ι_toTrivSqZeroExt_of_mem_grade_one {a} (ha : a ∈ grade R M 1) :
     (ι R M) ((sndHom R M) ((toTrivSqZeroExt R M) a)) = a := by
-  suffices ⟨(ι R M) ((sndHom R M) ((toTrivSqZeroExt R M) a)), ι_mem_grade_one R M _⟩ = 
+  suffices ⟨(ι R M) ((sndHom R M) ((toTrivSqZeroExt R M) a)), ι_mem_grade_one R M _⟩ =
     (⟨a, ha⟩ : grade R M 1) by
-    simpa only [sndHom_apply, Subtype.mk.injEq] using this 
+    simpa only [sndHom_apply, Subtype.mk.injEq] using this
   apply (linearEquivDegreeOne R M).symm.injective
   rw [← LinearEquiv.invFun_eq_symm]
   simp only [linearEquivDegreeOne, toTrivSqZeroExt_ι, sndHom_apply, snd_inr]
 
-theorem mem_grade_one_iff (a : DividedPowerAlgebra R M) : 
+theorem mem_grade_one_iff (a : DividedPowerAlgebra R M) :
     a ∈ grade R M 1 ↔ ∃ m, a = ι R M m := by
   constructor
   . intro ha
