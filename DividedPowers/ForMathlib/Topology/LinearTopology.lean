@@ -10,7 +10,7 @@ theorem TopologicalSpace.eq_iff_nhds_eq {α : Type _} (τ τ' : TopologicalSpace
   constructor
   · intro h s a _; rw [h]
   intro h; ext s
-  simp only [@isOpen_iff_mem_nhds α τ, @isOpen_iff_mem_nhds α τ']
+  rw [@isOpen_iff_mem_nhds α s τ, @isOpen_iff_mem_nhds α s τ']
   apply forall_congr'; intro a
   apply imp_congr_right; exact h s a
 #align topological_space_eq_iff_nhds_eq TopologicalSpace.eq_iff_nhds_eq
@@ -25,22 +25,21 @@ theorem TopologicalSpace.eq_iff_nhds_eq_nhds {α : Type _} (τ τ' : Topological
     apply eq_of_nhds_eq_nhds
     simp only [h, implies_true]
 
-
 -- TODO: This is similar to `le_iff_nhds`, do we need this variant?
 theorem TopologicalSpace.le_iff_nhds_le {α : Type _} (τ τ' : TopologicalSpace α) :
     τ ≤ τ' ↔ ∀ (s : Set α), ∀ a ∈ s, s ∈ @nhds α τ' a → s ∈ @nhds α τ a := by
   rw [TopologicalSpace.le_def]
   constructor
-  · intro h a s _
-    simp only [@mem_nhds_iff α τ, @mem_nhds_iff α τ']
+  · intro h s a _
+    simp only [@mem_nhds_iff α a s τ, @mem_nhds_iff α a s τ']
     apply Exists.imp; intro t
     apply And.imp_right
     simp only [and_imp]
     intro ht_open h'
     exact ⟨h t ht_open, h'⟩
-  . intro h
+  · intro h
     intro s
-    simp only [@isOpen_iff_mem_nhds α τ, @isOpen_iff_mem_nhds α τ']
+    simp only [@isOpen_iff_mem_nhds α s τ, @isOpen_iff_mem_nhds α s τ']
     intro hs a has
     exact h s a has (hs a has)
 #align topological_space_le_iff_nhds_le TopologicalSpace.le_iff_nhds_le
@@ -88,7 +87,9 @@ lemma ofComm {α : Type _} [CommRing α] {ι : Type _} {B : ι → Ideal α}
 lemma toRingSubgroupsBasis {ι : Type _} {B : ι → Ideal α} (hB : IdealBasis B) :
     RingSubgroupsBasis fun i => (B i).toAddSubgroup where
   inter := hB.inter
-  mul i := ⟨i, fun u => by rintro ⟨x, y, _, hy, rfl⟩; exact Ideal.mul_mem_left _ _ hy⟩
+  mul i := ⟨i, fun u => by
+    rintro ⟨x, _, _, hy, rfl⟩
+    exact Ideal.mul_mem_left _ _ hy⟩
   leftMul a i := ⟨i, fun x hx => Ideal.mul_mem_left _ _ hx⟩
   rightMul a i := ⟨i, fun y hy =>  hB.mul_right _ _ hy⟩
 #align ideals_basis.to_ring_subgroups_basis IdealBasis.toRingSubgroupsBasis
