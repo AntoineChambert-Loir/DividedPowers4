@@ -35,7 +35,7 @@ import DividedPowers.ForMathlib.RingTheory.Ideal
 import DividedPowers.ForMathlib.RingTheory.SubmoduleMem
 import DividedPowers.ForMathlib.Topology.LinearTopology
 import DividedPowers.ForMathlib.WeightedHomogeneous
---import DividedPowers.IdealAdd
+import DividedPowers.IdealAdd
 import DividedPowers.PolynomialMap.Basic
 import DividedPowers.PolynomialMap.Coeff
 import DividedPowers.PolynomialMap.Graded
