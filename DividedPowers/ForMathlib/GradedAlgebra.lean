@@ -21,7 +21,7 @@ theorem DirectSum.mk_apply_of_mem {s : Finset ι} {f : ∀ i : (↑s : Set ι), 
 
 theorem DirectSum.mk_apply_of_not_mem {s : Finset ι} {f : ∀ i : (↑s : Set ι), β i.val} {n : ι}
     (hn : n ∉ s) : DirectSum.mk β s f n = 0 := by
-  dsimp only [Finset.coe_sort_coe, mk, AddMonoidHom.coe_mk, ZeroHom.coe_mk, DFinsupp.mk_apply] 
+  dsimp only [Finset.coe_sort_coe, mk, AddMonoidHom.coe_mk, ZeroHom.coe_mk, DFinsupp.mk_apply]
   rw [dif_neg hn]
 #align direct_sum.mk_apply_of_not_mem DirectSum.mk_apply_of_not_mem
 
@@ -34,16 +34,15 @@ variable {M : Type w} [DecidableEq M] [AddCommMonoid M]
 theorem DirectSum.coeAddMonoidHom_eq_dfinsupp_sum {M : Type w} [DecidableEq M] [AddCommMonoid M]
     (A : ι → AddSubmonoid M) (x : DirectSum ι fun i => A i) :
     DirectSum.coeAddMonoidHom A x = DFinsupp.sum x fun i => (fun x : A i => ↑x) := by
-  simp only [DirectSum.coeAddMonoidHom, DirectSum.toAddMonoid, DFinsupp.liftAddHom, AddEquiv.coe_mk,
-    Equiv.coe_fn_mk]
-  rw [DFinsupp.sumAddHom_apply]
-  simp only [AddSubmonoidClass.coe_subtype]
+  simp only [DirectSum.coeAddMonoidHom, DirectSum.toAddMonoid,
+    DFinsupp.liftAddHom, AddEquiv.coe_mk, Equiv.coe_fn_mk]
+  exact DFinsupp.sumAddHom_apply _ x
 #align direct_sum.coe_add_monoid_hom_eq_dfinsupp_sum DirectSum.coeAddMonoidHom_eq_dfinsupp_sum
 
 theorem DirectSum.coeLinearMap_eq_dfinsupp_sum {R : Type u} [Semiring R] [Module R M]
     (A : ι → Submodule R M) (x : DirectSum ι fun i => A i) :
     DirectSum.coeLinearMap A x = DFinsupp.sum x fun i => (fun x : A i => ↑x) := by
-  simp only [coeLinearMap, toModule, DFinsupp.lsum, LinearEquiv.coe_mk, LinearMap.coe_mk, 
+  simp only [coeLinearMap, toModule, DFinsupp.lsum, LinearEquiv.coe_mk, LinearMap.coe_mk,
     AddHom.coe_mk]
   rw [DFinsupp.sumAddHom_apply]
   simp only [LinearMap.toAddMonoidHom_coe, Submodule.coeSubtype]
@@ -132,4 +131,3 @@ def DirectSum.Decomposition.gradedAlgebra (dM : DirectSum.Decomposition M) : Gra
 #align direct_sum.decomposition.graded_algebra DirectSum.Decomposition.gradedAlgebra
 
 end DirectSum
-
