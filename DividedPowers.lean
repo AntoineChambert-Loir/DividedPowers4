@@ -4,7 +4,7 @@ import DividedPowers.BasicLemmas
 --import DividedPowers.DPAlgebra.Dpow
 --import DividedPowers.DPAlgebra.Envelope
 --import DividedPowers.DPAlgebra.Exponential
---import DividedPowers.DPAlgebra.Graded.Basic
+import DividedPowers.DPAlgebra.Graded.Basic
 --import DividedPowers.DPAlgebra.Graded.GradeOne
 --import DividedPowers.DPAlgebra.Graded.GradeZero
 --import DividedPowers.DPAlgebra.Init_copy
