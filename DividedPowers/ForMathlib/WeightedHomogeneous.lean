@@ -719,11 +719,11 @@ variable
 
 -- MODIF : new definition and new lemma
 /-- A weight function is nontrivial if its values are not torsion -/
-def NonTrivialWeight (w : σ → M) :=
+def NonTorsionWeight (w : σ → M) :=
   ∀ n x, n • w x = (0 : M) → n = 0
-#align mv_polynomial.non_trivial_weight MvPolynomial.NonTrivialWeight
+#align mv_polynomial.non_trivial_weight MvPolynomial.NonTorsionWeight
 
-theorem nonTrivialWeight_of [NoZeroSMulDivisors ℕ M] (hw : ∀ i : σ, w i ≠ 0) : NonTrivialWeight w := by
+theorem nonTrivialWeight_of [NoZeroSMulDivisors ℕ M] (hw : ∀ i : σ, w i ≠ 0) : NonTorsionWeight w := by
   intro n x; rw [smul_eq_zero]
   intro hnx
   cases' hnx with hn hx
@@ -738,7 +738,7 @@ theorem nonTrivialWeight_of [NoZeroSMulDivisors ℕ M] (hw : ∀ i : σ, w i ≠
   then the `weighted_homogeneous_component` of weighted degree `0`
   of a polynomial is its constant coefficient. -/
 @[simp]
-theorem weightedHomogeneousComponent_zero' (hw : NonTrivialWeight w) :
+theorem weightedHomogeneousComponent_zero' (hw : NonTorsionWeight w) :
     weightedHomogeneousComponent w 0 φ = C (coeff 0 φ) := by
   classical
   ext1 d
@@ -768,7 +768,7 @@ example (p q : Prop) : ((¬ p → q) ↔ p) ↔ (q → p) :=  by
   · simp [hp]
 
 -- MODIF : generalize to non_trivial_weight
-theorem weightedDegree'_eq_zero_iff (hw : NonTrivialWeight w) (m : σ →₀ ℕ) :
+theorem weightedDegree'_eq_zero_iff (hw : NonTorsionWeight w) (m : σ →₀ ℕ) :
     weightedDegree' w m = 0 ↔ ∀ x : σ, m x = 0 := by
   simp only [weightedDegree', Finsupp.total]
   simp only [LinearMap.toAddMonoidHom_coe, coe_lsum, LinearMap.coe_smulRight, LinearMap.id_coe, id_eq]
@@ -793,7 +793,7 @@ theorem isWeightedHomogeneous_zero_iff_weightedTotalDegree_eq_zero {p : MvPolyno
   MvPolynomial.isWeightedHomogeneous_zero_iff_weightedTotalDegree_eq_zero
 
 -- MODIF : new lemma
-theorem weightedTotalDegree_eq_zero_iff (hw : NonTrivialWeight w) (p : MvPolynomial σ R) :
+theorem weightedTotalDegree_eq_zero_iff (hw : NonTorsionWeight w) (p : MvPolynomial σ R) :
     p.weightedTotalDegree w = 0 ↔ ∀ (m : σ →₀ ℕ) (_ : m ∈ p.support) (x : σ), m x = ⊥ :=
   by
   rw [← isWeightedHomogeneous_zero_iff_weightedTotalDegree_eq_zero, IsWeightedHomogeneous]
