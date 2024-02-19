@@ -14,7 +14,7 @@ import DividedPowers.DPAlgebra.Misc
 --import DividedPowers.DPAlgebra.PolynomialMap
 import DividedPowers.DPAlgebra.RobyLemma5
 import DividedPowers.DPAlgebra.RobyLemma9
---import DividedPowers.DPMorphism
+import DividedPowers.DPMorphism
 import DividedPowers.ForMathlib.AlgebraComp
 import DividedPowers.ForMathlib.AlgebraLemmas
 import DividedPowers.ForMathlib.Antidiagonal
@@ -39,7 +39,7 @@ import DividedPowers.IdealAdd
 import DividedPowers.PolynomialMap.Basic
 import DividedPowers.PolynomialMap.Coeff
 import DividedPowers.PolynomialMap.Graded
---import DividedPowers.RatAlgebra
+import DividedPowers.RatAlgebra
 --import DividedPowers.SubDPIdeal
 #exit
 
