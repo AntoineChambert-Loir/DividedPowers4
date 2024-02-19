@@ -34,20 +34,20 @@ theorem isDPMorphism.comp {A B C : Type _} [CommSemiring A] [CommSemiring B] [Co
 /-- The structure of a dp_morphism between rings endowed with dp-rings -/
 @[ext]
 structure dpMorphism {A B : Type _} [CommSemiring A] [CommSemiring B] {I : Ideal A} {J : Ideal B}
-    (hI : DividedPowers I) (hJ : DividedPowers J) where
-  toRingHom : A →+* B
+    (hI : DividedPowers I) (hJ : DividedPowers J)
+  extends RingHom A B where
   ideal_comp : I.map toRingHom ≤ J
   dpow_comp : ∀ (n : ℕ), ∀ a ∈ I, hJ.dpow n (toRingHom a) = toRingHom (hI.dpow n a)
 #align divided_powers.pd_morphism DividedPowers.dpMorphism
 
-def dpMorphismFunLike {A B : Type _} [CommSemiring A] [CommSemiring B] {I : Ideal A} {J : Ideal B}
-    (hI : DividedPowers I) (hJ : DividedPowers J) : FunLike (dpMorphism hI hJ) A fun _x : A => B
-    where
+instance dpMorphism.instFunLike {A B : Type _} [CommSemiring A] [CommSemiring B] {I : Ideal A} {J : Ideal B}
+    (hI : DividedPowers I) (hJ : DividedPowers J) :
+    FunLike (dpMorphism hI hJ) A B where
   coe h := h.toRingHom
   coe_injective' h h' hh' := by
     cases h; cases h'; congr
     dsimp at hh' ; ext; rw [hh']
-#align divided_powers.pd_morphism_fun_like DividedPowers.dpMorphismFunLike
+#align divided_powers.pd_morphism_fun_like DividedPowers.dpMorphism.instFunLike
 
 def dpMorphism.isDPMorphism {A B : Type _} [CommSemiring A] [CommSemiring B] {I : Ideal A} {J : Ideal B}
     {hI : DividedPowers I} {hJ : DividedPowers J} (f : dpMorphism hI hJ) :
@@ -63,11 +63,11 @@ def dpMorphismIdeal {A B : Type _} [CommSemiring A] [CommSemiring B] {I : Ideal 
   carrier := {x ∈ I | ∀ n : ℕ, f (hI.dpow n (x : A)) = hJ.dpow n (f (x : A))}
   add_mem' := by
     intro x y hx hy
-    simp only [Set.mem_sep_iff, SetLike.mem_coe] at hx hy ⊢
+    simp only [Set.mem_setOf_eq, map_add] at hx hy ⊢
     refine' ⟨I.add_mem hx.1 hy.1, _⟩
     intro n
-    rw [hI.dpow_add _ hx.1 hy.1, map_add,
-      hJ.dpow_add _ (hf (Ideal.mem_map_of_mem f hx.1)) (hf (Ideal.mem_map_of_mem f hy.1)), map_sum]
+    rw [hI.dpow_add _ hx.1 hy.1, map_sum,
+      hJ.dpow_add _ (hf (Ideal.mem_map_of_mem f hx.1)) (hf (Ideal.mem_map_of_mem f hy.1))]
     apply congr_arg
     ext k
     rw [map_mul, hx.2 k, hy.2 (n - k)]
