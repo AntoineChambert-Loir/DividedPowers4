@@ -576,11 +576,13 @@ theorem sum_weightedHomogeneousComponent :
 #align mv_polynomial.sum_weighted_homogeneous_component MvPolynomial.sum_weightedHomogeneousComponent
 -/
 
+/- -- Useless
 theorem finsum_weightedHomogeneousComponent :
-    (finsum fun m => weightedHomogeneousComponent w m φ) = φ := by
+    (finsum fun m => weightedHomogeneousComponent w m φ) = φ :=
   -- rw [finsum_eq_sum _ (weightedHomogeneousComponent_finsupp φ)]
-  rw [sum_weightedHomogeneousComponent]
+  sum_weightedHomogeneousComponent _ _
 #align mv_polynomial.finsum_weighted_homogeneous_component MvPolynomial.finsum_weightedHomogeneousComponent
+-/
 
 variable {w}
 
@@ -723,13 +725,13 @@ def NonTorsionWeight (w : σ → M) :=
   ∀ n x, n • w x = (0 : M) → n = 0
 #align mv_polynomial.non_trivial_weight MvPolynomial.NonTorsionWeight
 
-theorem nonTrivialWeight_of [NoZeroSMulDivisors ℕ M] (hw : ∀ i : σ, w i ≠ 0) : NonTorsionWeight w := by
+theorem nonTorsionWeight_of_nonZero [NoZeroSMulDivisors ℕ M] (hw : ∀ i : σ, w i ≠ 0) : NonTorsionWeight w := by
   intro n x; rw [smul_eq_zero]
   intro hnx
   cases' hnx with hn hx
   exact hn
   exfalso; exact hw x hx
-#align mv_polynomial.non_trivial_weight_of MvPolynomial.nonTrivialWeight_of
+#align mv_polynomial.non_trivial_weight_of MvPolynomial.nonTorsionWeight_of_nonZero
 
 -- #print MvPolynomial.weightedHomogeneousComponent_zero
 /-
@@ -862,8 +864,7 @@ def weightedDecomposition [DecidableEq σ] [DecidableEq R] [DecidableEq M] :
   decompose' := decompose'_toFun R w
   left_inv φ := by
     conv_rhs => rw [← sum_weightedHomogeneousComponent w φ]
-    rw [←
-      DirectSum.sum_support_of (fun m => ↥(weightedHomogeneousSubmodule R w m))
+    rw [← DirectSum.sum_support_of (fun m => ↥(weightedHomogeneousSubmodule R w m))
         (decompose'_toFun R w φ)]
     simp only [DirectSum.coeAddMonoidHom_of, MvPolynomial.coeff_sum, map_sum]
     rw [finsum_eq_sum _ (weightedHomogeneousComponent_finsupp φ)]
