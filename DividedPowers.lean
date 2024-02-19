@@ -8,7 +8,7 @@ import DividedPowers.BasicLemmas
 --import DividedPowers.DPAlgebra.Graded.GradeOne
 --import DividedPowers.DPAlgebra.Graded.GradeZero
 --import DividedPowers.DPAlgebra.Init_copy
---import DividedPowers.DPAlgebra.Init
+import DividedPowers.DPAlgebra.Init
 import DividedPowers.DPAlgebra.Misc
 --import DividedPowers.DPAlgebra.mwe
 --import DividedPowers.DPAlgebra.PolynomialMap
