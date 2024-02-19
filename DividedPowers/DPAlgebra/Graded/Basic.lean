@@ -9,26 +9,28 @@ noncomputable section
 
 namespace DividedPowerAlgebra
 
-open DirectSum Finset Function Ideal Ideal.Quotient MvPolynomial RingEquiv RingQuot TrivSqZeroExt 
+open DirectSum Finset Function Ideal Ideal.Quotient MvPolynomial RingEquiv RingQuot TrivSqZeroExt
 
 section CommSemiring
 
-variable (R : Type u) (M : Type v) [CommSemiring R] [AddCommMonoid M] [Module R M] 
+variable (R : Type u) (M : Type v) [CommSemiring R] [AddCommMonoid M] [Module R M]
 
 variable [DecidableEq R] [DecidableEq M]
 
 local instance : GradedAlgebra (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) :=
   weightedGradedAlgebra R (Prod.fst : ℕ × M → ℕ)
 
-theorem rel_isPureHomogeneous : 
-    RelIsPureHomogeneous (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) (Rel R M) := by 
+theorem rel_isPureHomogeneous :
+    RelIsPureHomogeneous (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) (Rel R M) := by
   intro a b h
   cases' h with a r n a m n a n a b
   . exact ⟨0, zero_mem _, zero_mem _⟩
   . use 0
-    simp only [mem_weightedHomogeneousSubmodule, isWeightedHomogeneous_X, isWeightedHomogeneous_one]
+    simp only [mem_weightedHomogeneousSubmodule, isWeightedHomogeneous_X,
+      isWeightedHomogeneous_one, and_self]
   . use n
-    simp only [mem_weightedHomogeneousSubmodule, Submodule.smul_mem, isWeightedHomogeneous_X]
+    simp only [mem_weightedHomogeneousSubmodule, isWeightedHomogeneous_X,
+      Submodule.smul_mem, and_self]
   . use m + n
     constructor
     . apply IsWeightedHomogeneous.mul <;> simp only [isWeightedHomogeneous_X]
@@ -45,16 +47,16 @@ theorem rel_isPureHomogeneous :
       rw [mem_range, Nat.lt_succ_iff] at hc
       rw [Nat.add_sub_of_le hc]
 
-theorem Rel_isHomogeneous : 
-    RelIsHomogeneous (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) (Rel R M) := 
+theorem Rel_isHomogeneous :
+    RelIsHomogeneous (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) (Rel R M) :=
   RelIsHomogeneous_of_isPureHomogeneous _ (rel_isPureHomogeneous R M) Rel.rfl_zero
 
-theorem RelI_isHomogeneous (R : Type u) [CommRing R] (M : Type v) [AddCommGroup M] [Module R M] 
+theorem RelI_isHomogeneous (R : Type u) [CommRing R] (M : Type v) [AddCommGroup M] [Module R M]
     [DecidableEq R] [DecidableEq M] :
-    (RelI R M).IsHomogeneous (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) := 
-  IsHomogeneous_of_rel_isPureHomogeneous (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) 
+    (RelI R M).IsHomogeneous (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) :=
+  IsHomogeneous_of_rel_isPureHomogeneous (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ))
     (Rel R M) (rel_isPureHomogeneous R M)
-  
+
 set_option linter.uppercaseLean3 false
 #align divided_power_algebra.relI_is_homogeneous DividedPowerAlgebra.RelI_isHomogeneous
 
@@ -66,8 +68,8 @@ def grade (n : ℕ) : Submodule R (DividedPowerAlgebra R M) :=
     (DividedPowerAlgebra.Rel R M) n
 #align divided_power_algebra.grade DividedPowerAlgebra.grade
 
-lemma mem_grade_iff (a : DividedPowerAlgebra R M) (n : ℕ) : 
-    a ∈ grade R M n ↔ ∃ (p : MvPolynomial (ℕ × M) R), 
+lemma mem_grade_iff (a : DividedPowerAlgebra R M) (n : ℕ) :
+    a ∈ grade R M n ↔ ∃ (p : MvPolynomial (ℕ × M) R),
       (p ∈ weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ) n) ∧ mk p = a := by
   simp only [grade, _root_.quotSubmodule, Submodule.mem_map]
   rfl
@@ -77,14 +79,14 @@ theorem one_mem : (1 : DividedPowerAlgebra R M) ∈ grade R M 0 :=
 #align divided_power_algebra.one_mem DividedPowerAlgebra.one_mem
 
 /-- The canonical decomposition of `divided_power_algebra R M` -/
-def decomposition : DirectSum.Decomposition (M := DividedPowerAlgebra R M) (grade R M) := 
+def decomposition : DirectSum.Decomposition (M := DividedPowerAlgebra R M) (grade R M) :=
   _root_.quotDecomposition R (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ))
     (DividedPowerAlgebra.Rel R M) (Rel_isHomogeneous R M)
 #align divided_power_algebra.decomposition DividedPowerAlgebra.decomposition
 
 /-- The graded algebra structure on the divided power algebra-/
 def GAlgebra : GradedAlgebra (DividedPowerAlgebra.grade R M) :=
-  DirectSum.Decomposition_RingQuot R (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) 
+  DirectSum.Decomposition_RingQuot R (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ))
     (DividedPowerAlgebra.Rel R M) (Rel_isHomogeneous R M)
 #align divided_power_algebra.divided_power_galgebra DividedPowerAlgebra.GAlgebra
 
@@ -121,7 +123,7 @@ theorem mk_comp_toSupported :
     toSupported]
   split_ifs with h
   · rfl
-  · simp only [not_lt, le_zero_iff] at h 
+  · simp only [not_lt, le_zero_iff] at h
     rw [h, OneMemClass.coe_one, map_one]
     exact (dp_zero R m).symm
 
@@ -143,7 +145,7 @@ theorem surjective_of_supported' {n : ℕ} (p : grade R M n) :
   constructor
   · apply toSupported_isHomogeneous'
     exact hpn'
-  erw [FunLike.congr_fun (mk_comp_toSupported R M) p', hp']
+  erw [DFunLike.congr_fun (mk_comp_toSupported R M) p', hp']
   -- TODO: write mk_comp_to_supported
 #align divided_power_algebra.surjective_of_supported' DividedPowerAlgebra.surjective_of_supported'
 
@@ -174,7 +176,7 @@ theorem ι_def (m : M) : ι R M m = dp R 1 m := rfl
 /-
 theorem mk_algHom_mvPolynomial_ι_eq_ι (m : M) : mkₐ R (relI R M) (X (1, m)) = ι R m :=
   rfl
-#align divided_power_algebra.mk_alg_hom_mv_polynomial_ι_eq_ι 
+#align divided_power_algebra.mk_alg_hom_mv_polynomial_ι_eq_ι
   DividedPowerAlgebra.mk_algHom_mvPolynomial_ι_eq_ι
 
 theorem mk_alg_hom_mv_polynomial_ι_eq_ι' (m : M) : dp R 1 m = ι R m :=
@@ -183,18 +185,18 @@ theorem mk_alg_hom_mv_polynomial_ι_eq_ι' (m : M) : dp R 1 m = ι R m :=
   DividedPowerAlgebra.mk_alg_hom_mv_polynomial_ι_eq_ι'
 -/
 
-variable {M} 
-@[simp] theorem ι_comp_lift {A : Type w} [CommRing A] [Algebra R A] {I : Ideal A} 
-    (hI : DividedPowers I) {φ : M →ₗ[R] A} (hφ : ∀ (m : M), φ m ∈ I) : 
+variable {M}
+@[simp] theorem ι_comp_lift {A : Type w} [CommRing A] [Algebra R A] {I : Ideal A}
+    (hI : DividedPowers I) {φ : M →ₗ[R] A} (hφ : ∀ (m : M), φ m ∈ I) :
     (DividedPowerAlgebra.lift hI φ hφ).toLinearMap.comp (ι R M) = φ := by
   ext m
-  simp only [LinearMap.coe_comp, Function.comp_apply, AlgHom.toLinearMap_apply, ι_def, 
+  simp only [LinearMap.coe_comp, Function.comp_apply, AlgHom.toLinearMap_apply, ι_def,
     liftAlgHom_apply_dp]
   exact hI.dpow_one (hφ m)
 #align divided_power_algebra.ι_comp_lift DividedPowerAlgebra.ι_comp_lift
 
-@[simp] theorem lift_ι_apply {A : Type w} [CommRing A] [Algebra R A] {I : Ideal A} 
-    (hI : DividedPowers I) (φ : M →ₗ[R] A) (hφ : ∀ m, φ m ∈ I) (x : M) : 
+@[simp] theorem lift_ι_apply {A : Type w} [CommRing A] [Algebra R A] {I : Ideal A}
+    (hI : DividedPowers I) (φ : M →ₗ[R] A) (hφ : ∀ m, φ m ∈ I) (x : M) :
     lift hI φ hφ (ι R M x) = φ x := by
   conv_rhs => rw [← ι_comp_lift R hI hφ]; rfl
 #align divided_power_algebra.lift_ι_apply DividedPowerAlgebra.lift_ι_apply
@@ -202,7 +204,7 @@ variable {M}
 
 variable {R}
 
-def HasGradedDpow {A : Type w} [CommSemiring A] [Algebra R A] 
+def HasGradedDpow {A : Type w} [CommSemiring A] [Algebra R A]
     (𝒜 : ℕ → Submodule R A) {I : Ideal A} (hI : DividedPowers I) :=
   ∀ a ∈ I, ∀ (i : ℕ) (_ : a ∈ 𝒜 i) (n : ℕ), hI.dpow n a ∈ 𝒜 (n • i)
 #align divided_power_algebra.has_graded_dpow DividedPowerAlgebra.HasGradedDpow
@@ -211,7 +213,7 @@ section DecidableEq
 
 variable (R)
 
-variable (S : Type u) [CommSemiring S] [Algebra R S] 
+variable (S : Type u) [CommSemiring S] [Algebra R S]
 
 theorem liftAux_isHomogeneous {A : Type w} [CommSemiring A] [Algebra R A]
     [Algebra S A] [IsScalarTower R S A] (𝒜 : ℕ → Submodule S A)
@@ -222,7 +224,7 @@ theorem liftAux_isHomogeneous {A : Type w} [CommSemiring A] [Algebra R A]
     (hf : ∀ n m, f (n, m) ∈ 𝒜 n) :
     GalgHom.IsHomogeneous (DividedPowerAlgebra.grade R M) 𝒜
       (lift' f hf_zero hf_smul hf_mul hf_add) := by
-  intro i a 
+  intro i a
   simp only [mem_grade_iff]
   rintro ⟨p, hp, rfl⟩
   rw [lift'AlgHom_apply, p.as_sum, aeval_sum]
@@ -238,7 +240,7 @@ variable {R}
 
 instance : GradedAlgebra (DividedPowerAlgebra.grade R M) := GAlgebra R M
 
-theorem lift_isHomogeneous {A : Type w} [CommSemiring A] [Algebra R A] (𝒜 : ℕ → Submodule R A) 
+theorem lift_isHomogeneous {A : Type w} [CommSemiring A] [Algebra R A] (𝒜 : ℕ → Submodule R A)
     [GradedAlgebra 𝒜] {I : Ideal A} (hI : DividedPowers I) (hI' : HasGradedDpow 𝒜 hI)
     (φ : M →ₗ[R] A) (hφ : ∀ m, φ m ∈ I) (hφ' : ∀ m, φ m ∈ 𝒜 1) :
     GalgHom.IsHomogeneous (DividedPowerAlgebra.grade R M) 𝒜 (lift hI φ hφ) := by
@@ -247,10 +249,10 @@ theorem lift_isHomogeneous {A : Type w} [CommSemiring A] [Algebra R A] (𝒜 : �
   simpa only [Algebra.id.smul_eq_mul, mul_one] using hI' (φ m) (hφ m) 1 (hφ' m) n
 #align divided_power_algebra.lift_is_homogeneous DividedPowerAlgebra.lift_isHomogeneous
 
-variable {N : Type v'} [AddCommMonoid N] [DecidableEq S] [DecidableEq N] [Module R N] [Module S N] 
-  [IsScalarTower R S N] 
+variable {N : Type v'} [AddCommMonoid N] [DecidableEq S] [DecidableEq N] [Module R N] [Module S N]
+  [IsScalarTower R S N]
 
-  
+
 theorem lift'_isHomogeneous (f : M →ₗ[R] N) :
     GalgHom.IsHomogeneous (DividedPowerAlgebra.grade R M) (DividedPowerAlgebra.grade S N)
       (LinearMap.lift R S f) := by
