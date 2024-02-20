@@ -574,7 +574,7 @@ theorem dpow_comp_coeffs {m n p : ℕ} (hn : n ≠ 0) (hp : p ≤ m * n) :
   simp_rw [mul_assoc, ← map_mul]
   simp_rw [← map_sum, coeff_C_mul]
   simp only [← mul_assoc, coeff_mul_C]
-  simp_rw [coeff_X_pow, one_pow, mul_one, coeff_mul_C]
+  simp_rw [coeff_X_pow]
 
   rw [Finset.sum_eq_single p]
 
@@ -612,7 +612,7 @@ theorem dpow_comp_coeffs {m n p : ℕ} (hn : n ≠ 0) (hp : p ≤ m * n) :
     rw [Finset.mem_range, Nat.lt_succ_iff]
     simp only [mem_filter] at hx
     rw [← hx.2]
-    exact range_sym_weighted_sum_le x hx.1
+    exact range_sym_weighted_sum_le hx.1
 #align divided_powers.ideal_add.dpow_comp_coeffs DividedPowers.IdealAdd.dpow_comp_coeffs
 
 theorem dpow_comp {J : Ideal A} (hJ : DividedPowers J)
