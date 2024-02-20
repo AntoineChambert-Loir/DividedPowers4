@@ -12,12 +12,12 @@ import DividedPowers.DPAlgebra.Init
 import DividedPowers.DPAlgebra.Misc
 --import DividedPowers.DPAlgebra.mwe
 --import DividedPowers.DPAlgebra.PolynomialMap
-import DividedPowers.DPAlgebra.RobyLemma5
+-- import DividedPowers.DPAlgebra.RobyLemma5 -- now uselesss, use TensorProduct.map_ker 
 import DividedPowers.DPAlgebra.RobyLemma9
 import DividedPowers.DPMorphism
 import DividedPowers.ForMathlib.AlgebraComp
 import DividedPowers.ForMathlib.AlgebraLemmas
-import DividedPowers.ForMathlib.Antidiagonal
+-- import DividedPowers.ForMathlib.Antidiagonal -- now useless
 import DividedPowers.ForMathlib.CombinatoricsLemmas
 import DividedPowers.ForMathlib.GradedAlgebra
 --import DividedPowers.ForMathlib.GradedModuleQuot -- Not ported
