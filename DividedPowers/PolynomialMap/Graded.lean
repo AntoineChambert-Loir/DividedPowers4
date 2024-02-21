@@ -2,6 +2,7 @@ import DividedPowers.PolynomialMap.Coeff
 import Mathlib.RingTheory.TensorProduct
 import Mathlib.Data.MvPolynomial.Basic
 import Mathlib.Data.Polynomial.Basic
+import DividedPowers.ForMathlib.TensorProductFinsupp
 
 open TensorProduct LinearMap
 
@@ -669,16 +670,181 @@ noncomputable def f
     ℕ → S ⊗[R] N :=
   fun i => (rTensor N ((lcoeff S i).restrictScalars R) sn)
 
+noncomputable def F
+    (S : Type*) [CommSemiring S] [Algebra R S] :
+    S[X] ⊗[R] N →ₗ[S] (ℕ → S ⊗[R] N) where
+  toFun := fun sn i ↦ (rTensor N ((lcoeff S i).restrictScalars R) sn)
+  map_add' := fun sn sn' ↦ by
+    ext i
+    simp only [map_add, Pi.add_apply]
+  map_smul' := fun s sn ↦ by
+    ext i
+    simp only [RingHom.id_apply, Pi.smul_apply, @rTensor_smul']
+
+lemma hF
+    (S : Type*) [CommSemiring S] [Algebra R S] (sn : S[X] ⊗[R] N) :
+    Set.Finite (Function.support (F S sn)) := by
+  induction sn using TensorProduct.induction_on with
+  | zero =>
+    suffices : F S 0 = (0 : ℕ → S ⊗[R] N)
+    simp only [this, support_zero', Set.finite_empty]
+    ext i
+    simp only [map_zero, Pi.zero_apply]
+  | tmul s m =>
+    suffices : _ ⊆ (s.support : Set ℕ)
+    apply Set.Finite.subset _ this
+    exact Finset.finite_toSet (Polynomial.support s)
+    intro i
+    contrapose
+    simp only [Finset.mem_coe, mem_support_iff, ne_eq, not_not, mem_support]
+    intro hi
+    simp [F, hi, zero_tmul]
+  | add sm sm' h h' =>
+    simp only [f, map_add]
+    apply Set.Finite.subset ?_ (Function.support_add _ _)
+    exact Set.Finite.union h h'
+
 lemma hf
     (S : Type*) [CommSemiring S] [Algebra R S] (sn : S[X] ⊗[R] N) :
-  Set.Finite (Function.support (f S sn)) := sorry
+    Set.Finite (Function.support (f S sn)) := by
+  induction sn using TensorProduct.induction_on with
+  | zero =>
+    suffices : f S 0 = (0 : ℕ → S ⊗[R] N)
+    simp only [this, support_zero', Set.finite_empty]
+    ext i
+    simp only [f, map_zero, Pi.zero_apply]
+  | tmul s m =>
+    suffices : _ ⊆ (s.support : Set ℕ)
+    apply Set.Finite.subset _ this
+    exact Finset.finite_toSet (Polynomial.support s)
+    intro i
+    contrapose
+    simp only [Finset.mem_coe, mem_support_iff, ne_eq, not_not, mem_support]
+    intro hi
+    simp [f, hi, zero_tmul]
+  | add sm sm' h h' =>
+    apply Set.Finite.subset (Set.Finite.union h h')
+    intro i
+    contrapose
+    simp only [Set.mem_union, mem_support, f, ne_eq, map_add, not_not, not_or, and_imp]
+    intro hi hi'
+    rw [hi, hi', add_zero]
+
+
+
+noncomputable def F'
+    (S : Type*) [CommSemiring S] [Algebra R S] :
+    S[X] ⊗[R] N →ₗ[S] (ℕ →₀ S ⊗[R] N) where
+  toFun := fun sn => Finsupp.ofSupportFinite _ (hF S sn)
+  map_add' := fun sn sn' => by
+    ext i
+    simp only [map_add, Finsupp.ofSupportFinite_coe, Pi.add_apply, Finsupp.coe_add]
+  map_smul' := fun s sn => by
+    ext i
+    simp only [map_smul, Finsupp.ofSupportFinite_coe, Pi.smul_apply,
+      RingHom.id_apply, Finsupp.coe_smul]
+
+noncomputable def F'inv
+    (S : Type*) [CommSemiring S] [Algebra R S] :
+    (ℕ →₀ S ⊗[R] N) →ₗ[S] S[X] ⊗[R] N where
+  toFun := fun f ↦ f.sum (fun i ↦ (rTensor N ((monomial i).restrictScalars R)))
+  map_add' := fun f g ↦ by
+    rw [← Finsupp.sum_add_index]
+    · intro i _
+      simp only [map_zero]
+    · intro a _ s s'
+      simp only [map_add]
+  map_smul' := fun s f ↦ by
+    simp only [RingHom.id_apply]
+    -- doesn't work ! --  rw [Finsupp.sum_smul_index]
+    apply symm
+    rw [Finsupp.sum, Finset.smul_sum, Finsupp.sum_of_support_subset]
+    apply Finset.sum_congr rfl
+    · intro i _
+      simp only [Finsupp.coe_smul, Pi.smul_apply, rTensor_smul']
+    · exact Finsupp.support_smul
+    · intro i _
+      simp only [map_zero]
+
+#check TensorProduct.directSumLeft
+
+example : N ≃ₗ[R] (R →ₗ[R] N) := by
+  exact LinearEquiv.symm (ringLmapEquivSelf R R N)
+
+section
+
+variable {R M N : Type*} [CommSemiring R] [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module R N]
+
+variable {ι : Type*} [DecidableEq ι]
+
+def Finsupp.lsum (f : ι → M →ₗ[R] N) : (ι →₀ M) →ₗ[R] N where
+  toFun := fun p ↦ p.sum (f · ·)
+  map_add' := fun p q ↦ by
+    rw [← Finsupp.sum_add_index]
+    · intro i _ ; simp only [map_zero]
+    · intro i _ m m'
+      simp only [map_add]
+  map_smul' := fun r p ↦ by
+    simp only [Finsupp.sum_smul_index_linearMap', RingHom.id_apply]
+
+noncomputable def Finsupp.tensorProductLeft :
+    (ι →₀ M) ⊗[R] N ≃ₗ[R] ι →₀ (M ⊗[R] N) :=
+  LinearEquiv.ofLinear
+    (TensorProduct.lift
+      (Finsupp.lsum (fun i ↦ TensorProduct.curry (Finsupp.lsingle i))))
+    (Finsupp.lsum (fun i ↦ rTensor N (Finsupp.lsingle i)))
+    (by ext i m n j; simp [Finsupp.lsum])
+    (by ext i m n; simp [Finsupp.lsum])
+
+lemma Finsupp.tensorProductLeft_apply_tmul (p : ι →₀ M) (n : N) :
+  Finsupp.tensorProductLeft (p ⊗ₜ[R] n) =
+    p.sum (fun i m ↦ Finsupp.single i (m ⊗ₜ[R] n)) := by
+  simp [tensorProductLeft, Finsupp.lsum]
+
+lemma Finsupp.tensorProductLeft_symm_apply_single (i : ι) (m : M) (n : N) :
+    Finsupp.tensorProductLeft.symm (Finsupp.single i (m ⊗ₜ[R] n)) =
+      Finsupp.single i m ⊗ₜ[R] n := by
+  simp [Finsupp.tensorProductLeft, Finsupp.lsum]
+
+noncomputable def Finsupp.tensorProductRight :
+    M ⊗[R] (ι →₀ N) ≃ₗ[R] ι →₀ (M ⊗[R] N) :=
+  ((TensorProduct.comm R _ _).trans
+    (Finsupp.tensorProductLeft (ι := ι) (M := N) (N := M) (R := R))).trans
+      (Finsupp.mapRange.linearEquiv (TensorProduct.comm R _ _))
+
+
+
+noncomputable example  :
+    R[X] ⊗[R] N ≃ₗ[R] (ℕ →₀ N) := by
+  apply LinearEquiv.ofLinear (TensorProduct.lift (Polynomial.lsum (fun i ↦ (ringLmapEquivSelf R R _).symm (Finsupp.lsingle i)))) (by
+
+    sorry)
+  · sorry
+  · sorry
+
+noncomputable example (S : Type*) [CommSemiring S] [Algebra R S] :
+    S[X] ⊗[R] N ≃ₗ[S] (ℕ →₀ S ⊗[R] N) := {
+  F' S with
+  invFun := F'inv S
+  left_inv := fun s => by
+    simp only [AddHom.toFun_eq_coe, coe_toAddHom]
+    induction s using TensorProduct.induction_on with
+    | zero => simp only [map_zero]
+    | add => simp only [map_add]
+    | tmul => sorry
+  right_inv := fun f => by
+    ext i
+    simp only [AddHom.toFun_eq_coe, coe_toAddHom]
+    sorry }
+
+
 
 noncomputable def f'
     (S : Type*) [CommSemiring S] [Algebra R S] (sn : S[X] ⊗[R] N) :
     ℕ →₀ S ⊗[R] N :=
   Finsupp.ofSupportFinite _ (hf S sn)
 
-noncomputable example
+noncomputable def hf'
     (S : Type*) [CommSemiring S] [Algebra R S] (sn : S[X] ⊗[R] N) :
     (Finsupp.ofSupportFinite _ (hf S sn)).sum
       (fun i => (rTensor N ((monomial i).restrictScalars R))) = sn := by
@@ -700,8 +866,24 @@ noncomputable example
     · intro i hi
       simp only [map_zero]
   | add sn sn' h h' =>
+    conv_rhs => rw [← h, ← h']
+    rw [← Finsupp.sum_add_index]
+    · conv_rhs => rw [Finsupp.sum]
+      rw [Finsupp.sum_of_support_subset]
+      apply Finset.sum_congr rfl
+      · intro i hi
+        simp [Finsupp.ofSupportFinite_coe, f]
+      · intro i
+        contrapose
+        simp [Finsupp.ofSupportFinite_coe, f]
+      · intro i hi
+        simp only [map_zero]
+    · simp only [Finset.mem_union, Finsupp.mem_support_iff, ne_eq, map_zero, implies_true,
+      forall_const]
+    · simp only [Finset.mem_union, Finsupp.mem_support_iff, ne_eq, map_add, forall_const,
+      implies_true]
 
-    sorry
+
 
 --       (fun i => rTensor N ((monomial i).restrictScalars R) (rTensor N ((lcoeff S i).restrictScalars R) sn)) := by
   sorry

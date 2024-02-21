@@ -1,3 +1,4 @@
+import DividedPowers.ForMathlib.TensorProductFinsupp
 import Mathlib.RingTheory.PowerSeries.Basic
 import Mathlib.RingTheory.TensorProduct
 import Mathlib.LinearAlgebra.TensorProduct
@@ -142,6 +143,9 @@ section MvPolynomialModule
   not only polynomials (corresponding to σ →₀ ℕ).
   M[σ] has to be defined hss (σ →₀ M)
   because mathlib doesn't know about “the monoid module”. -/
+
+-- And we need the same for Polynomial…
+
 open scoped TensorProduct
 
 variable (σ : Type _) [DecidableEq σ]
@@ -157,6 +161,16 @@ One issue is that `Algebra.TensorProduct.Basis` makes
 base change on the left, and has different assumptions… -/
 
 -- TODO: rename
+
+#check Finsupp.tensorProductLeft
+noncomputable def zooEquiv' :
+  ((σ →₀ ℕ) →₀ N) ≃ₗ[R] MvPolynomial σ R ⊗[R] N := by
+  have := (Finsupp.tensorProductLeft (ι := σ →₀ ℕ) (M := R) (R := R) (N := N))
+  have that := LinearEquiv.symm this
+  convert that
+
+
+
 
 noncomputable def zoo :
     ((σ →₀ ℕ) →₀ N) →ₗ[R] MvPolynomial σ R ⊗[R] N := (Finsupp.lsum R)
