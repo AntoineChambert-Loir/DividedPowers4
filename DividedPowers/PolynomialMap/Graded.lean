@@ -115,9 +115,9 @@ theorem TensorProduct.is_finsupp_sum_tmul' {R S : Type _}
       apply Finset.sum_congr rfl
       intro x _
       dsimp
-      suffices : ¬ (n1 + x  < n1)
-      simp only [if_neg this]
-      simp only [add_tsub_cancel_left]
+      suffices ¬ (n1 + x  < n1) by
+        simp only [if_neg this]
+        simp only [add_tsub_cancel_left]
       simp only [not_lt, Nat.le_add_right]
 
 example (α : Type _) [Fintype α] : Fintype (ULift α) := by exact ULift.fintype α
@@ -228,8 +228,7 @@ theorem isHomogeneousOfDegree_iff'
   f.IsHomogeneousOfDegree p ↔
     ∀ {ι : Type u} [DecidableEq ι] [Fintype ι]
       (m : ι → M) (k : ι →₀ ℕ) (_ : coeff m f k ≠ 0),
-      (Finset.univ.sum k) = p :=
-  by
+      (Finset.univ.sum k) = p := by
   classical
   constructor
   · -- difficult direction
@@ -238,101 +237,87 @@ theorem isHomogeneousOfDegree_iff'
     rw [not_imp_comm]
     by_cases hι : Nonempty ι
     . intro hk
-
-      suffices : ∀ (s : Finset (ι →₀ ℕ)), ∃ (l : ι →₀ ℕ),
+      suffices ∀ (s : Finset (ι →₀ ℕ)), ∃ (l : ι →₀ ℕ),
         ∀ a ∈ s, ∀ b ∈ s,
         (Finset.univ.sum a) • l + a = p • l + b →
-        (Finset.univ.sum a = p ∧ a = b)
-      obtain ⟨l, hl⟩ := this (insert k (coeff m f).support)
+        (Finset.univ.sum a = p ∧ a = b) by
+        obtain ⟨l, hl⟩ := this (insert k (coeff m f).support)
+        specialize hf (MvPolynomial ι R) (MvPolynomial.monomial l 1)
+          (Finset.sum Finset.univ fun i => MvPolynomial.X i ⊗ₜ[R] m i)
+        simp only [Finset.smul_sum, TensorProduct.smul_tmul', image_eq_coeff_sum] at hf
+        simp only [Finsupp.smul_sum, TensorProduct.smul_tmul'] at hf
+        -- write the summands as monomials
+        simp_rw [smul_eq_mul, mul_pow, Finset.prod_mul_distrib, Finset.prod_pow_eq_pow_sum,
+          MvPolynomial.monomial_pow, one_pow] at hf
+        suffices h : ∀ (c : ι →₀ ℕ),
+          MvPolynomial.monomial c (1 : R) = Finset.univ.prod (fun i ↦ MvPolynomial.X i ^ c i) by
+          simp_rw [← h] at hf
+          simp_rw [MvPolynomial.monomial_mul, mul_one] at hf
 
-      specialize hf (MvPolynomial ι R) (MvPolynomial.monomial l 1)
-        (Finset.sum Finset.univ fun i => MvPolynomial.X i ⊗ₜ[R] m i)
-      simp only [Finset.smul_sum, TensorProduct.smul_tmul', image_eq_coeff_sum] at hf
-      simp only [Finsupp.smul_sum, TensorProduct.smul_tmul'] at hf
-      -- write the summands as monomials
-      simp_rw [smul_eq_mul, mul_pow, Finset.prod_mul_distrib,
-        Finset.prod_pow_eq_pow_sum, MvPolynomial.monomial_pow,
-        one_pow] at hf
-      suffices : ∀ (c : ι →₀ ℕ),
-        MvPolynomial.monomial c (1 : R) = Finset.univ.prod (fun i ↦ MvPolynomial.X i ^ c i)
-      simp_rw [← this] at hf
-      simp_rw [MvPolynomial.monomial_mul, mul_one] at hf
+          let hf' := (zooEquiv ι R N).symm.congr_arg hf
+          rw [DFunLike.ext_iff] at hf'
+          simp only [_root_.map_finsupp_sum] at hf'
+          simp only [Finsupp.sum_apply] at hf'
+          simp only [zooEquiv_symm_apply_tmul] at hf'
+          simp only [MvPolynomial.coeff_monomial] at hf'
+          simp only [ite_smul, one_smul, zero_smul] at hf'
+        /- For all x,
+          hf' proves the equality of the sums for y in the support of (coeff m f):
+          * LHS : if x = y + deg (y) • l,  coeff m f y
+          * RHS : if x = y + p • l, coeff m f y
 
-      let hf' := (zooEquiv ι R N).symm.congr_arg hf
-      rw [DFunLike.ext_iff] at hf'
-      simp only [_root_.map_finsupp_sum] at hf'
-      simp only [Finsupp.sum_apply] at hf'
-      simp only [zooEquiv_symm_apply_tmul] at hf'
-      simp only [MvPolynomial.coeff_monomial] at hf'
-      simp only [ite_smul, one_smul, zero_smul] at hf'
+          Take x = k + p • l
+          RHS : only term is given by y = k, gives coeff m f k
+          LHS ? : y + deg (y) • l = k + p • l
+            for deg(l) large enough,
+            this will imply y = k
+          -/
+          specialize hf' (p • l + k)
+          rw [eq_comm] at hf'
+          rw [Finsupp.sum, Finset.sum_eq_single k, if_pos rfl] at hf'
+          rw [hf']
+          rw [Finsupp.sum, Finset.sum_eq_zero]
+          . intro x hx
+            rw [if_neg]
+            intro hx'
+            apply hk
+            -- This is where the condition on l should be introduced
+            -- It will suffice to take l of large degree
 
+            let hl' := hl x (Finset.mem_insert_of_mem hx)
+              k (Finset.mem_insert_self _ _) hx'
+            rw [← hl'.2, hl'.1]
 
+          · intro y _ hy
+            rw [if_neg]
+            intro hy'
+            apply hy
+            exact add_left_cancel hy'
+          · rw [if_pos rfl]
+            simp only [Finsupp.mem_support_iff, ne_eq, not_not, imp_self]
 
-      /- For all x,
-        hf' proves the equality of the sums for y in the support of (coeff m f):
-        * LHS : if x = y + deg (y) • l,  coeff m f y
-        * RHS : if x = y + p • l, coeff m f y
-
-        Take x = k + p • l
-        RHS : only term is given by y = k, gives coeff m f k
-        LHS ? : y + deg (y) • l = k + p • l
-          for deg(l) large enough,
-          this will imply y = k
-
-        -/
-
-
-      specialize hf' (p • l + k)
-      rw [eq_comm] at hf'
-      rw [Finsupp.sum, Finset.sum_eq_single k, if_pos rfl] at hf'
-      rw [hf']
-      rw [Finsupp.sum, Finset.sum_eq_zero]
-      . intro x hx
-        rw [if_neg]
-        intro hx'
-        apply hk
-        -- This is where the condition on l should be introduced
-        -- It will suffice to take l of large degree
-
-        let hl' := hl x (Finset.mem_insert_of_mem hx)
-          k (Finset.mem_insert_self _ _) hx'
-        rw [← hl'.2, hl'.1]
-
-      . intro y _ hy
-        rw [if_neg]
-        intro hy'
-        apply hy
-        exact add_left_cancel hy'
-      . rw [if_pos rfl]
-        simp only [Finsupp.mem_support_iff, ne_eq, not_not, imp_self]
-
-      . intro c
-        simp only [MvPolynomial.monomial_eq, _root_.map_one, Finsupp.prod_pow, one_mul]
+        . intro c
+          simp only [MvPolynomial.monomial_eq, _root_.map_one, Finsupp.prod_pow, one_mul]
 
 
       . -- The choice of l
         intro s
-        suffices : ∃ N, ∀ (l : ι →₀ ℕ),
-          N ≤ Finset.univ.sum l →
-          ∀ a ∈ s, ∀ b ∈ s,
-            Finset.univ.sum a • l + a = p • l + b →
-            Finset.univ.sum a = p ∧ a = b
-
-        obtain ⟨N, hN⟩ := this
-        obtain ⟨i : ι⟩ := hι
-        use Finsupp.single i N
-        apply hN
-        simp only [Finsupp.univ_sum_single_apply, le_refl]
+        suffices h' : ∃ N, ∀ (l : ι →₀ ℕ), N ≤ Finset.univ.sum l →
+            ∀ a ∈ s, ∀ b ∈ s,
+              Finset.univ.sum a • l + a = p • l + b →
+              Finset.univ.sum a = p ∧ a = b by
+          obtain ⟨N, hN⟩ := h'
+          obtain ⟨i : ι⟩ := hι
+          use Finsupp.single i N
+          apply hN
+          simp only [Finsupp.univ_sum_single_apply, le_refl]
 
         use (s.sup (fun a ↦ Finset.univ.sum a)).succ
         intro l hl a ha b hb h
-        suffices : Finset.univ.sum a = p
-        . constructor
-          exact this
-          rw [this] at h
+        suffices h'' : Finset.univ.sum a = p by
+          refine' ⟨h'', _⟩
+          rw [h''] at h
           apply add_left_cancel h
-
-
         let h' := congr_arg (fun (x : ι →₀ ℕ) ↦ Finset.univ.sum x) h
         dsimp at h'
         change Finset.univ.sum (fun i ↦ Finset.univ.sum a • (l i) + a i)
@@ -363,8 +348,8 @@ theorem isHomogeneousOfDegree_iff'
       simp only [zero_pow (ne_comm.mp hp), zero_smul] at hf
       simp only [coeff, LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply,
         zooEquiv_symm_apply, AddEquivClass.map_eq_zero_iff]
-      suffices : generize R N m f = 0
-      . simp only [this, map_zero]
+      suffices hf : generize R N m f = 0 by
+        simp only [hf, map_zero]
       . simp only [generize, Finset.univ_eq_empty, Finset.sum_empty,
           coe_mk, AddHom.coe_mk]
         exact hf
@@ -576,49 +561,51 @@ lemma componentIsHomogeneous (p : ℕ) (f : PolynomialMap R M N) :
   intro S _ _ s sm
   dsimp [component]
   let ψ := ((Polynomial.aeval (R := S) (monomial 1 s : S[X])).restrictScalars R)
-  suffices : (rTensor M ((Polynomial.monomial 1).restrictScalars R)) (s • sm)
-    = (rTensor M ψ.toLinearMap) (rTensor M ((monomial 1).restrictScalars R) sm)
-  rw [this]
-  rw [← f.isCompat_apply ψ]
-  generalize toFun f S[X] (rTensor M ((monomial 1).restrictScalars R) sm) = t
-  rw [← rTensor_comp_apply]
-  conv_rhs =>
-    rw [← (IsLinearMap.isLinearMap_smul (s ^ p)).mk'_apply,
-    ← coe_restrictScalars R]
-  rw [← LinearMap.comp_apply]
-  apply LinearMap.congr_fun
-  apply symm
-  dsimp [rTensor, TensorProduct.map]
-  apply TensorProduct.lift.unique
-  intro f n
-  simp only [compl₂_id, coe_comp, coe_restrictScalars, Function.comp_apply, TensorProduct.lift.tmul, lcoeff_apply,
-    TensorProduct.mk_apply, IsLinearMap.mk'_apply, AlgHom.toLinearMap_apply, AlgHom.coe_restrictScalars']
-  rw [TensorProduct.smul_tmul']
-  apply congr_arg₂ _ _ rfl
-  induction f using Polynomial.induction_on' with
-  | h_add f g hf hg =>
-      rw [coeff_add, smul_add, hf, hg, aeval_add, coeff_add]
-  | h_monomial n a =>
-      simp only [aeval_monomial, ← smul_eq_mul, algebraMap_smul, coeff_smul]
-      simp only [monomial_pow, one_mul, coeff_monomial]
-      split_ifs with h
-      . simp only [smul_eq_mul]
-        rw [mul_comm, h]
-      . simp only [smul_zero]
-  . --
-    suffices : ∀ (sm : S ⊗[R] M), s • sm = rTensor M (((IsLinearMap.isLinearMap_smul s).mk').restrictScalars R) sm
+  suffices  (rTensor M ((Polynomial.monomial 1).restrictScalars R)) (s • sm)
+      = (rTensor M ψ.toLinearMap) (rTensor M ((monomial 1).restrictScalars R) sm) by
     rw [this]
-    simp only [← rTensor_comp_apply]
+    rw [← f.isCompat_apply ψ]
+    generalize toFun f S[X] (rTensor M ((monomial 1).restrictScalars R) sm) = t
+    rw [← rTensor_comp_apply]
+    conv_rhs =>
+      rw [← (IsLinearMap.isLinearMap_smul (s ^ p)).mk'_apply,
+      ← coe_restrictScalars R]
+    rw [← LinearMap.comp_apply]
     apply LinearMap.congr_fun
-    apply congr_arg
-    rw [LinearMap.ext_iff]
-    intro r
-    simp only [compl₂_id, smul_eq_mul, TensorProduct.lift.tmul, coe_comp, coe_restrictScalars, Function.comp_apply,
-      IsLinearMap.mk'_apply, TensorProduct.mk_apply, AlgHom.toLinearMap_apply, AlgHom.coe_restrictScalars',
-      aeval_monomial, pow_one]
-    rw [mul_comm]
-    simp only [← smul_eq_mul, algebraMap_smul]
-    rw [Polynomial.smul_monomial]
+    apply symm
+    dsimp [rTensor, TensorProduct.map]
+    apply TensorProduct.lift.unique
+    intro f n
+    simp only [compl₂_id, coe_comp, coe_restrictScalars, Function.comp_apply, TensorProduct.lift.tmul,
+      lcoeff_apply, TensorProduct.mk_apply, IsLinearMap.mk'_apply, AlgHom.toLinearMap_apply,
+      AlgHom.coe_restrictScalars']
+    rw [TensorProduct.smul_tmul']
+    apply congr_arg₂ _ _ rfl
+    induction f using Polynomial.induction_on' with
+    | h_add f g hf hg =>
+        rw [coeff_add, smul_add, hf, hg, aeval_add, coeff_add]
+    | h_monomial n a =>
+        simp only [aeval_monomial, ← smul_eq_mul, algebraMap_smul, coeff_smul]
+        simp only [monomial_pow, one_mul, coeff_monomial]
+        split_ifs with h
+        . simp only [smul_eq_mul]
+          rw [mul_comm, h]
+        . simp only [smul_zero]
+  . --
+    suffices ∀ (sm : S ⊗[R] M), s • sm =
+        rTensor M (((IsLinearMap.isLinearMap_smul s).mk').restrictScalars R) sm by
+      rw [this]
+      simp only [← rTensor_comp_apply]
+      apply LinearMap.congr_fun
+      apply congr_arg
+      rw [LinearMap.ext_iff]
+      intro r
+      simp only [compl₂_id, smul_eq_mul, TensorProduct.lift.tmul, coe_comp, coe_restrictScalars, Function.comp_apply,
+        IsLinearMap.mk'_apply, TensorProduct.mk_apply, AlgHom.toLinearMap_apply, AlgHom.coe_restrictScalars',
+        aeval_monomial, pow_one]
+      rw [mul_comm]
+      simp only [← smul_eq_mul, algebraMap_smul]
+      rw [Polynomial.smul_monomial]
     --
     intro sm
     rw [← (IsLinearMap.isLinearMap_smul s).mk'_apply, ← LinearMap.coe_restrictScalars R]
@@ -647,9 +634,9 @@ theorem LocFinsupp_component' -- (f : PolynomialMap R M N)
   | zero => simp only [map_zero, Function.support_zero, Set.finite_empty]
   | tmul s m =>
     simp only [rTensor_tmul, coe_restrictScalars, lcoeff_apply]
-    suffices : _ ⊆ (s.support : Set ℕ)
-    apply Set.Finite.subset _ this
-    exact Finset.finite_toSet (Polynomial.support s)
+    suffices _ ⊆ (s.support : Set ℕ) by
+      apply Set.Finite.subset _ this
+      exact Finset.finite_toSet (Polynomial.support s)
     intro i
     contrapose
     simp only [Finset.mem_coe, mem_support_iff, ne_eq, not_not, mem_support]
@@ -686,14 +673,14 @@ lemma hF
     Set.Finite (Function.support (F S sn)) := by
   induction sn using TensorProduct.induction_on with
   | zero =>
-    suffices : F S 0 = (0 : ℕ → S ⊗[R] N)
-    simp only [this, support_zero', Set.finite_empty]
+    suffices F S 0 = (0 : ℕ → S ⊗[R] N) by
+      simp only [this, support_zero', Set.finite_empty]
     ext i
     simp only [map_zero, Pi.zero_apply]
   | tmul s m =>
-    suffices : _ ⊆ (s.support : Set ℕ)
-    apply Set.Finite.subset _ this
-    exact Finset.finite_toSet (Polynomial.support s)
+    suffices  _ ⊆ (s.support : Set ℕ) by
+      apply Set.Finite.subset _ this
+      exact Finset.finite_toSet (Polynomial.support s)
     intro i
     contrapose
     simp only [Finset.mem_coe, mem_support_iff, ne_eq, not_not, mem_support]
@@ -709,14 +696,14 @@ lemma hf
     Set.Finite (Function.support (f S sn)) := by
   induction sn using TensorProduct.induction_on with
   | zero =>
-    suffices : f S 0 = (0 : ℕ → S ⊗[R] N)
-    simp only [this, support_zero', Set.finite_empty]
+    suffices  f S 0 = (0 : ℕ → S ⊗[R] N) by
+      simp only [this, support_zero', Set.finite_empty]
     ext i
     simp only [f, map_zero, Pi.zero_apply]
   | tmul s m =>
-    suffices : _ ⊆ (s.support : Set ℕ)
-    apply Set.Finite.subset _ this
-    exact Finset.finite_toSet (Polynomial.support s)
+    suffices  _ ⊆ (s.support : Set ℕ) by
+      apply Set.Finite.subset _ this
+      exact Finset.finite_toSet (Polynomial.support s)
     intro i
     contrapose
     simp only [Finset.mem_coe, mem_support_iff, ne_eq, not_not, mem_support]
@@ -729,8 +716,6 @@ lemma hf
     simp only [Set.mem_union, mem_support, f, ne_eq, map_add, not_not, not_or, and_imp]
     intro hi hi'
     rw [hi, hi', add_zero]
-
-
 
 noncomputable def F'
     (S : Type*) [CommSemiring S] [Algebra R S] :
@@ -830,7 +815,7 @@ noncomputable example (S : Type*) [CommSemiring S] [Algebra R S] :
     simp only [AddHom.toFun_eq_coe, coe_toAddHom]
     induction s using TensorProduct.induction_on with
     | zero => simp only [map_zero]
-    | add => simp only [map_add]
+    | add => simp only [map_add]; sorry
     | tmul => sorry
   right_inv := fun f => by
     ext i
@@ -855,7 +840,7 @@ noncomputable def hf'
     rw [Polynomial.sum, TensorProduct.sum_tmul]
     rw [Finsupp.sum_of_support_subset (s := s.support)]
     apply Finset.sum_congr rfl
-    · intro i hi
+    · intro i _
       rfl
     · intro i
       contrapose
@@ -863,7 +848,7 @@ noncomputable def hf'
       intro hi
       rw [Finsupp.ofSupportFinite_coe]
       simp only [f, rTensor_tmul, coe_restrictScalars, lcoeff_apply, hi, zero_tmul]
-    · intro i hi
+    · intro i _
       simp only [map_zero]
   | add sn sn' h h' =>
     conv_rhs => rw [← h, ← h']
@@ -871,12 +856,12 @@ noncomputable def hf'
     · conv_rhs => rw [Finsupp.sum]
       rw [Finsupp.sum_of_support_subset]
       apply Finset.sum_congr rfl
-      · intro i hi
+      · intro i _
         simp [Finsupp.ofSupportFinite_coe, f]
       · intro i
         contrapose
         simp [Finsupp.ofSupportFinite_coe, f]
-      · intro i hi
+      · intro i _
         simp only [map_zero]
     · simp only [Finset.mem_union, Finsupp.mem_support_iff, ne_eq, map_zero, implies_true,
       forall_const]
@@ -886,7 +871,7 @@ noncomputable def hf'
 
 
 --       (fun i => rTensor N ((monomial i).restrictScalars R) (rTensor N ((lcoeff S i).restrictScalars R) sn)) := by
-  sorry
+  --sorry
 
   -- fun i => (rTensor N ((lcoeff S i).restrictScalars R) sn)
 
@@ -904,13 +889,12 @@ theorem recompose_component (f : PolynomialMap R M N) :
   simp [LocFinsupp.sum, component]
   have := f.isCompat_apply ((algebraMap' S S[X]).restrictScalars R) sm
   set φ := rTensor N ((algebraMap' S S[X]).restrictScalars R).toLinearMap
-  suffices h : Function.Injective φ
-  apply h
-  simp [φ, this]
-  rw [map_finsupp_sum]
-
+  suffices h : Function.Injective φ by
+    apply h
+    simp [φ, this]
+    rw [map_finsupp_sum]
+    sorry
   -- suffices : f.toFun S[X] ((rTensor M (monomial (1 : S)).restrictScalars R) sm = sm
-  sorry
   sorry
 
 example  {α : Type*} {M : Type*} {N : Type*} {P : Type*}
