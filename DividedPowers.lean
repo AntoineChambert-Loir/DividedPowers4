@@ -12,25 +12,25 @@ import DividedPowers.DPAlgebra.Init
 import DividedPowers.DPAlgebra.Misc
 --import DividedPowers.DPAlgebra.mwe
 --import DividedPowers.DPAlgebra.PolynomialMap
--- import DividedPowers.DPAlgebra.RobyLemma5 -- now uselesss, use TensorProduct.map_ker 
+-- import DividedPowers.DPAlgebra.RobyLemma5 -- now uselesss, use TensorProduct.map_ker
 import DividedPowers.DPAlgebra.RobyLemma9
 import DividedPowers.DPMorphism
 import DividedPowers.ForMathlib.AlgebraComp
 import DividedPowers.ForMathlib.AlgebraLemmas
--- import DividedPowers.ForMathlib.Antidiagonal -- now useless
+-- import DividedPowers.ForMathlib.Antidiagonal -- now useless (?)
 import DividedPowers.ForMathlib.CombinatoricsLemmas
 import DividedPowers.ForMathlib.GradedAlgebra
 --import DividedPowers.ForMathlib.GradedModuleQuot -- Not ported
 import DividedPowers.ForMathlib.GradedRingQuot
 import DividedPowers.ForMathlib.Homogeneous
-import DividedPowers.ForMathlib.InfiniteSum.Basic
+import DividedPowers.ForMathlib.InfiniteSum.Basic -- has sorrys
 import DividedPowers.ForMathlib.InfiniteSum.Order
 import DividedPowers.ForMathlib.MvPowerSeries.LinearTopology
 import DividedPowers.ForMathlib.MvPowerSeries.Order
 import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Basic
 import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Topology
 import DividedPowers.ForMathlib.MvPowerSeries.Substitutions
-import DividedPowers.ForMathlib.MvPowerSeries.Topology
+-- import DividedPowers.ForMathlib.MvPowerSeries.Topology -- Depends on `ForMahlib.Antidiagonal`
 import DividedPowers.ForMathlib.RingTheory.Ideal
 import DividedPowers.ForMathlib.RingTheory.SubmoduleMem
 import DividedPowers.ForMathlib.Topology.LinearTopology

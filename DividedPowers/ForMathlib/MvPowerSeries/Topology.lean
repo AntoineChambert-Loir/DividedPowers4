@@ -1,4 +1,5 @@
 import Mathlib.Topology.Algebra.Ring.Basic
+import Mathlib.RingTheory.PowerSeries.Basic
 import DividedPowers.ForMathlib.InfiniteSum.Basic
 
 theorem Finset.prod_one_add {ι α : Type _} [DecidableEq ι] [CommRing α] {f : ι → α} (s : Finset ι) :
@@ -117,8 +118,8 @@ theorem uniformAddGroup [AddGroup α] [UniformAddGroup α] : UniformAddGroup (Mv
 theorem completeSpace [AddGroup α] [CompleteSpace α] : CompleteSpace (MvPowerSeries σ α) where
   complete := by
     intro f hf
-    suffices : ∀ d, ∃ x, (f.map fun a => a d) ≤ nhds x
-    . use fun d => (this d).choose
+    suffices ∀ d, ∃ x, (f.map fun a => a d) ≤ nhds x by
+      use fun d => (this d).choose
       rw [nhds_pi, Filter.le_pi]
       exact fun d => (this d).choose_spec
     intro d
@@ -162,7 +163,7 @@ theorem variables_tendsto_zero :
     Filter.Tendsto (fun s : σ => (X s : MvPowerSeries σ α)) Filter.cofinite (nhds 0) := by
   classical
   rw [tendsto_pi_nhds]
-  simp_rw [Pi.zero_apply]
+  --simp_rw [Pi.zero_apply]
   intro d s hs
   rw [Filter.mem_map, Filter.mem_cofinite, ← Set.preimage_compl]
   by_cases h : ∃ i, d = Finsupp.single i 1
@@ -173,9 +174,10 @@ theorem variables_tendsto_zero :
     rw [Set.mem_preimage, Set.mem_compl_iff, Set.mem_singleton_iff, not_imp_comm]
     intro hx
     convert mem_of_mem_nhds hs
-    rw [← coeff_eq_apply (X x) (Finsupp.single i 1), coeff_X,
-      if_neg (by simp only [Finsupp.single_eq_single_iff, and_true, or_false, Ne.symm hx])]
+    rw [← coeff_eq_apply (X x) (Finsupp.single i 1), coeff_X, if_neg]
     rfl
+    · simp only [Finsupp.single_eq_single_iff, Ne.symm hx, and_true, one_ne_zero, and_self,
+      or_self, not_false_eq_true]
   . convert Set.finite_empty
     rw [Set.eq_empty_iff_forall_not_mem]
     intro x
