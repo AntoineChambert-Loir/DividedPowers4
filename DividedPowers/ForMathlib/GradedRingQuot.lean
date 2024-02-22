@@ -781,8 +781,8 @@ theorem _root_.IsHomogeneous_of_rel_isHomogeneous [h𝒜 : GradedAlgebra 𝒜]
   Ideal.IsHomogeneous 𝒜 (Ideal.ofRel r):= by
   let r' : A → A → Prop := fun a b =>
     ∃ i, a ∈ 𝒜 i ∧ b ∈ 𝒜 i ∧ r a b
-  suffices : Ideal.ofRel r = Ideal.ofRel r'
-  . rw [this]
+  suffices Ideal.ofRel r = Ideal.ofRel r' by
+    rw [this]
     apply Ideal.IsHomogeneous_of_rel_isPureHomogeneous
     intro a b h'
     obtain ⟨i, h⟩ := h'
@@ -791,7 +791,8 @@ theorem _root_.IsHomogeneous_of_rel_isHomogeneous [h𝒜 : GradedAlgebra 𝒜]
   . intro x hx
     refine' Submodule.span_induction hx _ _ _ _
     . rintro x ⟨a, b, h', h⟩
-      rw [← h𝒜.left_inv x, ← DirectSum.sum_support_of _ (DirectSum.Decomposition.decompose' x), map_sum]
+      rw [← h𝒜.left_inv x, ← DirectSum.sum_support_of _ (DirectSum.Decomposition.decompose' x),
+        map_sum]
       apply Ideal.sum_mem
       intro i _
       rw [DirectSum.coeAddMonoidHom_of]
@@ -896,9 +897,10 @@ theorem quotDecompose_left_inv'_aux_apply (x) :
 lemma quotDecompose'_apply (a : DirectSum ι (fun i => 𝒜 i)) :
   (quotDecompose' R 𝒜 rel) (DirectSum.lmap' (quotCompMap R 𝒜 rel) a) =
   RingQuot.mkAlgHom R rel (DirectSum.coeLinearMap 𝒜 a) := by
-  suffices : (quotDecompose' R 𝒜 rel).comp (DirectSum.lmap' (quotCompMap R 𝒜 rel)) = (RingQuot.mkAlgHom R rel).toLinearMap.comp (DirectSum.coeLinearMap 𝒜)
-  simp only [LinearMap.ext_iff, LinearMap.comp_apply, AlgHom.toLinearMap_apply] at this
-  apply this
+  suffices (quotDecompose' R 𝒜 rel).comp (DirectSum.lmap' (quotCompMap R 𝒜 rel)) =
+      (RingQuot.mkAlgHom R rel).toLinearMap.comp (DirectSum.coeLinearMap 𝒜) by
+    simp only [LinearMap.ext_iff, LinearMap.comp_apply, AlgHom.toLinearMap_apply] at this
+    apply this
   apply DirectSum.linearMap_ext
   intro i
   ext ⟨x, hx⟩
@@ -931,9 +933,9 @@ lemma obvious_iff {x y : A} :
     RingConGen.Rel rel x y := by
   constructor
   . intro h
-    suffices : ∀ x, Quot.mk (RingQuot.Rel rel) x = ((RingQuot.mkRingHom rel) x).toQuot
-    rw [← RingQuot.eqvGen_rel_eq]
-    rw [← Quot.eq, this x, this y, h]
+    suffices ∀ x, Quot.mk (RingQuot.Rel rel) x = ((RingQuot.mkRingHom rel) x).toQuot by
+      rw [← RingQuot.eqvGen_rel_eq]
+      rw [← Quot.eq, this x, this y, h]
     intro x
     simp only [RingQuot.mkRingHom]
     rfl
@@ -945,7 +947,6 @@ lemma obvious_iff {x y : A} :
     | trans h h' k k' => rw [k, k']
     | add _ _ k k' => simp only [map_add, k, k']
     | mul _ _ k k' => simp only [map_mul, k, k']
-
 
 theorem quotDecompose_injective [h𝒜 : GradedAlgebra 𝒜] (hrel : RelIsHomogeneous 𝒜 rel) {x y : A}
   (hxy : RingQuot.mkAlgHom R rel x = RingQuot.mkAlgHom R rel y)
@@ -977,10 +978,10 @@ theorem quotDecompose'_injective [h𝒜 : GradedAlgebra 𝒜]
   intro i
   specialize hxy' i
   simp only [DirectSum.Decomposition.decompose'_eq] at hxy'
-  suffices : ∀ a,  RingQuot.mkAlgHom R rel ↑(((DirectSum.decompose fun i => 𝒜 i) ((DirectSum.coeLinearMap fun i => 𝒜 i) a)) i)
-     = ((DirectSum.lmap' (quotCompMap R 𝒜 rel)) a) i
-  simpa only [this, SetLike.coe_eq_coe] using hxy'
-
+  suffices ∀ a, RingQuot.mkAlgHom R rel ↑(((DirectSum.decompose fun i => 𝒜 i)
+      ((DirectSum.coeLinearMap fun i => 𝒜 i) a)) i) =
+        ((DirectSum.lmap' (quotCompMap R 𝒜 rel)) a) i by
+    simpa only [this, SetLike.coe_eq_coe] using hxy'
   intro a
   simp only [DirectSum.lmap'_apply]
   congr
@@ -988,10 +989,10 @@ theorem quotDecompose'_injective [h𝒜 : GradedAlgebra 𝒜]
 
 
 theorem quotDecompose_injective' [h𝒜 : GradedAlgebra 𝒜] (hrel : RelIsHomogeneous 𝒜 rel) :
-  Function.Injective (DirectSum.coeLinearMap
-    (fun i => (𝒜 i).map (RingQuot.mkAlgHom R rel))) := by
-  have hφ : ∀ i, Function.Surjective (quotCompMap R 𝒜 rel i)
-  . intro i ⟨x, hx⟩
+    Function.Injective (DirectSum.coeLinearMap
+      (fun i => (𝒜 i).map (RingQuot.mkAlgHom R rel))) := by
+  have hφ : ∀ i, Function.Surjective (quotCompMap R 𝒜 rel i) := by
+    intro i ⟨x, hx⟩
     obtain ⟨a, ha, rfl⟩ := hx
     use ⟨a, ha⟩ ; rfl
   intro x y hxy
@@ -1208,18 +1209,18 @@ theorem Ideal.quotDecomposition_right_inv' [GradedAlgebra 𝒜] (hI : I.IsHomoge
   rw [Ideal.quotDecomposeLaux]
   simp only [LinearMap.coe_comp, Function.comp_apply]
   change DirectSum.lmap' _ (DirectSum.decompose 𝒜 x) = _
-  suffices : DirectSum.decompose 𝒜 x = DirectSum.lof R ι (fun i => 𝒜 i) i (⟨x, hx⟩ : 𝒜 i)
-  rw [this]
-  rw [DirectSum.lmap'_lof, DirectSum.lof_eq_of]
-  apply congr_arg₂ _ rfl
-  rw [quotCompMap]
-  simp only [Ideal.Quotient.mkₐ_eq_mk, Submodule.coe_mk, LinearMap.coe_mk]
-  rw [← Subtype.coe_inj, Subtype.coe_mk]
-  rw [← hxy]
-  simp only [Ideal.Quotient.mkₐ_eq_mk]
-  rfl
-  . conv_lhs => rw [← Subtype.coe_mk x hx]
-    rw [DirectSum.decompose_coe, DirectSum.lof_eq_of]
+  suffices DirectSum.decompose 𝒜 x = DirectSum.lof R ι (fun i => 𝒜 i) i (⟨x, hx⟩ : 𝒜 i) by
+    rw [this]
+    rw [DirectSum.lmap'_lof, DirectSum.lof_eq_of]
+    apply congr_arg₂ _ rfl
+    rw [quotCompMap]
+    simp only [Ideal.Quotient.mkₐ_eq_mk, Submodule.coe_mk, LinearMap.coe_mk]
+    rw [← Subtype.coe_inj, Subtype.coe_mk]
+    rw [← hxy]
+    simp only [Ideal.Quotient.mkₐ_eq_mk]
+    rfl
+  conv_lhs => rw [← Subtype.coe_mk x hx]
+  rw [DirectSum.decompose_coe, DirectSum.lof_eq_of]
 
 theorem Ideal.quotDecomposition_right_inv [GradedAlgebra 𝒜] (hI : I.IsHomogeneous 𝒜) :
     Function.RightInverse (DirectSum.coeAddMonoidHom (I.quotSubmodule R 𝒜))
