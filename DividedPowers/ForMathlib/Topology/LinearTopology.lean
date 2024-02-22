@@ -51,14 +51,14 @@ theorem mem_nhds_add_iff {α : Type _} [AddCommGroup α] [TopologicalSpace α] [
   constructor
   . exact fun hV => ContinuousAt.preimage_mem_nhds (continuous_add_left a).continuousAt hV
   · intro hV
-    suffices : V = Add.add (-a) ⁻¹' (Add.add a ⁻¹' V)
-    . rw [this]
+    suffices h : V = Add.add (-a) ⁻¹' (Add.add a ⁻¹' V) by
+      rw [h]
       apply ContinuousAt.preimage_mem_nhds (continuous_add_left (-a)).continuousAt
       convert hV
       apply neg_add_cancel_left
-    . rw [Set.preimage_preimage, eq_comm]
-      convert Set.preimage_id'
-      apply add_neg_cancel_left a
+    rw [Set.preimage_preimage, eq_comm]
+    convert Set.preimage_id'
+    apply add_neg_cancel_left a
 #align mem_nhds_add_iff mem_nhds_add_iff
 
 end Complements
