@@ -27,14 +27,14 @@ section AlgHom
 
 theorem AlgHom.ker_eq_ideal_iff {R A B : Type _} [CommRing R] [CommRing A] [Algebra R A]
     [CommRing B] [Algebra R B] (f : A →ₐ[R] B) (I : Ideal A) :
-    RingHom.ker f = I ↔ ∃ h : I ≤ RingHom.ker f, Function.Injective (Ideal.Quotient.liftₐ I f h) :=
-  by
-  have : RingHom.ker f = RingHom.ker f.toRingHom; rfl
+    RingHom.ker f = I ↔
+      ∃ h : I ≤ RingHom.ker f, Function.Injective (Ideal.Quotient.liftₐ I f h) := by
+  have : RingHom.ker f = RingHom.ker f.toRingHom := rfl
   constructor
   · intro hI; use le_of_eq hI.symm
-    suffices : Function.Injective (Ideal.Quotient.lift I f.toRingHom (le_of_eq hI.symm))
-    intro x y hxy; apply this
-    simpa only [Ideal.Quotient.liftₐ_apply] using hxy
+    suffices h : Function.Injective (Ideal.Quotient.lift I f.toRingHom (le_of_eq hI.symm)) by
+      intro x y hxy; apply h
+      simpa only [Ideal.Quotient.liftₐ_apply] using hxy
     apply RingHom.lift_injective_of_ker_le_ideal
     rw [← hI, ← this]
   · rintro ⟨hI, h⟩
@@ -134,12 +134,11 @@ theorem ψ_apply (m : M) (n : N) :
 #align ψ_apply ψ_apply
 
 theorem kerφ_eq : RingHom.ker (φ R S M N).toRingHom = kerφ R S M N := by
-  suffices h : kerφ R S M N ≤ RingHom.ker (φ R S M N).toRingHom
-  rw [RingHom.ker_eq_ideal_iff]
-  use h
-  apply Function.HasLeftInverse.injective
-  use ψ R S M N
-  · -- left_inverse
+  suffices h : kerφ R S M N ≤ RingHom.ker (φ R S M N).toRingHom by
+    rw [RingHom.ker_eq_ideal_iff]
+    use h
+    apply Function.HasLeftInverse.injective
+    use ψ R S M N
     intro z
     obtain ⟨y, rfl⟩ := Ideal.Quotient.mk_surjective z
     simp only [AlgHom.toRingHom_eq_coe, Ideal.Quotient.lift_mk, AlgHom.coe_toRingHom]

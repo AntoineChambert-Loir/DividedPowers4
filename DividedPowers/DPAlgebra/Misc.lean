@@ -68,8 +68,8 @@ section IdealsAndRel
 theorem quotient_mk_eq_ofRel {A : Type _} [CommRing A] {r : A → A → Prop}
     {a b : A} (h : r a b) :
   mk (ofRel r) a = mk (ofRel r) b := by
-  suffices hinj : Function.Injective (RingQuot.ringQuotEquivIdealQuotient r).invFun
-  · apply hinj; exact mkRingHom_rel h
+  suffices hinj : Function.Injective (RingQuot.ringQuotEquivIdealQuotient r).invFun by
+    apply hinj; exact mkRingHom_rel h
   rw [Function.injective_iff_hasLeftInverse]
   exact ⟨(ringQuotEquivIdealQuotient r).toFun, (ringQuotEquivIdealQuotient r).right_inv⟩
 #align quotient_mk_eq_of_rel quotient_mk_eq_ofRel

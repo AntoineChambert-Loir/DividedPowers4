@@ -154,14 +154,12 @@ theorem isDPMorphism_on_span {A B : Type _} [CommSemiring A] [CommSemiring B] {I
     (hI : DividedPowers I) (hJ : DividedPowers J) (f : A →+* B) {S : Set A} (hS : I = Ideal.span S)
     (hS' : ∀ s ∈ S, f s ∈ J) (hdp : ∀ (n : ℕ), ∀ a ∈ S, f (hI.dpow n a) = hJ.dpow n (f a)) :
     isDPMorphism hI hJ f := by
-  suffices : I.map f ≤ J
-  apply And.intro this
-  let dp_f := dpMorphismFromGens hI hJ hS this hdp
-  intro n a ha
-  rw [← dpMorphismFromGens_coe hI hJ hS this hdp]
-  rw [dp_f.dpow_comp n a ha]
-  rw [hS]; rw [Ideal.map_span]
-  rw [Ideal.span_le]
+  suffices h : I.map f ≤ J by
+    apply And.intro h
+    let dp_f := dpMorphismFromGens hI hJ hS h hdp
+    intro n a ha
+    rw [← dpMorphismFromGens_coe hI hJ hS h hdp, dp_f.dpow_comp n a ha]
+  rw [hS, Ideal.map_span, Ideal.span_le]
   rintro b ⟨a, has, rfl⟩
   exact hS' a has
 #align divided_powers.is_pd_morphism_on_span DividedPowers.isDPMorphism_on_span

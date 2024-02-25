@@ -153,44 +153,41 @@ theorem coeff_comp_equiv {ι : Type u} [DecidableEq ι] [Fintype ι]
     (Finset.univ.sum (fun i ↦ MvPolynomial.X i ⊗ₜ[R] (m (e i))))
   simp only [map_sum, rTensor_tmul, AlgHom.toLinearMap_apply,
     MvPolynomial.aeval_X] at hf
-  suffices : toFun f (MvPolynomial κ R) (Finset.sum Finset.univ (fun x ↦ MvPolynomial.X (e x) ⊗ₜ[R] m (e x))) =
-    generize R N m f
-  rw [this] at hf
-  rw [← hf]
-
-  generalize h : generize R N (fun x ↦ m (e x)) f = g
-  simp only [generize, coe_mk, AddHom.coe_mk] at h
-  rw [h]
-
-  simp only [EmbeddingLike.apply_eq_iff_eq]
-  rw [← LinearMap.rTensor_comp_apply]
-  congr
-
-  ext p
-  simp only [coe_comp, Function.comp_apply, AlgHom.toLinearMap_apply]
-  simp only [MvPolynomial.aeval_monomial, _root_.map_one, Finsupp.prod_pow,
-    _root_.one_mul, MvPolynomial.lcoeff_apply]
-  suffices : Finset.prod Finset.univ (fun x ↦ MvPolynomial.X (e x) ^ p x) = MvPolynomial.monomial (Finsupp.equivMapDomain e p) (1 : R)
-  simp only [this, MvPolynomial.coeff_monomial]
-  by_cases h : p = k
-  . rw [if_pos h, if_pos]
+  suffices toFun f (MvPolynomial κ R)
+    (Finset.sum Finset.univ (fun x ↦ MvPolynomial.X (e x) ⊗ₜ[R] m (e x))) =
+      generize R N m f by
+    rw [this] at hf
+    rw [← hf]
+    generalize h : generize R N (fun x ↦ m (e x)) f = g
+    simp only [generize, coe_mk, AddHom.coe_mk] at h
     rw [h]
-  . rw [if_neg h, if_neg]
-    intro h'; apply h
-    simp only [DFunLike.ext_iff] at h'
-    ext i
-    specialize h' (e i)
-    simpa only [Finsupp.equivMapDomain_apply, Equiv.symm_apply_apply] using h'
-  . simp only [MvPolynomial.monomial_eq, _root_.map_one, Finsupp.prod_pow,
-      Finsupp.equivMapDomain_apply, _root_.one_mul]
-    rw [Finset.prod_congr_equiv e]
-    simp only [Finset.map_univ_equiv, Function.comp_apply, Equiv.apply_symm_apply]
+    simp only [EmbeddingLike.apply_eq_iff_eq]
+    rw [← LinearMap.rTensor_comp_apply]
+    congr
+    ext p
+    simp only [coe_comp, Function.comp_apply, AlgHom.toLinearMap_apply]
+    simp only [MvPolynomial.aeval_monomial, _root_.map_one, Finsupp.prod_pow,
+      _root_.one_mul, MvPolynomial.lcoeff_apply]
+    suffices Finset.prod Finset.univ (fun x ↦ MvPolynomial.X (e x) ^ p x) =
+        MvPolynomial.monomial (Finsupp.equivMapDomain e p) (1 : R) by
+      simp only [this, MvPolynomial.coeff_monomial]
+      by_cases h : p = k
+      . rw [if_pos h, if_pos]
+        rw [h]
+      . rw [if_neg h, if_neg]
+        intro h'; apply h
+        simp only [DFunLike.ext_iff] at h'
+        ext i
+        specialize h' (e i)
+        simpa only [Finsupp.equivMapDomain_apply, Equiv.symm_apply_apply] using h'
+    . simp only [MvPolynomial.monomial_eq, _root_.map_one, Finsupp.prod_pow,
+        Finsupp.equivMapDomain_apply, _root_.one_mul]
+      rw [Finset.prod_congr_equiv e]
+      simp only [Finset.map_univ_equiv, Function.comp_apply, Equiv.apply_symm_apply]
   . rw [generize, coe_mk, AddHom.coe_mk]
     apply congr_arg
     rw [Finset.sum_congr_equiv e]
     simp only [Finset.map_univ_equiv, Function.comp_apply, Equiv.apply_symm_apply]
-
-
 
 theorem image_eq_coeff_sum
     (m : ι → M)
@@ -268,14 +265,14 @@ theorem span_tensorProduct_eq_top_of_span_eq_top
       { toFun := fun m => (1 : S) ⊗ₜ[R] m
         map_add' := fun x y => by simp only [TensorProduct.tmul_add]
         map_smul' := fun a x => by simp only [TensorProduct.tmul_smul, RingHom.id_apply] }
-    suffices : r ⊗ₜ[R] m = r • (1 : S) ⊗ₜ[R] m
-    rw [this]
-    refine' Submodule.smul_mem _ r _
-    apply Submodule.span_le_restrictScalars R
-    convert Submodule.apply_mem_span_image_of_mem_span
-      (s := Set.range e) f _
-    . conv_rhs => rw [← Set.image_univ, Set.image_image, Set.image_univ]
-    . rw [hm]; exact Submodule.mem_top
+    suffices r ⊗ₜ[R] m = r • (1 : S) ⊗ₜ[R] m by
+      rw [this]
+      refine' Submodule.smul_mem _ r _
+      apply Submodule.span_le_restrictScalars R
+      convert Submodule.apply_mem_span_image_of_mem_span
+        (s := Set.range e) f _
+      . conv_rhs => rw [← Set.image_univ, Set.image_image, Set.image_univ]
+      . rw [hm]; exact Submodule.mem_top
     rw [TensorProduct.smul_tmul']; simp only [Algebra.id.smul_eq_mul, _root_.mul_one]
   exact Submodule.add_mem _ (hx Submodule.mem_top) (hy Submodule.mem_top)
 #align polynomial_map.span_tensor_product_eq_top_of_span_eq_top PolynomialMap.span_tensorProduct_eq_top_of_span_eq_top
@@ -285,16 +282,16 @@ theorem coeff_injective [DecidableEq ι] (m : ι → M)
     (f g : PolynomialMap R M N) (h : coeff m f = coeff m g) :
   f = g := by
   ext S _ _ p
-  suffices hp : p ∈ Submodule.span S (Set.range fun s => 1 ⊗ₜ[R] m s)
-  simp only [Submodule.mem_span_iff_exists_sum _ p, TensorProduct.smul_tmul'] at hp
-  obtain ⟨r, rfl⟩ := hp
-  rw [Finsupp.sum_of_support_subset _ (Finset.subset_univ _)]
-  rw [image_eq_coeff_sum m f]
-  simp only [image_eq_coeff_sum, h]
-  . intro i _
-    simp only [smul_eq_mul, _root_.mul_one, TensorProduct.zero_tmul]
-  . rw [PolynomialMap.span_tensorProduct_eq_top_of_span_eq_top ι m hm]
-    exact Submodule.mem_top
+  suffices hp : p ∈ Submodule.span S (Set.range fun s => 1 ⊗ₜ[R] m s) by
+    simp only [Submodule.mem_span_iff_exists_sum _ p, TensorProduct.smul_tmul'] at hp
+    obtain ⟨r, rfl⟩ := hp
+    rw [Finsupp.sum_of_support_subset _ (Finset.subset_univ _)]
+    rw [image_eq_coeff_sum m f]
+    simp only [image_eq_coeff_sum, h]
+    . intro i _
+      simp only [smul_eq_mul, _root_.mul_one, TensorProduct.zero_tmul]
+  rw [PolynomialMap.span_tensorProduct_eq_top_of_span_eq_top ι m hm]
+  exact Submodule.mem_top
 #align polynomial_map.coeff_injective PolynomialMap.coeff_injective
 
 noncomputable def Finsupp.polynomialMap (b : Basis ι R M) (h : (ι →₀ ℕ) →₀ N) :

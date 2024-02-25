@@ -67,35 +67,34 @@ theorem rewriting_4_fold_sums {α : Type _} [CommSemiring α] {m n u v : ℕ}
     ∀ x : (ℕ × ℕ) × ℕ × ℕ,
       ite ((x.fst.fst + x.snd.fst = u ∧ x.fst.snd + x.snd.snd = v) ∧ x.fst = (i, j)) (g x) 0 =
         ite ((x.fst.fst + x.snd.fst = u ∧ x.fst.snd + x.snd.snd = v) ∧ x.fst = (i, j)) 1 0 *
-          f ⟨i, j⟩
-  rw [Finset.sum_congr rfl fun x _ => hf' x]
-  rw [← Finset.sum_mul]
-  by_cases hij' : i ≤ u ∧ j ≤ v
-  · conv_rhs => rw [← one_mul (f ⟨i, j⟩)]
-    apply congr_arg₂ _ _ rfl
-    rw [Finset.sum_eq_single (⟨⟨i, j⟩, ⟨u - i, v - j⟩⟩ : (ℕ × ℕ) × ℕ × ℕ)]
-    simp only [Nat.add_sub_of_le hij'.1, Nat.add_sub_of_le hij'.2, eq_self_iff_true, and_self_iff,
-      if_true]
-    · rintro ⟨⟨x, y⟩, ⟨z, t⟩⟩ hb hb'; rw [if_neg]; intro hb''
-      simp only [Finset.mem_product, Finset.mem_antidiagonal] at hb
-      simp only [Ne.def, Prod.mk.inj_iff, not_and, and_imp] at hb'
-      simp only [Prod.mk.inj_iff] at hb''
-      specialize hb' hb''.2.1 hb''.2.2
-      rw [hb''.2.1, hb''.2.2] at hb
-      apply hb'
-      apply Nat.add_left_cancel; rw [Nat.add_sub_of_le hij'.1, ← hb''.2.1, hb''.1.1]
-      apply Nat.add_left_cancel; rw [Nat.add_sub_of_le hij'.2, ← hb''.2.2, hb''.1.2]
-    · intro hb; rw [if_neg]; intro hb'; apply hb
-      simp only [eq_self_iff_true, and_true_iff] at hb'
-      simp only [Finset.mem_product, Finset.mem_antidiagonal]
-      apply And.intro hij
-      apply Nat.add_left_cancel; rw [h, ← hij]
-      conv_rhs => rw [← hb'.1, ← hb'.2]
-      simp only [← add_assoc, add_left_inj]
-      simp only [add_assoc, add_right_inj]
-      apply add_comm
-  · simp only [not_and_or, not_le] at hij'
-    rw [hf ⟨i, j⟩ hij', MulZeroClass.mul_zero]
+          f ⟨i, j⟩ by
+    rw [Finset.sum_congr rfl fun x _ => hf' x, ← Finset.sum_mul]
+    by_cases hij' : i ≤ u ∧ j ≤ v
+    · conv_rhs => rw [← one_mul (f ⟨i, j⟩)]
+      apply congr_arg₂ _ _ rfl
+      rw [Finset.sum_eq_single (⟨⟨i, j⟩, ⟨u - i, v - j⟩⟩ : (ℕ × ℕ) × ℕ × ℕ)]
+      simp only [Nat.add_sub_of_le hij'.1, Nat.add_sub_of_le hij'.2, eq_self_iff_true, and_self_iff,
+        if_true]
+      · rintro ⟨⟨x, y⟩, ⟨z, t⟩⟩ hb hb'; rw [if_neg]; intro hb''
+        simp only [Finset.mem_product, Finset.mem_antidiagonal] at hb
+        simp only [Ne.def, Prod.mk.inj_iff, not_and, and_imp] at hb'
+        simp only [Prod.mk.inj_iff] at hb''
+        specialize hb' hb''.2.1 hb''.2.2
+        rw [hb''.2.1, hb''.2.2] at hb
+        apply hb'
+        apply Nat.add_left_cancel; rw [Nat.add_sub_of_le hij'.1, ← hb''.2.1, hb''.1.1]
+        apply Nat.add_left_cancel; rw [Nat.add_sub_of_le hij'.2, ← hb''.2.2, hb''.1.2]
+      · intro hb; rw [if_neg]; intro hb'; apply hb
+        simp only [eq_self_iff_true, and_true_iff] at hb'
+        simp only [Finset.mem_product, Finset.mem_antidiagonal]
+        apply And.intro hij
+        apply Nat.add_left_cancel; rw [h, ← hij]
+        conv_rhs => rw [← hb'.1, ← hb'.2]
+        simp only [← add_assoc, add_left_inj]
+        simp only [add_assoc, add_right_inj]
+        apply add_comm
+    · simp only [not_and_or, not_le] at hij'
+      rw [hf ⟨i, j⟩ hij', MulZeroClass.mul_zero]
   · intro x
     split_ifs with hx
     · simp only [one_mul, hgf]; rw [hx.2]
@@ -123,18 +122,13 @@ theorem Finset.sum_4_rw {α : Type _} [AddCommMonoid α]
   rw [Finset.sum_sigma', Finset.sum_sigma', Finset.sum_sigma', Finset.sum_sigma']
   let φ : (Σ (_ : Σ (_ : ℕ), ℕ), ℕ) → (Σ (_ : Σ (_ : ℕ), ℕ), ℕ) :=
     fun ⟨⟨k, a⟩, c⟩ => ⟨⟨a + c, a⟩, k - a⟩
-  suffices h1 : _
-  suffices h2 : _
-  refine Finset.sum_bij' (fun m _ => φ m) (fun m _ => φ m) h1 h1 h2 h2 ?_
-  · rintro ⟨⟨k, a⟩, c⟩ h
-    simp only [mem_sigma, mem_range, Nat.lt_succ_iff] at h
-    simp only [Nat.add_sub_self_left a c, Nat.sub_sub,
-      add_comm (a + c), ← add_assoc, Nat.sub_add_cancel h.1.2]
-  · rintro ⟨⟨k, a⟩, c⟩ h
-    simp only [Finset.mem_sigma, Finset.mem_range, Nat.lt_succ_iff] at h
-    simp only [add_tsub_cancel_left, Sigma.mk.inj_iff, heq_eq_eq, and_true]
-    refine add_tsub_cancel_of_le h.1.2
-  · rintro ⟨⟨k, a⟩, c⟩ h
+  --suffices h1 : (hi : ∀ ((_ : (_ : ℕ) × ℕ) × ℕ) ha, i a ha ∈ t)
+  --suffices h2 : _
+  have h1 : ∀ (a : (_ : (_ : ℕ) × ℕ) × ℕ) (ha : a ∈ Finset.sigma
+      (Finset.sigma (range (n + 1)) fun l => range (l + 1)) fun x => range (n - x.fst + 1)),
+      (fun m _ => φ m) a ha ∈ Finset.sigma (Finset.sigma (range (n + 1))
+        fun k => range (k + 1)) fun x => range (n - x.fst + 1) := by
+    rintro ⟨⟨k, a⟩, c⟩ h
     simp only [Finset.mem_sigma, Finset.mem_range, Nat.lt_succ_iff] at h
     simp_rw [Finset.mem_sigma, Finset.mem_range, Nat.lt_succ_iff]
     constructor; constructor
@@ -147,6 +141,23 @@ theorem Finset.sum_4_rw {α : Type _} [AddCommMonoid α]
       rw [Nat.le_sub_iff_add_le h.1.1, add_comm] at h
       exact h.2
       exact le_trans h.2 (Nat.sub_le n k)
+
+  have h2 : ∀ (a : (_ : (_ : ℕ) × ℕ) × ℕ) (ha : a ∈ Finset.sigma (Finset.sigma (range (n + 1))
+      fun k => range (k + 1)) fun x => range (n - x.fst + 1)),
+      (fun m _ => φ m) ((fun m _ => φ m) a ha) ((fun m _ => φ m) a ha ∈
+        Finset.sigma (Finset.sigma (range (n + 1)) fun k => range (k + 1))
+          fun x => range (n - x.fst + 1)) =
+    a := by
+    rintro ⟨⟨k, a⟩, c⟩ h
+    simp only [Finset.mem_sigma, Finset.mem_range, Nat.lt_succ_iff] at h
+    simp only [add_tsub_cancel_left, Sigma.mk.inj_iff, heq_eq_eq, and_true]
+    refine add_tsub_cancel_of_le h.1.2
+
+  refine Finset.sum_bij' (fun m _ => φ m) (fun m _ => φ m) h1 h1 h2 h2 ?_
+  · rintro ⟨⟨k, a⟩, c⟩ h
+    simp only [mem_sigma, mem_range, Nat.lt_succ_iff] at h
+    simp only [Nat.add_sub_self_left a c, Nat.sub_sub,
+      add_comm (a + c), ← add_assoc, Nat.sub_add_cancel h.1.2]
 #align finset.sum_4_rw Finset.sum_4_rw
 
 end FourFoldSums
@@ -172,10 +183,9 @@ theorem range_sym_prop {m n : ℕ} {k : Sym ℕ m} (hk : k ∈ (Finset.range (n 
 theorem range_sym_weighted_sum_le {m n : ℕ} {k : Sym ℕ m}
     (hk : k ∈ (Finset.range (n + 1)).sym m) :
     ((Finset.range (n + 1)).sum fun i => Multiset.count i k * i) ≤ m * n := by
-  suffices : ∀ i ∈ Finset.range (n + 1), Multiset.count i k * i ≤ Multiset.count i k * n
-  apply le_trans (Finset.sum_le_sum this)
-  rw [← Finset.sum_mul, range_sym_prop hk]
-  -- suffices
+  suffices h : ∀ i ∈ Finset.range (n + 1), Multiset.count i k * i ≤ Multiset.count i k * n by
+    apply le_trans (Finset.sum_le_sum h)
+    rw [← Finset.sum_mul, range_sym_prop hk]
   intro i hi
   apply Nat.mul_le_mul_left
   exact Nat.lt_succ_iff.mp (Finset.mem_range.mp hi)
@@ -184,20 +194,15 @@ theorem range_sym_weighted_sum_le {m n : ℕ} {k : Sym ℕ m}
 theorem sum_range_sym_mul_compl {m n : ℕ} {k : Sym ℕ m} (hk : k ∈ (Finset.range (n + 1)).sym m) :
     (Finset.sum (Finset.range (n + 1)) fun i => Multiset.count i k * (n - i)) =
       m * n - Finset.sum (Finset.range (n + 1)) fun i => Multiset.count i k * i := by
-  suffices :
-    (((Finset.range (n + 1)).sum fun i => Multiset.count i k * (n - i)) +
-        (Finset.range (n + 1)).sum fun i => Multiset.count i k * i) =
-      m * n
-  rw [← this]; rw [Nat.add_sub_cancel]
+  suffices h : (((Finset.range (n + 1)).sum fun i => Multiset.count i k * (n - i)) +
+        (Finset.range (n + 1)).sum fun i => Multiset.count i k * i) = m * n by
+    rw [← h, Nat.add_sub_cancel]
   rw [← Finset.sum_add_distrib]
   simp_rw [← mul_add]
   have :
     ∀ x ∈ Finset.range (n + 1),
-      Multiset.count x ↑k * (n - x + x) = Multiset.count x ↑k * n :=
-    by
+      Multiset.count x ↑k * (n - x + x) = Multiset.count x ↑k * n := by
     intro x hx
     rw [Nat.sub_add_cancel (Nat.lt_succ_iff.mp (Finset.mem_range.mp hx))]
-  rw [Finset.sum_congr rfl this]
-  rw [← Finset.sum_mul]
-  rw [range_sym_prop hk]
+  rw [Finset.sum_congr rfl this, ← Finset.sum_mul, range_sym_prop hk]
 #align sum_range_sym_mul_compl sum_range_sym_mul_compl

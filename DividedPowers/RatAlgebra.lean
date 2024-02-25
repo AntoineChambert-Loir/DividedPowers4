@@ -13,19 +13,16 @@ lemma Nat.inv_smul_eq_invCast_mul {A : Type _} [CommSemiring A] [Algebra ℚ A] 
   cases' Nat.eq_zero_or_pos n with hn hn
   . simp only [hn, Nat.cast_zero, isUnit_zero_iff, not_false_eq_true, Ring.inverse_non_unit, zero_smul,
     Ring.inverse_zero, zero_mul]
-  . suffices hn' : IsUnit (n : ℚ)
-    simp only [Algebra.smul_def, ← map_natCast (algebraMap ℚ A)]
-    apply symm
-    rw [Ring.inverse_mul_eq_iff_eq_mul, ← mul_assoc]
-    apply symm
-    convert @one_mul A _ _
-    simp only [← map_mul, ← map_one (algebraMap ℚ A)]
-    apply congr_arg
-    apply symm
-    rw [Ring.eq_mul_inverse_iff_mul_eq, one_mul]
-    . exact hn'
-    . apply RingHom.isUnit_map
-      exact hn'
+  . suffices hn' : IsUnit (n : ℚ) by
+      simp only [Algebra.smul_def, ← map_natCast (algebraMap ℚ A)]
+      apply symm
+      rw [Ring.inverse_mul_eq_iff_eq_mul _ _ _ (RingHom.isUnit_map _ hn'), ← mul_assoc]
+      apply symm
+      convert @one_mul A _ _
+      simp only [← map_mul, ← map_one (algebraMap ℚ A)]
+      apply congr_arg
+      apply symm
+      rw [Ring.eq_mul_inverse_iff_mul_eq _ _ _ hn', one_mul]
     rw [isUnit_iff_ne_zero, ne_eq, Nat.cast_eq_zero]
     exact Nat.ne_of_gt hn
 
@@ -216,11 +213,10 @@ noncomputable def dividedPowers : DividedPowers I :=
 theorem dpow_of_two_le {n : ℕ} (hn : 2 ≤ n) (a : A) : (dividedPowers hI2) n a = 0 := by
   simp [dividedPowers, OfInvertibleFactorial.dpow_def]
   split_ifs with ha
-  -- ; convert MulZeroClass.mul_zero _
-  suffices : a ^ n = 0
-  . rw [this, mul_zero]
-  . exact Ideal.mem_pow_eq_zero 2 n hI2 hn ha
-  rfl
+  · suffices h : a ^ n = 0 by
+      rw [h, mul_zero]
+    exact Ideal.mem_pow_eq_zero 2 n hI2 hn ha
+  · rfl
 #align divided_powers.of_square_zero.dpow_of_two_le DividedPowers.OfSquareZero.dpow_of_two_le
 
 end OfSquareZero

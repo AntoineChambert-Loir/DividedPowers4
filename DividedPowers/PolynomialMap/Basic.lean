@@ -187,8 +187,8 @@ theorem zooInv_apply_tmul (p : MvPolynomial σ R) (n : N) (k):
   (zooInv σ R N) (p ⊗ₜ[R] n) k = MvPolynomial.coeff k p • n := by
   rw [zooInv]
   simp only [AddHom.toFun_eq_coe, coe_toAddHom, LinearEquiv.coe_coe, TensorProduct.lift.tmul]
-  suffices : MvPolynomial.coeff k p • n = sum p fun d b => (Finsupp.single d (b • n)) k
-  · rw [this]
+  suffices h : MvPolynomial.coeff k p • n = sum p fun d b => (Finsupp.single d (b • n)) k by
+    rw [h]
     have := Finsupp.llift_apply (N →ₗ[R] (σ →₀ ℕ) →₀ N) R R (σ →₀ ℕ)
     specialize this lsingle p
     rw [LinearMap.ext_iff] at this
@@ -226,8 +226,8 @@ theorem zooInv_apply (pn) :
 
 /-
 theorem zooInv_zoo_apply (f) : zooInv σ R N (zoo σ R N f) = f := by
-  suffices : (zooInv σ R N) ∘ₗ (zoo σ R N) = LinearMap.id
-  · simp only [← LinearMap.comp_apply, this, id_coe, id_eq]
+  suffices h : (zooInv σ R N) ∘ₗ (zoo σ R N) = LinearMap.id by
+    simp only [← LinearMap.comp_apply, h, id_coe, id_eq]
   ext d n e
   simp only [LinearMap.id_comp, lsingle_apply, zoo, coe_comp, coe_lsum, LinearEquiv.coe_coe,
     Function.comp_apply, map_zero, sum_single_index, TensorProduct.lid_symm_apply, rTensor_tmul]
@@ -237,14 +237,13 @@ theorem zooInv_zoo_apply (f) : zooInv σ R N (zoo σ R N f) = f := by
     one_smul, zero_smul]
 
 theorem zoo_zooInv_apply (p) : (zoo σ R N) (zooInv σ R N p) = p := by
-  suffices : (zoo σ R N) ∘ₗ (zooInv σ R N) = LinearMap.id
-  · simp only [← LinearMap.comp_apply, this, id_coe, id_eq]
+  suffices (zoo σ R N) ∘ₗ (zooInv σ R N) = LinearMap.id by
+    simp only [← LinearMap.comp_apply, this, id_coe, id_eq]
   ext d n
   simp only [coe_comp, Function.comp_apply, TensorProduct.AlgebraTensorModule.curry_apply,
     TensorProduct.curry_apply, coe_restrictScalars, id_coe, id_eq]
-  suffices : (zooInv σ R N) ((MvPolynomial.monomial d) 1 ⊗ₜ[R] n) =
-    Finsupp.single d n
-  · rw [this]
+  suffices  (zooInv σ R N) ((MvPolynomial.monomial d) 1 ⊗ₜ[R] n) = Finsupp.single d n by
+    rw [this]
     simp only [zoo, coe_lsum, coe_comp, LinearEquiv.coe_coe,
       Function.comp_apply, map_zero, sum_single_index,
       TensorProduct.lid_symm_apply, rTensor_tmul]
