@@ -12,8 +12,11 @@ namespace PolynomialMap
 
 section Coefficients
 
-variable {R : Type u} {M N : Type _} [CommSemiring R]
-  [AddCommMonoid M] [AddCommMonoid N] [Module R M] [Module R N]
+/- variable {R : Type u} {M N : Type _} [CommSemiring R]
+  [AddCommMonoid M] [AddCommMonoid N] [Module R M] [Module R N] -/
+
+variable {R : Type u} {M N : Type _} [CommRing R]
+  [AddCommGroup M] [AddCommGroup N] [Module R M] [Module R N]
 
 variable {ι : Type u} [DecidableEq ι] [Fintype ι]
 
@@ -108,8 +111,8 @@ theorem generize_comp_embed (f : PolynomialMap R M N)
 
 /-- The coefficients of a `polynomial_map` -/
 noncomputable def coeff (m : ι → M) :
-  PolynomialMap R M N →ₗ[R] (ι →₀ ℕ) →₀ N := by
-    exact (zooEquiv ι R N).symm.comp (generize R N m)
+    PolynomialMap R M N →ₗ[R] (ι →₀ ℕ) →₀ N :=
+  (MvPolynomial.scalarRTensor ι).toLinearMap.comp (generize R N m)
 #align polynomial_map.coeff PolynomialMap.coeff
 
 theorem generize_eq (m : ι → M) (f : PolynomialMap R M N)  :
@@ -117,10 +120,10 @@ theorem generize_eq (m : ι → M) (f : PolynomialMap R M N)  :
     (fun k n => (MvPolynomial.monomial k 1) ⊗ₜ n)  := by
   simp only [coeff]
   dsimp
-  generalize h : (zooEquiv ι R N).symm (generize R N m f) = p
-  rw [LinearEquiv.symm_apply_eq] at h
-  rw [h]
-  rfl
+  generalize h : (MvPolynomial.scalarRTensor ι) (generize R N m f) = p
+  rw [eq_comm, ← LinearEquiv.symm_apply_eq] at h
+  rw [← h]
+  rw [MvPolynomial.scalarRTensor_symm_apply]
 
 theorem coeff_eq (m : ι → M) (k : ι →₀ ℕ) (f : PolynomialMap R M N) :
   coeff m f k =
@@ -130,7 +133,7 @@ theorem coeff_eq (m : ι → M) (k : ι →₀ ℕ) (f : PolynomialMap R M N) :
           fun i : ι => MvPolynomial.X i ⊗ₜ[R] m i))) := by
   simp only [coeff, coe_comp, LinearEquiv.coe_coe, Function.comp_apply]
   simp only [generize, coe_mk, AddHom.coe_mk]
-  rw [zooEquiv_symm_apply]
+  simp only [MvPolynomial.scalarRTensor_apply]
 #align polynomial_map.coeff_eq PolynomialMap.coeff_eq
 
 
@@ -141,9 +144,8 @@ theorem coeff_comp_equiv {ι : Type u} [DecidableEq ι] [Fintype ι]
   simp only [coeff]
 
   simp only [coe_comp, LinearEquiv.coe_coe, Function.comp_apply]
-  simp only [zooEquiv_symm_apply]
-  have : m ∘ e = fun x ↦ m (e x) := rfl
-  rw [this]
+  simp only [MvPolynomial.scalarRTensor_apply]
+  rw [Function.comp]
 
   let hf := f.isCompat_apply
     (MvPolynomial.aeval (fun i ↦ MvPolynomial.X (e i)) :
@@ -334,10 +336,11 @@ theorem coeff_of_finsupp_polynomialMap [DecidableEq ι]
   coeff (DFunLike.coe b) (Finsupp.polynomialMap b h) = h := by
   simp only [coeff, coe_mk, AddHom.coe_mk]
   simp only [coe_comp, LinearEquiv.coe_coe, Function.comp_apply]
-  rw [LinearEquiv.symm_apply_eq]
+  rw [eq_comm, ← LinearEquiv.symm_apply_eq]
   dsimp [Finsupp.polynomialMap, generize]
-  apply congr_arg
-  ext k
+  rw [MvPolynomial.scalarRTensor_symm_apply]
+  apply Finsupp.sum_congr
+  intro k _
   apply congr_arg₂ _ _ rfl
   rw [MvPolynomial.monomial_eq]
   simp

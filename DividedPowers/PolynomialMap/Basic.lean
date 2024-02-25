@@ -1,3 +1,5 @@
+/- Copyright ACL @ MIdFF 2024 -/
+
 import DividedPowers.ForMathlib.TensorProductFinsupp
 import Mathlib.RingTheory.PowerSeries.Basic
 import Mathlib.RingTheory.TensorProduct
@@ -112,29 +114,9 @@ end LinearForm
 
 end Algebra
 
-namespace MvPolynomial
-
-variable {R : Type _} [CommSemiring R] {ι : Type _}
-
--- I think it makes more sense to have this in the `mv_polynomial` namespace
---def linear_map.mv_polynomial.coeff (k : ι →₀ ℕ) : mv_polynomial ι A →ₗ[A] A :=
-def lcoeff (k : ι →₀ ℕ) : MvPolynomial ι R →ₗ[R] R where
-  -- or `coeff_linear_map`
-  toFun     := coeff k
-  map_add'  := coeff_add k
-  map_smul' := coeff_smul k
-#align mv_polynomial.coeff_hom MvPolynomial.lcoeff
-
---#check MvPolynomial.lcoeff
-
-theorem lcoeff_apply (k : ι →₀ ℕ) (f : MvPolynomial ι R) :
-    lcoeff k f = MvPolynomial.coeff k f :=
-  rfl
-#align mv_polynomial.coeff_hom_apply MvPolynomial.lcoeff_apply
-
-end MvPolynomial
-
 section MvPolynomialModule
+
+open MvPolynomial
 
 /- This is boring stuff devoted to prove
   the standard linear equivalence between M[σ] and R[σ] ⊗ M
@@ -149,8 +131,8 @@ section MvPolynomialModule
 open scoped TensorProduct
 
 variable (σ : Type _) [DecidableEq σ]
-  (R : Type _) [CommSemiring R]
-  (N : Type _) [AddCommMonoid N] [Module R N]
+  (R : Type _) [CommRing R] -- [CommSemiring R]
+  (N : Type _) [AddCommGroup N] [Module R N] -- [AddCommMonoid N] [Module R N]
 
 open Finsupp
 
@@ -162,32 +144,45 @@ base change on the left, and has different assumptions… -/
 
 -- TODO: rename
 
-#check Finsupp.tensorProductLeft
-noncomputable def zooEquiv' :
-  ((σ →₀ ℕ) →₀ N) ≃ₗ[R] MvPolynomial σ R ⊗[R] N := by
-  have := (Finsupp.tensorProductLeft (ι := σ →₀ ℕ) (M := R) (R := R) (N := N))
-  have that := LinearEquiv.symm this
-  convert that
+/-
+noncomputable def MvPolynomial.rTensor' {S : Type*} [CommRing S] [Algebra R S] :
+    MvPolynomial σ S ⊗[R] N ≃ₗ[S] (σ →₀ ℕ) →₀ (S ⊗[R] N) :=
+  TensorProduct.finsuppLeft'
 
+noncomputable def MvPolynomial.rTensor :
+    MvPolynomial σ R ⊗[R] N ≃ₗ[R] (σ →₀ ℕ) →₀ N := by
+ exact (MvPolynomial.rTensor' σ (S := R) (N := N) (R := R)).trans
+    (Finsupp.mapRange.linearEquiv (TensorProduct.lid R N))
+-/
 
-
-
+/- -- USE  (MvPolynomial.rTensor σ R N).symm
 noncomputable def zoo :
     ((σ →₀ ℕ) →₀ N) →ₗ[R] MvPolynomial σ R ⊗[R] N := (Finsupp.lsum R)
   (fun d => (LinearMap.rTensor N (MvPolynomial.monomial d)).comp
     (TensorProduct.lid R N).symm.toLinearMap)
+-/
 
+/- -- USE MvPolynomial.rTensor_symm_apply_single
 theorem zoo_apply_single (k : σ →₀ ℕ) (n : N) :
   zoo σ R N (single k n) =
     (MvPolynomial.monomial k) 1 ⊗ₜ[R] n := by
   simp only [zoo, Finsupp.lsum_single, coe_comp, LinearEquiv.coe_coe, Function.comp_apply,
     TensorProduct.lid_symm_apply, rTensor_tmul]
-#align zoo_apply_single zoo_apply_single
+#align zoo_apply_single zoo_apply_single -/
 
+/- -- USE (MvPolynomial.rTensor σ R N)
 noncomputable def zooInv :
     MvPolynomial σ R ⊗[R] N →ₗ[R] (σ →₀ ℕ) →₀ N :=
-  TensorProduct.lift ((Finsupp.llift _ R R _ ).toLinearMap.toFun lsingle )
+  TensorProduct.lift ((Finsupp.llift _ R R _ ).toLinearMap.toFun lsingle ) -/
 
+
+/- -- USE MvPolynomial.rTensor_apply
+theorem zooInv_apply_tmul (p : MvPolynomial σ R) (n : N) (k):
+    (zooInv σ R N) (p ⊗ₜ[R] n) k = MvPolynomial.coeff k p • n := by
+  sorry
+-/
+
+/-
 theorem zooInv_apply_tmul (p : MvPolynomial σ R) (n : N) (k):
   (zooInv σ R N) (p ⊗ₜ[R] n) k = MvPolynomial.coeff k p • n := by
   rw [zooInv]
@@ -211,7 +206,9 @@ theorem zooInv_apply_tmul (p : MvPolynomial σ R) (n : N) (k):
     rw [Finsupp.single_apply, if_neg hdk]
   · intro _
     simp only [zero_smul, single_zero, coe_zero, Pi.zero_apply]
+-/
 
+/-
 theorem zooInv_apply (pn) :
   (zooInv σ R N) pn k =
     (TensorProduct.lid R N)
@@ -225,7 +222,9 @@ theorem zooInv_apply (pn) :
   | add p q h h' =>
       simp only [map_add, coe_add, Pi.add_apply]
       simp only [h, h']
+-/
 
+/-
 theorem zooInv_zoo_apply (f) : zooInv σ R N (zoo σ R N f) = f := by
   suffices : (zooInv σ R N) ∘ₗ (zoo σ R N) = LinearMap.id
   · simp only [← LinearMap.comp_apply, this, id_coe, id_eq]
@@ -253,7 +252,9 @@ theorem zoo_zooInv_apply (p) : (zoo σ R N) (zooInv σ R N p) = p := by
   rw [zooInv_apply, Finsupp.single_apply]
   simp only [MvPolynomial.lcoeff, rTensor_tmul, LinearMap.coe_mk, AddHom.coe_mk,
     MvPolynomial.coeff_monomial, TensorProduct.lid_tmul, ite_smul, one_smul, zero_smul]
+-/
 
+/- USE rTensor
 noncomputable def zooEquiv :
   ((σ →₀ ℕ) →₀ N) ≃ₗ[R] MvPolynomial σ R ⊗[R] N :=
   { zoo σ R N with
@@ -261,7 +262,9 @@ noncomputable def zooEquiv :
     left_inv := zooInv_zoo_apply σ R N
     right_inv := zoo_zooInv_apply σ R N }
 #align linear_map_equiv zooEquiv
+-/
 
+/-
 theorem zooEquiv_apply_single (k : σ →₀ ℕ) (n : N) :
   zooEquiv σ R N (single k n) = (MvPolynomial.monomial k) 1 ⊗ₜ[R] n := by
   simp [← LinearEquiv.toFun_eq_coe, zooEquiv, zoo_apply_single]
@@ -276,6 +279,7 @@ theorem zooEquiv_symm_apply (pn) :
       ((rTensor N (MvPolynomial.lcoeff k)) pn) := by
   simp [← LinearEquiv.invFun_eq_symm, zooEquiv, zooInv_apply]
 end MvPolynomialModule
+-/
 
 open scoped TensorProduct
 
@@ -313,27 +317,26 @@ theorem isCompat_apply (f : PolynomialMap R M N)
     (φ : S →ₐ[R] S') (x : S ⊗[R] M) :
   (φ.toLinearMap.rTensor N) ((f.toFun S) x) =
       (f.toFun S') (φ.toLinearMap.rTensor M x) := by
-  simpa only using congr_fun (f.isCompat φ) x
+  simpa only using _root_.congr_fun (f.isCompat φ) x
 #align polynomial_map.is_compat_apply PolynomialMap.isCompat_apply
 
-variable {S : Type u} [CommSemiring S] [Algebra R S]
 
-variable (R)
-def algebraMap' (S : Type u) [Semiring S] [Algebra R S] : R →ₐ[R] S where
+/- USE Algebra.linearMap for the linearMap-/
+def _root_.algebraMap' (R : Type*) [CommSemiring R] (S : Type u) [Semiring S] [Algebra R S] : R →ₐ[R] S where
   toRingHom := algebraMap R S
   commutes' := fun _ ↦ rfl
 
 variable {R}
+variable {S : Type u} [CommSemiring S] [Algebra R S]
 
 lemma isCompat_aux :
-    1 ⊗ₜ[R] (TensorProduct.lid R N) m =
-      (rTensor N (AlgHom.toLinearMap (algebraMap' R S))) m := by
+    (1 : S)  ⊗ₜ[R] (TensorProduct.lid R N) m =
+      (rTensor N (algebraMap' R S).toLinearMap) m := by
   suffices : ∀ m,
     (rTensor N (algebraMap' R S).toLinearMap).comp (TensorProduct.lid R N).symm.toLinearMap m = 1 ⊗ₜ[R] m
   · simp [← this]
   · intro z
-    simp only [coe_comp, LinearEquiv.coe_coe, Function.comp_apply,
-      TensorProduct.lid_symm_apply, rTensor_tmul, AlgHom.toLinearMap_apply, map_one]
+    simp
 
 theorem isCompat_apply_ground (f : PolynomialMap R M N)
     {S : Type u} [CommSemiring S] [Algebra R S] (x : M) :
@@ -478,157 +481,6 @@ theorem comp_assoc (f : PolynomialMap R M N) (g : PolynomialMap R N P)
 
 end Comp
 
-section Homogeneous
-
-universe u
-
-variable {R M N : Type _} [CommSemiring R]
-  [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module R N]
-
-/-- A polynomial map is homogeneous if all its toFun are homogeneous -/
-def IsHomogeneousOfDegree
-    (p : ℕ) (f : PolynomialMap R M N) : Prop :=
-  ∀ (S : Type u) [CommSemiring S] [Algebra R S] (r : S) (m : S ⊗[R] M),
-    f.toFun S (r • m) = r ^ p • f.toFun S m
-#align polynomial_map.is_homogeneous_of_degree PolynomialMap.IsHomogeneousOfDegree
-
-lemma isHomogeneousOfDegree_iff (p : ℕ) (f : PolynomialMap R M N) :
-    IsHomogeneousOfDegree p f ↔ ∀ (S : Type u) [CommSemiring S] [Algebra R S] (r : S) (m : S ⊗[R] M), f.toFun S (r • m) = r ^ p • f.toFun S m := by
-  rfl
-
-theorem IsHomogeneousOfDegree_add (p : ℕ) {f g : PolynomialMap R M N}
-    (hf : f.IsHomogeneousOfDegree p) (hg : g.IsHomogeneousOfDegree p) :
-    (f + g).IsHomogeneousOfDegree p := fun S _ _ s m ↦ by
-  simp only [add_def_apply, smul_add, hf S s m, hg S s m]
-
-theorem IsHomogeneousOfDegree_smul (p : ℕ) (r : R) {f : PolynomialMap R M N}
-    (hf : f.IsHomogeneousOfDegree p) : (r • f).IsHomogeneousOfDegree p := fun S _ _ s m ↦ by
-  simp only [smul_def, Pi.smul_apply, hf S]
-  exact smul_comm r (s ^ p) (toFun f S m)
-
-/-- The submodule of Homogeneous Polynomial maps -/
-def grade (p : ℕ) : Submodule R (PolynomialMap R M N) where
-  carrier   := IsHomogeneousOfDegree p
-  add_mem' hf hg := IsHomogeneousOfDegree_add p hf hg
-  smul_mem' r f hf := IsHomogeneousOfDegree_smul p r hf
-  zero_mem' := by
-    intro S _ _ r _
-    simp only [zero_def, Pi.zero_apply, smul_zero]
-
-lemma mem_grade (f : PolynomialMap R M N) (p : ℕ) :
-    f ∈ grade p ↔ IsHomogeneousOfDegree p f := by
-  rfl
-
-end Homogeneous
-
-section ConstantMap
-
-variable {R : Type u} [CommSemiring R]
-  {M N : Type _} [AddCommMonoid M] [AddCommMonoid N] [Module R M] [Module R N]
-
-open scoped TensorProduct
-
-def ofConstant (n : N) : PolynomialMap R M N where
-  toFun S _ _ _:= TensorProduct.tmul R 1 n
-  isCompat φ := by
-    ext
-    simp only [Function.comp_apply, rTensor_tmul, AlgHom.toLinearMap_apply, map_one]
-
-#align polynomial_map.of_constant PolynomialMap.ofConstant
-
-/-- Homogeneous Polynomial maps of degree 0 are constant maps -/
-def ofConstantHom : N →ₗ[R] (grade 0 : Submodule R (PolynomialMap R M N)) := {
-  toFun := fun n ↦ {
-    val := ofConstant n
-    property := by
-      simp only [grade, Submodule.mem_mk, AddSubmonoid.mem_mk, AddSubsemigroup.mem_mk]
-      intro S _ _ r sm
-      simp only [pow_zero, one_smul]
-      rfl }
-  map_add'  := fun x y ↦ by
-    simp only [AddSubmonoid.mk_add_mk, Subtype.mk.injEq, ofConstant]
-    ext
-    simp only [add_def_apply, TensorProduct.tmul_add]
-  map_smul' := fun r x ↦ by
-    simp only [RingHom.id_apply, SetLike.mk_smul_mk, Subtype.mk.injEq, ofConstant,
-      TensorProduct.tmul_smul]
-    rfl }
-
-/-- Homogeneous Polynomial maps of degree 0 are constant maps -/
-def ofConstantEquiv : N ≃ₗ[R] (grade 0 : Submodule R (PolynomialMap R M N)) := {
-  ofConstantHom with
-  invFun    := fun f ↦ f.val.ground 0
-  left_inv  := fun x ↦ by
-    simp only [AddHom.toFun_eq_coe, coe_toAddHom, ground, Function.comp_apply, map_zero,
-      ofConstantHom, coe_mk, AddHom.coe_mk, ofConstant, TensorProduct.lid_tmul, one_smul]
-  right_inv := fun x ↦ by
-    obtain ⟨f, hf⟩ := x
-    simp only [mem_grade, isHomogeneousOfDegree_iff] at hf
-    simp only [AddHom.toFun_eq_coe, coe_toAddHom]
-    rw [Subtype.ext_iff]
-    rw [Subtype.coe_mk]
-    simp [ofConstantHom, ground]
-    ext S _ _ m
-    conv_rhs =>
-      rw [← one_smul (M := S) (f.toFun S m), ← pow_zero 0, ← hf S _ m]
-      rw [zero_smul]
-    --  rw [← TensorProduct.tmul_zero M 1]
-    -- set n := ((TensorProduct.lid R N) (f.toFun R (0 : R ⊗[R] M)))
-    have := f.isCompat_apply (algebraMap' R S) 0
-    simp only [map_zero] at this
-    rw [← this]
-    simp [ofConstant]
-    rw [isCompat_aux] }
-
-end ConstantMap
-
-section Linear
-
-open scoped TensorProduct
-
-variable {R : Type u} [CommSemiring R]
-  {M N : Type _} [AddCommMonoid M] [AddCommMonoid N] [Module R M] [Module R N]
-
-def ofLinearMap (v : M →ₗ[R] N) : PolynomialMap R M N where
-  toFun S _ _ := v.baseChange S
-  isCompat φ := by
-    ext
-    simp only [← LinearMap.comp_apply, baseChange_eq_ltensor, Function.comp_apply, rTensor_comp_lTensor, lTensor_comp_rTensor]
-#align polynomial_map.of_linear_map PolynomialMap.ofLinearMap
-
-theorem ofLinearMap_toFun (u : M →ₗ[R] N)
-    (S : Type _) [CommSemiring S] [Algebra R S] :
-  (ofLinearMap u).toFun S = baseChange S u := rfl
-#align polynomial_map.of_linear_map_to_fun PolynomialMap.ofLinearMap_toFun
-
-def ofLinearMapHom :
-  (M →ₗ[R] N) →ₗ[R] (grade 1 : Submodule R (PolynomialMap R M N))
-    where
-  toFun := fun u ↦ {
-    val := ofLinearMap u
-    property := sorry }
-  map_add' u v := by
-    ext S _ _ m
-    simp only [ofLinearMap_toFun, baseChange_add, add_apply, AddSubmonoid.mk_add_mk, add_def_apply]
-  map_smul' a v := by
-    ext S _ _ m
-    simp only [smul_def, ofLinearMap_toFun, baseChange_smul]
-    rfl
-#align polynomial_map.of_linear_map_hom PolynomialMap.ofLinearMapHom
-
-theorem ofLinearMapHom_apply (v : M →ₗ[R] N) :
-  ofLinearMapHom v = ofLinearMap v := rfl
-#align polynomial_map.of_linear_map_hom_apply PolynomialMap.ofLinearMapHom_apply
-
-def ofLinearMapEquiv :
-    (M →ₗ[R] N) ≃ₗ[R] (grade 1 : Submodule R (PolynomialMap R M N)) :=
-  { ofLinearMapHom with
-    invFun := sorry
-    left_inv := sorry
-    right_inv := sorry }
-
-end Linear
-
 /-
 section multilinear
 
@@ -662,17 +514,14 @@ end multilinear
 section LocallyFinite
 
 variable {R : Type u} [CommSemiring R]
-  {M N : Type _} [AddCommMonoid M] [AddCommMonoid N] [Module R M] [Module R N]
+  {M N : Type v} [AddCommMonoid M] [AddCommMonoid N] [Module R M] [Module R N]
 
-def LocFinsupp {ι : Type _} (f : ι → PolynomialMap R M N) :=
+def LocFinsupp {ι : Type*} (f : ι → PolynomialMap R M N) :=
   ∀ (S : Type u) [CommSemiring S] [Algebra R S] (m : S ⊗[R] M),
     (Function.support fun i => (f i).toFun S m).Finite
 #align polynomial_map.locfinsupp PolynomialMap.LocFinsupp
 
-variable (R M N)
-
-def withLocFinsupp (ι : Type _) :
-  Submodule R (ι → PolynomialMap R M N) where
+def withLocFinsupp (ι : Type*) : Submodule R (ι → PolynomialMap R M N) where
   carrier := LocFinsupp
   add_mem' := by
     intro a b ha hb S _ _ m
@@ -681,16 +530,17 @@ def withLocFinsupp (ι : Type _) :
   zero_mem' := by
     simp only
     intro R _ _ _
-    simp only [Pi.zero_apply, zero_def, support_zero, Set.finite_empty]
+    simp only [Pi.zero_apply, zero_def, Function.support_zero, Set.finite_empty]
   smul_mem' a f hf S _ _ m :=
     Set.Finite.subset (hf S m) (Function.support_smul_subset_right _ _)
 #align polynomial_map.with_locfinsupp PolynomialMap.withLocFinsupp
 
+example {ι : Type*} : Module R (withLocFinsupp ι : Submodule R (ι → PolynomialMap R M N)) :=
+  inferInstance
+
 namespace LocFinsupp
 
-variable {R M N}
-
-noncomputable def sum {ι : Type _} (f : ι → PolynomialMap R M N)
+noncomputable def sum {ι : Type*} (f : ι → PolynomialMap R M N)
     (hf : LocFinsupp f) :
   PolynomialMap R M N where
   toFun S _ _ m := (Finsupp.ofSupportFinite _ (hf S m)).sum fun _ m => m
@@ -722,8 +572,8 @@ end LocFinsupp
 
 --TODO: I don't think this is in the right namespace, but I don't know how to rename it.
 noncomputable def LinearMap.LocFinsupp.sum {ι : Type _} [DecidableEq ι] :
-    withLocFinsupp R M N ι →ₗ[R] PolynomialMap R M N
-    where
+    (withLocFinsupp ι : Submodule R (ι → PolynomialMap R M N))
+      →ₗ[R] PolynomialMap R M N where
   toFun fhf := PolynomialMap.LocFinsupp.sum fhf.val fhf.prop
   map_add' := fun ⟨f, hf⟩ ⟨g, hg⟩ => by
     ext S _ _ m
