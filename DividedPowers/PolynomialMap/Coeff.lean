@@ -18,7 +18,7 @@ section Coefficients
 variable {R : Type u} {M N : Type _} [CommRing R]
   [AddCommGroup M] [AddCommGroup N] [Module R M] [Module R N]
 
-variable {ι : Type u} [DecidableEq ι] [Fintype ι]
+variable {ι : Type max u} [DecidableEq ι] [Fintype ι]
 
 variable (R N)
 noncomputable def generize (m : ι → M) :
@@ -136,7 +136,6 @@ theorem coeff_eq (m : ι → M) (k : ι →₀ ℕ) (f : PolynomialMap R M N) :
   simp only [MvPolynomial.scalarRTensor_apply]
 #align polynomial_map.coeff_eq PolynomialMap.coeff_eq
 
-
 theorem coeff_comp_equiv {ι : Type u} [DecidableEq ι] [Fintype ι]
     {κ : Type u} [DecidableEq κ] [Fintype κ]
     (e : ι ≃ κ) (m : κ → M) (k : ι →₀ ℕ) (f : PolynomialMap R M N) :
@@ -249,6 +248,64 @@ theorem image_eq_coeff_sum' {ι : Type u} [DecidableEq ι] (m : ι → M)
   rw [Finsupp.sum]
   rw [image_eq_coeff_finset_sum]
 #align polynomial_map.image_eq_coeff_sum' PolynomialMap.image_eq_coeff_sum'
+
+theorem ground_image_eq_coeff_sum
+    (m : ι → M)
+    (f : PolynomialMap R M N)
+    (r : ι → R) :
+  ground f (Finset.univ.sum fun i => (r i) • (m i)) =
+    (coeff m f).sum
+      (fun k n => (Finset.univ.prod fun i => r i ^ k i) • n) := by
+  apply (TensorProduct.lid R N).symm.injective
+  simp only [TensorProduct.lid_symm_apply]
+  rw [isCompat_apply_ground]
+  simp only [← TensorProduct.lid_symm_apply]
+  simp only [map_sum, TensorProduct.lid_symm_apply,
+    ← TensorProduct.smul_tmul, smul_eq_mul, mul_one]
+  rw [image_eq_coeff_sum]
+  simp only [← TensorProduct.lid_symm_apply]
+  simp only [map_finsupp_sum, map_finsupp_sum, TensorProduct.lid_symm_apply]
+  apply Finsupp.sum_congr
+  intro d _
+  rw [← TensorProduct.smul_tmul, smul_eq_mul, mul_one]
+
+theorem ground_image_eq_coeff_sum_one (m : M) (f : PolynomialMap R M N) (r : R) :
+  ground f (r • m) =
+    (coeff (const (ULift.{u} (Fin 1)) m) f).sum (fun k n => r ^ (k 0) • n) := by
+  suffices r • m = Finset.univ.sum
+    fun i ↦ (const (ULift.{u} (Fin 1)) r) i • ((const (ULift.{u} (Fin 1)) m) i) by
+    rw [this, ground_image_eq_coeff_sum]
+    apply Finset.sum_congr rfl
+    intro i _
+    simp only [Finset.univ_unique, const_apply, Finset.prod_singleton]
+    rfl
+  simp only [Finset.univ_unique, const_apply, Finset.sum_const, Finset.card_singleton, one_smul]
+
+example (r s : R) : ULift.{u} (Fin 2) → R := ![r, s] ∘ (ULift.down)
+
+example  (r₁ r₂ : R) (k : ULift.{u} (Fin 2)) : R := ![r₁, r₂] (ULift.down k)
+
+example (n : ℕ) (k : Fin n → R) :
+    Finset.univ.sum (fun (i : ULift.{u} (Fin n)) => k (ULift.down i))
+      = Finset.univ.sum k := by
+  rw [Finset.sum_equiv (t := Finset.univ) (Equiv.ulift)]
+  · exact fun i => by simp
+  · exact fun i => by simp
+
+theorem ground_image_eq_coeff_sum_two
+    (r₁ r₂ : R) (m₁ m₂ : M) (f : PolynomialMap R M N) :
+  ground f (r₁ • m₁ + r₂ • m₂) =
+    (coeff (![m₁, m₂] ∘ ULift.down) f).sum fun k n =>
+      (Finset.univ.prod (fun i => (![r₁, r₂] ∘ ULift.down) i ^ (k i)) • n) := by
+  suffices r₁ • m₁ + r₂ • m₂ = Finset.univ.sum
+    fun i ↦ (![r₁, r₂] ∘ ULift.down) i • (![m₁, m₂] ∘ ULift.down) i  by
+    rw [this, ground_image_eq_coeff_sum]
+  rw [Finset.sum_equiv (t := Finset.univ)
+    (g := fun i ↦ ![r₁, r₂] i • ![m₁, m₂] i)
+    (Equiv.ulift : ULift.{u} (Fin 2) ≃ Fin 2)]
+  · simp
+  · exact fun _ => by simp
+  · exact fun _ => by simp
 
 variable {S : Type _} [CommSemiring S] [Algebra R S]
 

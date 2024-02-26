@@ -331,11 +331,11 @@ variable {S : Type u} [CommSemiring S] [Algebra R S]
 lemma isCompat_aux :
     (1 : S)  ⊗ₜ[R] (TensorProduct.lid R N) m =
       (rTensor N (algebraMap' R S).toLinearMap) m := by
-  suffices : ∀ m,
-    (rTensor N (algebraMap' R S).toLinearMap).comp (TensorProduct.lid R N).symm.toLinearMap m = 1 ⊗ₜ[R] m
-  · simp [← this]
-  · intro z
-    simp
+  suffices ∀ m, (rTensor N (algebraMap' R S).toLinearMap).comp
+    (TensorProduct.lid R N).symm.toLinearMap m = 1 ⊗ₜ[R] m by
+    simp [← this]
+  intro z
+  simp
 
 theorem isCompat_apply_ground (f : PolynomialMap R M N)
     {S : Type u} [CommSemiring S] [Algebra R S] (x : M) :
