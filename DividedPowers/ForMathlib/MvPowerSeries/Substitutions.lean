@@ -41,9 +41,55 @@ theorem Continuous.tendsto_apply_variables_zero_of_cofinite {φ : MvPowerSeries 
   rw [← φ.map_zero]
   exact Filter.Tendsto.comp hφ.continuousAt variables_tendsto_zero
 
-/-- Bourbaki, Algèbre, chap. 4, §4, n°3, Prop. 4 (i) (c) -/
+
+
+/-- Bourbaki, Algèbre, chap. 4, §4, n°3, Prop. 4 (ii) - Existence -/
 theorem foo {Y : σ → R}
     (hY_pow : ∀ s : σ, Filter.Tendsto (fun n : ℕ => (Y s ^ n)) Filter.atTop (nhds 0))
-    (hY_cof : ∀ s : σ, Filter.Tendsto (fun s : σ => (Y s)) Filter.cofinite (nhds 0)) :
+    (hY_cof : ∀ s : σ, Filter.Tendsto (fun s : σ => (Y s)) Filter.cofinite (nhds 0))
+    [τ : UniformSpace R] (ι : Type*) [Nonempty ι] [IsLinearTopology R ι] [CompleteSpace R]
+    [T2Space R] :
     ∃ (φ : MvPowerSeries σ α →ₐ[α] R) (hφ : Continuous φ), ∀ (s : σ), φ (X s) = Y s := by
+  set ψ : MvPolynomial σ α →ₐ[α] R :=
+  { toFun     := fun f => MvPolynomial.aeval Y f
+    map_one'  := by simp only [map_one]
+    map_mul'  := by simp only [map_mul, forall_const]
+    map_zero' := by simp only [map_zero]
+    map_add'  := by simp only [map_add, forall_const]
+    commutes' := by simp only [AlgHom.commutes, forall_const] } with hψ_def
+  letI : TopologicalSpace (MvPolynomial σ α) := TopologicalSpace.induced
+    MvPolynomial.toMvPowerSeries (MvPowerSeries.topologicalSpace σ α)
+  haveI di : DenseInducing (@MvPolynomial.toMvPowerSeries σ α _) := {
+    induced := rfl
+    dense   := by
+      rw [DenseRange, Dense]
+      sorry }
+  have hψ : Continuous ψ := sorry
+  let φ : MvPowerSeries σ α →ₐ[α] R :=
+  { toFun     := DenseInducing.extend di ψ
+    map_one'  := by rw [← MvPolynomial.coe_one, DenseInducing.extend_eq di hψ, map_one]
+    map_mul'  := by
+      simp only [AlgHom.mk_coe]
+      sorry
+    map_zero' := by
+      rw [← MvPolynomial.coe_zero]
+      simp only [AlgHom.mk_coe]
+      erw [DenseInducing.extend_eq di hψ, map_zero]
+    map_add'  := sorry
+    commutes' := sorry }
+  have hφ : Continuous φ := sorry
+  use φ, hφ
+  intro s
+  have : φ = DenseInducing.extend di ψ := rfl
+  rw [this, ← MvPolynomial.coe_X, DenseInducing.extend_eq di hψ (MvPolynomial.X s)]
+  simp only [AlgHom.mk_coe, MvPolynomial.aeval_X]
+
+/-- Bourbaki, Algèbre, chap. 4, §4, n°3, Prop. 4 (ii) - uniqueness -/
+theorem foo_unique {Y : σ → R}
+    (hY_pow : ∀ s : σ, Filter.Tendsto (fun n : ℕ => (Y s ^ n)) Filter.atTop (nhds 0))
+    (hY_cof : ∀ s : σ, Filter.Tendsto (fun s : σ => (Y s)) Filter.cofinite (nhds 0))
+    [τ : UniformSpace R] (ι : Type*) [Nonempty ι] [IsLinearTopology R ι] [CompleteSpace R]
+    [T2Space R] (φ : MvPowerSeries σ α →ₐ[α] R) (hφ : Continuous φ)
+      (hφ' : ∀ (s : σ), φ (X s) = Y s) :
+    φ = (foo α R σ hY_pow hY_cof ι).choose := by
   sorry
