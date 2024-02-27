@@ -18,7 +18,7 @@ section Coefficients
 variable {R : Type u} {M N : Type _} [CommRing R]
   [AddCommGroup M] [AddCommGroup N] [Module R M] [Module R N]
 
-variable {ι : Type max u} [DecidableEq ι] [Fintype ι]
+variable {ι : Type u} [DecidableEq ι] [Fintype ι]
 
 variable (R N)
 noncomputable def generize (m : ι → M) :
@@ -31,7 +31,6 @@ noncomputable def generize (m : ι → M) :
     simp only [RingHom.id_apply, PolynomialMap.smul_def, Pi.smul_apply]
 
 variable {R N}
-
 
 theorem generize_comp_equiv
   {ι : Type u} {κ : Type u} [Fintype ι] [Fintype κ] [DecidableEq ι] [DecidableEq κ]
@@ -270,6 +269,18 @@ theorem ground_image_eq_coeff_sum
   rw [← TensorProduct.smul_tmul, smul_eq_mul, mul_one]
 
 theorem ground_image_eq_coeff_sum_one (m : M) (f : PolynomialMap R M N) (r : R) :
+  ground f (r • m) =
+    (coeff (const ((Fin 1)) m) f).sum (fun k n => r ^ (k 0) • n) := by
+  suffices r • m = Finset.univ.sum
+    fun i ↦ (const (ULift.{u} (Fin 1)) r) i • ((const (ULift.{u} (Fin 1)) m) i) by
+    rw [this, ground_image_eq_coeff_sum]
+    apply Finset.sum_congr rfl
+    intro i _
+    simp only [Finset.univ_unique, const_apply, Finset.prod_singleton]
+    rfl
+  simp only [Finset.univ_unique, const_apply, Finset.sum_const, Finset.card_singleton, one_smul]
+
+theorem ground_image_eq_coeff_sum_one' (m : M) (f : PolynomialMap R M N) (r : R) :
   ground f (r • m) =
     (coeff (const (ULift.{u} (Fin 1)) m) f).sum (fun k n => r ^ (k 0) • n) := by
   suffices r • m = Finset.univ.sum
