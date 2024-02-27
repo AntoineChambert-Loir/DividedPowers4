@@ -1,6 +1,7 @@
 import Mathlib.Topology.Algebra.Ring.Basic
 import Mathlib.RingTheory.PowerSeries.Basic
 import DividedPowers.ForMathlib.InfiniteSum.Basic
+import DividedPowers.ForMathlib.MvPowerSeries.Basic
 
 theorem Finset.prod_one_add {ι α : Type _} [DecidableEq ι] [CommRing α] {f : ι → α} (s : Finset ι) :
     (s.prod fun i => 1 + f i) = s.powerset.sum fun t => t.prod f := by
@@ -163,7 +164,6 @@ theorem variables_tendsto_zero :
     Filter.Tendsto (fun s : σ => (X s : MvPowerSeries σ α)) Filter.cofinite (nhds 0) := by
   classical
   rw [tendsto_pi_nhds]
-  --simp_rw [Pi.zero_apply]
   intro d s hs
   rw [Filter.mem_map, Filter.mem_cofinite, ← Set.preimage_compl]
   by_cases h : ∃ i, d = Finsupp.single i 1
@@ -215,16 +215,16 @@ theorem tendsto_pow_of_constantCoeff_nilpotent_iff [DiscreteTopology α] (f : Mv
       IsNilpotent (constantCoeff σ α f) := by
   refine' ⟨_, tendsto_pow_zero_of_constantCoeff_nilpotent ⟩
   · intro h
-    suffices : Filter.Tendsto (fun n : ℕ => constantCoeff σ α (f ^ n)) Filter.atTop (nhds 0)
-    simp only [Filter.tendsto_def] at this
-    specialize this {0} _
-    suffices : ∀ x : α, {x} ∈ nhds x; exact this 0
-    rw [← discreteTopology_iff_singleton_mem_nhds]; infer_instance
-    simp only [map_pow, Filter.mem_atTop_sets, ge_iff_le, Set.mem_preimage,
-      Set.mem_singleton_iff] at this
-    obtain ⟨m, hm⟩ := this
-    use m
-    apply hm m (le_refl m)
+    suffices Filter.Tendsto (fun n : ℕ => constantCoeff σ α (f ^ n)) Filter.atTop (nhds 0) by
+      simp only [Filter.tendsto_def] at this
+      specialize this {0} _
+      suffices  ∀ x : α, {x} ∈ nhds x by exact this 0
+      rw [← discreteTopology_iff_singleton_mem_nhds]; infer_instance
+      simp only [map_pow, Filter.mem_atTop_sets, ge_iff_le, Set.mem_preimage,
+        Set.mem_singleton_iff] at this
+      obtain ⟨m, hm⟩ := this
+      use m
+      apply hm m (le_refl m)
     simp only [← @comp_apply _ α ℕ]
     rw [← Filter.tendsto_map'_iff]
     simp only [Filter.Tendsto, Filter.map_le_iff_le_comap] at h ⊢

@@ -56,8 +56,8 @@ theorem tendsto_zero_of_summable [AddCommGroup α] [TopologicalSpace α] [Topolo
   rw [HasSum, tendsto_atTop_nhds] at ha
   rw [tendsto_nhds]
   intro U₀ hU₀ memU₀
-  suffices hU₁ : ∃ U₁ : Set α, IsOpen U₁ ∧ (0 : α) ∈ U₁ ∧ U₁ - U₁ ≤ U₀
-  · obtain ⟨U₁, hU₁, memU₁, addU₁_subset⟩ := hU₁
+  suffices hU₁ : ∃ U₁ : Set α, IsOpen U₁ ∧ (0 : α) ∈ U₁ ∧ U₁ - U₁ ≤ U₀ by
+    obtain ⟨U₁, hU₁, memU₁, addU₁_subset⟩ := hU₁
     obtain ⟨S, hS⟩ :=
       ha ((fun x => x - a) ⁻¹' U₁) (by simp only [memU₁, Set.mem_preimage, sub_self])
         (IsOpen.preimage (continuous_sub_right a) hU₁)
@@ -66,17 +66,18 @@ theorem tendsto_zero_of_summable [AddCommGroup α] [TopologicalSpace α] [Topolo
     by_contra his
     apply hi
     apply addU₁_subset
-    use (insert i S).sum f - a, S.sum f - a, hS (insert i S) (subset_insert i S), hS S le_rfl
-    simp only [sum_insert his, sub_sub_sub_cancel_right, add_sub_cancel]
-  · suffices h_open : IsOpen ((fun xy : α × α => xy.fst - xy.snd) ⁻¹' U₀)
-    · rw [isOpen_prod_iff] at h_open
+    sorry
+    /- use (insert i S).sum f - a, S.sum f - a, hS (insert i S) (subset_insert i S), hS S le_rfl
+    simp only [sum_insert his, sub_sub_sub_cancel_right, add_sub_cancel] -/
+  · suffices h_open : IsOpen ((fun xy : α × α => xy.fst - xy.snd) ⁻¹' U₀) by
+      rw [isOpen_prod_iff] at h_open
       obtain ⟨u, v, hu, hv, mem_u, mem_v, H⟩ :=
         h_open 0 0 (by simp only [Set.mem_preimage, sub_self, memU₀])
       use u ∩ v, IsOpen.inter hu hv, ⟨mem_u, mem_v⟩
       apply subset_trans _ (Set.image_subset_iff.mpr H)
       rw [image_prod]
       rintro z ⟨x, y, hx, hy, rfl⟩
-      exact ⟨x, y, mem_of_mem_inter_left hx, mem_of_mem_inter_right hy, rfl⟩
+      sorry --exact ⟨x, y, mem_of_mem_inter_left hx, mem_of_mem_inter_right hy, rfl⟩
     · exact IsOpen.preimage continuous_sub hU₀
 #align function.tendsto_zero_of_summable Function.tendsto_zero_of_summable
 
@@ -143,9 +144,9 @@ theorem weightedOrder_tendsto_top_iff [Finite σ] {ι : Type _} {w : σ → ℕ}
     · rename_i n
       simp only [Set.mem_Ioi, eventually_cofinite, not_lt]
       let s := {d : σ →₀ ℕ | (weight w d) ≤ n}
-      suffices h_ss :
-        {i | (f i).weightedOrder w ≤ some n} ⊆ ⋃ (d : σ →₀ ℕ) (_ : d ∈ s), {i | coeff α d (f i) ≠ 0}
-      · exact ((finite_of_weight_le w hw n).biUnion fun d _ => hf d).subset h_ss
+      suffices h_ss : {i | (f i).weightedOrder w ≤ some n} ⊆
+          ⋃ (d : σ →₀ ℕ) (_ : d ∈ s), {i | coeff α d (f i) ≠ 0} by
+        exact ((finite_of_weight_le w hw n).biUnion fun d _ => hf d).subset h_ss
       · intro i hi
         simp only [mem_setOf_eq] at hi
         simp only [mem_setOf_eq, Nat.cast_id, Ne.def, mem_iUnion, mem_setOf_eq, exists_prop]
@@ -269,7 +270,7 @@ theorem support_mul [DecidableEq ι] [DecidableEq σ] {f : ι → MvPowerSeries 
       intro h₂
       apply h'
       rw [h₂, MulZeroClass.mul_zero]
-  · by_contra' h'
+  · by_contra h'
     refine' h (sum_eq_zero _)
     convert h'
 #align mv_power_series.strongly_summable.support_mul MvPowerSeries.StronglySummable.support_mul

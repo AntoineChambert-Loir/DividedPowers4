@@ -29,7 +29,7 @@ def basis : (σ →₀ ℕ) → Ideal (MvPowerSeries σ α) := fun d =>
       rintro uv huv
       convert MulZeroClass.mul_zero (coeff α uv.fst f)
       exact hg  _ (le_trans (le_iff_exists_add'.mpr
-        ⟨uv.fst, (Finsupp.mem_antidiagonal.mp huv).symm⟩) he) }
+        ⟨uv.fst, (Finset.mem_antidiagonal.mp huv).symm⟩) he) }
 #align mv_power_series.J MvPowerSeries.basis
 
 /-- A power series `f` belongs to the ideal `basis σ α d` if and only if `coeff α e f = 0` for all
@@ -99,7 +99,6 @@ theorem basis_mem_nhds_zero [DiscreteTopology α] (d : σ →₀ ℕ) :
   use Finset.Iic d, Finset.finite_toSet _, (fun e => if e ≤ d then {0} else univ)
   constructor
   · intro e
-    simp only
     split_ifs with h
     . simp only [nhds_discrete, Filter.mem_pure, mem_singleton_iff]
       rfl
@@ -165,9 +164,9 @@ lemma has_submodules_basis_topology' [DiscreteTopology α] :
   let τ := MvPowerSeries.topologicalSpace σ α
   let τ' := (toSubmodulesBasis σ α).topology
   rw [TopologicalSpace.eq_iff_nhds_eq]
-  suffices : ∀ s, s ∈ @nhds _ τ 0 ↔ s ∈ @nhds _ τ' 0
+  suffices ∀ s, s ∈ @nhds _ τ 0 ↔ s ∈ @nhds _ τ' 0 by
   -- mv nhds from 0 to a
-  · intros s a _ha -- _ha is never used
+    intros s a _ha -- _ha is never used
     rw [← add_zero a]
     letI tr := (topologicalRing σ α)
     rw [@mem_nhds_add_iff _ _ τ, mem_nhds_add_iff]
@@ -190,11 +189,10 @@ lemma has_submodules_basis_topology' [DiscreteTopology α] :
     exact mem_of_mem_nhds (ht e)
     rw [← id.def e]
     apply Finset.le_sup
-    simp only [id.def]
     simp only [Set.Finite.mem_toFinset]
     exact he }
   { rintro ⟨d, _, hd⟩
-    exact (@nhds _ τ 0).sets_of_superset  (basis_mem_nhds_zero σ α d) hd}
+    exact (@nhds _ τ 0).sets_of_superset  (basis_mem_nhds_zero σ α d) hd }
 
 -- Alternative proof
 lemma has_submodules_basis_topology [DiscreteTopology α] :
@@ -202,9 +200,9 @@ lemma has_submodules_basis_topology [DiscreteTopology α] :
   let τ := MvPowerSeries.topologicalSpace σ α
   let τ' := (toSubmodulesBasis σ α).topology
   rw [TopologicalSpace.eq_iff_nhds_eq_nhds]
-  suffices : ∀ s, s ∈ @nhds _ τ 0 ↔ s ∈ @nhds _ τ' 0
+  suffices ∀ s, s ∈ @nhds _ τ 0 ↔ s ∈ @nhds _ τ' 0 by
   -- mv nhds from 0 to a
-  · ext a s
+    ext a s
     rw [← add_zero a]
     letI tr := (topologicalRing σ α)
     rw [@mem_nhds_add_iff _ _ τ, mem_nhds_add_iff]
