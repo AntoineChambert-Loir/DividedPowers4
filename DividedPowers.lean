@@ -23,14 +23,14 @@ import DividedPowers.ForMathlib.GradedAlgebra
 import DividedPowers.ForMathlib.GradedRingQuot
 import DividedPowers.ForMathlib.Homogeneous
 import DividedPowers.ForMathlib.InfiniteSum.Basic -- has sorrys
-import DividedPowers.ForMathlib.InfiniteSum.Order
+--import DividedPowers.ForMathlib.InfiniteSum.Order
 import DividedPowers.ForMathlib.MvPowerSeries.Basic
 import DividedPowers.ForMathlib.MvPowerSeries.LinearTopology
 import DividedPowers.ForMathlib.MvPowerSeries.Order
-import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Basic
-import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Topology
+--import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Basic
+--import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Topology
 import DividedPowers.ForMathlib.MvPowerSeries.Substitutions
--- import DividedPowers.ForMathlib.MvPowerSeries.Topology -- Depends on `ForMahlib.Antidiagonal`
+import DividedPowers.ForMathlib.MvPowerSeries.Topology
 import DividedPowers.ForMathlib.RingTheory.Ideal
 import DividedPowers.ForMathlib.RingTheory.SubmoduleMem
 import DividedPowers.ForMathlib.Topology.LinearTopology
@@ -38,6 +38,6 @@ import DividedPowers.ForMathlib.WeightedHomogeneous
 import DividedPowers.IdealAdd
 import DividedPowers.PolynomialMap.Basic
 import DividedPowers.PolynomialMap.Coeff
-import DividedPowers.PolynomialMap.Graded
+--import DividedPowers.PolynomialMap.Graded
 import DividedPowers.RatAlgebra
 --import DividedPowers.SubDPIdeal
