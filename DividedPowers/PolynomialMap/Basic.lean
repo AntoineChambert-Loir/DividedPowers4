@@ -286,6 +286,14 @@ section PolynomialMap
 
 noncomputable section
 
+structure PolynomialMap' (R : Type u) [CommSemiring R]
+    (M : Type _) [AddCommMonoid M] [Module R M]
+    (N : Type _) [AddCommMonoid N] [Module R N] where
+  toFun (S : Type _) [CommSemiring S] [Algebra R S] : S ⊗[R] M → S ⊗[R] N
+  isCompat {S : Type _} [CommSemiring S] [Algebra R S]
+    {S' : Type u} [CommSemiring S'] [Algebra R S'] (φ : S →ₐ[R] S') :
+    φ.toLinearMap.rTensor N ∘ toFun S = toFun S' ∘ φ.toLinearMap.rTensor M
+
 /-- A polynomial map M → N between A-modules is a functorial family
 of maps R ⊗[A] M → R ⊗[A] N, for all A-algebras R -/
 @[ext]
@@ -295,11 +303,27 @@ structure PolynomialMap (R : Type u) [CommSemiring R]
   toFun (S : Type u) [CommSemiring S] [Algebra R S] : S ⊗[R] M → S ⊗[R] N
   isCompat {S : Type u} [CommSemiring S] [Algebra R S]
     {S' : Type u} [CommSemiring S'] [Algebra R S'] (φ : S →ₐ[R] S') :
-    φ.toLinearMap.rTensor N ∘ toFun S =
-      toFun S' ∘ φ.toLinearMap.rTensor M
+    φ.toLinearMap.rTensor N ∘ toFun S = toFun S' ∘ φ.toLinearMap.rTensor M
 #align polynomial_map PolynomialMap
 
 namespace PolynomialMap
+
+section Universes
+
+variable {R : Type u} {M N : Type _} [CommSemiring R]
+  [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module R N]
+  (f : PolynomialMap R M N)
+
+example (S : Type v) [CommSemiring S] [Algebra R S] [Algebra.FiniteType R S] :
+  ∃ (A : Type u), ∃ (hCommSemiring A : CommSemiring A), ∃ (hAlg : Algebra R S),
+  A ≃ₐ[R] S := by
+  sorry
+
+example (S : Type v) [CommSemiring S] [Algebra R S] :
+  S ⊗[R] M → S ⊗[R] N := by
+  sorry
+
+end Universes
 
 section Apply
 
@@ -321,7 +345,7 @@ theorem isCompat_apply (f : PolynomialMap R M N)
 
 
 /- USE Algebra.linearMap for the linearMap-/
-def _root_.algebraMap' (R : Type*) [CommSemiring R] (S : Type u) [Semiring S] [Algebra R S] : R →ₐ[R] S where
+def _root_.algebraMap' (R : Type*) [CommSemiring R] (S : Type*) [Semiring S] [Algebra R S] : R →ₐ[R] S where
   toRingHom := algebraMap R S
   commutes' := fun _ ↦ rfl
 
@@ -368,7 +392,7 @@ instance : Zero (PolynomialMap R M N) :=
       isCompat := fun _ => rfl }⟩
 
 @[simp]
-theorem zero_def (S : Type _) [CommSemiring S] [Algebra R S] :
+theorem zero_def (S : Type u) [CommSemiring S] [Algebra R S] :
     (0 : PolynomialMap R M N).toFun S = 0 :=
   rfl
 #align polynomial_map.zero_def PolynomialMap.zero_def
@@ -387,7 +411,7 @@ theorem add_def (f g : PolynomialMap R M N)
 
 @[simp]
 theorem add_def_apply (f g : PolynomialMap R M N)
-    (S : Type _) [CommSemiring S] [Algebra R S] (m : S ⊗[R] M) :
+    (S : Type u) [CommSemiring S] [Algebra R S] (m : S ⊗[R] M) :
   (f + g).toFun S m = f.toFun S m + g.toFun S m := rfl
 #align polynomial_map.add_def_apply PolynomialMap.add_def_apply
 

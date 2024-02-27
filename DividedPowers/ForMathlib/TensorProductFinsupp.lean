@@ -40,8 +40,7 @@ namespace TensorProduct
 
 variable {ι : Type*} [DecidableEq ι]
 variable {R : Type u} {M : Type v} {N : Type w}
---  [CommSemiring R] [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module R N]
-  [CommRing R] [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
+[CommSemiring R] [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module R N]
 
 /-- The tensor product of `i →₀ M` and `N` is linearly equivalent to `i →₀ M ⊗[R] N` -/
 noncomputable def finsuppLeft :
@@ -145,8 +144,7 @@ section Polynomial
 open TensorProduct LinearMap
 
 variable {R : Type u} {M : Type v} {N : Type w}
---  [CommSemiring R] [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module R N]
-  [CommRing R] [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
+[CommSemiring R] [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module R N]
 
 -- keep ?
 noncomputable def LinearEquiv.rTensor
@@ -155,7 +153,7 @@ noncomputable def LinearEquiv.rTensor
 
 -- TODO : lTensor ?
 
-variable {S : Type*} [CommRing S] [Algebra R S]
+variable {S : Type*} [CommSemiring S] [Algebra R S]
 
 lemma TensorProduct.map_isLinearMap'
     [Module S M] [IsScalarTower R S M] [Module S N] [IsScalarTower R S N]
@@ -225,7 +223,7 @@ namespace MvPolynomial
 
 variable (σ : Type u) [DecidableEq σ]
 
-variable {S : Type*} [CommRing S] [Algebra R S]
+variable {S : Type*} [CommSemiring S] [Algebra R S]
 
 noncomputable def rTensor :
     MvPolynomial σ S ⊗[R] N ≃ₗ[S] (σ →₀ ℕ) →₀ (S ⊗[R] N) := {
