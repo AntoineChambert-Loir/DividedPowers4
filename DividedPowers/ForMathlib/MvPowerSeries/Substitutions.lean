@@ -47,9 +47,10 @@ section foo
 
 variable (Y : σ → R)
     (hY_pow : ∀ s : σ, Filter.Tendsto (fun n : ℕ => (Y s ^ n)) Filter.atTop (nhds 0))
-    (hY_cof : ∀ s : σ, Filter.Tendsto (fun s : σ => (Y s)) Filter.cofinite (nhds 0))
-    [τ : UniformSpace R] (ι : Type*) [Nonempty ι] [IsLinearTopology R ι] [CompleteSpace R]
-    [T2Space R]
+    (hY_cof : ∀ _ : σ, Filter.Tendsto (fun s : σ => (Y s)) Filter.cofinite (nhds 0))
+    [τ : UniformSpace R]
+    (ι : Type*) [Nonempty ι] [IsLinearTopology R ι]
+    [CompleteSpace R] [T2Space R]
 
 def foo_ψ : MvPolynomial σ α →ₐ[α] R :=
   { toFun     := fun f => MvPolynomial.aeval Y f

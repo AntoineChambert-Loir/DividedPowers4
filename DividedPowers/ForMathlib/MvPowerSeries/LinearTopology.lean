@@ -138,10 +138,17 @@ theorem topology_eq_ideals_basis_topology [DiscreteTopology α] :
     apply Finset.le_sup he'
 #align mv_power_series.topology_eq_ideals_basis_topolgy MvPowerSeries.topology_eq_ideals_basis_topology
 
+#check range
 
 lemma isLinearTopology [DiscreteTopology α] :
-    IsLinearTopology (MvPowerSeries σ α) (σ →₀ ℕ) :=
-  ⟨basis σ α, idealBasis σ α, topology_eq_ideals_basis_topology σ α⟩
+    IsLinearTopology (MvPowerSeries σ α) where
+      ideals := Set.range (basis σ α)
+      nonempty_ideals := inferInstance
+      isIdealBasis := sorry
+      isTopology := sorry
+
+
+  -- ⟨σ →₀ ℕ, basis σ α, idealBasis σ α, topology_eq_ideals_basis_topology σ α⟩
 
 lemma toSubmodulesBasis [DiscreteTopology α] : SubmodulesBasis (basis σ α) :=
   SubmodulesBasis.mk

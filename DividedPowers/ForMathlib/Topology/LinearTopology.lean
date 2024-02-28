@@ -163,14 +163,23 @@ variable (α : Type*) [CommRing α]
 
 /-- Note that ideally we would want `ι` in the existencial, but this causes universe issues which
   I don't know how to solve -/
-class IsLinearTopology [τ : TopologicalSpace α] (ι : Type*) [Nonempty ι]  : Prop where
-  toLinearLopology : ∃ (J : ι → Ideal α) (hJ : IdealBasis J),
+class IsLinearTopology (α : Type u) [CommRing α] [τ : TopologicalSpace α]
+   where
+  ideals : Set (Ideal α)
+  nonempty_ideals : Nonempty (ideals)
+  isIdealBasis : IdealBasis (fun (J : ideals) ↦ (J : Ideal α))
+  isTopology :  τ = isIdealBasis.toRingSubgroupsBasis.topology
+
+/-
+class IsLinearTopology (α : Type u) [CommRing α] [τ : TopologicalSpace α]
+  (ι : Type*) [Nonempty ι]  : Prop where
+  toLinearTopology : ∃ (J : ι → Ideal α) (hJ : IdealBasis J),
     τ = hJ.toRingSubgroupsBasis.topology
 
 lemma IsLinearTopology.toTopologicalRing [τ : TopologicalSpace α] (ι : Type*) [Nonempty ι]
   (h : IsLinearTopology α ι) : TopologicalRing α := by
   obtain ⟨_, hJ, _⟩ := h
   convert hJ.to_topologicalRing
-
+-/
 
 end LinearTopology
