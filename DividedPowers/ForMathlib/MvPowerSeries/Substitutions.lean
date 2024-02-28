@@ -1,5 +1,7 @@
 import DividedPowers.ForMathlib.MvPowerSeries.LinearTopology
 
+--import Mathlib.Topology.UniformSpace.CompleteSeparated
+
 /- # Substitutions in power series
 
 We follow Bourbaki, Algèbre, chap. 4, §4, n° 3 -/
@@ -57,14 +59,21 @@ theorem foo {Y : σ → R}
     map_zero' := by simp only [map_zero]
     map_add'  := by simp only [map_add, forall_const]
     commutes' := by simp only [AlgHom.commutes, forall_const] } with hψ_def
+  -- I should move this and di outside the proof
   letI : TopologicalSpace (MvPolynomial σ α) := TopologicalSpace.induced
     MvPolynomial.toMvPowerSeries (MvPowerSeries.topologicalSpace σ α)
   haveI di : DenseInducing (@MvPolynomial.toMvPowerSeries σ α _) := {
     induced := rfl
     dense   := by
       rw [DenseRange, Dense]
+      intro f
+      rw [mem_closure_iff]
+      intro S hSopen hSf
       sorry }
-  have hψ : Continuous ψ := sorry
+  have hψ : Continuous ψ := by
+    rw [continuous_def]
+    intros U hU
+    sorry
   let φ : MvPowerSeries σ α →ₐ[α] R :=
   { toFun     := DenseInducing.extend di ψ
     map_one'  := by rw [← MvPolynomial.coe_one, DenseInducing.extend_eq di hψ, map_one]
@@ -77,10 +86,26 @@ theorem foo {Y : σ → R}
       erw [DenseInducing.extend_eq di hψ, map_zero]
     map_add'  := sorry
     commutes' := sorry }
-  have hφ : Continuous φ := sorry
+  have : φ = DenseInducing.extend di ψ := rfl
+  have hφ : Continuous φ := by
+    rw [this]
+    apply DenseInducing.continuous_extend di
+    intro f
+    use (φ f)
+    rw [tendsto_nhds]
+    intros U hUopen hUf
+    rw [Filter.mem_comap]
+    use (φ ⁻¹' U)
+    constructor
+    · rw [mem_nhds_iff]
+      have := MvPolynomial.toMvPowerSeries ⁻¹' (⇑φ ⁻¹' U)
+      sorry
+    · intro P hP
+      change DenseInducing.extend di ⇑(ψ) ↑P ∈ U at hP
+      rw [DenseInducing.extend_eq di hψ] at hP
+      exact hP
   use φ, hφ
   intro s
-  have : φ = DenseInducing.extend di ψ := rfl
   rw [this, ← MvPolynomial.coe_X, DenseInducing.extend_eq di hψ (MvPolynomial.X s)]
   simp only [AlgHom.mk_coe, MvPolynomial.aeval_X]
 
@@ -92,4 +117,27 @@ theorem foo_unique {Y : σ → R}
     [T2Space R] (φ : MvPowerSeries σ α →ₐ[α] R) (hφ : Continuous φ)
       (hφ' : ∀ (s : σ), φ (X s) = Y s) :
     φ = (foo α R σ hY_pow hY_cof ι).choose := by
+  set ψ := (foo α R σ hY_pow hY_cof ι).choose with hψ
+  letI : TopologicalSpace (MvPolynomial σ α) := TopologicalSpace.induced
+    MvPolynomial.toMvPowerSeries (MvPowerSeries.topologicalSpace σ α)
+  haveI di : DenseInducing (@MvPolynomial.toMvPowerSeries σ α _) := {
+    induced := rfl
+    dense   := by
+      rw [DenseRange, Dense]
+      sorry }
+  have hφψ : ∀ (P : MvPolynomial σ α), φ P = ψ P := by
+    intro P
+    apply MvPolynomial.induction_on P _ _ _
+    · intros a
+      rw [MvPolynomial.coe_C]
+      sorry
+    · intros f g hf hg
+      rw [MvPolynomial.coe_add, map_add, map_add, hf, hg]
+    · intros f n hf
+      rw [MvPolynomial.coe_mul, MvPolynomial.coe_X, map_mul, map_mul, hf, hφ',
+        (foo α R σ hY_pow hY_cof ι).choose_spec.2]
+  ext x
+  rw [← DenseInducing.extend_unique di hφψ hφ]
+
+
   sorry
