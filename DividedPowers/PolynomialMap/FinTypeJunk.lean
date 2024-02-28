@@ -13,6 +13,13 @@ variable {R : Type u} [CommSemiring R]
     {S : Type v} [Semiring S] [Algebra R S]
     {T : Type w} [Semiring T] [Algebra R T]
 
+#check RingHom.range
+
+#check RingHom.rangeS
+
+#check AlgHom.range
+
+#check RingHom.ker_rangeRestrict
 theorem ker_rangeRestrict (f : S →ₐ[R] T) :
     RingHom.ker f.rangeRestrict = RingHom.ker f :=
   Ideal.ext fun _ ↦ Subtype.ext_iff
@@ -33,8 +40,8 @@ theorem range_top_of_surjective (f : S →ₐ[R] T) (hf : Function.Surjective f)
     f.range = ⊤ :=
   range_top_iff_surjective.2 hf
 
-example (f : S →+* T) (hf : Function.Surjective f) :
-    f.range ≃+* T :=
+example {S T : Type*} [Ring S] [Ring T] (f : S →+* T) (hf : Function.Surjective f) :
+    RingHom.range f ≃+* T :=
   (RingHom.range_top_of_surjective f hf) ▸ Subring.topEquiv
 
 example (f : S →ₐ[R] T) (hf : Function.Surjective f) :
@@ -70,6 +77,7 @@ theorem rangeS_top_of_surjective (f : S →ₐ[R] T) (hf : Function.Surjective f
     f.rangeS = ⊤ :=
   rangeS_top_iff_surjective.2 hf
 
+#check AlgHom.ker_rangeRestrict
 end range
 
 section FIT
