@@ -5,6 +5,7 @@ import Mathlib.RingTheory.PowerSeries.Basic
 import Mathlib.RingTheory.TensorProduct
 import Mathlib.LinearAlgebra.TensorProduct
 import Mathlib.Data.MvPolynomial.Basic
+import Mathlib.RingTheory.FiniteType
 
 -- import Mathlib.LinearAlgebra.Multilinear.Basic
 import DividedPowers.ForMathlib.RingTheory.SubmoduleMem
@@ -312,16 +313,113 @@ section Universes
 
 variable {R : Type u} {M N : Type _} [CommSemiring R]
   [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module R N]
-  (f : PolynomialMap R M N)
 
-example (S : Type v) [CommSemiring S] [Algebra R S] [Algebra.FiniteType R S] :
-  ∃ (A : Type u), ∃ (hCommSemiring A : CommSemiring A), ∃ (hAlg : Algebra R S),
-  A ≃ₐ[R] S := by
+lemma UnivDown {S : Type v} [CommSemiring S] [Algebra R S] (A : Subalgebra R S) [Algebra.FiniteType R A] :
+  ∃ (B : Type u) (_ : CommSemiring B) (_ : Algebra R B) (_ : B ≃ₐ[R] A), True := by
   sorry
 
-example (S : Type v) [CommSemiring S] [Algebra R S] :
-  S ⊗[R] M → S ⊗[R] N := by
+theorem TensorProduct.map_comp_Quotient
+  {M' : Type*} [AddCommMonoid M'] [Module R M']
+  {N' : Type*} [AddCommMonoid N'] [Module R N']
+  (f : M →ₗ[R] M') (g : N →ₗ[R] N') (l : FreeAddMonoid (M × N)) :
+  (TensorProduct.map f g) ⟦l⟧ = ⟦FreeAddMonoid.map (fun ⟨m, n⟩ ↦ ⟨f m, g n⟩) l⟧ := by
+  change (TensorProduct.map f g) (AddCon.toQuotient l) =
+    AddCon.toQuotient (FreeAddMonoid.map (fun ⟨m,n⟩ ↦ ⟨f m, g n⟩) l)
+  induction l using FreeAddMonoid.recOn with
+  | h0 => simp only [map_zero, AddCon.coe_zero]; rfl
+  | ih x y hy =>
+    simp [AddCon.coe_add, LinearMap.map_add, map_add, FreeAddMonoid.map_of]
+    apply congr_arg₂ _ _ hy
+    change TensorProduct.map f g (x.1 ⊗ₜ[R] x.2) = _
+    rw [TensorProduct.map_tmul]
+    rfl
+
+theorem LinearMap.rTensor_comp_AddCon
+    {M' : Type*} [AddCommMonoid M'] [Module R M']
+    (h : M →ₗ[R] M') (l : FreeAddMonoid (M × N)) :
+    (LinearMap.rTensor N h) ⟦l⟧ = ⟦FreeAddMonoid.map (fun ⟨m, n⟩ ↦ ⟨h m, n⟩) l⟧ :=
+  TensorProduct.map_comp_Quotient h _ l
+
+def mem_fg' (P : Submodule R (M ⊗[R] N)) (hP : Submodule.FG P) :
+    ∃ (M₀ : Submodule R M) (hM₀ : Submodule.FG M₀) (N₀ : Submodule R N) (hN₀ : Submodule.FG N₀),
+      P ≤ LinearMap.range
+        (TensorProduct.map (Submodule.subtype M₀) (Submodule.subtype N₀)) := by
   sorry
+
+def mem_fg
+    (S : Type v) [CommSemiring S] [Algebra R S]
+    (t : S ⊗[R] M) :
+     ∃ (S₀ : Subalgebra R S)
+        (hFG : Subalgebra.FG S₀),
+            t ∈ LinearMap.range (LinearMap.rTensor M (Subalgebra.val S₀).toLinearMap) := by
+  sorry
+
+def FAM_liftMap (f : PolynomialMap R M N)
+    (S : Type v) [CommSemiring S] [Algebra R S]
+    (t : S ⊗[R] M) :
+     ∃ (B : Type u)
+      (hCommSemiring : CommSemiring B)
+        (hAlgRB : Algebra R B)
+          (hBS : B →ₐ[R] S),
+            t ∈ LinearMap.range (LinearMap.rTensor M hBS.toLinearMap) := by
+  classical
+  let ⟨l, hl⟩ := Quotient.exists.mp (Exists.intro t rfl)
+  let A : Subalgebra R S := Algebra.adjoin R ((l.toList.map (fun (s, _) ↦ s)).toFinset : Set S)
+  have : Algebra.FiniteType R A :=
+    (Subalgebra.fg_iff_finiteType A).mp (Subalgebra.fg_adjoin_finset _)
+  let ⟨B, hCommSemiring, hAlgRB, hBA, _⟩ := UnivDown A
+  have hl_mem : ∀ sm ∈ FreeAddMonoid.toList l, sm.1 ∈ A := fun sm ↦ by
+    simp only [List.coe_toFinset, List.mem_map, Prod.exists, exists_and_right, exists_eq_right]
+    exact fun hsm ↦ Algebra.subset_adjoin ⟨sm.2, hsm⟩
+  let h₁ : S → B := fun s ↦ if hs : s ∈ A then hBA.symm ⟨s, hs⟩ else 0
+  set l' : FreeAddMonoid (B × M) := FreeAddMonoid.map (fun ⟨s, m⟩ ↦ ⟨h₁ s, m⟩) l
+    with hl'
+  -- let t' : B ⊗[R] M := AddCon.toQuotient l'
+  use B, hCommSemiring, hAlgRB
+  let h := (Subalgebra.val A).comp hBA.toAlgHom
+  use h
+  use AddCon.toQuotient l'
+  have : t = AddCon.toQuotient l := by rw [hl]; rfl
+  rw [this]
+  convert LinearMap.rTensor_comp_AddCon (R := R) h.toLinearMap l'
+  rw [hl']
+  change l = (AddMonoidHom.comp (FreeAddMonoid.map _) (FreeAddMonoid.map _)) l
+  rw [← FreeAddMonoid.map_comp]
+  apply symm
+  -- hypothèse trop forte, parce que h₁ n'est pas l'inverse de h partout,
+  -- juste sur l'algèbre engendrée par les valeurs de l…
+  convert DFunLike.congr_fun FreeAddMonoid.map_id l
+  sorry
+
+def FAM_liftMap' (f : PolynomialMap R M N) (S : Type v) [CommSemiring S] [Algebra R S] :
+    FreeAddMonoid (S × M) → S ⊗[R] N := by
+  classical
+  intro l
+  let A : Subalgebra R S := Algebra.adjoin R ((l.toList.map (fun (s, _) ↦ s)).toFinset : Set S)
+  have : Algebra.FiniteType R A :=
+    (Subalgebra.fg_iff_finiteType A).mp (Subalgebra.fg_adjoin_finset _)
+  set B := (UnivDown A).choose
+  let hCommSemiringB : CommSemiring B := (UnivDown A).choose_spec.choose
+  let hAlgebraRB : Algebra R B := (UnivDown A).choose_spec.choose_spec.choose
+  let hBA : B ≃ₐ[R] A := (UnivDown A).choose_spec.choose_spec.choose_spec.choose
+  have hl_mem : ∀ sm ∈ FreeAddMonoid.toList l, sm.1 ∈ A := fun sm ↦ by
+    simp only [List.coe_toFinset, List.mem_map, Prod.exists, exists_and_right, exists_eq_right]
+    exact fun hsm ↦ Algebra.subset_adjoin ⟨sm.2, hsm⟩
+  let l' : FreeAddMonoid (B × M) := (List.attach (FreeAddMonoid.toList l)).map
+    (fun ⟨x, hx⟩ ↦ ⟨hBA.symm (⟨x.1, hl_mem x hx⟩ : A), x.2⟩)
+  let t' : B ⊗[R] M := AddCon.toQuotient l'
+  let u' := f.toFun B t'
+  have hBS : B →ₐ[R] S := (Subalgebra.val A).comp hBA.toAlgHom
+  exact (LinearMap.rTensor N hBS.toLinearMap) u'
+
+
+
+
+
+example (f : PolynomialMap R M N) (S : Type v) [CommSemiring S] [Algebra R S] :
+    S ⊗[R] M → S ⊗[R] N := by
+  apply Quotient.lift
+
 
 end Universes
 
