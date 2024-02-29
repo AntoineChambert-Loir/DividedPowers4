@@ -16,9 +16,19 @@ variable (α : Type*) [CommRing α]
 
 set_option linter.uppercaseLean3 false
 
+-- We need the same for Polynomial, MvPolynomial…
+-- Suggestion : define a Ideal.IsBasis topology on α defined by a
+-- family of “monomials” : (MonoidHom M α) where M is a monoid
+-- and apply that to (monomial _ 1)
+-- or even : a family of principal ideals
+-- or even : a family in α
+-- or :
+def basis' : (σ →₀ ℕ) → Ideal (MvPowerSeries σ α) := fun d =>
+  Ideal.span {MvPowerSeries.monomial α d 1}
+
 /-- The underlying family for the `Ideal.IsBasis` in a multivariate power series ring. -/
 def basis : (σ →₀ ℕ) → Ideal (MvPowerSeries σ α) := fun d =>
-  { carrier   := {f | ∀ e ≤ d, coeff α e f = 0}
+  { carrier   := {f | ∀ e ≤ d, coeff α e f = 0} -- monomial e 1 ∣ f
     zero_mem' := fun e _ => by rw [coeff_zero]
     add_mem'  := fun hf hg e he => by
       rw [map_add, hf e he, hg e he, add_zero]

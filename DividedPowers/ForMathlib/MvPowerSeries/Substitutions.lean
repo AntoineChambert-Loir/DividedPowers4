@@ -49,7 +49,7 @@ variable (Y : σ → R)
     (hY_pow : ∀ s : σ, Filter.Tendsto (fun n : ℕ => (Y s ^ n)) Filter.atTop (nhds 0))
     (hY_cof : ∀ _ : σ, Filter.Tendsto (fun s : σ => (Y s)) Filter.cofinite (nhds 0))
     [τ : UniformSpace R]
-    (ι : Type*) [Nonempty ι] [IsLinearTopology R ι]
+    [LinearTopology R]
     [CompleteSpace R] [T2Space R]
 
 def foo_ψ : MvPolynomial σ α →ₐ[α] R :=
@@ -63,13 +63,19 @@ def foo_ψ : MvPolynomial σ α →ₐ[α] R :=
 local instance : TopologicalSpace (MvPolynomial σ α) := TopologicalSpace.induced
     MvPolynomial.toMvPowerSeries (MvPowerSeries.topologicalSpace σ α)
 
+-- Suggestion : endow MvPolynomial with the linear topology defined by
+-- the “same” Ideal.IsBasis and prove :
 def foo_di : DenseInducing (@MvPolynomial.toMvPowerSeries σ α _) := {
-  induced := rfl
+  induced := rfl -- there will be something to prove
   dense   := by
-    rw [DenseRange, Dense]
     intro f
     rw [mem_closure_iff]
     intro S hSopen hSf
+    -- find ideal in the basis such that "f + I ⊆ S"
+    -- it will be a monomial , maybe several
+    -- f - some truncation of f is a multiple of all of them
+    -- just take `trunc f e`
+    -- rw [DenseRange, Dense]
     sorry }
 
 lemma foo_ψ_continuous : Continuous (foo_ψ α R σ Y) := by
