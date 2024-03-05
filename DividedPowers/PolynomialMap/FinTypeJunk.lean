@@ -3,6 +3,77 @@ import Mathlib.RingTheory.Ideal.QuotientOperations
 import Mathlib.Algebra.Algebra.Subalgebra.Basic
 import Mathlib.RingTheory.TensorProduct
 import DividedPowers.PolynomialMap.Basic
+import Mathlib.Algebra.Module.DirectLimitAndTensorProduct
+
+section FG
+
+open TensorProduct FreeAddMonoid
+
+variable {R : Type u} {M N : Type*}
+  [Ring R]
+  [AddCommGroup M] [Module R M]
+  [AddCommGroup N] [Module R N]
+
+example : Preorder {P : Submodule R M // P.FG } := inferInstance
+  -- exact Subtype.preorder fun P => Submodule.FG P
+
+variable (R M)
+def Submodules_fg := { P : Submodule R M // P.FG }
+
+local instance : PartialOrder (Submodules_fg R M) := by
+  unfold Submodules_fg
+  infer_instance
+
+local instance : Sup (Submodules_fg R M) where
+  sup := fun P Q ↦ ⟨P.val ⊔ Q.val, Submodule.FG.sup P.property Q.property⟩
+
+local instance : SemilatticeSup (Submodules_fg R M) where
+  le_sup_left := fun P Q ↦ by rw [← Subtype.coe_le_coe]; exact le_sup_left
+  le_sup_right := fun P Q ↦ by rw [← Subtype.coe_le_coe]; exact le_sup_right
+  sup_le := fun P Q R hPR hQR ↦ by
+    rw [← Subtype.coe_le_coe] at hPR hQR ⊢
+    exact sup_le hPR hQR
+
+example : IsDirected (Submodules_fg R M) (fun P Q ↦ P ≤ Q) := inferInstance
+
+local instance : Submodules_fg R M → Submodule R M := fun P ↦ P.val
+
+example : Π (P : Submodules_fg R M), AddCommGroup P.val := inferInstance
+
+example : Π (P : Submodules_fg R M), Module R P.val := inferInstance
+
+def Submodules_fg_direct : Π (P : Submodules_fg R M) (Q : Submodules_fg R M)
+  (_ : P ≤ Q), P.val →ₗ[R] Q.val :=
+  fun _ _ hPQ ↦ Submodule.inclusion hPQ
+
+open scoped Classical
+
+noncomputable def Submodules_fg_map :
+    Module.DirectLimit
+      (fun (P : Submodules_fg R M) ↦ P.val)
+      (Submodules_fg_direct R M) →ₗ[R] M := by
+  refine Module.DirectLimit.lift R (Submodules_fg R M) _ _
+    (fun (P : Submodules_fg R M) ↦ Submodule.subtype P.val)
+    (fun _ _ _ _ ↦ rfl)
+
+noncomputable def Submodules_fg_equiv :
+    Module.DirectLimit
+      (fun (P : Submodules_fg R M) ↦ P.val)
+      (Submodules_fg_direct R M) ≃ₗ[R] M := by
+  apply LinearEquiv.ofBijective (Submodules_fg_map R M)
+  constructor
+  · apply Module.DirectLimit.lift_injective
+    exact fun P ↦ Submodule.injective_subtype _
+  · intro x
+    let P := (⟨Submodule.span R {x}, Submodule.fg_span_singleton x⟩ : Submodules_fg R M)
+    use (Module.DirectLimit.of R (Submodules_fg R M) _ (Submodules_fg_direct R M) P)
+          ⟨x, Submodule.mem_span_singleton_self x⟩
+    simp only [Submodules_fg_map, Module.DirectLimit.lift_of, Submodule.coeSubtype]
+
+end FG
+
+
+#exit
 
 section FG
 
