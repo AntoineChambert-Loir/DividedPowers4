@@ -59,6 +59,12 @@ def Submodules_fg_inclusion :
 #check Submodules_fg_inclusion R M
 open scoped Classical
 
+theorem Submodules_fg.directedSystem :
+    DirectedSystem (ι := Submodules_fg R M)
+      (fun P ↦ P.val) (fun _ _ hPQ ↦ (Submodule.inclusion (Subtype.coe_le_coe.mpr hPQ))) where
+  map_self' := fun _ _ _ ↦ rfl
+  map_map' := fun _ _ _ ↦ rfl
+
 example := Module.DirectLimit
   (ι := Submodules_fg R M) (fun P ↦ P.val) (Submodules_fg_inclusion R M)
 
@@ -104,28 +110,25 @@ variable {R : Type u} {M N : Type*}
   [AddCommGroup M] [Module R M]
   [AddCommGroup N] [Module R N]
 
-example (t : M ⊗[R] N) :
-  ∃ (P : Submodule R M), P.FG ∧ t ∈ LinearMap.range (LinearMap.rTensor N P.subtype) := by
-
-  let e : Module.DirectLimit (R := R) (ι := Submodules_fg R M)
-      (fun P ↦ P.val ⊗[R] N)
-      (fun P Q hPQ ↦ LinearMap.rTensor N (Submodules_fg_inclusion R M P Q hPQ))
+variable (R M N)
+noncomputable def rTensor_fgEquiv : Module.DirectLimit (R := R) (ι := Submodules_fg R M)
+    (fun P ↦ P.val ⊗[R] N)
+    (fun P Q hPQ ↦ LinearMap.rTensor N (Submodules_fg_inclusion R M P Q hPQ))
       ≃ₗ[R] M ⊗[R] N :=
-    (TensorProduct.directLimitLeft _ N).symm.trans (LinearEquiv.rTensor N (Submodules_fg_equiv R M))
+  (TensorProduct.directLimitLeft _ N).symm.trans (LinearEquiv.rTensor N (Submodules_fg_equiv R M))
 
-  let ⟨P, u, hu⟩ := Module.DirectLimit.exists_of (e.symm t)
-  let hu' := DFunLike.congr_arg e hu
-  use P.val, P.property
-  simp only [LinearEquiv.trans_symm, LinearEquiv.symm_symm, LinearEquiv.trans_apply, e] at hu
-  simp only [LinearEquiv.apply_symm_apply] at hu'
-  use u
-  rw [← hu']
-  suffices LinearMap.rTensor N (Submodule.subtype P.val)
-    = e.toLinearMap.comp (Module.DirectLimit.of R (Submodules_fg R M)
-      (fun P ↦ P.val ⊗[R] N) (fun P Q hPQ => LinearMap.rTensor N (Submodules_fg_inclusion R M P Q hPQ)) P) by
+theorem rTensor_fgEquiv_of (P : Submodules_fg R M) (u : P.val ⊗[R] N) :
+    (rTensor_fgEquiv R M N)
+      ((Module.DirectLimit.of R (Submodules_fg R M) (fun P => P.val ⊗[R] N)
+        (fun P Q hPQ => LinearMap.rTensor N (Submodules_fg_inclusion R M P Q hPQ)) P) u)
+      = (LinearMap.rTensor N (Submodule.subtype P.val)) u := by
+  suffices (rTensor_fgEquiv R M N).toLinearMap.comp
+      (Module.DirectLimit.of R (Submodules_fg R M) (fun P ↦ P.val ⊗[R] N)
+        (fun P Q hPQ => LinearMap.rTensor N (Submodules_fg_inclusion R M P Q hPQ)) P)
+      = LinearMap.rTensor N (Submodule.subtype P.val) by
     exact DFunLike.congr_fun this u
   ext p n
-  simp [e]
+  simp [rTensor_fgEquiv]
   simp only [LinearEquiv.rTensor]
   simp only [congr_tmul, LinearEquiv.refl_apply]
   congr
@@ -134,8 +137,51 @@ example (t : M ⊗[R] N) :
   simp only [Module.DirectLimit.lift_of]
   simp only [Submodule.coeSubtype]
 
+def Submodules_fg_of {P : Submodule R M} (hP : Submodule.FG P) :
+    Submodules_fg R M := ⟨P, hP⟩
+
+theorem rTensor_fgEquiv_of' (P : Submodule R M) (hP : Submodule.FG P) (u : P ⊗[R] N) :
+    (rTensor_fgEquiv R M N)
+      ((Module.DirectLimit.of R (Submodules_fg R M) (fun P => P.val ⊗[R] N)
+        (fun P Q hPQ => LinearMap.rTensor N (Submodules_fg_inclusion R M P Q hPQ)) ⟨P, hP⟩) u)
+      = (LinearMap.rTensor N (Submodule.subtype P)) u :=
+  rTensor_fgEquiv_of R M N ⟨P, hP⟩ u
+
+theorem rTensor_fg_directedSystem :
+    DirectedSystem (ι := Submodules_fg R M) (fun P ↦ P.val ⊗[R] N)
+      (fun P Q hPQ ↦ LinearMap.rTensor N (Submodules_fg_inclusion R M P Q hPQ)) := {
+  map_self' := fun P p hP ↦ by
+    rw [← LinearMap.id_apply (R := R) p]
+    apply DFunLike.congr_fun
+    ext p n
+    rfl -- needs some rw lemmas
+  map_map' := fun {P Q R} hPQ hRQ p ↦ by
+    rw [← LinearMap.comp_apply, ← LinearMap.rTensor_comp]
+    apply DFunLike.congr_fun
+    ext p n
+    simp
+    rfl }
+
+example (t : M ⊗[R] N) :
+    ∃ (P : Submodule R M), P.FG ∧ t ∈ LinearMap.range (LinearMap.rTensor N P.subtype) := by
+
+  let ⟨P, u, hu⟩ := Module.DirectLimit.exists_of ((rTensor_fgEquiv R M N).symm t)
+  use P.val, P.property, u
+  rw [← rTensor_fgEquiv_of, hu, LinearEquiv.apply_symm_apply]
 
 
+example (P : Submodule R M) (hP : Submodule.FG P) (t t' : P ⊗[R] N)
+  (h : LinearMap.rTensor N P.subtype t = LinearMap.rTensor N P.subtype t') :
+  ∃ (Q : Submodule R M) (hPQ : P ≤ Q), Q.FG ∧
+    LinearMap.rTensor N (Submodule.inclusion hPQ) t
+      = LinearMap.rTensor N (Submodule.inclusion hPQ) t' := by
+  rw [← sub_eq_zero, ← map_sub, ← rTensor_fgEquiv_of R M N ⟨P,hP⟩,
+    LinearEquiv.map_eq_zero_iff] at h
+  have := rTensor_fg_directedSystem R M N
+  have := Module.DirectLimit.of.zero_exact h
+  let ⟨Q, hPQ, h⟩ := this
+  use Q.val, Subtype.coe_le_coe.mpr hPQ, Q.property
+  simpa only [sub_eq_zero, map_sub] using h
 
 
 end CommRing
