@@ -52,11 +52,7 @@ def Submodules_fg_val :  Submodules_fg R M → Submodule R M :=
 
 def Submodules_fg_inclusion :
     Π (P Q : Submodules_fg R M) (_ : P ≤ Q), P.val →ₗ[R] Q.val :=
-  fun P Q hPQ ↦ (Submodule.inclusion (Subtype.coe_le_coe.mpr hPQ))
-
-#check Submodules_fg_val R M
-#check Submodules_fg_inclusion R M
-open scoped Classical
+  fun _ _ hPQ ↦ (Submodule.inclusion (Subtype.coe_le_coe.mpr hPQ))
 
 theorem Submodules_fg.directedSystem :
     DirectedSystem (ι := Submodules_fg R M)
@@ -64,19 +60,7 @@ theorem Submodules_fg.directedSystem :
   map_self' := fun _ _ _ ↦ rfl
   map_map' := fun _ _ _ ↦ rfl
 
-example := Module.DirectLimit
-  (ι := Submodules_fg R M) (fun P ↦ P.val) (Submodules_fg_inclusion R M)
-
-
-example := Module.DirectLimit _ (Submodules_fg_inclusion R M)
-
-example := Module.DirectLimit (ι := Submodules_fg R M)
-    (fun P ↦ P.val) (fun P Q hPQ ↦ (by
-      dsimp only
-      rw [← Subtype.coe_le_coe] at hPQ
-      exact Submodule.inclusion hPQ))
-
-  --Submodules_fg_inclusion R M)
+open scoped Classical
 
 noncomputable def Submodules_fg_map :
     Module.DirectLimit _ (Submodules_fg_inclusion R M) →ₗ[R] M :=
@@ -265,11 +249,12 @@ theorem TensorProduct.Algebra.eq_of_fg_of_subtype_eq
     simp only [B, ← hw]
     apply Algebra.adjoin_mono
     simp only [Finset.coe_union, Set.subset_union_right]
-  have hBA' : Subalgebra.toSubmodule A ≤ Subalgebra.toSubmodule B := hBA
   use B, hBA, Subalgebra.fg_adjoin_finset _
   rw [← hu, ← hu']
   simp only [← LinearMap.comp_apply, ← LinearMap.rTensor_comp]
-  have hP'₁_le : P'₁ ≤ Subalgebra.toSubmodule B := by sorry
+  have hP'₁_le : P'₁ ≤ Subalgebra.toSubmodule B := by
+    simp only [← hs, Finset.coe_union, Submodule.span_le, Subalgebra.coe_toSubmodule, B]
+    exact subset_trans (Set.subset_union_left _ _) Algebra.subset_adjoin
   have k : (Subalgebra.inclusion hBA).toLinearMap ∘ₗ P.subtype
     = Submodule.inclusion hP'₁_le ∘ₗ Submodule.inclusion hP₁_le ∘ₗ j := by ext; rfl
   have k' : (Subalgebra.inclusion hBA).toLinearMap ∘ₗ P'.subtype
