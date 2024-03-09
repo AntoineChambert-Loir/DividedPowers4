@@ -151,6 +151,15 @@ noncomputable def LinearEquiv.rTensor
     (P : Type*) (e : M ≃ₗ[R] N)  [AddCommMonoid P] [Module R P] :
     M ⊗[R] P ≃ₗ[R] N ⊗[R] P := TensorProduct.congr e (refl R P)
 
+theorem LinearEquiv.rTensor_toLinearMap
+  (P : Type*) (e : M ≃ₗ[R] N)  [AddCommMonoid P] [Module R P] :
+  (e.rTensor P).toLinearMap = e.toLinearMap.rTensor P := rfl
+
+theorem LinearEquiv.rTensor_symm
+    (P : Type*) (e : M ≃ₗ[R] N)  [AddCommMonoid P] [Module R P] :
+    LinearEquiv.rTensor P e.symm = (LinearEquiv.rTensor P e).symm := by
+  rfl
+
 -- TODO : lTensor ?
 
 variable {S : Type*} [CommSemiring S] [Algebra R S]
