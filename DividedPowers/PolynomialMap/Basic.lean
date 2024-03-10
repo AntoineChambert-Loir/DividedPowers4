@@ -115,185 +115,13 @@ end LinearForm
 
 end Algebra
 
-section MvPolynomialModule
-
-open MvPolynomial
-
-/- This is boring stuff devoted to prove
-  the standard linear equivalence between M[σ] and R[σ] ⊗ M
-  for any semiring R, any R-module M and any type σ.
-  Probably, this should be generalized to an arbitrary monoid,
-  not only polynomials (corresponding to σ →₀ ℕ).
-  M[σ] has to be defined hss (σ →₀ M)
-  because mathlib doesn't know about “the monoid module”. -/
-
--- And we need the same for Polynomial…
-
-open scoped TensorProduct
-
-variable (σ : Type _) [DecidableEq σ]
-  (R : Type _) [CommRing R] -- [CommSemiring R]
-  (N : Type _) [AddCommGroup N] [Module R N] -- [AddCommMonoid N] [Module R N]
-
-open Finsupp
-
-/- I wonder whether there's a simpler proof using
-the fact that MvPolynomial σ R is a free R-module,
-with basis given by monomials
-One issue is that `Algebra.TensorProduct.Basis` makes
-base change on the left, and has different assumptions… -/
-
--- TODO: rename
-
-/-
-noncomputable def MvPolynomial.rTensor' {S : Type*} [CommRing S] [Algebra R S] :
-    MvPolynomial σ S ⊗[R] N ≃ₗ[S] (σ →₀ ℕ) →₀ (S ⊗[R] N) :=
-  TensorProduct.finsuppLeft'
-
-noncomputable def MvPolynomial.rTensor :
-    MvPolynomial σ R ⊗[R] N ≃ₗ[R] (σ →₀ ℕ) →₀ N := by
- exact (MvPolynomial.rTensor' σ (S := R) (N := N) (R := R)).trans
-    (Finsupp.mapRange.linearEquiv (TensorProduct.lid R N))
--/
-
-/- -- USE  (MvPolynomial.rTensor σ R N).symm
-noncomputable def zoo :
-    ((σ →₀ ℕ) →₀ N) →ₗ[R] MvPolynomial σ R ⊗[R] N := (Finsupp.lsum R)
-  (fun d => (LinearMap.rTensor N (MvPolynomial.monomial d)).comp
-    (TensorProduct.lid R N).symm.toLinearMap)
--/
-
-/- -- USE MvPolynomial.rTensor_symm_apply_single
-theorem zoo_apply_single (k : σ →₀ ℕ) (n : N) :
-  zoo σ R N (single k n) =
-    (MvPolynomial.monomial k) 1 ⊗ₜ[R] n := by
-  simp only [zoo, Finsupp.lsum_single, coe_comp, LinearEquiv.coe_coe, Function.comp_apply,
-    TensorProduct.lid_symm_apply, rTensor_tmul]
-#align zoo_apply_single zoo_apply_single -/
-
-/- -- USE (MvPolynomial.rTensor σ R N)
-noncomputable def zooInv :
-    MvPolynomial σ R ⊗[R] N →ₗ[R] (σ →₀ ℕ) →₀ N :=
-  TensorProduct.lift ((Finsupp.llift _ R R _ ).toLinearMap.toFun lsingle ) -/
-
-
-/- -- USE MvPolynomial.rTensor_apply
-theorem zooInv_apply_tmul (p : MvPolynomial σ R) (n : N) (k):
-    (zooInv σ R N) (p ⊗ₜ[R] n) k = MvPolynomial.coeff k p • n := by
-  sorry
--/
-
-/-
-theorem zooInv_apply_tmul (p : MvPolynomial σ R) (n : N) (k):
-  (zooInv σ R N) (p ⊗ₜ[R] n) k = MvPolynomial.coeff k p • n := by
-  rw [zooInv]
-  simp only [AddHom.toFun_eq_coe, coe_toAddHom, LinearEquiv.coe_coe, TensorProduct.lift.tmul]
-  suffices h : MvPolynomial.coeff k p • n = sum p fun d b => (Finsupp.single d (b • n)) k by
-    rw [h]
-    have := Finsupp.llift_apply (N →ₗ[R] (σ →₀ ℕ) →₀ N) R R (σ →₀ ℕ)
-    specialize this lsingle p
-    rw [LinearMap.ext_iff] at this
-    specialize this n
-    rw [DFunLike.ext_iff] at this
-    apply symm
-    specialize this k
-    simp only [lift_apply, finsupp_sum_apply, LinearMap.smul_apply,
-      lsingle_apply, smul_single, Finsupp.sum_apply] at this
-    exact this.symm
-  rw [Finsupp.sum_eq_single k]
-  · rw [single_eq_same]
-    rfl
-  · intro d _ hdk
-    rw [Finsupp.single_apply, if_neg hdk]
-  · intro _
-    simp only [zero_smul, single_zero, coe_zero, Pi.zero_apply]
--/
-
-/-
-theorem zooInv_apply (pn) :
-  (zooInv σ R N) pn k =
-    (TensorProduct.lid R N)
-      ((rTensor N (MvPolynomial.lcoeff k)) pn) := by
-  induction pn using TensorProduct.induction_on with
-  | zero => simp only [map_zero, coe_zero, Pi.zero_apply]
-  | tmul p n =>
-      simp only [rTensor_tmul, TensorProduct.lid_tmul]
-      simp only [zooInv_apply_tmul]
-      rfl
-  | add p q h h' =>
-      simp only [map_add, coe_add, Pi.add_apply]
-      simp only [h, h']
--/
-
-/-
-theorem zooInv_zoo_apply (f) : zooInv σ R N (zoo σ R N f) = f := by
-  suffices h : (zooInv σ R N) ∘ₗ (zoo σ R N) = LinearMap.id by
-    simp only [← LinearMap.comp_apply, h, id_coe, id_eq]
-  ext d n e
-  simp only [LinearMap.id_comp, lsingle_apply, zoo, coe_comp, coe_lsum, LinearEquiv.coe_coe,
-    Function.comp_apply, map_zero, sum_single_index, TensorProduct.lid_symm_apply, rTensor_tmul]
-  rw [zooInv_apply]
-  simp only [rTensor_tmul, TensorProduct.lid_tmul,  Finsupp.single_apply,
-    MvPolynomial.lcoeff_apply, MvPolynomial.coeff_monomial, ite_smul,
-    one_smul, zero_smul]
-
-theorem zoo_zooInv_apply (p) : (zoo σ R N) (zooInv σ R N p) = p := by
-  suffices (zoo σ R N) ∘ₗ (zooInv σ R N) = LinearMap.id by
-    simp only [← LinearMap.comp_apply, this, id_coe, id_eq]
-  ext d n
-  simp only [coe_comp, Function.comp_apply, TensorProduct.AlgebraTensorModule.curry_apply,
-    TensorProduct.curry_apply, coe_restrictScalars, id_coe, id_eq]
-  suffices  (zooInv σ R N) ((MvPolynomial.monomial d) 1 ⊗ₜ[R] n) = Finsupp.single d n by
-    rw [this]
-    simp only [zoo, coe_lsum, coe_comp, LinearEquiv.coe_coe,
-      Function.comp_apply, map_zero, sum_single_index,
-      TensorProduct.lid_symm_apply, rTensor_tmul]
-  ext e
-  rw [zooInv_apply, Finsupp.single_apply]
-  simp only [MvPolynomial.lcoeff, rTensor_tmul, LinearMap.coe_mk, AddHom.coe_mk,
-    MvPolynomial.coeff_monomial, TensorProduct.lid_tmul, ite_smul, one_smul, zero_smul]
--/
-
-/- USE rTensor
-noncomputable def zooEquiv :
-  ((σ →₀ ℕ) →₀ N) ≃ₗ[R] MvPolynomial σ R ⊗[R] N :=
-  { zoo σ R N with
-    invFun := zooInv σ R N
-    left_inv := zooInv_zoo_apply σ R N
-    right_inv := zoo_zooInv_apply σ R N }
-#align linear_map_equiv zooEquiv
--/
-
-/-
-theorem zooEquiv_apply_single (k : σ →₀ ℕ) (n : N) :
-  zooEquiv σ R N (single k n) = (MvPolynomial.monomial k) 1 ⊗ₜ[R] n := by
-  simp [← LinearEquiv.toFun_eq_coe, zooEquiv, zoo_apply_single]
-#align zoo_equiv_apply_single zooEquiv_apply_single
-
-theorem zooEquiv_symm_apply_tmul (p : MvPolynomial σ R) (n : N) (k) :
-    (zooEquiv σ R N).symm (p ⊗ₜ[R] n) k = MvPolynomial.coeff k p • n := by
-  simp [← LinearEquiv.invFun_eq_symm, zooEquiv, zooInv_apply, MvPolynomial.lcoeff]
-
-theorem zooEquiv_symm_apply (pn) :
-  (zooEquiv σ R N).symm pn k = (TensorProduct.lid R N)
-      ((rTensor N (MvPolynomial.lcoeff k)) pn) := by
-  simp [← LinearEquiv.invFun_eq_symm, zooEquiv, zooInv_apply]
-end MvPolynomialModule
--/
-
-open scoped TensorProduct
-
 section PolynomialMap
 
 noncomputable section
 
-structure PolynomialMap' (R : Type u) [CommSemiring R]
-    (M : Type _) [AddCommMonoid M] [Module R M]
-    (N : Type _) [AddCommMonoid N] [Module R N] where
-  toFun (S : Type _) [CommSemiring S] [Algebra R S] : S ⊗[R] M → S ⊗[R] N
-  isCompat {S : Type _} [CommSemiring S] [Algebra R S]
-    {S' : Type u} [CommSemiring S'] [Algebra R S'] (φ : S →ₐ[R] S') :
-    φ.toLinearMap.rTensor N ∘ toFun S = toFun S' ∘ φ.toLinearMap.rTensor M
+open scoped TensorProduct
+
+open MvPolynomial
 
 /-- A polynomial map M → N between A-modules is a functorial family
 of maps R ⊗[A] M → R ⊗[A] N, for all A-algebras R -/
@@ -301,47 +129,37 @@ of maps R ⊗[A] M → R ⊗[A] N, for all A-algebras R -/
 structure PolynomialMap (R : Type u) [CommSemiring R]
     (M : Type _) [AddCommMonoid M] [Module R M]
     (N : Type _) [AddCommMonoid N] [Module R N] where
-  toFun (S : Type u) [CommSemiring S] [Algebra R S] : S ⊗[R] M → S ⊗[R] N
-  isCompat {S : Type u} [CommSemiring S] [Algebra R S]
+  toFun' (S : Type u) [CommSemiring S] [Algebra R S] : S ⊗[R] M → S ⊗[R] N
+  isCompat' {S : Type u} [CommSemiring S] [Algebra R S]
     {S' : Type u} [CommSemiring S'] [Algebra R S'] (φ : S →ₐ[R] S') :
-    φ.toLinearMap.rTensor N ∘ toFun S = toFun S' ∘ φ.toLinearMap.rTensor M
+    φ.toLinearMap.rTensor N ∘ toFun' S = toFun' S' ∘ φ.toLinearMap.rTensor M
 #align polynomial_map PolynomialMap
 
 namespace PolynomialMap
-
-section Universes
-
-variable {R : Type u} {M N : Type _} [CommSemiring R]
-  [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module R N]
-
-
-end Universes
 
 section Apply
 
 variable {R : Type u} {M N : Type _} [CommSemiring R]
   [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module R N]
 
-/-- The map M → N associated with a PolynomialMap R M N (essentially, toFun R)-/
+/-- The map M → N associated with a PolynomialMap R M N (essentially, toFun' R)-/
 noncomputable def ground (f : PolynomialMap R M N) : M → N :=
-  (TensorProduct.lid R N) ∘ (f.toFun R) ∘ (TensorProduct.lid R M).symm
+  (TensorProduct.lid R N) ∘ (f.toFun' R) ∘ (TensorProduct.lid R M).symm
 
-theorem isCompat_apply (f : PolynomialMap R M N)
+theorem isCompat_apply' (f : PolynomialMap R M N)
     {S : Type u} [CommSemiring S] [Algebra R S]
     {S' : Type u} [CommSemiring S'] [Algebra R S']
     (φ : S →ₐ[R] S') (x : S ⊗[R] M) :
-  (φ.toLinearMap.rTensor N) ((f.toFun S) x) =
-      (f.toFun S') (φ.toLinearMap.rTensor M x) := by
-  simpa only using _root_.congr_fun (f.isCompat φ) x
-#align polynomial_map.is_compat_apply PolynomialMap.isCompat_apply
-
+  (φ.toLinearMap.rTensor N) ((f.toFun' S) x) =
+      (f.toFun' S') (φ.toLinearMap.rTensor M x) := by
+  simpa only using _root_.congr_fun (f.isCompat' φ) x
+#align polynomial_map.is_compat_apply PolynomialMap.isCompat_apply'
 
 /- USE Algebra.linearMap for the linearMap-/
 def _root_.algebraMap' (R : Type*) [CommSemiring R] (S : Type*) [Semiring S] [Algebra R S] : R →ₐ[R] S where
   toRingHom := algebraMap R S
   commutes' := fun _ ↦ rfl
 
-variable {R}
 variable {S : Type u} [CommSemiring S] [Algebra R S]
 
 lemma isCompat_aux :
@@ -353,11 +171,11 @@ lemma isCompat_aux :
   intro z
   simp
 
-theorem isCompat_apply_ground (f : PolynomialMap R M N)
+theorem isCompat_apply'_ground (f : PolynomialMap R M N)
     {S : Type u} [CommSemiring S] [Algebra R S] (x : M) :
-    1 ⊗ₜ (f.ground x) = (f.toFun S) (1 ⊗ₜ x) := by
+    1 ⊗ₜ (f.ground x) = (f.toFun' S) (1 ⊗ₜ x) := by
   simp only [ground]
-  convert f.isCompat_apply (algebraMap' R S) (1 ⊗ₜ[R] x)
+  convert f.isCompat_apply' (algebraMap' R S) (1 ⊗ₜ[R] x)
   simp only [Function.comp_apply, TensorProduct.lid_symm_apply]
   rw [isCompat_aux]
   simp only [rTensor_tmul, AlgHom.toLinearMap_apply, map_one]
@@ -371,21 +189,20 @@ variable {R : Type u} [CommSemiring R]
 
 noncomputable def add (f g : PolynomialMap R M N) : PolynomialMap R M N
     where
-  toFun S _ _ := f.toFun S + g.toFun S
-  isCompat φ := by
+  toFun' S _ _ := f.toFun' S + g.toFun' S
+  isCompat' φ := by
     ext
     simp only [Function.comp_apply, Pi.add_apply, map_add]
-    simp only [Function.comp_apply, Pi.add_apply, map_add, isCompat_apply]
-
+    simp only [Function.comp_apply, Pi.add_apply, map_add, isCompat_apply']
 #align polynomial_map.add PolynomialMap.add
 
 instance : Zero (PolynomialMap R M N) :=
-  ⟨{  toFun := fun _ => 0
-      isCompat := fun _ => rfl }⟩
+  ⟨{  toFun' := fun _ => 0
+      isCompat' := fun _ => rfl }⟩
 
 @[simp]
 theorem zero_def (S : Type u) [CommSemiring S] [Algebra R S] :
-    (0 : PolynomialMap R M N).toFun S = 0 :=
+    (0 : PolynomialMap R M N).toFun' S = 0 :=
   rfl
 #align polynomial_map.zero_def PolynomialMap.zero_def
 
@@ -398,13 +215,13 @@ instance : Add (PolynomialMap R M N) :=
 @[simp]
 theorem add_def (f g : PolynomialMap R M N)
     (S : Type u) [CommSemiring S] [Algebra R S] :
-  (f + g).toFun S = f.toFun S + g.toFun S := rfl
+  (f + g).toFun' S = f.toFun' S + g.toFun' S := rfl
 #align polynomial_map.add_def PolynomialMap.add_def
 
 @[simp]
 theorem add_def_apply (f g : PolynomialMap R M N)
     (S : Type u) [CommSemiring S] [Algebra R S] (m : S ⊗[R] M) :
-  (f + g).toFun S m = f.toFun S m + g.toFun S m := rfl
+  (f + g).toFun' S m = f.toFun' S m + g.toFun' S m := rfl
 #align polynomial_map.add_def_apply PolynomialMap.add_def_apply
 
 instance addCommMonoid : AddCommMonoid (PolynomialMap R M N)
@@ -415,10 +232,10 @@ instance addCommMonoid : AddCommMonoid (PolynomialMap R M N)
   zero_add f := by ext ; simp only [add_def, zero_add, zero_def]
   add_zero f := by ext ; simp only [add_def, add_zero, zero_def]
   nsmul n f :=
-    { toFun := fun S _ _ => n • (f.toFun S)
-      isCompat := fun φ => by
+    { toFun' := fun S _ _ => n • (f.toFun' S)
+      isCompat' := fun φ => by
         ext m
-        simp only [isCompat_apply, map_nsmul, Function.comp_apply, Pi.smul_apply] }
+        simp only [isCompat_apply', map_nsmul, Function.comp_apply, Pi.smul_apply] }
   nsmul_zero f := by ext ; simp only [zero_smul, Pi.smul_apply]; rfl
   nsmul_succ n f := by
     ext
@@ -429,10 +246,10 @@ instance addCommMonoid : AddCommMonoid (PolynomialMap R M N)
 
 def smul (r : R) (f : PolynomialMap R M N) : PolynomialMap R M N
     where
-  toFun S _ _ := r • f.toFun S
-  isCompat φ := by
+  toFun' S _ _ := r • f.toFun' S
+  isCompat' φ := by
     ext m
-    simp only [Function.comp_apply, Pi.smul_apply, map_smul, isCompat_apply]
+    simp only [Function.comp_apply, Pi.smul_apply, map_smul, isCompat_apply']
 #align polynomial_map.smul PolynomialMap.smul
 
 instance hasSmul : SMul R (PolynomialMap R M N) :=
@@ -441,7 +258,7 @@ instance hasSmul : SMul R (PolynomialMap R M N) :=
 
 theorem smul_def (f : PolynomialMap R M N)
     (r : R) (S : Type u) [CommSemiring S] [Algebra R S] :
-  (r • f).toFun S = r • f.toFun S :=
+  (r • f).toFun' S = r • f.toFun' S :=
   rfl
 #align polynomial_map.smul_def PolynomialMap.smul_def
 
@@ -472,18 +289,18 @@ variable {P : Type _} [AddCommMonoid P] [Module R P]
 
 def comp (g : PolynomialMap R N P) (f : PolynomialMap R M N) :
   PolynomialMap R M P where
-  toFun S _ _ := (g.toFun S).comp (f.toFun S)
-  isCompat φ := by ext ; simp only [Function.comp_apply, isCompat_apply]
+  toFun' S _ _ := (g.toFun' S).comp (f.toFun' S)
+  isCompat' φ := by ext ; simp only [Function.comp_apply, isCompat_apply']
 #align polynomial_map.comp PolynomialMap.comp
 
-theorem comp_toFun (f : PolynomialMap R M N) (g : PolynomialMap R N P)
+theorem comp_toFun' (f : PolynomialMap R M N) (g : PolynomialMap R N P)
     (S : Type _) [CommSemiring S] [Algebra R S] :
-  (g.comp f).toFun S = (g.toFun S).comp (f.toFun S) := rfl
-#align polynomial_map.comp_to_fun PolynomialMap.comp_toFun
+  (g.comp f).toFun' S = (g.toFun' S).comp (f.toFun' S) := rfl
+#align polynomial_map.comp_to_fun PolynomialMap.comp_toFun'
 
 theorem comp_apply (f : PolynomialMap R M N) (g : PolynomialMap R N P)
     (S : Type u) [CommSemiring S] [Algebra R S] (m : S ⊗[R] M) :
-  (g.comp f).toFun S m = (g.toFun S) (f.toFun S m) := rfl
+  (g.comp f).toFun' S m = (g.toFun' S) (f.toFun' S m) := rfl
 #align polynomial_map.comp_apply PolynomialMap.comp_apply
 
 variable {Q : Type _} [AddCommMonoid Q] [Module R Q]
@@ -491,7 +308,7 @@ variable {Q : Type _} [AddCommMonoid Q] [Module R Q]
 theorem comp_assoc (f : PolynomialMap R M N) (g : PolynomialMap R N P)
     (h : PolynomialMap R P Q) :
   h.comp (g.comp f) = (h.comp g).comp f := by
-  ext; simp only [comp_toFun] ; rfl
+  ext; simp only [comp_toFun'] ; rfl
 #align polynomial_map.comp_assoc PolynomialMap.comp_assoc
 
 end Comp
@@ -533,7 +350,7 @@ variable {R : Type u} [CommSemiring R]
 
 def LocFinsupp {ι : Type*} (f : ι → PolynomialMap R M N) :=
   ∀ (S : Type u) [CommSemiring S] [Algebra R S] (m : S ⊗[R] M),
-    (Function.support fun i => (f i).toFun S m).Finite
+    (Function.support fun i => (f i).toFun' S m).Finite
 #align polynomial_map.locfinsupp PolynomialMap.LocFinsupp
 
 def withLocFinsupp (ι : Type*) : Submodule R (ι → PolynomialMap R M N) where
@@ -558,8 +375,8 @@ namespace LocFinsupp
 noncomputable def sum {ι : Type*} (f : ι → PolynomialMap R M N)
     (hf : LocFinsupp f) :
   PolynomialMap R M N where
-  toFun S _ _ m := (Finsupp.ofSupportFinite _ (hf S m)).sum fun _ m => m
-  isCompat {S _ _ S' _ _} φ := by
+  toFun' S _ _ m := (Finsupp.ofSupportFinite _ (hf S m)).sum fun _ m => m
+  isCompat' {S _ _ S' _ _} φ := by
     ext m
     simp only [Function.comp_apply, map_finsupp_sum]
     rw [Finsupp.sum]
@@ -567,11 +384,11 @@ noncomputable def sum {ι : Type*} (f : ι → PolynomialMap R M N)
       rw [Finsupp.sum_of_support_subset _ this]
       apply Finset.sum_congr rfl
       intro i _
-      simp only [Finsupp.ofSupportFinite_coe, _root_.map_sum, isCompat_apply]
+      simp only [Finsupp.ofSupportFinite_coe, _root_.map_sum, isCompat_apply']
       · intro i _; rfl
     · intro i
       simp only [Finsupp.ofSupportFinite_coe, not_imp_not, Finsupp.mem_support_iff,
-        Set.Finite.mem_toFinset, Function.mem_support, ← isCompat_apply]
+        Set.Finite.mem_toFinset, Function.mem_support, ← isCompat_apply']
       intro hi
       rw [hi, map_zero]
 #align polynomial_map.locfinsupp.sum PolynomialMap.LocFinsupp.sum
@@ -579,7 +396,7 @@ noncomputable def sum {ι : Type*} (f : ι → PolynomialMap R M N)
 theorem sum_eq {ι : Type _} (f : ι → PolynomialMap R M N)
     (hf : LocFinsupp f)
     (S : Type _) [CommSemiring S] [Algebra R S] (m : S ⊗[R] M) :
-  (LocFinsupp.sum f hf).toFun S m =
+  (LocFinsupp.sum f hf).toFun' S m =
     (Finsupp.ofSupportFinite _ (hf S m)).sum fun _ m => m := rfl
 #align polynomial_map.locfinsupp.sum_eq PolynomialMap.LocFinsupp.sum_eq
 
@@ -676,13 +493,13 @@ example : S' ⊗[R'] (R' ⊗[R] M) →ₗ[S'] S' ⊗[R] M := by
 
 --Universe error
 def baseChange (f : PolynomialMap R M N) : PolynomialMap R' (R' ⊗[R] M) (R' ⊗[R] N) where
-  toFun S' _ _ := by
+  toFun' S' _ _ := by
     /- have : Algebra R S' := RingHom.toAlgebra ((algebraMap R' S').comp (algebraMap R R'))
-    let fS' := toFun f S'
+    let fS' := toFun' f S'
     let u := Algebra.TensorProduct.rid R' S' -/
 
     sorry
-  isCompat := sorry
+  isCompat' := sorry
 
 end BaseChange
 

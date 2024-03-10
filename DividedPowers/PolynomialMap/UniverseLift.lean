@@ -2,32 +2,64 @@ import DividedPowers.PolynomialMap.Basic
 import DividedPowers.ForMathlib.DirectLimit
 import Mathlib.LinearAlgebra.TensorProduct.RightExactness
 
-universe u v
+/-! # Lift the definition of a `PolynomialMap` to higher universes
 
+Consider a commutative semiring `R` and two `R`-modules `M` and `N`.
+Although written naïvely, the definition of a `f : PolynomialMap R M N`
+presents is as a universal definition of maps
+`f.toFun' :  S ⊗[R] M → S ⊗[R] N`,
+where `S` ranges over commutative `R`-algebras,
+related by compatibility equalities
+`h.isCompat' : f.toLinearMap.rTensor N ∘ f.toFun' S = f.toFun' S' ∘ h.toLinearMap.rTensor M`,
+for all `h : S →ₐ[R] S'`.
+To be correct, the definition restricts these algebras `S`
+to live in the same universe as `R`.
+The present file extends the definitions to all universes.
 
-variable {R : Type u} {M N : Type _} [CommRing R]
-  [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
-  (f : PolynomialMap R M N)
+* `PolynomialMap.toFun` is the variant of `PolynomialMap.toFun'`
+without any universe restrictions.
 
-open TensorProduct LinearMap MvPolynomial
+* `PolynomialMap.isCompat` and `PolynomialMap.isCompat_apply` are
+the variants of `PolynomialMap.isCompat` without any universe restrictions.
 
-/-
-f : M -> N application polynomiale
+* Finally, we show the compatibility with the basic constructions
+  on polynomial maps (module structure, composition).
 
-t dans S ⊗ M
+## Construction
 
-choix d'une algèbre tf A, φ : A → S, u ∈ A ⊗ M, φ(u) = t
-on pose f (t) l'image de  f(u) ∈ A ⊗ N dans S ⊗ N
+The idea is standard, setting it up in detail is sometimes technical.
 
-seconde algèbre tf B, ψ : B → S, v ∈ B ⊗ M, ψ(v) = t
+Consider `f : PolynomialMap R M N` and a general commutative algebra `S`.
+Any tensor `t : S ⊗[R] M` is induced from a tensor `u : B ⊗[R] M`,
+where `B` is a finite type subalgebra of `S`.
+Taking generators, we present `B` as the range of an algebra morphism
+`φ : MvPolynomial (Fin n) R →ₐ[R] S`, for some integer `n`,
+and get `p : MvPolynomial (Fin n) R ⊗[R] M` such that
+`φ.toLinearMap.rTensor M p = t`.
+We set `f.toFun t = φ.toLinearMap.rTensor N (f.toFun p)`.
+This is forced by the expected compatibility property `f.isCompat`.
 
-on sait que φ(u) et ψ(v) coïncident dans C ⊗ M, θ : C → S, C tf
-A ⊗ B → C
-u ⊗ 1 et 1 ⊗ v ont même image
+We then prove that it does not depend on choices
+and satisfies the compatibility property `f.isCompat`.
 
-f(u) = f(v) dans C ⊗ N, donc dans S ⊗ N
+`PolynomialMap.toFun_eq_toFun'` proves that it extends `f.toFun'`.
+
+## TODO
+
+* Because we use direct limits, we have to work on commutative rings.
+A standard refactor of the files about direct limits
+will extend this (automatically) to commutative semirings.
 
 -/
+
+universe u v
+
+variable {R : Type u} [CommRing R]
+  {M : Type _} [AddCommGroup M] [Module R M]
+  {N : Type _} [AddCommGroup N] [Module R N]
+  (f g : PolynomialMap R M N)
+
+open TensorProduct LinearMap MvPolynomial
 
 theorem AlgHom.comp_rangeRestrict
     {R S T : Type*} [CommSemiring R]
@@ -46,6 +78,14 @@ theorem AlgHom.quotientKerEquivRange_mk
   simp only [AlgEquiv.toAlgHom_eq_coe, coe_comp, AlgHom.coe_coe,
     Ideal.Quotient.mkₐ_eq_mk, Function.comp_apply, coe_codRestrict]
   rfl
+
+theorem Ideal.kerLiftAlg_eq_val_comp_Equiv
+    {R S T : Type*} [CommRing R] [CommRing S] [Semiring T]
+    [Algebra R S] [Algebra R T] (φ : S →ₐ[R] T) :
+    Ideal.kerLiftAlg φ
+      = (Subalgebra.val _).comp (Ideal.quotientKerEquivRange φ).toAlgHom := by
+  apply Ideal.Quotient.algHom_ext
+  ext s; simp; rfl
 
 variable (R)
 theorem MvPolynomial.aeval_range (S : Type*) [CommRing S] [Algebra R S] {σ : Type*} (s : σ → S) :
@@ -72,44 +112,39 @@ theorem MvPolynomial.aeval_range (S : Type*) [CommRing S] [Algebra R S] {σ : Ty
     use X i
     simp only [AlgHom.toRingHom_eq_coe, RingHom.coe_coe, aeval_X]
 
+namespace PolynomialMap
+
 variable (M)
 variable (S : Type v) [CommRing S] [Algebra R S]
-/-- The type of lifts of  `S ⊗[R] M` to a polynomial ring -/
+/-- The type of lifts of  `S ⊗[R] M` to a polynomial ring -/
 private
 def α : Type _ := Σ (s : Finset S), (MvPolynomial (Fin s.card) R) ⊗[R] M
 
+
 variable {M S}
 /-- The lift of f.toFun to the type `α` -/
+private
 noncomputable def φAux (s : Finset S) : MvPolynomial (Fin s.card) R →ₐ[R] S :=
   MvPolynomial.aeval  (R := R) (fun n ↦ (s.equivFin.symm n: S))
 
-/-
-φAux R s : MvPolynomial (Fin s.card) R →ₐ[R] S
-qu'il faut factoriser par
-
-* Ideal.Quotient.mkₐ (RingHom.ker (φAux R S)) :
-  MvPolynomial (Fin s.card) R → A R s := MvPolynomial (Fin s.card) R ⧸ (RingHom.ker (φAux R S))
-* Ideal.quotientKerEquivRange (RingHom.ker (φAux R S)) :
-  A R s ≃ₐ[R] (φAux R S).range
-* Subalgebra.val (φAux R S).range
-
--/
-
-def A (s : Finset S) := MvPolynomial (Fin s.card) R ⧸ (RingHom.ker (φAux R s))
-
+private
 theorem φAux_eq_comp (s : Finset S) :
     φAux R s = (Ideal.kerLiftAlg (φAux R s)).comp
       (Ideal.Quotient.mkₐ R (RingHom.ker (φAux R s))) := by ext; rfl
 
+private
 theorem φAux_eq_comp' (s : Finset S) : φAux R s
     = (Subalgebra.val _).comp
         ((Ideal.quotientKerEquivRange (φAux R s)).toAlgHom.comp
           (Ideal.Quotient.mkₐ R (RingHom.ker (φAux R s)))) := by ext; rfl
 
+
+private
 theorem φAux_apply_X (s : Finset S) (n : Fin s.card) :
     φAux R s (X n) = s.equivFin.symm n := by
   simp only [φAux, aeval_X]
 
+private
 theorem φAux_range (s : Finset S) : (φAux R s).range = Algebra.adjoin R s := by
   apply le_antisymm
   · rintro _ ⟨p, rfl⟩
@@ -139,34 +174,19 @@ noncomputable def π : α R M S → S ⊗[R] M :=
   fun ⟨s, p⟩ ↦ rTensor M (φAux R s).toLinearMap p
 
 variable {R M S}
-/- Delete
-noncomputable def PolynomialMap.toFunAux
-    (s : Finset S) (p : MvPolynomial (Fin s.card) R ⊗[R] M) :
-    S ⊗[R] N :=
-  rTensor N (φAux s).toLinearMap (f.toFun (MvPolynomial (Fin s.card) R) p)
--/
+
 private
 noncomputable def φ :
     α R M S → S ⊗[R] N := fun ⟨s,p⟩ ↦
-  rTensor N (φAux R s).toLinearMap (f.toFun (MvPolynomial (Fin s.card) R) p)
+  rTensor N (φAux R s).toLinearMap (f.toFun' (MvPolynomial (Fin s.card) R) p)
 
 variable (S)
-noncomputable def PolynomialMap.toFun' :
+noncomputable def toFun :
     S ⊗[R] M → S ⊗[R] N := by
   apply Function.extend (π R M S) (φ f) (fun _ ↦ 0)
 
-/-
-noncomputable def φAux' {S : Type v} [CommRing S] [Algebra R S] (s : Finset S) :
-    MvPolynomial (Fin s.card) R →ₐ[R] Algebra.adjoin R (s : Set S) :=
-  MvPolynomial.aeval  (R := R) (fun n ↦ ⟨s.equivFin.symm n, by
-    apply Algebra.subset_adjoin
-    simp only [Finset.mem_coe, Finset.coe_mem]⟩)
--/
-
 theorem π_surjective : Function.Surjective (π R M S) := by
   intro t
-/-   ∃ (s : Finset S) (p : MvPolynomial (Fin s.card) R ⊗[R] M),
-    t = (LinearMap.rTensor M (φAux s).toLinearMap) p := by -/
   choose B hB ht using TensorProduct.Algebra.exists_of_fg t
   choose s hs using hB
   choose u ht using ht
@@ -201,41 +221,8 @@ theorem π_surjective : Function.Surjective (π R M S) := by
   simp only [← LinearMap.comp_apply, ← LinearMap.rTensor_comp, φ, h, ← AlgHom.comp_toLinearMap, MvPolynomial.comp_aeval]
   rfl
 
-/-
-noncomputable def PolynomialMap.toFunAux
-    {S : Type v} [CommRing S] [Algebra R S] -- (t : S ⊗[R] M)
-    (s : Finset S) (p : MvPolynomial (Fin s.card) R ⊗[R] M) :
-   --  (_ : t = (LinearMap.rTensor M (φAux s).toLinearMap) p) :
-    S ⊗[R] N :=
-  LinearMap.rTensor N (φAux s).toLinearMap (f.toFun (MvPolynomial (Fin s.card) R) p)
--/
-
-/- theorem eq_of_inclusion -- (S : Type v) [CommRing S] [Algebra R S]
-    (a a' : α R M S)
-    (hss' : (φAux R a.1).range ≤ (φAux R a'.1).range) : False := sorry
--/
-
-
-/-
-   φ : A → S , ψ : B → T
-   a : A ⊗ M    b : B ⊗ M
-   h : S → T
-   h' : φ.range → ψ.range
-   on veut que h' (φM a) : φM.range = b : ψM.range
-   pour h' : φM.range → ψM.range
-
--/
-
-theorem Ideal.kerLiftAlg_eq_val_comp_Equiv
-    {R S T : Type*} [CommRing R] [CommRing S] [Semiring T]
-    [Algebra R S] [Algebra R T] (φ : S →ₐ[R] T) :
-    Ideal.kerLiftAlg φ
-      = (Subalgebra.val _).comp (Ideal.quotientKerEquivRange φ).toAlgHom := by
-  apply Ideal.Quotient.algHom_ext
-  ext s; simp; rfl
-
 variable {S}
-theorem eq_of_diagram'
+theorem toFun'_eq_of_diagram
     {T : Type w} [CommRing T] [Algebra R T]
     (s : Finset S) (p : MvPolynomial (Fin s.card) R ⊗[R] M)
     (t : Finset T) (q : MvPolynomial (Fin t.card) R ⊗[R] M)
@@ -246,9 +233,9 @@ theorem eq_of_diagram'
     (hpq : (rTensor M (h'.comp (φAux R s).rangeRestrict).toLinearMap) p
       = rTensor M (φAux R t).rangeRestrict.toLinearMap q) :
     LinearMap.rTensor N (h.comp (φAux R s)).toLinearMap
-      (f.toFun (MvPolynomial (Fin s.card) R) p)
+      (f.toFun' (MvPolynomial (Fin s.card) R) p)
     = LinearMap.rTensor N (φAux R t).toLinearMap
-      (f.toFun (MvPolynomial (Fin t.card) R) q) := by
+      (f.toFun' (MvPolynomial (Fin t.card) R) q) := by
 
   let θ := (Ideal.quotientKerEquivRange (R := R) (φAux R t)).symm.toAlgHom.comp
     (h'.comp (Ideal.quotientKerEquivRange (φAux R s)).toAlgHom)
@@ -269,8 +256,7 @@ theorem eq_of_diagram'
   simp only [AlgHom.comp_toLinearMap, LinearMap.rTensor_comp, LinearMap.comp_apply]
   apply LinearMap.congr_arg
   apply LinearMap.congr_arg
-
-  simp only [f.isCompat_apply]
+  simp only [f.isCompat_apply']
   apply congr_arg
   simp only [θ]
   simp only [← LinearMap.comp_apply, ← LinearMap.rTensor_comp, ← AlgHom.comp_toLinearMap, AlgHom.comp_assoc]
@@ -288,65 +274,19 @@ theorem eq_of_diagram'
   erw [Equiv.symm_apply_eq]
   rfl
 
-theorem eq_of_diagram
-    {T : Type w} [CommRing T] [Algebra R T]
-    (s : Finset S) (p : MvPolynomial (Fin s.card) R ⊗[R] M)
-    (t : Finset T) (q : MvPolynomial (Fin t.card) R ⊗[R] M)
-    (h : S →ₐ[R] T)
-    (j : MvPolynomial (Fin s.card) R →ₐ[R] MvPolynomial (Fin t.card) R)
-    (hj : (φAux R t).comp j = h.comp (φAux R s))
-    (hpq : rTensor M j.toLinearMap p = q) :
-    LinearMap.rTensor N (h.comp (φAux R s)).toLinearMap
-      (f.toFun (MvPolynomial (Fin s.card) R) p)
-    = LinearMap.rTensor N (φAux R t).toLinearMap
-      (f.toFun (MvPolynomial (Fin t.card) R) q) := by
-  let φAA' := Ideal.quotientMapₐ (I := RingHom.ker (φAux R s))
-    (RingHom.ker (φAux R t)) j (by
-    intro p
-    simp only [Ideal.mem_comap, RingHom.mem_ker, ← AlgHom.comp_apply, hj]
-    intro hp
-    rw [AlgHom.comp_apply, hp, map_zero])
-
-  have ht : h.comp (Ideal.kerLiftAlg (φAux R s)) = (Ideal.kerLiftAlg (φAux R t)).comp φAA' := by
-    apply Ideal.Quotient.algHom_ext
-    ext p
-    simp only [AlgHom.comp_apply, φAA']
-    simp only [Ideal.Quotient.mkₐ_eq_mk, Ideal.kerLiftAlg_mk, Ideal.quotient_map_mkₐ]
-    simp only [← AlgHom.comp_apply, hj]
-
-  simp only [φAux_eq_comp, ht]
-  simp only [AlgHom.comp_toLinearMap, LinearMap.rTensor_comp, LinearMap.comp_apply]
-
-  rw [f.isCompat_apply]
-  rw [← LinearMap.comp_apply, ← LinearMap.rTensor_comp, ← AlgHom.comp_toLinearMap]
-  rw [ht]
-  rw [AlgHom.comp_toLinearMap, LinearMap.rTensor_comp, LinearMap.comp_apply]
-  rw [f.isCompat_apply]
-  apply congr_arg
-  rw [f.isCompat_apply]
-  apply congr_arg
-
-  rw [← hpq]
-  simp only [← LinearMap.comp_apply, ← LinearMap.rTensor_comp, ← AlgHom.comp_toLinearMap]
-  apply LinearMap.congr_fun
-  apply congr_arg
-  apply congr_arg
-  ext n
-  simp [φAA']
-
 /-- Ce cas compare les deux formules lorsque les tenseurs se comparent
   dans une inclusion de sous-algèbres -/
-theorem eq_of_inclusion -- (S : Type v) [CommRing S] [Algebra R S]
---    (a a' : α R M S)
+private
+theorem toFun'_eq_of_inclusion
     (s : Finset S) (p : MvPolynomial (Fin s.card) R ⊗[R] M)
     (s' : Finset S) (p' : MvPolynomial (Fin s'.card) R ⊗[R] M)
     (hss' : (φAux R s).range ≤ (φAux R s').range)
     (hpp' : LinearMap.rTensor M ((Subalgebra.inclusion hss').comp (φAux R s).rangeRestrict).toLinearMap p = LinearMap.rTensor M (φAux R s').rangeRestrict.toLinearMap p') :
     (LinearMap.rTensor N (AlgHom.toLinearMap (φAux R s)))
-      (f.toFun (MvPolynomial (Fin s.card) R) p)
+      (f.toFun' (MvPolynomial (Fin s.card) R) p)
     = (LinearMap.rTensor N (AlgHom.toLinearMap (φAux R s')))
-        (f.toFun (MvPolynomial (Fin s'.card) R) p') :=
-  eq_of_diagram' f s p s' p' (AlgHom.id R S) (Subalgebra.inclusion hss')
+        (f.toFun' (MvPolynomial (Fin s'.card) R) p') :=
+  toFun'_eq_of_diagram f s p s' p' (AlgHom.id R S) (Subalgebra.inclusion hss')
     (by ext x; simp) hpp'
 
 /-- Ce cas montrera que f.toFunAux S permet de définir f.toFun S t -/
@@ -357,6 +297,7 @@ theorem eq_of_inclusion -- (S : Type v) [CommRing S] [Algebra R S]
           LinearMap.rTensor M (φAux s').toLinearMap p') :
     f.toFunAux s p = f.toFunAux s' p' := by-/
 
+private
 theorem φ_factorsThrough_π :
     Function.FactorsThrough (φ f) (π R M S) := by
   rintro ⟨s, p⟩ ⟨s', p'⟩ h
@@ -397,7 +338,7 @@ theorem φ_factorsThrough_π :
     exact AlgHom.rangeRestrict_surjective _
 
   obtain ⟨q, hq⟩ := this
-  rw  [eq_of_inclusion f s p t q hAB', eq_of_inclusion f s' p' t q hA'B']
+  rw  [toFun'_eq_of_inclusion f s p t q hAB', toFun'_eq_of_inclusion f s' p' t q hA'B']
   · rw [hq]
     simp only [AlgHom.comp_toLinearMap, LinearMap.rTensor_comp, LinearMap.comp_apply]
     rw [← hu', h]
@@ -407,15 +348,23 @@ theorem φ_factorsThrough_π :
     simp only [← LinearMap.comp_apply, AlgHom.comp_toLinearMap, LinearMap.rTensor_comp]
     congr; ext; rfl
 
-theorem PolynomialMap.toFun'_apply
+private
+theorem toFun_apply
     {t : S ⊗[R] M} {a : α R M S} (ha : π R M S a = t)  :
-    f.toFun' S t = φ f a := by
-  rw [PolynomialMap.toFun', ← ha, (φ_factorsThrough_π f).extend_apply]
+    f.toFun S t = φ f a := by
+  rw [PolynomialMap.toFun, ← ha, (φ_factorsThrough_π f).extend_apply]
 
-theorem PolynomialMap.isCompat'
-    (T : Type w) [CommRing T] [Algebra R T] (h : S →ₐ[R] T) (t : S ⊗[R] M) :
-    rTensor N h.toLinearMap (f.toFun' S t) =
-      f.toFun' T (rTensor M h.toLinearMap t) := by
+theorem toFun_eq_toFun' (S : Type u) [CommRing S] [Algebra R S] :
+    f.toFun S = f.toFun' S := by
+  ext t
+  obtain ⟨⟨s, p⟩, ha⟩ := π_surjective S t
+  simp only [f.toFun_apply ha, φ, f.isCompat_apply']
+  apply congr_arg
+  exact ha
+
+theorem isCompat_apply
+    {T : Type w} [CommRing T] [Algebra R T] (h : S →ₐ[R] T) (t : S ⊗[R] M) :
+    rTensor N h.toLinearMap (f.toFun S t) = f.toFun T (rTensor M h.toLinearMap t) := by
   classical
   obtain ⟨⟨s, p⟩, ha⟩ := π_surjective S t
   let s' := s.image h
@@ -443,11 +392,11 @@ theorem PolynomialMap.isCompat'
     simp only [← LinearMap.comp_apply, ← LinearMap.rTensor_comp, ← AlgHom.comp_toLinearMap]
     rw [eq_h_comp]
 
-  rw [PolynomialMap.toFun'_apply f ha]
-  rw [PolynomialMap.toFun'_apply f ha']
+  rw [PolynomialMap.toFun_apply f ha]
+  rw [PolynomialMap.toFun_apply f ha']
   simp only [φ]
   simp only [← LinearMap.comp_apply, ← LinearMap.rTensor_comp, ← AlgHom.comp_toLinearMap]
-  apply eq_of_diagram' f s p s' p' h h'
+  apply toFun'_eq_of_diagram f s p s' p' h h'
   · ext x; simp [h']
   · simp only [p']
     simp only [← LinearMap.comp_apply, ← LinearMap.rTensor_comp, ← AlgHom.comp_toLinearMap]
@@ -457,26 +406,47 @@ theorem PolynomialMap.isCompat'
     ext n
     simp [h', j, φAux_apply_X]
 
+theorem isCompat
+    {T : Type w} [CommRing T] [Algebra R T] (h : S →ₐ[R] T) :
+    h.toLinearMap.rTensor N ∘ f.toFun S = f.toFun T ∘ h.toLinearMap.rTensor M := by
+  ext t
+  simp only [Function.comp_apply, PolynomialMap.isCompat_apply]
 
+/-- Extension of `MvPolynomial.add_def_apply` -/
+theorem add_toFun_apply (t : S ⊗[R] M) :
+    (f + g).toFun S t = f.toFun S t + g.toFun S t := by
+  obtain ⟨⟨s, p⟩, ha⟩ := π_surjective S t
+  simp only [Pi.add_apply, toFun_apply _ ha, φ, add_def, map_add]
 
-/-
+/-- Extension of `MvPolynomial.add_def` -/
+theorem add_toFun : (f + g).toFun S = f.toFun S + g.toFun S := by
+  ext t
+  simp only [Pi.add_apply, add_toFun_apply]
 
-  p ∈ P ⊗ M       t = φ p
-  I = noyau (φ : P → S), A = P/I
-  π (p) ∈ A ⊗ M,   f(p) ∈ A ⊗ N   : f(t) = j( f(p) )
+/-- Extension of `MvPolynomial.zero_def` -/
+theorem zero_toFun : (0 : PolynomialMap R M N).toFun S = 0 := by
+  ext t
+  obtain ⟨⟨s, p⟩, ha⟩ := π_surjective S t
+  simp only [toFun_apply _ ha, φ, zero_def, Pi.zero_apply, map_zero]
 
-  p' ∈ P' ⊗ M     t' = φ' p
-  I' = noyau (φ' : P' → S), A' = P'/I'
-  π(p') ∈ A' ⊗ M, f(p') ∈ A ⊗ N  : f(t') = j' (f(p'))
+/-- Extension of `MvPolynomial.smul_def` -/
+theorem smul_toFun (r : R) : (r • f).toFun S = r • (f.toFun S) := by
+  ext t
+  obtain ⟨⟨s, p⟩, ha⟩ := π_surjective S t
+  simp only [toFun_apply _ ha, φ, smul_def, Pi.smul_apply, map_smul]
 
-  φ p et φ p' égaux dans B ⊗ M, k : A → B, k' : A' → B'
-  prouver k f(p) = k' f(p'))
+variable {P : Type*} [AddCommGroup P] [Module R P]
+  (g : PolynomialMap R N P) (f : PolynomialMap R M N)
 
-  P ⊗ M → Q ⊗ M
+/-- Extension of `MvPolynomial.comp_toFun'` -/
+theorem comp_toFun (S : Type*) [CommRing S] [Algebra R S] :
+    (g.comp f).toFun S = (g.toFun S).comp (f.toFun S) := by
+  ext t
+  obtain ⟨⟨s, p⟩, ha⟩ := π_surjective S t
+  have hb : PolynomialMap.π R N S ⟨s, f.toFun' _ p⟩ = f.toFun S t := by
+    simp only [toFun_apply _ ha, π, φ]
+  simp only [Function.comp_apply]
+  simp only [toFun_apply _ hb, φ]
+  simp only [toFun_apply _ ha, φ, comp_toFun', Function.comp_apply]
 
-  A ⊗ M → B ⊗ M ← A' ⊗ M      p → k(p) = q = k' (p') ← p'
-
-  A ⊗ N → B ⊗ N ← A' ⊗ N
-
-  k (f(p) ) = f(q) = k'(f(p'))
--/
+end PolynomialMap
