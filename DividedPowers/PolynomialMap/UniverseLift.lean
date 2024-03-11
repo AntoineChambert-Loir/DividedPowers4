@@ -354,6 +354,12 @@ theorem toFun_apply
     f.toFun S t = φ f a := by
   rw [PolynomialMap.toFun, ← ha, (φ_factorsThrough_π f).extend_apply]
 
+theorem exists_lift (t : S ⊗[R] M) :
+    ∃ (n : ℕ) (ψ : MvPolynomial (Fin n) R →ₐ[R] S) (p : MvPolynomial (Fin n) R ⊗[R] M),
+      ψ.toLinearMap.rTensor M p = t := by
+  obtain ⟨⟨s, p⟩, ha⟩ := π_surjective S t
+  use s.card, φAux R s, p, ha
+
 theorem toFun_eq_toFun' (S : Type u) [CommRing S] [Algebra R S] :
     f.toFun S = f.toFun' S := by
   ext t
@@ -361,6 +367,10 @@ theorem toFun_eq_toFun' (S : Type u) [CommRing S] [Algebra R S] :
   simp only [f.toFun_apply ha, φ, f.isCompat_apply']
   apply congr_arg
   exact ha
+
+theorem toFun_eq_toFun'_apply (S : Type u) [CommRing S] [Algebra R S] (t : S ⊗[R] M):
+    f.toFun S t = f.toFun' S t :=
+  congr_fun (f.toFun_eq_toFun' S) t
 
 theorem isCompat_apply
     {T : Type w} [CommRing T] [Algebra R T] (h : S →ₐ[R] T) (t : S ⊗[R] M) :
@@ -448,5 +458,14 @@ theorem comp_toFun (S : Type*) [CommRing S] [Algebra R S] :
   simp only [Function.comp_apply]
   simp only [toFun_apply _ hb, φ]
   simp only [toFun_apply _ ha, φ, comp_toFun', Function.comp_apply]
+
+theorem isCompat_apply_ground
+    (x : M) :
+    1 ⊗ₜ (f.ground x) = (f.toFun S) (1 ⊗ₜ x) := by
+  simp only [ground, ← toFun_eq_toFun']
+  convert f.isCompat_apply (algebraMap' R S) (1 ⊗ₜ[R] x)
+  simp only [Function.comp_apply, TensorProduct.lid_symm_apply]
+  rw [TensorProduct.includeRight_lid]
+  simp only [rTensor_tmul, AlgHom.toLinearMap_apply, _root_.map_one]
 
 end PolynomialMap

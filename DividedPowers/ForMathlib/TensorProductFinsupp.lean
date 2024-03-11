@@ -230,7 +230,7 @@ section MvPolynomial
 
 namespace MvPolynomial
 
-variable (σ : Type u) [DecidableEq σ]
+variable (σ : Type*) [DecidableEq σ]
 
 variable {S : Type*} [CommSemiring S] [Algebra R S]
 
