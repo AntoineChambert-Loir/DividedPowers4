@@ -138,7 +138,6 @@ theorem φAux_eq_comp' (s : Finset S) : φAux R s
         ((Ideal.quotientKerEquivRange (φAux R s)).toAlgHom.comp
           (Ideal.Quotient.mkₐ R (RingHom.ker (φAux R s)))) := by ext; rfl
 
-
 private
 theorem φAux_apply_X (s : Finset S) (n : Fin s.card) :
     φAux R s (X n) = s.equivFin.symm n := by
@@ -185,43 +184,53 @@ noncomputable def toFun :
     S ⊗[R] M → S ⊗[R] N := by
   apply Function.extend (π R M S) (φ f) (fun _ ↦ 0)
 
+theorem Subalgebra.val_comp_inclusion {R : Type*} [CommSemiring R]
+    {S : Type*} [Semiring S] [Algebra R S]
+    {A B : Subalgebra R S} (h : A ≤ B) :
+  (Subalgebra.val B).comp (Subalgebra.inclusion h) = Subalgebra.val A := rfl
+
+theorem rTensor_range {R M N P : Type*} [CommSemiring R]
+    [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module R N]
+    [AddCommMonoid P] [Module R P] (f : M →ₗ[R] N) :
+    LinearMap.range (f.rTensor P) =
+    LinearMap.range ((Submodule.subtype (LinearMap.range f)).rTensor P) := by
+  sorry
+
+variable {S}
+theorem Subalgebra.FG.exists_range_eq
+    {B : Subalgebra R S} (hB : Subalgebra.FG B) :
+    ∃ s : Finset S, (φAux R s).range = B := by
+  choose s hs using hB
+  use s
+  simp only [φAux_range, hs]
+
+theorem exists_lift_of_le_rTensor_range
+    {R : Type*} [CommRing R]
+    (M : Type*) [AddCommGroup M] [Module R M]
+    {S : Type*} [CommRing S] [Algebra R S]
+    {T : Type*} [CommRing T] [Algebra R T] (A : Subalgebra R T)
+    {φ : S →ₐ[R] T} (hφ : A ≤ AlgHom.range φ)
+    (t : T ⊗[R] M) (ht : t ∈ LinearMap.range ((Subalgebra.val A).toLinearMap.rTensor M)) :
+    ∃ s : S ⊗[R] M, φ.toLinearMap.rTensor M s = t := by
+  choose u hu using ht
+  suffices Function.Surjective ((φ.rangeRestrict.toLinearMap).rTensor M) by
+    choose p hp using this ((Subalgebra.inclusion hφ).toLinearMap.rTensor M u)
+    use p
+    rw [← hu, ← Subalgebra.val_comp_inclusion hφ]
+    simp only [AlgHom.comp_toLinearMap, LinearMap.rTensor_comp, LinearMap.comp_apply]
+    rw [← hp]
+    simp only [← LinearMap.comp_apply, ← LinearMap.rTensor_comp, ← AlgHom.comp_toLinearMap]
+    congr
+  exact rTensor.surjective M (by exact AlgHom.rangeRestrict_surjective φ)
+
 theorem π_surjective : Function.Surjective (π R M S) := by
   intro t
   choose B hB ht using TensorProduct.Algebra.exists_of_fg t
-  choose s hs using hB
-  choose u ht using ht
-  set h : Fin s.card → B := fun n ↦ ⟨s.equivFin.symm n, by
-    rw [← hs]
-    apply Algebra.subset_adjoin
-    simp only [Finset.mem_coe, Finset.coe_mem]⟩
-  let φ := MvPolynomial.aeval (R := R) h
-  have : AlgHom.range (MvPolynomial.aeval (R := R) (fun n => (Subalgebra.val B) (h n))) = B := by
-    simp_rw [MvPolynomial.aeval_range, ← hs]
-    congr
-    apply le_antisymm
-    · rintro _ ⟨i, rfl⟩; simp
-    · intro x hx; simp only [Finset.mem_coe] at hx; use s.equivFin ⟨x, hx⟩; simp
-  have : LinearMap.range (LinearMap.rTensor M φ.toLinearMap) = ⊤ := by
-    rw [LinearMap.range_eq_top]
-    apply rTensor.surjective
-    rintro ⟨x, hx⟩
-    rw [← MvPolynomial.comp_aeval, AlgHom.range_comp] at this
-    rw [← this] at hx
-    obtain ⟨b, ⟨⟨p, rfl⟩, rfl⟩⟩ := hx
-    use p
-    apply Subtype.coe_injective
-    rfl
-  have : ∃ w, (LinearMap.rTensor M φ.toLinearMap) w = u  := by
-    rw [← LinearMap.mem_range, this]
-    exact Submodule.mem_top
-  choose p hp using this
-  use ⟨s, p⟩
-  simp only [π]
-  rw [← ht, ← hp]
-  simp only [← LinearMap.comp_apply, ← LinearMap.rTensor_comp, φ, h, ← AlgHom.comp_toLinearMap, MvPolynomial.comp_aeval]
-  rfl
+  choose s hs using Subalgebra.FG.exists_range_eq hB
+  choose p hp using
+    exists_lift_of_le_rTensor_range M B (le_of_eq hs.symm) t ht
+  exact ⟨⟨s, p⟩, hp⟩
 
-variable {S}
 theorem toFun'_eq_of_diagram
     {T : Type w} [CommRing T] [Algebra R T]
     (s : Finset S) (p : MvPolynomial (Fin s.card) R ⊗[R] M)
@@ -354,16 +363,10 @@ theorem toFun_apply
     f.toFun S t = φ f a := by
   rw [PolynomialMap.toFun, ← ha, (φ_factorsThrough_π f).extend_apply]
 
-theorem exists_lift (t : S ⊗[R] M) :
-    ∃ (n : ℕ) (ψ : MvPolynomial (Fin n) R →ₐ[R] S) (p : MvPolynomial (Fin n) R ⊗[R] M),
-      ψ.toLinearMap.rTensor M p = t := by
-  obtain ⟨⟨s, p⟩, ha⟩ := π_surjective S t
-  use s.card, φAux R s, p, ha
-
 theorem toFun_eq_toFun' (S : Type u) [CommRing S] [Algebra R S] :
     f.toFun S = f.toFun' S := by
   ext t
-  obtain ⟨⟨s, p⟩, ha⟩ := π_surjective S t
+  obtain ⟨⟨s, p⟩, ha⟩ := π_surjective t
   simp only [f.toFun_apply ha, φ, f.isCompat_apply']
   apply congr_arg
   exact ha
@@ -376,7 +379,7 @@ theorem isCompat_apply
     {T : Type w} [CommRing T] [Algebra R T] (h : S →ₐ[R] T) (t : S ⊗[R] M) :
     rTensor N h.toLinearMap (f.toFun S t) = f.toFun T (rTensor M h.toLinearMap t) := by
   classical
-  obtain ⟨⟨s, p⟩, ha⟩ := π_surjective S t
+  obtain ⟨⟨s, p⟩, ha⟩ := π_surjective t
   let s' := s.image h
 
   let h' : (φAux R s).range →ₐ[R] (φAux R s').range :=
@@ -425,7 +428,7 @@ theorem isCompat
 /-- Extension of `MvPolynomial.add_def_apply` -/
 theorem add_toFun_apply (t : S ⊗[R] M) :
     (f + g).toFun S t = f.toFun S t + g.toFun S t := by
-  obtain ⟨⟨s, p⟩, ha⟩ := π_surjective S t
+  obtain ⟨⟨s, p⟩, ha⟩ := π_surjective t
   simp only [Pi.add_apply, toFun_apply _ ha, φ, add_def, map_add]
 
 /-- Extension of `MvPolynomial.add_def` -/
@@ -436,13 +439,13 @@ theorem add_toFun : (f + g).toFun S = f.toFun S + g.toFun S := by
 /-- Extension of `MvPolynomial.zero_def` -/
 theorem zero_toFun : (0 : PolynomialMap R M N).toFun S = 0 := by
   ext t
-  obtain ⟨⟨s, p⟩, ha⟩ := π_surjective S t
+  obtain ⟨⟨s, p⟩, ha⟩ := π_surjective t
   simp only [toFun_apply _ ha, φ, zero_def, Pi.zero_apply, map_zero]
 
 /-- Extension of `MvPolynomial.smul_def` -/
 theorem smul_toFun (r : R) : (r • f).toFun S = r • (f.toFun S) := by
   ext t
-  obtain ⟨⟨s, p⟩, ha⟩ := π_surjective S t
+  obtain ⟨⟨s, p⟩, ha⟩ := π_surjective t
   simp only [toFun_apply _ ha, φ, smul_def, Pi.smul_apply, map_smul]
 
 variable {P : Type*} [AddCommGroup P] [Module R P]
@@ -452,7 +455,7 @@ variable {P : Type*} [AddCommGroup P] [Module R P]
 theorem comp_toFun (S : Type*) [CommRing S] [Algebra R S] :
     (g.comp f).toFun S = (g.toFun S).comp (f.toFun S) := by
   ext t
-  obtain ⟨⟨s, p⟩, ha⟩ := π_surjective S t
+  obtain ⟨⟨s, p⟩, ha⟩ := π_surjective t
   have hb : PolynomialMap.π R N S ⟨s, f.toFun' _ p⟩ = f.toFun S t := by
     simp only [toFun_apply _ ha, π, φ]
   simp only [Function.comp_apply]
@@ -467,5 +470,45 @@ theorem isCompat_apply_ground
   simp only [Function.comp_apply, TensorProduct.lid_symm_apply]
   rw [TensorProduct.includeRight_lid]
   simp only [rTensor_tmul, AlgHom.toLinearMap_apply, _root_.map_one]
+
+/- Lemmas to allow to use the definition -/
+/-- Lift an element of a tensor product -/
+theorem exists_lift (t : S ⊗[R] M) :
+    ∃ (n : ℕ) (ψ : MvPolynomial (Fin n) R →ₐ[R] S) (p : MvPolynomial (Fin n) R ⊗[R] M),
+      ψ.toLinearMap.rTensor M p = t := by
+  obtain ⟨⟨s, p⟩, ha⟩ := π_surjective t
+  use s.card, φAux R s, p, ha
+
+theorem Subalgebra.fg_sup
+    {R : Type*} [CommSemiring R]
+    {S : Type*} [CommSemiring S] [Algebra R S]
+    {A B : Subalgebra R S} (hA : A.FG) (hB : B.FG) :
+    Subalgebra.FG (A ⊔ B) := by
+  classical
+  choose s hs using hA
+  choose t ht using hB
+  rw [← hs, ← ht, ← Algebra.adjoin_union, ← Finset.coe_union]
+  exact ⟨s ∪ t, rfl⟩
+
+theorem exists_lift' (t : S ⊗[R] M) (s : S) :
+    ∃ (n : ℕ) (ψ : MvPolynomial (Fin n) R →ₐ[R] S)
+      (p : MvPolynomial (Fin n) R ⊗[R] M) (q : MvPolynomial (Fin n) R),
+      ψ.toLinearMap.rTensor M p = t ∧ ψ q = s := by
+  classical
+  choose A hA ht using TensorProduct.Algebra.exists_of_fg t
+  have hB : Subalgebra.FG (A ⊔ Algebra.adjoin R ({s} : Finset S)) :=
+    Subalgebra.fg_sup hA (Subalgebra.fg_adjoin_finset _)
+  choose gen hgen using Subalgebra.FG.exists_range_eq hB
+  have hAB : A ≤ A ⊔ Algebra.adjoin R ({s} : Finset S) := le_sup_left
+  rw [← hgen] at hAB
+  choose p hp using exists_lift_of_le_rTensor_range M _ hAB t ht
+  have : s ∈ AlgHom.range (φAux R gen) := by
+    rw [hgen]
+    apply Algebra.subset_adjoin
+    simp only [Finset.coe_singleton, Set.sup_eq_union, Set.mem_union, SetLike.mem_coe]
+    right
+    exact Algebra.subset_adjoin rfl
+  choose q hq using this
+  use gen.card, φAux R gen, p, q, hp, hq
 
 end PolynomialMap

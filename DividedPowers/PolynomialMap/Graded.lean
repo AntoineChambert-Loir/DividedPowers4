@@ -10,12 +10,12 @@ open scoped TensorProduct
 
 section
 
-variable {R : Type _} [CommSemiring R]
-  {S : Type _} [CommSemiring S] [Algebra R S]
-  {M : Type _} [AddCommMonoid M] [Module R M] [Module S M] [IsScalarTower R S M]
-  {N : Type _} [AddCommMonoid N] [Module R N] [Module S N] [IsScalarTower R S N]
-  {P : Type _} [AddCommMonoid P] [Module R P]
-  {Q : Type _} [AddCommMonoid Q] [Module R Q]
+variable {R : Type _} [CommRing R]
+  {S : Type _} [CommRing S] [Algebra R S]
+  {M : Type _} [AddCommGroup M] [Module R M] [Module S M] [IsScalarTower R S M]
+  {N : Type _} [AddCommGroup N] [Module R N] [Module S N] [IsScalarTower R S N]
+  {P : Type _} [AddCommGroup P] [Module R P]
+  {Q : Type _} [AddCommGroup Q] [Module R Q]
 
 section rTensor
 
@@ -216,9 +216,9 @@ namespace PolynomialMap
 
 universe u v w
 
-variable {R : Type u}[CommSemiring R]
-    {M : Type _} [AddCommMonoid M] [Module R M]
-    {N : Type _}  [AddCommMonoid N] [Module R N]
+variable {R : Type u}[CommRing R]
+    {M : Type _} [AddCommGroup M] [Module R M]
+    {N : Type _}  [AddCommGroup N] [Module R N]
 
 /-- (Roby, Prop. I.1)
   A PolynomialMap is Homogeneous of degree p

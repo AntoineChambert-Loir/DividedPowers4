@@ -348,8 +348,6 @@ noncomputable def Finsupp.polynomialMap_toFun
     (Finset.univ.prod fun i =>
       (LinearForm.baseChange R S _ (b.coord i)) x ^ k i) ⊗ₜ[R] n
 
-#check Finsupp.polynomialMap_toFun b h S
-
 theorem Finsupp.polynomialMap_isCompat
     {S : Type*} [CommRing S] [Algebra R S]
     {S' : Type*} [CommRing S'] [Algebra R S']
