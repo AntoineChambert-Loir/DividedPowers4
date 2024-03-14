@@ -324,18 +324,20 @@ theorem map'_apply {β γ : ι → Type*} [∀ i, AddCommMonoid (β i)]
     [∀ (i : ι) (x : γ i), Decidable (x ≠ 0)]
     (h : ∀ i, β i →+ γ i) (x : ⨁ i, β i) (i : ι) :
     map' h x i = h i (x i) := by
-  let f : (⨁ i, β i) →+ γ i :=
+  set f : (⨁ i, β i) →+ γ i :=
     { toFun := fun x => map' h x i
       map_zero' := by simp only [map_zero, zero_apply]
-      map_add' := by simp only [map_add, add_apply, eq_self_iff_true, forall_const] }
-  let g : (⨁ i, β i) →+ γ i :=
+      map_add' := by simp only [map_add, add_apply, eq_self_iff_true, forall_const] } with hf
+  set g : (⨁ i, β i) →+ γ i :=
     { toFun := fun y => h i (y i)
       map_zero' := by simp only [zero_apply, map_zero]
-      map_add' := by simp only [add_apply, map_add, eq_self_iff_true, forall_const] }
+      map_add' := by simp only [add_apply, map_add, eq_self_iff_true, forall_const] } with hg
   change f x = g x
   apply DFunLike.congr_fun
   ext j y
-  simp [DirectSum.map'_of]
+  rw [hf, hg]
+  simp only [AddMonoidHom.coe_comp, AddMonoidHom.coe_mk, ZeroHom.coe_mk, Function.comp_apply,
+    map'_of]
   by_cases hj : j = i
   · rw [← hj]; simp only [DirectSum.of_eq_same]
   · simp only [DirectSum.of_eq_of_ne _ j i _ hj, map_zero]

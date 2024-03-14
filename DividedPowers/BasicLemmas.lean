@@ -150,9 +150,9 @@ theorem Finset.sum_4_rw {α : Type _} [AddCommMonoid α]
     a := by
     rintro ⟨⟨k, a⟩, c⟩ h
     simp only [Finset.mem_sigma, Finset.mem_range, Nat.lt_succ_iff] at h
-    simp only [add_tsub_cancel_left, Sigma.mk.inj_iff, heq_eq_eq, and_true]
+    rw [Sigma.mk.inj_iff]
+    simp only [Sigma.mk.inj_iff, heq_eq_eq, and_true, add_tsub_cancel_left]
     refine add_tsub_cancel_of_le h.1.2
-
   refine Finset.sum_bij' (fun m _ => φ m) (fun m _ => φ m) h1 h1 h2 h2 ?_
   · rintro ⟨⟨k, a⟩, c⟩ h
     simp only [mem_sigma, mem_range, Nat.lt_succ_iff] at h

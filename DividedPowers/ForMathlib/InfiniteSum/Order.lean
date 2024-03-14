@@ -125,7 +125,7 @@ theorem isLUB_hasProd (h : ∀ i, 1 ≤ f i) (hf : HasProd f a) :
 @[to_additive]
 theorem le_hasProd (hf : HasProd f a) (i : ι) (hb : ∀ (b') (_ : b' ≠ i), 1 ≤ f b') : f i ≤ a :=
   calc
-    f i = ∏ i in {i}, f i := Finset.prod_singleton.symm
+    f i = ∏ i in {i}, f i := (Finset.prod_singleton _ _).symm
     _ ≤ a := prod_le_hasProd _ (by convert hb; simp) hf
 #align le_has_prod le_hasProd
 #align le_has_sum le_hasSum
@@ -267,9 +267,9 @@ theorem hasProd_one_iff_of_one_le (hf : ∀ i, 1 ≤ f i) : HasProd f 1 ↔ f = 
 
 end OrderedCommGroup
 
-section CanonicallyOrderedMonoid
+section CanonicallyOrderedCommMonoid
 
-variable [CanonicallyOrderedMonoid α]
+variable [CanonicallyOrderedCommMonoid α]
 
 variable [TopologicalSpace α] [OrderClosedTopology α] {f : ι → α} {a : α}
 
@@ -290,7 +290,7 @@ theorem hasProd_one_iff : HasProd f 1 ↔ ∀ x, f x = 1 := by
   refine' ⟨_, fun h => _⟩
   · contrapose!
     exact fun ⟨x, hx⟩ h => hx (le_one_iff_eq_one.1 <| le_hasProd' h x)
-  · convert @hasProd_one α ι _ _ 
+  · convert @hasProd_one α ι _ _
     exact h _
 #align has_prod_one_iff hasProd_one_iff
 #align has_sum_zero_iff hasSum_zero_iff
@@ -313,7 +313,7 @@ theorem isLUB_has_prod' (hf : HasProd f a) : IsLUB (Set.range fun s => ∏ i in 
 #align is_lub_has_prod' isLUB_has_prod'
 #align is_lub_has_sum' isLUB_hasSum'
 
-end CanonicallyOrderedMonoid
+end CanonicallyOrderedCommMonoid
 
 section LinearOrder
 
@@ -335,7 +335,7 @@ theorem hasProd_of_isLUB_of_one_le [LinearOrderedCommMonoid α] [TopologicalSpac
 #align has_sum_of_is_lub_of_nonneg hasSum_of_isLUB_of_nonneg
 
 @[to_additive]
-theorem hasProd_of_isLUB [CanonicallyLinearOrderedMonoid α] [TopologicalSpace α] [OrderTopology α]
+theorem hasProd_of_isLUB [CanonicallyLinearOrderedCommMonoid α] [TopologicalSpace α] [OrderTopology α]
     {f : ι → α} (b : α) (hf : IsLUB (Set.range fun s => ∏ i in s, f i) b) : HasProd f b :=
   tendsto_atTop_isLUB (Finset.prod_mono_set' f) hf
 #align has_prod_of_is_lub hasProd_of_isLUB
@@ -355,7 +355,7 @@ theorem summable_abs_iff [LinearOrderedAddCommGroup α] [UniformSpace α] [Unifo
 #align summable_abs_iff summable_abs_iff
 
 
-alias summable_abs_iff ↔ Summable.of_abs Summable.abs
+alias ⟨Summable.of_abs, Summable.abs⟩ := summable_abs_iff
 #align summable.of_abs Summable.of_abs
 #align summable.abs Summable.abs
 
@@ -366,7 +366,7 @@ theorem Finite.of_summable_const [LinearOrderedAddCommGroup α] [TopologicalSpac
     simpa using sum_le_hasSum s (fun a _ => hb.le) hf.hasSum
   obtain ⟨n, hn⟩ := Archimedean.arch (∑' _ : ι, b) hb
   have : ∀ s : Finset ι, s.card ≤ n := fun s => by
-    simpa [nsmul_le_nsmul_iff hb] using (H s).trans hn
+    simpa [nsmul_le_nsmul_iff_left hb] using (H s).trans hn
   have : Fintype ι := fintypeOfFinsetCardLe n this
   infer_instance
 theorem Set.Finite.of_summable_const [LinearOrderedAddCommGroup α] [TopologicalSpace α]

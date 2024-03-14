@@ -1448,18 +1448,20 @@ theorem HasProd.prod_nat_of_prod_int {α : Type _} [CommMonoid α] [TopologicalS
     HasProd (fun n : ℕ => f n * f (-n)) (a * f 0) := by
   apply (hf.mul (hasProd_ite_eq (0 : ℤ) (f 0))).hasProd_of_prod_eq fun u => ?_
   refine' ⟨u.image Int.natAbs, fun v' hv' => _⟩
-  let u1 := v'.image fun x : ℕ => (x : ℤ)
-  let u2 := v'.image fun x : ℕ => -(x : ℤ)
+  set u1 := v'.image fun x : ℕ => (x : ℤ) with hu1
+  set u2 := v'.image fun x : ℕ => -(x : ℤ) with hu2
   have A : u ⊆ u1 ∪ u2 := by
     intro x hx
     simp only [mem_union, mem_image, exists_prop]
     rcases le_total 0 x with (h'x | h'x)
     · left
+      rw [Finset.mem_image]
       refine' ⟨Int.natAbs x, hv' _, _⟩
       · simp only [mem_image, exists_prop]
         exact ⟨x, hx, rfl⟩
       · simp only [h'x, Int.coe_natAbs, abs_eq_self]
     · right
+      rw [Finset.mem_image]
       refine' ⟨Int.natAbs x, hv' _, _⟩
       · simp only [mem_image, exists_prop]
         exact ⟨x, hx, rfl⟩
@@ -1474,20 +1476,21 @@ theorem HasProd.prod_nat_of_prod_int {α : Type _} [CommMonoid α] [TopologicalS
       · intro x hx
         suffices x ≠ 0 by simp only [this, if_false]
         rintro rfl
-        simp only [mem_sdiff, mem_union, mem_image, neg_eq_zero, or_self_iff, mem_inter,
-          and_self_iff, and_not_self_iff] at hx
+        simp only [hu1, hu2, mem_sdiff, mem_union, mem_image, Nat.cast_eq_zero, exists_eq_right,
+          neg_eq_zero, or_self, mem_inter, and_self, and_not_self] at hx
       · intro x hx
         simp only [mem_inter, mem_image, exists_prop] at hx
         have : x = 0 := by
           apply le_antisymm
-          · rcases hx.2 with ⟨a, _, rfl⟩
+          · rcases Finset.mem_image.mp hx.2 with ⟨a, _, rfl⟩
             simp only [Right.neg_nonpos_iff, Nat.cast_nonneg]
-          · rcases hx.1 with ⟨a, _, rfl⟩
+          · rcases Finset.mem_image.mp hx.1 with ⟨a, _, rfl⟩
             simp only [Nat.cast_nonneg]
         simp only [this, eq_self_iff_true, if_true]
     _ = (∏ x in u1, f x) * ∏ x in u2, f x := prod_union_inter
     _ = (∏ b in v', f b) * ∏ b in v', f (-b) := by
-      simp only [prod_image, Nat.cast_inj, imp_self, imp_true_iff, neg_inj]
+      simp only [hu1, Nat.cast_inj, imp_self, implies_true, forall_const, prod_image,
+        hu2, neg_inj]
     _ = ∏ b in v', f b * f (-b) := prod_mul_distrib.symm
 #align has_prod.prod_nat_of_prod_int HasProd.prod_nat_of_prod_int
 #align has_sum.sum_nat_of_sum_int HasSum.sum_nat_of_sum_int
@@ -1554,9 +1557,9 @@ theorem tendsto_tprod_compl_atTop_one (f : β → α) :
   · intro e he
     rcases exists_mem_nhds_isClosed_subset he with ⟨o, ho, o_closed, oe⟩
     simp only [le_eq_subset, Set.mem_preimage, mem_atTop_sets, Filter.mem_map, ge_iff_le]
-    sorry
-    /- obtain ⟨s, hs⟩ : ∃ s : Finset β, ∀ t : Finset β, Disjoint t s → (∏ b : β in t, f b) ∈ o :=
-      cauchySeq_finset_iff_mul_vanishing.1 (Tendsto.cauchySeq H.hasProd) o ho
+    obtain ⟨s, hs⟩ : ∃ s : Finset β, ∀ t : Finset β, Disjoint t s → (∏ b : β in t, f b) ∈ o := by
+      apply cauchySeq_finset_iff_mul_vanishing.1 _ o ho
+      apply Tendsto.cauchySeq H.hasProd -- Split to avoid timeout.
     refine' ⟨s, fun a sa => oe _⟩
     have A : Multipliable fun b : { x // x ∉ a } => f b := a.multipliable_compl_iff.2 H
     refine' IsClosed.mem_of_tendsto o_closed A.hasProd (eventually_of_forall fun b => _)
@@ -1567,7 +1570,7 @@ theorem tendsto_tprod_compl_atTop_one (f : β → α) :
     convert hs _ this using 1
     rw [prod_image]
     intro i _ j _ hij
-    exact Subtype.ext hij -/
+    exact Subtype.ext hij
   · convert tendsto_const_nhds (X := α) (α := Finset β) (f := atTop) (x := 1)
     apply tprod_eq_one_of_not_multipliable
     rwa [Finset.multipliable_compl_iff]

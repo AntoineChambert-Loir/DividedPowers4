@@ -53,11 +53,12 @@ theorem le_weight (x : σ) (hx : w x ≠ 0) (d : σ →₀ ℕ) : d x ≤ weight
 theorem finite_of_weight_le [Finite σ] (hw : ∀ x, w x ≠ 0) (n : ℕ) :
     {f : σ →₀ ℕ | weight w f ≤ n}.Finite := by
   classical
-  let fg := Finset.antidiagonal (Finsupp.equivFunOnFinite.symm (Function.const σ n))
+  set fg := Finset.antidiagonal (Finsupp.equivFunOnFinite.symm (Function.const σ n)) with hfg
   suffices {f : σ →₀ ℕ | weight w f ≤ n} ⊆ ↑(fg.image fun uv => uv.fst) by
     apply Set.Finite.subset _ this
     apply Finset.finite_toSet
   intro f hf
+  rw [hfg]
   simp only [Finset.coe_image, Set.mem_image, Finset.mem_coe,
     Finset.mem_antidiagonal, Prod.exists, exists_and_right, exists_eq_right]
   use Finsupp.equivFunOnFinite.symm (Function.const σ n) - f

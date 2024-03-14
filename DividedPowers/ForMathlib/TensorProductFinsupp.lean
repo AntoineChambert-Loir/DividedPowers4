@@ -1,4 +1,4 @@
-import Mathlib.RingTheory.TensorProduct
+import Mathlib.RingTheory.TensorProduct.Basic
 import Mathlib.Data.MvPolynomial.Basic
 import Mathlib.Data.Polynomial.Basic
 import Mathlib.Data.Polynomial.Coeff

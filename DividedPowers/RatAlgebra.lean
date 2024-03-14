@@ -211,12 +211,11 @@ noncomputable def dividedPowers : DividedPowers I :=
 
 -- TODO: generalize to I^p = 0 in a ring A with prime characteristic p
 theorem dpow_of_two_le {n : ℕ} (hn : 2 ≤ n) (a : A) : (dividedPowers hI2) n a = 0 := by
-  simp [dividedPowers, OfInvertibleFactorial.dpow_def]
-  split_ifs with ha
-  · suffices h : a ^ n = 0 by
-      rw [h, mul_zero]
-    exact Ideal.mem_pow_eq_zero 2 n hI2 hn ha
-  · rfl
+  simp only [dividedPowers, OfInvertibleFactorial.dpow_def, ite_eq_right_iff]
+  intro ha
+  suffices h : a ^ n = 0 by
+    rw [h, mul_zero]
+  exact Ideal.mem_pow_eq_zero 2 n hI2 hn ha
 #align divided_powers.of_square_zero.dpow_of_two_le DividedPowers.OfSquareZero.dpow_of_two_le
 
 end OfSquareZero
