@@ -380,7 +380,8 @@ end multilinear
 section LocallyFinite
 
 variable {R : Type u} [CommRing R]
-  {M N : Type v} [AddCommGroup M] [AddCommGroup N] [Module R M] [Module R N]
+  {M : Type*} [AddCommGroup M] [Module R M]
+  {N : Type*} [AddCommGroup N] [Module R N]
 
 def LocFinsupp {ι : Type*} (f : ι → PolynomialMap R M N) :=
   ∀ (S : Type u) [CommRing S] [Algebra R S] (m : S ⊗[R] M),
