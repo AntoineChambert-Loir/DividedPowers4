@@ -15,14 +15,14 @@ import DividedPowers.DPAlgebra.Misc
 -- import DividedPowers.DPAlgebra.RobyLemma5 -- now uselesss, use TensorProduct.map_ker
 import DividedPowers.DPAlgebra.RobyLemma9
 import DividedPowers.DPMorphism
-import DividedPowers.ForMathlib.AlgebraComp
+--import DividedPowers.ForMathlib.AlgebraComp -- This file has errors, but I think we should not use it
 import DividedPowers.ForMathlib.AlgebraLemmas
 import DividedPowers.ForMathlib.CombinatoricsLemmas
 import DividedPowers.ForMathlib.GradedAlgebra
 --import DividedPowers.ForMathlib.GradedModuleQuot -- Not ported
 import DividedPowers.ForMathlib.GradedRingQuot
 import DividedPowers.ForMathlib.Homogeneous
-import DividedPowers.ForMathlib.InfiniteSum.Basic -- has sorrys
+import DividedPowers.ForMathlib.InfiniteSum.Basic
 --import DividedPowers.ForMathlib.InfiniteSum.Order
 import DividedPowers.ForMathlib.MvPowerSeries.Basic
 import DividedPowers.ForMathlib.MvPowerSeries.LinearTopology
@@ -33,11 +33,12 @@ import DividedPowers.ForMathlib.MvPowerSeries.Substitutions
 import DividedPowers.ForMathlib.MvPowerSeries.Topology
 import DividedPowers.ForMathlib.RingTheory.Ideal
 import DividedPowers.ForMathlib.RingTheory.SubmoduleMem
+import DividedPowers.ForMathlib.TensorProductFinsupp
 import DividedPowers.ForMathlib.Topology.LinearTopology
 import DividedPowers.ForMathlib.WeightedHomogeneous
-import DividedPowers.IdealAdd
+--import DividedPowers.IdealAdd
 import DividedPowers.PolynomialMap.Basic
-import DividedPowers.PolynomialMap.Coeff
+--import DividedPowers.PolynomialMap.Coeff
 --import DividedPowers.PolynomialMap.Graded
 import DividedPowers.RatAlgebra
 --import DividedPowers.SubDPIdeal

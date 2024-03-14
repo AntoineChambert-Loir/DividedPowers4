@@ -2,8 +2,8 @@
 
 import DividedPowers.ForMathlib.TensorProductFinsupp
 import Mathlib.RingTheory.PowerSeries.Basic
-import Mathlib.RingTheory.TensorProduct
-import Mathlib.LinearAlgebra.TensorProduct
+import Mathlib.RingTheory.TensorProduct.Basic
+--import Mathlib.LinearAlgebra.TensorProduct.Tower
 import Mathlib.Data.MvPolynomial.Basic
 import Mathlib.RingTheory.FiniteType
 
@@ -266,6 +266,53 @@ instance addCommGroup : AddCommGroup (PolynomialMap R M N) where
   add_assoc f g h := by ext; simp only [add_def, add_assoc]
   zero := Zero.zero
   zero_add f := by ext; simp only [add_def, zero_add, zero_def]
+  add_zero f :=by ext; simp only [add_def, add_zero, zero_def]
+  nsmul n f := {
+    toFun' := fun S _ _ => n • (f.toFun' S)
+    isCompat' := fun φ => by
+        ext m
+        simp only [isCompat_apply', map_nsmul, Function.comp_apply, Pi.smul_apply] }
+  nsmul_zero f := by ext; simp only [zero_smul, Pi.smul_apply]; rfl
+  nsmul_succ n f := by
+    ext
+    simp only [Pi.smul_apply, add_def_apply, add_comm _ 1]
+    simp only [add_smul, one_smul]
+  neg := Neg.neg
+  zsmul z f := {
+    toFun' := fun S _ _ => z • (f.toFun' S)
+    isCompat' := fun φ => by
+        ext m
+        simp only [isCompat_apply', map_zsmul, Function.comp_apply, Pi.smul_apply] }
+  add_left_neg f := by
+    ext; simp only [add_def_apply, neg_def, Pi.neg_apply, add_left_neg, zero_def, Pi.zero_apply]
+  add_comm f g := by ext; simp only [add_def, add_comm]
+  --sub := _
+  --sub_eq_add_neg := _
+  /- zsmul_zero' f := by ext; simp only [zero_smul, Pi.smul_apply]; rfl
+  zsmul_succ' z f := by
+    sorry
+  zsmul_neg' := sorry -/
+
+
+
+  #exit
+  /- where
+  add := Add.add
+  add_assoc := sorry
+  zero := Zero.zero
+  zero_add := sorry
+  add_zero := sorry
+  nsmul := sorry
+  neg := Neg.neg
+  zsmul := sorry
+  add_left_neg := sorry
+  add_comm := sorry -/
+
+   /- where
+  add := Add.add
+  add_assoc f g h := by ext; simp only [add_def, add_assoc]
+  zero := Zero.zero
+  zero_add f := by ext; simp only [add_def, zero_add, zero_def]
   add_zero f := by ext; simp only [add_def, add_zero, zero_def]
   nsmul n f :=
     { toFun' := fun S _ _ => n • (f.toFun' S)
@@ -280,6 +327,12 @@ instance addCommGroup : AddCommGroup (PolynomialMap R M N) where
   add_comm f g := by ext; simp only [add_def, add_comm]
   add_left_neg f := by
     ext; simp only [add_def_apply, neg_def, Pi.neg_apply, add_left_neg, zero_def, Pi.zero_apply]
+  zsmul z f := {
+    toFun' := fun S _ _ => z • (f.toFun' S)
+    isCompat' := fun φ => by
+        ext m
+        simp only [isCompat_apply', map_zsmul, Function.comp_apply, Pi.smul_apply]
+  } -/
 #align polynomial_map.add_comm_monoid PolynomialMap.addCommGroup
 
 def smul (r : R) (f : PolynomialMap R M N) : PolynomialMap R M N where

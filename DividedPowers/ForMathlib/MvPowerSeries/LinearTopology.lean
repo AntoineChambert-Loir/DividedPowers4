@@ -2,6 +2,8 @@
 import DividedPowers.ForMathlib.Topology.LinearTopology
 import DividedPowers.ForMathlib.MvPowerSeries.Topology
 
+import Mathlib.Data.Finsupp.Interval
+
 --import Mathlib.Control.Ulift
 
 open Set SetLike
@@ -149,7 +151,7 @@ theorem topology_eq_ideals_basis_topology [DiscreteTopology α] :
     apply Finset.le_sup he'
 #align mv_power_series.topology_eq_ideals_basis_topolgy MvPowerSeries.topology_eq_ideals_basis_topology
 
-#check range
+--#check range
 
 lemma isLinearTopology [DiscreteTopology α] :
     LinearTopology (MvPowerSeries σ α) := {

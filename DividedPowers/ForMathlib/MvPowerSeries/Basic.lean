@@ -37,13 +37,13 @@ theorem coeff_eq_zero_of_constantCoeff_nilpotent (f : MvPowerSeries σ α) (m : 
   apply sum_eq_zero
   intro k hk
   rw [mem_piAntidiagonal'] at hk
-  let s := (range n).filter fun i => k i = 0
+  set s := (range n).filter fun i => k i = 0 with hs_def
   suffices hs : s ⊆ range n by
     rw [← prod_sdiff hs]
     refine' mul_eq_zero_of_right _ _
     have hs' : ∀ i ∈ s, coeff α (k i) f = constantCoeff σ α f := by
-      simp only [mem_filter]
       intro i hi
+      simp only [hs_def, mem_filter] at hi
       rw [hi.2, coeff_zero_eq_constantCoeff]
     rw [prod_congr rfl hs', prod_const]
     suffices m ≤ s.card by
@@ -55,14 +55,17 @@ theorem coeff_eq_zero_of_constantCoeff_nilpotent (f : MvPowerSeries σ α) (m : 
     simp only [add_comm m, Nat.add_le_add_iff_right]
     rw [← hk.2, map_sum, ← sum_sdiff hs]
     have hs'' : ∀ i ∈ s, degree (k i) = 0 := by
-      simp only [mem_filter]
       intro i hi
+      simp only [hs_def, mem_filter] at hi
       rw [hi.2, map_zero]
     rw [sum_eq_zero hs'', add_zero]
     convert Finset.card_nsmul_le_sum (range n \ s) _ 1 _
     simp only [Algebra.id.smul_eq_mul, mul_one]
-    · simp only [mem_filter, mem_sdiff, mem_range, not_and, and_imp]
-      intro i hi hi'; rw [← not_lt]; intro h; apply hi' hi
+    · simp only [hs_def, mem_filter, mem_sdiff, mem_range, not_and, and_imp]
+      intro i hi hi'
+      rw [← not_lt]
+      intro h
+      apply hi' hi
       simpa only [Nat.lt_one_iff, degree_eq_zero_iff] using h
   apply filter_subset
 

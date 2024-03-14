@@ -1,4 +1,5 @@
 import Mathlib.Topology.Algebra.Ring.Basic
+import Mathlib.RingTheory.Nilpotent
 import Mathlib.RingTheory.PowerSeries.Basic
 import DividedPowers.ForMathlib.InfiniteSum.Basic
 import DividedPowers.ForMathlib.MvPowerSeries.Basic
@@ -129,21 +130,19 @@ theorem completeSpace [AddGroup α] [CompleteSpace α] : CompleteSpace (MvPowerS
 #align mv_power_series.complete_space MvPowerSeries.completeSpace
 
 /-- Separation of the uniform structure on mv_power_series -/
-theorem separatedSpace [SeparatedSpace α] : SeparatedSpace (MvPowerSeries σ α) := by
-  rw [separated_iff_t2]
-  have : _root_.T2Space α := by
-    rw [← separated_iff_t2]; infer_instance
+theorem T0Space [T0Space α] : T0Space (MvPowerSeries σ α) := by
+  suffices T2Space (MvPowerSeries σ α) by infer_instance
   exact t2Space σ α
-#align mv_power_series.separated_space MvPowerSeries.separatedSpace
 
 theorem uniform_topologicalRing [Ring α] [UniformAddGroup α] [TopologicalRing α] :
     TopologicalRing (MvPowerSeries σ α) :=
   { uniformAddGroup σ α with
-    continuous_add :=  uniformContinuous_add.continuous
+    continuous_add :=  (@uniformContinuous_add _ _ _ (uniformAddGroup σ α)).continuous
     continuous_mul := continuous_pi fun _ => continuous_finset_sum _ fun i _ => Continuous.comp
       continuous_mul (Continuous.prod_mk (Continuous.fst' (continuous_component σ α i.fst))
         (Continuous.snd' (continuous_component σ α i.snd)))
-    continuous_neg := uniformContinuous_neg.continuous }
+    continuous_neg := (@uniformContinuous_neg _ _ _ (uniformAddGroup σ α)).continuous
+    }
 #align mv_power_series.uniform_topological_ring MvPowerSeries.uniform_topologicalRing
 
 end Uniform
