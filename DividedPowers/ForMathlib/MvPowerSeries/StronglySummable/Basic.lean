@@ -169,6 +169,9 @@ theorem order_tendsto_top_iff [Finite σ] (f : ι → MvPowerSeries σ α) :
 
 end Order
 
+-- NOTE (MI) : I had to add this
+instance : LocallyFiniteOrderBot (σ →₀ ℕ) := sorry
+
 /-- The union of the supports of the functions `λ i, coeff α e (f i)`, where `e` runs over
   the coefficients bounded by `d`. -/
 noncomputable def unionOfSupportOfCoeffLe [DecidableEq ι] {f : ι → MvPowerSeries σ α}
@@ -251,7 +254,7 @@ theorem support_mul [DecidableEq ι] [DecidableEq σ] {f : ι → MvPowerSeries 
     (hg : StronglySummable g) :
     ∀ d : σ →₀ ℕ,
       (fun i : ι × κ => coeff α d (f i.fst * g i.snd)).support ⊆
-        (d.antidiagonal.biUnion fun b => (hf b.fst).toFinset).product
+        (d.antidiagonal'.biUnion fun b => (hf b.fst).toFinset).product
           (d.antidiagonal.biUnion fun b => (hg b.snd).toFinset) := by
   rintro d ⟨i, j⟩ h
   dsimp only [Function.mem_support, coeff_mul] at h

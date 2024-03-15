@@ -17,18 +17,18 @@ import DividedPowers.DPAlgebra.RobyLemma9
 import DividedPowers.DPMorphism
 --import DividedPowers.ForMathlib.AlgebraComp -- This file has errors, but I think we should not use it
 import DividedPowers.ForMathlib.AlgebraLemmas
-import DividedPowers.ForMathlib.DirectLimit
 import DividedPowers.ForMathlib.CombinatoricsLemmas
+import DividedPowers.ForMathlib.DirectLimit
 import DividedPowers.ForMathlib.GradedAlgebra
 --import DividedPowers.ForMathlib.GradedModuleQuot -- Not ported
 import DividedPowers.ForMathlib.GradedRingQuot
 import DividedPowers.ForMathlib.Homogeneous
 import DividedPowers.ForMathlib.InfiniteSum.Basic
---import DividedPowers.ForMathlib.InfiniteSum.Order
+import DividedPowers.ForMathlib.InfiniteSum.Order
 import DividedPowers.ForMathlib.MvPowerSeries.Basic
 import DividedPowers.ForMathlib.MvPowerSeries.LinearTopology
 import DividedPowers.ForMathlib.MvPowerSeries.Order
---import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Basic
+--import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Basic -- It has errors related to antidiagonal
 --import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Topology
 import DividedPowers.ForMathlib.MvPowerSeries.Substitutions
 import DividedPowers.ForMathlib.MvPowerSeries.Topology
@@ -43,4 +43,4 @@ import DividedPowers.PolynomialMap.Coeff
 import DividedPowers.PolynomialMap.Homogeneous
 import DividedPowers.PolynomialMap.UniverseLift -- It has sorrys
 import DividedPowers.RatAlgebra
---import DividedPowers.SubDPIdeal
+import DividedPowers.SubDPIdeal
