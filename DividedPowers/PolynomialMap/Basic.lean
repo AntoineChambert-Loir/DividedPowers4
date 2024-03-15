@@ -69,11 +69,7 @@ variable (R : Type _) [CommSemiring R]
 namespace Algebra.TensorProduct
 
 -- The natural `R`-algebra map from `S ⊗[R] R` to `S`.
-noncomputable def rid' : S ⊗[R] R →ₐ[S] S := Algebra.TensorProduct.rid R S S/- with
-  map_one' := by simp only [AlgEquiv.toFun_eq_coe, map_one]
-  map_zero' := by simp only [AlgEquiv.toFun_eq_coe, map_zero]
-  commutes' := fun r => by
-    simp only [algebraMap_apply, AlgEquiv.toFun_eq_coe, rid_tmul, one_smul] } -/
+noncomputable def rid' : S ⊗[R] R →ₐ[S] S := Algebra.TensorProduct.rid R S S
 #align algebra.tensor_product.rid' Algebra.TensorProduct.rid'
 
 @[simp]
@@ -139,15 +135,6 @@ noncomputable section
 open scoped TensorProduct
 
 open MvPolynomial
-/-
-structure PolynomialMap (R : Type u) [CommSemiring R]
-    (M : Type _) [AddCommMonoid M] [Module R M]
-    (N : Type _) [AddCommMonoid N] [Module R N] where
-  toFun' (S : Type u) [CommSemiring S] [Algebra R S] : S ⊗[R] M → S ⊗[R] N
-  isCompat' {S : Type u} [CommSemiring S] [Algebra R S]
-    {S' : Type u} [CommSemiring S'] [Algebra R S'] (φ : S →ₐ[R] S') :
-    φ.toLinearMap.rTensor N ∘ toFun' S = toFun' S' ∘ φ.toLinearMap.rTensor M
--/
 
 /-- A polynomial map M → N between A-modules is a functorial family
 of maps R ⊗[A] M → R ⊗[A] N, for all A-algebras R -/
@@ -171,7 +158,6 @@ variable {R : Type u} {M N : Type _} [CommRing R]
 /-- The map M → N associated with a PolynomialMap R M N (essentially, toFun' R)-/
 noncomputable def ground (f : PolynomialMap R M N) : M → N :=
   (TensorProduct.lid R N) ∘ (f.toFun' R) ∘ (TensorProduct.lid R M).symm
-
 theorem isCompat_apply' (f : PolynomialMap R M N)
     {S : Type u} [CommRing S] [Algebra R S]
     {S' : Type u} [CommRing S'] [Algebra R S']
@@ -246,15 +232,6 @@ instance : Neg (PolynomialMap R M N) where
 theorem neg_def (f : PolynomialMap R M N)
     (S : Type u) [CommRing S] [Algebra R S] :
     (-f).toFun' S = - f.toFun' S := rfl
-
-/-
-instance addCommMonoid : AddCommMonoid (PolynomialMap R M N) where
-  add_assoc f g h := by ext; simp only [add_def, add_assoc]
-  zero_add f := by ext; simp only [add_def, zero_add, zero_def]
-  add_zero f := by ext; simp only [add_def, add_zero, zero_def]
-  nsmul := nsmulRec
-  add_comm f g := by ext; simp only [add_def, add_comm]
--/
 
 instance addCommGroup : AddCommGroup (PolynomialMap R M N) where
   add_assoc f g h := by ext; simp only [add_def, add_assoc]
@@ -422,8 +399,7 @@ theorem sum_eq {ι : Type _} (f : ι → PolynomialMap R M N)
 
 end LocFinsupp
 
---TODO: I don't think this is in the right namespace, but I don't know how to rename it.
-noncomputable def LinearMap.LocFinsupp.sum {ι : Type _} [DecidableEq ι] :
+noncomputable def _root_.LinearMap.LocFinsupp.sum {ι : Type _} [DecidableEq ι] :
     (withLocFinsupp ι : Submodule R (ι → PolynomialMap R M N))
       →ₗ[R] PolynomialMap R M N where
   toFun fhf := PolynomialMap.LocFinsupp.sum fhf.val fhf.prop
@@ -455,7 +431,7 @@ noncomputable def LinearMap.LocFinsupp.sum {ι : Type _} [DecidableEq ι] :
       intro hi
       rw [hi, smul_zero]
     · intro i _ ; rfl
-#align polynomial_map.linear_map.locfinsupp.sum PolynomialMap.LinearMap.LocFinsupp.sum
+#align polynomial_map.linear_map.locfinsupp.sum LinearMap.LocFinsupp.sum
 
 end LocallyFinite
 

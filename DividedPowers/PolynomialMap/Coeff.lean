@@ -1,9 +1,9 @@
 import DividedPowers.PolynomialMap.Basic
 import DividedPowers.PolynomialMap.UniverseLift
-import Mathlib.RingTheory.TensorProduct
+import Mathlib.RingTheory.TensorProduct.Basic
 -- import Mathlib.Data.MvPolynomial.Basic
 -- import Mathlib.LinearAlgebra.Multilinear.Basic
-import Mathlib.LinearAlgebra.TensorProduct
+import Mathlib.LinearAlgebra.TensorProduct.Basic
 
 
 open TensorProduct Algebra Function MvPolynomial LinearMap Algebra.TensorProduct

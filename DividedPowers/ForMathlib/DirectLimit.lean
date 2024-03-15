@@ -1,10 +1,10 @@
 import Mathlib.RingTheory.FiniteType
 import Mathlib.RingTheory.Ideal.QuotientOperations
 import Mathlib.Algebra.Algebra.Subalgebra.Basic
-import Mathlib.RingTheory.TensorProduct
+import Mathlib.RingTheory.TensorProduct.Basic
 import DividedPowers.PolynomialMap.Basic
-import Mathlib.Algebra.Module.DirectLimitAndTensorProduct
-
+--import Mathlib.Algebra.DirectLimit --AndTensorProduct
+import Mathlib.LinearAlgebra.TensorProduct.DirectLimit
 
 open TensorProduct FreeAddMonoid
 

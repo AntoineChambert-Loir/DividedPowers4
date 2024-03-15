@@ -2,7 +2,7 @@
 
 import DividedPowers.PolynomialMap.Coeff
 import DividedPowers.ForMathlib.TensorProductFinsupp
-import Mathlib.RingTheory.TensorProduct
+import Mathlib.RingTheory.TensorProduct.Basic
 
 universe u
 

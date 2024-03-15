@@ -221,7 +221,7 @@ theorem exists_lift_of_le_rTensor_range
     rw [← hp]
     simp only [← LinearMap.comp_apply, ← LinearMap.rTensor_comp, ← AlgHom.comp_toLinearMap]
     congr
-  exact rTensor.surjective M (by exact AlgHom.rangeRestrict_surjective φ)
+  exact rTensor_surjective M (by exact AlgHom.rangeRestrict_surjective φ)
 
 theorem π_surjective : Function.Surjective (π R M S) := by
   intro t
@@ -343,7 +343,7 @@ theorem φ_factorsThrough_π :
       = LinearMap.rTensor M ((Subalgebra.inclusion (le_of_eq hB)).comp (Subalgebra.inclusion hAB)).toLinearMap u := by
     suffices Function.Surjective (?_) by
       exact this _
-    apply rTensor.surjective
+    apply rTensor_surjective
     exact AlgHom.rangeRestrict_surjective _
 
   obtain ⟨q, hq⟩ := this
