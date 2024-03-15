@@ -17,7 +17,7 @@ structure Exp (R : Type _) [Semiring R] where
 
 namespace Exp
 
-instance funLike : FunLike (Exp R) ℕ fun _ => R
+instance funLike : DFunLike (Exp R) ℕ (fun _ => R)
     where
   coe := Exp.toFun
   coe_injective' f g h := by cases f ; cases g ; congr
@@ -26,7 +26,7 @@ instance funLike : FunLike (Exp R) ℕ fun _ => R
 @[simp] theorem toFun_eq_coe {f : Exp R} : f.toFun = (f : ℕ → R) := rfl
 #align Exp.to_fun_eq_coe Exp.toFun_eq_coe
 
-@[ext] theorem ext {f g : Exp R} (h : ∀ n, f n = g n) : f = g := FunLike.ext f g h
+@[ext] theorem ext {f g : Exp R} (h : ∀ n, f n = g n) : f = g := DFunLike.ext f g h
 #align Exp.ext Exp.ext
 
 protected def copy (f : Exp R) (f' : ℕ → R) (h : f' = f) : Exp R where
@@ -36,7 +36,7 @@ protected def copy (f : Exp R) (f' : ℕ → R) (h : f' = f) : Exp R where
 #align Exp.copy Exp.copy
 
 def add : Exp R → Exp R → Exp R := fun f g =>
-  { toFun := fun p => (Finset.Nat.antidiagonal p).sum fun rs => f rs.1 * g rs.2
+  { toFun := fun p => (Finset.antidiagonal p).sum fun rs => f rs.1 * g rs.2
     map_zero := by
       simp only [Finset.Nat.antidiagonal_zero, Finset.sum_singleton, ← toFun_eq_coe, map_zero,
         mul_one]
@@ -44,8 +44,7 @@ def add : Exp R → Exp R → Exp R := fun f g =>
 #align Exp.add Exp.add
 
 /- example : add_comm_group (Exp R) := {
-  
+
 } -/
 --#print is_exponential
 end Exp
-

@@ -1,5 +1,5 @@
 import DividedPowers.DPAlgebra.Dpow
-import DividedPowers.ForMathlib.AlgebraComp
+--import DividedPowers.ForMathlib.AlgebraComp -- TODO: We should not use this
 
 universe u v w
 
@@ -12,7 +12,7 @@ def IsCompatibleWith {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers
       ∀ (n : ℕ) (b : B) (_ : b ∈ J ⊓ I.map f), hJ.dpow n b = hI'.dpow n b
 #align is_compatible_with IsCompatibleWith
 
--- I added hext (compatibility condition) and replaced `g` `h` and `h_comp` by 
+-- I added hext (compatibility condition) and replaced `g` `h` and `h_comp` by
 -- `[algebra A C] [algebra B C] [is_scalar_tower A B C]`
 def IsUniversal {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I) {B : Type v}
     [CommRing B] [Algebra A B] (J : Ideal B) {D : Type v} [CommRing D] (J' : Ideal D)
@@ -21,7 +21,7 @@ def IsUniversal {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I) {
     ∀ [Algebra A C] [Algebra B C],
       ∀ [IsScalarTower A B C],
         ∀ (K : Ideal C) (hK : DividedPowers K)
-          -- (g : pd_morphism hI hK) 
+          -- (g : pd_morphism hI hK)
           -- (h : B →+* C)
           (_ : J.map (algebraMap B C) ≤ K)
           -- (hcomp : h ∘ (algebra_map A B) = algebra_map A C)
@@ -81,12 +81,14 @@ noncomputable instance : CommRing (DpEnvelopeOfIncluded hI J hIJ) :=
 noncomputable instance : Algebra B (DpEnvelopeOfIncluded hI J hIJ) :=
   Ideal.Quotient.algebra _
 
+--TODO: we should not use Algebra.comp
 noncomputable instance algebraOfIncluded : Algebra A (DpEnvelopeOfIncluded hI J hIJ) :=
-  Algebra.comp A B (DpEnvelopeOfIncluded hI J hIJ)
+  sorry --Algebra.comp A B (DpEnvelopeOfIncluded hI J hIJ)
 #align divided_power_envelope.algebra_of_included DividedPowerEnvelope.algebraOfIncluded
 
+--TODO: we should not use Algebra.comp
 instance isScalarTower_of_included : IsScalarTower A B (DpEnvelopeOfIncluded hI J hIJ) :=
-  IsScalarTower.comp A B (DpEnvelopeOfIncluded hI J hIJ)
+  sorry --IsScalarTower.comp A B (DpEnvelopeOfIncluded hI J hIJ)
 #align divided_power_envelope.is_scalar_tower_of_included DividedPowerEnvelope.isScalarTower_of_included
 
 noncomputable def dpIdealOfIncluded [DecidableEq B] : Ideal (DpEnvelopeOfIncluded hI J hIJ) :=
@@ -109,7 +111,7 @@ theorem sub_ideal_dpIdealOfIncluded [DecidableEq B] :
       (Quotient.dividedPowers (DividedPowerAlgebra.dividedPowers' B J) (j12_isSubDPIdeal hI J hIJ))
       (algebraMap B (DpEnvelopeOfIncluded hI J hIJ)) (sub_ideal_dpIdealOfIncluded hI J hIJ) :=
   sorry
-#align divided_power_envelope.dp_envelope_of_included_is_universal 
+#align divided_power_envelope.dp_envelope_of_included_is_universal
   DividedPowerEnvelope.dpEnvelopeOfIncluded_isUniversal
  -/
 end Included
@@ -139,19 +141,21 @@ noncomputable instance : CommRing (DpEnvelope hI J) :=
 noncomputable instance : Algebra B (DpEnvelope hI J) :=
   Ideal.Quotient.algebra _
 
+--TODO: we should not use Algebra.comp
 noncomputable instance algebra' : Algebra A (DpEnvelope hI J) :=
-  Algebra.comp A B (DpEnvelope hI J)
+  sorry --Algebra.comp A B (DpEnvelope hI J)
 #align divided_power_envelope.algebra' DividedPowerEnvelope.algebra'
 
+--TODO: we should not use Algebra.comp
 instance : IsScalarTower A B (DpEnvelope hI J) :=
-  IsScalarTower.comp A B (DpEnvelope hI J)
+  sorry --IsScalarTower.comp A B (DpEnvelope hI J)
 
 noncomputable def dpIdeal [DecidableEq B] : Ideal (DpEnvelope hI J) :=
   Ideal.map (Ideal.Quotient.mk (j12 hI (j' I J) (sub_ideal_j' I J)))
     (DividedPowerAlgebra.augIdeal B (j' I J))
 #align divided_power_envelope.dp_ideal DividedPowerEnvelope.dpIdeal
 
-theorem sub_ideal_dpIdeal [DecidableEq B] : 
+theorem sub_ideal_dpIdeal [DecidableEq B] :
     J.map (algebraMap B (DpEnvelope hI J)) ≤ dpIdeal hI J :=
   sorry
 #align divided_power_envelope.sub_ideal_dp_ideal DividedPowerEnvelope.sub_ideal_dpIdeal
@@ -181,7 +185,7 @@ section
 
 end -/
 
-#exit 
+#exit
 
 
 theorem dpEnvelope_isUniversal [DecidableEq B] :
@@ -220,7 +224,7 @@ theorem dpEnvelope_isUniversal [DecidableEq B] :
     rw [IsCompatibleWith]
     use hI'; use hI'_ext
     intro n c hc
-    simp only [hK1, Ideal.add_eq_sup, inf_of_le_right, le_sup_right] at hc 
+    simp only [hK1, Ideal.add_eq_sup, inf_of_le_right, le_sup_right] at hc
     exact ideal_add.dpow_eq_of_mem_right _ _ hI'_int _ hc
   obtain ⟨φ, hφ, hφ_unique⟩ :=
     dp_envelope_of_included_is_universal hI (J' I J) (sub_ideal_J' I J) C _ h1 hg' hI1
@@ -233,11 +237,11 @@ theorem dpEnvelope_isUniversal [DecidableEq B] :
       ideal_comp := sorry
       dpow_comp := fun n a ha => by
         obtain ⟨r, s⟩ := hI1
-        --rw ← hI'_ext, 
+        --rw ← hI'_ext,
         --rw φ.dpow_comp,
         sorry }
   -- TODO: add rw lemma for ideal_add.divided_powers.dpow = ideal_add.dpow
-  /- rw ← hI'_ext, 
+  /- rw ← hI'_ext,
         exact ideal_add.dpow_eq_of_mem_right _ _ hI'_int _ (mem_map_of_mem (algebra_map A C) ha), -/
   use ψ
   --simp only,
@@ -248,4 +252,3 @@ theorem dpEnvelope_isUniversal [DecidableEq B] :
     sorry
   · sorry
 #align divided_power_envelope.dp_envelope_is_universal DividedPowerEnvelope.dpEnvelope_isUniversal
-

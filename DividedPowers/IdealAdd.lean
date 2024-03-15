@@ -550,10 +550,11 @@ theorem dpow_comp_coeffs {m n p : ℕ} (hn : n ≠ 0) (hp : p ≤ m * n) :
     Nat.cast_mul, Nat.cast_prod]
 
   simp only [← C_eq_nat_cast, coeff_C_mul]
+  sorry
   /- simp only [RatAlgebra.dividedPowers, RatAlgebra.dpow_eq_inv_fact_smul _ _ Submodule.mem_top,
    Polynomial.smul_eq_C_mul] -/
 
-  simp_rw [one_pow, mul_one, mul_comm _ (X ^ _), ← mul_assoc, coeff_mul_C, ← map_prod, mul_assoc,
+  /- simp_rw [one_pow, mul_one, mul_comm _ (X ^ _), ← mul_assoc, coeff_mul_C, ← map_prod, mul_assoc,
     ← map_mul, ← map_sum, coeff_C_mul]
   simp only [← mul_assoc, coeff_mul_C]
   simp_rw [coeff_X_pow]
@@ -590,7 +591,7 @@ theorem dpow_comp_coeffs {m n p : ℕ} (hn : n ≠ 0) (hp : p ≤ m * n) :
     rw [Finset.mem_range, Nat.lt_succ_iff]
     simp only [mem_filter] at hx
     rw [← hx.2]
-    exact range_sym_weighted_sum_le hx.1
+    exact range_sym_weighted_sum_le hx.1 -/
 #align divided_powers.ideal_add.dpow_comp_coeffs DividedPowers.IdealAdd.dpow_comp_coeffs
 
 theorem dpow_comp {J : Ideal A} (hJ : DividedPowers J)

@@ -3,7 +3,7 @@ import DividedPowers.DPAlgebra.Graded.GradeZero
 import DividedPowers.RatAlgebra
 import DividedPowers.SubDPIdeal
 import DividedPowers.IdealAdd
-import DividedPowers.DPAlgebra.RobyLemma5
+--import DividedPowers.DPAlgebra.RobyLemma5
 import DividedPowers.DPAlgebra.RobyLemma9
 import Mathlib.RingTheory.MvPolynomial.Basic
 import DividedPowers.ForMathlib.RingTheory.Ideal
@@ -14,7 +14,7 @@ universe u v v₁ v₂ w
 
 section
 
-variable (R M : Type u) [CommRing R] [DecidableEq R] [AddCommGroup M] [DecidableEq M] 
+variable (R M : Type u) [CommRing R] [DecidableEq R] [AddCommGroup M] [DecidableEq M]
   [Module R M]
 
 variable (x : M) (n : ℕ)
@@ -35,16 +35,15 @@ open DividedPowerAlgebra
 /-- Lemma 2 of Roby 65. -/
 theorem on_dp_algebra_unique (h h' : DividedPowers (augIdeal R M))
     (h1 : ∀ (n : ℕ) (x : M), h.dpow n (ι R M x) = dp R n x)
-    (h1' : ∀ (n : ℕ) (x : M), h'.dpow n (ι R M x) = dp R n x) : h = h' :=
-  by
+    (h1' : ∀ (n : ℕ) (x : M), h'.dpow n (ι R M x) = dp R n x) : h = h' := by
   apply DividedPowers.dp_uniqueness_self h' h (augIdeal_eq_span R M)
-  rintro n f ⟨q, m, hq : 0 < q, _, rfl⟩
+  rintro n f ⟨q, hq : 0 < q, m, _, rfl⟩
   nth_rw 1 [← h1' q m]
   rw [← h1 q m, h.dpow_comp n (ne_of_gt hq) (ι_mem_augIdeal R M m),
     h'.dpow_comp n (ne_of_gt hq) (ι_mem_augIdeal R M m), h1 _ m, h1' _ m]
 #align divided_power_algebra.on_dp_algebra_unique DividedPowerAlgebra.on_dp_algebra_unique
 
-def Condδ (R : Type u) [CommRing R] [DecidableEq R] (M : Type u) [AddCommGroup M] [Module R M] : 
+def Condδ (R : Type u) [CommRing R] [DecidableEq R] (M : Type u) [AddCommGroup M] [Module R M] :
     Prop :=
   ∃ h : DividedPowers (augIdeal R M), ∀ (n : ℕ) (x : M), h.dpow n (ι R M x) = dp R n x
 #align divided_power_algebra.cond_δ DividedPowerAlgebra.Condδ
@@ -106,8 +105,8 @@ theorem on_tensorProduct_unique (hK hK' : DividedPowers (k A I J))
   apply eq_of_eq_on_ideal
   intro n x hx
   suffices x ∈ dpEqualizer hK hK' by exact ((mem_dpEqualizer_iff _ _).mp this).2 n
-  suffices h_ss : k A I J ≤ dpEqualizer hK hK'
-  · exact h_ss hx
+  suffices h_ss : k A I J ≤ dpEqualizer hK hK' by
+    exact h_ss hx
   dsimp only [k]
   rw [sup_le_iff]
   constructor
@@ -141,9 +140,9 @@ def CondTFree (A : Type u) [CommRing A] : Prop :=
 #align divided_power_algebra.cond_T_free DividedPowerAlgebra.CondTFree
 
 /- def cond_Q (A R : Type*) [comm_ring A] [comm_ring R] /- [algebra A R] not used -/
-  {I : ideal R} (hI : divided_powers I) : Prop := 
+  {I : ideal R} (hI : divided_powers I) : Prop :=
 ∃ (T : Type*) [comm_ring T], by exactI ∃ [algebra A T], by exactI ∃ [module.free A T]
-  {J : ideal T} (hJ : divided_powers J) (f : pd_morphism hI hJ), 
+  {J : ideal T} (hJ : divided_powers J) (f : pd_morphism hI hJ),
   function.surjective f.to_ring_hom
  -/
 def CondQ (A : Type u) [CommRing A] : Prop :=
@@ -151,7 +150,7 @@ def CondQ (A : Type u) [CommRing A] : Prop :=
     ∀ [Algebra A R] (I : Ideal R) (hI : DividedPowers I),
       ∃ (T : Type u) (_ : CommRing T),
         ∃ (_ : Algebra A T),
-          ∃ (_ : Module.Free A T) (f : T →ₐ[A] R) (J : Ideal T) (hJ : DividedPowers J) 
+          ∃ (_ : Module.Free A T) (f : T →ₐ[A] R) (J : Ideal T) (hJ : DividedPowers J)
             (_ : isDPMorphism hJ hI f), Function.Surjective f
 #align divided_power_algebra.cond_Q DividedPowerAlgebra.CondQ
 
@@ -165,7 +164,7 @@ open DividedPowerAlgebra
 
 open scoped TensorProduct
 
-/- 
+/-
 variables {M : Type*} [add_comm_group M] [module R M] (h : divided_powers (aug_ideal R M))
 (hh : ∀ (x : M) (n : ℕ), h.dpow n (ι R x) = dp R n x)
 include M  h -/
@@ -181,7 +180,7 @@ theorem cond_D_uniqueness [DecidableEq R] {M : Type u} [AddCommGroup M] [Module 
     rw [Ideal.map_span]
     rw [Ideal.span_le]
     intro s
-    rintro ⟨a, ⟨n, m, hn : 0 < n, _, rfl⟩, rfl⟩
+    rintro ⟨a, ⟨n, hn : 0 < n, m, _, rfl⟩, rfl⟩
     simp only [AlgHom.coe_toRingHom, SetLike.mem_coe]
     rw [liftAlgHom_apply_dp]
     apply hJ.dpow_mem (ne_of_gt hn) (hf m)
@@ -189,10 +188,10 @@ theorem cond_D_uniqueness [DecidableEq R] {M : Type u} [AddCommGroup M] [Module 
     --    simp only [alg_hom.coe_to_ring_hom],
     apply symm
     rw [(dp_uniqueness h hJ (lift hJ f hf) (augIdeal_eq_span R M) _ _) n a ha]
-    · rintro a ⟨q, m, hq : 0 < q, _, rfl⟩
+    · rintro a ⟨q, hq : 0 < q, m, _, rfl⟩
       simp only [AlgHom.coe_toRingHom, liftAlgHom_apply_dp]
       exact hJ.dpow_mem (ne_of_gt hq) (hf m)
-    · rintro n a ⟨q, m, hq : 0 < q, _, rfl⟩
+    · rintro n a ⟨q, hq : 0 < q, m, _, rfl⟩
       simp only [AlgHom.coe_toRingHom, liftAlgHom_apply_dp]
       rw [hJ.dpow_comp n (ne_of_gt hq) (hf m),← hh q m,
         h.dpow_comp n (ne_of_gt hq) (ι_mem_augIdeal R M m), _root_.map_mul, map_natCast]
@@ -204,7 +203,7 @@ theorem cond_D_uniqueness [DecidableEq R] {M : Type u} [AddCommGroup M] [Module 
 /- I have commented out this proof for now because it times out (and since it is quite long, it
   is hard to see where the problem is). -/
 -- Roby, lemma 4
-theorem T_free_and_D_to_Q (A : Type u) [CommRing A] [DecidableEq A] : 
+theorem T_free_and_D_to_Q (A : Type u) [CommRing A] [DecidableEq A] :
     CondTFree A → CondD A → CondQ A := by
   sorry
  /- intro hT_free hD
@@ -272,8 +271,8 @@ theorem T_free_and_D_to_Q (A : Type u) [CommRing A] [DecidableEq A] :
     -- split,
     · intro n a ha
       let ha' := id ha
-      simp only [K, Ideal.map_bot, bot_sup_eq] at ha 
-      simp only [is_pd_morphism] at hM_pd 
+      simp only [K, Ideal.map_bot, bot_sup_eq] at ha
+      simp only [is_pd_morphism] at hM_pd
       apply dp_uniqueness hK hI
       simp only [K, Ideal.map_bot, bot_sup_eq]; rw [Ideal.map]
       · rintro s ⟨a, ha, rfl⟩
@@ -282,9 +281,9 @@ theorem T_free_and_D_to_Q (A : Type u) [CommRing A] [DecidableEq A] :
         apply lift_mem_of_mem_aug_ideal
         exact ha
       · rintro n s ⟨a, ha, rfl⟩
-        simp only [SetLike.mem_coe] at ha 
+        simp only [SetLike.mem_coe] at ha
         have := hM_pd.2 n a ha
-        simp only [AlgHom.coe_toRingHom] at this 
+        simp only [AlgHom.coe_toRingHom] at this
         rw [this]
         simp only [i_2, Algebra.TensorProduct.includeRight_apply, AlgHom.coe_toRingHom,
           Algebra.TensorProduct.productMap_apply_tmul, map_one, one_mul]
@@ -328,32 +327,32 @@ theorem T_free_and_D_to_Q (A : Type u) [CommRing A] [DecidableEq A] :
 
 example {A : Type _} [CommRing A] (a : A) (n : ℕ) : n • a = n * a := by refine' nsmul_eq_mul n a
 
-/- In Roby, all PD-algebras A considered are of the form A₀ ⊕ A₊, 
+/- In Roby, all PD-algebras A considered are of the form A₀ ⊕ A₊,
 where A₊ is the PD-ideal. In other words, the PD-ideal is an augmentation ideal.
 Moreover, PD-morphisms map A₀ to B₀ and A₊ to B₊,
-so that their kernel is a direct sum K₀ ⊕ K₊ 
+so that their kernel is a direct sum K₀ ⊕ K₊
 
-Roby states this as a sory of `pre-graded algebras`, 
+Roby states this as a sory of `pre-graded algebras`,
 which correspond to graded algebras by the monoid {⊥, ⊤} with carrier set (fin 0)
 or fin 2 (with multiplication)
 
-I am not sure that the proofs can avoid this hypothesis, 
+I am not sure that the proofs can avoid this hypothesis,
 especially for tensor products (alas…).
 
-The question is about the formalism to use. 
+The question is about the formalism to use.
 With `is_augmentation_ideal A I`, and `is_augmentation_ideal B J`,
 we need to state out the assumption that `f : A →+* B` is homogeneous.
 
 It maps A₊ to B₊ by definition of a PD-morphism,
-but A₀ and B₀ are not canonical. 
+but A₀ and B₀ are not canonical.
 The definition of an augmentation ideal is the existence of
-a section A/A₊ →+* A, whose image is A₀. 
+a section A/A₊ →+* A, whose image is A₀.
 Write r₀ for the composition A →+* A/A₊ →+* A₀.
 The assumptions are : A₊ ≤ r₀.ker, r₀.range ⊓ A₊ = 0
 
 If f is homogeneous (for the two chosen maps r₀), then r₀ (f a) = f (r₀ a)
 and f.ker = (f.ker ⊓ A₀) ⊕ (f.ker ⊓ A₊)
-or map f I is an augmentation ideal in f.range 
+or map f I is an augmentation ideal in f.range
 
 This looks less convenient than imposing the graded structure
 
@@ -368,12 +367,12 @@ with quotient PD structures
 Lemma 5 has proved that  fg.ker = (f.ker ⊗ 1) ⊔ (1 ⊗ g.ker)
 
 In the end, Roby applies its proposition 4 which we
-apparently haven't formalized and make use of yet another definition, 
-namely of a `divised ideal` : 
+apparently haven't formalized and make use of yet another definition,
+namely of a `divised ideal` :
 Up to the homogeneous condition, this is exactly that `K ⊓ I` is a sub-pd-ideal.
-The proof of proposition goes by using that 
+The proof of proposition goes by using that
 `ideal.span s ⊓ I = ideal.span s ⊓ I`
-if `s` is made of homogeneous elements. 
+if `s` is made of homogeneous elements.
 
 So we assume the `roby` condition in the statement, in the hope
 that will be possible to prove it each time we apply cond_τ_rel
@@ -411,13 +410,15 @@ theorem condτ_rel (A : Type _) [CommRing A] {R S R' S' : Type _} [CommRing R] [
   obtain ⟨hK, hK_pd⟩ := hRS
   simp only [Condτ]
   let fg := Algebra.TensorProduct.map f g
-  let k_fg := Algebra.TensorProduct.ker_tens hf hg
+  sorry
+  -- The following line comes from `RobyLemma 5`
+  /-let k_fg := Algebra.TensorProduct.ker_tens hf hg
   have s_fg : Function.Surjective fg.toRingHom :=
     sorry --Algebra.TensorProduct.mapSurjective A f hf g hg
-  suffices hK_map : k A I' J' = (k A I J).map fg
-  rw [hK_map]
-  suffices hK'_pd : isSubDPIdeal hK (RingHom.ker fg.toRingHom ⊓ k A I J)
-  let hK' := DividedPowers.Quotient.OfSurjective.dividedPowers hK s_fg hK'_pd
+  suffices hK_map : k A I' J' = (k A I J).map fg by
+    rw [hK_map]
+    suffices hK'_pd : isSubDPIdeal hK (RingHom.ker fg.toRingHom ⊓ k A I J) by
+      let hK' := DividedPowers.Quotient.OfSurjective.dividedPowers hK s_fg hK'_pd
   use hK'
   constructor
   · -- hI'.is_pd_morphism hK' ↑(i_1 A R' S')
@@ -427,9 +428,10 @@ theorem condτ_rel (A : Type _) [CommRing A] {R S R' S' : Type _} [CommRing R] [
       rw [Ideal.mem_comap]
       apply Ideal.mem_sup_left; apply Ideal.mem_map_of_mem; exact ha'
     · intro n a' ha'
-      suffices ha : a' ∈ f '' I; obtain ⟨a, ha, rfl⟩ := ha
+      suffices ha : a' ∈ f '' I by
+        obtain ⟨a, ha, rfl⟩ := ha
       simp only [i1, AlgHom.coe_toRingHom, Algebra.TensorProduct.includeLeft_apply]
-      suffices : ∀ x : R, fg.toRingHom (x ⊗ₜ[A] 1) = f x ⊗ₜ[A] 1; rw [← this]
+      suffices ∀ x : R, fg.toRingHom (x ⊗ₜ[A] 1) = f x ⊗ₜ[A] 1 by rw [← this]
       sorry -- I am not sure what fails here
       sorry
       sorry
@@ -445,7 +447,7 @@ theorem condτ_rel (A : Type _) [CommRing A] {R S R' S' : Type _} [CommRing R] [
         simp only [AlgHom.toRingHom_eq_coe, AlgHom.coe_toRingHom, Algebra.TensorProduct.map_tmul,
           map_one]
       · have := Ideal.image_eq_map_of_surjective f.to_ring_hom I _
-        simp only [AlgHom.toRingHom_eq_coe, AlgHom.coe_toRingHom] at this 
+        simp only [AlgHom.toRingHom_eq_coe, AlgHom.coe_toRingHom] at this
         rw [this]; rw [hI'I] at ha' ; exact ha'
         simp only [AlgHom.toRingHom_eq_coe, AlgHom.coe_toRingHom]
         exact hf -/
@@ -472,7 +474,7 @@ theorem condτ_rel (A : Type _) [CommRing A] {R S R' S' : Type _} [CommRing R] [
         simp only [AlgHom.toRingHom_eq_coe, AlgHom.coe_toRingHom, Algebra.TensorProduct.map_tmul,
           map_one]
       · have := Ideal.image_eq_map_of_surjective g.to_ring_hom J _
-        simp only [AlgHom.toRingHom_eq_coe, AlgHom.coe_toRingHom] at this 
+        simp only [AlgHom.toRingHom_eq_coe, AlgHom.coe_toRingHom] at this
         rw [this]; rw [hJ'J] at ha' ; exact ha'
         simp only [AlgHom.toRingHom_eq_coe, AlgHom.coe_toRingHom]
         exact hg -/
@@ -505,7 +507,7 @@ theorem condτ_rel (A : Type _) [CommRing A] {R S R' S' : Type _} [CommRing R] [
     simp only [i_2, AlgHom.toRingHom_eq_coe, RingHom.coe_comp, AlgHom.coe_toRingHom,
       Function.comp_apply, Algebra.TensorProduct.includeRight_apply, Algebra.TensorProduct.map_tmul,
       map_one] -/
-    sorry
+    sorry-/
 #align divided_power_algebra.cond_τ_rel DividedPowerAlgebra.condτ_rel
 
 -- Roby, lemma 7
@@ -521,7 +523,7 @@ theorem condQ_and_condTFree_imply_condT (A : Type _) [CommRing A] (hQ : CondQ A)
 
 -- Roby, lemma 8
 theorem condT_and_condD_imply_cond_D' (A : Type _) [CommRing A] [DecidableEq A]
-    (R : Type _) [CommRing R]  [DecidableEq R] [Algebra A R] (hT : CondT A) (hD : CondD A) : 
+    (R : Type _) [CommRing R]  [DecidableEq R] [Algebra A R] (hT : CondT A) (hD : CondD A) :
     CondD R :=
   sorry
 #align divided_power_algebra.cond_T_and_cond_D_imply_cond_D'
@@ -532,7 +534,7 @@ theorem condT_and_condD_imply_cond_D' (A : Type _) [CommRing A] [DecidableEq A]
 theorem condT_implies_cond_T'_free (A : Type _) [CommRing A] (R : Type _) [CommRing R] [Algebra A R]
     (hA : CondT A) : CondTFree R :=
   sorry
-#align divided_power_algebra.cond_T_implies_cond_T'_free 
+#align divided_power_algebra.cond_T_implies_cond_T'_free
   DividedPowerAlgebra.condT_implies_cond_T'_free
 
 -- Roby, lemma 11
@@ -596,7 +598,7 @@ open DividedPowerAlgebra
 
 -- namespace divided_power_algebra
 -- Part of Roby65 Thm 1
-def dividedPowers' (A : Type u) [CommRing A] [DecidableEq A] (M : Type u) [AddCommGroup M] 
+def dividedPowers' (A : Type u) [CommRing A] [DecidableEq A] (M : Type u) [AddCommGroup M]
     [Module A M] : DividedPowers (augIdeal A M) :=
   sorry --(roby_D A M).some
 #align divided_power_algebra.divided_powers' DividedPowerAlgebra.dividedPowers'
@@ -606,7 +608,7 @@ theorem dpow_ι (A : Type _) [CommRing A] [DecidableEq A] (M : Type _) [AddCommG
   sorry --(roby_D A M).choose_spec n x
 #align divided_power_algebra.dpow_ι DividedPowerAlgebra.dpow_ι
 
-theorem dp_comp (A : Type _) [CommRing A] [DecidableEq A] (M : Type _) [AddCommGroup M] [Module A M] 
+theorem dp_comp (A : Type _) [CommRing A] [DecidableEq A] (M : Type _) [AddCommGroup M] [Module A M]
     (x : M) {n : ℕ} (m : ℕ) (hn : n ≠ 0) :
     dpow (dividedPowers' A M) m (dp A n x) = ↑(mchoose m n) * dp A (m * n) x := by
   sorry --erw [← (roby_D A M).choose_spec, dpow_comp _ m hn (ι_mem_aug_ideal A M x), dpow_ι]
@@ -678,9 +680,9 @@ end DividedPowerAlgebra
 
 end Roby
 
-/- 
+/-
 and a divided power structure on that ideal such that
-dpow R n (ι R x) = mk_alg_hom R (rel R M) (X (x, n)) 
+dpow R n (ι R x) = mk_alg_hom R (rel R M) (X (x, n))
 
 (x,n) represents dpow n x
 dpow m (x,n) should be dpow m (dpow n x) = (mchoose m n) dpow (m*n) x
@@ -688,12 +690,12 @@ An element x in divided_power_algebra R M takes the form
 mk_alg_hom R (rel R M) (P)
 where P is a sum of monomials  a * (m,n)   : m ∈ M, n ∈ ℕ
 define
-dpow k x = sum products a ^ kᵢ * dpow (mchoose kᵢ nᵢ (mᵢ,nᵢ * kᵢ)) 
+dpow k x = sum products a ^ kᵢ * dpow (mchoose kᵢ nᵢ (mᵢ,nᵢ * kᵢ))
 where the sum is over functions → ℕ, with sum k
 -/
--- Prove that it is unique… 
+-- Prove that it is unique…
 /- Introduce notation ?
 Here : x ^ [n] = mk_alg_hom R _ (X (x, n))
-In general, x ^ [n]  for dpow n x ? 
+In general, x ^ [n]  for dpow n x ?
 
 -/
