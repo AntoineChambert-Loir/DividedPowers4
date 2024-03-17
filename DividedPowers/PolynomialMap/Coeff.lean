@@ -280,7 +280,7 @@ theorem ground_image_eq_coeff_sum_one (m : M) (f : PolynomialMap R M N) (r : R) 
     intro i _
     simp only [Finset.univ_unique, const_apply, Finset.prod_singleton]
     rfl
-  simp only [Finset.univ_unique, const_apply, Finset.sum_const, Finset.card_singleton, one_smul]
+  simp only [Finset.univ_unique, const_apply, Finset.sum_const, Finset.card_singleton, _root_.one_smul]
 
 theorem ground_image_eq_coeff_sum_two
     (r₁ r₂ : R) (m₁ m₂ : M) (f : PolynomialMap R M N) :
@@ -420,7 +420,7 @@ theorem coeff_of_finsupp_polynomialMap [DecidableEq ι]
   simp only [LinearForm.baseChange_apply_tmul]
   rw [Basis.coord_apply, Basis.repr_self, Finsupp.single_apply]
   rw [if_neg hij]
-  simp only [zero_smul, MulZeroClass.mul_zero]
+  simp only [_root_.zero_smul, MulZeroClass.mul_zero]
 #align polynomial_map.coeff_of_finsupp_polynomial_map PolynomialMap.coeff_of_finsupp_polynomialMap
 
 theorem finsupp_polynomialMap_of_coeff [DecidableEq ι]
