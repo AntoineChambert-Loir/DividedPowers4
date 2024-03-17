@@ -140,8 +140,8 @@ open MvPolynomial
 of maps R ⊗[A] M → R ⊗[A] N, for all A-algebras R -/
 @[ext]
 structure PolynomialMap (R : Type u) [CommRing R]
-    (M : Type _) [AddCommGroup M] [Module R M]
-    (N : Type _) [AddCommGroup N] [Module R N] where
+    (M : Type*) [AddCommGroup M] [Module R M]
+    (N : Type*) [AddCommGroup N] [Module R N] where
   toFun' (S : Type u) [CommRing S] [Algebra R S] : S ⊗[R] M → S ⊗[R] N
   isCompat' {S : Type u} [CommRing S] [Algebra R S]
     {S' : Type u} [CommRing S'] [Algebra R S'] (φ : S →ₐ[R] S') :
@@ -152,8 +152,9 @@ namespace PolynomialMap
 
 section Apply
 
-variable {R : Type u} {M N : Type _} [CommRing R]
-  [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
+variable {R : Type u} [CommRing R]
+  {M : Type*} [AddCommGroup M] [Module R M]
+  {N : Type*} [AddCommGroup N] [Module R N]
 
 /-- The map M → N associated with a PolynomialMap R M N (essentially, toFun' R)-/
 noncomputable def ground (f : PolynomialMap R M N) : M → N :=
@@ -181,7 +182,21 @@ end Apply
 section Module
 
 variable {R : Type u} [CommRing R]
-  {M N : Type _} [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
+  {M : Type*} [AddCommGroup M] [Module R M]
+  {N : Type*} [AddCommGroup N] [Module R N]
+
+instance : Zero (PolynomialMap R M N) :=
+  ⟨{  toFun' := fun _ => 0
+      isCompat' := fun _ => rfl }⟩
+
+@[simp]
+theorem zero_def (S : Type u) [CommRing S] [Algebra R S] :
+    (0 : PolynomialMap R M N).toFun' S = 0 :=
+  rfl
+#align polynomial_map.zero_def PolynomialMap.zero_def
+
+instance : Inhabited (PolynomialMap R M N) :=
+  ⟨Zero.zero⟩
 
 noncomputable def add (f g : PolynomialMap R M N) : PolynomialMap R M N
     where
@@ -206,19 +221,6 @@ theorem add_def_apply (f g : PolynomialMap R M N)
   (f + g).toFun' S m = f.toFun' S m + g.toFun' S m := rfl
 #align polynomial_map.add_def_apply PolynomialMap.add_def_apply
 
-instance : Zero (PolynomialMap R M N) :=
-  ⟨{  toFun' := fun _ => 0
-      isCompat' := fun _ => rfl }⟩
-
-@[simp]
-theorem zero_def (S : Type u) [CommRing S] [Algebra R S] :
-    (0 : PolynomialMap R M N).toFun' S = 0 :=
-  rfl
-#align polynomial_map.zero_def PolynomialMap.zero_def
-
-instance : Inhabited (PolynomialMap R M N) :=
-  ⟨Zero.zero⟩
-
 noncomputable def neg (f : PolynomialMap R M N) : PolynomialMap R M N where
   toFun' S _ _ := - f.toFun' S
   isCompat' φ := by
@@ -233,16 +235,6 @@ theorem neg_def (f : PolynomialMap R M N)
     (S : Type u) [CommRing S] [Algebra R S] :
     (-f).toFun' S = - f.toFun' S := rfl
 
-instance addCommGroup : AddCommGroup (PolynomialMap R M N) where
-  add_assoc f g h := by ext; simp only [add_def, add_assoc]
-  zero_add f := by ext; simp only [add_def, zero_add, zero_def]
-  add_zero f :=by ext; simp only [add_def, add_zero, zero_def]
-  nsmul := nsmulRec
-  zsmul := zsmulRec
-  add_left_neg f := by
-    ext; simp only [add_def_apply, neg_def, Pi.neg_apply, add_left_neg, zero_def, Pi.zero_apply]
-  add_comm f g := by ext; simp only [add_def, add_comm]
-#align polynomial_map.add_comm_monoid PolynomialMap.addCommGroup
 
 def smul (r : R) (f : PolynomialMap R M N) : PolynomialMap R M N where
   toFun' S _ _ := r • f.toFun' S
@@ -255,24 +247,74 @@ instance hasSmul : SMul R (PolynomialMap R M N) :=
   ⟨smul⟩
 #align polynomial_map.has_smul PolynomialMap.hasSmul
 
-theorem smul_def (f : PolynomialMap R M N)
-    (r : R) (S : Type u) [CommRing S] [Algebra R S] :
+theorem smul_def (r : R) (f : PolynomialMap R M N)
+    (S : Type u) [CommRing S] [Algebra R S] :
     (r • f).toFun' S = r • f.toFun' S :=
   rfl
 #align polynomial_map.smul_def PolynomialMap.smul_def
+
+theorem smul_def_apply (r : R) (f : PolynomialMap R M N)
+    (S : Type u) [CommRing S] [Algebra R S]
+    (m : S ⊗[R] M):
+    (r • f).toFun' S m = r • f.toFun' S m :=
+  rfl
+
+theorem add_smul (a b : R) (f : PolynomialMap R M N) :
+    (a + b) • f = a • f + b • f := by
+  ext S _ _ x
+  simp only [add_def, smul_def, _root_.add_smul]
+
+theorem zero_smul (f : PolynomialMap R M N) :
+    (0 : R) • f = 0 := by
+  ext S _ _ x
+  simp only [smul_def, _root_.zero_smul, zero_def, Pi.zero_apply]
+
+theorem one_smul (f : PolynomialMap R M N) :
+    (1 : R) • f = f := by
+  ext S _ _ x
+  simp only [smul_def, Pi.smul_apply, _root_.one_smul]
 
 instance : MulAction R (PolynomialMap R M N) where
   one_smul f := by ext; simp only [smul_def, one_smul]
   mul_smul a b f := by ext; simp only [smul_def, mul_smul]
 
-instance : DistribMulAction R (PolynomialMap R M N) where
+example (f : PolynomialMap R M N) (n : ℕ):
+    (((n.succ : ℕ) : ℤ) : R) • f = f + (((n : ℕ): ℤ) : R) • f
+    := by
+  simp only [Nat.cast_succ, Int.cast_add, Int.cast_ofNat, Int.cast_one]
+  rw [add_comm _ 1, add_smul, one_smul]
+
+
+instance addCommGroup : AddCommGroup (PolynomialMap R M N) where
+  add_assoc f g h := by ext; simp only [add_def, add_assoc]
+  zero_add f := by ext; simp only [add_def, zero_add, zero_def]
+  add_zero f := by ext; simp only [add_def, add_zero, zero_def]
+  nsmul n f := (n : R) • f
+  nsmul_zero f := by simp only [Nat.cast_zero, zero_smul f]
+  nsmul_succ n f := by
+    simp only [add_comm n 1, Nat.cast_add, add_smul, Nat.cast_one, one_smul]
+  zsmul n f := (n : R) • f
+  zsmul_zero' f := by simp only [Int.cast_zero, zero_smul f]
+  zsmul_succ' n f := by
+    simp only [Int.ofNat_eq_coe, Nat.cast_succ, Int.cast_add, Int.cast_ofNat, Int.cast_one] -- , add_comm _ 1, add_smul, one_smul]
+    rw [add_comm _ 1, add_smul, one_smul]
+  zsmul_neg' n f := by
+    ext
+    simp only [Int.cast_negSucc, Nat.cast_add, Nat.cast_one, neg_add_rev, smul_def, Pi.smul_apply,
+      Nat.cast_succ, Int.cast_add, Int.cast_ofNat, Int.cast_one, neg_def, Pi.neg_apply]
+    simp only [_root_.add_smul, neg_smul, _root_.one_smul, neg_add_rev]
+  add_left_neg f := by
+    ext
+    simp only [add_def_apply, neg_def, Pi.neg_apply, add_left_neg, zero_def, Pi.zero_apply]
+  add_comm f g := by ext; simp only [add_def, add_comm]
+#align polynomial_map.add_comm_monoid PolynomialMap.addCommGroup
+
+instance instModule : Module R (PolynomialMap R M N) where
   smul_zero a := rfl
   smul_add a f g := by ext; simp only [smul_def, add_def, smul_add]
-
-instance module : Module R (PolynomialMap R M N) where
-  add_smul a b f := by ext; simp only [smul_def, add_def, add_smul]
-  zero_smul f := by ext; simp only [smul_def, zero_smul] ; rfl
-#align polynomial_map.module PolynomialMap.module
+  add_smul := add_smul
+  zero_smul := zero_smul
+#align polynomial_map.module PolynomialMap.instModule
 
 end Module
 
