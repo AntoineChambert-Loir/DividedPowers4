@@ -231,8 +231,8 @@ lemma isHomogeneousOfDegree_coeff {f : PolynomialMap R M N} {p : ℕ}
   rw [Finsupp.sum_eq_single d] at hφ
   rw [Finsupp.sum_eq_single d] at hφ
   simp [φ, lcoeff] at hφ
-  rw [he, MvPolynomial.coeff_monomial, if_pos, one_smul] at hφ
-  rw [he, MvPolynomial.coeff_monomial, if_neg, zero_smul] at hφ
+  rw [he, MvPolynomial.coeff_monomial, if_pos, _root_.one_smul] at hφ
+  rw [he, MvPolynomial.coeff_monomial, if_neg, _root_.zero_smul] at hφ
   exact hφ
   · rw [eq_comm]
     intro hd'
@@ -242,7 +242,7 @@ lemma isHomogeneousOfDegree_coeff {f : PolynomialMap R M N} {p : ℕ}
   · simp [Finsupp.sum_of_support_subset _ (Finset.subset_univ d.support)]
   · intro b _ hb'
     simp [φ, lcoeff]
-    rw [he, MvPolynomial.coeff_monomial, if_neg, zero_smul]
+    rw [he, MvPolynomial.coeff_monomial, if_neg, _root_.zero_smul]
     intro h
     apply hb'
     ext i
@@ -251,7 +251,7 @@ lemma isHomogeneousOfDegree_coeff {f : PolynomialMap R M N} {p : ℕ}
   · simp
   · intro b _ hb'
     simp [φ, lcoeff]
-    rw [he, MvPolynomial.coeff_monomial, if_neg, zero_smul]
+    rw [he, MvPolynomial.coeff_monomial, if_neg, _root_.zero_smul]
     intro h
     apply hb'
     ext i
@@ -317,7 +317,7 @@ noncomputable def ofConstantHom : N →ₗ[R] (grade 0 : Submodule R (Polynomial
     property := by
       simp only [grade, Submodule.mem_mk, AddSubmonoid.mem_mk, AddSubsemigroup.mem_mk]
       intro S _ _ r sm
-      simp only [pow_zero, one_smul]
+      simp only [pow_zero, _root_.one_smul]
       rfl }
   map_add'  := fun x y ↦ by
     simp only [AddSubmonoid.mk_add_mk, Subtype.mk.injEq, ofConstant]
@@ -344,8 +344,8 @@ noncomputable def ofConstantEquiv :
     simp [ofConstantHom, ground]
     ext S _ _ m
     conv_rhs =>
-      rw [← one_smul (M := S) (f.toFun' S m), ← pow_zero 0, ← hf S _ m]
-      rw [zero_smul]
+      rw [← _root_.one_smul (M := S) (f.toFun' S m), ← pow_zero 0, ← hf S _ m]
+      rw [_root_.zero_smul]
     have := f.isCompat_apply (algebraMap' R S) 0
     simp only [map_zero] at this
     simp [← this, ofConstant, TensorProduct.includeRight_lid, isCompat_apply'] }
@@ -432,13 +432,13 @@ theorem isHomogeneousOfDegreeOne_coeff_single {f : PolynomialMap R M N}
   rw [Finsupp.sum_of_support_subset _ (isHomogeneousOfDegreeOne_coeff_support_le hf m)]
   simp only [Finset.sum_map, Function.Embedding.coeFn_mk]
   rw [Finset.sum_eq_single i]
-  · rw [Finset.prod_eq_single i, Pi.single_eq_same, one_pow, one_smul]
+  · rw [Finset.prod_eq_single i, Pi.single_eq_same, one_pow, _root_.one_smul]
     intro j _ hj
     rw [Finsupp.single_eq_of_ne hj.symm, pow_zero]
     intro hi
     simp only [Finset.mem_univ, not_true_eq_false] at hi
   · intro j _ hj
-    rw [Finset.prod_eq_zero (a := j), zero_smul]
+    rw [Finset.prod_eq_zero (a := j), _root_.zero_smul]
     exact Finset.mem_univ _
     rw [Finsupp.single_eq_same, Pi.single_eq_of_ne hj, pow_one]
   · simp
@@ -483,7 +483,7 @@ theorem ofLinearMap_coeff_single (u : M →ₗ[R] N)
   rw [Finset.sum_eq_single i, MvPolynomial.scalarRTensor_apply_tmul_apply]
   simp
   · intro b _ hb
-    rw [MvPolynomial.scalarRTensor_apply_tmul_apply, MvPolynomial.coeff_X', if_neg, zero_smul]
+    rw [MvPolynomial.scalarRTensor_apply_tmul_apply, MvPolynomial.coeff_X', if_neg, _root_.zero_smul]
     rw [Finsupp.single_left_inj]; exact hb
     norm_num
   · intro j
@@ -532,15 +532,15 @@ noncomputable def toLinearMap (f : (grade 1 : Submodule R (PolynomialMap R M N))
   map_add' := fun m n => by
     obtain ⟨f, hf⟩ := f; dsimp only
     rw [mem_grade, isHomogeneousOfDegree_of_coeff_iff] at hf
-    have h := fun (r s : R) ↦ ground_image_eq_coeff_sum_two r s m n f
-    have h11 := h 1 1; simp only [one_smul] at h11
-    have h10 := h 1 0; simp only [one_smul, zero_smul, add_zero] at h10
-    have h01 := h 0 1; simp only [one_smul, zero_smul, zero_add] at h01
+    let h := fun (r s : R) ↦ ground_image_eq_coeff_sum_two r s m n f
+    have h11 := h 1 1; simp only [_root_.one_smul] at h11
+    have h10 := h 1 0; simp only [_root_.one_smul, _root_.zero_smul, _root_.add_zero] at h10
+    have h01 := h 0 1; simp only [_root_.one_smul, _root_.zero_smul, _root_.zero_add] at h01
     rw [h01, h10, h11]
     rw [← Finsupp.sum_add]
     apply Finsupp.sum_congr
     intro x hx
-    rw [← add_smul]
+    rw [← _root_.add_smul]
     apply congr_arg₂ _ _ rfl
     simp
     refine (zero_pow_add_zero_pow _ _ ?_).symm
