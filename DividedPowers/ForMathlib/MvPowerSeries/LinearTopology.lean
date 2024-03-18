@@ -210,6 +210,23 @@ lemma has_submodules_basis_topology' [DiscreteTopology α] :
   { rintro ⟨d, _, hd⟩
     exact (@nhds _ τ 0).sets_of_superset  (basis_mem_nhds_zero σ α d) hd }
 
+lemma mem_nhds_zero_iff [DiscreteTopology α] (U : Set (MvPowerSeries σ α)) :
+    U ∈ nhds 0 ↔ ∃ i, {b | b ∈ basis σ α i} ⊆ U := by
+  let τ := MvPowerSeries.topologicalSpace σ α
+  constructor
+  · rw [nhds_pi, Filter.mem_pi]
+    rintro ⟨D, hD, t, ht, ht'⟩
+    use Finset.sup hD.toFinset id
+    apply subset_trans _ ht'
+    intros f hf e he
+    --change f ∈ basis σ α _ at hf
+    rw [← coeff_eq_apply f e, hf e]
+    · exact mem_of_mem_nhds (ht e)
+    · rw [← id.def e]
+      exact Finset.le_sup ((Set.Finite.mem_toFinset _).mpr he)
+  · rintro ⟨d, hd⟩
+    exact (@nhds _ τ 0).sets_of_superset (basis_mem_nhds_zero σ α d) hd
+
 -- Alternative proof
 lemma has_submodules_basis_topology [DiscreteTopology α] :
     MvPowerSeries.topologicalSpace σ α = (toSubmodulesBasis σ α).topology := by
@@ -227,20 +244,7 @@ lemma has_submodules_basis_topology [DiscreteTopology α] :
   intro s
   rw [(RingSubgroupsBasis.hasBasis_nhds (toRingSubgroupsBasis σ α) 0).mem_iff]
   simp only [sub_zero, Submodule.mem_toAddSubgroup, true_and]
-  constructor
-  · rw [nhds_pi, Filter.mem_pi]
-    rintro ⟨D, hD, t, ht, ht'⟩
-    use Finset.sup hD.toFinset id
-    apply subset_trans _ ht'
-    intros f hf e he
-    --change f ∈ basis σ α _ at hf
-    rw [← coeff_eq_apply f e, hf e]
-    · exact mem_of_mem_nhds (ht e)
-    · rw [← id.def e]
-      exact Finset.le_sup ((Set.Finite.mem_toFinset _).mpr he)
-  · rintro ⟨d, hd⟩
-    exact (@nhds _ τ 0).sets_of_superset  (basis_mem_nhds_zero σ α d) hd
-
+  exact mem_nhds_zero_iff σ α s
 
 /- -- TODO : problèmes d'univers
 
