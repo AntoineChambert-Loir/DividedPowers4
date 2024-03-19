@@ -11,27 +11,13 @@ We follow Bourbaki, Algèbre, chap. 4, §4, n° 3 -/
 /- # Substitutions in power series
 
 We follow Bourbaki, Algèbre, chap. 4, §4, n° 3 -/
-variable (α : Type _) [CommRing α]
 
-variable (R : Type _) [CommRing R] [Algebra α R]
-
--- variables {ι : Type*} [nonempty ι] {J : ι → ideal R} (hJ : ideals_basis J)
--- instance zz1 : topological_space R := ideals_basis.topology hJ
--- instance zz2 := ideals_basis.to_topological_ring hJ
-variable [TopologicalSpace R] [TopologicalRing R]
-
-variable [TopologicalSpace α] [TopologicalRing α]
-
-variable (σ : Type _)
+variable (σ : Type _) (α : Type _) [CommRing α] (R : Type _) [CommRing R] [Algebra α R]
+  [TopologicalSpace R] [TopologicalRing R] [TopologicalSpace α] [TopologicalRing α]
 
 section
 
 open MvPowerSeries
-
--- set_option trace.class_instances true
-example {α β γ : Type _} (φ : α → β) (ψ : β → γ) (f : Filter α) (g : Filter β) (h : Filter γ)
-    (hφ : Filter.Tendsto φ f g) (hψ : Filter.Tendsto ψ g h) : Filter.Tendsto (ψ ∘ φ) f h := by
-  refine' Filter.Tendsto.comp hψ hφ
 
 /-- Bourbaki, Algèbre, chap. 4, §4, n°3, Prop. 4 (i) (a) -/
 theorem Continuous.tendsto_apply_pow_zero_of_constantCoeff_zero {φ : MvPowerSeries σ α →ₐ[α] R}
@@ -126,8 +112,6 @@ end MvPolynomial
 
 section foo
 
-namespace MvPolynomial
-
 variable (Y : σ → R)
     (hY_pow : ∀ s : σ, Filter.Tendsto (fun n : ℕ => (Y s ^ n)) Filter.atTop (nhds 0))
     (hY_cof : ∀ _ : σ, Filter.Tendsto (fun s : σ => (Y s)) Filter.cofinite (nhds 0))
@@ -135,7 +119,9 @@ variable (Y : σ → R)
     [LinearTopology R]
     [CompleteSpace R] [T2Space R]
 
-def foo_ψ : MvPolynomial σ α →ₐ[α] R :=
+namespace MvPolynomial
+
+def aeval_on : MvPolynomial σ α →ₐ[α] R :=
   { toFun     := fun f => MvPolynomial.aeval Y f
     map_one'  := by simp only [map_one]
     map_mul'  := by simp only [map_mul, forall_const]
@@ -143,7 +129,7 @@ def foo_ψ : MvPolynomial σ α →ₐ[α] R :=
     map_add'  := by simp only [map_add, forall_const]
     commutes' := by simp only [AlgHom.commutes, forall_const] }
 
-local instance topologicalSpace : TopologicalSpace (MvPolynomial σ α) :=
+/- local  -/instance topologicalSpace : TopologicalSpace (MvPolynomial σ α) :=
   (idealIsBasis σ α).topology
   --TopologicalSpace.induced MvPolynomial.toMvPowerSeries (MvPowerSeries.topologicalSpace σ α
 
@@ -173,16 +159,17 @@ theorem induced_topologicalRing : @TopologicalRing (MvPolynomial σ α)
 
 -- Suggestion : endow MvPolynomial with the linear topology defined by
 -- the “same” Ideal.IsBasis and prove :
-def foo_di : DenseInducing (@MvPolynomial.toMvPowerSeries σ α _) := {
+def toMvPowerSeries_denseInducing [DiscreteTopology α] :
+    DenseInducing (@MvPolynomial.toMvPowerSeries σ α _) := {
   induced := by
-    let τ := MvPolynomial.topologicalSpace α σ
+    let τ := MvPolynomial.topologicalSpace σ α
     let τ' := TopologicalSpace.induced toMvPowerSeries (MvPowerSeries.topologicalSpace σ α)
     rw [TopologicalSpace.eq_iff_nhds_eq]
     suffices ∀ s, s ∈ @nhds _ τ 0 ↔ s ∈ @nhds _ τ' 0 by
     -- mv nhds from 0 to a
       intros S f _hfS -- _hfS is never used
       rw [← add_zero f, @mem_nhds_add_iff _ _ τ,
-        @mem_nhds_add_iff _ _ τ' (induced_topologicalRing α σ).to_topologicalAddGroup]
+        @mem_nhds_add_iff _ _ τ' (induced_topologicalRing σ α).to_topologicalAddGroup]
       exact this _
     -- Nhds of zero agree
     intro S
@@ -231,31 +218,38 @@ def foo_di : DenseInducing (@MvPolynomial.toMvPowerSeries σ α _) := {
       · simp only [add_neg_cancel_left]
     · simp only [Set.mem_range, coe_inj, exists_eq] }
 
-lemma foo_ψ_continuous : Continuous (foo_ψ α R σ Y) := by
+lemma aeval_on_continuous : Continuous (aeval_on σ α R Y) := by
     rw [continuous_def]
     intros U hU
     rw [isOpen_iff_mem_nhds]
     intros f hf
-    rw [foo_ψ]
+    rw [aeval_on]
     simp only [AlgHom.mk_coe]
     sorry
 
-noncomputable def foo_φ : MvPowerSeries σ α →ₐ[α] R :=
-  { toFun     := DenseInducing.extend (foo_di α σ) (foo_ψ α R σ Y)
-    map_one'  := by rw [← MvPolynomial.coe_one, DenseInducing.extend_eq (foo_di α σ)
-      (foo_ψ_continuous α R σ Y), map_one]
+end MvPolynomial
+
+namespace MvPowerSeries
+
+open MvPolynomial
+
+noncomputable def aeval_on [DiscreteTopology α] : MvPowerSeries σ α →ₐ[α] R :=
+  { toFun     := DenseInducing.extend (toMvPowerSeries_denseInducing σ α)
+      (MvPolynomial.aeval_on σ α R Y)
+    map_one'  := by rw [← MvPolynomial.coe_one, DenseInducing.extend_eq
+      (toMvPowerSeries_denseInducing σ α) (aeval_on_continuous σ α R Y), map_one]
     map_zero' := by
-      rw [← MvPolynomial.coe_zero]
-      simp only [AlgHom.mk_coe]
-      erw [DenseInducing.extend_eq (foo_di α σ) (foo_ψ_continuous α R σ Y), map_zero]
+      simp only [← MvPolynomial.coe_zero]
+      rw [DenseInducing.extend_eq (toMvPowerSeries_denseInducing σ α)
+        (aeval_on_continuous σ α R Y), map_zero]
     map_mul'  := fun f g => by
       /- set p : (MvPowerSeries σ α) → (MvPowerSeries σ α) → Prop := fun f g =>
-        DenseInducing.extend (foo_di α σ) (⇑(foo_ψ α R σ Y)) (f * g) =
-          DenseInducing.extend (foo_di α σ) (⇑(foo_ψ α R σ Y)) f *
-          DenseInducing.extend (foo_di α σ) (⇑(foo_ψ α R σ Y)) g with hp -/
+        DenseInducing.extend (toMvPowerSeries_denseInducing σ α) (⇑(aeval_on σ α R Y)) (f * g) =
+          DenseInducing.extend (toMvPowerSeries_denseInducing σ α) (⇑(aeval_on σ α R Y)) f *
+          DenseInducing.extend (toMvPowerSeries_denseInducing σ α) (⇑(aeval_on σ α R Y)) g with hp -/
       --simp only [AlgHom.mk_coe]
       apply @DenseRange.induction_on₂ (MvPolynomial σ α) (MvPowerSeries σ α) _
-        (@MvPolynomial.toMvPowerSeries σ α _) _ (foo_di α σ).dense _ _ f g
+        (@MvPolynomial.toMvPowerSeries σ α _) _ (toMvPowerSeries_denseInducing σ α).dense _ _ f g
       · /- let τ := MvPowerSeries.topologicalSpace σ α
         have tg := @TopologicalRing.to_topologicalAddGroup _ _ τ (MvPowerSeries.topologicalRing σ α)
         rw [← isOpen_compl_iff]
@@ -266,7 +260,8 @@ noncomputable def foo_φ : MvPowerSeries σ α →ₐ[α] R :=
         sorry
       · intro a b
         rw [← coe_mul]
-        simp only [DenseInducing.extend_eq (foo_di α σ) (foo_ψ_continuous α _ σ _), map_mul]
+        simp only [DenseInducing.extend_eq (toMvPowerSeries_denseInducing σ α)
+          (aeval_on_continuous σ α _ _), map_mul]
 
     map_add'  := sorry
     commutes' := fun r => by
@@ -274,72 +269,63 @@ noncomputable def foo_φ : MvPowerSeries σ α →ₐ[α] R :=
         rw [MvPowerSeries.algebraMap_apply]
         rw [MvPolynomial.algebraMap_apply]
         simp only [Algebra.id.map_eq_id, RingHom.id_apply, coe_C]
-      simp only [h, DenseInducing.extend_eq (foo_di α σ) (foo_ψ_continuous α _ σ _)]
-      simp only [foo_ψ, AlgHom.mk_coe, AlgHom.commutes] }
+      simp only [h, DenseInducing.extend_eq (toMvPowerSeries_denseInducing σ α)
+        (aeval_on_continuous σ α _ _)]
+      simp only [MvPolynomial.aeval_on, AlgHom.mk_coe, AlgHom.commutes] }
 
-theorem foo_φ_coe :
-    foo_φ α R σ Y = DenseInducing.extend (foo_di α σ)  (foo_ψ α R σ Y) := rfl
+theorem aeval_on_coe [DiscreteTopology α] : aeval_on σ α R Y =
+    DenseInducing.extend (toMvPowerSeries_denseInducing σ α) (MvPolynomial.aeval_on σ α R Y) := rfl
 
-theorem foo_Continuous_φ : Continuous (foo_φ α R σ Y) := by
-  rw [foo_φ_coe]
-  apply DenseInducing.continuous_extend (foo_di α σ)
+theorem aeval_on_continuous [DiscreteTopology α] : Continuous (aeval_on σ α R Y) := by
+  rw [aeval_on_coe]
+  apply DenseInducing.continuous_extend (toMvPowerSeries_denseInducing σ α)
   intro f
-  use (foo_φ α R σ Y f)
+  use (aeval_on σ α R Y f)
   rw [tendsto_nhds]
   intros U hUopen hUf
   rw [Filter.mem_comap]
-  use (foo_φ α R σ Y ⁻¹' U)
+  use (aeval_on σ α R Y ⁻¹' U)
   constructor
   · rw [mem_nhds_iff]
-    have := MvPolynomial.toMvPowerSeries ⁻¹' (⇑(foo_φ α R σ Y) ⁻¹' U)
+    set S := MvPolynomial.toMvPowerSeries ⁻¹' (⇑(aeval_on σ α R Y) ⁻¹' U)
     sorry
   · intro P hP
-    rw [Set.mem_preimage, foo_φ_coe, Set.mem_preimage,
-      DenseInducing.extend_eq _ (foo_ψ_continuous α R σ Y)] at hP
+    rw [Set.mem_preimage, aeval_on_coe, Set.mem_preimage,
+      DenseInducing.extend_eq _ (MvPolynomial.aeval_on_continuous σ α R Y)] at hP
     exact hP
 
-theorem foo_φ_apply_X (s : σ) : (foo_φ α R σ Y) (MvPowerSeries.X s) = Y s := by
-  rw [foo_φ_coe, ← MvPolynomial.coe_X,
-    DenseInducing.extend_eq _ (foo_ψ_continuous _ _ _ _ ) (MvPolynomial.X s)]
-  simp only [foo_ψ, AlgHom.mk_coe, MvPolynomial.aeval_X]
+theorem aeval_on_apply_X [DiscreteTopology α] (s : σ) :
+    (aeval_on σ α R Y) (MvPowerSeries.X s) = Y s := by
+  rw [aeval_on_coe, ← MvPolynomial.coe_X,
+    DenseInducing.extend_eq _ (MvPolynomial.aeval_on_continuous _ _ _ _ ) (MvPolynomial.X s)]
+  simp only [MvPolynomial.aeval_on, AlgHom.mk_coe, MvPolynomial.aeval_X]
 
 variable {Y}
 
 /-- Bourbaki, Algèbre, chap. 4, §4, n°3, Prop. 4 (ii) - Existence -/
-theorem foo :
-    ∃ (φ : MvPowerSeries σ α →ₐ[α] R) (_ : Continuous φ), ∀ (s : σ), φ (MvPowerSeries.X s) = Y s := by
-  use foo_φ α R σ Y, foo_Continuous_φ α R σ Y, fun s ↦ foo_φ_apply_X α R σ Y s
-
+theorem exists_continuous_aeval_on [DiscreteTopology α] :
+    ∃ (φ : MvPowerSeries σ α →ₐ[α] R) (_ : Continuous φ),
+      ∀ (s : σ), φ (MvPowerSeries.X s) = Y s := by
+  use aeval_on σ α R Y, aeval_on_continuous σ α R Y, fun s ↦ aeval_on_apply_X σ α R Y s
 
 /-- Bourbaki, Algèbre, chap. 4, §4, n°3, Prop. 4 (ii) - uniqueness -/
-theorem foo_unique (φ : MvPowerSeries σ α →ₐ[α] R) (hφ : Continuous φ)
-      (hφ' : ∀ (s : σ), φ (MvPowerSeries.X s) = Y s) (f : MvPowerSeries σ α) :
-    φ f = foo_φ α R σ Y f := by
-  sorry
- /-
-  set ψ := (foo α R σ hY_pow hY_cof ι).choose with hψ
-  letI : TopologicalSpace (MvPolynomial σ α) := TopologicalSpace.induced
-    MvPolynomial.toMvPowerSeries (MvPowerSeries.topologicalSpace σ α)
-  haveI di : DenseInducing (@MvPolynomial.toMvPowerSeries σ α _) := {
-    induced := rfl
-    dense   := by
-      rw [DenseRange, Dense]
-      sorry }
+theorem continuous_aeval_on_unique [DiscreteTopology α] (φ : MvPowerSeries σ α →ₐ[α] R)
+    (hφ : Continuous φ) (hφ' : ∀ (s : σ), φ (MvPowerSeries.X s) = Y s) (f : MvPowerSeries σ α) :
+    φ f = aeval_on σ α R Y f := by
+  set ψ := aeval_on σ α R Y
   have hφψ : ∀ (P : MvPolynomial σ α), φ P = ψ P := by
     intro P
     apply MvPolynomial.induction_on P _ _ _
     · intros a
-      rw [MvPolynomial.coe_C]
-      sorry
+      simp only [MvPolynomial.coe_C, MvPowerSeries.c_eq_algebraMap, AlgHom.commutes]
     · intros f g hf hg
       rw [MvPolynomial.coe_add, map_add, map_add, hf, hg]
     · intros f n hf
-      rw [MvPolynomial.coe_mul, MvPolynomial.coe_X, map_mul, map_mul, hf, hφ',
-        (foo α R σ hY_pow hY_cof ι).choose_spec.2]
-  ext x
-  rw [← DenseInducing.extend_unique di hφψ hφ]
--/
+      rw [MvPolynomial.coe_mul, MvPolynomial.coe_X, map_mul, map_mul, hf, hφ', aeval_on_apply_X]
+  rw [← DenseInducing.extend_unique (toMvPowerSeries_denseInducing σ α) (fun P => rfl)
+    (aeval_on_continuous σ α R _),
+    ← DenseInducing.extend_unique (toMvPowerSeries_denseInducing σ α) hφψ hφ]
 
-end MvPolynomial
+end MvPowerSeries
 
 end foo
