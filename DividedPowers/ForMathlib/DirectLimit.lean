@@ -2,9 +2,9 @@ import Mathlib.RingTheory.FiniteType
 import Mathlib.RingTheory.Ideal.QuotientOperations
 import Mathlib.Algebra.Algebra.Subalgebra.Basic
 import Mathlib.RingTheory.TensorProduct.Basic
-import DividedPowers.PolynomialMap.Basic
---import Mathlib.Algebra.DirectLimit --AndTensorProduct
+import Mathlib.Algebra.DirectLimit
 import Mathlib.LinearAlgebra.TensorProduct.DirectLimit
+import DividedPowers.ForMathlib.TensorProductFinsupp
 
 open TensorProduct FreeAddMonoid
 
