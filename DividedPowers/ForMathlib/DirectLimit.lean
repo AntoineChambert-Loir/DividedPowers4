@@ -4,7 +4,30 @@ import Mathlib.Algebra.Algebra.Subalgebra.Basic
 import Mathlib.RingTheory.TensorProduct.Basic
 import Mathlib.Algebra.DirectLimit
 import Mathlib.LinearAlgebra.TensorProduct.DirectLimit
-import DividedPowers.ForMathlib.TensorProductFinsupp
+import DividedPowers.ForMathlib.LinearAlgebra.DirectSum.Finsupp
+import DividedPowers.ForMathlib.LinearEquiv
+
+/- # Tensor products and finitely generated submodules
+
+* `Submodules_fg_equiv` proves that a module is the direct limit
+of its finitely generated submodules, with respect to the inclusion maps
+
+* `rTensor_fgEquiv` deduces that a tensor product `M ⊗[R] N`
+is the direct limit of the modules `P ⊗[R] N`, for all finitely generated
+submodules `P`, with respect to the maps deduced from the inclusions
+
+## TODO
+
+* Fix namespaces, add docstrings
+
+* The results are valid in the context of `AddCommMonoid M` over a `Semiring`.
+However,  tensor products in mathlib require commutativity of the scalars,
+and direct limits of modules are restricted to modules over rings.
+
+* Provide the analogous results for `lTensor`, and both sides at the same time.
+
+* Add the analogous results for algebras.
+-/
 
 open TensorProduct FreeAddMonoid
 

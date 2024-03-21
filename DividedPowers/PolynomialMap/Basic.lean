@@ -1,6 +1,8 @@
 /- Copyright ACL @ MIdFF 2024 -/
 
-import DividedPowers.ForMathlib.TensorProductFinsupp
+import DividedPowers.ForMathlib.LinearAlgebra.DirectSum.Finsupp
+import DividedPowers.ForMathlib.RingTheory.TensorProduct.Polynomial
+import DividedPowers.ForMathlib.RingTheory.TensorProduct.MvPolynomial
 import Mathlib.RingTheory.PowerSeries.Basic
 import Mathlib.RingTheory.TensorProduct.Basic
 import Mathlib.Data.MvPolynomial.Basic
