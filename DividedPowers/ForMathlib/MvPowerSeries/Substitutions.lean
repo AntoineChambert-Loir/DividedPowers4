@@ -148,8 +148,8 @@ theorem induced_topologicalRing : @TopologicalRing (MvPolynomial σ α)
     (MvPowerSeries.topologicalSpace σ α))
   { continuous_add := by
       have h : ContinuousAdd (MvPolynomial σ α) := by
-        --apply @Inducing.continuousAdd (MvPolynomial σ α) (MvPowerSeries σ α)
-          --((MvPolynomial σ α) → (MvPowerSeries σ α))
+        apply @Inducing.continuousAdd (MvPolynomial σ α) (MvPowerSeries σ α)
+          ((MvPolynomial σ α) →ₐ[α] (MvPowerSeries σ α))
         sorry
       exact h.continuous_add
       --apply Inducing.continuousAdd
@@ -189,7 +189,8 @@ def toMvPowerSeries_denseInducing [DiscreteTopology α] :
         {b | b ∈ basis σ α i} := rfl
       rw [← hi']
       exact Set.preimage_mono hi
-  dense   := by
+  dense   := MvPowerSeries.toMvPowerSeries_denseRange σ α
+  /- -- can be deleted ! by
     intro f
     rw [mem_closure_iff]
     intro S hSopen hSf
@@ -216,7 +217,7 @@ def toMvPowerSeries_denseInducing [DiscreteTopology α] :
         intros e hei
         rw [MvPowerSeries.coeff_trunc', if_pos hei, add_left_neg]
       · simp only [add_neg_cancel_left]
-    · simp only [Set.mem_range, coe_inj, exists_eq] }
+    · simp only [Set.mem_range, coe_inj, exists_eq] -/}
 
 lemma aeval_on_continuous : Continuous (aeval_on σ α R Y) := by
     rw [continuous_def]
