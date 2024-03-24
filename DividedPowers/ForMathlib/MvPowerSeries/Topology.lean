@@ -242,7 +242,7 @@ section Dense
 variable [CommRing α] [TopologicalSpace α]
 /-- The inclusion of multivariate polynomials in multivariate power series
   has dense image -/
-theorem toMvPowerSeries_denseRange :
+theorem _root_.MvPolynomial.toMvPowerSeries_denseRange :
     DenseRange (@MvPolynomial.toMvPowerSeries σ α _) := by
   intro f
   rw [mem_closure_iff_nhds, nhds_pi]

@@ -22,7 +22,7 @@ theorem TopologicalSpace.eq_iff_nhds_eq_nhds {α : Type _} (τ τ' : Topological
   constructor
   · intro h; rw [h]
   · intro h
-    apply eq_of_nhds_eq_nhds
+    apply TopologicalSpace.ext_nhds
     simp only [h, implies_true]
 
 -- TODO: This is similar to `le_iff_nhds`, do we need this variant?

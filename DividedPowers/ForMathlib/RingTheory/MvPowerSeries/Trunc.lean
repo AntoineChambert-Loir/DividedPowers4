@@ -50,8 +50,9 @@ def trunc' : MvPowerSeries σ R →+ MvPolynomial σ R where
 variable {R}
 
 theorem coeff_trunc' (m : σ →₀ ℕ) (φ : MvPowerSeries σ R) :
-    (trunc' R n φ).coeff m = if m ≤ n then coeff R m φ else 0 := by
-  classical simp [trunc', coeff_truncFun']
+    (trunc' R n φ).coeff m = if m ≤ n then coeff R m φ else 0 :=
+    -- by classical simp [trunc', coeff_truncFun']
+  coeff_truncFun' n m φ
 
 @[simp]
 theorem trunc_one' (n : σ →₀ ℕ) : trunc' R n 1 = 1 :=
@@ -78,6 +79,20 @@ theorem trunc_c (n : σ →₀ ℕ) (a : R) : trunc' R n (C σ R a) = MvPolynomi
     rw [coeff_trunc', coeff_C, MvPolynomial.coeff_C]
     split_ifs with H <;> first |rfl|try simp_all
     exfalso; apply H; subst m; exact orderBot.proof_1 n
+
+theorem coeff_mul_trunc' (n : σ →₀ ℕ) (f g : MvPowerSeries σ R)
+    {m : σ →₀ ℕ} (h : m ≤ n) :
+    ((trunc' R n f) * (trunc' R n g)).coeff m = coeff R m (f * g) := by
+  classical
+  simp only [MvPowerSeries.coeff_mul, MvPolynomial.coeff_mul]
+  apply Finset.sum_congr rfl
+  rintro ⟨i, j⟩ hij
+  simp only [mem_antidiagonal] at hij
+  rw [← hij] at h
+  simp only
+  apply congr_arg₂
+  rw [coeff_trunc', if_pos (le_trans le_self_add h)]
+  rw [coeff_trunc', if_pos (le_trans le_add_self h)]
 
 end Trunc'
 
