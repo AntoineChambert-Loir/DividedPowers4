@@ -3,7 +3,7 @@ import Mathlib.RingTheory.Nilpotent
 import Mathlib.RingTheory.PowerSeries.Basic
 import DividedPowers.ForMathlib.InfiniteSum.Basic
 import DividedPowers.ForMathlib.MvPowerSeries.Basic
-import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Trunc
+
 theorem Finset.prod_one_add {ι α : Type _} [DecidableEq ι] [CommRing α] {f : ι → α} (s : Finset ι) :
     (s.prod fun i => 1 + f i) = s.powerset.sum fun t => t.prod f := by
   simp_rw [add_comm, Finset.prod_add]
@@ -250,33 +250,6 @@ theorem tendsto_pow_of_constantCoeff_nilpotent_iff [DiscreteTopology α] (f : Mv
   MvPowerSeries.tendsto_pow_of_constantCoeff_nilpotent_iff
 
 end
-
-section Dense
-
-variable [CommRing α] [TopologicalSpace α]
-/-- The inclusion of multivariate polynomials in multivariate power series
-  has dense image -/
-theorem _root_.MvPolynomial.toMvPowerSeries_denseRange :
-    DenseRange (@MvPolynomial.toMvPowerSeries σ α _) := by
-  intro f
-  rw [mem_closure_iff_nhds, nhds_pi]
-  intro t
-  rw [Filter.mem_pi]
-  rintro ⟨I, hI, p, hp, hp_le⟩
-  obtain ⟨n, hn⟩ := hI.bddAbove
-  use f.truncFun' n
-  constructor
-  apply hp_le
-  simp only [Set.mem_pi]
-  intro i hi
-  apply mem_of_mem_nhds
-  convert hp i using 2
-  change MvPolynomial.coeff i (truncFun' n f)  = MvPowerSeries.coeff α i f
-  rw [coeff_truncFun']
-  rw [if_pos (hn hi)]
-  simp only [Set.mem_range, MvPolynomial.coe_inj, exists_eq]
-
-end Dense
 
 section Summable
 
