@@ -21,8 +21,9 @@ import DividedPowers.ForMathlib.Topology.Algebra.Algebra.Basic
 
 Let `σ`, `R` `S` be types, with `CommRing R`, `CommRing S`.
 One assumes that `R` is a topological ring, and uniform add group,
-and that `S` is a topological `R`-algebra, with a linear topology
-(basis of neighborhoods of 0 consisting of ideals).
+and that `S` is a complete and separated topological `R`-algebra,
+with `LinearTopology R`, which means there is a basis of neighborhoods of 0
+consisting of ideals.
 
 * `MvPowerSeries.eval₂` : Given `φ : R →+* S` and `a : σ → S`,
 this file defines an evaluation of `f : MvPowerSeries σ R`,
@@ -36,11 +37,11 @@ the following lemmas assert the necessity
 * `Continuous.tendsto_apply_variables_zero_of_cofinite`:
   when `a s` tends to  zero for the filter of cofinite subsets of `σ`.
 
+* `MvPowerSeries.uniformContinuous_eval₂` : uniform continuity of the evaluation
+
 * `MvPowerSeries.continuous_eval₂` : continuity of the evaluation
 
 * `MvPowerSeries.aeval` : the evaluation map as an algebra map
-
-* `MvPowerSeries.continuous_aeval` : continuity of the evaluation
 
 -/
 
@@ -232,6 +233,7 @@ theorem MvPolynomial.coeToMvPowerSeries_denseInducing :
   coeToMvPowerSeries_uniformInducing.denseInducing
     MvPolynomial.coeToMvPowerSeries_denseRange
 
+/-- Evaluation of power series at adequate elements, as a `RingHom` -/
 noncomputable def MvPowerSeries.eval₂ :
     MvPowerSeries σ R →+* S :=
   DenseInducing.extendRingHom
@@ -265,6 +267,7 @@ theorem MvPowerSeries.eval₂_X (s : σ) :
     MvPowerSeries.eval₂ φ a hpow hcof hφ (X s) = a s := by
   rw [← MvPolynomial.coe_X, eval₂_coe, MvPolynomial.eval₂_X]
 
+/-- Evaluation of power series at adequate elements, as an `AlgHom` -/
 noncomputable def MvPowerSeries.aeval [TopologicalAlgebra R S] :
     MvPowerSeries σ R →ₐ[R] S where
   toRingHom := MvPowerSeries.eval₂ (algebraMap R S) a hpow hcof TopologicalAlgebra.continuous_algebraMap
