@@ -156,9 +156,23 @@ example [σ_ne : Nonempty σ] : NoMaxOrder (σ →₀ ℕ) where
 
 section
 
-variable {σ α}
+variable {σ α} [DecidableEq σ]
 
 variable [TopologicalSpace α] [CommRing α] [TopologicalRing α]
+
+local instance : TopologicalRing (MvPowerSeries σ α) := topologicalRing σ α
+
+theorem continuous_C :
+    Continuous (C σ α) := by
+  apply continuous_of_continuousAt_zero
+  rw [continuousAt_pi]
+  intro d
+  change ContinuousAt (fun y => coeff α d ((C σ α) y)) 0
+  by_cases hd : d = 0
+  · convert continuousAt_id
+    rw [hd, coeff_zero_C, id_eq]
+  · convert continuousAt_const
+    rw [coeff_C, if_neg hd]
 
 theorem variables_tendsto_zero :
     Filter.Tendsto (fun s : σ => (X s : MvPowerSeries σ α)) Filter.cofinite (nhds 0) := by
