@@ -300,10 +300,14 @@ theorem hf : UniformContinuous (f φ a) := by
   simp only [Filter.mem_map]
   rw [(induced_iff_nhds_eq _).mp rfl]
   simp only [map_zero, Filter.mem_comap]
-  -- let B := hS.toIdealBasis
-  -- let hB := Ideal.IsBasis.ofIdealBasis B
+
   have : ∃ (I : Ideal S), ((I : Set S) ∈ nhds 0) ∧ I ≤ u := by
-    sorry
+    have hS' := hS.isTopology
+    rw [← Ideal.IsBasis.ofIdealBasis_topology_eq (Ideal.IsBasis.ofIdealBasis hS.toIdealBasis)] at hS'
+    rw [map_zero, TopologicalSpace.ext_iff_nhds.mp hS', Ideal.IsBasis.mem_nhds_zero_iff] at hu
+    rcases hu with ⟨i, hi⟩
+    use ↑i
+    convert hi
   rcases this with ⟨I, hI, hI'⟩
 
   simp only [Filter.tendsto_def] at hcof hpow
@@ -358,28 +362,15 @@ theorem hf : UniformContinuous (f φ a) := by
     by_cases hd : d ∈ D
     · exact Ideal.mul_mem_right _ _ (hp d hd)
     · apply Ideal.mul_mem_left
-      simp only [Set.mem_Iic, D] at hd
-      have : ∃ s, n₀ s < d s := sorry
-      rcases this with ⟨s, hs⟩
-      rw [Finset.prod_eq_prod_diff_singleton_mul (i := s)]
+      simp only [Set.mem_Iic, D, Finsupp.le_iff] at hd
+      push_neg at hd
+      rcases hd with ⟨s, hs', hs⟩
+      rw [Finset.prod_eq_prod_diff_singleton_mul hs']
       · apply Ideal.mul_mem_left
         rw [← Nat.add_sub_of_le (Nat.succ_le_of_lt hs), pow_add]
         apply Ideal.mul_mem_right
         simp only [Finsupp.coe_mk, n₀, n]
         exact Nat.sInf_mem (hn_ne s)
-      · rw [← not_le] at hs
-        simp only [Finsupp.mem_support_iff, ne_eq]
-        intro hs'; apply hs
-        rw [hs']
-        exact zero_le _
-
-
-  /- have hS' := hS.isTopology
-  rw [← Ideal.IsBasis.ofIdealBasis_topology_eq (Ideal.IsBasis.ofIdealBasis hS.toIdealBasis)] at hS'
-  -- have hS_nhds := TopologicalSpace.ext_iff_nhds.mp hS'
-  rw [map_zero, TopologicalSpace.ext_iff_nhds.mp hS'] at hu
-  -- simp only [Filter.IsBasis.mem_filterBasis_iff] at hu -/
-
 
     /- p = ∑ c m T ^m
       f φ a p = ∑ φ (c m) a ^ m
@@ -402,15 +393,30 @@ theorem hf : UniformContinuous (f φ a) := by
 local instance [TopologicalSpace R] [TopologicalSemiring R] :
     TopologicalSemiring (MvPowerSeries σ R) := MvPowerSeries.topologicalSemiring
 
-noncomputable def MvPowerSeries.eval₂
-    [TopologicalSpace R] [TopologicalSemiring R] :
+noncomputable def MvPowerSeries.eval₂ :
     MvPowerSeries σ R →+* S :=
-  DenseInducing.extendRingHom ue dr (hf φ a)
+  DenseInducing.extendRingHom ue dr (hf φ a hpow hcof hφ)
+
+theorem MvPowerSeries.eval₂_coe (p : MvPolynomial σ R) :
+    MvPowerSeries.eval₂ φ a hpow hcof hφ p = MvPolynomial.eval₂ φ a p := by
+  simp only [eval₂]
+  exact DenseInducing.extend_eq (ue.denseInducing dr) (hf φ a hpow hcof hφ).continuous p
+
+theorem MvPowerSeries.eval₂_C (r : R) :
+    MvPowerSeries.eval₂ φ a hpow hcof hφ (C σ R r) = φ r := by
+  rw [← MvPolynomial.coe_C, eval₂_coe, MvPolynomial.eval₂_C]
+
+theorem MvPowerSeries.eval₂_X (s : σ) :
+    MvPowerSeries.eval₂ φ a hpow hcof hφ (X s) = a s := by
+  rw [← MvPolynomial.coe_X, eval₂_coe, MvPolynomial.eval₂_X]
 
 noncomputable def MvPowerSeries.aeval
-    [TopologicalSpace R] [TopologicalSemiring R] [Algebra R S] :
+    [Algebra R S] (hc: Continuous (algebraMap R S)):
     MvPowerSeries σ R →ₐ[R] S where
-  toRingHom := MvPowerSeries.eval₂ φ a
-  commutes' := sorry
+  toRingHom := MvPowerSeries.eval₂ (algebraMap R S) a hpow hcof hc
+  commutes' := fun r ↦ by
+    simp only [RingHom.toMonoidHom_eq_coe, OneHom.toFun_eq_coe, MonoidHom.toOneHom_coe,
+      MonoidHom.coe_coe]
+    rw [← MvPowerSeries.c_eq_algebraMap, eval₂_C]
 
 end MvPowerSeries_aeval

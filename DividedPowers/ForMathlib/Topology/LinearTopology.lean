@@ -4,8 +4,10 @@ import Mathlib.Topology.Algebra.Nonarchimedean.Bases
 
 section Complements
 
--- TODO: Do we need this?
-theorem TopologicalSpace.eq_iff_nhds_eq {α : Type _} (τ τ' : TopologicalSpace α) :
+#check TopologicalSpace.ext_iff_nhds
+/- -- TODO: Do we need this?
+  -- NO, this is more or less TopologicalSpace.ext_iff_nhds
+theorem TopologicalSpace.eq_iff_nhds_eq {α : Type*} (τ τ' : TopologicalSpace α) :
     τ = τ' ↔ ∀ (s : Set α), ∀ a ∈ s, s ∈ @nhds α τ a ↔ s ∈ @nhds α τ' a := by
   constructor
   · intro h s a _; rw [h]
@@ -14,21 +16,39 @@ theorem TopologicalSpace.eq_iff_nhds_eq {α : Type _} (τ τ' : TopologicalSpace
   apply forall_congr'; intro a
   apply imp_congr_right; exact h s a
 #align topological_space_eq_iff_nhds_eq TopologicalSpace.eq_iff_nhds_eq
+-/
 
--- ADDED
+/- -- ADDED.
+  -- This is exactly TopologicalSpace.ext_iff_nhds
 /-- Two topologies on `α` are equal if and only if their neighborhood filters agree. -/
-theorem TopologicalSpace.eq_iff_nhds_eq_nhds {α : Type _} (τ τ' : TopologicalSpace α) :
+theorem TopologicalSpace.eq_iff_nhds_eq_nhds {α : Type*} (τ τ' : TopologicalSpace α) :
     τ = τ' ↔ @nhds α τ = @nhds α τ'  := by
   constructor
   · intro h; rw [h]
   · intro h
     apply TopologicalSpace.ext_nhds
     simp only [h, implies_true]
+-/
 
 -- TODO: This is similar to `le_iff_nhds`, do we need this variant?
-theorem TopologicalSpace.le_iff_nhds_le {α : Type _} (τ τ' : TopologicalSpace α) :
+-- Probably not :
+theorem TopologicalSpace.le_iff_nhds_le {α : Type*} (τ τ' : TopologicalSpace α) :
     τ ≤ τ' ↔ ∀ (s : Set α), ∀ a ∈ s, s ∈ @nhds α τ' a → s ∈ @nhds α τ a := by
-  rw [TopologicalSpace.le_def]
+  rw [le_iff_nhds]
+  rw [forall_comm]
+  apply forall_congr'
+  intro a
+  rw [Filter.le_def]
+  apply forall_congr'
+  intro s
+  constructor
+  · exact fun h _ ↦ h
+  · intro h
+    by_cases ha : a ∈ s
+    · exact h ha
+    · exact fun hs ↦ False.elim (ha (mem_of_mem_nhds hs))
+
+/-   rw [TopologicalSpace.le_def]
   constructor
   · intro h s a _
     simp only [@mem_nhds_iff α a s τ, @mem_nhds_iff α a s τ']
@@ -43,10 +63,11 @@ theorem TopologicalSpace.le_iff_nhds_le {α : Type _} (τ τ' : TopologicalSpace
     intro hs a has
     exact h s a has (hs a has)
 #align topological_space_le_iff_nhds_le TopologicalSpace.le_iff_nhds_le
+-/
 
 /-- If `a, b` are two elements of a topological group `α`, then a set `V` belongs to `nhds (a + b)`
   if and only if `Add.add a ⁻¹' V ∈ nhds b`.  -/
-theorem mem_nhds_add_iff {α : Type _} [AddCommGroup α] [TopologicalSpace α] [TopologicalAddGroup α]
+theorem mem_nhds_add_iff {α : Type*} [AddCommGroup α] [TopologicalSpace α] [TopologicalAddGroup α]
     (V : Set α) (a b : α) : V ∈ nhds (a + b) ↔ Add.add a ⁻¹' V ∈ nhds b := by
   constructor
   . exact fun hV => ContinuousAt.preimage_mem_nhds (continuous_add_left a).continuousAt hV
@@ -64,7 +85,7 @@ theorem mem_nhds_add_iff {α : Type _} [AddCommGroup α] [TopologicalSpace α] [
 end Complements
 
 /-- `Ideal.IsBasis B` means the image of `B` is a filter basis consisting of left- and right-ideals. -/
-structure Ideal.IsBasis {α : Type _} [Ring α] {ι : Sort*}
+structure Ideal.IsBasis {α : Type*} [Ring α] {ι : Sort*}
   (B : ι → Ideal α) : Prop where
   /-- There is an `i : ι` -/
   nonempty : Nonempty ι
@@ -87,10 +108,10 @@ structure IdealBasis (α : Type*) [Ring α] where
 
 namespace Ideal.IsBasis
 
-variable {α : Type _} [Ring α]
+variable {α : Type*} [Ring α]
 
 /-- The `IdealBasis` associated with an `Ideal.IsBasis` -/
-def toIdealBasis {ι : Type _} {B : ι → Ideal α} (hB : Ideal.IsBasis B) : IdealBasis α where
+def toIdealBasis {ι : Type*} {B : ι → Ideal α} (hB : Ideal.IsBasis B) : IdealBasis α where
   sets := Set.range B
   nonempty := Set.range_nonempty (h := hB.nonempty) _
   inter_sets {x y} := by
@@ -104,18 +125,21 @@ def toIdealBasis {ι : Type _} {B : ι → Ideal α} (hB : Ideal.IsBasis B) : Id
 /-- An `Ideal.IsBasis` associated with an `IdealBasis` -/
 def ofIdealBasis (B : IdealBasis α) : Ideal.IsBasis (ι := B.sets) (fun x => (x : Ideal α)) where
   nonempty := Set.nonempty_coe_sort.mpr B.nonempty
-  inter := sorry
-  mul_right := sorry
+  inter := fun s t ↦ by
+    obtain ⟨u, hu, hu'⟩ := B.inter_sets s.prop t.prop
+    use ⟨u, hu⟩
+  mul_right := fun s {a} r has ↦ B.mul_right (Subtype.coe_prop s) has
 
 /-- An `Ideal.IsBasis` on a `CommRing`. -/
-lemma ofComm {α : Type _} [CommRing α] {ι : Type _} [Nonempty ι] {B : ι → Ideal α}
+lemma ofComm {α : Type*} [CommRing α] {ι : Type*} [Nonempty ι] {B : ι → Ideal α}
     (inter : ∀ (i j), ∃ k, B k ≤ B i ⊓ B j) : Ideal.IsBasis B :=
   { inter
     nonempty := inferInstance
-    mul_right := fun i a r h => by rw [mul_comm]; refine' Ideal.mul_mem_left (B i) r h }
+    mul_right := fun i a r h => by
+      rw [mul_comm]; refine' Ideal.mul_mem_left (B i) r h }
 
 /-- An `Ideal.IsBasis` is a `RingSubgroupsBasis`. -/
-lemma toRingSubgroupsBasis {ι : Type _} {B : ι → Ideal α} (hB : Ideal.IsBasis B) :
+lemma toRingSubgroupsBasis {ι : Type*} {B : ι → Ideal α} (hB : Ideal.IsBasis B) :
     RingSubgroupsBasis fun i => (B i).toAddSubgroup where
   inter := hB.inter
   mul i := ⟨i, fun u => by
@@ -125,21 +149,54 @@ lemma toRingSubgroupsBasis {ι : Type _} {B : ι → Ideal α} (hB : Ideal.IsBas
   rightMul a i := ⟨i, fun y hy =>  hB.mul_right _ _ hy⟩
 
 /-- An `Ideal.IsBasis` is a `RingFilterBasis`. -/
-def toRingFilterBasis {ι : Type _} {B : ι → Ideal α} (hB : Ideal.IsBasis B) :=
+def toRingFilterBasis {ι : Type*} {B : ι → Ideal α} (hB : Ideal.IsBasis B) :=
   let _: Nonempty ι := hB.nonempty
   hB.toRingSubgroupsBasis.toRingFilterBasis
 #align ideals_basis.to_ring_filter_basis Ideal.IsBasis.toRingFilterBasis
 
 /-- The topology generated by an `Ideal.IsBasis`. -/
-def topology {ι : Type _} {B : ι → Ideal α} (hB : Ideal.IsBasis B) :
+def topology {ι : Type*} {B : ι → Ideal α} (hB : Ideal.IsBasis B) :
     TopologicalSpace α :=
   (toRingFilterBasis hB).topology
 
-theorem ofIdealBasis_topology_eq {ι : Type _} {B : ι → Ideal α} (hB : Ideal.IsBasis B) :
-    (ofIdealBasis hB.toIdealBasis).topology = hB.topology := sorry
+theorem mem_nhds_zero_iff {ι : Type*} {B : ι → Ideal α} (hB : Ideal.IsBasis B)
+    (s : Set α) :
+    (s ∈ @nhds _ hB.topology 0) ↔
+    (∃ i, ((B i : Set α) ∈ @nhds _ hB.topology 0) ∧ (B i : Set α) ⊆ s) := by
+  constructor
+  · intro hs
+    simp only [AddGroupFilterBasis.nhds_eq, AddGroupFilterBasis.N_zero,
+      FilterBasis.mem_filter_iff] at hs
+    rcases hs with ⟨t, ht, hts⟩
+    rcases ht with ⟨i, rfl⟩
+    simp only [Submodule.coe_toAddSubgroup] at hts
+    use i
+    refine ⟨?_, hts⟩
+    simp only [AddGroupFilterBasis.nhds_eq, AddGroupFilterBasis.N_zero, FilterBasis.mem_filter_iff]
+    exact ⟨B i, ⟨i, rfl⟩, subset_of_eq rfl⟩
+  · rintro ⟨i, _, his⟩
+    simp only [AddGroupFilterBasis.nhds_eq, AddGroupFilterBasis.N_zero, FilterBasis.mem_filter_iff]
+    use B i, ⟨i, rfl⟩, his
+
+theorem ofIdealBasis_topology_eq {ι : Type*} {B : ι → Ideal α} (hB : Ideal.IsBasis B) :
+    (ofIdealBasis hB.toIdealBasis).topology = hB.topology := by
+  rw [TopologicalSpace.ext_iff_nhds]
+  intro a
+  simp [AddGroupFilterBasis.nhds_eq]
+  simp only [AddGroupFilterBasis.N]
+  apply congr_arg₂ _ rfl
+  ext s
+  simp only [FilterBasis.mem_filter_iff]
+  constructor
+  · rintro ⟨u, hu, hus⟩
+
+    sorry
+
+  · rintro ⟨u, hu, hus⟩
+    sorry
 
 /-- A ring `α` with the topology generated by an `Ideal.IsBasis` is a topological ring. -/
-theorem to_topologicalRing {ι : Type _} {B : ι → Ideal α} (hB : Ideal.IsBasis B) :
+theorem to_topologicalRing {ι : Type*} {B : ι → Ideal α} (hB : Ideal.IsBasis B) :
     @TopologicalRing α hB.topology _ :=
   hB.toRingFilterBasis.isTopologicalRing
 #align ideals_basis.to_topological_ring Ideal.IsBasis.to_topologicalRing
