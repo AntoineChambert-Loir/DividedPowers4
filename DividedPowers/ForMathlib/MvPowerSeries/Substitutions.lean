@@ -20,6 +20,57 @@ The goal here is to check the relevant hypotheses:
 * Power series have a linear topology
 -/
 
+section DiscreteUniformity
+
+class DiscreteUniformity (α : Type*) [u : UniformSpace α] : Prop where
+  eq_principal_idRel : uniformity α = Filter.principal idRel
+
+instance discreteUniformity_bot (α : Type*) : @DiscreteUniformity α ⊥ := by
+  apply @DiscreteUniformity.mk α ⊥ rfl
+
+instance discreteTopology_of_discreteUniformity (α : Type*)
+    [UniformSpace α] [DiscreteUniformity α] : DiscreteTopology α := by
+    rw [discreteTopology_iff_singleton_mem_nhds]
+    intro a
+    rw [UniformSpace.mem_nhds_iff]
+    simp only [Set.subset_singleton_iff, DiscreteUniformity.eq_principal_idRel]
+    simp only [Filter.mem_principal, idRel_subset]
+    use Set.diagonal α
+    simp only [Set.mem_diagonal_iff, implies_true, true_and]
+    intro x
+    simp only [UniformSpace.ball, Set.mem_preimage, Set.mem_diagonal_iff]
+    exact fun a => a.symm
+
+instance bot_uniformAddGroup {R : Type*} [AddGroup R]
+    [UniformSpace R] [DiscreteUniformity R] : UniformAddGroup R :=
+  { uniformContinuous_sub := fun s hs ↦ by
+      simp only [uniformity_prod, DiscreteUniformity.eq_principal_idRel, Filter.comap_principal,
+        Filter.inf_principal, Filter.map_principal, Filter.mem_principal, Set.image_subset_iff]
+      rintro ⟨⟨x, y⟩, z, t⟩
+      simp only [Set.mem_inter_iff, Set.mem_preimage, mem_idRel, and_imp]
+      rintro ⟨rfl⟩ ⟨rfl⟩
+      exact mem_uniformity_of_eq hs rfl }
+
+instance discreteUniformity_complete (α : Type*) [UniformSpace α] [DiscreteUniformity α] : CompleteSpace α :=
+  { complete := fun {f} hf ↦ by
+      simp [cauchy_iff, bot_uniformity] at hf
+      rcases hf with ⟨f_NeBot, hf⟩
+      let d := (fun (a : α) ↦ (a, a)) '' Set.univ
+      obtain ⟨t, ht, ht'⟩ := hf d (by
+        simp only [DiscreteUniformity.eq_principal_idRel, Filter.mem_principal, idRel_subset]
+        exact (fun a ↦ Set.mem_image_of_mem (fun a => (a, a)) (Set.mem_univ a)))
+      obtain ⟨x, hx⟩ := f_NeBot.nonempty_of_mem ht
+      use x
+      intro s hs
+      apply f.sets_of_superset ht
+      intro y hy
+      convert mem_of_mem_nhds hs
+      apply symm
+      simpa only [d, Set.image_univ, Set.range_diag, Set.mem_diagonal_iff] using ht' (Set.mk_mem_prod hx hy)
+      }
+
+end DiscreteUniformity
+
 namespace MvPowerSeries
 
 variable {σ : Type*} [DecidableEq σ]
@@ -35,28 +86,42 @@ structure substDomain (a : σ → MvPowerSeries τ S) : Prop where
   finite_support : a.support.Finite
 
 variable {a : σ → MvPowerSeries τ S} (ha : substDomain a)
-noncomputable def subst (f : MvPowerSeries σ R) : MvPowerSeries τ S := by
-  letI : UniformSpace R := ⊥
-  letI : UniformAddGroup R := sorry
-  letI : DiscreteTopology R := discreteTopology_bot R
-  letI : TopologicalRing R := DiscreteTopology.topologicalRing
-  letI : UniformSpace S := ⊥
-  letI : CompleteSpace S := sorry
-  letI : DiscreteTopology S := discreteTopology_bot S
-  letI : TopologicalAlgebra R S := sorry
-  letI : UniformSpace (MvPowerSeries τ S) := uniformSpace τ S
-  letI : UniformAddGroup (MvPowerSeries τ S) := sorry
-  letI : LinearTopology (MvPowerSeries τ S) := sorry
-  letI : T2Space (MvPowerSeries τ S) := t2Space τ S
-  letI : TopologicalRing (MvPowerSeries τ S) := topologicalRing _ _
-  letI : TopologicalAlgebra R (MvPowerSeries τ S) := by
-    refine DiscreteTopology.topologicalAlgebra R (MvPowerSeries τ S)
 
-  letI : CompleteSpace (MvPowerSeries τ S) := by refine completeSpace τ S
-  have ha' : evalDomain a := by sorry
-  apply MvPowerSeries.aeval ha' f
-  sorry
--- variable [TopologicalSpace α] [DiscreteTopology α] [TopologicalRing α]
+open WithPiTopology WithPiUniformity
+
+local instance : UniformSpace R := ⊥
+-- local instance : DiscreteUniformity R := discreteUniformity_bot R
+-- local instance : UniformAddGroup R := bot_uniformAddGroup
+-- local instance : DiscreteTopology R := discreteTopology_bot R
+local instance : TopologicalRing R := DiscreteTopology.topologicalRing
+
+local instance : UniformSpace S := ⊥
+local instance : DiscreteUniformity S := discreteUniformity_bot S
+-- local instance : CompleteSpace S := discreteUniformity_complete S
+-- local instance : DiscreteTopology S := discreteTopology_bot S
+-- local instance : UniformAddGroup S := bot_uniformAddGroup
+local instance : TopologicalAlgebra R S := inferInstance
+
+-- local instance : UniformSpace (MvPowerSeries τ S) := uniformSpace τ S
+-- local instance : UniformAddGroup (MvPowerSeries τ S) := uniformAddGroup τ S
+noncomputable local instance : LinearTopology (MvPowerSeries τ S) := isLinearTopology τ S
+-- local instance : T2Space (MvPowerSeries τ S) := t2Space τ S
+-- local instance : TopologicalRing (MvPowerSeries τ S) := topologicalRing _ _
+noncomputable local instance : TopologicalAlgebra R (MvPowerSeries τ S) := by
+    refine DiscreteTopology.topologicalAlgebra R (MvPowerSeries τ S)
+local instance : CompleteSpace (MvPowerSeries τ S) := by refine completeSpace τ S
+
+/-- Substibution of power series into a power series -/
+noncomputable def subst (a : σ → MvPowerSeries τ S) (f : MvPowerSeries σ R) :
+    MvPowerSeries τ S :=
+  MvPowerSeries.eval₂ (algebraMap _ _) a f
+
+/-- Substibution of power series into a power series -/
+noncomputable def substAlgHom : MvPowerSeries σ R →ₐ[R] MvPowerSeries τ S :=
+  let ha' : evalDomain a := {
+    hpow := fun s ↦ tendsto_pow_zero_of_constantCoeff_zero (ha.const_coeff s)
+    hcof := tendsto_nhds_of_eventually_eq ha.finite_support }
+  MvPowerSeries.aeval ha'
 
 #exit
 

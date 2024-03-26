@@ -97,7 +97,8 @@ theorem coeff_mul_trunc' (n : σ →₀ ℕ) (f g : MvPowerSeries σ R)
 section Continuity
 
 variable [TopologicalSpace R]
-private instance : TopologicalSpace (MvPowerSeries σ R) := topologicalSpace σ R
+
+open MvPowerSeries.WithPiTopology
 
 private instance : TopologicalSpace (MvPolynomial σ R) :=
   TopologicalSpace.induced MvPolynomial.toMvPowerSeries Pi.topologicalSpace
