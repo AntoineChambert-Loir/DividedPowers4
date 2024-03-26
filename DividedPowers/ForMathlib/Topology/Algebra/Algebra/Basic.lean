@@ -103,8 +103,9 @@ section Prod
 
 /-- The product topology on the cartesian product of two topological algebras
   makes the product into a topological algebra. -/
-instance {B : Type*} [Semiring B] [TopologicalSpace B] [TopologicalSemiring B]
-  [TopologicalAlgebra R B] : TopologicalAlgebra R (A × B) :=
+instance [TopologicalAlgebra R A]
+    {B : Type*} [Semiring B] [TopologicalSpace B] [TopologicalSemiring B]
+    [TopologicalAlgebra R B] : TopologicalAlgebra R (A × B) :=
 { (inferInstance : Algebra R (A × B)) with
   continuous_algebraMap := continuous_prod_mk.mpr
     ⟨TopologicalAlgebra.continuous_algebraMap, TopologicalAlgebra.continuous_algebraMap⟩ }
