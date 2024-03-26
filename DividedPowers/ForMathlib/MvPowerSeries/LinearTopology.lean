@@ -104,9 +104,9 @@ set_option linter.uppercaseLean3 false
 variable (α : Type*) [CommRing α] [TopologicalSpace α] [DiscreteTopology α]
 
 /-- We endow MvPowerSeries σ α with the product topology -/
-local instance : TopologicalSpace (MvPowerSeries σ α) := topologicalSpace σ α
+private instance : TopologicalSpace (MvPowerSeries σ α) := topologicalSpace σ α
 /-- MvPowerSeries σ α is a topological ring -/
-local instance : TopologicalRing (MvPowerSeries σ α) := topologicalRing σ α
+private instance : TopologicalRing (MvPowerSeries σ α) := topologicalRing σ α
 
 /-- If the coefficient ring `α` is endowed with the discrete topology, then for every `d : σ →₀ ℕ`,
   `↑(basis σ α d) ∈ nhds (0 : MvPowerSeries σ α)`. -/

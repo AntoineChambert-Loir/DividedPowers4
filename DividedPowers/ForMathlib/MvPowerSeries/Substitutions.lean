@@ -20,11 +20,45 @@ The goal here is to check the relevant hypotheses:
 * Power series have a linear topology
 -/
 
-variable (σ : Type*) [DecidableEq σ]
-  (α : Type*) [CommRing α] [TopologicalSpace α] [TopologicalRing α]
-  (R : Type*) [CommRing R] [TopologicalSpace R] [TopologicalRing R][TopologicalAlgebra α R]
+namespace MvPowerSeries
 
-section
+variable {σ : Type*} [DecidableEq σ]
+  {R : Type*} [CommRing R]
+  -- [TopologicalSpace α] [TopologicalRing α]
+  {τ : Type*} [DecidableEq τ]
+  {S : Type*} [CommRing S] [Algebra R S]
+  -- [TopologicalSpace R] [TopologicalRing R][TopologicalAlgebra α R]
+
+/-- Families of power series which can be substituted -/
+structure substDomain (a : σ → MvPowerSeries τ S) : Prop where
+  const_coeff : ∀ s, coeff S 0 (a s) = 0
+  finite_support : a.support.Finite
+
+variable {a : σ → MvPowerSeries τ S} (ha : substDomain a)
+noncomputable def subst (f : MvPowerSeries σ R) : MvPowerSeries τ S := by
+  letI : UniformSpace R := ⊥
+  letI : UniformAddGroup R := sorry
+  letI : DiscreteTopology R := discreteTopology_bot R
+  letI : TopologicalRing R := DiscreteTopology.topologicalRing
+  letI : UniformSpace S := ⊥
+  letI : CompleteSpace S := sorry
+  letI : DiscreteTopology S := discreteTopology_bot S
+  letI : TopologicalAlgebra R S := sorry
+  letI : UniformSpace (MvPowerSeries τ S) := uniformSpace τ S
+  letI : UniformAddGroup (MvPowerSeries τ S) := sorry
+  letI : LinearTopology (MvPowerSeries τ S) := sorry
+  letI : T2Space (MvPowerSeries τ S) := t2Space τ S
+  letI : TopologicalRing (MvPowerSeries τ S) := topologicalRing _ _
+  letI : TopologicalAlgebra R (MvPowerSeries τ S) := by
+    refine DiscreteTopology.topologicalAlgebra R (MvPowerSeries τ S)
+
+  letI : CompleteSpace (MvPowerSeries τ S) := by refine completeSpace τ S
+  have ha' : evalDomain a := by sorry
+  apply MvPowerSeries.aeval ha' f
+  sorry
+-- variable [TopologicalSpace α] [DiscreteTopology α] [TopologicalRing α]
+
+#exit
 
 open MvPowerSeries
 

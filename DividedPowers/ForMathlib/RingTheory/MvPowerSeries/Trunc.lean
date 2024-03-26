@@ -97,11 +97,10 @@ theorem coeff_mul_trunc' (n : σ →₀ ℕ) (f g : MvPowerSeries σ R)
 section Continuity
 
 variable [TopologicalSpace R]
-local instance : TopologicalSpace (MvPowerSeries σ R) := topologicalSpace σ R
+private instance : TopologicalSpace (MvPowerSeries σ R) := topologicalSpace σ R
 
-local instance : TopologicalSpace (MvPolynomial σ R) :=
+private instance : TopologicalSpace (MvPolynomial σ R) :=
   TopologicalSpace.induced MvPolynomial.toMvPowerSeries Pi.topologicalSpace
-
 
 /-- Truncation of power series is continuous -/
 theorem continuous_trunc' [TopologicalSpace R] [TopologicalSemiring R] (n : σ →₀ ℕ) :

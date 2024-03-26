@@ -40,29 +40,30 @@ all remaining arguments have metavariables:
 -/
 --instance [TopologicalAlgebra R A] : ContinuousAdd A := sorry
 
-
-variable [TopologicalAlgebra R A]
-
 -- But if we put `TopologicalAlgebra R A` as a variable, it is fine.
 example : ContinuousAdd A := inferInstance
 
-example : Algebra R A := by exact TopologicalAlgebra.toAlgebra
-
-/-- If `R` is a discrete topological ring, any topological ring `S` which is an `R`-algebra is also
-  a topological `R`-algebra. -/
-instance (priority := 50) DiscreteTopology.topologicalAlgebra [DiscreteTopology R] :
+/-- If `R` is a discrete topological ring,
+  then any topological ring `S` which is an `R`-algebra
+  is also a topological `R`-algebra. -/
+instance (priority := 50) DiscreteTopology.topologicalAlgebra
+    [DiscreteTopology R] [Algebra R A] :
     TopologicalAlgebra R A :=
   { (inferInstance : Algebra R A) with
     continuous_algebraMap := continuous_of_discreteTopology }
 
 namespace Subalgebra
 
+variable [TopologicalAlgebra R A]
 /-- An `R`-subalgebra `S` of `A` is a topological algebra (with the subspace topology). -/
-instance topologicalAlgebra (S : Subalgebra R A) : TopologicalAlgebra R S :=
-  { (inferInstance : Algebra R S) with
+instance topologicalAlgebra (S : Subalgebra R A) :
+    TopologicalAlgebra R S where
   continuous_algebraMap := by
     rw [inducing_subtype_val.continuous_iff]
-    exact TopologicalAlgebra.continuous_algebraMap }
+    suffices Subtype.val ∘ (algebraMap R S) = algebraMap R A by
+      erw [this]
+      exact TopologicalAlgebra.continuous_algebraMap
+    rfl
 
 -- What follows seems to be in Mathlib.Topology.Algebra.Algebra
 

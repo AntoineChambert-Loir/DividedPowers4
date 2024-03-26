@@ -60,7 +60,7 @@ variable {S : Type*} [CommRing S] [TopologicalSpace S] [TopologicalRing S]
 variable  (φ : R →+* S) (hφ : Continuous φ)
 
 /-- We endow MvPowerSeries σ R with the product topology -/
-local instance : TopologicalSpace (MvPowerSeries σ R) := topologicalSpace σ R
+private instance : TopologicalSpace (MvPowerSeries σ R) := topologicalSpace σ R
 
 /-- Families at which power series can be evaluated -/
 structure MvPowerSeries.evalDomain (a : σ → S) : Prop where
@@ -144,28 +144,28 @@ variable  (φ : R →+* S) (hφ : Continuous φ)
 
 /-- We endow MvPowerSeries σ R with the product uniform structure
   (hence the product topology) -/
-local instance : UniformSpace (MvPowerSeries σ R) := uniformSpace σ R
+private instance : UniformSpace (MvPowerSeries σ R) := uniformSpace σ R
 
 -- local instance : TopologicalSpace (MvPolynomial σ R) :=
 --   induced toMvPowerSeries Pi.topologicalSpace
 
 /-- The uniform structure of MvPowerSeries σ R is an add group uniform structure -/
-local instance : UniformAddGroup (MvPowerSeries σ R) :=
+private instance : UniformAddGroup (MvPowerSeries σ R) :=
   Pi.instUniformAddGroup
 
 /-- We endow MvPolynomial σ R with the induced uniform structure (hence the induced topology) -/
-local instance : UniformSpace (MvPolynomial σ R) :=
+private instance : UniformSpace (MvPolynomial σ R) :=
   comap toMvPowerSeries (Pi.uniformSpace _)
 
 /- local instance : UniformSpace (MvPolynomial σ R) :=
   comap coeToMvPowerSeries.ringHom inferInstance -/
 
 /-- The induced uniform structure of MvPolynomial σ R is an add group uniform structure -/
-local instance : UniformAddGroup (MvPolynomial σ R) :=
+private instance : UniformAddGroup (MvPolynomial σ R) :=
   UniformAddGroup.comap coeToMvPowerSeries.ringHom
 
 /-- MvPowerSeries σ R is a topological ring -/
-local instance : TopologicalRing (MvPowerSeries σ R) :=
+private instance : TopologicalRing (MvPowerSeries σ R) :=
     MvPowerSeries.topologicalRing σ R
 
 variable {φ} [hS : LinearTopology S]
