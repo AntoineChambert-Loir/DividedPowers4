@@ -4,6 +4,12 @@ import Mathlib.RingTheory.PowerSeries.Basic
 import DividedPowers.ForMathlib.InfiniteSum.Basic
 import DividedPowers.ForMathlib.MvPowerSeries.Basic
 
+/-! # Topology on power series
+
+In this file we define the possible topologies on power series.
+
+
+-/
 theorem Finset.prod_one_add {ι α : Type _} [DecidableEq ι] [CommRing α] {f : ι → α} (s : Finset ι) :
     (s.prod fun i => 1 + f i) = s.powerset.sum fun t => t.prod f := by
   simp_rw [add_comm, Finset.prod_add]
@@ -29,7 +35,7 @@ section Topological
 variable [TopologicalSpace α]
 
 /-- The pointwise topology on mv_power_series -/
-instance topologicalSpace : TopologicalSpace (MvPowerSeries σ α) :=
+local instance topologicalSpace : TopologicalSpace (MvPowerSeries σ α) :=
   Pi.topologicalSpace
 
 /-- Components are continuous -/
@@ -78,18 +84,16 @@ theorem topologicalRing [Ring α] [TopologicalRing α] : TopologicalRing (MvPowe
       (continuous_component σ α d) }
 #align mv_power_series.topological_ring MvPowerSeries.topologicalRing
 
-/-- mv_power_series on a t2_space form a t2_space -/
-theorem t2Space [T2Space α] : T2Space (MvPowerSeries σ α) := by
-  apply T2Space.mk
-  intro x y h
-  rw [Function.ne_iff] at h
-  obtain ⟨d, h⟩ := h
-  obtain ⟨u, v, huv⟩ := t2_separation h
-  use (fun x => x d) ⁻¹' u, (fun x => x d) ⁻¹' v,
-    IsOpen.preimage (continuous_component σ α d) huv.1,
-    IsOpen.preimage (continuous_component σ α d) huv.2.1, huv.2.2.1, huv.2.2.2.1
-  exact Disjoint.preimage _ huv.2.2.2.2
-#align mv_power_series.t2_space MvPowerSeries.t2Space
+/-- MvPowerSeries on a T2Space form a T2Space -/
+theorem t2Space [T2Space α] : T2Space (MvPowerSeries σ α) where
+  t2 x y h := by
+    obtain ⟨d, h⟩ := Function.ne_iff.mp h
+    obtain ⟨u, v, ⟨hu, hv, hx, hy, huv⟩⟩ := t2_separation h
+    exact ⟨(fun x => x d) ⁻¹' u, (fun x => x d) ⁻¹' v,
+      IsOpen.preimage (continuous_component σ α d) hu,
+      IsOpen.preimage (continuous_component σ α d) hv, hx, hy,
+      Disjoint.preimage _ huv⟩
+  #align mv_power_series.t2_space MvPowerSeries.t2Space
 
 end Topological
 
@@ -98,7 +102,7 @@ section Uniform
 variable [UniformSpace α]
 
 /-- The componentwise uniformity on mv_power_series -/
-instance uniformSpace : UniformSpace (MvPowerSeries σ α) :=
+local instance uniformSpace : UniformSpace (MvPowerSeries σ α) :=
   Pi.uniformSpace fun _ : σ →₀ ℕ => α
 #align mv_power_series.uniform_space MvPowerSeries.uniformSpace
 
@@ -160,6 +164,7 @@ variable {σ α} [DecidableEq σ]
 
 variable [TopologicalSpace α] [CommRing α] [TopologicalRing α]
 
+local instance : TopologicalSpace (MvPowerSeries σ α) := topologicalSpace σ α
 local instance : TopologicalRing (MvPowerSeries σ α) := topologicalRing σ α
 
 theorem continuous_C :
@@ -254,6 +259,8 @@ end
 section Summable
 
 variable [Semiring α] [TopologicalSpace α]
+
+local instance : TopologicalSpace (MvPowerSeries σ α) := topologicalSpace σ α
 
 variable {σ α}
 

@@ -1,3 +1,4 @@
+import Mathlib.Topology.Algebra.Algebra
 import Mathlib.Algebra.Algebra.Pi
 import Mathlib.Algebra.Algebra.Subalgebra.Basic
 import Mathlib.Topology.Algebra.Ring.Basic
@@ -63,6 +64,9 @@ instance topologicalAlgebra (S : Subalgebra R A) : TopologicalAlgebra R S :=
     rw [inducing_subtype_val.continuous_iff]
     exact TopologicalAlgebra.continuous_algebraMap }
 
+-- What follows seems to be in Mathlib.Topology.Algebra.Algebra
+
+/-
 /-- The (topological-space) closure of a subalgebra of a topological algebra is
 itself a subalgebra. -/
 def topologicalClosure (S : Subalgebra R A) : Subalgebra R A :=
@@ -90,6 +94,7 @@ topological closure. -/
 def commSemiringTopologicalClosure [T2Space A] (S : Subalgebra R A)
     (hS : ∀ x y : S, x * y = y * x) : CommSemiring S.topologicalClosure :=
   { (S.topologicalClosure R A).toSemiring, S.toSubmonoid.commMonoidTopologicalClosure hS with }
+-/
 
 end Subalgebra
 

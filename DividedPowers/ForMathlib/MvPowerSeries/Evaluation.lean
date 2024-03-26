@@ -7,7 +7,7 @@ import Mathlib.RingTheory.MvPowerSeries.Basic
 -- import Mathlib.Topology.UniformSpace.Basic
 import Mathlib.Topology.UniformSpace.Pi
 import Mathlib.Topology.Algebra.UniformRing
-import Mathlib.Topology.Algebra.UniformGroup
+-- import Mathlib.Topology.Algebra.UniformGroup
 import Mathlib.Data.MvPolynomial.CommRing
 import Mathlib.Topology.Algebra.Ring.Basic
 import Mathlib.Data.Nat.Lattice
@@ -48,19 +48,22 @@ that is required to evaluate power series
 
 -/
 
-section Evaluation
-
 open MvPowerSeries MvPolynomial TopologicalSpace UniformSpace
+
+section
 
 /- ## Necessary conditions -/
 
 variable {σ : Type*} [DecidableEq σ]
-variable  {R : Type*} [CommRing R] [UniformSpace R] [UniformAddGroup R] [TopologicalRing R]
-variable {S : Type*} [CommRing S] [UniformSpace S] [UniformAddGroup S][TopologicalRing S] [T2Space S] [CompleteSpace S]
+variable  {R : Type*} [CommRing R] [TopologicalSpace R] [TopologicalRing R]
+variable {S : Type*} [CommRing S] [TopologicalSpace S] [TopologicalRing S]
 variable  (φ : R →+* S) (hφ : Continuous φ)
 
+/-- We endow MvPowerSeries σ R with the product topology -/
+local instance : TopologicalSpace (MvPowerSeries σ R) := topologicalSpace σ R
+
 /-- Families at which power series can be evaluated -/
-structure MvPowerSeries.evalDomain (a : σ → S) where
+structure MvPowerSeries.evalDomain (a : σ → S) : Prop where
   hpow : ∀ s, Filter.Tendsto (fun n : ℕ => (a s) ^ n) Filter.atTop (nhds 0)
   hcof : Filter.Tendsto a Filter.cofinite (nhds 0)
 
@@ -100,30 +103,6 @@ theorem Continuous.tendsto_apply_variables_zero_of_cofinite
 -/
 
 
-/- ## Construction of an evaluation morphism for power series -/
-
-local instance : TopologicalSpace (MvPowerSeries σ R) := topologicalSpace σ R
-
-local instance : UniformSpace (MvPowerSeries σ R) := uniformSpace σ R
-
-local instance : TopologicalSpace (MvPolynomial σ R) :=
-  induced toMvPowerSeries Pi.topologicalSpace
-
-local instance : UniformSpace (MvPolynomial σ R) :=
-  comap toMvPowerSeries (Pi.uniformSpace _)
-
-local instance : UniformSpace (MvPolynomial σ R) :=
-  comap coeToMvPowerSeries.ringHom inferInstance
-
-local instance : UniformAddGroup (MvPowerSeries σ R) :=
-  Pi.instUniformAddGroup
-
-local instance : UniformAddGroup (MvPolynomial σ R) :=
-  UniformAddGroup.comap coeToMvPowerSeries.ringHom
-
-local instance : TopologicalRing (MvPowerSeries σ R) :=
-    MvPowerSeries.topologicalRing σ R
-
 theorem Continuous.on_scalars
     {ε : MvPowerSeries σ R →+* S} (hε : Continuous ε) :
     Continuous (ε.comp (C σ R)) := by
@@ -149,6 +128,45 @@ theorem MvPolynomial.coeToMvPowerSeries_denseRange :
     rw [coeff_truncFun']
     rw [if_pos (hn hd)]
   · simp only [Set.mem_range, coeToMvPowerSeries.ringHom_apply, coe_inj, exists_eq]
+
+end
+
+section
+/- ## Construction of an evaluation morphism for power series -/
+
+variable {σ : Type*} [DecidableEq σ]
+variable  {R : Type*} [CommRing R] [UniformSpace R] [UniformAddGroup R] [TopologicalRing R]
+variable {S : Type*} [CommRing S] [UniformSpace S] [UniformAddGroup S][TopologicalRing S] [T2Space S] [CompleteSpace S]
+variable  (φ : R →+* S) (hφ : Continuous φ)
+
+
+-- local instance : TopologicalSpace (MvPowerSeries σ R) := topologicalSpace σ R
+
+/-- We endow MvPowerSeries σ R with the product uniform structure
+  (hence the product topology) -/
+local instance : UniformSpace (MvPowerSeries σ R) := uniformSpace σ R
+
+-- local instance : TopologicalSpace (MvPolynomial σ R) :=
+--   induced toMvPowerSeries Pi.topologicalSpace
+
+/-- The uniform structure of MvPowerSeries σ R is an add group uniform structure -/
+local instance : UniformAddGroup (MvPowerSeries σ R) :=
+  Pi.instUniformAddGroup
+
+/-- We endow MvPolynomial σ R with the induced uniform structure (hence the induced topology) -/
+local instance : UniformSpace (MvPolynomial σ R) :=
+  comap toMvPowerSeries (Pi.uniformSpace _)
+
+/- local instance : UniformSpace (MvPolynomial σ R) :=
+  comap coeToMvPowerSeries.ringHom inferInstance -/
+
+/-- The induced uniform structure of MvPolynomial σ R is an add group uniform structure -/
+local instance : UniformAddGroup (MvPolynomial σ R) :=
+  UniformAddGroup.comap coeToMvPowerSeries.ringHom
+
+/-- MvPowerSeries σ R is a topological ring -/
+local instance : TopologicalRing (MvPowerSeries σ R) :=
+    MvPowerSeries.topologicalRing σ R
 
 variable {φ} [hS : LinearTopology S]
   {a : σ → S} (ha : MvPowerSeries.evalDomain a)
@@ -260,7 +278,7 @@ noncomputable def MvPowerSeries.eval₂Hom :
     coeToMvPowerSeries_denseRange
     (coeToMvPowerSeries_uniformContinuous hφ ha)
 
-def MvPowerSeries.coe_eval₂Hom :
+theorem MvPowerSeries.coe_eval₂Hom :
     ⇑(MvPowerSeries.eval₂Hom hφ ha) = MvPowerSeries.eval₂ φ a := by
   rfl
 
@@ -332,4 +350,4 @@ theorem MvPowerSeries.aeval_unique [TopologicalAlgebra R S]
     simp only [AlgHom.toRingHom_eq_coe, coe_mul, coe_X, map_mul,
       RingHom.coe_coe, eval₂_mul, MvPolynomial.eval₂_X, h]
 
-end Evaluation
+end

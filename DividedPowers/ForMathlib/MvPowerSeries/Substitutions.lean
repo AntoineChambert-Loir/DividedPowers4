@@ -1,20 +1,28 @@
-import DividedPowers.ForMathlib.MvPowerSeries.LinearTopology
-
 import Mathlib.Topology.Algebra.Algebra
 import Mathlib.Data.MvPolynomial.CommRing
 import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Trunc
+import DividedPowers.ForMathlib.MvPowerSeries.Evaluation
+import DividedPowers.ForMathlib.MvPowerSeries.LinearTopology
+import DividedPowers.ForMathlib.Topology.Algebra.Algebra.Basic
 
 --import Mathlib.Topology.UniformSpace.CompleteSeparated
 
 /- # Substitutions in power series
 
-We follow Bourbaki, Algèbre, chap. 4, §4, n° 3 -/
-/- # Substitutions in power series
+Here we define the substitution of power series into other power series.
+We follow Bourbaki, Algèbre, chap. 4, §4, n° 3.
 
-We follow Bourbaki, Algèbre, chap. 4, §4, n° 3 -/
+Evaluation of a power series at adequate elements has been defined
+in `DividedPowers.ForMathlib.MvPowerSeries.Evaluation.lean`.
+The goal here is to check the relevant hypotheses:
+* The ring of coefficients is endowed the discrete topology.
+* The main condition rewrites as having vanishing constant coefficient
+* Power series have a linear topology
+-/
 
-variable (σ : Type _) (α : Type _) [CommRing α] (R : Type _) [CommRing R] [Algebra α R]
-  [TopologicalSpace R] [TopologicalRing R] [TopologicalSpace α] [TopologicalRing α]
+variable (σ : Type*) [DecidableEq σ]
+  (α : Type*) [CommRing α] [TopologicalSpace α] [TopologicalRing α]
+  (R : Type*) [CommRing R] [TopologicalSpace R] [TopologicalRing R][TopologicalAlgebra α R]
 
 section
 
@@ -246,7 +254,9 @@ def toMvPowerSeries_inducing : @Inducing _ _
 def toMvPowerSeries_denseInducing : @DenseInducing _ _
   (toMvPowerSeries_induced σ α) (MvPowerSeries.topologicalSpace σ α) (toMvPowerSeries) where
     toInducing := toMvPowerSeries_inducing σ α
-    dense := toMvPowerSeries_denseRange σ α
+    dense := by
+      have := coeToMvPowerSeries_denseRange (σ := σ) (R := α)
+      sorry -- coeToMvPowerSeries_denseRange
 
 def toMvPowerSeries_denseEmbedding : @DenseEmbedding _ _
   (toMvPowerSeries_induced σ α) (MvPowerSeries.topologicalSpace σ α) (toMvPowerSeries) where

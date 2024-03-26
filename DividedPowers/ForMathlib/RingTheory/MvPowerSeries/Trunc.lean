@@ -1,7 +1,7 @@
 import Mathlib.RingTheory.MvPowerSeries.Basic
 import Mathlib.Data.Finsupp.Interval
 
-
+import DividedPowers.ForMathlib.MvPowerSeries.Topology
 
 noncomputable section
 
@@ -93,6 +93,28 @@ theorem coeff_mul_trunc' (n : σ →₀ ℕ) (f g : MvPowerSeries σ R)
   apply congr_arg₂
   rw [coeff_trunc', if_pos (le_trans le_self_add h)]
   rw [coeff_trunc', if_pos (le_trans le_add_self h)]
+
+section Continuity
+
+variable [TopologicalSpace R]
+local instance : TopologicalSpace (MvPowerSeries σ R) := topologicalSpace σ R
+
+local instance : TopologicalSpace (MvPolynomial σ R) :=
+  TopologicalSpace.induced MvPolynomial.toMvPowerSeries Pi.topologicalSpace
+
+
+/-- Truncation of power series is continuous -/
+theorem continuous_trunc' [TopologicalSpace R] [TopologicalSemiring R] (n : σ →₀ ℕ) :
+    Continuous (trunc' R n) := by
+  rw [continuous_induced_rng]
+  apply continuous_pi
+  intro m
+  simp only [Function.comp_apply, MvPolynomial.coe_def, coeff_trunc']
+  split_ifs with h
+  · exact continuous_apply m
+  · exact continuous_const
+
+end Continuity
 
 end Trunc'
 
