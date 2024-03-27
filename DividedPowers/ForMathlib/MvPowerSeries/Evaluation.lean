@@ -64,10 +64,93 @@ variable {φ : R →+* S} (hφ : Continuous φ)
 -- We endow MvPowerSeries σ R with the Pi topology
 open WithPiTopology
 
+def IsTopologicallyNilpotent
+  {α : Type*} [Semiring α] [TopologicalSpace α] (a : α) : Prop :=
+    Filter.Tendsto (fun n : ℕ => a ^ n) Filter.atTop (nhds 0)
+
+theorem IsTopologicallyNilpotent.mul_right
+    {α : Type*} [CommRing α] [TopologicalSpace α] [LinearTopology α]
+    {a : α} (ha : IsTopologicallyNilpotent a) (b : α) :
+    IsTopologicallyNilpotent (a * b) := by
+  intro v hv
+  rw [LinearTopology.mem_nhds_zero_iff] at hv
+  rcases hv with ⟨I, _, I_mem_nhds, I_subset⟩
+  specialize ha I_mem_nhds
+  simp only [Filter.mem_map, Filter.mem_atTop_sets, ge_iff_le, Set.mem_preimage, SetLike.mem_coe] at ha ⊢
+  rcases ha with ⟨n, ha⟩
+  use n
+  intro m hm
+  rw [mul_pow]
+  apply I_subset
+  apply I.mul_mem_right _ (ha m hm)
+
+ theorem IsTopologicallyNilpotent.mul_left
+    {α : Type*} [CommRing α] [TopologicalSpace α] [LinearTopology α]
+    (a : α) {b : α} (hb : IsTopologicallyNilpotent b) :
+    IsTopologicallyNilpotent (a * b) := by
+  rw [mul_comm]
+  exact IsTopologicallyNilpotent.mul_right hb a
+
+theorem IsTopologicallyNilpotent.add
+    {α : Type*} [CommRing α] [TopologicalSpace α] [LinearTopology α] {a b : α}
+    (ha : IsTopologicallyNilpotent a) (hb : IsTopologicallyNilpotent b) :
+    IsTopologicallyNilpotent (a + b) := by
+  intro v hv
+  rw [LinearTopology.mem_nhds_zero_iff] at hv
+  rcases hv with ⟨I, _, I_mem_nhds, I_subset⟩
+  specialize ha I_mem_nhds
+  specialize hb I_mem_nhds
+  simp only [Filter.mem_map, Filter.mem_atTop_sets, ge_iff_le,
+    Set.mem_preimage, SetLike.mem_coe] at ha hb
+  rcases ha with ⟨na, ha⟩
+  rcases hb with ⟨nb, hb⟩
+  simp only [Filter.mem_map, Filter.mem_atTop_sets, ge_iff_le, Set.mem_preimage]
+  use na + nb
+  intro m hm
+  apply I_subset
+  -- This will be in mathlib, PR #11723
+  rw [← Nat.add_sub_of_le hm, pow_add]
+  apply I.mul_mem_right
+  rw [add_pow]
+  apply Ideal.sum_mem
+  intro c _
+  apply I.mul_mem_right
+  by_cases h : na ≤ c
+  · apply I.mul_mem_right _ (ha c h)
+  · apply I.mul_mem_left _ (hb _ ?_)
+    simp only [not_le] at h
+    rw [add_comm, Nat.add_sub_assoc (le_of_lt h)]
+    apply Nat.le_add_right
+  -- end of stuff that will be in mathlib, PR #11723
+
+
 /-- Families at which power series can be evaluated -/
 structure EvalDomain (a : σ → S) : Prop where
-  hpow : ∀ s, Filter.Tendsto (fun n : ℕ => (a s) ^ n) Filter.atTop (nhds 0)
+  hpow : ∀ s, IsTopologicallyNilpotent (a s)
   tendsto_zero : Filter.Tendsto a Filter.cofinite (nhds 0)
+
+def evalDomain.submodule [LinearTopology S] : Submodule S (σ → S) where
+  carrier := setOf EvalDomain
+  add_mem' {a} {b} ha hb := by
+    simp only [Set.mem_setOf_eq] at ha hb ⊢
+    exact {
+      hpow := fun s ↦ IsTopologicallyNilpotent.add (ha.hpow s) (hb.hpow s)
+      tendsto_zero := by
+        rw [← add_zero 0]
+        apply Filter.Tendsto.add ha.tendsto_zero hb.tendsto_zero }
+  zero_mem' := by
+    simp only [Set.mem_setOf_eq]
+    exact {
+      hpow := fun s ↦ by
+        simp only [Pi.zero_apply]
+        apply tendsto_atTop_of_eventually_const (i₀ := 1)
+        intro i hi
+        rw [zero_pow]
+        apply?
+
+        sorry
+      tendsto_zero := tendsto_const_nhds }
+  smul_mem' := sorry
 
 /-- Bourbaki, Algèbre, chap. 4, §4, n°3, Prop. 4 (i) (a & b) -/
 theorem EvalDomain.map {a : σ → R} (ha : EvalDomain a) :
@@ -178,19 +261,10 @@ theorem _root_.MvPolynomial.coeToMvPowerSeries_uniformContinuous  :
     UniformContinuous (MvPolynomial.eval₂Hom φ a) := by
   apply uniformContinuous_of_continuousAt_zero
   intro u hu
-  simp only [Filter.mem_map]
-  rw [(induced_iff_nhds_eq _).mp rfl]
-  simp only [map_zero, Filter.mem_comap]
-
-  have : ∃ (I : Ideal S), ((I : Set S) ∈ nhds 0) ∧ I ≤ u := by
-    have hS' := hS.isTopology
-    rw [← Ideal.IsBasis.ofIdealBasis_topology_eq (Ideal.IsBasis.ofIdealBasis hS.toIdealBasis)] at hS'
-    rw [map_zero, TopologicalSpace.ext_iff_nhds.mp hS', Ideal.IsBasis.mem_nhds_zero_iff] at hu
-    rcases hu with ⟨i, hi⟩
-    use ↑i
-    convert hi
-  rcases this with ⟨I, hI, hI'⟩
-
+  simp only [coe_eval₂Hom, (induced_iff_nhds_eq _).mp rfl, coe_zero,
+    Filter.mem_map, Filter.mem_comap]
+  rw [map_zero, hS.mem_nhds_zero_iff] at hu
+  rcases hu with ⟨I, _, hI, hI'⟩
   let tendsto_zero := ha.tendsto_zero
   let hpow := ha.hpow
   simp only [Filter.tendsto_def] at tendsto_zero hpow

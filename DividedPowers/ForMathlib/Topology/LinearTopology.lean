@@ -136,7 +136,8 @@ def toIdealBasis {ι : Type*} {B : ι → Ideal α} (hB : Ideal.IsBasis B) : Ide
     exact hB.mul_right i b ha
 
 /-- An `Ideal.IsBasis` associated with an `IdealBasis` -/
-def ofIdealBasis (B : IdealBasis α) : Ideal.IsBasis (ι := B.sets) (fun x => (x : Ideal α)) where
+def _root_.IdealBasis.toIsBasis (B : IdealBasis α) :
+    Ideal.IsBasis (ι := B.sets) (fun x => (x : Ideal α)) where
   nonempty := Set.nonempty_coe_sort.mpr B.nonempty
   inter := fun s t ↦ by
     obtain ⟨u, hu, hu'⟩ := B.inter_sets s.prop t.prop
@@ -186,7 +187,7 @@ theorem mem_nhds_zero_iff {ι : Type*} {B : ι → Ideal α} (hB : Ideal.IsBasis
     use B i, ⟨i, rfl⟩, his
 
 theorem ofIdealBasis_topology_eq {ι : Type*} {B : ι → Ideal α} (hB : Ideal.IsBasis B) :
-    (ofIdealBasis hB.toIdealBasis).topology = hB.topology := by
+    (hB.toIdealBasis.toIsBasis).topology = hB.topology := by
   rw [TopologicalSpace.ext_iff_nhds]
   intro a
   simp [AddGroupFilterBasis.nhds_eq]
@@ -256,11 +257,67 @@ end linear_topology
 
 
 
+
+namespace IdealBasis
+
+variable {α : Type*} [Ring α]
+
+theorem mem_nhds_zero_iff (B : IdealBasis α)
+    (s : Set α) :
+    (s ∈ @nhds _ B.toIsBasis.topology 0) ↔
+    ∃ i ∈ B.sets, (i : Set α) ∈ @nhds _ B.toIsBasis.topology 0 ∧ i ≤ s := by
+  rw [Ideal.IsBasis.mem_nhds_zero_iff]
+  simp only [Subtype.exists, exists_and_left, exists_prop, Set.le_eq_subset]
+  constructor
+  · rintro ⟨a, mem_nhds, mem_sets, subset_s⟩
+    exact ⟨a, mem_sets, mem_nhds, subset_s⟩
+  · rintro ⟨i, hi, mem_nhds, subset_s⟩
+    exact ⟨i, mem_nhds, hi, subset_s⟩
+
+lemma ofComm {α : Type*} [CommRing α] (B : Set (Ideal α))
+    (nonempty : Set.Nonempty B)
+    (inter : ∀ {i j}, i ∈ B → j ∈ B → ∃ k ∈ B, k ≤ i ⊓ j) : IdealBasis α where
+  sets := B
+  inter_sets := inter
+  nonempty := nonempty
+  mul_right {i} {a b} _ ha := by
+    rw [mul_comm]
+    exact Ideal.mul_mem_left i b ha
+
+/-
+/-- An `IdealBasis` is a `RingFilterBasis` -/
+def toRingFilterBasis (B : IdealBasis α) : RingFilterBasis α where
+  sets := (fun (i : Ideal α) ↦ (i : Set α)) '' B.sets
+  nonempty := by simp ; exact B.nonempty
+  inter_sets {s t} hs ht := sorry
+  zero' := sorry
+  add' := sorry
+  neg' := sorry
+  conj' := sorry
+  mul' := sorry
+  mul_left' := sorry
+  mul_right' := sorry
+
+-/
+end IdealBasis
+
+
 section LinearTopology
 
-class LinearTopology (α : Type u) [Ring α] [τ : TopologicalSpace α]
-    extends IdealBasis α   where
-  isTopology :  τ = (Ideal.IsBasis.ofIdealBasis toIdealBasis).topology
+variable (α : Type u) [Ring α]
+
+class LinearTopology [τ : TopologicalSpace α]
+    extends IdealBasis α where
+  isTopology :  τ = toIdealBasis.toIsBasis.topology
+
+namespace LinearTopology
+
+theorem mem_nhds_zero_iff [TopologicalSpace α] [hL : LinearTopology α]
+    (s : Set α) :
+    (s ∈ nhds 0) ↔
+    ∃ i ∈ hL.sets, (i : Set α) ∈ nhds 0 ∧ i ≤ s := by
+  rw [TopologicalSpace.ext_iff_nhds.mp hL.isTopology,
+    hL.toIdealBasis.mem_nhds_zero_iff]
 
 /-
 class IsLinearTopology (α : Type u) [CommRing α] [τ : TopologicalSpace α]
