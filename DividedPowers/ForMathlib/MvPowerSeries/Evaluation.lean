@@ -68,6 +68,16 @@ def IsTopologicallyNilpotent
   {α : Type*} [Semiring α] [TopologicalSpace α] (a : α) : Prop :=
     Filter.Tendsto (fun n : ℕ => a ^ n) Filter.atTop (nhds 0)
 
+theorem IsTopologicallyNilpotent.map
+  {α β : Type*} [CommRing α] [CommRing β] [TopologicalSpace α] [TopologicalSpace β]
+  {φ : α →+* β} (hφ : Continuous φ)
+  {a : α} (ha : IsTopologicallyNilpotent a) :
+  IsTopologicallyNilpotent (φ a) := by
+  unfold IsTopologicallyNilpotent at ha ⊢
+  simp_rw [← map_pow]
+  apply Filter.Tendsto.comp _ ha
+  convert hφ.tendsto 0; rw [map_zero]
+
 theorem IsTopologicallyNilpotent.mul_right
     {α : Type*} [CommRing α] [TopologicalSpace α] [LinearTopology α]
     {a : α} (ha : IsTopologicallyNilpotent a) (b : α) :
@@ -145,21 +155,14 @@ def evalDomain.submodule [LinearTopology S] : Submodule S (σ → S) where
         simp only [Pi.zero_apply]
         apply tendsto_atTop_of_eventually_const (i₀ := 1)
         intro i hi
-        rw [zero_pow]
-        apply?
-
-        sorry
+        rw [zero_pow (Nat.ne_zero_iff_zero_lt.mpr hi)]
       tendsto_zero := tendsto_const_nhds }
   smul_mem' := sorry
 
 /-- Bourbaki, Algèbre, chap. 4, §4, n°3, Prop. 4 (i) (a & b) -/
 theorem EvalDomain.map {a : σ → R} (ha : EvalDomain a) :
     EvalDomain (fun s ↦ φ (a s)) where
-  hpow := fun s ↦  by
-    simp_rw [← RingHom.map_pow]
-    apply Filter.Tendsto.comp
-    convert hφ.tendsto 0; rw [RingHom.map_zero]
-    exact ha.hpow s
+  hpow := fun s ↦ IsTopologicallyNilpotent.map hφ (ha.hpow s)
   tendsto_zero := by
     apply Filter.Tendsto.comp
     convert hφ.tendsto 0; rw [RingHom.map_zero]
@@ -270,13 +273,12 @@ theorem _root_.MvPolynomial.coeToMvPowerSeries_uniformContinuous  :
   simp only [Filter.tendsto_def] at tendsto_zero hpow
   specialize tendsto_zero I hI
   simp only [Filter.mem_cofinite] at tendsto_zero
-  let hpow := fun s ↦ hpow s I hI
+  let hpow' := fun s ↦ hpow s hI
+  simp only [Filter.mem_map, Filter.mem_atTop_sets, ge_iff_le, Set.mem_preimage, SetLike.mem_coe] at hpow'
 
   let n : σ → ℕ := fun s ↦ sInf {n : ℕ | (a s) ^ n.succ ∈ I}
   have hn_ne : ∀ s, Set.Nonempty {n : ℕ | (a s) ^ n.succ ∈ I} := fun s ↦ by
-    specialize hpow s
-    simp only [Filter.mem_atTop_sets, ge_iff_le, Set.mem_preimage, SetLike.mem_coe] at hpow
-    rcases hpow with ⟨n, hn⟩
+    rcases hpow' s with ⟨n, hn⟩
     use n
     simp only [Set.mem_setOf_eq]
     refine hn n.succ (Nat.le_succ n)
@@ -390,6 +392,20 @@ theorem eval₂_unique
     ε = eval₂ φ a :=
   (DenseInducing.extend_unique _ h hε).symm
 
+theorem comp_eval₂
+    {T : Type*} [CommRing T] [UniformSpace T] [LinearTopology T] [T2Space T]
+    {ε : S →+* T} (hε : Continuous ε) :
+    ε ∘ eval₂ φ a = eval₂ (ε.comp φ) (ε ∘ a) := by
+  rw [← coe_eval₂Hom hφ ha, ← RingHom.coe_comp]
+  apply eval₂_unique
+  simp only [RingHom.coe_comp]
+  exact Continuous.comp hε (continuous_eval₂ hφ ha)
+  intro p
+  simp only [RingHom.coe_comp, Function.comp_apply, eval₂_coe]
+  rw [coe_eval₂Hom hφ ha, eval₂_coe hφ ha, ← MvPolynomial.coe_eval₂Hom]
+  rw [← RingHom.comp_apply, MvPolynomial.comp_eval₂Hom]
+  rfl
+
 variable [TopologicalAlgebra R S]
 
 /-- Evaluation of power series at adequate elements, as an `AlgHom` -/
@@ -428,4 +444,63 @@ theorem aeval_unique {ε : MvPowerSeries σ R →ₐ[R] S} (hε : Continuous ε)
     simp only [AlgHom.toRingHom_eq_coe, coe_mul, coe_X, map_mul,
       RingHom.coe_coe, eval₂_mul, MvPolynomial.eval₂_X, h]
 
+theorem comp_aeval
+    {T : Type*} [CommRing T] [UniformSpace T] [UniformAddGroup T]
+    [LinearTopology T] [T2Space T] [TopologicalRing T] [TopologicalAlgebra R T] [CompleteSpace T]
+    {ε : S →ₐ[R] T} (hε : Continuous ε) :
+    ε.comp (aeval ha) = aeval (ha.map hε)  := by
+  apply DFunLike.coe_injective
+  simp only [AlgHom.coe_comp, -- AlgHom.toRingHom_eq_coe, RingHom.coe_coe,
+    coe_aeval ha]
+  erw [comp_eval₂ TopologicalAlgebra.continuous_algebraMap ha hε]
+  apply congr_arg₂
+  simp only [AlgHom.toRingHom_eq_coe, AlgHom.comp_algebraMap_of_tower]
+  simp only [AlgHom.toRingHom_eq_coe, RingHom.coe_coe]
+  ext; rfl
+
 end MvPowerSeries
+
+namespace PowerSeries
+
+/- take f : PowerSeries R = MvPowerSeries Unit R
+evaluate at s : S  =~= Unit → S
+
+def
+-/
+
+variable {R : Type*} [CommRing R] [UniformSpace R] [UniformAddGroup R] [TopologicalRing R]
+variable {S : Type*} [CommRing S] [UniformSpace S] [UniformAddGroup S][TopologicalRing S] [T2Space S] [CompleteSpace S]
+variable {φ : R →+* S} (hφ : Continuous φ)
+variable {a : S}
+
+/-- Families at which power series can be evaluated -/
+structure EvalDomain (a : S) : Prop where
+  hpow : IsTopologicallyNilpotent a
+
+open WithPiUniformity
+
+def EvalDomain.ideal : Ideal S where
+  carrier := setOf IsTopologicallyNilpotent
+  add_mem' := sorry
+  zero_mem' := sorry
+  smul_mem' := sorry
+
+variable (φ a)
+noncomputable def eval₂ : PowerSeries R → S :=
+  MvPowerSeries.eval₂ φ (fun _ ↦ a)
+
+variable [hS : LinearTopology S] {a : S} (ha : EvalDomain a)
+
+def EvalDomain.const : MvPowerSeries.EvalDomain (fun (_ : Unit) ↦ a) where
+  hpow := fun _ ↦ ha.hpow
+  tendsto_zero := by simp only [Filter.cofinite_eq_bot, Filter.tendsto_bot]
+
+noncomputable def eval₂Hom : PowerSeries R →+* S :=
+  MvPowerSeries.eval₂Hom hφ ha.const
+
+variable [TopologicalAlgebra R S]
+
+noncomputable def aeval : PowerSeries R →ₐ[R] S :=
+  MvPowerSeries.aeval ha.const
+
+end PowerSeries
