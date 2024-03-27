@@ -80,12 +80,7 @@ variable {σ : Type*} [DecidableEq σ]
   {S : Type*} [CommRing S] [Algebra R S]
   -- [TopologicalSpace R] [TopologicalRing R][TopologicalAlgebra α R]
 
-/-- Families of power series which can be substituted -/
-structure substDomain (a : σ → MvPowerSeries τ S) : Prop where
-  const_coeff : ∀ s, coeff S 0 (a s) = 0
-  finite_support : a.support.Finite
-
-variable {a : σ → MvPowerSeries τ S} (ha : substDomain a)
+variable {a : σ → MvPowerSeries τ S} (ha : SubstDomain a)
 
 open WithPiTopology WithPiUniformity
 
@@ -111,17 +106,75 @@ noncomputable local instance : TopologicalAlgebra R (MvPowerSeries τ S) := by
     refine DiscreteTopology.topologicalAlgebra R (MvPowerSeries τ S)
 local instance : CompleteSpace (MvPowerSeries τ S) := by refine completeSpace τ S
 
-/-- Substibution of power series into a power series -/
+/-- Families of power series which can be substituted -/
+structure SubstDomain (a : σ → MvPowerSeries τ S) : Prop where
+  const_coeff : ∀ s, IsNilpotent (constantCoeff τ S (a s))
+  tendsto_zero : Filter.Tendsto a Filter.cofinite (nhds 0)
+
+def substDomain [Fintype σ] {a : σ → MvPowerSeries τ S}
+    (ha : ∀ s, constantCoeff τ S (a s) = 0) : SubstDomain a where
+  const_coeff := fun s ↦ by rw [ha s]; exact IsNilpotent.zero
+  tendsto_zero := by simp only [Filter.cofinite_eq_bot, Filter.tendsto_bot]
+
+/-- Substitution of power series into a power series -/
 noncomputable def subst (a : σ → MvPowerSeries τ S) (f : MvPowerSeries σ R) :
     MvPowerSeries τ S :=
   MvPowerSeries.eval₂ (algebraMap _ _) a f
 
-/-- Substibution of power series into a power series -/
+def SubstDomain.evalDomain : EvalDomain a := {
+  hpow := fun s ↦ (tendsto_pow_of_constantCoeff_nilpotent_iff (a s)).mpr (ha.const_coeff s)
+  tendsto_zero := ha.tendsto_zero }
+
+/-- Substitution of power series into a power series -/
 noncomputable def substAlgHom : MvPowerSeries σ R →ₐ[R] MvPowerSeries τ S :=
-  let ha' : evalDomain a := {
-    hpow := fun s ↦ tendsto_pow_zero_of_constantCoeff_zero (ha.const_coeff s)
-    hcof := tendsto_nhds_of_eventually_eq ha.finite_support }
-  MvPowerSeries.aeval ha'
+  MvPowerSeries.aeval ha.evalDomain
+
+theorem coe_subst : subst a = ⇑(substAlgHom (R := R) ha) := rfl
+
+theorem subst_coe (p : MvPolynomial σ R) :
+    subst (R := R) a p = MvPolynomial.aeval a p := by
+  refine aeval_coe ha.evalDomain p
+
+end MvPowerSeries
+
+section ExponentialPowerSeries
+
+/- Works, but is not very nice to use -/
+open MvPowerSeries
+variable (R : Type*) [CommRing R] (f : MvPowerSeries Unit R)
+
+noncomputable def Dom : Ideal (Unit → MvPowerSeries (Fin 2) R) where
+  carrier := { f : Unit → MvPowerSeries (Fin 2) R | SubstDomain f }
+  add_mem' := sorry
+  zero_mem' := sorry
+  smul_mem' := sorry
+
+variable {R}
+
+noncomputable def T (i : Fin 2) : Dom R :=
+  ⟨fun _ ↦ (MvPowerSeries.X i),
+    substDomain (fun _ ↦ by simp only [constantCoeff_X])⟩
+
+def IsExponential (f : MvPowerSeries Unit R) :=
+  f.subst (T 0 + T 1) = (f.subst (T 0)) * (f.subst (T 1))
+
+example (f g : MvPowerSeries Unit R) (hf : IsExponential f) (hg : IsExponential g) :
+    IsExponential (f * g) := by
+  have h0 : SubstDomain (T R 0) := substDomain (fun _ ↦ by simp [T])
+  have h1 : SubstDomain (T R 1) := substDomain (fun _ ↦ by simp [T])
+  have h01 : SubstDomain (T R 0 + T R 1) := substDomain (fun _ ↦ by simp [T])
+  simp only [IsExponential] at hf hg ⊢
+  simp only [coe_subst h0, coe_subst h1, coe_subst h01, map_mul] at hf hg ⊢
+  rw [hf, hg]
+  ring
+
+noncomputable example : MvPowerSeries Unit R := X ()
+
+noncomputable example (r : R) : MvPowerSeries Unit R := r • X ()
+noncomputable example (f : MvPowerSeries Unit R) (hf : IsExponential f) (r : R) :
+    IsExponential (f.subst (σ := Unit) (τ  := Unit) (R := R) (S := R) (r • (X ())) : MvPowerSeries Unit R)) := by sorry
+
+end ExponentialPowerSeries
 
 #exit
 

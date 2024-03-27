@@ -65,27 +65,27 @@ variable {φ : R →+* S} (hφ : Continuous φ)
 open WithPiTopology
 
 /-- Families at which power series can be evaluated -/
-structure evalDomain (a : σ → S) : Prop where
+structure EvalDomain (a : σ → S) : Prop where
   hpow : ∀ s, Filter.Tendsto (fun n : ℕ => (a s) ^ n) Filter.atTop (nhds 0)
-  hcof : Filter.Tendsto a Filter.cofinite (nhds 0)
+  tendsto_zero : Filter.Tendsto a Filter.cofinite (nhds 0)
 
 /-- Bourbaki, Algèbre, chap. 4, §4, n°3, Prop. 4 (i) (a & b) -/
-theorem map_evalDomain {a : σ → R} (ha : evalDomain a) :
-    evalDomain (fun s ↦ φ (a s)) where
+theorem EvalDomain.map {a : σ → R} (ha : EvalDomain a) :
+    EvalDomain (fun s ↦ φ (a s)) where
   hpow := fun s ↦  by
     simp_rw [← RingHom.map_pow]
     apply Filter.Tendsto.comp
     convert hφ.tendsto 0; rw [RingHom.map_zero]
     exact ha.hpow s
-  hcof := by
+  tendsto_zero := by
     apply Filter.Tendsto.comp
     convert hφ.tendsto 0; rw [RingHom.map_zero]
-    exact ha.hcof
+    exact ha.tendsto_zero
 
-theorem evalDomain_X :
-    evalDomain (fun s ↦ (MvPowerSeries.X s : MvPowerSeries σ R)) where
+theorem EvalDomain.evalDomain_X :
+    EvalDomain (fun s ↦ (MvPowerSeries.X s : MvPowerSeries σ R)) where
   hpow := fun s ↦ tendsto_pow_zero_of_constantCoeff_zero (constantCoeff_X s)
-  hcof := variables_tendsto_zero
+  tendsto_zero := variables_tendsto_zero
 
 /-
 /-- Bourbaki, Algèbre, chap. 4, §4, n°3, Prop. 4 (i) (a) -/
@@ -171,7 +171,7 @@ private instance : TopologicalRing (MvPowerSeries σ R) :=
 -/
 
 variable [hS : LinearTopology S]
-  {a : σ → S} (ha : MvPowerSeries.evalDomain a)
+  {a : σ → S} (ha : EvalDomain a)
 
 /- The coercion of polynomials into power series is uniformly continuous. -/
 theorem _root_.MvPolynomial.coeToMvPowerSeries_uniformContinuous  :
@@ -191,11 +191,11 @@ theorem _root_.MvPolynomial.coeToMvPowerSeries_uniformContinuous  :
     convert hi
   rcases this with ⟨I, hI, hI'⟩
 
-  let hcof := ha.hcof
+  let tendsto_zero := ha.tendsto_zero
   let hpow := ha.hpow
-  simp only [Filter.tendsto_def] at hcof hpow
-  specialize hcof I hI
-  simp only [Filter.mem_cofinite] at hcof
+  simp only [Filter.tendsto_def] at tendsto_zero hpow
+  specialize tendsto_zero I hI
+  simp only [Filter.mem_cofinite] at tendsto_zero
   let hpow := fun s ↦ hpow s I hI
 
   let n : σ → ℕ := fun s ↦ sInf {n : ℕ | (a s) ^ n.succ ∈ I}
@@ -207,7 +207,7 @@ theorem _root_.MvPolynomial.coeToMvPowerSeries_uniformContinuous  :
     simp only [Set.mem_setOf_eq]
     refine hn n.succ (Nat.le_succ n)
   have hn : Set.Finite (n.support) := by
-    apply @Finite.Set.subset  _ _ _ hcof
+    apply @Finite.Set.subset  _ _ _ tendsto_zero
     intro s
     simp only [Function.mem_support, ne_eq, Set.mem_compl_iff, Set.mem_preimage, SetLike.mem_coe, not_imp_comm, not_not]
     simp only [imp_or, n, Nat.sInf_eq_zero, Set.mem_setOf_eq, zero_add, pow_one, imp_self, true_or]
@@ -316,9 +316,10 @@ theorem eval₂_unique
     ε = eval₂ φ a :=
   (DenseInducing.extend_unique _ h hε).symm
 
+variable [TopologicalAlgebra R S]
+
 /-- Evaluation of power series at adequate elements, as an `AlgHom` -/
-noncomputable def aeval [TopologicalAlgebra R S] :
-    MvPowerSeries σ R →ₐ[R] S where
+noncomputable def aeval : MvPowerSeries σ R →ₐ[R] S where
   toRingHom := MvPowerSeries.eval₂Hom TopologicalAlgebra.continuous_algebraMap ha
   commutes' := fun r ↦ by
     simp only [RingHom.toMonoidHom_eq_coe, OneHom.toFun_eq_coe, MonoidHom.toOneHom_coe,
@@ -326,21 +327,24 @@ noncomputable def aeval [TopologicalAlgebra R S] :
     rw [← c_eq_algebraMap, coe_eval₂Hom]
     exact eval₂_C TopologicalAlgebra.continuous_algebraMap ha r
 
-theorem coe_aeval [TopologicalAlgebra R S] :
+theorem coe_aeval :
     ⇑(MvPowerSeries.aeval ha) = MvPowerSeries.eval₂ (algebraMap R S) a :=
   rfl
 
-theorem aeval_unique [TopologicalAlgebra R S]
-    {ε : MvPowerSeries σ R →ₐ[R] S} (hε : Continuous ε) :
-    ε = MvPowerSeries.aeval (map_evalDomain hε evalDomain_X) := by
+theorem aeval_coe (p : MvPolynomial σ R) :
+    MvPowerSeries.aeval ha (p : MvPowerSeries σ R) = MvPolynomial.aeval a p := by
+  simp only [coe_aeval, eval₂_coe TopologicalAlgebra.continuous_algebraMap ha, aeval_def]
+
+theorem aeval_unique {ε : MvPowerSeries σ R →ₐ[R] S} (hε : Continuous ε) :
+    ε = aeval (EvalDomain.evalDomain_X.map hε) := by
   apply DFunLike.ext'
-  rw [MvPowerSeries.coe_aeval]
-  apply MvPowerSeries.eval₂_unique hε
+  rw [coe_aeval]
+  apply eval₂_unique hε
   intro p
   induction p using MvPolynomial.induction_on with
   | h_C r =>
     simp only [AlgHom.toRingHom_eq_coe, coe_C, RingHom.coe_coe, MvPolynomial.eval₂_C]
-    rw [MvPowerSeries.c_eq_algebraMap, AlgHom.commutes]
+    rw [c_eq_algebraMap, AlgHom.commutes]
   | h_add p q hp hq =>
     simp only [AlgHom.toRingHom_eq_coe, RingHom.coe_coe] at hp hq
     simp only [AlgHom.toRingHom_eq_coe, coe_add, map_add,
