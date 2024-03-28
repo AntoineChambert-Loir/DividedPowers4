@@ -83,12 +83,13 @@ theorem IsNilpotent.finsum {α : Type*} [CommSemiring α] {β : Type*} (f : β �
   · simp only [finsum_def, dif_neg h, IsNilpotent.zero]
 
 
-def MvPowerSeries.mapAlgHom (σ : Type*) {R : Type*} [CommSemiring R]
-  {S : Type*} [Semiring S] [Algebra R S] {T : Type*} [Semiring T] [Algebra R T]
-  (φ : S →ₐ[R] T) :
-  MvPowerSeries σ S →ₐ[R] MvPowerSeries σ T where
-  toRingHom := MvPowerSeries.map σ φ
-  commutes' := sorry
+def MvPowerSeries.mapAlgHom (σ : Type*) {R : Type*} [CommSemiring R] {S : Type*}
+    [Semiring S] [Algebra R S] {T : Type*} [Semiring T] [Algebra R T] (φ : S →ₐ[R] T) :
+    MvPowerSeries σ S →ₐ[R] MvPowerSeries σ T where
+  toRingHom   := MvPowerSeries.map σ φ
+  commutes' r := by
+    simp only [RingHom.toMonoidHom_eq_coe, OneHom.toFun_eq_coe, MonoidHom.toOneHom_coe,
+      MonoidHom.coe_coe, MvPowerSeries.algebraMap_apply, map_C, RingHom.coe_coe, AlgHom.commutes]
 
 def PowerSeries.mapAlgHom {R : Type*} [CommSemiring R]
   {S : Type*} [Semiring S] [Algebra R S] {T : Type*} [Semiring T] [Algebra R T]
@@ -384,19 +385,29 @@ noncomputable def subst (a : MvPowerSeries τ S) (f : PowerSeries R) :
 
 variable {a : MvPowerSeries τ S} (ha : SubstDomain a)
 
+section Finite
+
+variable [Finite τ]
 def SubstDomain.const : MvPowerSeries.SubstDomain (fun (_ : Unit) ↦ a) where
-  const_coeff := fun _ ↦ ha.const_coeff
-  tendsto_zero := sorry
+  const_coeff  := fun _ ↦ ha.const_coeff
+  tendsto_zero := by simp only [Filter.cofinite_eq_bot, Filter.tendsto_bot]
 
 /-- Substitution of power series into a power series -/
-noncomputable def substAlgHom : PowerSeries R →ₐ[R] MvPowerSeries τ S :=
+noncomputable def substAlgHom  : PowerSeries R →ₐ[R] MvPowerSeries τ S :=
   MvPowerSeries.substAlgHom ha.const
 
 theorem coe_subst : subst a = ⇑(substAlgHom (R := R) ha) := rfl
 
 theorem subst_coe (p : Polynomial R) :
-    subst (R := R) a (p : PowerSeries R) = Polynomial.aeval a p :=
+    subst (R := R) a (p : PowerSeries R) = Polynomial.aeval a p := by
+  --rw [subst, MvPowerSeries.subst_coe _]
+
   sorry
+
+-- This probably needs to be moved to later
+end Finite
+
+--#exit --TODO: remove
 
 theorem comp_subst
     {T : Type*} [CommRing T] [Algebra R T] (ε : S →ₐ[R] T) :
