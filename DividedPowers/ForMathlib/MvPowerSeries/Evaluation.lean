@@ -69,20 +69,18 @@ def IsTopologicallyNilpotent
   {α : Type*} [Semiring α] [TopologicalSpace α] (a : α) : Prop :=
     Filter.Tendsto (fun n : ℕ => a ^ n) Filter.atTop (nhds 0)
 
-theorem IsTopologicallyNilpotent.map
-  {α β : Type*} [CommRing α] [CommRing β] [TopologicalSpace α] [TopologicalSpace β]
-  {φ : α →+* β} (hφ : Continuous φ)
-  {a : α} (ha : IsTopologicallyNilpotent a) :
+namespace IsTopologicallyNilpotent
+
+theorem map {α β : Type*} [CommRing α] [CommRing β] [TopologicalSpace α] [TopologicalSpace β]
+  {φ : α →+* β} (hφ : Continuous φ) {a : α} (ha : IsTopologicallyNilpotent a) :
   IsTopologicallyNilpotent (φ a) := by
   unfold IsTopologicallyNilpotent at ha ⊢
   simp_rw [← map_pow]
   apply Filter.Tendsto.comp _ ha
   convert hφ.tendsto 0; rw [map_zero]
 
-theorem IsTopologicallyNilpotent.mul_right
-    {α : Type*} [CommRing α] [TopologicalSpace α] [LinearTopology α]
-    {a : α} (ha : IsTopologicallyNilpotent a) (b : α) :
-    IsTopologicallyNilpotent (a * b) := by
+theorem mul_right {α : Type*} [CommRing α] [TopologicalSpace α] [LinearTopology α] {a : α}
+    (ha : IsTopologicallyNilpotent a) (b : α) : IsTopologicallyNilpotent (a * b) := by
   intro v hv
   rw [LinearTopology.mem_nhds_zero_iff] at hv
   rcases hv with ⟨I, _, I_mem_nhds, I_subset⟩
@@ -95,15 +93,11 @@ theorem IsTopologicallyNilpotent.mul_right
   apply I_subset
   apply I.mul_mem_right _ (ha m hm)
 
- theorem IsTopologicallyNilpotent.mul_left
-    {α : Type*} [CommRing α] [TopologicalSpace α] [LinearTopology α]
-    (a : α) {b : α} (hb : IsTopologicallyNilpotent b) :
-    IsTopologicallyNilpotent (a * b) := by
-  rw [mul_comm]
-  exact IsTopologicallyNilpotent.mul_right hb a
+ theorem mul_left {α : Type*} [CommRing α] [TopologicalSpace α] [LinearTopology α] (a : α) {b : α}
+    (hb : IsTopologicallyNilpotent b) : IsTopologicallyNilpotent (a * b) := by
+  rw [mul_comm]; exact mul_right hb a
 
-theorem IsTopologicallyNilpotent.add
-    {α : Type*} [CommRing α] [TopologicalSpace α] [LinearTopology α] {a b : α}
+theorem add {α : Type*} [CommRing α] [TopologicalSpace α] [LinearTopology α] {a b : α}
     (ha : IsTopologicallyNilpotent a) (hb : IsTopologicallyNilpotent b) :
     IsTopologicallyNilpotent (a + b) := by
   intro v hv
@@ -134,6 +128,11 @@ theorem IsTopologicallyNilpotent.add
     apply Nat.le_add_right
   -- end of stuff that will be in mathlib, PR #11723
 
+theorem zero {α : Type*} [CommRing α] [TopologicalSpace α] :
+  IsTopologicallyNilpotent (0 : α) := tendsto_atTop_of_eventually_const (i₀ := 1)
+    (fun _ hi => by rw [zero_pow (Nat.ne_zero_iff_zero_lt.mpr hi)])
+
+end IsTopologicallyNilpotent
 
 /-- Families at which power series can be evaluated -/
 structure EvalDomain (a : σ → S) : Prop where
@@ -158,7 +157,14 @@ def evalDomain.submodule [LinearTopology S] : Submodule S (σ → S) where
         intro i hi
         rw [zero_pow (Nat.ne_zero_iff_zero_lt.mpr hi)]
       tendsto_zero := tendsto_const_nhds }
-  smul_mem' := sorry
+  smul_mem' c {x} hx := by
+    simp only [Set.mem_setOf_eq] at hx ⊢
+    exact {
+      hpow := fun s ↦ IsTopologicallyNilpotent.mul_left _ (hx.hpow s)
+      tendsto_zero := by
+        rw [← smul_zero c]
+        apply Filter.Tendsto.const_smul hx.tendsto_zero }
+
 
 /-- Bourbaki, Algèbre, chap. 4, §4, n°3, Prop. 4 (i) (a & b) -/
 theorem EvalDomain.map {a : σ → R} (ha : EvalDomain a) :
@@ -502,9 +508,8 @@ def
 -/
 
 variable {R : Type*} [CommRing R] [UniformSpace R] [UniformAddGroup R] [TopologicalRing R]
-variable {S : Type*} [CommRing S] [UniformSpace S] [UniformAddGroup S][TopologicalRing S] [T2Space S] [CompleteSpace S]
-variable {φ : R →+* S} (hφ : Continuous φ)
-variable {a : S}
+variable {S : Type*} [CommRing S] [UniformSpace S] [UniformAddGroup S][TopologicalRing S]
+  [T2Space S] [CompleteSpace S]
 
 /-- Families at which power series can be evaluated -/
 structure EvalDomain (a : S) : Prop where
@@ -512,13 +517,14 @@ structure EvalDomain (a : S) : Prop where
 
 open WithPiUniformity
 
-def EvalDomain.ideal : Ideal S where
-  carrier := setOf IsTopologicallyNilpotent
-  add_mem' := sorry
-  zero_mem' := sorry
-  smul_mem' := sorry
+def EvalDomain.ideal [LinearTopology S] : Ideal S where
+  carrier   := setOf IsTopologicallyNilpotent
+  add_mem'  := IsTopologicallyNilpotent.add
+  zero_mem' := IsTopologicallyNilpotent.zero
+  smul_mem' := IsTopologicallyNilpotent.mul_left
 
-variable (φ a)
+variable {φ : R →+* S} (hφ : Continuous φ) (a : S)
+
 noncomputable def eval₂ : PowerSeries R → S :=
   MvPowerSeries.eval₂ φ (fun _ ↦ a)
 
