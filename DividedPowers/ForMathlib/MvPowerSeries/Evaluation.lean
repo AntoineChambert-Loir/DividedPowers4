@@ -17,6 +17,7 @@ import DividedPowers.ForMathlib.Topology.LinearTopology
 import DividedPowers.ForMathlib.MvPowerSeries.Topology
 import DividedPowers.ForMathlib.Topology.Algebra.Algebra.Basic
 
+
 /- # Evaluation of (multivariate) power series
 
 Let `σ`, `R` `S` be types, with `CommRing R`, `CommRing S`.
@@ -368,7 +369,7 @@ theorem uniformContinuous_eval₂ :
     (coeToMvPowerSeries_uniformContinuous hφ ha)
 
 theorem continuous_eval₂ :
-    Continuous (eval₂ φ a) :=
+    Continuous (eval₂ φ a : MvPowerSeries σ R → S) :=
   (uniformContinuous_eval₂ hφ ha).continuous
 
 theorem eval₂_coe (p : MvPolynomial σ R) :
@@ -385,6 +386,20 @@ theorem eval₂_C (r : R) :
 theorem eval₂_X (s : σ) :
     eval₂ φ a (X s) = a s := by
   rw [← coe_X, eval₂_coe hφ ha, MvPolynomial.eval₂_X]
+
+variable (f : MvPowerSeries σ R) (d : σ →₀ ℕ)
+
+theorem hasSum_eval₂ (f : MvPowerSeries σ R) :
+    HasSum
+    (fun (d : σ →₀ ℕ) ↦ φ (coeff R d f) * (d.prod fun s e => (a s) ^ e))
+    (MvPowerSeries.eval₂ φ a f) := by
+  convert (hasSum_of_monomials_self f).map (eval₂Hom hφ ha) (continuous_eval₂ hφ ha) with d
+  simp only [Function.comp_apply, coe_eval₂Hom, ← MvPolynomial.coe_monomial, eval₂_coe hφ ha, eval₂_monomial]
+
+theorem eval₂_eq_sum (f : MvPowerSeries σ R) :
+    MvPowerSeries.eval₂ φ a f =
+      tsum (fun (d : σ →₀ ℕ) ↦ φ (coeff R d f) * (d.prod fun s e => (a s) ^ e)) :=
+  (hasSum_eval₂ hφ ha f).tsum_eq.symm
 
 theorem eval₂_unique
     {ε : MvPowerSeries σ R →+* S} (hε : Continuous ε)
@@ -421,6 +436,9 @@ theorem coe_aeval :
     ⇑(MvPowerSeries.aeval ha) = MvPowerSeries.eval₂ (algebraMap R S) a :=
   rfl
 
+theorem continuous_aeval : Continuous (aeval ha : MvPowerSeries σ R → S) :=
+  continuous_eval₂ TopologicalAlgebra.continuous_algebraMap ha
+
 theorem aeval_coe (p : MvPolynomial σ R) :
     MvPowerSeries.aeval ha (p : MvPowerSeries σ R) = MvPolynomial.aeval a p := by
   simp only [coe_aeval, eval₂_coe TopologicalAlgebra.continuous_algebraMap ha, aeval_def]
@@ -443,6 +461,21 @@ theorem aeval_unique {ε : MvPowerSeries σ R →ₐ[R] S} (hε : Continuous ε)
     simp only [AlgHom.toRingHom_eq_coe, RingHom.coe_coe] at h
     simp only [AlgHom.toRingHom_eq_coe, coe_mul, coe_X, map_mul,
       RingHom.coe_coe, eval₂_mul, MvPolynomial.eval₂_X, h]
+
+theorem hasSum_aeval (f : MvPowerSeries σ R) :
+    HasSum
+    (fun (d : σ →₀ ℕ) ↦ (coeff R d f) • (d.prod fun s e => (a s) ^ e))
+    (MvPowerSeries.aeval ha f)
+     :=  by
+  have := hasSum_eval₂ TopologicalAlgebra.continuous_algebraMap ha f
+  simp_rw [← smul_eq_mul, algebraMap_smul] at this
+  rw [coe_aeval]
+  exact this
+
+theorem aeval_eq_sum (f : MvPowerSeries σ R) :
+    MvPowerSeries.aeval ha f =
+      tsum (fun (d : σ →₀ ℕ) ↦ (coeff R d f) • (d.prod fun s e => (a s) ^ e)) :=
+  (hasSum_aeval ha f).tsum_eq.symm
 
 theorem comp_aeval
     {T : Type*} [CommRing T] [UniformSpace T] [UniformAddGroup T]
