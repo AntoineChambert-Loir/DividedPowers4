@@ -310,6 +310,11 @@ class LinearTopology [τ : TopologicalSpace α]
     extends IdealBasis α where
   isTopology :  τ = toIdealBasis.toIsBasis.topology
 
+example [TopologicalSpace α] [hLT : LinearTopology α] :
+  TopologicalRing α where
+    continuous_add := sorry
+    continuous_mul := sorry
+    continuous_neg := sorry
 namespace LinearTopology
 
 theorem mem_nhds_zero_iff [TopologicalSpace α] [hL : LinearTopology α]
