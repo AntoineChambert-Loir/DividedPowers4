@@ -17,12 +17,10 @@ theorem Finset.prod_one_add {ι α : Type _} [DecidableEq ι] [CommRing α] {f :
   ext t
   convert mul_one (Finset.prod t fun a => f a)
   exact Finset.prod_eq_one (fun i _ => rfl)
-#align finset.prod_one_add Finset.prod_one_add
 
 theorem MvPowerSeries.coeff_eq_apply {σ α : Type _} [Semiring α] (f : MvPowerSeries σ α)
     (d : σ →₀ ℕ) : MvPowerSeries.coeff α d f = f d :=
   rfl
-#align mv_power_series.coeff_eq_apply MvPowerSeries.coeff_eq_apply
 
 namespace MvPowerSeries
 
@@ -36,18 +34,20 @@ variable [TopologicalSpace α]
 
 namespace WithPiTopology
 
-/-- The pointwise topology on mv_power_series -/
+/-- The pointwise topology on MvPowerSeries -/
 scoped instance topologicalSpace : TopologicalSpace (MvPowerSeries σ α) :=
   Pi.topologicalSpace
 
 /-- Components are continuous -/
-theorem continuous_component : ∀ d : σ →₀ ℕ, Continuous fun a : MvPowerSeries σ α => a d :=
+theorem continuous_component :
+    ∀ d : σ →₀ ℕ, Continuous fun a : MvPowerSeries σ α => a d :=
   continuous_pi_iff.mp continuous_id
 
 variable {σ α}
 
-/-- coeff are continuous-/
-theorem continuous_coeff [Semiring α] (d : σ →₀ ℕ) : Continuous (MvPowerSeries.coeff α d) :=
+/-- coeff are continuous -/
+theorem continuous_coeff [Semiring α] (d : σ →₀ ℕ) :
+    Continuous (MvPowerSeries.coeff α d) :=
   continuous_component σ α d
 
 /-- constant_coeff is continuous -/
@@ -59,14 +59,13 @@ theorem continuous_constantCoeff [Semiring α] :
 theorem tendsto_iff_coeff_tendsto [Semiring α] {ι : Type _}
     (f : ι → MvPowerSeries σ α) (u : Filter ι) (g : MvPowerSeries σ α) :
     Filter.Tendsto f u (nhds g) ↔
-  ∀ d : σ →₀ ℕ, Filter.Tendsto (fun i => coeff α d (f i)) u (nhds (coeff α d g)) := by
+    ∀ d : σ →₀ ℕ, Filter.Tendsto (fun i => coeff α d (f i)) u (nhds (coeff α d g)) := by
   rw [nhds_pi, Filter.tendsto_pi]
   exact forall_congr' (fun d => Iff.rfl)
 
-
 variable (σ α)
 
-/-- The semiring topology on mv_power_series of a topological semiring -/
+/-- The semiring topology on MvPowerSeries of a topological semiring -/
 scoped instance topologicalSemiring [Semiring α] [TopologicalSemiring α] :
     TopologicalSemiring (MvPowerSeries σ α) where
     continuous_add := continuous_pi fun d => Continuous.comp continuous_add
@@ -77,7 +76,7 @@ scoped instance topologicalSemiring [Semiring α] [TopologicalSemiring α] :
         (Continuous.snd' (continuous_component σ α i.snd))))
 
 
-/-- The ring topology on mv_power_series of a topological ring -/
+/-- The ring topology on MvPowerSeries of a topological ring -/
 scoped instance topologicalRing [Ring α] [TopologicalRing α] :
     TopologicalRing (MvPowerSeries σ α) :=
   { topologicalSemiring σ α with
@@ -106,7 +105,7 @@ open WithPiTopology
 
 variable [UniformSpace α]
 
-/-- The componentwise uniformity on mv_power_series -/
+/-- The componentwise uniformity on MvPowerSeries -/
 scoped instance uniformSpace : UniformSpace (MvPowerSeries σ α) :=
   Pi.uniformSpace fun _ : σ →₀ ℕ => α
 
@@ -115,7 +114,7 @@ theorem uniformContinuous_component :
     ∀ d : σ →₀ ℕ, UniformContinuous fun a : MvPowerSeries σ α => a d :=
   uniformContinuous_pi.mp uniformContinuous_id
 
-/-- The uniform_add_group structure on mv_power_series of a uniform_add_group -/
+/-- The uniform_add_group structure on MvPowerSeries of a uniform_add_group -/
 scoped instance uniformAddGroup [AddGroup α] [UniformAddGroup α] :
     UniformAddGroup (MvPowerSeries σ α) where
   uniformContinuous_sub := uniformContinuous_pi.mpr fun _ => UniformContinuous.comp
@@ -124,7 +123,7 @@ scoped instance uniformAddGroup [AddGroup α] [UniformAddGroup α] :
       (UniformContinuous.comp (uniformContinuous_component _ _ _) uniformContinuous_fst)
       (UniformContinuous.comp (uniformContinuous_component _ _ _) uniformContinuous_snd))
 
-/-- Completeness of the uniform structure on mv_power_series -/
+/-- Completeness of the uniform structure on MvPowerSeries -/
 scoped instance completeSpace [AddGroup α] [CompleteSpace α] :
     CompleteSpace (MvPowerSeries σ α) where
   complete := by
@@ -137,7 +136,7 @@ scoped instance completeSpace [AddGroup α] [CompleteSpace α] :
     use lim (f.map fun a => a d)
     exact (Cauchy.map hf (uniformContinuous_component σ α d)).le_nhds_lim
 
-/-- Separation of the uniform structure on mv_power_series -/
+/-- Separation of the uniform structure on MvPowerSeries -/
 scoped instance t0Space [T0Space α] : T0Space (MvPowerSeries σ α) := by
   suffices T2Space (MvPowerSeries σ α) by infer_instance
   exact WithPiTopology.t2Space σ α
@@ -210,7 +209,6 @@ theorem variables_tendsto_zero :
     . intro h'
       apply h
       exact ⟨x, h'⟩
-#align mv_power_series.variables_tendsto_zero MvPowerSeries.variables_tendsto_zero
 
 theorem tendsto_pow_zero_of_constantCoeff_nilpotent {f : MvPowerSeries σ α}
     (hf : IsNilpotent (constantCoeff σ α f)) :
@@ -220,16 +218,12 @@ theorem tendsto_pow_zero_of_constantCoeff_nilpotent {f : MvPowerSeries σ α}
   simp_rw [tendsto_iff_coeff_tendsto, coeff_zero]
   exact fun d =>  tendsto_atTop_of_eventually_const fun n hn =>
     coeff_eq_zero_of_constantCoeff_nilpotent f m hm d n hn
-#align mv_power_series.tendsto_pow_of_constant_coeff_nilpotent
-  MvPowerSeries.tendsto_pow_zero_of_constantCoeff_nilpotent
 
 theorem tendsto_pow_zero_of_constantCoeff_zero {f : MvPowerSeries σ α} (hf : constantCoeff σ α f = 0) :
     Filter.Tendsto (fun n : ℕ => f ^ n) Filter.atTop (nhds 0) := by
   apply tendsto_pow_zero_of_constantCoeff_nilpotent
   rw [hf]
   exact IsNilpotent.zero
-#align mv_power_series.tendsto_pow_of_constant_coeff_zero
-  MvPowerSeries.tendsto_pow_zero_of_constantCoeff_zero
 
 /-- Bourbaki, Algèbre, chap. 4, §4, n°2, corollaire de la prop. 3 -/
 theorem tendsto_pow_of_constantCoeff_nilpotent_iff [DiscreteTopology α] (f : MvPowerSeries σ α) :
@@ -254,8 +248,6 @@ theorem tendsto_pow_of_constantCoeff_nilpotent_iff [DiscreteTopology α] (f : Mv
     apply Filter.comap_mono
     rw [← Filter.map_le_iff_le_comap]
     apply continuous_constantCoeff.continuousAt
-#align mv_power_series.tendsto_pow_of_constant_coeff_nilpotent_iff
-  MvPowerSeries.tendsto_pow_of_constantCoeff_nilpotent_iff
 
 end
 
@@ -279,7 +271,6 @@ theorem hasSum_of_monomials_self (f : MvPowerSeries σ α) :
   convert hasSum_single d hd using 1
   · rw [← coeff_apply f d, ← coeff_apply (monomial α d (coeff α d f)) d, coeff_apply,
       coeff_monomial_same]
-#align mv_power_series.has_sum_of_monomials_self MvPowerSeries.hasSum_of_monomials_self
 
 /-- If the coefficient space is T2, then the power series is `tsum` of its monomials -/
 theorem as_tsum [T2Space α] (f : MvPowerSeries σ α) :
@@ -291,7 +282,6 @@ theorem as_tsum [T2Space α] (f : MvPowerSeries σ α) :
   . rw [← tsum_eq_finsum h']
     exact (f.hasSum_of_monomials_self.summable).hasSum
   . exact (Classical.choose_spec _)
-#align mv_power_series.as_tsum MvPowerSeries.as_tsum
 
 /-- A power series is the sum (in the sense of summable families) of its monomials -/
 theorem hasSum_of_homogeneous_components_self (w : σ → ℕ) (f : MvPowerSeries σ α) :
@@ -306,22 +296,16 @@ theorem hasSum_of_homogeneous_components_self (w : σ → ℕ) (f : MvPowerSerie
   · rw [← coeff_apply f d, ← coeff_apply (homogeneousComponent w (weight w d) f) d,
       coeff_homogeneousComponent]
     simp only [eq_self_iff_true, if_true]
-#align mv_power_series.has_sum_of_homogeneous_components_self
-  MvPowerSeries.hasSum_of_homogeneous_components_self
 
 theorem homogeneous_components_self_summable (w : σ → ℕ) (f : MvPowerSeries σ α) :
     Summable fun p => homogeneousComponent w p f :=
   (hasSum_of_homogeneous_components_self w f).summable
-#align mv_power_series.homogeneous_components_self_summable
-  MvPowerSeries.homogeneous_components_self_summable
 
 theorem as_tsum_of_homogeneous_components_self [T2Space α] (w : σ → ℕ) (f : MvPowerSeries σ α) :
     f = tsum fun p => homogeneousComponent w p f := by
   haveI := t2Space σ α
   exact HasSum.unique (hasSum_of_homogeneous_components_self w f)
    (homogeneous_components_self_summable w f).hasSum
-#align mv_power_series.as_tsum_of_homogeneous_components_self
-  MvPowerSeries.as_tsum_of_homogeneous_components_self
 
 end Summable
 

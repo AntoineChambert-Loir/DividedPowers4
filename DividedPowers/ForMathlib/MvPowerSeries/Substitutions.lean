@@ -4,6 +4,7 @@ import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Trunc
 import DividedPowers.ForMathlib.MvPowerSeries.Evaluation
 import DividedPowers.ForMathlib.MvPowerSeries.LinearTopology
 import DividedPowers.ForMathlib.Topology.Algebra.Algebra.Basic
+import Mathlib.Data.Set.Finite
 
 --import Mathlib.Topology.UniformSpace.CompleteSeparated
 
@@ -188,14 +189,14 @@ structure SubstDomain (a : σ → MvPowerSeries τ S) : Prop where
   tendsto_zero : Filter.Tendsto a Filter.cofinite (nhds 0)
 
 /-- If σ is finite, then the nilpotent condition is enough for SubstDomain -/
-def substDomain_of_constantCoeff_nilpotent [Fintype σ]
+def substDomain_of_constantCoeff_nilpotent [Finite σ]
     {a : σ → MvPowerSeries τ S} (ha : ∀ s, IsNilpotent (constantCoeff τ S (a s))) :
     SubstDomain a where
   const_coeff := ha
   tendsto_zero := by simp only [Filter.cofinite_eq_bot, Filter.tendsto_bot]
 
 /-- If σ is finite, then having zero constant coefficient is enough for SubstDomain -/
-def substDomain_of_constantCoeff_zero [Fintype σ]
+def substDomain_of_constantCoeff_zero [Finite σ]
     {a : σ → MvPowerSeries τ S} (ha : ∀ s, constantCoeff τ S (a s) = 0) :
     SubstDomain a :=
   substDomain_of_constantCoeff_nilpotent (fun s ↦ by simp only [ha s, IsNilpotent.zero])
@@ -214,6 +215,18 @@ noncomputable def substAlgHom : MvPowerSeries σ R →ₐ[R] MvPowerSeries τ S 
   MvPowerSeries.aeval ha.evalDomain
 
 theorem coe_subst : subst a = ⇑(substAlgHom (R := R) ha) := rfl
+
+theorem subst_add (f g : MvPowerSeries σ R) :
+    subst a (f + g) = subst a f + subst a g := by
+  rw [coe_subst ha, map_add]
+
+theorem subst_mul (f g : MvPowerSeries σ R) :
+    subst a (f * g) = subst a f * subst a g := by
+  rw [coe_subst ha, map_mul]
+
+theorem subst_smul (r : R) (f : MvPowerSeries σ R) :
+    subst a (r • f) = r • (subst a f) := by
+  rw [coe_subst ha, map_smul]
 
 theorem subst_coe (p : MvPolynomial σ R) :
     subst (R := R) a p = MvPolynomial.aeval a p := by
@@ -247,11 +260,9 @@ theorem comp_substAlgHom :
    ε.comp (substAlgHom ha) = aeval (EvalDomain.map hε ha.evalDomain) :=
   comp_aeval ha.evalDomain hε
 
-theorem comp_subst :=
---    ⇑ε ∘ (subst a) = subst (EvalDomain.map hε ha.evalDomain) :=
-  comp_aeval ha.evalDomain hε
-
-
+theorem comp_subst :
+    ⇑ε ∘ (subst a) = ⇑(aeval (R := R) (EvalDomain.map hε ha.evalDomain)) := by
+  rw [← comp_substAlgHom ha hε, AlgHom.coe_comp, ← coe_subst]
 
 /- a : σ → MvPowerSeries τ S
    b : τ → MvPowerSeries υ T
@@ -263,7 +274,7 @@ theorem comp_subst :=
 
 variable {υ : Type*} [DecidableEq υ]
   {T : Type*} [CommRing T] [Algebra R T] [Algebra S T] [IsScalarTower R S T]
-    {b : τ → MvPowerSeries υ T} (hb : SubstDomain b)
+  {b : τ → MvPowerSeries υ T} (hb : SubstDomain b)
 
 -- TODO : prove equivalence (constant coefficient of f is nilpotent iff ...)-/
 theorem IsNilpotent_subst
@@ -336,12 +347,9 @@ variable {R : Type*} [CommRing R]
   {τ : Type*} [DecidableEq τ]
   {S : Type*} [CommRing S] [Algebra R S]
 
-open MvPowerSeries.WithPiTopology MvPowerSeries.WithPiUniformity
+open MvPowerSeries.WithPiUniformity
 
 local instance : UniformSpace R := ⊥
--- local instance : DiscreteUniformity R := discreteUniformity_bot R
--- local instance : UniformAddGroup R := bot_uniformAddGroup
--- local instance : DiscreteTopology R := discreteTopology_bot R
 local instance : TopologicalRing R := DiscreteTopology.topologicalRing
 
 local instance : UniformSpace S := ⊥
@@ -385,9 +393,6 @@ noncomputable def subst (a : MvPowerSeries τ S) (f : PowerSeries R) :
 
 variable {a : MvPowerSeries τ S} (ha : SubstDomain a)
 
-section Finite
-
-variable [Finite τ]
 def SubstDomain.const : MvPowerSeries.SubstDomain (fun (_ : Unit) ↦ a) where
   const_coeff  := fun _ ↦ ha.const_coeff
   tendsto_zero := by simp only [Filter.cofinite_eq_bot, Filter.tendsto_bot]
@@ -398,19 +403,84 @@ noncomputable def substAlgHom  : PowerSeries R →ₐ[R] MvPowerSeries τ S :=
 
 theorem coe_subst : subst a = ⇑(substAlgHom (R := R) ha) := rfl
 
+noncomputable def _root_.finsuppUnitEquiv (α : Type*) [Zero α] : (Unit →₀ α) ≃ α where
+  toFun f := f ()
+  invFun a := Finsupp.single () a
+  left_inv := fun f ↦ by ext; simp
+  right_inv := fun a ↦ by simp
+
+theorem coeff_subst_finite (f : PowerSeries R) (e : τ →₀ ℕ) :
+    Set.Finite (fun (d : ℕ) ↦ (coeff R d f) • (MvPowerSeries.coeff S e (a ^ d))).support := by
+  convert (MvPowerSeries.coeff_subst_finite ha.const f e).image
+    ⇑(finsuppUnitEquiv ℕ)
+  ext n
+  simp
+  constructor
+  · intro h
+    convert h
+    simp [finsuppUnitEquiv]
+  · intro h
+    convert h
+    simp [finsuppUnitEquiv]
+
+theorem coeff_subst (f : PowerSeries R) (e : τ →₀ ℕ) :
+    MvPowerSeries.coeff S e (subst a f) =
+      finsum (fun (d : ℕ) ↦
+        (coeff R d f) •
+          (MvPowerSeries.coeff S e (a ^ d))) := by
+  erw [MvPowerSeries.coeff_subst ha.const f e]
+  rw [← finsum_comp_equiv (finsuppUnitEquiv ℕ)]
+  apply finsum_congr
+  intro d
+  congr
+  · ext; simp [finsuppUnitEquiv]
+  · simp only [Finsupp.prod_pow, Finset.univ_unique, PUnit.default_eq_unit, Finset.prod_singleton,
+    finsuppUnitEquiv, Equiv.coe_fn_mk]
+
+theorem constantCoeff_subst (f : PowerSeries R) :
+    MvPowerSeries.constantCoeff τ S (subst a f) =
+    finsum (fun (d : ℕ) ↦ (coeff R d f) •
+      (MvPowerSeries.constantCoeff τ S (a ^ d))) := by
+  simp only [← MvPowerSeries.coeff_zero_eq_constantCoeff_apply, coeff_subst ha f 0]
+
 theorem subst_coe (p : Polynomial R) :
-    subst (R := R) a (p : PowerSeries R) = Polynomial.aeval a p := by
-  --rw [subst, MvPowerSeries.subst_coe _]
+    subst (R := R) a (p : PowerSeries R) = ↑(Polynomial.aeval a p) := by
+  ext e
+  classical
+  rw [coeff_subst ha, finsum_def, dif_pos (coeff_subst_finite ha _ e)]
+  conv_rhs => rw [← Polynomial.sum_monomial_eq p]
+  rw [Polynomial.sum, map_sum, map_sum]
+  simp only [Polynomial.coeff_coe, Polynomial.aeval_monomial]
+  rw [eq_comm, ← Finset.sum_sdiff]
+  convert zero_add _ with n h
+  · apply Finset.sum_eq_zero
+    intro n hn
+    simp only [Finset.mem_sdiff, Polynomial.mem_support_iff, ne_eq, Set.Finite.mem_toFinset,
+      Function.mem_support, not_not] at hn
+    rw [← hn.right]
+    rw [IsScalarTower.algebraMap_eq R S _]
+    simp only [RingHom.coe_comp, Function.comp_apply]
+    simp only [← smul_eq_mul]
+    rw [algebraMap_smul, algebraMap_smul]
+    rfl
+  · rw [IsScalarTower.algebraMap_eq R S _]
+    simp only [RingHom.coe_comp, Function.comp_apply]
+    simp only [← smul_eq_mul]
+    rw [algebraMap_smul, algebraMap_smul]
+    rfl
+  · intro n
+    simp only [Set.Finite.mem_toFinset, Function.mem_support, ne_eq, Polynomial.mem_support_iff, not_imp_not]
+    intro h
+    rw [h, zero_smul]
 
-  sorry
 
--- This probably needs to be moved to later
+section Finite
 end Finite
 
 --#exit --TODO: remove
-
-theorem comp_subst
-    {T : Type*} [CommRing T] [Algebra R T] (ε : S →ₐ[R] T) :
+/-
+theorem comp_substAlgHom
+    {T : Type*} [CommRing T] [Algebra R T] {ε : S →ₐ[R] T} :
     (MvPowerSeries.mapAlgHom τ ε).comp (substAlgHom ha) = substAlgHom (ha.map ε)  :=
   MvPowerSeries.comp_subst ha.const ε
 
@@ -418,296 +488,37 @@ theorem comp_substAlgHom
     {T : Type*} [CommRing T] [Algebra R T] (ε : S →ₐ[R] T) :
     (MvPowerSeries.mapAlgHom τ ε).comp (substAlgHom ha) = substAlgHom (ha.map ε)  :=
   MvPowerSeries.comp_substAlgHom ha.const ε
-
+-/
 def SubstDomain.comp {a : PowerSeries S} (ha : SubstDomain a)
     {b : MvPowerSeries υ T} (hb : SubstDomain b):
     SubstDomain (substAlgHom hb a) where
   const_coeff := sorry
 
-theorem substAlgHom_comp_substAlgHom
+
+variable
     {υ : Type*} [DecidableEq υ] {T : Type*} [CommRing T] [Algebra R T] [Algebra S T] [IsScalarTower R S T]
     {a : PowerSeries S} (ha : SubstDomain a)
-    {b : MvPowerSeries υ T} (hb : SubstDomain b) :
-    ((substAlgHom hb).restrictScalars R).comp (substAlgHom  ha)
-      = substAlgHom (ha.comp hb) := by
-  apply comp_aeval ha.evalDomain
-  apply continuous_subst hb
+    {b : MvPowerSeries υ T} (hb : SubstDomain b)
+    {a' : MvPowerSeries τ S} (ha' : SubstDomain a')
+    {b' : τ → MvPowerSeries υ T} (hb' : MvPowerSeries.SubstDomain b')
 
-theorem substAlgHom_comp_substAlgHom_apply
-    {υ : Type*} [DecidableEq υ] {T : Type*} [CommRing T] [Algebra R T] [Algebra S T] [IsScalarTower R S T]
-    {b : τ → MvPowerSeries υ T} (hb : SubstDomain b) (f : MvPowerSeries σ R) :
-    (substAlgHom hb) (substAlgHom  ha f)
-      = substAlgHom (ha.comp hb) f :=
+theorem substAlgHom_comp_substAlgHom :
+    ((substAlgHom hb).restrictScalars R).comp (substAlgHom ha)
+      = substAlgHom (ha.comp hb) :=
+  MvPowerSeries.substAlgHom_comp_substAlgHom _ _
+
+theorem substAlgHom_comp_substAlgHom_apply (f : PowerSeries R) :
+    (substAlgHom hb) (substAlgHom  ha f) = substAlgHom (ha.comp hb) f :=
   DFunLike.congr_fun (substAlgHom_comp_substAlgHom ha hb) f
 
-theorem subst_comp_subst
-    {υ : Type*} [DecidableEq υ] {T : Type*} [CommRing T] [Algebra R T] [Algebra S T] [IsScalarTower R S T]
-    {b : τ → MvPowerSeries υ T} (hb : SubstDomain b) :
-    (subst b) ∘ (subst a)
-      = subst (R := R) (fun s ↦ subst b (a s)) := by
+theorem subst_comp_subst :
+    (subst b) ∘ (subst a) = subst (R := R) (subst b a) := by
   have h := substAlgHom_comp_substAlgHom (R := R) ha hb
   simp only [DFunLike.ext_iff, AlgHom.coe_comp, AlgHom.coe_restrictScalars', Function.comp_apply] at h
-  apply funext
-  exact h
+  exact funext h
 
-theorem subst_comp_subst_apply
-    {υ : Type*} [DecidableEq υ] {T : Type*} [CommRing T] [Algebra R T] [Algebra S T] [IsScalarTower R S T]
-    {b : τ → MvPowerSeries υ T} (hb : SubstDomain b) (f : MvPowerSeries σ R) :
-    subst b (subst a f) = subst (fun s ↦ subst b (a s)) f :=
+theorem subst_comp_subst_apply (f : PowerSeries R) :
+    subst b (subst a f) = subst (subst b a) f :=
   congr_fun (subst_comp_subst (R := R) ha hb) f
 
-
 end PowerSeries
-
-section ExponentialPowerSeries
-
-/- Works, but is not very nice to use -/
-namespace MvPowerSeries
-
-variable (τ : Type*) [DecidableEq τ] (R : Type*) [CommRing R] (f : PowerSeries R)
-
-noncomputable def Dom : Ideal (MvPowerSeries τ R) where
-  carrier := setOf PowerSeries.SubstDomain
-  add_mem' := sorry
-  zero_mem' := sorry
-  smul_mem' := sorry
-
-variable {R τ}
-
-def Dom.substDomain (d : Dom τ R) :
-    SubstDomain (S := R) (σ := Unit) (fun _ ↦ d.val) := by
-  apply substDomain_of_constantCoeff_zero
-  intro _
-  have := d.prop.const_coeff
-  apply?
-  -- exact fun _ ↦ d.prop.const_coeff
-  -- tendsto_zero := sorry
-
-variable (r : R)
-
-example : (constantCoeff Unit R) (r • X ()) = 0 := by
-  erw [MvPowerSeries.coeff_smul]
-  simp only [coeff_zero_eq_constantCoeff, constantCoeff_X, mul_zero]
-
-noncomputable def rX : Dom Unit R :=
-  ⟨r • MvPowerSeries.X (),
-    { const_coeff := by
-        erw [MvPowerSeries.coeff_smul]
-        simp only [coeff_zero_eq_constantCoeff, constantCoeff_X, mul_zero, IsNilpotent.zero] } ⟩
-
-/- noncomputable def T (i : τ) : Dom τ R :=
-  ⟨ ((MvPolynomial.X i : MvPolynomial τ R) : MvPowerSeries τ R),
-    { const_coeff := by simp [IsNilpotent.zero] } ⟩
--/
-
-noncomputable def T (i : τ) : Dom τ R :=
-  ⟨ (MvPowerSeries.X i : MvPowerSeries τ R),
-    { const_coeff := by simp [IsNilpotent.zero] } ⟩
-
-theorem coe_T (i : τ) :
-    ((T i : Dom τ R) : MvPowerSeries τ R) = MvPowerSeries.X i :=
-  rfl
-
-noncomputable def Dom.subst (a : Dom τ R) :
-    MvPowerSeries Unit R →ₐ[R] MvPowerSeries τ R :=
-  MvPowerSeries.substAlgHom (Dom.substDomain a)
-noncomputable def a : Dom Unit R := T ()
-noncomputable def b : Dom (Fin 2) R := T 0 + T 1
-
---  Dom.subst (T 0 + T 1 : Dom (Fin 2) R) f = Dom.subst (T 0) f * Dom.subst (T 1) f
-
-/-- A power series f : R⟦T⟧ is exponential if f(X + Y) = f(X) f(Y)
-(one should add f(0) = 1) -/
-def IsExponential (f : PowerSeries R) :=
-  PowerSeries.subst (X 0 + X 1 : MvPowerSeries (Fin 2) R) f
-    = PowerSeries.subst (X 0) f * PowerSeries.subst (X 1) f
-
-/-- If f and g are exponential, then so is f * g -/
-example (f g : MvPowerSeries Unit R) (hf : IsExponential f) (hg : IsExponential g) :
-    IsExponential (f * g) := by
-  simp only [IsExponential] at hf hg ⊢
-  repeat
-    rw [PowerSeries.coe_subst (PowerSeries.substDomain_of_constantCoeff_zero (by simp))]
-  simp only [map_mul, ← PowerSeries.coe_subst, hf, hg]
-  ring
-
-@[simp]
-lemma _root_.MvPolynomial.coe_smul {σ : Type*} {R : Type*} [CommSemiring R]
-    (φ : MvPolynomial σ R) (r : R) :
-  (r • φ : MvPolynomial σ R) = r • (φ : MvPowerSeries σ R) := rfl
-
-@[simp]
-lemma _root_.Polynomial.coe_smul {R : Type*} [CommSemiring R]
-    (φ : Polynomial R) (r : R) :
-  (r • φ : Polynomial R) = r • (φ : PowerSeries R) := rfl
-
-@[simp]
-theorem _root_.PowerSeries.constantCoeff_smul
-    {R : Type*} [CommSemiring R] (a : R) (f : PowerSeries R) :
-    PowerSeries.constantCoeff R (a • f) = a • PowerSeries.constantCoeff R f :=
-  rfl
-
-@[simp]
-theorem _root_.MvPowerSeries.constantCoeff_smul {σ : Type*}
-    {R : Type*} [CommSemiring R] (a : R) (f : MvPowerSeries σ R) :
-    MvPowerSeries.constantCoeff σ R (a • f) = a • MvPowerSeries.constantCoeff σ R f :=
-  rfl
-
-theorem _root_.MvPowerSeries.monomial_eq {R : Type u} {σ : Type u_1} [DecidableEq σ] {a : R} {d : σ →₀ ℕ} [CommSemiring R] :
-    (MvPowerSeries.monomial R d) a = MvPowerSeries.C σ R a * Finsupp.prod d fun (n : σ) (e : ℕ) => MvPowerSeries.X n ^ e :=  by
-    rw [← MvPolynomial.coe_monomial, MvPolynomial.monomial_eq]
-    simp only [MvPolynomial.coe_mul, MvPolynomial.coe_C]
-    rw [← MvPolynomial.coeToMvPowerSeries.ringHom_apply, map_finsupp_prod]
-    simp only [map_pow, MvPolynomial.coeToMvPowerSeries.ringHom_apply, MvPolynomial.coe_X]
-
-lemma foo1 (r : R) (p : MvPowerSeries (Fin 2) R) :
-    PowerSeries.subst p (r • PowerSeries.X : PowerSeries R) = r • p := by
-  simp only [← Polynomial.coe_X, ← Polynomial.coe_smul]
-  rw [PowerSeries.subst_coe]
-  simp only [map_smul, Polynomial.aeval_X]
-
-lemma foo1_v2 (r : R) :
-    PowerSeries.subst (MvPowerSeries.X 0 + MvPowerSeries.X 1 : MvPowerSeries (Fin 2) R) (r • PowerSeries.X : PowerSeries R)
-    = r • MvPowerSeries.X 0 + r • MvPowerSeries.X 1 := by
-  simp only [foo1, smul_add]
-
-lemma foo1_v1 (r : R) :
-    PowerSeries.subst (MvPowerSeries.X 0 + MvPowerSeries.X 1 : MvPowerSeries (Fin 2) R) (r • PowerSeries.X : PowerSeries R)
-    = r • MvPowerSeries.X 0 + r • MvPowerSeries.X 1 := by
-  simp only [← MvPolynomial.coe_X, ← Polynomial.coe_X, ← MvPolynomial.coe_add, ← Polynomial.coe_smul]
-  rw [PowerSeries.subst_coe]
-  simp only [Fin.isValue, MvPolynomial.coe_add, MvPolynomial.coe_X, map_smul, Polynomial.aeval_X,
-    smul_add]
-
-lemma foo2 [DecidableEq σ] [Finite σ] (r : R) (f : MvPowerSeries σ R)
-    (hp : ∀ (d : σ →₀ ℕ), (d.sum (fun i n ↦ n) ≠ 1) → coeff R d f = 0) :
-    MvPowerSeries.subst (fun i ↦ r • (MvPowerSeries.X (σ := σ) (R := R) i)) f = r • f := by
-  have hr : SubstDomain fun s => r • (X s : MvPowerSeries σ R) := {
-    const_coeff := fun i ↦ by simp [MvPowerSeries.constantCoeff_smul]
-    tendsto_zero := by simp }
-  ext e
-  rw [coeff_subst hr, finsum_eq_sum _ (coeff_subst_finite hr _ _)]
-  simp only [smul_eq_mul, map_smul]
-  rw [Finset.sum_eq_single e]
-  · rw [mul_comm]
-    apply congr_arg₂ _ _ rfl
-    simp only [smul_pow]
-    simp only [Algebra.smul_def]
-    rw [Finsupp.prod_mul, ← map_finsupp_prod, ← Algebra.smul_def, map_smul]
-    conv_rhs => rw [← mul_one r]
-    rw [smul_eq_mul]
-    apply congr_arg₂
-    · sorry
-    · sorry
-  · sorry
-  · sorry
-
-lemma foo2_v2 (r : R) :
-    MvPowerSeries.subst
-      (fun i ↦ r • (MvPowerSeries.X i : MvPowerSeries (Fin 2) R))
-      (MvPowerSeries.X 0 + (MvPowerSeries.X 1) : MvPowerSeries (Fin 2) R)
-    = r • (MvPowerSeries.X 0 : MvPowerSeries (Fin 2) R) + r • (MvPowerSeries.X 1) := by
-  rw [foo2 r (MvPowerSeries.X 0 + MvPowerSeries.X 1) ?_, smul_add]
-  intro d hd
-  simp only [Fin.isValue, map_add]
-  sorry
-
-lemma foo2_v1 (r : R) :
-    MvPowerSeries.subst
-      (fun i ↦ r • (MvPowerSeries.X i : MvPowerSeries (Fin 2) R))
-      (MvPowerSeries.X 0 + (MvPowerSeries.X 1) : MvPowerSeries (Fin 2) R)
-    = r • (MvPowerSeries.X 0 : MvPowerSeries (Fin 2) R) + r • (MvPowerSeries.X 1) := by
-  simp only [← MvPolynomial.coe_X, ← Polynomial.coe_X, ← MvPolynomial.coe_add,
-    ← MvPolynomial.coe_smul]
-  rw [MvPowerSeries.subst_coe]
-  simp
-  exact {
-    const_coeff := fun i ↦ by
-      simp [MvPowerSeries.constantCoeff_smul]
-    tendsto_zero := by simp only [MvPolynomial.coe_smul, MvPolynomial.coe_X, Filter.cofinite_eq_bot,
-      Filter.tendsto_bot] }
-
-
-/-- If f is exponential, then f(r T) is exponential, for any r : R -/
-example (r : R) (f : PowerSeries R) (hf : IsExponential f) :
-    IsExponential (PowerSeries.subst (r • (PowerSeries.X : PowerSeries R)) f) := by
-  simp only [IsExponential] at hf ⊢
-  have := foo1 r
-  -- simp only [PowerSeries.subst, PowerSeries.X] at this
-  rw [PowerSeries.coe_subst (PowerSeries.substDomain_of_constantCoeff_zero (by simp [constantCoeff_smul, constantCoeff_X, smul_zero]))]
-  rw [PowerSeries.coe_subst
-    (PowerSeries.substDomain_of_constantCoeff_zero (by
-      erw [constantCoeff_smul, constantCoeff_X, smul_zero]))]
-  rw [PowerSeries.coe_subst (PowerSeries.substDomain_of_constantCoeff_zero (by simp only [Fin.isValue, constantCoeff_X]))]
-  rw [PowerSeries.coe_subst (PowerSeries.substDomain_of_constantCoeff_zero (by simp only [Fin.isValue, constantCoeff_X]))]
-  unfold PowerSeries.substAlgHom
-  classical
-  erw [MvPowerSeries.substAlgHom_comp_substAlgHom_apply ?_ ?_ f]
-
-
-  simp only [Fin.isValue, AddSubmonoid.coe_add, Submodule.coe_toAddSubmonoid,
-    Submodule.coe_smul_of_tower, coe_T]
-  rw [this]
-  rw [← foo2 r]
-  rw [← subst_comp_subst_apply]
-  simp [← coe_subst, coe_T] at hf
-  rw [hf]
-  rw [coe_subst ?_, map_mul, ← coe_subst]
-  apply congr_arg₂
-  rw [subst_comp_subst_apply]
-  apply congr_arg₂ _ _ rfl
-  ext s
-
-
-  -- simp_rw [congr_arg₂ (foo1 r) f]
-  /- f (r • (X + Y)))
-      = f (r • X + r • Y)
-      = f(r • X) f(r • Y)
-
-    -/
---  have : SubstDomain.comp (Dom.substDomain (r • T ())) (Dom.substDomain (T 0 + T 1)) = Dom.substDomain (r • T 1 + r • T 1) := by sorry
-  sorry
-
-/-
-a = Unit → r • X
-b = Unit → T 0 + T 1
--/
-example (f g : PowerSeries R) (hf : IsExponential f) (hg : IsExponential g) :
-    IsExponential (f * g) := by
-  simp only [IsExponential] at hf hg ⊢
-  simp only [coe_subst (T 0).prop, coe_subst (T 1).prop, coe_subst (T 0 + T 1).prop] at hf hg ⊢
-  simp only [map_mul, hf, hg]
-  ring
-
-noncomputable example : PowerSeries R := X
-variable {r : R}
-
-noncomputable example (r : R) : PowerSeries R := r • X
-#check (r • T 0 : Dom 1 R)
-#check fun (f : MvPowerSeries (Fin 1) R) ↦ subst (r • T 0 : Dom 1 R) f
-noncomputable example (f : PowerSeries R) (hf : IsExponential f) (r : R) :
-    IsExponential (subst (r • T 0 : Dom 1 R) f) := by
-  simp only [IsExponential] at hf ⊢
-  let hb := (T 0 + T 1 : Dom R).prop
-  let ha := let h := MvPowerSeries.subst_comp_subst_apply (R := R)
-
-
-/-
-  R⟦X⟧ → R⟦X⟧ → R⟦T₀, T₁⟧
-  X -> r • X, X -> T₀ + T₁
-  f(X) → f(rX) → f(rX) (T₀+T₁) = f( r(T₀+t₁))
-
-  f ∈ R⟦σ⟧, a : σ → R⟦τ⟧  gives f(a) ∈ R⟦τ⟧
-  b : τ → C
-  may compute f(a) (b)  = eval b f(a)  = eval b (eval a f)
-  eval b may be used as ε : R ⟦τ⟧ → C, continuous
-  f(a) (b) = ε (eval a f)
-     = [comp_eval] eval (s ↦ ε (a s)) f
-  But ε (a s) = eval b (a s)
-    = eval (s ↦ eval b (a s)) f
-
-
-
--/
-  sorry
-end ExponentialPowerSeries
