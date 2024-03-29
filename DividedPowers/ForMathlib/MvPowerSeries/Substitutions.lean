@@ -452,7 +452,7 @@ theorem subst_coe (p : Polynomial R) :
   rw [Polynomial.sum, map_sum, map_sum]
   simp only [Polynomial.coeff_coe, Polynomial.aeval_monomial]
   rw [eq_comm, ← Finset.sum_sdiff]
-  convert zero_add _ with n h
+  convert zero_add _ with n _
   · apply Finset.sum_eq_zero
     intro n hn
     simp only [Finset.mem_sdiff, Polynomial.mem_support_iff, ne_eq, Set.Finite.mem_toFinset,
@@ -492,8 +492,7 @@ theorem comp_substAlgHom
 def SubstDomain.comp {a : PowerSeries S} (ha : SubstDomain a)
     {b : MvPowerSeries υ T} (hb : SubstDomain b):
     SubstDomain (substAlgHom hb a) where
-  const_coeff := sorry
-
+  const_coeff := MvPowerSeries.IsNilpotent_subst hb.const (ha.const_coeff)
 
 variable
     {υ : Type*} [DecidableEq υ] {T : Type*} [CommRing T] [Algebra R T] [Algebra S T] [IsScalarTower R S T]
