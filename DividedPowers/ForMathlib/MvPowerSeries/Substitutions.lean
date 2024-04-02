@@ -252,8 +252,10 @@ theorem constantCoeff_subst (f : MvPowerSeries σ R) :
   simp only [← coeff_zero_eq_constantCoeff_apply, coeff_subst ha f 0]
 
 variable
-    {T : Type*} [CommRing T] [UniformSpace T] [UniformAddGroup T]
-    [LinearTopology T] [T2Space T] [TopologicalRing T] [TopologicalAlgebra R T] [CompleteSpace T]
+    {T : Type*} [CommRing T]
+    [UniformSpace T] [T2Space T] [CompleteSpace T]
+    [UniformAddGroup T] [TopologicalRing T] [LinearTopology T]
+    [TopologicalAlgebra R T] [TopologicalAlgebra S T] [IsScalarTower R S T]
     {ε : MvPowerSeries τ S →ₐ[R] T} (hε : Continuous ε)
 
 theorem comp_substAlgHom :
@@ -263,6 +265,18 @@ theorem comp_substAlgHom :
 theorem comp_subst :
     ⇑ε ∘ (subst a) = ⇑(aeval (R := R) (EvalDomain.map hε ha.evalDomain)) := by
   rw [← comp_substAlgHom ha hε, AlgHom.coe_comp, ← coe_subst]
+
+theorem comp_subst_apply (f : MvPowerSeries σ R) :
+    ε (subst a f) = aeval (R := R) (EvalDomain.map hε ha.evalDomain) f :=
+  congr_fun (comp_subst ha hε) f
+
+theorem eval₂_subst
+    {b : τ → T} (hb : EvalDomain b) (f : MvPowerSeries σ R) :
+    eval₂ (algebraMap S T) b (subst a f) =
+      eval₂ (algebraMap R T) (fun s ↦ eval₂ (algebraMap S T) b (a s)) f := by
+  let ε : MvPowerSeries τ S →ₐ[R] T := (aeval hb).restrictScalars R
+  have hε : Continuous ε := continuous_aeval hb
+  exact comp_subst_apply ha hε f
 
 /- a : σ → MvPowerSeries τ S
    b : τ → MvPowerSeries υ T
@@ -311,22 +325,20 @@ def SubstDomain.comp : SubstDomain (fun s ↦ substAlgHom hb (a s)) where
     apply (continuous_subst hb).continuousAt
 
 theorem substAlgHom_comp_substAlgHom :
-    ((substAlgHom hb).restrictScalars R).comp (substAlgHom  ha)
+    ((substAlgHom hb).restrictScalars R).comp (substAlgHom ha)
       = substAlgHom (ha.comp hb) := by
   apply comp_aeval ha.evalDomain
   apply continuous_subst hb
 
 theorem substAlgHom_comp_substAlgHom_apply (f : MvPowerSeries σ R) :
-    (substAlgHom hb) (substAlgHom  ha f)
-      = substAlgHom (ha.comp hb) f :=
+    (substAlgHom hb) (substAlgHom ha f) = substAlgHom (ha.comp hb) f :=
   DFunLike.congr_fun (substAlgHom_comp_substAlgHom ha hb) f
 
 theorem subst_comp_subst :
     (subst b) ∘ (subst a) = subst (R := R) (fun s ↦ subst b (a s)) := by
-  have h := substAlgHom_comp_substAlgHom (R := R) ha hb
-  simp only [DFunLike.ext_iff, AlgHom.coe_comp, AlgHom.coe_restrictScalars', Function.comp_apply] at h
   apply funext
-  exact h
+  simpa only [DFunLike.ext_iff, AlgHom.coe_comp, AlgHom.coe_restrictScalars', Function.comp_apply] using
+    substAlgHom_comp_substAlgHom (R := R) ha hb
 
 theorem subst_comp_subst_apply (f : MvPowerSeries σ R) :
     subst b (subst a f) = subst (fun s ↦ subst b (a s)) f :=
