@@ -4,6 +4,8 @@ namespace PowerSeries
 
 open MvPowerSeries
 
+universe u
+variable {σ : Type*}
 variable {R : Type*} [CommRing R]
 
 /-- A power series f : R⟦T⟧ is exponential if f(X + Y) = f(X) f(Y) and f(0) = 1 -/

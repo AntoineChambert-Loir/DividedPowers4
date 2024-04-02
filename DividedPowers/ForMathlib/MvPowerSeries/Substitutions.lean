@@ -157,7 +157,6 @@ variable {σ : Type*} [DecidableEq σ]
   {S : Type*} [CommRing S] [Algebra R S]
   -- [TopologicalSpace R] [TopologicalRing R][TopologicalAlgebra α R]
 
-variable {a : σ → MvPowerSeries τ S} (ha : SubstDomain a)
 
 open WithPiTopology WithPiUniformity
 
@@ -205,6 +204,8 @@ def substDomain_of_constantCoeff_zero [Finite σ]
 noncomputable def subst (a : σ → MvPowerSeries τ S) (f : MvPowerSeries σ R) :
     MvPowerSeries τ S :=
   MvPowerSeries.eval₂ (algebraMap _ _) a f
+
+variable {a : σ → MvPowerSeries τ S} (ha : SubstDomain a)
 
 def SubstDomain.evalDomain : EvalDomain a := {
   hpow := fun s ↦ (tendsto_pow_of_constantCoeff_nilpotent_iff (a s)).mpr (ha.const_coeff s)

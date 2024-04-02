@@ -35,8 +35,7 @@ open Classical Filter Finset Function
 
 open scoped BigOperators Classical Topology
 
-variable {α α': Type u_1} {β : Type _} {γ : Type _} {δ : Type _}
-
+variable {α α' β γ δ : Type*}
 
 section HasProd
 

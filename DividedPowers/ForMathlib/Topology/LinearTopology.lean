@@ -301,6 +301,7 @@ def toRingFilterBasis (B : IdealBasis α) : RingFilterBasis α where
 -/
 end IdealBasis
 
+universe u
 
 section LinearTopology
 

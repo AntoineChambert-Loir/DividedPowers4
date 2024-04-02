@@ -10,9 +10,9 @@ open scoped BigOperators
 
 open Finset
 
-variable {σ : Type _} [DecidableEq σ] [DecidableEq (ι → σ →₀ ℕ)]
+variable {σ : Type*} [DecidableEq σ] {ι : Type*} [DecidableEq (ι → σ →₀ ℕ)]
 
-variable {α : Type _} [CommSemiring α]
+variable {α : Type*} [CommSemiring α]
 
 namespace MvPowerSeries
 

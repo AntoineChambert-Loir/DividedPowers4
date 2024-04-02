@@ -151,6 +151,8 @@ theorem coeFn_injective : @Function.Injective (A →A[R] B) (A → B) (↑) := D
 def Simps.apply (h : A →A[R] B) : A → B := h
 
 --TODO: Check if this is needed
+#exit
+-- ACL : exit because what is below doesn't compile here
 
 /-- See Note [custom simps projection]. -/
 def Simps.coe (h : A →A[R] B) : A →ₐ[R] B := h
@@ -165,7 +167,7 @@ theorem ext_iff {f g : A →A[R] B} : f = g ↔ ∀ x, f x = g x := DFunLike.ext
 /-- Copy of a `ContinuousAlgHom` with a new `toFun` equal to the old one. Useful to fix
 definitional equalities. -/
 protected def copy (f : A →A[R] B) (f' : A → B) (h : f' = ⇑f) : A →A[R] B where
-  toAlgHom := (f : A →ₐ[R] B).copy f' h
+  toAlgHom := (f : A →A[R] B).copy f' h
   cont := show Continuous f' from h.symm ▸ f.continuous
 
 @[simp]
