@@ -298,7 +298,7 @@ theorem dp_sum_smul {ι : Type*} [DecidableEq ι] (s : Finset ι)
 #align divided_power_algebra.dp_sum_smul DividedPowerAlgebra.dp_sum_smul
 
 variable {R}
-theorem ext_iff {A : Type u_3} [CommSemiring A] [Algebra R A]
+theorem ext_iff {A : Type*} [CommSemiring A] [Algebra R A]
     {f g : DividedPowerAlgebra R M →ₐ[R] A} :
     (f = g) ↔ (∀ n m, f (dp R n m) = g (dp R n m)) := by
   constructor
