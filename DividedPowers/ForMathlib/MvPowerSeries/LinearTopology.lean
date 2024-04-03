@@ -149,8 +149,7 @@ theorem topology_eq_ideals_basis_topology :
     apply Finset.le_sup he'
 #align mv_power_series.topology_eq_ideals_basis_topolgy MvPowerSeries.topology_eq_ideals_basis_topology
 
-lemma isLinearTopology :
-    LinearTopology (MvPowerSeries σ α) := {
+instance linearTopology : LinearTopology (MvPowerSeries σ α) := {
   Ideal.IsBasis.toIdealBasis (idealIsBasis _ _) with
   isTopology := by
     rw [Ideal.IsBasis.ofIdealBasis_topology_eq]

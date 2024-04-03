@@ -207,13 +207,13 @@ def SubstDomain.evalDomain : @EvalDomain σ (MvPowerSeries τ S) _ (@topological
 -- NOTE: We need `by exact` or the proof breaks!!!!
 /-- Substitution of power series into a power series -/
 noncomputable def substAlgHom : MvPowerSeries σ R →ₐ[R] MvPowerSeries τ S := by
-  letI : UniformSpace S := ⊥
-  letI : DiscreteUniformity S := discreteUniformity_bot S
   letI : UniformSpace R := ⊥
   letI : DiscreteUniformity R := discreteUniformity_bot R
-  letI : LinearTopology (MvPowerSeries τ S) := isLinearTopology τ S
-  letI : TopologicalAlgebra R (MvPowerSeries τ S) := by
-    refine DiscreteTopology.topologicalAlgebra R (MvPowerSeries τ S)
+  letI : UniformSpace S := ⊥
+  letI : DiscreteUniformity S := discreteUniformity_bot S
+  -- letI : LinearTopology (MvPowerSeries τ S) := isLinearTopology τ S
+  -- letI : TopologicalAlgebra R (MvPowerSeries τ S) := by
+  --   refine DiscreteTopology.topologicalAlgebra R (MvPowerSeries τ S)
   --NOTE : Could there be a tactic that introduces these local instances?
   exact MvPowerSeries.aeval ha.evalDomain
 
@@ -233,18 +233,29 @@ theorem subst_smul (r : R) (f : MvPowerSeries σ R) :
 
 theorem subst_coe (p : MvPolynomial σ R) :
     subst (R := R) a p = MvPolynomial.aeval a p := by
+  letI : UniformSpace R := ⊥
+  letI : UniformSpace S := ⊥
   refine aeval_coe ha.evalDomain p
 
-theorem continuous_subst : Continuous (subst a : MvPowerSeries σ R → MvPowerSeries τ S) :=
+theorem continuous_subst :
+    letI : UniformSpace R := ⊥
+    letI : UniformSpace S := ⊥
+    Continuous (subst a : MvPowerSeries σ R → MvPowerSeries τ S) :=
+  letI : UniformSpace R := ⊥
+  letI : UniformSpace S := ⊥
   continuous_aeval ha.evalDomain
 
 theorem coeff_subst_finite (f : MvPowerSeries σ R) (e : τ →₀ ℕ) :
     Set.Finite (fun (d : σ →₀ ℕ) ↦ (coeff R d f) • (coeff S e (d.prod fun s e => (a s) ^ e))).support :=
+  letI : UniformSpace S := ⊥
+  letI : UniformSpace R := ⊥
   Set.Finite.support_of_summable _
     ((hasSum_aeval ha.evalDomain f).map (coeff S e) (continuous_coeff e)).summable
 
 theorem coeff_subst (f : MvPowerSeries σ R) (e : τ →₀ ℕ) :
     coeff S e (subst a f) = finsum (fun (d : σ →₀ ℕ) ↦ (coeff R d f) • (coeff S e (d.prod fun s e => (a s) ^ e))) := by
+  letI : UniformSpace S := ⊥
+  letI : UniformSpace R := ⊥
   have := ((hasSum_aeval ha.evalDomain f).map (coeff S e) (continuous_coeff e))
   erw [← this.tsum_eq, tsum_def]
   erw [dif_pos this.summable, if_pos (coeff_subst_finite ha f e)]
@@ -258,28 +269,51 @@ variable
     {T : Type*} [CommRing T]
     [UniformSpace T] [T2Space T] [CompleteSpace T]
     [UniformAddGroup T] [TopologicalRing T] [LinearTopology T]
-    [TopologicalAlgebra R T] [TopologicalAlgebra S T] [IsScalarTower R S T]
-    {ε : MvPowerSeries τ S →ₐ[R] T} (hε : Continuous ε)
+    [Algebra R T] [Algebra S T] [IsScalarTower R S T]
+    {ε : MvPowerSeries τ S →ₐ[R] T}
 
 theorem comp_substAlgHom :
-   ε.comp (substAlgHom ha) = aeval (EvalDomain.map hε ha.evalDomain) :=
-  comp_aeval ha.evalDomain hε
+    letI : UniformSpace S := ⊥
+    letI : UniformSpace R := ⊥
+    (hε : Continuous ε) →
+      ε.comp (substAlgHom ha) = aeval (EvalDomain.map hε ha.evalDomain) :=
+  letI : UniformSpace R := ⊥
+--  letI : DiscreteUniformity R := inferInstance
+--  letI : TopologicalAlgebra R T := inferInstance
+  letI : UniformSpace S := ⊥
+--  letI : DiscreteUniformity S := discreteUniformity_bot S
+--  letI : CompleteSpace S := inferInstance
+--  letI : TopologicalAlgebra S T := inferInstance
+  fun hε ↦ comp_aeval ha.evalDomain hε
 
 theorem comp_subst :
-    ⇑ε ∘ (subst a) = ⇑(aeval (R := R) (EvalDomain.map hε ha.evalDomain)) := by
-  rw [← comp_substAlgHom ha hε, AlgHom.coe_comp, ← coe_subst]
+    letI : UniformSpace R := ⊥
+    letI : UniformSpace S := ⊥
+    (hε : Continuous ε) →
+      ⇑ε ∘ (subst a) = ⇑(aeval (R := R) (EvalDomain.map hε ha.evalDomain)) :=
+  letI : UniformSpace R := ⊥
+  letI : UniformSpace S := ⊥
+  fun hε ↦ by rw [← comp_substAlgHom ha hε, AlgHom.coe_comp, ← coe_subst]
 
-theorem comp_subst_apply (f : MvPowerSeries σ R) :
-    ε (subst a f) = aeval (R := R) (EvalDomain.map hε ha.evalDomain) f :=
-  congr_fun (comp_subst ha hε) f
+theorem comp_subst_apply :
+    letI : UniformSpace R := ⊥
+    letI : UniformSpace S := ⊥
+    (hε : Continuous ε) → (f : MvPowerSeries σ R) →
+      ε (subst a f) = aeval (R := R) (EvalDomain.map hε ha.evalDomain) f :=
+  letI : UniformSpace R := ⊥
+  letI : UniformSpace S := ⊥
+  fun hε ↦ congr_fun (comp_subst ha hε)
 
-theorem eval₂_subst
-    {b : τ → T} (hb : EvalDomain b) (f : MvPowerSeries σ R) :
+theorem eval₂_subst {b : τ → T} (hb : EvalDomain b) (f : MvPowerSeries σ R) :
+    letI : UniformSpace R := ⊥
+    letI : UniformSpace S := ⊥
     eval₂ (algebraMap S T) b (subst a f) =
-      eval₂ (algebraMap R T) (fun s ↦ eval₂ (algebraMap S T) b (a s)) f := by
+      eval₂ (algebraMap R T) (fun s ↦ eval₂ (algebraMap S T) b (a s)) f :=
+  letI : UniformSpace R := ⊥
+  letI : UniformSpace S := ⊥
   let ε : MvPowerSeries τ S →ₐ[R] T := (aeval hb).restrictScalars R
   have hε : Continuous ε := continuous_aeval hb
-  exact comp_subst_apply ha hε f
+  comp_subst_apply ha hε f
 
 /- a : σ → MvPowerSeries τ S
    b : τ → MvPowerSeries υ T
@@ -324,15 +358,19 @@ theorem IsNilpotent_subst
 def SubstDomain.comp : SubstDomain (fun s ↦ substAlgHom hb (a s)) where
   const_coeff s := IsNilpotent_subst hb (ha.const_coeff s)
   tendsto_zero := by
+    letI : TopologicalSpace S := ⊥
+    letI : TopologicalSpace T := ⊥
     apply Filter.Tendsto.comp _ (ha.tendsto_zero)
     rw [← coe_subst, ← (substAlgHom (R := S) hb).map_zero]
     apply (continuous_subst hb).continuousAt
 
 theorem substAlgHom_comp_substAlgHom :
-    ((substAlgHom hb).restrictScalars R).comp (substAlgHom ha)
-      = substAlgHom (ha.comp hb) := by
-  apply comp_aeval ha.evalDomain
-  apply continuous_subst hb
+    ((substAlgHom hb).restrictScalars R).comp (substAlgHom ha) = substAlgHom (ha.comp hb) :=
+  letI : UniformSpace R := ⊥
+  letI : UniformSpace S := ⊥
+  letI : UniformSpace T := ⊥
+  comp_aeval (R := R) (ε := (substAlgHom hb).restrictScalars R)
+    ha.evalDomain (continuous_subst (R := S) hb)
 
 theorem substAlgHom_comp_substAlgHom_apply (f : MvPowerSeries σ R) :
     (substAlgHom hb) (substAlgHom ha f) = substAlgHom (ha.comp hb) f :=

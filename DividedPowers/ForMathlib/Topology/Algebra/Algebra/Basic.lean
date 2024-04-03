@@ -31,7 +31,7 @@ variable (R : Type u) (A : Type v) [CommSemiring R] [TopologicalSpace R]
 /-- If `R` is a discrete topological ring,
   then any topological ring `S` which is an `R`-algebra
   is also a topological `R`-algebra. -/
-instance (priority := 50) DiscreteTopology.topologicalAlgebra [DiscreteTopology R] [Algebra R A] :
+instance DiscreteTopology.topologicalAlgebra [DiscreteTopology R] [Algebra R A] :
     TopologicalAlgebra R A :=
   { (inferInstance : Algebra R A) with
     continuous_algebraMap := continuous_of_discreteTopology }
