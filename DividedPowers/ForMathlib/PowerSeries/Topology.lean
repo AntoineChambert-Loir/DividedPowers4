@@ -11,7 +11,7 @@ namespace PowerSeries
 
 open Function
 
-variable (α : Type _)
+variable (α : Type*)
 
 section Topological
 
@@ -39,20 +39,24 @@ theorem continuous_constantCoeff [Semiring α] :
     Continuous (constantCoeff α) := continuous_component α 0
 
 /-- A family of power series converges iff it converges coefficientwise -/
-theorem tendsto_iff_coeff_tendsto [Semiring α] {ι : Type _}
+theorem tendsto_iff_coeff_tendsto [Semiring α] {ι : Type*}
     (f : ι → PowerSeries α) (u : Filter ι) (g : PowerSeries α) :
     Filter.Tendsto f u (nhds g) ↔
     ∀ d : ℕ, Filter.Tendsto (fun i => coeff α d (f i)) u (nhds (coeff α d g)) := by
-  rw [nhds_pi, Filter.tendsto_pi]
-  sorry
-  --exact forall_congr' (fun d => Iff.rfl)
+  rw [MvPowerSeries.WithPiTopology.tendsto_iff_coeff_tendsto]
+  apply (Finsupp.LinearEquiv.finsuppUnique ℕ ℕ Unit).toEquiv.forall_congr
+  intro d
+  simp only [LinearEquiv.coe_toEquiv, Finsupp.LinearEquiv.finsuppUnique_apply,
+    PUnit.default_eq_unit, coeff]
+  apply iff_of_eq
+  congr; ext i; congr;
+  all_goals { ext; simp }
 
-variable (σ α)
+variable (α)
 
 /-- The semiring topology on PowerSeries of a topological semiring -/
 scoped instance topologicalSemiring [Semiring α] [TopologicalSemiring α] :
     TopologicalSemiring (PowerSeries α) := MvPowerSeries.WithPiTopology.topologicalSemiring Unit α
-
 
 /-- The ring topology on PowerSeries of a topological ring -/
 scoped instance topologicalRing [Ring α] [TopologicalRing α] :
@@ -105,7 +109,6 @@ end WithPiUniformity
 
 end Uniform
 
-
 section
 
 variable {α}
@@ -131,7 +134,6 @@ theorem tendsto_pow_of_constantCoeff_nilpotent_iff [DiscreteTopology α] (f : Po
       IsNilpotent (constantCoeff α f) :=
   MvPowerSeries.tendsto_pow_of_constantCoeff_nilpotent_iff f
 
-
 end
 
 section Summable
@@ -140,34 +142,23 @@ variable [Semiring α] [TopologicalSpace α]
 
 open WithPiTopology MvPowerSeries.WithPiTopology
 
-variable {σ α}
+variable {α}
 
+-- NOTE : one needs an API to apply `Finsupp.LinearEquiv.finsuppUnique`
 /-- A power series is the sum (in the sense of summable families) of its monomials -/
 theorem hasSum_of_monomials_self (f : PowerSeries α) :
     HasSum (fun d : ℕ => monomial α d (coeff α d f)) f := by
-  rw [Pi.hasSum]
-  intro ud
-  set d := ud ()
-  have hd : ∀ (d' : ℕ), d' ≠ d → (coeff _ d ((monomial α d') ((coeff α d') f))) = 0 := by
-    intro d' h
-    rw [coeff_monomial, if_neg h.symm]
-  convert hasSum_single d hd using 1
-  · sorry/- rw [← MvPowerSeries.coeff_apply f ud, ← coeff_apply (monomial α d (coeff α d f)) d, coeff_apply,
-      coeff_monomial_same] -/
-  sorry
+  rw [← (Finsupp.LinearEquiv.finsuppUnique ℕ ℕ Unit).toEquiv.hasSum_iff]
+  convert MvPowerSeries.hasSum_of_monomials_self f
+  simp only [LinearEquiv.coe_toEquiv, comp_apply, monomial, coeff,
+    Finsupp.LinearEquiv.finsuppUnique_apply, PUnit.default_eq_unit]
+  congr
+  all_goals { ext ; simp }
 
--- NOTE : this is duplicated
-noncomputable def _root_.finsuppUnitEquiv (α : Type*) [Zero α] : (Unit →₀ α) ≃ α where
-  toFun f := f ()
-  invFun a := Finsupp.single () a
-  left_inv := fun f ↦ by ext; simp
-  right_inv := fun a ↦ by simp
-
---TODO: change the proof
 /-- If the coefficient space is T2, then the power series is `tsum` of its monomials -/
 theorem as_tsum [T2Space α] (f : PowerSeries α) :
     f = tsum fun d : ℕ => monomial α d (coeff α d f) :=
-  (HasSum.tsum_eq (hasSum_of_monomials_self _)).symm
+  (HasSum.tsum_eq (hasSum_of_monomials_self f)).symm
 
 end Summable
 
