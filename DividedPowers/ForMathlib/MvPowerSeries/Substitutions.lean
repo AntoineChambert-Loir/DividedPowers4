@@ -3,6 +3,7 @@ import Mathlib.Data.MvPolynomial.CommRing
 import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Trunc
 import DividedPowers.ForMathlib.MvPowerSeries.Evaluation
 import DividedPowers.ForMathlib.MvPowerSeries.LinearTopology
+import DividedPowers.ForMathlib.PowerSeries.Topology
 import DividedPowers.ForMathlib.Topology.Algebra.Algebra.Basic
 import Mathlib.Data.Set.Finite
 
@@ -160,32 +161,20 @@ variable {σ : Type*} [DecidableEq σ]
 
 open WithPiTopology WithPiUniformity
 
-local instance : UniformSpace R := ⊥
--- local instance : DiscreteUniformity R := discreteUniformity_bot R
--- local instance : UniformAddGroup R := bot_uniformAddGroup
--- local instance : DiscreteTopology R := discreteTopology_bot R
-local instance : TopologicalRing R := DiscreteTopology.topologicalRing
-
-local instance : UniformSpace S := ⊥
-local instance : DiscreteUniformity S := discreteUniformity_bot S
--- local instance : CompleteSpace S := discreteUniformity_complete S
--- local instance : DiscreteTopology S := discreteTopology_bot S
--- local instance : UniformAddGroup S := bot_uniformAddGroup
-local instance : TopologicalAlgebra R S := inferInstance
-
--- local instance : UniformSpace (MvPowerSeries τ S) := uniformSpace τ S
--- local instance : UniformAddGroup (MvPowerSeries τ S) := uniformAddGroup τ S
-noncomputable local instance : LinearTopology (MvPowerSeries τ S) := isLinearTopology τ S
--- local instance : T2Space (MvPowerSeries τ S) := t2Space τ S
--- local instance : TopologicalRing (MvPowerSeries τ S) := topologicalRing _ _
-noncomputable local instance : TopologicalAlgebra R (MvPowerSeries τ S) := by
-    refine DiscreteTopology.topologicalAlgebra R (MvPowerSeries τ S)
-local instance : CompleteSpace (MvPowerSeries τ S) := by refine completeSpace τ S
-
 /-- Families of power series which can be substituted -/
 structure SubstDomain (a : σ → MvPowerSeries τ S) : Prop where
   const_coeff : ∀ s, IsNilpotent (constantCoeff τ S (a s))
-  tendsto_zero : Filter.Tendsto a Filter.cofinite (nhds 0)
+  tendsto_zero : Filter.Tendsto a Filter.cofinite (@nhds _ (@topologicalSpace τ S ⊥) 0)
+
+#check SubstDomain
+
+/-
+--variable [UniformSpace R] [DiscreteUniformity R] [UniformSpace S] [DiscreteUniformity S]
+
+noncomputable local instance : LinearTopology (MvPowerSeries τ S) := isLinearTopology τ S
+noncomputable local instance : TopologicalAlgebra R (MvPowerSeries τ S) := by
+    refine DiscreteTopology.topologicalAlgebra R (MvPowerSeries τ S)
+local instance : CompleteSpace (MvPowerSeries τ S) := by refine completeSpace τ S -/
 
 /-- If σ is finite, then the nilpotent condition is enough for SubstDomain -/
 def substDomain_of_constantCoeff_nilpotent [Finite σ]
@@ -203,17 +192,30 @@ def substDomain_of_constantCoeff_zero [Finite σ]
 /-- Substitution of power series into a power series -/
 noncomputable def subst (a : σ → MvPowerSeries τ S) (f : MvPowerSeries σ R) :
     MvPowerSeries τ S :=
+  letI : UniformSpace R := ⊥
+  letI : UniformSpace S := ⊥
   MvPowerSeries.eval₂ (algebraMap _ _) a f
 
 variable {a : σ → MvPowerSeries τ S} (ha : SubstDomain a)
 
-def SubstDomain.evalDomain : EvalDomain a := {
-  hpow := fun s ↦ (tendsto_pow_of_constantCoeff_nilpotent_iff (a s)).mpr (ha.const_coeff s)
-  tendsto_zero := ha.tendsto_zero }
+def SubstDomain.evalDomain : @EvalDomain σ (MvPowerSeries τ S) _ (@topologicalSpace τ S ⊥) a :=
+  letI : UniformSpace S := ⊥
+  letI : DiscreteUniformity S := discreteUniformity_bot S
+  { hpow := fun s ↦ (tendsto_pow_of_constantCoeff_nilpotent_iff (a s)).mpr (ha.const_coeff s)
+    tendsto_zero := ha.tendsto_zero }
 
+-- NOTE: We need `by exact` or the proof breaks!!!!
 /-- Substitution of power series into a power series -/
-noncomputable def substAlgHom : MvPowerSeries σ R →ₐ[R] MvPowerSeries τ S :=
-  MvPowerSeries.aeval ha.evalDomain
+noncomputable def substAlgHom : MvPowerSeries σ R →ₐ[R] MvPowerSeries τ S := by
+  letI : UniformSpace S := ⊥
+  letI : DiscreteUniformity S := discreteUniformity_bot S
+  letI : UniformSpace R := ⊥
+  letI : DiscreteUniformity R := discreteUniformity_bot R
+  letI : LinearTopology (MvPowerSeries τ S) := isLinearTopology τ S
+  letI : TopologicalAlgebra R (MvPowerSeries τ S) := by
+    refine DiscreteTopology.topologicalAlgebra R (MvPowerSeries τ S)
+  --NOTE : Could there be a tactic that introduces these local instances?
+  exact MvPowerSeries.aeval ha.evalDomain
 
 theorem coe_subst : subst a = ⇑(substAlgHom (R := R) ha) := rfl
 
@@ -289,6 +291,7 @@ theorem eval₂_subst
 
 variable {υ : Type*} [DecidableEq υ]
   {T : Type*} [CommRing T] [Algebra R T] [Algebra S T] [IsScalarTower R S T]
+  --[UniformSpace T]
   {b : τ → MvPowerSeries υ T} (hb : SubstDomain b)
 
 -- TODO : prove equivalence (constant coefficient of f is nilpotent iff ...)-/
@@ -360,16 +363,26 @@ variable {R : Type*} [CommRing R]
   {τ : Type*} [DecidableEq τ]
   {S : Type*} [CommRing S] [Algebra R S]
 
-open MvPowerSeries.WithPiUniformity
-
-local instance : UniformSpace R := ⊥
+open MvPowerSeries.WithPiUniformity WithPiTopology
+/-
+local instance us : UniformSpace R := ⊥
 local instance : TopologicalRing R := DiscreteTopology.topologicalRing
 
-local instance : UniformSpace S := ⊥
+local instance us2 : UniformSpace S := ⊥
 local instance : DiscreteUniformity S := discreteUniformity_bot S
-local instance : TopologicalAlgebra R S := inferInstance
+local instance : TopologicalAlgebra R S := inferInstance -/
 
-noncomputable local instance : LinearTopology (MvPowerSeries τ S) := MvPowerSeries.isLinearTopology τ S
+variable [UniformSpace R] [DiscreteUniformity R] [UniformSpace S] [DiscreteUniformity S]
+
+noncomputable local instance : LinearTopology (MvPowerSeries τ S) :=
+  MvPowerSeries.isLinearTopology τ S
+
+--noncomputable local instance : TopologicalSpace (PowerSeries S) := inferInstance
+
+-- TODO : PowerSeries.LinearTopology file
+noncomputable local instance : LinearTopology (PowerSeries S) :=
+   MvPowerSeries.isLinearTopology Unit S
+
 noncomputable local instance : TopologicalAlgebra R (MvPowerSeries τ S) := by
     refine DiscreteTopology.topologicalAlgebra R (MvPowerSeries τ S)
 local instance : CompleteSpace (MvPowerSeries τ S) := by refine completeSpace τ S
@@ -416,31 +429,38 @@ noncomputable def substAlgHom  : PowerSeries R →ₐ[R] MvPowerSeries τ S :=
 
 theorem coe_subst : subst a = ⇑(substAlgHom (R := R) ha) := rfl
 
-noncomputable def _root_.finsuppUnitEquiv (α : Type*) [Zero α] : (Unit →₀ α) ≃ α where
+/- noncomputable def _root_.finsuppUnitEquiv (α : Type*) [Zero α] : (Unit →₀ α) ≃ α where
   toFun f := f ()
   invFun a := Finsupp.single () a
   left_inv := fun f ↦ by ext; simp
   right_inv := fun a ↦ by simp
+ -/
+/-
+-- TODO LIST:
+- Add PowerSeries.toMvPowerSeries_Unit
+- Show it is a topological equivalence.
+- The support under finsuppUnitEquiv should be the image of the support.
+
+-/
+
+
 
 theorem coeff_subst_finite (f : PowerSeries R) (e : τ →₀ ℕ) :
     Set.Finite (fun (d : ℕ) ↦ (coeff R d f) • (MvPowerSeries.coeff S e (a ^ d))).support := by
   convert (MvPowerSeries.coeff_subst_finite ha.const f e).image
     ⇑(finsuppUnitEquiv ℕ)
   ext n
-  simp
-  constructor
+  simp only [Function.mem_support, ne_eq, Finsupp.prod_pow, Finset.univ_unique,
+    PUnit.default_eq_unit, Finset.prod_singleton, Set.mem_image_equiv]
+  constructor <;>
   · intro h
     convert h
-    simp [finsuppUnitEquiv]
-  · intro h
-    convert h
-    simp [finsuppUnitEquiv]
+    simp only [finsuppUnitEquiv, Equiv.coe_fn_symm_mk, Finsupp.single_eq_same]
 
 theorem coeff_subst (f : PowerSeries R) (e : τ →₀ ℕ) :
     MvPowerSeries.coeff S e (subst a f) =
       finsum (fun (d : ℕ) ↦
-        (coeff R d f) •
-          (MvPowerSeries.coeff S e (a ^ d))) := by
+        (coeff R d f) • (MvPowerSeries.coeff S e (a ^ d))) := by
   erw [MvPowerSeries.coeff_subst ha.const f e]
   rw [← finsum_comp_equiv (finsuppUnitEquiv ℕ)]
   apply finsum_congr

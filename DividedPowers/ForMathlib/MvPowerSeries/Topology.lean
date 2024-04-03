@@ -274,14 +274,8 @@ theorem hasSum_of_monomials_self (f : MvPowerSeries σ α) :
 
 /-- If the coefficient space is T2, then the power series is `tsum` of its monomials -/
 theorem as_tsum [T2Space α] (f : MvPowerSeries σ α) :
-    f = tsum fun d : σ →₀ ℕ => monomial α d (coeff α d f) := by
-  apply HasSum.unique f.hasSum_of_monomials_self
-  rw [tsum_def]
-  rw [dif_pos f.hasSum_of_monomials_self.summable]
-  split_ifs with h'
-  . rw [← tsum_eq_finsum h']
-    exact (f.hasSum_of_monomials_self.summable).hasSum
-  . exact (Classical.choose_spec _)
+    f = tsum fun d : σ →₀ ℕ => monomial α d (coeff α d f) :=
+  (HasSum.tsum_eq (hasSum_of_monomials_self _)).symm
 
 /-- A power series is the sum (in the sense of summable families) of its monomials -/
 theorem hasSum_of_homogeneous_components_self (w : σ → ℕ) (f : MvPowerSeries σ α) :
