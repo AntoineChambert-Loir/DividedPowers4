@@ -232,6 +232,10 @@ theorem subst_mul (f g : MvPowerSeries σ R) :
     subst a (f * g) = subst a f * subst a g := by
   rw [coe_subst ha, map_mul]
 
+theorem subst_pow (f : MvPowerSeries σ R) (n : ℕ) :
+    subst a (f ^ n) = (subst a f ) ^ n := by
+  rw [coe_subst ha, map_pow]
+
 theorem subst_smul (r : R) (f : MvPowerSeries σ R) :
     subst a (r • f) = r • (subst a f) := by
   rw [coe_subst ha, map_smul]
@@ -469,6 +473,23 @@ theorem substAlgHom_apply (f : PowerSeries R) :
 
 variable (ha)
 
+theorem subst_add (f g : PowerSeries R) :
+    subst a (f + g) = subst a f + subst a g := by
+  rw [coe_subst ha, map_add]
+
+theorem subst_pow (f : PowerSeries R) (n : ℕ) :
+    subst a (f ^ n) = (subst a f ) ^ n := by
+  rw [coe_subst ha, map_pow]
+
+
+theorem subst_mul (f g : PowerSeries R) :
+    subst a (f * g) = subst a f * subst a g := by
+  rw [coe_subst ha, map_mul]
+
+theorem subst_smul (r : R) (f : PowerSeries R) :
+    subst a (r • f) = r • (subst a f) := by
+  rw [coe_subst ha, map_smul]
+
 /-
 -- TODO LIST:
 - Add PowerSeries.toMvPowerSeries_Unit
@@ -522,7 +543,7 @@ theorem _root_.Polynomial.toPowerSeries_toMvPowerSeries (p : Polynomial R) :
     Algebra.id.map_eq_id, MvPowerSeries.map_id, MvPolynomial.coe_X, RingHom.id_apply]
   rfl
 
-example :(substAlgHom ha).comp
+/- example :(substAlgHom ha).comp
     ((MvPolynomial.coeToMvPowerSeries.algHom R).comp
       (Polynomial.aeval (MvPolynomial.X () : MvPolynomial Unit R)))
     = (Polynomial.aeval a) := by
@@ -535,6 +556,7 @@ example :(substAlgHom ha).comp
   rw [← MvPolynomial.coe_X, substAlgHom]
   erw [MvPowerSeries.substAlgHom_apply]
   rw [MvPowerSeries.subst_coe, MvPolynomial.aeval_X]
+-/
 
 theorem subst_coe (p : Polynomial R) :
     subst (R := R) a (p : PowerSeries R) = ↑(Polynomial.aeval a p) := by
@@ -544,6 +566,10 @@ theorem subst_coe (p : Polynomial R) :
   apply AlgHom.congr_fun
   apply Polynomial.algHom_ext
   simp only [AlgHom.coe_comp, Function.comp_apply, Polynomial.aeval_X, MvPolynomial.aeval_X]
+
+theorem subst_X :
+    subst a (X : PowerSeries R) = a := by
+  rw [← Polynomial.coe_X, subst_coe ha, Polynomial.aeval_X]
 
 --#exit --TODO: remove
 /-

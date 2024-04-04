@@ -43,7 +43,6 @@ theorem _root_.MvPowerSeries.monomial_eq {R : Type u} {σ : Type u_1} [Decidable
     rw [← MvPolynomial.coeToMvPowerSeries.ringHom_apply, map_finsupp_prod]
     simp only [map_pow, MvPolynomial.coeToMvPowerSeries.ringHom_apply, MvPolynomial.coe_X]
 
-
 /-- If f and g are exponential, then so is f * g -/
 theorem IsExponential.mul {f g : PowerSeries R}
     (hf : IsExponential f) (hg : IsExponential g) :
@@ -57,9 +56,7 @@ theorem IsExponential.mul {f g : PowerSeries R}
 
 lemma foo1 (r : R) {p : MvPowerSeries (Fin 2) R} (hp : SubstDomain p) :
     PowerSeries.subst p (r • PowerSeries.X : PowerSeries R) = r • p := by
-  simp only [← Polynomial.coe_X, ← Polynomial.coe_smul]
-  rw [PowerSeries.subst_coe hp]
-  simp only [map_smul, Polynomial.aeval_X]
+  simp only [PowerSeries.subst_smul hp, PowerSeries.subst_X hp]
 
 lemma foo2 [DecidableEq σ] [Finite σ] (r : R) (f : MvPowerSeries σ R)
     (hp : ∀ (d : σ →₀ ℕ), (d.sum (fun _ n ↦ n) ≠ 1) → MvPowerSeries.coeff R d f = 0) :
@@ -92,12 +89,65 @@ lemma foo2 [DecidableEq σ] [Finite σ] (r : R) (f : MvPowerSeries σ R)
     rw [this, MvPowerSeries.coeff_monomial_ne hb.symm, mul_zero]
   · simp
 
+theorem _root_.MvPowerSeries.monomial_smul [DecidableEq σ] (e : σ →₀ ℕ) (r : R):
+   (Finsupp.prod e fun s e => (r • MvPowerSeries.X s) ^ e)
+      = MvPowerSeries.monomial R e (r ^ (Finsupp.sum e fun _ n => n)) := by
+  simp only [smul_pow]
+  simp only [Algebra.smul_def]
+  rw [Finsupp.prod_mul, ← map_finsupp_prod, ← Algebra.smul_def]
+  rw [MvPowerSeries.monomial_eq, Algebra.smul_def, MvPowerSeries.c_eq_algebraMap]
+  congr
+  simp only [Finsupp.prod, Finset.prod_pow_eq_pow_sum, Finsupp.sum]
+
+/-- When p is linear, substitution of p and then a scalar homothety
+  is substitution of the homothety then p -/
+lemma subst_linear_subst_scalar_comm [DecidableEq σ] [Finite σ] (r : R) (p : MvPowerSeries σ R) (f : PowerSeries R)
+    (hp_lin : ∀ (d : σ →₀ ℕ), (d.sum (fun _ n ↦ n) ≠ 1) → MvPowerSeries.coeff R d p = 0) :
+    subst p (subst (r • X : PowerSeries R) f)
+    = MvPowerSeries.subst (fun i ↦ r • (MvPowerSeries.X i : MvPowerSeries σ R)) (subst p f) := by
+  have hp : PowerSeries.SubstDomain p := by
+    apply substDomain_of_constantCoeff_zero
+    rw [← MvPowerSeries.coeff_zero_eq_constantCoeff_apply]
+    apply hp_lin
+    simp
+  have hX : SubstDomain (r • X : PowerSeries R) := by
+    apply substDomain_of_constantCoeff_zero
+    erw [MvPowerSeries.constantCoeff_smul, MvPowerSeries.constantCoeff_X, smul_zero]
+  have hr : MvPowerSeries.SubstDomain
+      (fun (s : σ) ↦ r • (MvPowerSeries.X s : MvPowerSeries σ R)) := by
+    apply MvPowerSeries.substDomain_of_constantCoeff_zero
+    intro s
+    rw [MvPowerSeries.constantCoeff_smul, MvPowerSeries.constantCoeff_X, smul_zero]
+  rw [subst_comp_subst_apply hX hp]
+  nth_rewrite 1 [subst]
+  nth_rewrite 2 [subst]
+  rw [MvPowerSeries.subst_comp_subst_apply hp.const hr]
+  apply congr_arg₂ _ _ rfl
+  rw [Function.funext_iff]
+  intro _
+  rw [subst_smul hp, ← Polynomial.coe_X, subst_coe hp, Polynomial.aeval_X]
+  ext d
+  rw [map_smul, MvPowerSeries.coeff_subst hr]
+  rw [finsum_eq_sum _ (MvPowerSeries.coeff_subst_finite hr p d)]
+  simp only [smul_eq_mul, map_smul]
+  simp_rw [MvPowerSeries.monomial_smul]
+  specialize hp_lin d; rw [not_imp_comm] at hp_lin
+  rw [Finset.sum_eq_single d]
+  · rw [mul_comm]
+    by_cases h : MvPowerSeries.coeff R d p = 0
+    · simp only [h, zero_mul]
+    · congr
+      simp only [hp_lin h, pow_one, MvPowerSeries.coeff_monomial_same]
+  · intro b _ hb
+    rw [MvPowerSeries.coeff_monomial_ne hb.symm, mul_zero]
+  · simp
+
 /-- If f is exponential, then f(r T) is exponential, for any r : R -/
 theorem IsExponential.smul (r : R) {f : PowerSeries R} (hf : IsExponential f) :
     IsExponential (PowerSeries.subst (r • (PowerSeries.X : PowerSeries R)) f) where
   constantCoeff := by
     rw [PowerSeries.constantCoeff]
-    erw [PowerSeries.constantCoeff_subst ?_]
+    erw [PowerSeries.constantCoeff_subst (substDomain_of_constantCoeff_zero ?_)]
     rw [finsum_eq_single _ 0]
     · simp only [coeff_zero_eq_constantCoeff, pow_zero, map_one, smul_eq_mul, mul_one, hf.constantCoeff]
     · intro n hn
@@ -106,8 +156,55 @@ theorem IsExponential.smul (r : R) {f : PowerSeries R} (hf : IsExponential f) :
       convert zero_pow hn
       change PowerSeries.constantCoeff R (r • X) = 0
       simp only [constantCoeff_smul, constantCoeff_X, smul_eq_mul, mul_zero]
-    · apply substDomain_of_constantCoeff_zero
+    · change PowerSeries.constantCoeff R (r • X) = 0
+      simp only [constantCoeff_smul, constantCoeff_X, smul_eq_mul, mul_zero]
+  add_mul := by
+    rw [subst_linear_subst_scalar_comm]
+    rw [subst_linear_subst_scalar_comm]
+    rw [subst_linear_subst_scalar_comm]
+    rw [MvPowerSeries.coe_subst ?_, ← map_mul, hf.add_mul]
+    -- the constant coefficients of the substituted power series are 0
+    try
+      apply MvPowerSeries.substDomain_of_constantCoeff_zero
+      intro i
+      simp only [MvPowerSeries.constantCoeff_smul, MvPowerSeries.constantCoeff_X, smul_eq_mul,
+        mul_zero]
+    -- we prove the hypothesis of the last two applications of subst_linear_subst_scalar_comm
+    repeat
+      intro d hd
+      simp only [Fin.isValue, map_add, MvPowerSeries.coeff_X]
+      rw [if_neg]
+      intro hd'
+      apply hd
+      rw [hd']
+      simp only [Fin.isValue, Finsupp.sum_single_index]
+    -- the first application of subst_linear_subst_scalar_comm is a bit different
+    · intro d hd
+      simp only [Fin.isValue, map_add, MvPowerSeries.coeff_X]
+      split_ifs with h0 h1 h1
+      · rw [h1, Finsupp.single_left_inj (by norm_num)] at h0
+        exfalso; exact one_ne_zero h0
+      · exfalso; apply hd
+        simp only [h0, Fin.isValue, Finsupp.sum_single_index]
+      · exfalso; apply hd
+        simp only [h1, Fin.isValue, Finsupp.sum_single_index]
+      · simp only [add_zero]
+
+/-- If f is exponential, then f(r T) is exponential, for any r : R -/
+theorem IsExponential.smul_v1 (r : R) {f : PowerSeries R} (hf : IsExponential f) :
+    IsExponential (PowerSeries.subst (r • (PowerSeries.X : PowerSeries R)) f) where
+  constantCoeff := by
+    rw [PowerSeries.constantCoeff]
+    erw [PowerSeries.constantCoeff_subst (substDomain_of_constantCoeff_zero ?_)]
+    rw [finsum_eq_single _ 0]
+    · simp only [coeff_zero_eq_constantCoeff, pow_zero, map_one, smul_eq_mul, mul_one, hf.constantCoeff]
+    · intro n hn
+      simp only [map_pow, smul_eq_mul]
+      convert mul_zero _
+      convert zero_pow hn
       change PowerSeries.constantCoeff R (r • X) = 0
+      simp only [constantCoeff_smul, constantCoeff_X, smul_eq_mul, mul_zero]
+    · change PowerSeries.constantCoeff R (r • X) = 0
       simp only [constantCoeff_smul, constantCoeff_X, smul_eq_mul, mul_zero]
   add_mul := by
     rw [subst_comp_subst_apply (substDomain_of_constantCoeff_zero
