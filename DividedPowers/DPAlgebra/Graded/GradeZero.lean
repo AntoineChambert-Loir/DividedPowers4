@@ -1,6 +1,7 @@
 import DividedPowers.DPAlgebra.Graded.Basic
-
 import Mathlib.LinearAlgebra.TensorAlgebra.Basic
+
+universe u v
 
 noncomputable section
 
@@ -20,7 +21,6 @@ section GradeZero
 def algebraMapInv : DividedPowerAlgebra R M →ₐ[R] R :=
   lift (dividedPowersBot R) (0 : M →ₗ[R] R)
     (fun _ => by simp only [LinearMap.zero_apply, mem_bot])
-#align divided_power_algebra.algebra_map_inv DividedPowerAlgebra.algebraMapInv
 
 theorem algebraMapInv_eq (f : MvPolynomial (ℕ × M) R) :
     algebraMapInv R M (mk f) = aeval (fun nm : ℕ × M => ite (0 < nm.1) (0 : R) 1) f := by
@@ -35,7 +35,6 @@ theorem algebraMapInv_eq (f : MvPolynomial (ℕ × M) R) :
     rw [not_lt, le_zero_iff] at hn
     simp only [hn, liftAlgHom_apply, LinearMap.zero_apply, aeval_X,
       DividedPowers.dpow_zero _ (mem_bot.mpr rfl)]
-#align divided_power_algebra.algebra_map_inv_eq DividedPowerAlgebra.algebraMapInv_eq
 
 theorem proj'_zero_comp_algebraMap (x : R) :
   ((proj' R M 0 ∘ algebraMap R (DividedPowerAlgebra R M)) x).val =
@@ -43,34 +42,27 @@ theorem proj'_zero_comp_algebraMap (x : R) :
   simp only [proj', proj, LinearMap.coe_mk, AddHom.coe_mk, Function.comp_apply,
     Algebra.algebraMap_eq_smul_one, decompose_smul, decompose_one]
   rfl
-#align divided_power_algebra.proj'_zero_comp_algebra_map
-  DividedPowerAlgebra.proj'_zero_comp_algebraMap
 
 theorem algebraMap_leftInverse :
     Function.LeftInverse (algebraMapInv R M) (algebraMap R (DividedPowerAlgebra R M)) := fun m => by
   simp only [AlgHom.commutes, Algebra.id.map_eq_id, RingHom.id_apply]
-#align divided_power_algebra.algebra_map_left_inverse DividedPowerAlgebra.algebraMap_leftInverse
 
 @[simp] theorem algebraMap_inj (x y : R) :
     (algebraMap R (DividedPowerAlgebra R M) x = algebraMap R (DividedPowerAlgebra R M) y) ↔ x = y :=
   (algebraMap_leftInverse R M).injective.eq_iff
-#align divided_power_algebra.algebra_map_inj DividedPowerAlgebra.algebraMap_inj
 
 @[simp] theorem algebraMap_eq_zero_iff (x : R) :
     algebraMap R (DividedPowerAlgebra R M) x = 0 ↔ x = 0 :=
   map_eq_zero_iff (algebraMap _ _) (algebraMap_leftInverse _ _).injective
-#align divided_power_algebra.algebra_map_eq_zero_iff DividedPowerAlgebra.algebraMap_eq_zero_iff
 
 @[simp] theorem algebraMap_eq_one_iff (x : R) :
     algebraMap R (DividedPowerAlgebra R M) x = 1 ↔ x = 1 :=
   map_eq_one_iff (algebraMap _ _) (algebraMap_leftInverse _ _).injective
-#align divided_power_algebra.algebra_map_eq_one_iff DividedPowerAlgebra.algebraMap_eq_one_iff
 
 theorem mkₐ_eq_aeval {C : Type*} [CommRing C] {D : Type*} (I : Ideal (MvPolynomial D C)) :
     Ideal.Quotient.mkₐ C I = aeval fun d : D => Ideal.Quotient.mk I (X d) := by
   ext d
   simp only [mkₐ_eq_mk, aeval_X]
-#align divided_power_algebra.mkₐ_eq_aeval DividedPowerAlgebra.mkₐ_eq_aeval
 
 theorem mk_eq_eval₂ {C : Type*} [CommRing C] {D : Type*} (I : Ideal (MvPolynomial D C)) :
     (Ideal.Quotient.mk I).toFun =
@@ -78,7 +70,6 @@ theorem mk_eq_eval₂ {C : Type*} [CommRing C] {D : Type*} (I : Ideal (MvPolynom
   ext d
   simp_rw [RingHom.toFun_eq_coe, ← mkₐ_eq_mk C, mkₐ_eq_aeval, aeval_X]
   rfl
-#align divided_power_algebra.mk_eq_eval₂ DividedPowerAlgebra.mk_eq_eval₂
 
 theorem algebraMap_right_inv_of_degree_zero (x : grade R M 0) :
   (algebraMap R (DividedPowerAlgebra R M)) ((algebraMapInv R M) x.1) = x.1 := by
@@ -109,8 +100,6 @@ theorem algebraMap_right_inv_of_degree_zero (x : grade R M 0) :
       simp only [mem_coe, mem_vars, Finsupp.mem_support_iff, ne_eq, mem_support_iff, exists_prop]
       simp only [Finsupp.mem_support_iff] at hnm
       exact ⟨exp, h, hnm⟩
-#align divided_power_algebra.algebra_map_right_inv_of_degree_zero
-  DividedPowerAlgebra.algebraMap_right_inv_of_degree_zero
 
 end GradeZero
 
@@ -128,23 +117,18 @@ section GradeZero
 if ideal.quotient.mk J has a right inverse which is a RingHom -/
 def IsAugmentationIdeal (A : Type*) [CommRing A] (J : Ideal A) : Prop :=
   ∃ g : A ⧸ J →+* A, Function.RightInverse g (Ideal.Quotient.mk J)
-#align is_augmentation_ideal DividedPowerAlgebra.IsAugmentationIdeal
 
 /-- The augmentation ideal in the divided_power_algebra -/
 def augIdeal : (Ideal (DividedPowerAlgebra R M) : Type (max u v)) :=
   RingHom.ker (algebraMapInv R M).toRingHom
-#align divided_power_algebra.aug_ideal DividedPowerAlgebra.augIdeal
-
 
 theorem mem_augIdeal_iff (f : DividedPowerAlgebra R M) :
     f ∈ augIdeal R M ↔ algebraMapInv R M f = 0 := by
   rw [augIdeal, AlgHom.toRingHom_eq_coe, RingHom.mem_ker, RingHom.coe_coe]
-#align divided_power_algebra.mem_aug_ideal_iff DividedPowerAlgebra.mem_augIdeal_iff
 
 /-- The image of ι is contained in the augmentation ideal -/
 theorem ι_mem_augIdeal (m : M) : ι R M m ∈ augIdeal R M := by
   simp only [mem_augIdeal_iff, ι_def, dp, algebraMapInv_eq, aeval_X, zero_lt_one, ite_true]
-#align divided_power_algebra.ι_mem_aug_ideal DividedPowerAlgebra.ι_mem_augIdeal
 
 def kerLiftAlg_algebraMapInv := kerLiftAlg (algebraMapInv R M)
 --  better type would be : (DividedPowerAlgebra R M ⧸ augIdeal R M) →ₐ[R] R
@@ -183,8 +167,6 @@ theorem augIdeal_isAugmentationIdeal :
   dsimp only [IsAugmentationIdeal]
   use algebraMap_comp_kerLiftAlg R M
   exact augIdeal_isAugmentationIdeal' R M
-#align divided_power_algebra.aug_ideal_is_augmentation_ideal
-  DividedPowerAlgebra.augIdeal_isAugmentationIdeal
 
 -- Q : if algebra map has a section, is the kernel an augmentation ideal?
 theorem coeff_zero_of_mem_augIdeal {f : MvPolynomial (ℕ × M) R}
@@ -210,8 +192,6 @@ theorem coeff_zero_of_mem_augIdeal {f : MvPolynomial (ℕ × M) R}
   · intro hf'
     rw [monomial_zero', aeval_C, Algebra.id.map_eq_id, RingHom.id_apply, ←
       not_mem_support_iff.mp hf']
-#align divided_power_algebra.coeff_zero_of_mem_aug_ideal
-  DividedPowerAlgebra.coeff_zero_of_mem_augIdeal
 
 /- theorem augIdeal_eq_span' : augIdeal R M = span (Set.image2 (dp R) {n : ℕ | 0 < n} ⊤) :=
   sorry
@@ -262,13 +242,11 @@ theorem  augIdeal_eq_span :
     rw [← hf, mem_augIdeal_iff, algebraMapInv, liftAlgHom_apply_dp]
     simp_rw [LinearMap.zero_apply]
     rw [DividedPowers.dpow_eval_zero _ (ne_of_gt hn)]
-#align divided_power_algebra.aug_ideal_eq_span DividedPowerAlgebra.augIdeal_eq_span
 
 theorem right_inv' (x : R) :
     (algebraMapInv R M) ((proj' R M 0 ∘ algebraMap R (DividedPowerAlgebra R M)) x).val = x := by
   rw [proj'_zero_comp_algebraMap]
   exact algebraMap_leftInverse R M x
-#align divided_power_algebra.right_inv' DividedPowerAlgebra.right_inv'
 
 theorem left_inv' (x : grade R M 0) :
     (proj' R M 0 ∘ algebraMap R (DividedPowerAlgebra R M)) ((algebraMapInv R M) x.val) = x := by
@@ -276,7 +254,6 @@ theorem left_inv' (x : grade R M 0) :
   simp only [proj', proj, LinearMap.coe_mk, AddHom.coe_mk, Function.comp_apply]
   conv_rhs => rw [← DirectSum.decompose_of_mem_same _ x.2]
   simp only [algebraMap_right_inv_of_degree_zero R M x, decompose_coe, of_eq_same]
-#align divided_power_algebra.left_inv' DividedPowerAlgebra.left_inv'
 
 theorem lift_augIdeal_le {A : Type*} [CommRing A] [Algebra R A] {I : Ideal A}
     (hI : DividedPowers I) (φ : M →ₗ[R] A) (hφ : ∀ m, φ m ∈ I) :
@@ -285,13 +262,11 @@ theorem lift_augIdeal_le {A : Type*} [CommRing A] [Algebra R A] {I : Ideal A}
   rintro y ⟨x, ⟨n, hn, m, _, rfl⟩, rfl⟩
   simp only [liftAlgHom_apply_dp]
   refine hI.dpow_mem (ne_of_gt hn) (hφ m)
-#align divided_power_algebra.lift_aug_ideal_le DividedPowerAlgebra.lift_augIdeal_le
 
 theorem lift_mem_of_mem_augIdeal {A : Type*} [CommRing A] [Algebra R A] {I : Ideal A}
     (hI : DividedPowers I) (φ : M →ₗ[R] A) (hφ : ∀ m, φ m ∈ I) (x : DividedPowerAlgebra R M)
     (hx : x ∈ augIdeal R M) : lift hI φ hφ x ∈ I :=
   (lift_augIdeal_le R M hI φ hφ) (mem_map_of_mem _ hx)
-#align divided_power_algebra.lift_mem_of_mem_aug_ideal DividedPowerAlgebra.lift_mem_of_mem_augIdeal
 
 -- grade R M 0 → R is isomorphism
 noncomputable def ringEquivDegreeZero : RingEquiv (grade R M 0) R where
@@ -301,7 +276,6 @@ noncomputable def ringEquivDegreeZero : RingEquiv (grade R M 0) R where
   right_inv    := right_inv' R M
   map_mul' x y := by rw [← _root_.map_mul] ; rfl
   map_add' x y := by rw [← _root_.map_add] ; rfl
-#align divided_power_algebra.ring_equiv_degree_zero DividedPowerAlgebra.ringEquivDegreeZero
 
 def proj0RingHom : RingHom (DividedPowerAlgebra R M) R where
   toFun := (ringEquivDegreeZero R M).toFun ∘ proj' R M 0
@@ -315,6 +289,5 @@ def proj0RingHom : RingHom (DividedPowerAlgebra R M) R where
     simp only [toEquiv_eq_coe, Equiv.toFun_as_coe, coe_toEquiv, comp_apply, map_zero]
   map_add' := by
     simp only [toEquiv_eq_coe, Equiv.toFun_as_coe, coe_toEquiv, comp_apply, map_add, forall_const]
-#align divided_power_algebra.proj_0_ring_hom DividedPowerAlgebra.proj0RingHom
 
 end GradeZero
