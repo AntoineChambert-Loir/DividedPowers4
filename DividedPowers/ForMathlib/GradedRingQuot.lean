@@ -278,6 +278,8 @@ def IsHomogeneous [GradedAlgebra 𝒜] : Prop :=
   ∀ {a b : A} (_ : rel a b), ∀ i,
     rel ((decomposeAlgEquiv 𝒜).toLinearMap a i) ((decomposeAlgEquiv 𝒜).toLinearMap b i)
 
+variable {𝒜 rel}
+
 lemma IsHomogeneous_of_isPureHomogeneous [GradedAlgebra 𝒜] (hrel : IsPureHomogeneous 𝒜 rel)
     (hrel0 : rel 0 0) : IsHomogeneous 𝒜 rel := by
   intro a b h i
