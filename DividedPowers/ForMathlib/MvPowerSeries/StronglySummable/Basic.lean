@@ -3,6 +3,7 @@ import Mathlib.Topology.Order.Basic
 import DividedPowers.ForMathlib.MvPowerSeries.Order
 import Mathlib.Topology.Algebra.Group.Basic
 import Mathlib.Topology.Algebra.InfiniteSum.Group
+import Mathlib.Data.Finsupp.Antidiagonal
 --import Mathlib.Data.Finsupp.Union
 
 --TODO: move
@@ -68,9 +69,11 @@ theorem tendsto_zero_of_summable [AddCommGroup α] [TopologicalSpace α] [Topolo
     by_contra his
     apply hi
     apply addU₁_subset
-    sorry
-    /- use (insert i S).sum f - a, S.sum f - a, hS (insert i S) (subset_insert i S), hS S le_rfl
-    simp only [sum_insert his, sub_sub_sub_cancel_right, add_sub_cancel] -/
+    use (insert i S).sum f - a,
+      hS (insert i S) (subset_insert i S),
+      S.sum f - a,
+      hS S le_rfl
+    simp only [sum_insert his, sub_sub_sub_cancel_right, add_sub_cancel_right]
   · suffices h_open : IsOpen ((fun xy : α × α => xy.fst - xy.snd) ⁻¹' U₀) by
       rw [isOpen_prod_iff] at h_open
       obtain ⟨u, v, hu, hv, mem_u, mem_v, H⟩ :=
@@ -78,8 +81,8 @@ theorem tendsto_zero_of_summable [AddCommGroup α] [TopologicalSpace α] [Topolo
       use u ∩ v, IsOpen.inter hu hv, ⟨mem_u, mem_v⟩
       apply subset_trans _ (Set.image_subset_iff.mpr H)
       rw [image_prod]
-      rintro z ⟨x, y, hx, hy, rfl⟩
-      sorry --exact ⟨x, y, mem_of_mem_inter_left hx, mem_of_mem_inter_right hy, rfl⟩
+      rintro z ⟨x, hx, y, hy, rfl⟩
+      exact ⟨x, mem_of_mem_inter_left hx, y, mem_of_mem_inter_right hy, rfl⟩
     · exact IsOpen.preimage continuous_sub hU₀
 #align function.tendsto_zero_of_summable Function.tendsto_zero_of_summable
 
@@ -89,7 +92,7 @@ namespace MvPowerSeries
 
 open Function
 
-variable {σ α : Type _}
+variable {σ α : Type*} [DecidableEq σ]
 
 section StronglySummable
 
@@ -256,15 +259,15 @@ theorem support_mul [DecidableEq ι] [DecidableEq σ] {f : ι → MvPowerSeries 
     (hg : StronglySummable g) :
     ∀ d : σ →₀ ℕ,
       (fun i : ι × κ => coeff α d (f i.fst * g i.snd)).support ⊆
-        (d.antidiagonal.biUnion fun b => (hf b.fst).toFinset).product
-          (d.antidiagonal.biUnion fun b => (hg b.snd).toFinset) := by
+        ((antidiagonal d).biUnion fun b => (hf b.fst).toFinset).product
+          ((antidiagonal d).biUnion fun b => (hg b.snd).toFinset) := by
   rintro d ⟨i, j⟩ h
-  dsimp only [Function.mem_support, coeff_mul] at h
-  suffices ∃ p ∈ d.antidiagonal, coeff α (p.fst : σ →₀ ℕ) (f i) * (coeff α p.snd) (g j) ≠ 0 by
+  -- dsimp only [Function.mem_support, coeff_mul] at h
+  suffices ∃ p ∈ antidiagonal d, coeff α (p.fst : σ →₀ ℕ) (f i) * (coeff α p.snd) (g j) ≠ 0 by
     obtain ⟨⟨b, c⟩, hbc, h'⟩ := this
-    simp only [Finsupp.mem_antidiagonal] at hbc
+    simp only [mem_antidiagonal] at hbc
     erw [Finset.mem_product]
-    simp only [Finset.mem_biUnion, Finsupp.mem_antidiagonal, Finite.mem_toFinset, mem_support,
+    simp only [Finset.mem_biUnion, mem_antidiagonal, Finite.mem_toFinset, mem_support,
       ne_eq, Prod.exists]
     constructor
     . use b, c, hbc
@@ -277,7 +280,11 @@ theorem support_mul [DecidableEq ι] [DecidableEq σ] {f : ι → MvPowerSeries 
       rw [h₂, MulZeroClass.mul_zero]
   · by_contra h'
     refine' h (sum_eq_zero _)
-    convert h'
+    push_neg at h'
+    intro x hx
+    simp only
+    exact h' x hx
+
 #align mv_power_series.strongly_summable.support_mul MvPowerSeries.StronglySummable.support_mul
 
 /-- If `f` and `g` are strongly summable, then `λ i, coeff α d (f i.fst * g i.snd)` is strongly
