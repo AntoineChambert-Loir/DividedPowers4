@@ -1,22 +1,12 @@
-import Mathlib.RingTheory.PowerSeries.Basic
-import Mathlib.Topology.Order.Basic
+--import Mathlib.Data.Finsupp.Union
 import DividedPowers.ForMathlib.MvPowerSeries.Order
-import Mathlib.Topology.Algebra.Group.Basic
-import Mathlib.Topology.Algebra.InfiniteSum.Group
+import DividedPowers.ForMathlib.MvPowerSeries.Topology
 import Mathlib.Data.Finsupp.Antidiagonal
 import Mathlib.Data.Finsupp.Interval
---import Mathlib.Data.Finsupp.Union
-
---TODO: move
---NOTE: I renamed it because `Finset.prod_one_add` is already declared in `MvPowerSeries.Topology`
-theorem Finset.prod_one_add' {ι α : Type _} [CommRing α] {f : ι → α} (s : Finset ι) :
-    (s.prod fun i => 1 + f i) = s.powerset.sum fun t => t.prod f := by
-  classical
-  simp_rw [add_comm, prod_add]
-  apply congr_arg
-  ext t
-  convert mul_one ((Finset.prod t fun a => f a))
-  exact prod_eq_one fun i _ => rfl
+import Mathlib.RingTheory.PowerSeries.Basic
+import Mathlib.Topology.Algebra.Group.Basic
+import Mathlib.Topology.Algebra.InfiniteSum.Group
+import Mathlib.Topology.Order.Basic
 
 open Finset Filter Set
 
@@ -174,11 +164,6 @@ theorem order_tendsto_top_iff [Finite σ] (f : ι → MvPowerSeries σ α) :
   MvPowerSeries.StronglySummable.order_tendsto_top_iff
 
 end Order
-
--- NOTE (MI) : I had to add this
-instance : LocallyFiniteOrderBot (σ →₀ ℕ) :=
-  sorry
-  -- get it from Finsupp.instLocallyFiniteOrder + OrderBot
 
 /-- The union of the supports of the functions `λ i, coeff α e (f i)`, where `e` runs over
   the coefficients bounded by `d`. -/
@@ -366,10 +351,9 @@ theorem sum_mul {f : ι → MvPowerSeries σ α} {κ : Type _} {g : κ → MvPow
   simp_rw [coeff_sum d (support_mul hf hg d), coeff_mul]
   rw [sum_comm]
   apply Finset.sum_congr rfl
-  rintro ⟨b, c⟩ hbc
-  simp only [mem_antidiagonal] at hbc
-  rw [coeff_sum b, coeff_sum c, sum_mul_sum]
-  rfl
+  rintro bc hbc
+  erw [Finset.sum_product]
+  rw [coeff_sum _, coeff_sum _, sum_mul_sum]
   all_goals
     intro x hx
     apply @Finset.subset_biUnion_of_mem _ _ _ _ _ bc hbc
@@ -378,20 +362,9 @@ theorem sum_mul {f : ι → MvPowerSeries σ α} {κ : Type _} {g : κ → MvPow
 --TODO: remove?
 theorem sum_mul' {f : ι → MvPowerSeries σ α} {κ : Type _} {g : κ → MvPowerSeries σ α}
     (hf : StronglySummable f) (hg : StronglySummable g)
-    (hh : StronglySummable fun i : ι × κ => f i.fst * g i.snd) : hh.sum = hf.sum * hg.sum := by
-  classical
-  ext d
-  simp_rw [coeff_sum d (support_mul hf hg d), coeff_mul]
-  rw [sum_comm]
-  apply Finset.sum_congr rfl
-  intro bc hbc
-  rw [coeff_sum bc.fst, coeff_sum bc.snd, sum_mul_sum]
-  rfl
-  all_goals
-    intro x hx
-    apply @Finset.subset_biUnion_of_mem _ _ _ _ _ bc hbc
-    exact (Finite.mem_toFinset _).mpr hx
-#align mv_power_series.strongly_summable.sum_mul MvPowerSeries.StronglySummable.sum_mul'
+    (hh : StronglySummable fun i : ι × κ => f i.fst * g i.snd) :
+    hh.sum = hf.sum * hg.sum := by
+  rw [← sum_mul]
 
 /-- If `f` is strongly summable and `s : Set ι` is any set, then `λ i, s.indicator f i` is
   strongly summable.-/
@@ -567,9 +540,10 @@ namespace StronglyMultipliable
 
 /-- If `f` is strongly_multipliable and `s : Finset ι`, the product of `λ i, (1 + f ι)` over `s`
   is equal to the sum of `hf.of_indicator {I : Finset ι | I ⊆ s}`.   -/
-theorem finset_prod_eq (s : Finset ι) (hf : StronglyMultipliable f) :
-    (s.prod fun i => 1 + f i) = (hf.of_indicator {I : Finset ι | I ⊆ s}).sum := by
-  rw [Finset.prod_one_add']
+theorem finset_prod_eq [DecidableEq ι] (s : Finset ι) (hf : StronglyMultipliable f) :
+    (s.prod fun i => 1 + f i)
+      = (hf.of_indicator {I : Finset ι | I ⊆ s}).sum := by
+  rw [Finset.prod_one_add]
   ext d
   rw [map_sum, StronglySummable.coeff_sum d]
   · apply sum_congr rfl
@@ -596,7 +570,7 @@ theorem prod_eq_sum_add_sum (hf : StronglyMultipliable f) (s : Set ι) :
   MvPowerSeries.StronglyMultipliable.prod_eq_sum_add_sum
 
 /-- A version of `prod_eq_sum_add_sum` for `s : Finset ι`. -/
-theorem prod_eq_finset_prod_add (hf : StronglyMultipliable f) (s : Finset ι) :
+theorem prod_eq_finset_prod_add [DecidableEq ι] (hf : StronglyMultipliable f) (s : Finset ι) :
     hf.prod = (s.prod fun i => 1 + f i) + (hf.of_indicator ({I : Finset ι | I ⊆ s}ᶜ)).sum := by
   rw [hf.prod_eq_sum_add_sum s, hf.finset_prod_eq s]
 #align mv_power_series.strongly_multipliable.prod_eq_finset_prod_add
