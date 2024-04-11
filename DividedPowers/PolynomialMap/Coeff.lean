@@ -77,19 +77,6 @@ theorem baseChange_compat_apply (f : M →ₗ[R] R) (m : S ⊗[R] M) :
 
 end LinearForm
 
-section MvPolynomial
-
-variable {R : Type*} [CommSemiring R]
-def MvPolynomial.lcoeff (k : ι →₀ ℕ) : MvPolynomial ι R →ₗ[R] R where
-  toFun     := coeff k
-  map_add'  := coeff_add k
-  map_smul' := coeff_smul k
-
-theorem MvPolynomial.lcoeff_apply (k : ι →₀ ℕ) (f : MvPolynomial ι R) :
-    lcoeff k f = coeff k f := rfl
-
-end MvPolynomial
-
 end Algebra
 
 namespace PolynomialMap
@@ -310,7 +297,7 @@ theorem generize_eq (m : ι → M) (f : PolynomialMap R M N)  :
 
 theorem _root_.MvPolynomial.rTensor_lcoeff {σ : Type*} [DecidableEq σ]
     (sn : MvPolynomial σ R ⊗[R] N) (k : σ →₀ ℕ) :
-    (LinearMap.rTensor N (lcoeff k)) sn = 1 ⊗ₜ[R] (scalarRTensor sn) k  := by
+    (LinearMap.rTensor N (lcoeff R k)) sn = 1 ⊗ₜ[R] (scalarRTensor sn) k  := by
   induction sn using TensorProduct.induction_on with
   | zero => simp
   | tmul s n =>
@@ -326,13 +313,13 @@ theorem _root_.MvPolynomial.rTensor_lcoeff {σ : Type*} [DecidableEq σ]
 
 theorem _root_.MvPolynomial.scalarRTensor_apply {σ : Type*} [DecidableEq σ]
     (sn : MvPolynomial σ R ⊗[R] N) (k : σ →₀ ℕ) :
-    scalarRTensor sn k = TensorProduct.lid R N ((LinearMap.rTensor N (lcoeff k)) sn) := by
+    scalarRTensor sn k = TensorProduct.lid R N ((LinearMap.rTensor N (lcoeff R k)) sn) := by
   rw [← LinearEquiv.symm_apply_eq, TensorProduct.lid_symm_apply, rTensor_lcoeff]
 
 theorem coeff_eq (m : ι → M) (k : ι →₀ ℕ) (f : PolynomialMap R M N) :
   coeff m f k =
     (TensorProduct.lid R N)
-      ((LinearMap.rTensor N (MvPolynomial.lcoeff k))
+      ((LinearMap.rTensor N (MvPolynomial.lcoeff R k))
         (f.toFun (MvPolynomial ι R) (Finset.univ.sum
           fun i : ι => MvPolynomial.X i ⊗ₜ[R] m i))) := by
   simp only [coeff, coe_comp, LinearEquiv.coe_coe, Function.comp_apply]
