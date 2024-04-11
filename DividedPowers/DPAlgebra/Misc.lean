@@ -6,8 +6,8 @@ import DividedPowers.ForMathlib.WeightedHomogeneous
 import Mathlib.Algebra.RingQuot
 import Mathlib.Algebra.TrivSqZeroExt
 import Mathlib.Algebra.Algebra.Operations
-import Mathlib.Data.MvPolynomial.Supported
-import Mathlib.Data.MvPolynomial.CommRing
+import Mathlib.Algebra.MvPolynomial.Supported
+import Mathlib.Algebra.MvPolynomial.CommRing
 
 noncomputable section
 
