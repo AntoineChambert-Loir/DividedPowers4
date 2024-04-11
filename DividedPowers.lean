@@ -45,7 +45,7 @@ import DividedPowers.ForMathlib.WeightedHomogeneous
 import DividedPowers.IdealAdd -- It uses sorry
 import DividedPowers.PolynomialMap.Basic -- It has sorrys
 import DividedPowers.PolynomialMap.Coeff
---import DividedPowers.PolynomialMap.Homogeneous
+import DividedPowers.PolynomialMap.Homogeneous
 --import DividedPowers.PolynomialMap.UniverseLift -- It has sorrys
 import DividedPowers.RatAlgebra
 import DividedPowers.SubDPIdeal

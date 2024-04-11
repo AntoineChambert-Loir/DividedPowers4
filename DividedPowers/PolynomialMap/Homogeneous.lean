@@ -1,8 +1,7 @@
 /- Copyright ACL & MIdFF 2024 -/
 
-import DividedPowers.PolynomialMap.Coeff
-import DividedPowers.ForMathlib.LinearAlgebra.DirectSum.Finsupp
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.Polynomial
+import DividedPowers.PolynomialMap.Coeff
 import Mathlib.RingTheory.TensorProduct.Basic
 
 universe u
@@ -91,7 +90,7 @@ lemma coeff_baseChange_apply (φ : S →ₐ[R] S') (f : S[X]) (p : ℕ) :
         coeff_C_mul, _root_.map_mul, coeff_X_pow]
       rw [apply_ite φ, _root_.map_one, map_zero]
 
-lemma lcoeff_comp_baseChange_eq (φ : S →ₐ[R] S') :
+lemma lcoeff_comp_baseChange_eq (φ : S →ₐ[R] S') (p : ℕ) :
   LinearMap.comp (AlgHom.toLinearMap φ) ((lcoeff S p).restrictScalars R)
     = LinearMap.comp ((lcoeff S' p).restrictScalars R) (baseChange φ).toLinearMap := by
   ext f
@@ -282,7 +281,7 @@ lemma isHomogeneousOfDegree_coeff {f : PolynomialMap R M N} {p : ℕ}
   simp only [image_eq_coeff_sum] at hf'
   simp only [Finsupp.smul_sum, TensorProduct.smul_tmul'] at hf'
   let φ : MvPolynomial (Option ι) R ⊗[R] N →ₗ[R] N :=
-    (TensorProduct.lid R N).toLinearMap.comp (LinearMap.rTensor N (MvPolynomial.lcoeff (e d (d.sum fun _ n => n))))
+    (TensorProduct.lid R N).toLinearMap.comp (LinearMap.rTensor N (MvPolynomial.lcoeff R (e d (d.sum fun _ n => n))))
   let hφ := LinearMap.congr_arg (f := φ) hf'
   simp only [map_finsupp_sum, LinearMap.map_smul] at hφ
   simp [TensorProduct.smul_tmul'] at hφ
@@ -654,11 +653,11 @@ variable {R : Type u} [CommRing R]
 /-- The homogeneous components of a `PolynomialMap` -/
 noncomputable def component (p : ℕ) (f : PolynomialMap R M N) :
   PolynomialMap R M N where
-  toFun' S _ _ := fun m ↦ rTensor'
-    (f.toFun' S[X] (((monomial 1).restrictScalars R).rTensor M m)) p
+  toFun' S _ _ := fun m ↦ rTensor R N S
+    (f.toFun' S[X] (((monomial 1).restrictScalars R).rTensor M m))  p
   isCompat' {S _ _} {S' _ _} φ := by
     ext sm
-    simp only [LinearEquiv.rTensor'_apply, Function.comp_apply, Polynomial.rTensor'_apply, ← LinearMap.rTensor_comp_apply]
+    simp only [LinearEquiv.rTensor'_apply, Function.comp_apply, rTensor_apply, ← LinearMap.rTensor_comp_apply]
     simp only [lcoeff_comp_baseChange_eq, LinearMap.rTensor_comp_apply]
     rw [f.isCompat_apply']
     simp only [← LinearMap.rTensor_comp_apply]
@@ -666,11 +665,12 @@ noncomputable def component (p : ℕ) (f : PolynomialMap R M N) :
     ext s n
     simp [baseChange_monomial]
 
+/-
 -- Faire une preuve directe  qui court-circuite `lcoeff_comp_baseChange_eq`?
 /-- The homogeneous components of a `PolynomialMap` -/
 noncomputable example (p : ℕ) (f : PolynomialMap R M N) :
   PolynomialMap R M N where
-  toFun' S _ _ := fun m ↦ rTensor'
+  toFun' S _ _ := fun m ↦ rTensor R N S
     (f.toFun' S[X] (((monomial 1).restrictScalars R).rTensor M m)) p
   isCompat' {S _ _} {S' _ _} φ := by
     ext sm
@@ -680,8 +680,11 @@ noncomputable example (p : ℕ) (f : PolynomialMap R M N) :
       sorry
     rw [this, LinearMap.rTensor_comp_apply, ← f.isCompat_apply']
     set sn := f.toFun' S[X] (((monomial (R := S) 1).restrictScalars R).rTensor M sm)
-    simp [rTensor', LinearEquiv.rTensor'_apply]
+    simp only [rTensor_apply]
+    simp only [← LinearMap.comp_apply]
+    simp only [← LinearMap.rTensor_comp]
     sorry
+-/
 
 /-- `f.PolynomialMap.component p` is homogeneous of degree p -/
 lemma componentIsHomogeneous (p : ℕ) (f : PolynomialMap R M N) :
@@ -694,7 +697,7 @@ lemma componentIsHomogeneous (p : ℕ) (f : PolynomialMap R M N) :
     rw [this]
     rw [← f.isCompat_apply' ψ]
     generalize toFun' f S[X] (rTensor M ((monomial 1).restrictScalars R) sm) = t
-    rw [rTensor'_apply, rTensor'_apply, ← rTensor_comp_apply]
+    rw [rTensor_apply, rTensor_apply, ← rTensor_comp_apply]
     conv_rhs =>
       rw [← (IsLinearMap.isLinearMap_smul (s ^ p)).mk'_apply,
       ← coe_restrictScalars R]
@@ -758,19 +761,19 @@ theorem component_add (p : ℕ) (f g : PolynomialMap R M N) :
 theorem component_smul (r : R) (f : PolynomialMap R M N) :
     (r • f).component p = r • f.component p := by
   ext S _ _ sm
-  simp [rTensor'_apply, component, smul_def, Pi.smul_apply, map_smul]
+  simp [rTensor_apply, component, smul_def, Pi.smul_apply, map_smul]
 
 theorem support_component' (f : M →ₚ[R] N)
     {S : Type u} [CommRing S] [Algebra R S] (m : S ⊗[R] M) :
     Function.support (fun i => ((fun p => component p f) i).toFun' S m)
-    = (rTensor' ((f.toFun' S[X] ((rTensor M ((monomial 1).restrictScalars R)) m)))).support := by
+    = (rTensor R N S ((f.toFun' S[X] ((rTensor M ((monomial 1).restrictScalars R)) m)))).support := by
   ext n
   simp only [component, Finsupp.fun_support_eq, Finset.mem_coe, Finsupp.mem_support_iff, ne_eq]
 
 theorem support_component (f : M →ₚ[R] N) {S : Type*} [CommRing S] [Algebra R S]
     (m : S ⊗[R] M) :
     Function.support (fun i => ((fun p => component p f) i).toFun S m)
-    = (rTensor' ((f.toFun S[X] ((rTensor M ((monomial 1).restrictScalars R)) m)))).support := by
+    = (rTensor R N S ((f.toFun S[X] ((rTensor M ((monomial 1).restrictScalars R)) m)))).support := by
   sorry
 
 theorem LocFinsupp_component (f : PolynomialMap R M N) :
@@ -781,25 +784,25 @@ theorem LocFinsupp_component_eq (f : M →ₚ[R] N)
     {S : Type u} [CommRing S] [Algebra R S] (m : S ⊗[R] M) :
     (Finsupp.ofSupportFinite (fun i => (component i f).toFun' S m)
       (LocFinsupp_component f S m)) =
-    rTensor' ((f.toFun' S[X] ((rTensor M ((monomial 1).restrictScalars R)) m))) := by
+    rTensor R N S ((f.toFun' S[X] ((rTensor M ((monomial 1).restrictScalars R)) m))) := by
   ext n
   simp only [component, Finsupp.ofSupportFinite_coe]
 
 theorem _root_.Polynomial.rTensor'_sum
     {S : Type*} [CommSemiring S] [Algebra R S] (φ : ℕ → S) (sXn : S[X] ⊗[R] N) :
-    (rTensor' sXn).sum (fun p sn ↦ (φ p) • sn) =
+    (rTensor R N S sXn).sum (fun p sn ↦ (φ p) • sn) =
       (Polynomial.lsum (fun n ↦ (LinearMap.lsmul S S (φ n)).restrictScalars R)).rTensor N sXn := by
   induction sXn using TensorProduct.induction_on with
   | zero => simp
   | tmul p n =>
     induction p using Polynomial.induction_on with
     | h_C s =>
-      rw [Finsupp.sum_eq_single 0, rTensor'_apply, rTensor_tmul, rTensor_tmul]
+      rw [Finsupp.sum_eq_single 0, rTensor_apply, rTensor_tmul, rTensor_tmul]
       simp only [coe_restrictScalars, lcoeff_apply, coeff_C_zero, Polynomial.lsum_apply,
         lsmul_apply, smul_eq_mul, mul_zero, sum_C_index]
       rw [TensorProduct.smul_tmul', smul_eq_mul]
       · intro b _ hb
-        simp only [rTensor'_apply, rTensor_tmul, coe_restrictScalars, lcoeff_apply]
+        simp only [rTensor_apply, rTensor_tmul, coe_restrictScalars, lcoeff_apply]
         rw [Polynomial.coeff_C, if_neg hb, zero_tmul, smul_zero]
       · exact fun _ => by rw [smul_zero]
     | h_add p q hp hq =>
@@ -808,7 +811,7 @@ theorem _root_.Polynomial.rTensor'_sum
       · intro x _; apply smul_zero
       · intro x _; apply smul_add
     | h_monomial p s _ =>
-      rw [Finsupp.sum_eq_single (p + 1), rTensor'_apply, rTensor_tmul]
+      rw [Finsupp.sum_eq_single (p + 1), rTensor_apply, rTensor_tmul]
       · simp only [coe_restrictScalars, lcoeff_apply, coeff_C_mul, coeff_X_pow,
           ↓reduceIte, mul_one, rTensor_tmul, Polynomial.lsum_apply,
           lsmul_apply, smul_eq_mul]
@@ -816,7 +819,7 @@ theorem _root_.Polynomial.rTensor'_sum
         rw [smul_tmul', smul_eq_mul]
         rw [mul_zero]
       · intro b  _ hb
-        simp only [rTensor'_apply, rTensor_tmul]
+        simp only [rTensor_apply, rTensor_tmul]
         simp only [coe_restrictScalars, lcoeff_apply, coeff_C_mul, coeff_X_pow, mul_ite, mul_one,
           mul_zero, if_neg hb, zero_tmul, smul_zero]
       · exact fun _ ↦ smul_zero _
