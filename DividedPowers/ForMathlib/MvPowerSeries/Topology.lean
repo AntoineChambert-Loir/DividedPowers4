@@ -1,7 +1,9 @@
 import Mathlib.Topology.Algebra.Ring.Basic
 import Mathlib.RingTheory.Nilpotent
 import Mathlib.RingTheory.PowerSeries.Basic
-import DividedPowers.ForMathlib.InfiniteSum.Basic
+import Mathlib.Topology.Algebra.InfiniteSum.Constructions
+import Mathlib.Topology.UniformSpace.Pi
+import Mathlib.Topology.Algebra.UniformGroup
 import DividedPowers.ForMathlib.MvPowerSeries.Basic
 
 /-! # Topology on power series

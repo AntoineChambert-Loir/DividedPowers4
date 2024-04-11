@@ -5,10 +5,11 @@ Authors: Johannes Hölzl
 
 ! This file was ported from Lean 3 source module infinite_sum.order
 -/
-import DividedPowers.ForMathlib.InfiniteSum.Basic
+--import DividedPowers.ForMathlib.InfiniteSum.Basic
 import Mathlib.Algebra.Order.Archimedean
 import Mathlib.Topology.Algebra.Order.Field
-import Mathlib.Topology.Algebra.Order.MonotoneConvergence
+import Mathlib.Topology.Algebra.InfiniteSum.Order --TODO: Adjust to use this import
+--import Mathlib.Topology.Algebra.Order.MonotoneConvergence
 
 /-!
 # Infinite sums and products in an order

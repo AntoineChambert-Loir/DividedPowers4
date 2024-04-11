@@ -20,8 +20,8 @@ import DividedPowers.ForMathlib.GradedAlgebra
 --import DividedPowers.ForMathlib.GradedModuleQuot -- Not ported
 import DividedPowers.ForMathlib.GradedRingQuot
 import DividedPowers.ForMathlib.Homogeneous
-import DividedPowers.ForMathlib.InfiniteSum.Basic
-import DividedPowers.ForMathlib.InfiniteSum.Order
+--import DividedPowers.ForMathlib.InfiniteSum.Basic -- In mathlib
+--import DividedPowers.ForMathlib.InfiniteSum.Order -- In mathlib
 import DividedPowers.ForMathlib.MvPowerSeries.Basic
 import DividedPowers.ForMathlib.MvPowerSeries.LinearTopology
 import DividedPowers.ForMathlib.MvPowerSeries.Order

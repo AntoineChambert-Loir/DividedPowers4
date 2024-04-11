@@ -1,7 +1,9 @@
 import Mathlib.RingTheory.PowerSeries.Basic
 import Mathlib.Topology.Order.Basic
 import DividedPowers.ForMathlib.MvPowerSeries.Order
-import DividedPowers.ForMathlib.InfiniteSum.Basic
+import Mathlib.Topology.Algebra.Group.Basic
+import Mathlib.Topology.Algebra.InfiniteSum.Group
+--import Mathlib.Data.Finsupp.Union
 
 --TODO: move
 --NOTE: I renamed it because `Finset.prod_one_add` is already declared in `MvPowerSeries.Topology`
@@ -254,7 +256,7 @@ theorem support_mul [DecidableEq ι] [DecidableEq σ] {f : ι → MvPowerSeries 
     (hg : StronglySummable g) :
     ∀ d : σ →₀ ℕ,
       (fun i : ι × κ => coeff α d (f i.fst * g i.snd)).support ⊆
-        (d.antidiagonal'.biUnion fun b => (hf b.fst).toFinset).product
+        (d.antidiagonal.biUnion fun b => (hf b.fst).toFinset).product
           (d.antidiagonal.biUnion fun b => (hg b.snd).toFinset) := by
   rintro d ⟨i, j⟩ h
   dsimp only [Function.mem_support, coeff_mul] at h
