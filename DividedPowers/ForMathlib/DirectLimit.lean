@@ -5,7 +5,7 @@ import Mathlib.RingTheory.TensorProduct.Basic
 import Mathlib.Algebra.DirectLimit
 import Mathlib.LinearAlgebra.TensorProduct.DirectLimit
 -- import DividedPowers.ForMathlib.LinearAlgebra.DirectSum.Finsupp
-import DividedPowers.ForMathlib.LinearEquiv
+import DividedPowers.ForMathlib.RingTheory.TensorProduct.LinearEquiv
 
 /- # Tensor products and finitely generated submodules
 
@@ -119,14 +119,14 @@ variable {R : Type*} {M N : Type*}
 variable (R M N)
 noncomputable def rTensor_fgEquiv : Module.DirectLimit (R := R) (ι := Submodules_fg R M)
     (fun P ↦ P.val ⊗[R] N)
-    (fun P Q hPQ ↦ LinearMap.rTensor N (Submodules_fg_inclusion R M P Q hPQ))
+    (fun P Q hPQ ↦ (Submodules_fg_inclusion R M P Q hPQ).rTensor N)
       ≃ₗ[R] M ⊗[R] N :=
-  (TensorProduct.directLimitLeft _ N).symm.trans (LinearEquiv.rTensor N (Submodules_fg_equiv R M))
+  (TensorProduct.directLimitLeft _ N).symm.trans ((Submodules_fg_equiv R M).rTensor N)
 
 theorem rTensor_fgEquiv_of (P : Submodules_fg R M) (u : P.val ⊗[R] N) :
     (rTensor_fgEquiv R M N)
       ((Module.DirectLimit.of R (Submodules_fg R M) (fun P => P.val ⊗[R] N)
-        (fun P Q hPQ => LinearMap.rTensor N (Submodules_fg_inclusion R M P Q hPQ)) P) u)
+        (fun P Q hPQ => (Submodules_fg_inclusion R M P Q hPQ).rTensor N) P) u)
       = (LinearMap.rTensor N (Submodule.subtype P.val)) u := by
   suffices (rTensor_fgEquiv R M N).toLinearMap.comp
       (Module.DirectLimit.of R (Submodules_fg R M) (fun P ↦ P.val ⊗[R] N)

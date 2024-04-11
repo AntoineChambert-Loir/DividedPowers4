@@ -653,17 +653,19 @@ instance addCommGroup : AddCommGroup (M →ₚ[R] N) where
   nsmul n f := (n : R) • f
   nsmul_zero f := by simp only [Nat.cast_zero, zero_smul f]
   nsmul_succ n f := by
-    simp only [add_comm n 1, Nat.cast_add, add_smul, Nat.cast_one, one_smul]
+    simp only [Nat.cast_add, Nat.cast_one, add_smul, one_smul]
   zsmul n f := (n : R) • f
-  zsmul_zero' f := by simp only [Int.cast_zero, zero_smul f]
+  zsmul_zero' f := by
+    simp only [Int.cast_zero, zero_smul]
   zsmul_succ' n f := by
-    simp only [Int.ofNat_eq_coe, Nat.cast_succ, Int.cast_add, Int.cast_ofNat, Int.cast_one] -- , add_comm _ 1, add_smul, one_smul]
-    rw [add_comm _ 1, add_smul, one_smul]
+    simp only [Int.ofNat_eq_coe, Nat.cast_succ, Int.cast_add, Int.cast_natCast,
+      Int.cast_one, add_smul, _root_.one_smul]
   zsmul_neg' n f := by
     ext
-    simp only [Int.cast_negSucc, Nat.cast_add, Nat.cast_one, neg_add_rev, smul_def, Pi.smul_apply,
-      Nat.cast_succ, Int.cast_add, Int.cast_ofNat, Int.cast_one, neg_def, Pi.neg_apply]
-    simp only [_root_.add_smul, neg_smul, _root_.one_smul, neg_add_rev]
+    simp only [Int.cast_negSucc, Nat.cast_add, Nat.cast_one, neg_add_rev,
+      smul_def_apply, _root_.add_smul, neg_smul, _root_.one_smul,
+      Nat.cast_succ, Int.cast_add, Int.cast_natCast, Int.cast_one, neg_def,
+      smul_def, Pi.neg_apply, Pi.add_apply, Pi.smul_apply]
   add_left_neg f := by
     ext
     simp only [add_def_apply, neg_def, Pi.neg_apply, add_left_neg, zero_def, Pi.zero_apply]

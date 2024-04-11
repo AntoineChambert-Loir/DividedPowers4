@@ -15,7 +15,7 @@ import DividedPowers.DPMorphism
 --import DividedPowers.ForMathlib.AlgebraComp -- This file has errors, but I think we should not use it
 import DividedPowers.ForMathlib.AlgebraLemmas
 import DividedPowers.ForMathlib.CombinatoricsLemmas
-import DividedPowers.ForMathlib.DirectLimit -- It doesn't work, relies on missing import
+import DividedPowers.ForMathlib.DirectLimit
 import DividedPowers.ForMathlib.GradedAlgebra
 --import DividedPowers.ForMathlib.GradedModuleQuot -- Not ported
 import DividedPowers.ForMathlib.GradedRingQuot
@@ -23,7 +23,6 @@ import DividedPowers.ForMathlib.Homogeneous
 --import DividedPowers.ForMathlib.InfiniteSum.Basic -- In mathlib
 --import DividedPowers.ForMathlib.InfiniteSum.Order -- In mathlib
 import DividedPowers.ForMathlib.Lcoeff
---import DividedPowers.ForMathlib.LinearEquiv -- Delete it and remove the import from other files
 import DividedPowers.ForMathlib.MvPowerSeries.Basic
 import DividedPowers.ForMathlib.MvPowerSeries.Evaluation
 import DividedPowers.ForMathlib.MvPowerSeries.Exponential
@@ -37,13 +36,14 @@ import DividedPowers.ForMathlib.MvPowerSeries.Topology
 import DividedPowers.ForMathlib.PowerSeries.Topology
 import DividedPowers.ForMathlib.RingTheory.Ideal
 import DividedPowers.ForMathlib.RingTheory.SubmoduleMem
---import DividedPowers.ForMathlib.RingTheory.TensorProduct.MvPolynomial
---import DividedPowers.ForMathlib.RingTheory.TensorProduct.Polynomial
+import DividedPowers.ForMathlib.RingTheory.TensorProduct.LinearEquiv
+import DividedPowers.ForMathlib.RingTheory.TensorProduct.MvPolynomial
+import DividedPowers.ForMathlib.RingTheory.TensorProduct.Polynomial
 import DividedPowers.ForMathlib.Topology.Algebra.Algebra.Basic
 import DividedPowers.ForMathlib.Topology.LinearTopology -- It has sorrys
 import DividedPowers.ForMathlib.WeightedHomogeneous
 import DividedPowers.IdealAdd -- It uses sorry
---import DividedPowers.PolynomialMap.Basic -- It has sorrys
+import DividedPowers.PolynomialMap.Basic -- It has sorrys
 --import DividedPowers.PolynomialMap.Coeff
 --import DividedPowers.PolynomialMap.Homogeneous
 --import DividedPowers.PolynomialMap.UniverseLift -- It has sorrys
