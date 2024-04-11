@@ -8,6 +8,9 @@ import Mathlib.LinearAlgebra.DirectSum.Finsupp
 import Mathlib.Algebra.MvPolynomial.Basic
 import Mathlib.RingTheory.TensorProduct.Basic
 import Mathlib.Algebra.MvPolynomial.Equiv
+
+import DividedPowers.ForMathlib.Lcoeff
+
 /-!
 
 # Tensor Product of (multivariate) polynomial rings
