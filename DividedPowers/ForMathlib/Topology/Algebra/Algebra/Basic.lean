@@ -200,7 +200,7 @@ protected theorem map_smul [Module R A] (f : A →A[R] B) (c : R) (x : A) :
 
 @[simp]
 theorem map_smul_of_tower {R S : Type*} [CommSemiring S] [SMul R A] [Algebra S A] [SMul R B]
-    [Algebra S B] [SMulHomClass (A →A[S] B) R A B] (f : A →A[S] B) (c : R) (x : A) :
+    [Algebra S B] [MulActionHomClass (A →A[S] B) R A B] (f : A →A[S] B) (c : R) (x : A) :
     f (c • x) = c • f x :=
   map_smul f c x
 
