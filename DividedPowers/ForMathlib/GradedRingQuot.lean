@@ -394,6 +394,9 @@ lemma rel_of_dfinsupp_sum_of_rel_add {A : Type*} [AddCommMonoid A] {r : A → A 
     DFinsupp.sum_of_support_le (Finset.subset_union_right f.support g.support)]
   exact rel_of_sum_of_rel_add hr_zero hr_add (fun i _ => H i)
 
+
+--TODO: delete this and use a sum over antidiagonal instead.
+
 def Φ (n i j : ι) : 𝒜 i →+ 𝒜 j →+ A := {
   toFun   := fun x => {
     toFun     := fun y => if i + j = n then x * y else (0 : A)
@@ -821,3 +824,5 @@ def Ideal.gradedQuotAlg [GradedAlgebra 𝒜] (hI : I.IsHomogeneous 𝒜) :
 end Ideal
 
 end GradedQuot
+
+--#lint

@@ -15,7 +15,7 @@ import DividedPowers.DPMorphism
 --import DividedPowers.ForMathlib.AlgebraComp -- This file has errors, but I think we should not use it
 import DividedPowers.ForMathlib.AlgebraLemmas
 import DividedPowers.ForMathlib.CombinatoricsLemmas
---import DividedPowers.ForMathlib.DirectLimit -- It doesn't work, relies on missing import
+import DividedPowers.ForMathlib.DirectLimit -- It doesn't work, relies on missing import
 import DividedPowers.ForMathlib.GradedAlgebra
 --import DividedPowers.ForMathlib.GradedModuleQuot -- Not ported
 import DividedPowers.ForMathlib.GradedRingQuot
