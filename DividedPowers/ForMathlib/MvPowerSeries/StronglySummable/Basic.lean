@@ -4,6 +4,7 @@ import DividedPowers.ForMathlib.MvPowerSeries.Order
 import Mathlib.Topology.Algebra.Group.Basic
 import Mathlib.Topology.Algebra.InfiniteSum.Group
 import Mathlib.Data.Finsupp.Antidiagonal
+import Mathlib.Data.Finsupp.Interval
 --import Mathlib.Data.Finsupp.Union
 
 --TODO: move
@@ -175,7 +176,9 @@ theorem order_tendsto_top_iff [Finite σ] (f : ι → MvPowerSeries σ α) :
 end Order
 
 -- NOTE (MI) : I had to add this
-instance : LocallyFiniteOrderBot (σ →₀ ℕ) := sorry
+instance : LocallyFiniteOrderBot (σ →₀ ℕ) :=
+  sorry
+  -- get it from Finsupp.instLocallyFiniteOrder + OrderBot
 
 /-- The union of the supports of the functions `λ i, coeff α e (f i)`, where `e` runs over
   the coefficients bounded by `d`. -/
@@ -281,9 +284,9 @@ theorem support_mul [DecidableEq ι] [DecidableEq σ] {f : ι → MvPowerSeries 
   · by_contra h'
     refine' h (sum_eq_zero _)
     push_neg at h'
-    intro x hx
-    simp only
-    exact h' x hx
+    -- why is it necessary?
+    simp only [mem_antidiagonal] at h' ⊢
+    exact h'
 
 #align mv_power_series.strongly_summable.support_mul MvPowerSeries.StronglySummable.support_mul
 
@@ -363,8 +366,9 @@ theorem sum_mul {f : ι → MvPowerSeries σ α} {κ : Type _} {g : κ → MvPow
   simp_rw [coeff_sum d (support_mul hf hg d), coeff_mul]
   rw [sum_comm]
   apply Finset.sum_congr rfl
-  intro bc hbc
-  rw [coeff_sum bc.fst, coeff_sum bc.snd, sum_mul_sum]
+  rintro ⟨b, c⟩ hbc
+  simp only [mem_antidiagonal] at hbc
+  rw [coeff_sum b, coeff_sum c, sum_mul_sum]
   rfl
   all_goals
     intro x hx
@@ -511,7 +515,7 @@ theorem support_partialProduct_subset [DecidableEq ι] [DecidableEq σ]
   simp only [partialProduct, prod_eq_mul_prod_diff_singleton hi, coeff_mul]
   apply sum_eq_zero
   rintro ⟨x, y⟩
-  rw [Finsupp.mem_antidiagonal]
+  rw [mem_antidiagonal]
   intro hxy
   rw [h x _, MulZeroClass.zero_mul]
   simp only [← hxy, Finsupp.le_def, Finsupp.coe_add, Pi.add_apply, le_self_add]
@@ -616,7 +620,7 @@ theorem coeff_prod_apply_eq_finset_prod [DecidableEq ι] [DecidableEq σ]
     simp only [partialProduct, prod_eq_mul_prod_diff_singleton hit, coeff_mul]
     apply sum_eq_zero
     rintro ⟨x, y⟩ hxy
-    rw [Finsupp.mem_antidiagonal] at hxy
+    rw [mem_antidiagonal] at hxy
     rw [(hf.not_mem_unionOfSupportOfCoeffLe_iff d i).mp (fun hi => hiJ (hJ hi)) x _,
       MulZeroClass.zero_mul]
     simp only [← hxy, Finsupp.le_def, Finsupp.coe_add, Pi.add_apply, le_self_add]
