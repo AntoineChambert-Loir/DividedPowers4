@@ -4,7 +4,7 @@ import Mathlib.Algebra.Algebra.Subalgebra.Basic
 import Mathlib.RingTheory.TensorProduct.Basic
 import Mathlib.Algebra.DirectLimit
 import Mathlib.LinearAlgebra.TensorProduct.DirectLimit
-import DividedPowers.ForMathlib.LinearAlgebra.DirectSum.Finsupp
+-- import DividedPowers.ForMathlib.LinearAlgebra.DirectSum.Finsupp
 import DividedPowers.ForMathlib.LinearEquiv
 
 /- # Tensor products and finitely generated submodules
@@ -33,7 +33,7 @@ open TensorProduct FreeAddMonoid
 
 section Ring
 
-variable {R : Type u} {M N : Type*}
+variable {R : Type*} {M N : Type*}
   [Ring R]
   [AddCommGroup M] [Module R M]
   [AddCommGroup N] [Module R N]
@@ -111,7 +111,7 @@ section CommRing
 
 open scoped Classical
 
-variable {R : Type u} {M N : Type*}
+variable {R : Type*} {M N : Type*}
   [CommRing R]
   [AddCommGroup M] [Module R M]
   [AddCommGroup N] [Module R N]
