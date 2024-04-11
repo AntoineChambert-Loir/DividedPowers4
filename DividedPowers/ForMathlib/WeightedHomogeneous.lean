@@ -19,7 +19,7 @@ it probably deserves a lemma that does the rewrite in an easy way
 import DividedPowers.ForMathlib.GradedAlgebra
 
 import Mathlib.Algebra.GradedMonoid
-import Mathlib.Data.MvPolynomial.Variables
+import Mathlib.Algebra.MvPolynomial.Variables
 import Mathlib.Algebra.DirectSum.Decomposition
 import Mathlib.RingTheory.MvPolynomial.WeightedHomogeneous
 
@@ -691,12 +691,9 @@ theorem weightedHomogeneousComponent_directSum
     (x : DirectSum M fun i : M => ↥(weightedHomogeneousSubmodule R w i)) (m : M) :
     (weightedHomogeneousComponent w m)
         ((DirectSum.coeLinearMap fun i : M => weightedHomogeneousSubmodule R w i) x) =
-      x m :=
-  by
-  rw [DirectSum.coeLinearMap_eq_dfinsupp_sum]
-  rw [DFinsupp.sum]
-  rw [map_sum]
-  convert @Finset.sum_eq_single (MvPolynomial σ R) M _ (DFinsupp.support x) _ m _ _
+      x m := by
+  rw [DirectSum.coeLinearMap_eq_dfinsupp_sum, DFinsupp.sum, map_sum]
+  convert @Finset.sum_eq_single M (MvPolynomial σ R) _ (DFinsupp.support x) _ m _ _
   · rw [weightedHomogeneousComponent_of_weighted_homogeneous_polynomial_same]
     rw [← mem_weightedHomogeneousSubmodule]
     exact (x m).prop
