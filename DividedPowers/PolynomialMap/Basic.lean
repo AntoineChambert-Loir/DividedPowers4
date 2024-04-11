@@ -74,6 +74,8 @@ and `AddCommGroup M`, `AddCommGroup N`.
 
 -/
 
+universe u v w
+
 open scoped TensorProduct
 open LinearMap
 
@@ -164,7 +166,6 @@ def algebraMap' (R : Type*) [CommSemiring R]
     R →ₐ[R] S where
   toRingHom := algebraMap R S
   commutes' := fun _ ↦ rfl
-
 
 lemma TensorProduct.includeRight_lid
     {R  : Type*} [CommSemiring R]
