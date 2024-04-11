@@ -135,8 +135,9 @@ lemma scalarRTensor_apply_tmul (p : R[X]) (n : N) :
     simp only [mem_support_iff, ne_eq, not_not] at h
     rw [h, zero_smul, Finsupp.single_zero, Finsupp.coe_zero, Pi.zero_apply]
 
-lemma scalarRTensor_apply_apply (pn : R[X] ⊗[R] N) (d : ℕ) :
-    Polynomial.scalarRTensor pn d = LinearMap.scalarRTensor (lcoeff R d) N pn := by  sorry
+--TODO: This lemma gives an error.
+/- lemma scalarRTensor_apply_apply (pn : R[X] ⊗[R] N) (d : ℕ) :
+    Polynomial.scalarRTensor pn d = LinearMap.scalarRTensor (lcoeff R d) N pn := by sorry -/
 
 /-- The linear map from the tensor product of a polynomial ring to a Finsupp type -/
 noncomputable def rTensor :
