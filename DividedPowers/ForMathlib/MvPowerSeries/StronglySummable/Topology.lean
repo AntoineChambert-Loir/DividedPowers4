@@ -1,15 +1,16 @@
 import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Basic
 import DividedPowers.ForMathlib.MvPowerSeries.Topology
 
+open MvPowerSeries.WithPiTopology MvPowerSeries.WithPiUniformity
 namespace MvPowerSeries
 
 open Function
 
-variable {σ α : Type _}
+variable {σ α : Type*} [DecidableEq σ]
 
 namespace StronglySummable
 
-variable {ι : Type _}
+variable {ι : Type*}
 
 section Semiring
 
@@ -87,13 +88,13 @@ section Summable
 variable [Semiring α] [TopologicalSpace α]
 
 /-- A family of power series is summable if their weighted orders tend to infinity. -/
-theorem summable_of_weightedOrder_tendsto_top {ι : Type _} (w : σ → ℕ) (f : ι → MvPowerSeries σ α)
+theorem summable_of_weightedOrder_tendsto_top {ι : Type*} (w : σ → ℕ) (f : ι → MvPowerSeries σ α)
     (hf : Filter.Tendsto (fun i => weightedOrder w (f i)) Filter.cofinite (nhds ⊤)) : Summable f :=
   (StronglySummable.of_weightedOrder_tendsto_top w f hf).summable
 #align mv_power_series.summable_of_weighted_order_tendsto_top
   MvPowerSeries.summable_of_weightedOrder_tendsto_top
 
-theorem summable_of_order_tendsto_top {ι : Type _} (f : ι → MvPowerSeries σ α)
+theorem summable_of_order_tendsto_top {ι : Type*} (f : ι → MvPowerSeries σ α)
     (hf : Filter.Tendsto (fun i => order (f i)) Filter.cofinite (nhds ⊤)) : Summable f :=
   (StronglySummable.of_order_tendsto_top f hf).summable
 #align mv_power_series.summable_of_order_tendsto_top MvPowerSeries.summable_of_order_tendsto_top
@@ -102,10 +103,12 @@ end Summable
 
 section StronglyMultipliable
 
-variable {ι : Type _} {f : ι → MvPowerSeries σ α} [CommRing α]
+variable {ι : Type*} {f : ι → MvPowerSeries σ α} [CommRing α]
 namespace StronglySummable
 
 variable [UniformSpace α] [UniformAddGroup α]
+
+#check MvPowerSeries.StronglyMultipliable.coeff_prod_apply_eq_finset_prod
 
 theorem hasProd_of_one_add (hf : StronglySummable f) :
     HasProd (fun i => 1 + f i) hf.toStronglyMultipliable.prod := by
@@ -116,9 +119,13 @@ theorem hasProd_of_one_add (hf : StronglySummable f) :
     Set.mem_preimage]
   let V₀ := Add.add hf.toStronglyMultipliable.prod ⁻¹' V
   have hV'₀ : V = Add.add (-hf.toStronglyMultipliable.prod) ⁻¹' V₀ := by
-    simp only [Add.add, ← Set.preimage_comp]
-    ext x
-    rw [Set.mem_preimage, comp_apply, ← add_assoc, add_right_neg, zero_add]
+    rw [← Set.preimage_comp, eq_comm]
+    convert Set.preimage_id
+    rw [Function.funext_iff]
+    intro f
+    simp only [comp_apply, id_eq]
+    change _ + (_ + f) = f
+    simp_rw [← add_assoc, add_right_neg, zero_add]
   have hV₀ : V₀ ∈ nhds (0 : MvPowerSeries σ α) := by
     apply continuousAt_def.mp (Continuous.continuousAt (continuous_add_left _))
     rw [add_zero]
@@ -129,34 +136,31 @@ theorem hasProd_of_one_add (hf : StronglySummable f) :
   intro J hIJ
   rw [hV'₀, Set.mem_preimage]
   apply htV₀
-  simp only [Set.mem_pi, Pi.add_apply, Pi.neg_apply]
   intro d hd
   convert mem_of_mem_nhds (ht d) using 1
-  simp only [Add.add, Pi.sub_apply, neg_add_eq_sub]
-  rw [Pi.zero_apply, sub_eq_zero]
-  simp only
-
-  sorry
-  /- convert StronglySummable.Finset.prod_of_one_add_eq hf d J _
-  intro i hi
-  apply hIJ
-  revert hi
-  contrapose
-  simp only [StronglySummable.not_mem_unionOfSupportOfCoeffLe_iff]
-  intro h e hed
-  refine' h e (le_trans hed _)
-  apply Finset.le_sup ((Set.Finite.mem_toFinset hD).mpr hd) -/
+  change (-_ + _) = 0
+  rw [neg_add_eq_sub, sub_eq_zero]
+  symm
+  apply StronglyMultipliable.coeff_prod_apply_eq_finset_prod hf (J := J)
+  · intro i hi
+    apply hIJ
+    revert hi
+    contrapose
+    simp only [StronglySummable.not_mem_unionOfSupportOfCoeffLe_iff]
+    intro h e hed
+    refine' h e (le_trans hed _)
+    apply Finset.le_sup ((Set.Finite.mem_toFinset hD).mpr hd)
 #align mv_power_series.strongly_summable.has_prod_of_one_add
   MvPowerSeries.StronglySummable.hasProd_of_one_add
 
-theorem multipliable_of_one_add {ι : Type _} (f : ι → MvPowerSeries σ α) (hf : StronglySummable f) :
+theorem multipliable_of_one_add {ι : Type*} (f : ι → MvPowerSeries σ α) (hf : StronglySummable f) :
     Multipliable fun i => 1 + f i := by classical exact hf.hasProd_of_one_add.multipliable
 #align mv_power_series.strongly_summable.multipliable_of_one_add
   MvPowerSeries.StronglySummable.multipliable_of_one_add
 
 variable [T2Space α]
 
-theorem tprod_eq_of_one_add {ι : Type _} {f : ι → MvPowerSeries σ α} (hf : StronglySummable f) :
+theorem tprod_eq_of_one_add {ι : Type*} {f : ι → MvPowerSeries σ α} (hf : StronglySummable f) :
     (tprod fun i => 1 + f i) = tsum (partialProduct f) := by
   haveI : T2Space (MvPowerSeries σ α) := t2Space σ α
   rw [hf.hasProd_of_one_add.tprod_eq, StronglyMultipliable.prod_eq, sum_eq_tsum]
