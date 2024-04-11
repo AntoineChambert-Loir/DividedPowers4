@@ -73,7 +73,7 @@ theorem tendsto_zero_of_summable [AddCommGroup α] [TopologicalSpace α] [Topolo
       hS (insert i S) (subset_insert i S),
       S.sum f - a,
       hS S le_rfl
-    simp only [sum_insert his, sub_sub_sub_cancel_right, add_sub_cancel]
+    simp only [sum_insert his, sub_sub_sub_cancel_right, add_sub_cancel_right]
   · suffices h_open : IsOpen ((fun xy : α × α => xy.fst - xy.snd) ⁻¹' U₀) by
       rw [isOpen_prod_iff] at h_open
       obtain ⟨u, v, hu, hv, mem_u, mem_v, H⟩ :=
