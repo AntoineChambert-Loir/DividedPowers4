@@ -24,7 +24,7 @@ variable {A : Type _} [CommSemiring A] {I : Ideal A}
 theorem factorial_isUnit {n : ℕ} (hn_fac : IsUnit ((n - 1).factorial : A)) {m : ℕ} (hmn : m < n) :
     IsUnit (m.factorial : A) := by
   apply isUnit_of_dvd_unit _ hn_fac
-  apply Nat.coe_nat_dvd
+  apply Nat.cast_dvd_cast
   apply Nat.factorial_dvd_factorial
   exact Nat.le_sub_one_of_lt hmn
 #align factorial_is_unit factorial_isUnit

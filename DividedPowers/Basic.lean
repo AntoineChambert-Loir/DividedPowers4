@@ -207,7 +207,7 @@ theorem factorial_mul_dpow_eq_pow (n : ℕ) (x : A) (hx : x ∈ I) :
     rw [Nat.factorial_succ, mul_comm (n + 1)]
     nth_rewrite 1 [← (n + 1).choose_one_right]
     rw [← Nat.choose_symm_add, Nat.cast_mul, mul_assoc,
-      ← hI.dpow_mul n 1 hx, ← mul_assoc, ih, hI.dpow_one hx, pow_succ']
+      ← hI.dpow_mul n 1 hx, ← mul_assoc, ih, hI.dpow_one hx, pow_succ', mul_comm]
 #align divided_powers.factorial_mul_dpow_eq_pow DividedPowers.factorial_mul_dpow_eq_pow
 
 theorem dpow_eval_zero {n : ℕ} (hn : n ≠ 0) : hI.dpow n 0 = 0 := by
@@ -233,11 +233,11 @@ then the divided powers of I and J coincide on I • J
 theorem coincide_on_smul {J : Ideal A} (hJ : DividedPowers J) {n : ℕ} {a : A} (ha : a ∈ I • J) :
     hI.dpow n a = hJ.dpow n a := by
   induction ha using Submodule.smul_induction_on' generalizing n with
-  | Hb a ha b hb =>
+  | smul a ha b hb =>
     rw [Algebra.id.smul_eq_mul, hJ.dpow_smul n hb, mul_comm a b, hI.dpow_smul n ha, ←
       hJ.factorial_mul_dpow_eq_pow n b hb, ← hI.factorial_mul_dpow_eq_pow n a ha]
     ring
-  | H1 x hx y hy hx' hy' =>
+  | add x hx y hy hx' hy' =>
     rw [hI.dpow_add n (Ideal.mul_le_right hx) (Ideal.mul_le_right hy),
       hJ.dpow_add n (Ideal.mul_le_left hx) (Ideal.mul_le_left hy)]
     apply Finset.sum_congr rfl
