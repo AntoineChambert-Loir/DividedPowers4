@@ -8,13 +8,12 @@ import Mathlib.LinearAlgebra.DirectSum.Finsupp
 import Mathlib.Algebra.MonoidAlgebra.Basic
 import Mathlib.RingTheory.TensorProduct.Basic
 import Mathlib.Algebra.Algebra.Equiv
+import Mathlib.Data.Finsupp.Defs
 
 /-! # TensorProduct of a monoid algebra
 
-This file consists of three sections, the first two will have to be moved
+This file consists of two sections, the first one will have to be moved
 somewhere else.
-
-## two lemmas about `Finsupp.single`
 
 ## functoriality for `MonoidAlgebra`
 
@@ -41,26 +40,6 @@ It remains to prove that this is a functor.
 -/
 
 variable {α R M N P : Type*}
-
-section Finsupp
-
-variable [DecidableEq α]
-namespace Finsupp
-
-lemma apply_single [AddCommMonoid N] [AddCommMonoid P]
-    (e : N →+ P) (a : α) (n : N) (b : α) :
-    e ((single a n) b) = single a (e n) b := by
-  simp only [single_apply]
-  split_ifs; rfl; exact map_zero e
-
-lemma mapRange.addMonoidHom_apply_single
-    [AddCommMonoid N] [AddCommMonoid P] (e : N →+ P) (a : α) (n : N) :
-    mapRange.addMonoidHom e (single a n) = single a (e n) := by
-    simp only [addMonoidHom_apply, mapRange_single]
-
-end Finsupp
-
-end Finsupp
 
 section Functoriality
 
@@ -193,7 +172,7 @@ lemma rTensorAlgHom_apply_tmul_apply
 lemma rTensorAlgHom_toLinearMap :
     (rTensorAlgHom :
       MonoidAlgebra M α ⊗[R] N →ₐ[S] MonoidAlgebra (M ⊗[R] N) α).toLinearMap =
-      finsuppLeft'.toLinearMap := by
+      (finsuppLeft' _ _ _ _ _).toLinearMap := by
   ext x n
   dsimp only [AlgebraTensorModule.curry_apply, TensorProduct.curry_apply,
     LinearMap.coe_restrictScalars, AlgHom.toLinearMap_apply]
@@ -205,12 +184,12 @@ lemma rTensorAlgHom_toLinearMap :
 lemma rTensorAlgHom_toLinearMap' :
     (rTensorAlgHom :
       MonoidAlgebra M α ⊗[R] N →ₐ[R] MonoidAlgebra (M ⊗[R] N) α).toLinearMap =
-      finsuppLeft.toLinearMap := by
+      (finsuppLeft _ _ _ _).toLinearMap := by
   rw [rTensorAlgHom_toLinearMap]
   rfl
 
 lemma rTensorAlgHom_apply_eq (x : MonoidAlgebra M α ⊗[R] N) :
-    rTensorAlgHom (S := S) x = finsuppLeft' (S := S) x := by
+    rTensorAlgHom (S := S) x = finsuppLeft' _ _ _ _ S x := by
   rw [← AlgHom.toLinearMap_apply, rTensorAlgHom_toLinearMap]
   rfl
 
@@ -218,7 +197,7 @@ lemma rTensorAlgHom_apply_eq (x : MonoidAlgebra M α ⊗[R] N) :
 noncomputable def rTensorAlgEquiv :
     (MonoidAlgebra M α) ⊗[R] N ≃ₐ[S] MonoidAlgebra (M ⊗[R] N) α := by
   apply AlgEquiv.ofLinearEquiv
-    (TensorProduct.finsuppLeft' :
+    (TensorProduct.finsuppLeft' R M N α S :
       MonoidAlgebra M α ⊗[R] N ≃ₗ[S] (MonoidAlgebra (M ⊗[R] N) α))
   · simp only [Algebra.TensorProduct.one_def]
     apply symm
@@ -231,7 +210,7 @@ noncomputable def rTensorAlgEquiv :
     rfl
 
 lemma rTensorAlgEquiv_apply_eq (x : MonoidAlgebra M α ⊗[R] N) :
-    rTensorAlgEquiv (S := S) x = finsuppLeft x :=
+    rTensorAlgEquiv (S := S) x = finsuppLeft R M N α x :=
   rfl
 
 lemma rTensorAlgEquiv_apply_tmul_apply
@@ -247,170 +226,3 @@ noncomputable def scalarRTensorAlgEquiv :
 end MonoidAlgebra
 
 end TensorProduct
-
--- THE REST IS PROBABLY USELESS
-/-
-section TensorProduct'
-
-variable {S : Type*} [CommSemiring S] [Algebra R S] [Algebra S M]
-  [IsScalarTower R S M]
-
-/-- AlgHom for the tensor product of the monoid algebra with an algebra -/
-noncomputable def rTensorAlgHom' :
-    (MonoidAlgebra M α) ⊗[R] N →ₐ[S] MonoidAlgebra (M ⊗[R] N) α :=
-  Algebra.TensorProduct.lift
-    (algHom Algebra.TensorProduct.includeLeft)
-    (singleOneAlgHom.comp Algebra.TensorProduct.includeRight)
-    (fun x n => by
-      simp only [AlgHom.coe_comp, Function.comp_apply, Algebra.TensorProduct.includeRight_apply,
-        singleOneAlgHom_apply, commute_iff_eq]
-      apply Finsupp.ext
-      intro a
-      rw [mul_def, sum_apply]
-      erw [sum_apply, sum_single_index (by simp), sum_apply]
-      apply sum_congr
-      · intro b _
-        rw [sum_apply, sum_single_index (by simp)]
-        simp only [mul_one, single_apply, one_mul]
-        split_ifs
-        · simp [algHom_apply_apply]
-        · rfl)
-
-lemma rTensorAlgHom_apply_tmul_apply
-    (x : MonoidAlgebra M α) (n : N) (a : α) :
-    rTensorAlgHom (x ⊗ₜ[R] n) a = (x a) ⊗ₜ[R] n := by
-  simp only [rTensorAlgHom]
-  simp only [Algebra.TensorProduct.lift_tmul]
-  rw [AlgHom.comp_apply, singleOneAlgHom_apply, mul_single_one_apply]
-  simp only [Algebra.TensorProduct.includeRight_apply]
-  simp only [algHom_apply_apply, Algebra.TensorProduct.includeLeft_apply]
-  simp only [Algebra.TensorProduct.tmul_mul_tmul, mul_one, one_mul]
-
-lemma rTensorAlgHom_toLinearMap :
-    (rTensorAlgHom :
-      MonoidAlgebra M α ⊗[R] N →ₐ[R] MonoidAlgebra (M ⊗[R] N) α).toLinearMap =
-      finsuppLeft.toLinearMap := by
-  apply TensorProduct.ext
-  ext x n
-  dsimp only [LinearMap.compr₂_apply, mk_apply, AlgHom.toLinearMap_apply]
-  apply Finsupp.ext
-  intro a
-  rw [rTensorAlgHom_apply_tmul_apply, ← finsuppLeft_apply_tmul_apply]
-  rfl
-
-lemma rTensorAlgHom_apply_eq (x : MonoidAlgebra M α ⊗[R] N) :
-    rTensorAlgHom x = finsuppLeft x := by
-  rw [← AlgHom.toLinearMap_apply, rTensorAlgHom_toLinearMap]
-  rfl
-
-/-- AlgHom equiv for the tensor product of the monoid algebra with an algebra -/
-noncomputable def rTensorAlgEquiv :
-    (MonoidAlgebra M α) ⊗[R] N ≃ₐ[R] MonoidAlgebra (M ⊗[R] N) α := by
-  apply AlgEquiv.ofLinearEquiv TensorProduct.finsuppLeft
-  · simp only [Algebra.TensorProduct.one_def]
-    apply symm
-    rw [← LinearEquiv.symm_apply_eq]
-    simp only [one_def]
-    apply finsuppLeft_symm_apply_single
-  · intro x y
-    erw [← rTensorAlgHom_apply_eq]
-    simp only [_root_.map_mul, rTensorAlgHom_apply_eq]
-    rfl
-
-lemma rTensorAlgEquiv_apply_eq (x : MonoidAlgebra M α ⊗[R] N) :
-    rTensorAlgEquiv x = finsuppLeft x :=
-  rfl
-
-lemma rTensorAlgEquiv_apply_tmul_apply
-    (x : MonoidAlgebra M α) (n : N) (a : α) :
-    rTensorAlgEquiv (x ⊗ₜ[R] n) a = (x a) ⊗ₜ[R] n := by
-  rw [rTensorAlgEquiv_apply_eq, finsuppLeft_apply_tmul_apply]
-
-/-- AlgHom equiv for the tensor product of the monoid algebra with a module -/
-noncomputable def scalarRTensorAlgEquiv :
-    (MonoidAlgebra R α) ⊗[R] N ≃ₐ[R] MonoidAlgebra N α :=
-  rTensorAlgEquiv.trans (algEquiv (Algebra.TensorProduct.lid R N))
-
-
-end TensorProduct'
--/
-/-
-#exit
-
--- PREVIOUS VERSIONS
-
-/-- Linear equiv for the tensor product of the monoid algebra with an algebra -/
-noncomputable def rTensorLinearEquiv :
-    (MonoidAlgebra M α) ⊗[R] N ≃ₗ[R] MonoidAlgebra (M ⊗[R] N) α :=
-  TensorProduct.finsuppLeft
-
-lemma rTensorLinearEquiv_of_tmul (a : α) (n : N) :
-    rTensorLinearEquiv ((of M α) a ⊗ₜ[R] n)
-    = (of (M ⊗[R] N) α a) *
-        (single 1 (1 ⊗ₜ[R] n)):= by
-  unfold rTensorLinearEquiv
-  apply Finsupp.ext
-  intro x
-  erw [finsuppLeft_apply_tmul_apply]
-  simp only [of_apply]
-  simp only [single_mul_single, mul_one, one_mul]
-  simp only [single_apply]
-  split_ifs with h
-  · rfl
-  · simp only [zero_tmul]
-
-lemma rTensorLinearEquiv_mul (x y : (MonoidAlgebra M α) ⊗[R] N) :
-    rTensorLinearEquiv (x * y) =
-    rTensorLinearEquiv x * rTensorLinearEquiv y := by
-  unfold rTensorLinearEquiv
-  induction x using TensorProduct.induction_on with
-  | zero => simp
-  | add x y hx hy => simp only [add_mul, map_add, hx, hy]
-  | tmul p m =>
-    induction y using TensorProduct.induction_on with
-    | zero => simp
-    | add x y hx hy => simp only [mul_add, map_add, hx, hy]
-    | tmul q n =>
-      simp only [Algebra.TensorProduct.tmul_mul_tmul]
-      apply Finsupp.ext
-      intro a
-      erw [finsuppLeft_apply_tmul_apply]
-      rw [mul_def, sum_apply, mul_def, sum_apply]
-      erw [finsuppLeft_apply_tmul]
-      rw [sum_sum_index (by simp), sum, TensorProduct.sum_tmul]
-      conv_rhs => rw [sum]
-      apply Finset.sum_congr rfl
-      intro x _
-      rw [Finsupp.sum_apply, Finsupp.sum, TensorProduct.sum_tmul,
-        Finsupp.sum_single_index (by simp), Finsupp.sum_apply]
-      erw [finsuppLeft_apply_tmul]
-      rw [Finsupp.sum_sum_index (by simp), Finsupp.sum]
-      apply Finset.sum_congr rfl
-      intro y _
-      rw [Finsupp.sum_single_index (by simp)]
-      by_cases h : x * y = a
-      · simp only [h, Finsupp.single_eq_same, Algebra.TensorProduct.tmul_mul_tmul]
-      · simp only [Finsupp.single_eq_of_ne h, zero_tmul]
-      -- remaining assumptions of `Finsupp.sum_single_index`
-      · intro b y z
-        simp [mul_add, tmul_add]
-      · intro b y z
-        simp_rw [add_mul, single_add, Finsupp.sum_add]
-        exact rfl
-
-/-- AlgHom equiv for the tensor product of the monoid algebra with an algebra -/
-noncomputable def rTensorAlgEquiv :
-    (MonoidAlgebra M α) ⊗[R] N ≃ₐ[R] MonoidAlgebra (M ⊗[R] N) α := by
-  apply AlgEquiv.ofLinearEquiv TensorProduct.finsuppLeft
-  · simp only [Algebra.TensorProduct.one_def]
-    apply symm
-    rw [← LinearEquiv.symm_apply_eq]
-    simp only [one_def]
-    apply finsuppLeft_symm_apply_single
-  · exact rTensorLinearEquiv_mul
-
-/-- AlgHom equiv for the tensor product of the monoid algebra with a module -/
-noncomputable def scalarRTensorAlgEquiv :
-    (MonoidAlgebra R α) ⊗[R] N ≃ₐ[R] MonoidAlgebra N α :=
-  rTensorAlgEquiv.trans (algEquiv (Algebra.TensorProduct.lid R N))
--/

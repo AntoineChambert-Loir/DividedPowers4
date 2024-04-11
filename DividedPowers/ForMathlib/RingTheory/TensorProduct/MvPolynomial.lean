@@ -4,11 +4,10 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir
 -/
 
--- import Mathlib.LinearAlgebra.DirectSum.Finsupp
-import DividedPowers.ForMathlib.LinearAlgebra.DirectSum.Finsupp
-import Mathlib.Data.MvPolynomial.Basic
+import Mathlib.LinearAlgebra.DirectSum.Finsupp
+import Mathlib.Algebra.MvPolynomial.Basic
 import Mathlib.RingTheory.TensorProduct.Basic
-import Mathlib.Data.MvPolynomial.Equiv
+import Mathlib.Algebra.MvPolynomial.Equiv
 /-!
 
 # Tensor Product of (multivariate) polynomial rings
@@ -55,7 +54,7 @@ variable   [AddCommMonoid N] [Module R N]
   linearly equivalent to a Finsupp of a tensor product -/
 noncomputable def rTensor :
     MvPolynomial σ S ⊗[R] N ≃ₗ[S] (σ →₀ ℕ) →₀ (S ⊗[R] N) :=
-  TensorProduct.finsuppLeft'
+  TensorProduct.finsuppLeft' _ _ _ _ _
 
 lemma rTensor_apply_tmul (p : MvPolynomial σ S) (n : N) :
     rTensor (p ⊗ₜ[R] n) = p.sum (fun i m ↦ Finsupp.single i (m ⊗ₜ[R] n)) :=
@@ -64,6 +63,10 @@ lemma rTensor_apply_tmul (p : MvPolynomial σ S) (n : N) :
 lemma rTensor_apply_tmul_apply (p : MvPolynomial σ S) (n : N) (d : σ →₀ ℕ) :
     rTensor (p ⊗ₜ[R] n) d = (coeff d p) ⊗ₜ[R] n :=
   TensorProduct.finsuppLeft_apply_tmul_apply p n d
+
+lemma rTensor_apply (t : MvPolynomial σ S ⊗[R] N) (d : σ →₀ ℕ) :
+    rTensor t d = ((lcoeff S d).restrictScalars R).rTensor N t :=
+  TensorProduct.finsuppLeft_apply t d
 
 lemma rTensor_symm_apply_single (d : σ →₀ ℕ) (s : S) (n : N) :
     rTensor.symm (Finsupp.single d (s ⊗ₜ n)) =
@@ -74,7 +77,7 @@ lemma rTensor_symm_apply_single (d : σ →₀ ℕ) (s : S) (n : N) :
   is linearly equivalent to a Finsupp of that module -/
 noncomputable def scalarRTensor :
     MvPolynomial σ R ⊗[R] N ≃ₗ[R] (σ →₀ ℕ) →₀ N :=
-  TensorProduct.finsuppScalarLeft
+  TensorProduct.finsuppScalarLeft _ _ _
 
 lemma scalarRTensor_apply_tmul (p : MvPolynomial σ R) (n : N) :
     scalarRTensor (p ⊗ₜ[R] n) = p.sum (fun i m ↦ Finsupp.single i (m • n)) :=
@@ -115,7 +118,7 @@ lemma rTensorAlgHom_coeff_tmul
 lemma rTensorAlgHom_toLinearMap :
     (rTensorAlgHom :
       MvPolynomial σ S ⊗[R] N →ₐ[S] MvPolynomial σ (S ⊗[R] N)).toLinearMap =
-      finsuppLeft'.toLinearMap := by
+      (finsuppLeft' _ _ _ _ _).toLinearMap := by
   ext d n e
   dsimp only [AlgebraTensorModule.curry_apply, TensorProduct.curry_apply,
     LinearMap.coe_restrictScalars, AlgHom.toLinearMap_apply]
@@ -128,12 +131,12 @@ lemma rTensorAlgHom_toLinearMap :
 lemma rTensorAlgHom_toLinearMap' :
     (rTensorAlgHom :
       MvPolynomial σ S ⊗[R] N →ₐ[S] MvPolynomial σ (S ⊗[R] N)).toLinearMap.restrictScalars R =
-      finsuppLeft.toLinearMap := by
+      (finsuppLeft _ _ _ _).toLinearMap := by
   rw [rTensorAlgHom_toLinearMap]
   rfl
 
 lemma rTensorAlgHom_apply_eq (p : MvPolynomial σ S ⊗[R] N) :
-    rTensorAlgHom (S := S) p = finsuppLeft' (S := S) p := by
+    rTensorAlgHom (S := S) p = finsuppLeft' _ _ _ _ S  p := by
   rw [← AlgHom.toLinearMap_apply, rTensorAlgHom_toLinearMap]
   rfl
 
@@ -142,7 +145,7 @@ lemma rTensorAlgHom_apply_eq (p : MvPolynomial σ S ⊗[R] N) :
 noncomputable def rTensorAlgEquiv :
     (MvPolynomial σ S) ⊗[R] N ≃ₐ[S] MvPolynomial σ (S ⊗[R] N) := by
   apply AlgEquiv.ofLinearEquiv
-    (finsuppLeft' : MvPolynomial σ S ⊗[R] N ≃ₗ[S] MvPolynomial σ (S ⊗[R] N))
+    (finsuppLeft' _ _ _ _ _ : MvPolynomial σ S ⊗[R] N ≃ₗ[S] MvPolynomial σ (S ⊗[R] N))
   · simp only [Algebra.TensorProduct.one_def]
     apply symm
     rw [← LinearEquiv.symm_apply_eq]
