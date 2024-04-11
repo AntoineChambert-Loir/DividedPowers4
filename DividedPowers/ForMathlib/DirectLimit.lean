@@ -4,7 +4,7 @@ import Mathlib.Algebra.Algebra.Subalgebra.Basic
 import Mathlib.RingTheory.TensorProduct.Basic
 import Mathlib.Algebra.DirectLimit
 import Mathlib.LinearAlgebra.TensorProduct.DirectLimit
-import DividedPowers.ForMathlib.LinearAlgebra.DirectSum.Finsupp
+-- import DividedPowers.ForMathlib.LinearAlgebra.DirectSum.Finsupp
 import DividedPowers.ForMathlib.LinearEquiv
 
 /- # Tensor products and finitely generated submodules
