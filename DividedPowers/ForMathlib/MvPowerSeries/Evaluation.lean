@@ -8,7 +8,7 @@ import Mathlib.RingTheory.MvPowerSeries.Basic
 import Mathlib.Topology.UniformSpace.Pi
 import Mathlib.Topology.Algebra.UniformRing
 -- import Mathlib.Topology.Algebra.UniformGroup
-import Mathlib.Data.MvPolynomial.CommRing
+import Mathlib.Algebra.MvPolynomial.CommRing
 import Mathlib.Topology.Algebra.Ring.Basic
 import Mathlib.Data.Nat.Lattice
 

@@ -1,5 +1,5 @@
 import Mathlib.Topology.Algebra.Algebra
-import Mathlib.Data.MvPolynomial.CommRing
+import Mathlib.Algebra.MvPolynomial.CommRing
 import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Trunc
 import DividedPowers.ForMathlib.MvPowerSeries.Evaluation
 import DividedPowers.ForMathlib.MvPowerSeries.LinearTopology
