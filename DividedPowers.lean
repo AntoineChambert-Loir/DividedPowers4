@@ -30,8 +30,8 @@ import DividedPowers.ForMathlib.MvPowerSeries.Exponential
 import DividedPowers.ForMathlib.MvPowerSeries.LinearTopology
 import DividedPowers.ForMathlib.MvPowerSeries.Order
 --import DividedPowers.ForMathlib.MvPowerSeries.Sandbox
---import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Basic -- It has errors related to antidiagonal
---import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Topology
+import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Basic
+import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Topology
 import DividedPowers.ForMathlib.MvPowerSeries.Substitutions -- It has sorrys
 import DividedPowers.ForMathlib.MvPowerSeries.Topology
 import DividedPowers.ForMathlib.PowerSeries.Topology
