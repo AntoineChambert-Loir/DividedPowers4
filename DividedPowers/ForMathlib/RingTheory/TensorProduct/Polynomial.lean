@@ -113,6 +113,24 @@ lemma rTensor_apply_tmul_apply (p : Polynomial S) (n : N) (i : ℕ) :
   rw [finsuppLeft_apply_tmul_apply]
   rfl
 
+lemma rTensor_apply_tmul (p : Polynomial S) (n : N) :
+    rTensor R N S (p ⊗ₜ[R] n) = p.sum (fun i m ↦ Finsupp.single i (m ⊗ₜ[R] n)) := by
+  simp only [rTensor, LinearEquiv.trans_apply, finsuppLeft'_apply,
+    LinearEquiv.rTensor'_apply, LinearEquiv.rTensor]
+  simp only [congr_tmul, LinearEquiv.restrictScalars_apply, refl_apply]
+  simp only [toFinsuppLinearEquiv, RingEquiv.toEquiv_eq_coe, Equiv.toFun_as_coe, EquivLike.coe_coe,
+    Equiv.invFun_as_coe, LinearEquiv.coe_mk, toFinsuppIso_apply]
+  rw [finsuppLeft_apply_tmul]
+  rfl
+
+lemma rTensor_apply (t : Polynomial S ⊗[R] N) (d : ℕ) :
+    rTensor R N S t d = ((lcoeff S d).restrictScalars R).rTensor N t := by
+  simp only [rTensor, LinearEquiv.trans_apply, finsuppLeft'_apply,
+    LinearEquiv.rTensor'_apply, LinearEquiv.rTensor]
+  simp only [TensorProduct.congr, refl_toLinearMap, refl_symm, ofLinear_apply, finsuppLeft_apply,
+    LinearMap.rTensor]
+  rw [← LinearMap.comp_apply, ← TensorProduct.map_comp]
+  rfl
 
 end Module
 
