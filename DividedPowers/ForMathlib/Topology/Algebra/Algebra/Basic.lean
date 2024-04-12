@@ -1,7 +1,5 @@
 import Mathlib.Topology.Algebra.Algebra
 import Mathlib.Algebra.Algebra.Pi
-import Mathlib.Algebra.Algebra.Subalgebra.Basic
-import Mathlib.Topology.Algebra.Ring.Basic
 
 /-!
 
@@ -15,6 +13,7 @@ which is a topological ring and such that the algebra map from `R` to `S` is con
 section
 --TODO: move to correct file
 
+/-- `Prod.map` of two algebra homomorphisms. -/
 def AlgHom.prodMap {R A B C D : Type*} [CommSemiring R] [Semiring A] [Semiring B] [Semiring C]
     [Semiring D] [Algebra R A] [Algebra R B] [Algebra R C]  [Algebra R D] (f : A →ₐ[R] B)
     (g : C →ₐ[R] D) :
@@ -93,6 +92,7 @@ instance Pi.topologicalAlgebra {β : Type*} {C : β → Type*} [∀ b, Semiring 
 end Pi
 
 section
+
 /-- Continuous algebra homomorphisms between algebras. We only put the type classes that are necessary for the
 definition, although in applications `M` and `B` will be topological algebras over the topological
 ring `R`. -/
@@ -113,12 +113,12 @@ attribute [inherit_doc ContinuousAlgHom] ContinuousAlgHom.cont
 @[inherit_doc]
 notation:25 A " →A[" R "] " B => ContinuousAlgHom R A B
 
-variable {R} {A}
-variable {B : Type*} [Semiring B] [TopologicalSpace B] [Algebra R A] [Algebra R B]
-
 namespace ContinuousAlgHom
 
 section Semiring
+
+variable {R} {A}
+variable {B : Type*} [Semiring B] [TopologicalSpace B] [Algebra R A] [Algebra R B]
 
 attribute [coe] ContinuousAlgHom.toAlgHom
 /-- Coerce continuous linear maps to linear maps. -/
@@ -195,10 +195,9 @@ protected theorem map_zero (f : A →A[R] B) : f (0 : A) = 0 := map_zero f
 
 protected theorem map_add (f : A →A[R] B) (x y : A) : f (x + y) = f x + f y := map_add f x y
 
-protected theorem map_smul [Module R A] (f : A →A[R] B) (c : R) (x : A) :
+protected theorem map_smul (f : A →A[R] B) (c : R) (x : A) :
     f (c • x) = c • f x := (toAlgHom _).map_smul _ _
 
-@[simp]
 theorem map_smul_of_tower {R S : Type*} [CommSemiring S] [SMul R A] [Algebra S A] [SMul R B]
     [Algebra S B] [MulActionHomClass (A →A[S] B) R A B] (f : A →A[S] B) (c : R) (x : A) :
     f (c • x) = c • f x :=
@@ -236,18 +235,17 @@ theorem ext_on [T2Space B] {s : Set A} (hs : Dense (Submodule.span R s : Set A))
 
 /-- Under a continuous algebra map, the image of the `TopologicalClosure` of a submodule is
 contained in the `TopologicalClosure` of its image. -/
-theorem _root_.Submodule.topologicalClosure_map' [TopologicalSpace R] [ContinuousSMul R A]
-    [ContinuousAdd A] [ContinuousSMul R B] [ContinuousAdd B] (f : A →A[R] B) (s : Submodule R A) :
+theorem _root_.Submodule.topologicalClosure_map' [TopologicalSpace R] [ContinuousAdd A]
+    [ContinuousSMul R B] [ContinuousAdd B] (f : A →A[R] B) (s : Submodule R A) :
     s.topologicalClosure.map (f : A →ₐ[R] B) ≤ (s.map (f : A →ₐ[R] B)).topologicalClosure :=
   image_closure_subset_closure_image f.continuous
 
 /-- Under a dense continuous algebra map, a submodule whose `TopologicalClosure` is `⊤` is sent to
 another such submodule.  That is, the image of a dense set under a map with dense range is dense.
 -/
-theorem _root_.DenseRange.topologicalClosure_map_submodule' [TopologicalSpace R]
-    [ContinuousSMul R A] [ContinuousAdd A] [ContinuousSMul R B] [ContinuousAdd B] {f : A →A[R] B}
-    (hf' : DenseRange f) {s : Submodule R A} (hs : s.topologicalClosure = ⊤) :
-    (s.map (f : A →ₐ[R] B)).topologicalClosure = ⊤ := by
+theorem _root_.DenseRange.topologicalClosure_map_submodule' [TopologicalSpace R] [ContinuousAdd A]
+    [ContinuousSMul R B] [ContinuousAdd B] {f : A →A[R] B}  (hf' : DenseRange f) {s : Submodule R A}
+    (hs : s.topologicalClosure = ⊤) : (s.map (f : A →ₐ[R] B)).topologicalClosure = ⊤ := by
   rw [SetLike.ext'_iff] at hs ⊢
   simp only [Submodule.topologicalClosure_coe, Submodule.top_coe, ← dense_iff_closure_eq] at hs ⊢
   exact hf'.dense_image f.continuous hs
@@ -256,7 +254,7 @@ end Semiring
 
 section id
 
-variable (R) (A)
+variable [Algebra R A]
 
 /-- The identity map as a continuous algebra homomorphism. -/
 def id : A →A[R] A := ⟨AlgHom.id R A, continuous_id⟩
@@ -282,7 +280,11 @@ theorem one_apply (x : A) : (1 : A →A[R] A) x = x := rfl
 
 end id
 
-variable {C : Type*} [Semiring C] [Algebra R C] [TopologicalSpace C]
+section comp
+
+variable {R} {A}
+variable {B : Type*} [Semiring B] [TopologicalSpace B] [Algebra R A] [Algebra R B]
+  {C : Type*} [Semiring C] [Algebra R C] [TopologicalSpace C]
 
 /-- Composition of continuous algebra homomorphisms. -/
 def comp (g : B →A[R] C) (f : A →A[R] B) : A →A[R] C :=
@@ -326,26 +328,33 @@ theorem coe_pow (f : A →A[R] A) (n : ℕ) : ⇑(f ^ n) = f^[n] :=
 
 /-- `ContinuousLinearMap.toLinearMap` as a `RingHom`. -/
 @[simps]
-def toAlgHomMonoidHom [ContinuousAdd A] : (A →A[R] A) →* A →ₐ[R] A where
+def toAlgHomMonoidHom : (A →A[R] A) →* A →ₐ[R] A where
   toFun        := toAlgHom
   map_one'     := rfl
   map_mul' _ _ := rfl
 
+end comp
+
+section prod
+
+variable {R} {A}
+variable {B : Type*} [Semiring B] [TopologicalSpace B] [Algebra R A] [Algebra R B]
+  {C : Type*} [Semiring C] [Algebra R C] [TopologicalSpace C]
+
 /-- The cartesian product of two bounded linear maps, as a bounded linear map. -/
-protected def prod [Module R B] [Module R C] (f₁ : A →A[R] B) (f₂ : A →A[R] C) :
+protected def prod (f₁ : A →A[R] B) (f₂ : A →A[R] C) :
     A →A[R] B × C :=
   ⟨(f₁ : A →ₐ[R] B).prod f₂, f₁.2.prod_mk f₂.2⟩
 
 @[simp, norm_cast]
-theorem coe_prod [Module R B] [Module R C] (f₁ : A →A[R] B) (f₂ : A →A[R] C) :
+theorem coe_prod (f₁ : A →A[R] B) (f₂ : A →A[R] C) :
     (f₁.prod f₂ : A →ₐ[R] B × C) = AlgHom.prod f₁ f₂ :=
   rfl
 
 @[simp, norm_cast]
-theorem prod_apply [Module R B] [Module R C] (f₁ : A →A[R] B) (f₂ : A →A[R] C) (x : A) :
+theorem prod_apply (f₁ : A →A[R] B) (f₂ : A →A[R] C) (x : A) :
     f₁.prod f₂ x = (f₁ x, f₂ x) :=
   rfl
-
 
 variable {F : Type*}
 
@@ -354,59 +363,6 @@ instance completeSpace_eqLocus {D : Type*} [UniformSpace D] [CompleteSpace D]
     [FunLike F D B] [ContinuousAlgHomClass F R D B]
     (f g : F) : CompleteSpace (LinearMap.eqLocus f g) :=
   IsClosed.completeSpace_coe <| isClosed_eq (map_continuous f) (map_continuous g)
-
-
-/-- Restrict codomain of a continuous linear map. -/
-def codRestrict (f : A →A[R] B) (p : Subalgebra R B) (h : ∀ x, f x ∈ p) : A →A[R] p where
-  cont     := f.continuous.subtype_mk _
-  toAlgHom := (f : A →ₐ[R] B).codRestrict p h
-
-@[norm_cast]
-theorem coe_codRestrict (f : A →A[R] B) (p : Subalgebra R B) (h : ∀ x, f x ∈ p) :
-    (f.codRestrict p h : A →ₐ[R] p) = (f : A →ₐ[R] B).codRestrict p h :=
-  rfl
-
-@[simp]
-theorem coe_codRestrict_apply (f : A →A[R] B) (p : Subalgebra R B) (h : ∀ x, f x ∈ p) (x) :
-    (f.codRestrict p h x : B) = f x :=
-  rfl
-
-/-- Restrict the codomain of a continuous algebra homomorphism `f` to `f.range`. -/
-@[reducible]
-def rangeRestrict (f : A →A[R] B) :=
-  f.codRestrict (@AlgHom.range R A B  _ _ _ _ _ f) (@AlgHom.mem_range_self R A B  _ _ _ _ _ f)
-
-@[simp]
-theorem coe_rangeRestrict (f : A →A[R] B) :
-    (f.rangeRestrict : A →ₐ[R] (@AlgHom.range R A B  _ _ _ _ _ f)) =
-      (f : A →ₐ[R] B).rangeRestrict :=
-  rfl
-
-/-- `Subalgebra.val` as a `ContinuousLinearMap`. -/
-def _root_.Subalgebra.valA (p : Subalgebra R A) : p →A[R] A where
-  cont := continuous_subtype_val
-  toAlgHom := p.val
-
-
-@[simp, norm_cast]
-theorem _root_.Subalgebra.coe_valA (p : Subalgebra R A) :
-    (p.valA : p →ₐ[R] A) = p.subtype :=
-  rfl
-
-@[simp]
-theorem _root_.Subalgebra.coe_valA' (p : Subalgebra R A) : ⇑p.valA = p.subtype :=
-  rfl
-set_option linter.uppercaseLean3 false in
-#align Subalgebra.coe_valA' Subalgebra.coe_valA'
-
-@[simp] -- @[norm_cast] -- Porting note: A theorem with this can't have a rhs starting with `↑`.
-theorem _root_.Subalgebra.valA_apply (p : Subalgebra R A) (x : p) : p.valA x = x :=
-  rfl
-
-@[simp]
-theorem _root_.Submodule.range_valA (p : Subalgebra R A) :
-    @AlgHom.range R p A _ _ _ _ _ p.valA = p :=
-  Subalgebra.range_val p
 
 variable (R A B)
 
@@ -457,12 +413,6 @@ def prodMap {D : Type*} [Semiring D] [TopologicalSpace D] [Algebra R D] (f₁ : 
     (f₂ : C →A[R] D) : A × C →A[R] B × D :=
   (f₁.comp (fst R A C)).prod (f₂.comp (snd R A C))
 
-/-   variable {D : Type*} [Semiring D] [TopologicalSpace D] [Algebra R D] (f₁ : A →A[R] B)
-    (f₂ : C →A[R] D)
-
-#check f₁.prodMap f₂ -/
-
-
 
 @[simp, norm_cast]
 theorem coe_prodMap {D : Type*} [Semiring D] [TopologicalSpace D] [Algebra R D] (f₁ : A →A[R] B)
@@ -475,450 +425,112 @@ theorem coe_prodMap' {D : Type*} [Semiring D] [TopologicalSpace D] [Algebra R D]
     (f₂ : C →A[R] D) : ⇑(f₁.prodMap f₂) = Prod.map f₁ f₂ :=
   rfl
 
-section Ring
+/-- `ContinuousAlgHom.prod` as an `Equiv`. -/
+@[simps apply]
+def prodEquiv : (A →A[R] B) × (A →A[R] C) ≃ (A →A[R] B × C) where
+  toFun f     := f.1.prod f.2
+  invFun f    := ⟨(fst _ _ _).comp f, (snd _ _ _).comp f⟩
+  left_inv f  := by ext <;> rfl
+  right_inv f := by ext <;> rfl
 
-variable {M : Type*} [Ring M] [TopologicalSpace M] [Algebra R M] {N : Type*} [Ring N]
-  [TopologicalSpace N] [Algebra R N]
+end prod
 
-protected theorem map_neg (f : M →A[R] N) (x : M) : f (-x) = -f x := map_neg f x
+section subalgebra
 
-protected theorem map_sub (f : M →A[R] N) (x y : M) : f (x - y) = f x - f y := map_sub f x y
+variable {R A}
+variable {B : Type*} [Semiring B] [TopologicalSpace B] [Algebra R A] [Algebra R B]
 
-#exit
-section
-
-variable [Module R B] [Module R C] [Module R M₄]
-
-theorem range_prod_eq {f : M →A[R] B} {g : M →A[R] C} (h : ker f ⊔ ker g = ⊤) :
-    range (f.prod g) = (range f).prod (range g) :=
-  LinearMap.range_prod_eq h
-#align continuous_linear_map.range_prod_eq ContinuousLinearMap.range_prod_eq
-
-theorem ker_prod_ker_le_ker_coprod [ContinuousAdd C] (f : M →A[R] C) (g : B →A[R] C) :
-    (LinearMap.ker f).prod (LinearMap.ker g) ≤ LinearMap.ker (f.coprod g) :=
-  LinearMap.ker_prod_ker_le_ker_coprod f.toLinearMap g.toLinearMap
-#align continuous_linear_map.ker_prod_ker_le_ker_coprod ContinuousLinearMap.ker_prod_ker_le_ker_coprod
-
-theorem ker_coprod_of_disjoint_range [ContinuousAdd C] (f : M →A[R] C) (g : B →A[R] C)
-    (hd : Disjoint (range f) (range g)) :
-    LinearMap.ker (f.coprod g) = (LinearMap.ker f).prod (LinearMap.ker g) :=
-  LinearMap.ker_coprod_of_disjoint_range f.toLinearMap g.toLinearMap hd
-#align continuous_linear_map.ker_coprod_of_disjoint_range ContinuousLinearMap.ker_coprod_of_disjoint_range
-
-end
-
-section
-
-variable [TopologicalAddGroup B]
-
-instance neg : Neg (M →A[R] B) :=
-  ⟨fun f => ⟨-f, f.2.neg⟩⟩
-#align continuous_linear_map.has_neg ContinuousLinearMap.neg
-
-@[simp]
-theorem neg_apply (f : M →A[R] B) (x : M) : (-f) x = -f x :=
-  rfl
-#align continuous_linear_map.neg_apply ContinuousLinearMap.neg_apply
-
-@[simp, norm_cast]
-theorem coe_neg (f : M →A[R] B) : (↑(-f) : M →ₐ[R] B) = -f :=
-  rfl
-#align continuous_linear_map.coe_neg ContinuousLinearMap.coe_neg
+/-- Restrict codomain of a continuous linear map. -/
+def codRestrict (f : A →A[R] B) (p : Subalgebra R B) (h : ∀ x, f x ∈ p) : A →A[R] p where
+  cont     := f.continuous.subtype_mk _
+  toAlgHom := (f : A →ₐ[R] B).codRestrict p h
 
 @[norm_cast]
-theorem coe_neg' (f : M →A[R] B) : ⇑(-f) = -f :=
+theorem coe_codRestrict (f : A →A[R] B) (p : Subalgebra R B) (h : ∀ x, f x ∈ p) :
+    (f.codRestrict p h : A →ₐ[R] p) = (f : A →ₐ[R] B).codRestrict p h :=
   rfl
-#align continuous_linear_map.coe_neg' ContinuousLinearMap.coe_neg'
 
-instance sub : Sub (M →A[R] B) :=
-  ⟨fun f g => ⟨f - g, f.2.sub g.2⟩⟩
-#align continuous_linear_map.has_sub ContinuousLinearMap.sub
-
-instance addCommGroup : AddCommGroup (M →A[R] B) := by
-  refine'
-    { ContinuousLinearMap.addCommMonoid with
-      neg := (-·)
-      sub := (· - ·)
-      sub_eq_add_neg := _
-      nsmul := (· • ·)
-      zsmul := (· • ·)
-      zsmul_zero' := fun f => by ext; simp
-      zsmul_succ' := fun n f => by ext; simp [add_smul, add_comm]
-      zsmul_neg' := fun n f => by ext; simp [Nat.succ_eq_add_one, add_smul]
-      .. } <;>
-    { intros
-      ext
-      apply_rules [zero_add, add_assoc, add_zero, add_left_neg, add_comm, sub_eq_add_neg] }
-#align continuous_linear_map.add_comm_group ContinuousLinearMap.addCommGroup
-
-theorem sub_apply (f g : M →A[R] B) (x : M) : (f - g) x = f x - g x :=
+@[simp]
+theorem coe_codRestrict_apply (f : A →A[R] B) (p : Subalgebra R B) (h : ∀ x, f x ∈ p) (x) :
+    (f.codRestrict p h x : B) = f x :=
   rfl
-#align continuous_linear_map.sub_apply ContinuousLinearMap.sub_apply
+
+/-- Restrict the codomain of a continuous algebra homomorphism `f` to `f.range`. -/
+@[reducible]
+def rangeRestrict (f : A →A[R] B) :=
+  f.codRestrict (@AlgHom.range R A B  _ _ _ _ _ f) (@AlgHom.mem_range_self R A B  _ _ _ _ _ f)
+
+@[simp]
+theorem coe_rangeRestrict (f : A →A[R] B) :
+    (f.rangeRestrict : A →ₐ[R] (@AlgHom.range R A B  _ _ _ _ _ f)) =
+      (f : A →ₐ[R] B).rangeRestrict :=
+  rfl
+
+/-- `Subalgebra.val` as a `ContinuousLinearMap`. -/
+def _root_.Subalgebra.valA (p : Subalgebra R A) : p →A[R] A where
+  cont := continuous_subtype_val
+  toAlgHom := p.val
 
 @[simp, norm_cast]
-theorem coe_sub (f g : M →A[R] B) : (↑(f - g) : M →ₐ[R] B) = f - g :=
-  rfl
-#align continuous_linear_map.coe_sub ContinuousLinearMap.coe_sub
-
-@[simp, norm_cast]
-theorem coe_sub' (f g : M →A[R] B) : ⇑(f - g) = f - g :=
-  rfl
-#align continuous_linear_map.coe_sub' ContinuousLinearMap.coe_sub'
-
-end
-
-@[simp]
-theorem comp_neg [RingHomCompTriple σ₁₂ σ₂₃ σ₁₃] [TopologicalAddGroup B] [TopologicalAddGroup C]
-    (g : B →SL[σ₂₃] C) (f : M →A[R] B) : g.comp (-f) = -g.comp f := by
-  ext x
-  simp
-#align continuous_linear_map.comp_neg ContinuousLinearMap.comp_neg
-
-@[simp]
-theorem neg_comp [RingHomCompTriple σ₁₂ σ₂₃ σ₁₃] [TopologicalAddGroup C] (g : B →SL[σ₂₃] C)
-    (f : M →A[R] B) : (-g).comp f = -g.comp f := by
-  ext
-  simp
-#align continuous_linear_map.neg_comp ContinuousLinearMap.neg_comp
-
-@[simp]
-theorem comp_sub [RingHomCompTriple σ₁₂ σ₂₃ σ₁₃] [TopologicalAddGroup B] [TopologicalAddGroup C]
-    (g : B →SL[σ₂₃] C) (f₁ f₂ : M →A[R] B) : g.comp (f₁ - f₂) = g.comp f₁ - g.comp f₂ := by
-  ext
-  simp
-#align continuous_linear_map.comp_sub ContinuousLinearMap.comp_sub
-
-@[simp]
-theorem sub_comp [RingHomCompTriple σ₁₂ σ₂₃ σ₁₃] [TopologicalAddGroup C] (g₁ g₂ : B →SL[σ₂₃] C)
-    (f : M →A[R] B) : (g₁ - g₂).comp f = g₁.comp f - g₂.comp f := by
-  ext
-  simp
-#align continuous_linear_map.sub_comp ContinuousLinearMap.sub_comp
-
-instance ring [TopologicalAddGroup M] : Ring (M →A[R] M) where
-  __ := ContinuousLinearMap.semiring
-  __ := ContinuousLinearMap.addCommGroup
-  intCast z := z • (1 : M →A[R] M)
-  intCast_ofNat := natCast_zsmul _
-  intCast_negSucc := negSucc_zsmul _
-#align continuous_linear_map.ring ContinuousLinearMap.ring
-
-@[simp]
-theorem intCast_apply [TopologicalAddGroup M] (z : ℤ) (m : M) : (↑z : M →A[R] M) m = z • m :=
+theorem _root_.Subalgebra.coe_valA (p : Subalgebra R A) :
+    (p.valA : p →ₐ[R] A) = p.subtype :=
   rfl
 
-theorem smulRight_one_pow [TopologicalSpace R] [TopologicalRing R] (c : R) (n : ℕ) :
-    smulRight (1 : R →A[R] R) c ^ n = smulRight (1 : R →A[R] R) (c ^ n) := by
-  induction' n with n ihn
-  · ext
-    simp
-  · rw [pow_succ, ihn, mul_def, smulRight_comp, smul_eq_mul, pow_succ']
-#align continuous_linear_map.smul_right_one_pow ContinuousLinearMap.smulRight_one_pow
-
-section
-
-variable {σ₂₁ : R →+* R} [RingHomInvPair σ₁₂ σ₂₁]
-
-
-/-- Given a right inverse `f₂ : B →A[R] M` to `f₁ : M →A[R] B`,
-`projKerOfRightInverse f₁ f₂ h` is the projection `M →A[R] LinearMap.ker f₁` along
-`LinearMap.range f₂`. -/
-def projKerOfRightInverse [TopologicalAddGroup M] (f₁ : M →A[R] B) (f₂ : B →SL[σ₂₁] M)
-    (h : Function.RightInverse f₂ f₁) : M →A[R] LinearMap.ker f₁ :=
-  (id R M - f₂.comp f₁).codRestrict (LinearMap.ker f₁) fun x => by simp [h (f₁ x)]
-#align continuous_linear_map.proj_ker_of_right_inverse ContinuousLinearMap.projKerOfRightInverse
-
 @[simp]
-theorem coe_projKerOfRightInverse_apply [TopologicalAddGroup M] (f₁ : M →A[R] B)
-    (f₂ : B →SL[σ₂₁] M) (h : Function.RightInverse f₂ f₁) (x : M) :
-    (f₁.projKerOfRightInverse f₂ h x : M) = x - f₂ (f₁ x) :=
+theorem _root_.Subalgebra.coe_valA' (p : Subalgebra R A) : ⇑p.valA = p.subtype :=
   rfl
-#align continuous_linear_map.coe_proj_ker_of_right_inverse_apply ContinuousLinearMap.coe_projKerOfRightInverse_apply
+set_option linter.uppercaseLean3 false in
+#align Subalgebra.coe_valA' Subalgebra.coe_valA'
+
+@[simp] -- @[norm_cast] -- Porting note: A theorem with this can't have a rhs starting with `↑`.
+theorem _root_.Subalgebra.valA_apply (p : Subalgebra R A) (x : p) : p.valA x = x :=
+  rfl
 
 @[simp]
-theorem projKerOfRightInverse_apply_idem [TopologicalAddGroup M] (f₁ : M →A[R] B)
-    (f₂ : B →SL[σ₂₁] M) (h : Function.RightInverse f₂ f₁) (x : LinearMap.ker f₁) :
-    f₁.projKerOfRightInverse f₂ h x = x := by
-  ext1
-  simp
-#align continuous_linear_map.proj_ker_of_right_inverse_apply_idem ContinuousLinearMap.projKerOfRightInverse_apply_idem
+theorem _root_.Submodule.range_valA (p : Subalgebra R A) :
+    @AlgHom.range R p A _ _ _ _ _ p.valA = p :=
+  Subalgebra.range_val p
 
-@[simp]
-theorem projKerOfRightInverse_comp_inv [TopologicalAddGroup M] (f₁ : M →A[R] B)
-    (f₂ : B →SL[σ₂₁] M) (h : Function.RightInverse f₂ f₁) (y : B) :
-    f₁.projKerOfRightInverse f₂ h (f₂ y) = 0 :=
-  Subtype.ext_iff_val.2 <| by simp [h y]
-#align continuous_linear_map.proj_ker_of_right_inverse_comp_inv ContinuousLinearMap.projKerOfRightInverse_comp_inv
+end subalgebra
 
-end
+section Ring
+
+
+variable {S : Type*} [Ring S] [TopologicalSpace S] [Algebra R S] {B : Type*} [Ring B]
+  [TopologicalSpace B] [Algebra R B]
+
+protected theorem map_neg (f : S →A[R] B) (x : S) : f (-x) = -f x := map_neg f x
+
+protected theorem map_sub (f : S →A[R] B) (x y : S) : f (x - y) = f x - f y := map_sub f x y
 
 end Ring
 
-section DivisionMonoid
-
-variable {R M : Type*}
-
-/-- A nonzero continuous linear functional is open. -/
-protected theorem isOpenMap_of_ne_zero [TopologicalSpace R] [DivisionRing R] [ContinuousSub R]
-    [AddCommGroup M] [TopologicalSpace M] [ContinuousAdd M] [Module R M] [ContinuousSMul R M]
-    (f : M →A[R] R) (hf : f ≠ 0) : IsOpenMap f :=
-  let ⟨x, hx⟩ := exists_ne_zero hf
-  IsOpenMap.of_sections fun y =>
-    ⟨fun a => y + (a - f y) • (f x)⁻¹ • x, Continuous.continuousAt <| by continuity, by simp,
-      fun a => by simp [hx]⟩
-#align continuous_linear_map.is_open_map_of_ne_zero ContinuousLinearMap.isOpenMap_of_ne_zero
-
-end DivisionMonoid
-
-section SMulMonoid
-
--- The M's are used for semilinear maps, and the N's for plain linear maps
-variable {R R R₃ S S₃ : Type*} [Semiring R] [Semiring R] [Semiring R₃] [Monoid S] [Monoid S₃]
-  {M : Type*} [TopologicalSpace M] [AddCommMonoid M] [Module R M] {B : Type*}
-  [TopologicalSpace B] [AddCommMonoid B] [Module R B] {C : Type*} [TopologicalSpace C]
-  [AddCommMonoid C] [Module R₃ C] {N₂ : Type*} [TopologicalSpace N₂] [AddCommMonoid N₂]
-  [Module R N₂] {N₃ : Type*} [TopologicalSpace N₃] [AddCommMonoid N₃] [Module R N₃]
-  [DistribMulAction S₃ C] [SMulCommClass R₃ S₃ C] [ContinuousConstSMul S₃ C]
-  [DistribMulAction S N₃] [SMulCommClass R S N₃] [ContinuousConstSMul S N₃] {σ₁₂ : R →+* R}
-  {σ₂₃ : R →+* R₃} {σ₁₃ : R →+* R₃} [RingHomCompTriple σ₁₂ σ₂₃ σ₁₃]
-
-@[simp]
-theorem smul_comp (c : S₃) (h : B →SL[σ₂₃] C) (f : M →A[R] B) :
-    (c • h).comp f = c • h.comp f :=
-  rfl
-#align continuous_linear_map.smul_comp ContinuousLinearMap.smul_comp
-
-variable [DistribMulAction S₃ B] [ContinuousConstSMul S₃ B] [SMulCommClass R S₃ B]
-variable [DistribMulAction S N₂] [ContinuousConstSMul S N₂] [SMulCommClass R S N₂]
-
-@[simp]
-theorem comp_smul [LinearMap.CompatibleSMul N₂ N₃ S R] (hₗ : N₂ →A[R] N₃) (c : S)
-    (fₗ : M →A[R] N₂) : hₗ.comp (c • fₗ) = c • hₗ.comp fₗ := by
-  ext x
-  exact hₗ.map_smul_of_tower c (fₗ x)
-#align continuous_linear_map.comp_smul ContinuousLinearMap.comp_smul
-
-@[simp]
-theorem comp_smulₛₗ [SMulCommClass R R B] [SMulCommClass R₃ R₃ C] [ContinuousConstSMul R B]
-    [ContinuousConstSMul R₃ C] (h : B →SL[σ₂₃] C) (c : R) (f : M →A[R] B) :
-    h.comp (c • f) = σ₂₃ c • h.comp f := by
-  ext x
-  simp only [coe_smul', coe_comp', Function.comp_apply, Pi.smul_apply,
-    ContinuousLinearMap.map_smulₛₗ]
-#align continuous_linear_map.comp_smulₛₗ ContinuousLinearMap.comp_smulₛₗ
-
-instance distribMulAction [ContinuousAdd B] : DistribMulAction S₃ (M →A[R] B) where
-  smul_add a f g := ext fun x => smul_add a (f x) (g x)
-  smul_zero _a := ext fun _x => smul_zero _
-#align continuous_linear_map.distrib_mul_action ContinuousLinearMap.distribMulAction
-
-end SMulMonoid
-
-section SMul
-
--- The M's are used for semilinear maps, and the N's for plain linear maps
-variable {R R R₃ S S₃ : Type*} [Semiring R] [Semiring R] [Semiring R₃] [Semiring S] [Semiring S₃]
-  {M : Type*} [TopologicalSpace M] [AddCommMonoid M] [Module R M] {B : Type*}
-  [TopologicalSpace B] [AddCommMonoid B] [Module R B] {C : Type*} [TopologicalSpace C]
-  [AddCommMonoid C] [Module R₃ C] {N₂ : Type*} [TopologicalSpace N₂] [AddCommMonoid N₂]
-  [Module R N₂] {N₃ : Type*} [TopologicalSpace N₃] [AddCommMonoid N₃] [Module R N₃] [Module S₃ C]
-  [SMulCommClass R₃ S₃ C] [ContinuousConstSMul S₃ C] [Module S N₂] [ContinuousConstSMul S N₂]
-  [SMulCommClass R S N₂] [Module S N₃] [SMulCommClass R S N₃] [ContinuousConstSMul S N₃]
-  {σ₁₂ : R →+* R} {σ₂₃ : R →+* R₃} {σ₁₃ : R →+* R₃} [RingHomCompTriple σ₁₂ σ₂₃ σ₁₃] (c : S)
-  (h : B →SL[σ₂₃] C) (f g : M →A[R] B) (x y z : M)
-
-/-- `ContinuousLinearMap.prod` as an `Equiv`. -/
-@[simps apply]
-def prodEquiv : (M →A[R] N₂) × (M →A[R] N₃) ≃ (M →A[R] N₂ × N₃) where
-  toFun f := f.1.prod f.2
-  invFun f := ⟨(fst _ _ _).comp f, (snd _ _ _).comp f⟩
-  left_inv f := by ext <;> rfl
-  right_inv f := by ext <;> rfl
-#align continuous_linear_map.prod_equiv ContinuousLinearMap.prodEquiv
-#align continuous_linear_map.prod_equiv_apply ContinuousLinearMap.prodEquiv_apply
-
-theorem prod_ext_iff {f g : M × N₂ →A[R] N₃} :
-    f = g ↔ f.comp (inl _ _ _) = g.comp (inl _ _ _) ∧ f.comp (inr _ _ _) = g.comp (inr _ _ _) := by
-  simp only [← coe_inj, LinearMap.prod_ext_iff]
-  rfl
-#align continuous_linear_map.prod_ext_iff ContinuousLinearMap.prod_ext_iff
-
-@[ext]
-theorem prod_ext {f g : M × N₂ →A[R] N₃} (hl : f.comp (inl _ _ _) = g.comp (inl _ _ _))
-    (hr : f.comp (inr _ _ _) = g.comp (inr _ _ _)) : f = g :=
-  prod_ext_iff.2 ⟨hl, hr⟩
-#align continuous_linear_map.prod_ext ContinuousLinearMap.prod_ext
-
-variable [ContinuousAdd B] [ContinuousAdd C] [ContinuousAdd N₂]
-
-instance module : Module S₃ (M →SL[σ₁₃] C) where
-  zero_smul _ := ext fun _ => zero_smul _ _
-  add_smul _ _ _ := ext fun _ => add_smul _ _ _
-#align continuous_linear_map.module ContinuousLinearMap.module
-
-instance isCentralScalar [Module S₃ᵐᵒᵖ C] [IsCentralScalar S₃ C] :
-    IsCentralScalar S₃ (M →SL[σ₁₃] C) where
-  op_smul_eq_smul _ _ := ext fun _ => op_smul_eq_smul _ _
-#align continuous_linear_map.is_central_scalar ContinuousLinearMap.isCentralScalar
-
-variable (S) [ContinuousAdd N₃]
-
-/-- `ContinuousLinearMap.prod` as a `LinearEquiv`. -/
-@[simps apply]
-def prodₗ : ((M →A[R] N₂) × (M →A[R] N₃)) ≃ₗ[S] M →A[R] N₂ × N₃ :=
-  { prodEquiv with
-    map_add' := fun _f _g => rfl
-    map_smul' := fun _c _f => rfl }
-#align continuous_linear_map.prodₗ ContinuousLinearMap.prodₗ
-#align continuous_linear_map.prodₗ_apply ContinuousLinearMap.prodₗ_apply
-
-/-- The coercion from `M →A[R] B` to `M →ₐ[R] B`, as a linear map. -/
-@[simps]
-def coeLM : (M →A[R] N₃) →ₐ[S] M →ₐ[R] N₃ where
-  toFun := (↑)
-  map_add' f g := coe_add f g
-  map_smul' c f := coe_smul c f
-#align continuous_linear_map.coe_lm ContinuousLinearMap.coeLM
-#align continuous_linear_map.coe_lm_apply ContinuousLinearMap.coeLM_apply
-
-variable {S} (σ₁₃)
-
-/-- The coercion from `M →SL[σ] B` to `M →ₛₗ[σ] B`, as a linear map. -/
-@[simps]
-def coeLMₛₗ : (M →SL[σ₁₃] C) →ₐ[S₃] M →ₛₗ[σ₁₃] C where
-  toFun := (↑)
-  map_add' f g := coe_add f g
-  map_smul' c f := coe_smul c f
-#align continuous_linear_map.coe_lmₛₗ ContinuousLinearMap.coeLMₛₗ
-#align continuous_linear_map.coe_lmₛₗ_apply ContinuousLinearMap.coeLMₛₗ_apply
-
-end SMul
-
-section SMulRightₗ
-
-variable {R S T M B : Type*} [Semiring R] [Semiring S] [Semiring T] [Module R S]
-  [AddCommMonoid B] [Module R B] [Module S B] [IsScalarTower R S B] [TopologicalSpace S]
-  [TopologicalSpace B] [ContinuousSMul S B] [TopologicalSpace M] [AddCommMonoid M] [Module R M]
-  [ContinuousAdd B] [Module T B] [ContinuousConstSMul T B] [SMulCommClass R T B]
-  [SMulCommClass S T B]
-
-/-- Given `c : E →A[𝕜] 𝕜`, `c.smulRightₗ` is the linear map from `F` to `E →A[𝕜] F`
-sending `f` to `fun e => c e • f`. See also `ContinuousLinearMap.smulRightL`. -/
-def smulRightₗ (c : M →A[R] S) : B →ₐ[T] M →A[R] B where
-  toFun := c.smulRight
-  map_add' x y := by
-    ext e
-    apply smul_add
-  map_smul' a x := by
-    ext e
-    dsimp
-    apply smul_comm
-#align continuous_linear_map.smul_rightₗ ContinuousLinearMap.smulRightₗ
-
-@[simp]
-theorem coe_smulRightₗ (c : M →A[R] S) : ⇑(smulRightₗ c : B →ₐ[T] M →A[R] B) = c.smulRight :=
-  rfl
-#align continuous_linear_map.coe_smul_rightₗ ContinuousLinearMap.coe_smulRightₗ
-
-end SMulRightₗ
-
-section CommRing
-
-variable {R : Type*} [CommRing R] {M : Type*} [TopologicalSpace M] [AddCommGroup M] {B : Type*}
-  [TopologicalSpace B] [AddCommGroup B] {C : Type*} [TopologicalSpace C] [AddCommGroup C]
-  [Module R M] [Module R B] [Module R C] [ContinuousConstSMul R C]
-
-variable [TopologicalAddGroup B] [ContinuousConstSMul R B]
-
-instance algebra : Algebra R (B →A[R] B) :=
-  Algebra.ofModule smul_comp fun _ _ _ => comp_smul _ _ _
-#align continuous_linear_map.algebra ContinuousLinearMap.algebra
-
-@[simp] theorem algebraMap_apply (r : R) (m : B) : algebraMap R (B →A[R] B) r m = r • m := rfl
-
-end CommRing
 
 section RestrictScalars
 
-variable {A M B : Type*} [Ring A] [AddCommGroup M] [AddCommGroup B] [Module A M] [Module A B]
-  [TopologicalSpace M] [TopologicalSpace B] (R : Type*) [Ring R] [Module R M] [Module R B]
-  [LinearMap.CompatibleSMul M B R A]
+variable {S : Type*} [CommSemiring S] [Algebra R S] {B : Type*} [Ring B] [TopologicalSpace B]
+  [Algebra R B] [Algebra S B] [IsScalarTower R S B] {C : Type*} [Ring C] [TopologicalSpace C]
+  [Algebra R C] [Algebra S C] [IsScalarTower R S C]
 
-/-- If `A` is an `R`-algebra, then a continuous `A`-linear map can be interpreted as a continuous
-`R`-linear map. We assume `LinearMap.CompatibleSMul M B R A` to match assumptions of
-`LinearMap.map_smul_of_tower`. -/
-def restrictScalars (f : M →A[A] B) : M →A[R] B :=
-  ⟨(f : M →ₐ[A] B).restrictScalars R, f.continuous⟩
-#align continuous_linear_map.restrict_scalars ContinuousLinearMap.restrictScalars
+/-- If `A` is an `R`-algebra, then a continuous `A`-algebra morphism can be interpreted as a
+  continuous `R`-algebra morphism. -/
+def restrictScalars (f : B →A[S] C) : B →A[R] C :=
+  ⟨(f : B →ₐ[S] C).restrictScalars R, f.continuous⟩
 
 variable {R}
 
-@[simp] -- @[norm_cast] -- Porting note: This theorem can't be a `norm_cast` theorem.
-theorem coe_restrictScalars (f : M →A[A] B) :
-    (f.restrictScalars R : M →ₐ[R] B) = (f : M →ₐ[A] B).restrictScalars R :=
+@[simp]
+theorem coe_restrictScalars (f : B →A[S] C) :
+    (f.restrictScalars R : B →ₐ[R] C) = (f : B →ₐ[S] C).restrictScalars R :=
   rfl
-#align continuous_linear_map.coe_restrict_scalars ContinuousLinearMap.coe_restrictScalars
 
 @[simp]
-theorem coe_restrictScalars' (f : M →A[A] B) : ⇑(f.restrictScalars R) = f :=
+theorem coe_restrictScalars' (f : B →A[S] C) : ⇑(f.restrictScalars R) = f :=
   rfl
-#align continuous_linear_map.coe_restrict_scalars' ContinuousLinearMap.coe_restrictScalars'
-
-@[simp]
-theorem restrictScalars_zero : (0 : M →A[A] B).restrictScalars R = 0 :=
-  rfl
-#align continuous_linear_map.restrict_scalars_zero ContinuousLinearMap.restrictScalars_zero
-
-section
-
-variable [TopologicalAddGroup B]
-
-@[simp]
-theorem restrictScalars_add (f g : M →A[A] B) :
-    (f + g).restrictScalars R = f.restrictScalars R + g.restrictScalars R :=
-  rfl
-#align continuous_linear_map.restrict_scalars_add ContinuousLinearMap.restrictScalars_add
-
-@[simp]
-theorem restrictScalars_neg (f : M →A[A] B) : (-f).restrictScalars R = -f.restrictScalars R :=
-  rfl
-#align continuous_linear_map.restrict_scalars_neg ContinuousLinearMap.restrictScalars_neg
-
-end
-
-variable {S : Type*}
-variable [Ring S] [Module S B] [ContinuousConstSMul S B] [SMulCommClass A S B]
-  [SMulCommClass R S B]
-
-@[simp]
-theorem restrictScalars_smul (c : S) (f : M →A[A] B) :
-    (c • f).restrictScalars R = c • f.restrictScalars R :=
-  rfl
-#align continuous_linear_map.restrict_scalars_smul ContinuousLinearMap.restrictScalars_smul
-
-variable (A M B R S)
-variable [TopologicalAddGroup B]
-
-/-- `ContinuousLinearMap.restrictScalars` as a `LinearMap`. See also
-`ContinuousLinearMap.restrictScalarsL`. -/
-def restrictScalarsₗ : (M →A[A] B) →ₐ[S] M →A[R] B where
-  toFun := restrictScalars R
-  map_add' := restrictScalars_add
-  map_smul' := restrictScalars_smul
-#align continuous_linear_map.restrict_scalarsₗ ContinuousLinearMap.restrictScalarsₗ
-
-variable {A M B R S}
-
-@[simp]
-theorem coe_restrictScalarsₗ : ⇑(restrictScalarsₗ A M B R S) = restrictScalars R :=
-  rfl
-#align continuous_linear_map.coe_restrict_scalarsₗ ContinuousLinearMap.coe_restrictScalarsₗ
 
 end RestrictScalars
 
 end ContinuousAlgHom
-
-
 
 end
 
