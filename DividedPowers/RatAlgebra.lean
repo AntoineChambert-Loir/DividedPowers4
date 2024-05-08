@@ -65,33 +65,41 @@ theorem dpow_mem {m : ℕ} (hm : m ≠ 0) {x : A} (hx : x ∈ I) : dpow I m x �
   exact Ideal.mul_mem_left I _ (Ideal.pow_mem_of_mem I hx _ (Nat.pos_of_ne_zero hm))
 #align divided_powers.of_invertible_factorial.dpow_mem DividedPowers.OfInvertibleFactorial.dpow_mem
 
+lemma foo {m : ℕ} {k : ℕ × ℕ}
+    (hm : IsUnit (m ! : A)) (hk : k ∈ Finset.antidiagonal m) :
+    (choose m k.1 : A) = ↑m ! * Ring.inverse ↑k.1! * Ring.inverse ↑k.2! := by
+  rw [Finset.mem_antidiagonal] at hk
+  rw [Ring.eq_mul_inverse_iff_mul_eq]
+  rw [Ring.eq_mul_inverse_iff_mul_eq]
+  · rw [← hk, ← Nat.cast_mul, ← Nat.cast_mul, add_comm, Nat.add_choose_mul_factorial_mul_factorial]
+  · apply factorial_isUnit' hm
+    rw [← hk]
+    exact Nat.le_add_right k.1 k.2
+  · apply factorial_isUnit' hm
+    rw [← hk]
+    exact Nat.le_add_left k.2 k.1
+
 theorem dpow_add_dif_pos {n : ℕ}
     (hn_fac : IsUnit ((n - 1) ! : A)) {m : ℕ} (hmn : m < n)
     {x y : A} (hx : x ∈ I) (hy : y ∈ I) :
-    dpow I m (x + y) = (Finset.range (m + 1)).sum fun k : ℕ => dpow I k x * dpow I (m - k) y := by
+    dpow I m (x + y) = (Finset.antidiagonal m).sum (fun k ↦ dpow I k.1 x * dpow I k.2 y) := by
+    -- (Finset.range (m + 1)).sum fun k : ℕ => dpow I k x * dpow I (m - k) y
   rw [dpow_eq_of_mem m (Ideal.add_mem I hx hy)]
   simp only [dpow]
-  rw [Ring.inverse_mul_eq_iff_eq_mul _ _ _ (factorial_isUnit hn_fac hmn), Finset.mul_sum, add_pow]
+  rw [Ring.inverse_mul_eq_iff_eq_mul _ _ _ (factorial_isUnit hn_fac hmn), Finset.mul_sum, Commute.add_pow' (Commute.all _ _)]
   apply Finset.sum_congr rfl
   intro k hk
-  rw [Finset.mem_range, Nat.lt_succ_iff] at hk
+  -- rw [Finset.mem_range, Nat.lt_succ_iff] at hk
   rw [if_pos hx, if_pos hy]
   ring_nf
   simp only [mul_assoc]; apply congr_arg₂ _ rfl; apply congr_arg₂ _ rfl
   rw [← mul_assoc]
-  rw [Ring.eq_mul_inverse_iff_mul_eq _ _ _
-        (factorial_isUnit hn_fac (lt_of_le_of_lt (Nat.sub_le m k) hmn)),
-      Ring.eq_mul_inverse_iff_mul_eq _ _ _
-        (factorial_isUnit hn_fac (lt_of_le_of_lt hk hmn))]
-  nth_rw 1 [← tsub_add_cancel_iff_le.mpr hk]
-  nth_rw 3 [← tsub_add_cancel_iff_le.mpr hk]
-  rw [← Nat.cast_mul, ← Nat.cast_mul, Nat.add_choose_mul_factorial_mul_factorial]
+  exact foo (factorial_isUnit' hn_fac (le_sub_one_of_lt hmn)) hk
 #align divided_powers.of_invertible_factorial.dpow_add_dif_pos DividedPowers.OfInvertibleFactorial.dpow_add_dif_pos
 
 theorem dpow_add {n : ℕ} (hn_fac : IsUnit ((n - 1) ! : A)) (hnI : I ^ n = 0) (m : ℕ) {x : A}
     (hx : x ∈ I) {y : A} (hy : y ∈ I) :
-    dpow I m (x + y) = (Finset.range (m + 1)).sum fun k : ℕ => dpow I k x * dpow I (m - k) y :=
-  by
+    dpow I m (x + y) = (Finset.antidiagonal m).sum fun k ↦ dpow I k.1 x * dpow I k.2 y := by
   by_cases hmn : m < n
   · exact dpow_add_dif_pos hn_fac hmn hx hy
   · have h_sub : I ^ m ≤ I ^ n := Ideal.pow_le_pow_right (not_lt.mp hmn)
@@ -104,19 +112,13 @@ theorem dpow_add {n : ℕ} (hn_fac : IsUnit ((n - 1) ! : A)) (hnI : I ^ n = 0) (
     rw [hxy, MulZeroClass.mul_zero, eq_comm]
     apply Finset.sum_eq_zero
     intro k hk
-    rw [if_pos hx, if_pos hy, mul_assoc, mul_comm (x ^ k), mul_assoc, ← mul_assoc]
+    rw [if_pos hx, if_pos hy, mul_assoc, mul_comm (x ^ k.1), mul_assoc, ← mul_assoc]
     apply mul_eq_zero_of_right
     rw [← Ideal.mem_bot, ← Ideal.zero_eq_bot, ← hnI]
-    have hIm : y ^ (m - k) * x ^ k ∈ I ^ m :=
-      by
-      have hadd : m = m - k + k :=
-        by
-        rw [eq_comm, tsub_add_cancel_iff_le]
-        exact Nat.le_of_lt_succ (Finset.mem_range.mp hk)
-      nth_rw 2 [hadd]
-      rw [pow_add]
-      exact Ideal.mul_mem_mul (Ideal.pow_mem_pow hy _) (Ideal.pow_mem_pow hx _)
-    apply Set.mem_of_subset_of_mem h_sub hIm
+    apply Set.mem_of_subset_of_mem h_sub
+    rw [Finset.mem_antidiagonal] at hk
+    rw [← hk, add_comm, pow_add]
+    exact Ideal.mul_mem_mul (Ideal.pow_mem_pow hy _) (Ideal.pow_mem_pow hx _)
 #align divided_powers.of_invertible_factorial.dpow_add DividedPowers.OfInvertibleFactorial.dpow_add
 
 theorem dpow_smul (m : ℕ) {a x : A} (hx : x ∈ I) : dpow I m (a * x) = a ^ m * dpow I m x := by

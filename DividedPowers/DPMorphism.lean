@@ -70,7 +70,7 @@ def dpMorphismIdeal {A B : Type _} [CommSemiring A] [CommSemiring B] {I : Ideal 
       hJ.dpow_add _ (hf (Ideal.mem_map_of_mem f hx.1)) (hf (Ideal.mem_map_of_mem f hy.1))]
     apply congr_arg
     ext k
-    rw [map_mul, hx.2 k, hy.2 (n - k)]
+    rw [map_mul, hx.2, hy.2]
   zero_mem' := by
     simp only [Set.mem_setOf_eq, Submodule.zero_mem, map_zero, true_and]
     intro n
