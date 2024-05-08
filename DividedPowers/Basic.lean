@@ -54,7 +54,9 @@ structure DividedPowers {A : Type _} [CommSemiring A] (I : Ideal A) where
   dpow_one : ∀ {x} (_ : x ∈ I), dpow 1 x = x
   dpow_mem : ∀ {n x} (_ : n ≠ 0) (_ : x ∈ I), dpow n x ∈ I
   dpow_add : ∀ (n) {x y} (_ : x ∈ I) (_ : y ∈ I),
-    dpow n (x + y) = (range (n + 1)).sum fun k => dpow k x * dpow (n - k) y
+    dpow n (x + y) = (Finset.antidiagonal n).sum fun k => dpow k.1 x * dpow k.2 y
+    -- ACL : changed from
+    --  dpow n (x + y) = (range (n + 1)).sum fun k => dpow k x * dpow (n - k) y
   dpow_smul : ∀ (n) {a : A} {x} (_ : x ∈ I),
     dpow n (a * x) = a ^ n * dpow n x
   dpow_mul : ∀ (m n) {x} (_ : x ∈ I),
@@ -88,13 +90,13 @@ def dividedPowersBot (A : Type _) [CommSemiring A] [DecidableEq A] : DividedPowe
     · apply symm
       apply Finset.sum_eq_zero
       intro i hi
-      simp only [mem_range, lt_succ] at hi
-      by_cases h' : n ≤ i
-      · rw [if_pos h', if_neg]
-        intro hi'
-        apply h
-        simpa [hi', le_zero] using h'
-      · rw [if_neg h']
+      simp only [mem_antidiagonal] at hi
+      split_ifs with h2 h1
+      · rw [h1, h2, add_zero] at hi
+        exfalso
+        exact h hi.symm
+      · rfl
+      · rfl
   dpow_smul n {a x} hx := by
     rw [Ideal.mem_bot.mp hx]
     simp only [mul_zero, true_and, mul_ite, mul_one]
@@ -304,21 +306,21 @@ theorem dpow_sum_aux (dpow : ℕ → A → A)
       sum_range, ih hx', mul_sum, sum_sigma']
     apply symm
     apply sum_bij'
-        (fun m _ => Sym.filterNe a m)
-        (fun m _ => m.2.fill a m.1)
-        (fun m hm => Finset.mem_sigma.2 ⟨mem_univ _, _⟩)
-        (fun m hm => by
-          rw [mem_sym_iff]
-          intro i hi
-          rw [Sym.mem_fill_iff] at hi
-          cases hi with
-          | inl hi =>
-            rw [hi.2]
-            exact mem_insert_self a s
-          | inr hi =>
-            simp only [mem_sigma, mem_univ, mem_sym_iff, true_and] at hm
-            exact mem_insert_of_mem (hm i hi))
-        (fun m _ => Sym.fill_filterNe a _ )
+      (fun m _ => Sym.filterNe a m)
+      (fun m _ => m.2.fill a m.1)
+      (fun m hm => Finset.mem_sigma.2 ⟨mem_univ _, _⟩)
+      (fun m hm => by
+        rw [mem_sym_iff]
+        intro i hi
+        rw [Sym.mem_fill_iff] at hi
+        cases hi with
+        | inl hi =>
+          rw [hi.2]
+          exact mem_insert_self a s
+        | inr hi =>
+          simp only [mem_sigma, mem_univ, mem_sym_iff, true_and] at hm
+          exact mem_insert_of_mem (hm i hi))
+      (fun m _ => Sym.fill_filterNe a _ )
     · intro m hm
       simp only [mem_sigma, mem_univ, mem_sym_iff, true_and] at hm
       exact Sym.filter_ne_fill a m fun a_1 => ha (hm a a_1)
@@ -410,10 +412,12 @@ theorem dpow_sum {ι : Type _} [DecidableEq ι] {s : Finset ι} {x : ι → A} (
     ∀ n : ℕ,
       hI.dpow n (s.sum x) =
         (Finset.sym s n).sum fun k => s.prod fun i => hI.dpow (Multiset.count i k) (x i) := by
-  refine' dpow_sum_aux hI.dpow _ (fun n x y hx hy => hI.dpow_add n hx hy) _
-    hx
+  refine' dpow_sum_aux hI.dpow _ ?_ _ hx
   · intro x
     exact hI.dpow_zero
+  · intro n x y hx hy
+    rw [← Finset.Nat.sum_antidiagonal_eq_sum_range_succ (fun k l ↦ hI.dpow k x * hI.dpow l y)]
+    exact hI.dpow_add n hx hy
   · intro n hn
     exact hI.dpow_eval_zero hn
 #align divided_powers.dpow_sum DividedPowers.dpow_sum

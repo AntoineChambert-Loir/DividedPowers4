@@ -43,7 +43,7 @@ structure IsExponential (f : R⟦X⟧) : Prop where
 private lemma coeff_add_pow (d : Fin 2 →₀ ℕ) (n : ℕ) :
     MvPolynomial.coeff d ((MvPolynomial.X 0 + MvPolynomial.X 1 : MvPolynomial (Fin 2) R) ^ n) =
     if (d 0, d 1) ∈ Finset.antidiagonal n
-    then Nat.choose n (d 0)
+    then n.choose (d 0)
     else 0 := by
   have hmon : ∀ (u v : ℕ),
     MvPolynomial.X (0 : Fin 2) ^ u * MvPolynomial.X 1 ^ v
@@ -162,14 +162,14 @@ lemma forall_congr_curry₀ {α : Type*} [Zero α]
     apply H
 
 /-- A power series f is exponential iff its coefficients (f n) satisfy
-  the relations `Nat.choose (p + q) p * f (p + q)= f p * f q`
+  the relations `(p + q).choose p * f (p + q)= f p * f q`
   and its constant coefficient is 1 -/
 theorem isExponential_add_mul_iff (f : R⟦X⟧) :
     (subst (MvPowerSeries.X 0 + MvPowerSeries.X 1) f : MvPowerSeries (Fin 2) R)
       = (subst (MvPowerSeries.X 0) f : MvPowerSeries (Fin 2) R) * (subst (MvPowerSeries.X 1) f : MvPowerSeries (Fin 2) R)
-    ↔ ∀ (p q : ℕ), Nat.choose (p + q) p * (coeff R (p + q) f) =
+    ↔ ∀ (p q : ℕ), (p + q).choose p * (coeff R (p + q) f) =
         coeff R p f * coeff R q f:= by
-  have he : ∀ (e : Fin 2 →₀ ℕ), (MvPowerSeries.coeff R e) (subst (MvPowerSeries.X 0 + MvPowerSeries.X 1) f) = Nat.choose (e 0 + e 1) (e 0) * coeff R (e 0 + e 1) f := by
+  have he : ∀ (e : Fin 2 →₀ ℕ), (MvPowerSeries.coeff R e) (subst (MvPowerSeries.X 0 + MvPowerSeries.X 1) f) = (e 0 + e 1).choose (e 0) * coeff R (e 0 + e 1) f := by
     intro e
     rw [PowerSeries.subst, MvPowerSeries.coeff_subst _]
     simp only [Fin.isValue, Finsupp.prod_pow, Finset.univ_unique,
@@ -223,11 +223,11 @@ theorem isExponential_add_mul_iff (f : R⟦X⟧) :
 
 
 /-- A power series f is exponential iff its coefficients (f n) satisfy
-  the relations `Nat.choose (p + q) p * f (p + q)= f p * f q`
+  the relations `(p + q).choose p * f (p + q)= f p * f q`
   and its constant coefficient is 1 -/
 theorem isExponential_iff (f : R⟦X⟧) :
     IsExponential f
-    ↔  (constantCoeff R f = 1) ∧ ∀ p q, Nat.choose (p + q) p * coeff R (p + q) f = coeff R p f * coeff R q f := by
+    ↔  (constantCoeff R f = 1) ∧ ∀ p q, (p + q).choose p * coeff R (p + q) f = coeff R p f * coeff R q f := by
   rw [← isExponential_add_mul_iff]
   constructor
   · exact fun hf ↦ ⟨hf.constantCoeff, hf.add_mul⟩
@@ -370,53 +370,96 @@ def ExponentialModule : AddSubmonoid (Additive R⟦X⟧) where
     simp only [Set.mem_setOf_eq, toMul_zero]
     exact isExponential_one
 
-def memExponentialModule_iff (f : Additive R⟦X⟧) :
+def memExponentialModule_iff (f : R⟦X⟧) :
+    ofMul f ∈ ExponentialModule R ↔ IsExponential f := by
+  simp only [ExponentialModule, AddSubmonoid.mem_mk, AddSubsemigroup.mem_mk, Set.mem_setOf_eq,
+    toMul_ofMul]
+
+def memExponentialModule_iff' (f : Additive R⟦X⟧) :
     f ∈ ExponentialModule R ↔ IsExponential (toMul f) := by
   simp only [ExponentialModule, AddSubmonoid.mem_mk, AddSubsemigroup.mem_mk, Set.mem_setOf_eq]
+
+end PowerSeries
+
+namespace ExponentialModule
+
+open PowerSeries Additive
+
+variable {R : Type*} [CommRing R]
+
+/-- The coercion map from `ExponentialModule R` to `R⟦X⟧` -/
+@[coe]
+def toPowerSeries (f : ExponentialModule R) : R⟦X⟧ := toMul (f : Additive R⟦X⟧)
+
+variable (R) in
+instance instCoe : Coe (ExponentialModule R) R⟦X⟧ := ⟨toPowerSeries⟩
+
+lemma coe_injective : Function.Injective ((↑) : ExponentialModule R → R⟦X⟧) :=
+  fun f g ↦ by
+    simp only [toPowerSeries, EmbeddingLike.apply_eq_iff_eq, SetLike.coe_eq_coe, imp_self]
+
+@[simp, norm_cast]
+lemma coe_inj {f g : ExponentialModule R} : (f : R⟦X⟧) = ↑g ↔ f = g :=
+  coe_injective.eq_iff
+
+@[ext]
+lemma coe_ext {f g : ExponentialModule R} (h : (f : R⟦X⟧) = ↑g) : f = g :=
+  coe_injective h
+
+@[simp]
+theorem toMul_val_eq_coe {f : ExponentialModule R} :
+    toMul (↑f : Additive R⟦X⟧) = ↑f := rfl
 
 noncomputable instance instExponentialModule_smul :
     SMul R (ExponentialModule R) where
   smul r f := ⟨r • (f : Additive R⟦X⟧), by
-    simp only [memExponentialModule_iff, toAdditive_smul_coe']
+    simp only [memExponentialModule_iff', toAdditive_smul_coe']
     exact isExponential_scale r f.prop⟩
 
-theorem ExponentialModule.coe_smul (r : R) (f : ExponentialModule R) :
+theorem smul_def (r : R) (f : ExponentialModule R) :
   (r • f : ExponentialModule R) = r • (f : Additive R⟦X⟧) := rfl
 
 noncomputable instance instExponentialModule_module :
     Module R (ExponentialModule R) where
-  one_smul f := by rw [← Subtype.coe_inj, ExponentialModule.coe_smul, one_smul]
+  one_smul f := by rw [← Subtype.coe_inj, smul_def, one_smul]
   mul_smul r s f := by
     rw [← Subtype.coe_inj]
-    simp only [ExponentialModule.coe_smul, mul_smul]
+    simp only [smul_def, mul_smul]
   smul_zero r := by
-    rw [← Subtype.coe_inj, ExponentialModule.coe_smul, ZeroMemClass.coe_zero, smul_zero]
+    rw [← Subtype.coe_inj, smul_def, ZeroMemClass.coe_zero, smul_zero]
   smul_add r f g := by
     rw [← Subtype.coe_inj]
-    simp only [ExponentialModule.coe_smul, AddSubmonoid.coe_add, smul_add]
+    simp only [smul_def, AddSubmonoid.coe_add, smul_add]
   add_smul r s f := by
     rw [← Subtype.coe_inj]
-    simp only [ExponentialModule.coe_smul, AddSubmonoid.coe_add]
+    simp only [smul_def, AddSubmonoid.coe_add]
     apply Additive.toMul.injective
     simp only [toAdditive_smul_coe', toMul_add]
     exact isExponential_scale_add r s f.prop
   zero_smul f := by
-    rw [← Subtype.coe_inj, ExponentialModule.coe_smul]
+    rw [← Subtype.coe_inj, smul_def]
     simp only [ZeroMemClass.coe_zero]
     apply Additive.toMul.injective
     simp only [toAdditive_smul_coe', scale_zero_apply, toMul_zero, f.prop.constantCoeff, map_one]
 
-def _root_.PowerSeries.ofExponentialModule (f : ExponentialModule R) :
-  R⟦X⟧ := toMul ↑f
+lemma coe_add (f g : ExponentialModule R) : (↑(f + g) : R⟦X⟧) = ↑f * ↑g := by
+  simp only [toPowerSeries, AddSubmonoid.coe_add, toMul_add]
 
-variable (R) in
-@[coe]
-instance instExponentialModule_coe : Coe (ExponentialModule R) R⟦X⟧ := ⟨ofExponentialModule⟩
+lemma coe_smul (r : R) (f : ExponentialModule R) :
+    ((r • f) : ExponentialModule R) = scale r ↑f  :=
+  rfl
 
-lemma ofExponentialModule_injective :
-    Function.Injective (ofExponentialModule (R := R)) := fun f g ↦ by
-  simp only [ofExponentialModule, EmbeddingLike.apply_eq_iff_eq, SetLike.coe_eq_coe, imp_self]
+lemma isExponential_coe (f : ExponentialModule R) :
+    IsExponential (f : R⟦X⟧) := f.prop
 
-lemma ofExponentialModule_add (f g : ExponentialModule R) :
-    ofExponentialModule (f + g) = ofExponentialModule f * ofExponentialModule g := by
-  simp only [ofExponentialModule, AddSubmonoid.coe_add, toMul_add]
+lemma constantCoeff_coe (f : ExponentialModule R) :
+    constantCoeff R (f : R⟦X⟧) = 1 := f.prop.constantCoeff
+
+lemma add_mul_coe (f : ExponentialModule R) :
+    subst (MvPowerSeries.X 0 + MvPowerSeries.X 1 : MvPowerSeries (Fin 2) R) (f : R⟦X⟧)
+      = (subst (MvPowerSeries.X 0) (f : R⟦X⟧)) * (subst (MvPowerSeries.X 1) (f : R⟦X⟧)) :=
+  f.prop.add_mul
+
+lemma add_mul_coe' (f : ExponentialModule R) (p q : ℕ) :
+    (p+q).choose p * (coeff R (p + q) (f : R⟦X⟧)) = coeff R p f * coeff R q f :=
+  (isExponential_add_mul_iff (R := R) f).mp (add_mul_coe f) p q
