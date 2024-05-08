@@ -98,6 +98,30 @@ def PowerSeries.mapAlgHom {R : Type*} [CommSemiring R]
   (φ : S →ₐ[R] T) :
   PowerSeries S →ₐ[R] PowerSeries T := MvPowerSeries.mapAlgHom Unit φ
 
+theorem MvPowerSeries.monomial_eq {σ : Type*} {R : Type*} [CommSemiring R] (e : σ →₀ ℕ) :
+    MvPowerSeries.monomial R e 1 = e.prod fun s n ↦ (X s : MvPowerSeries σ R) ^ n := by
+  simp only [← MvPolynomial.coe_X, ← MvPolynomial.coe_pow, ← MvPolynomial.coe_monomial, MvPolynomial.monomial_eq, map_one, one_mul]
+  simp only [← MvPolynomial.coeToMvPowerSeries.ringHom_apply, ← map_finsupp_prod]
+
+theorem MvPowerSeries.monomial_eq'
+    {σ : Type*} [DecidableEq σ] {R : Type*} [CommSemiring R]
+    (e : σ →₀ ℕ) (r : σ → R) :
+    MvPowerSeries.monomial R e (e.prod (fun s n => r s ^  n))
+      = (Finsupp.prod e fun s e => (r s • MvPowerSeries.X s) ^ e) := by
+  simp only [smul_pow]
+  simp only [Algebra.smul_def]
+  rw [Finsupp.prod_mul, ← map_finsupp_prod, ← Algebra.smul_def]
+  rw [← MvPowerSeries.monomial_eq, ← map_smul]
+  simp only [Finsupp.prod, smul_eq_mul, mul_one]
+
+theorem MvPowerSeries.monomial_smul
+    {σ : Type*} [DecidableEq σ] {R : Type*} [CommSemiring R]
+    (e : σ →₀ ℕ) (r : R) :
+    MvPowerSeries.monomial R e (r ^ (Finsupp.sum e fun _ n => n))
+      = (Finsupp.prod e fun s e => (r • MvPowerSeries.X s) ^ e) := by
+  rw [← MvPowerSeries.monomial_eq']
+  simp only [Finsupp.sum, Finsupp.prod, Finset.prod_pow_eq_pow_sum]
+
 section DiscreteUniformity
 
 class DiscreteUniformity (α : Type*) [u : UniformSpace α] : Prop where
@@ -165,8 +189,6 @@ open WithPiTopology WithPiUniformity
 structure SubstDomain (a : σ → MvPowerSeries τ S) : Prop where
   const_coeff : ∀ s, IsNilpotent (constantCoeff τ S (a s))
   tendsto_zero : Filter.Tendsto a Filter.cofinite (@nhds _ (@topologicalSpace τ S ⊥) 0)
-
-#check SubstDomain
 
 /-
 --variable [UniformSpace R] [DiscreteUniformity R] [UniformSpace S] [DiscreteUniformity S]
@@ -333,7 +355,8 @@ theorem eval₂_subst {b : τ → T} (hb : EvalDomain b) (f : MvPowerSeries σ R
 
 variable {υ : Type*} [DecidableEq υ]
   {T : Type*} [CommRing T] [Algebra R T] [Algebra S T] [IsScalarTower R S T]
-  {b : τ → MvPowerSeries υ T} (hb : SubstDomain b)
+  {b : τ → MvPowerSeries υ T}
+  (hb : @SubstDomain τ υ T _ b)
 
 -- TODO? : the converse holds when the kernel of `algebraMap R S` is a nilideal
 theorem IsNilpotent_subst
@@ -396,6 +419,115 @@ theorem comp_substAlgHom
   apply MvPowerSeries.comp_aeval
   sorry
 -/
+
+section scale
+
+variable [Finite σ]
+
+theorem substDomain_scale (r : σ → R) :
+    SubstDomain (fun (s : σ) ↦ r s • (X s : MvPowerSeries σ R)) :=
+  substDomain_of_constantCoeff_zero (fun s ↦ by
+    rw [MvPowerSeries.smul_eq_C_mul, map_mul, constantCoeff_C, constantCoeff_X, mul_zero])
+
+noncomputable def scale (r : σ → R) :
+    MvPowerSeries σ R →ₐ[R] MvPowerSeries σ R :=
+  substAlgHom (substDomain_scale r)
+
+theorem scale_eq_substAlgHom (r : σ → R) (f : MvPowerSeries σ R) :
+    scale r f = substAlgHom (substDomain_scale r) f := rfl
+
+theorem scale_eq_subst (r : σ → R) (f : MvPowerSeries σ R) :
+    scale r f = subst (fun s ↦ r s • (X s : MvPowerSeries σ R)) f := by
+  unfold scale
+  rw [← coe_subst]
+
+theorem scale_comp (a b : σ → R) :
+    (scale a).comp (scale b) = scale (fun s ↦ a s * b s) := by
+  rw [AlgHom.ext_iff]
+  intro f
+  simp only [AlgHom.coe_comp, Function.comp_apply, scale]
+  rw [substAlgHom_comp_substAlgHom_apply]
+  congr
+  rw [Function.funext_iff]
+  intro s
+  simp only [LinearMapClass.map_smul]
+  rw [← MvPolynomial.coe_X, substAlgHom_coe, MvPolynomial.aeval_X, MvPolynomial.coe_X]
+  rw [← mul_smul, mul_comm]
+
+theorem scale_one :
+    (scale (Function.const σ (1 : R))) = AlgHom.id R (MvPowerSeries σ R):= by
+  ext f d
+  simp only [scale, ← coe_subst, coeff_subst (substDomain_scale _)]
+  simp only [one_smul, smul_eq_mul, AlgHom.coe_id, id_eq]
+  simp only [Function.const_apply, one_smul, ← monomial_eq, coeff_monomial]
+  simp only [mul_ite, mul_one, mul_zero]
+  rw [finsum_eq_single _ d]
+  · rw [if_pos rfl]
+  · intro e he
+    rw [if_neg he.symm]
+
+theorem scale_MonoidHom : (σ → R) →* MvPowerSeries σ R →ₐ[R] MvPowerSeries σ R where
+  toFun := scale
+  map_one' := scale_one
+  map_mul' a b := by
+    dsimp only
+    rw [Pi.mul_def, ← scale_comp, @AlgHom.End_toSemigroup_toMul_mul]
+
+theorem coeff_scale (r : σ → R) (f : MvPowerSeries σ R) (d : σ →₀ ℕ) :
+    coeff R d (scale r f) = (d.prod fun s n ↦ r s ^ n) • coeff R d f := by
+  unfold scale
+  rw [← coe_subst, coeff_subst (substDomain_scale _)]
+  rw [finsum_eq_single _ d]
+  · rw [smul_eq_mul, smul_eq_mul, mul_comm]
+    apply congr_arg₂ _ _ rfl
+    simp only [MvPowerSeries.smul_eq_C_mul, mul_pow]
+    rw [Finsupp.prod, Finset.prod_mul_distrib]
+    simp only [← map_pow, ← map_prod, coeff_C_mul]
+    convert mul_one _
+    rw [← Finsupp.prod_of_support_subset _ (subset_refl d.support),
+      ← monomial_eq, coeff_monomial_same]
+    exact fun _ _ ↦ rfl
+  · intro e he
+    convert smul_zero _
+    simp only [MvPowerSeries.smul_eq_C_mul, mul_pow, Finsupp.prod,
+      Finset.prod_mul_distrib, ← map_pow, ← map_prod, coeff_C_mul]
+    convert mul_zero _
+    rw [← Finsupp.prod_of_support_subset _ (subset_refl e.support),
+      ← monomial_eq, coeff_monomial_ne he.symm]
+    exact fun _ _ ↦ rfl
+
+theorem scale_zero_apply (f : MvPowerSeries σ R) :
+  (scale (Function.const σ (0 : R))) f = MvPowerSeries.C σ R (constantCoeff σ R f) := by
+  ext d
+  simp only [coeff_scale, coeff_C]
+  by_cases hd : d = 0
+  · simp only [hd, Function.const_apply, Finsupp.prod_zero_index,
+      coeff_zero_eq_constantCoeff, smul_eq_mul, one_mul, ↓reduceIte]
+  · simp only [if_neg hd]
+    convert zero_smul R _
+    simp only [DFunLike.ext_iff, Finsupp.coe_zero, Pi.zero_apply, not_forall] at hd
+    obtain ⟨s, hs⟩ := hd
+    simp only [Finsupp.prod]
+    apply Finset.prod_eq_zero (a := s)
+    rw [Finsupp.mem_support_iff]
+    exact hs
+    simp only [Function.const_apply, zero_pow hs]
+
+/-- Scaling a linear power series is smul -/
+lemma scale_linear_eq_smul (r : R) (f : MvPowerSeries σ R)
+    (hf : ∀ (d : σ →₀ ℕ), (d.sum (fun _ n ↦ n) ≠ 1) → MvPowerSeries.coeff R d f = 0) :
+    MvPowerSeries.scale (Function.const σ r) f = r • f := by
+  ext e
+  simp only [MvPowerSeries.coeff_scale, map_smul]
+  simp only [Finsupp.prod, Function.const_apply, Finset.prod_pow_eq_pow_sum, smul_eq_mul]
+  by_cases he : Finsupp.sum e (fun _ n ↦ n) = 1
+  · simp only [Finsupp.sum] at he
+    rw [he, pow_one]
+  · simp only [hf e he, mul_zero]
+
+
+end scale
+
 end MvPowerSeries
 
 namespace PowerSeries
@@ -441,6 +573,11 @@ def substDomain_of_constantCoeff_nilpotent
     SubstDomain a where
   const_coeff := ha
 
+theorem substDomain_iff (a : MvPowerSeries τ S) :
+    SubstDomain a ↔ MvPowerSeries.SubstDomain (Function.const Unit a) :=
+  ⟨fun ha ↦ MvPowerSeries.substDomain_of_constantCoeff_nilpotent (Function.const Unit ha.const_coeff),
+   fun ha  ↦ substDomain_of_constantCoeff_nilpotent (ha.const_coeff ())⟩
+
 def substDomain_of_constantCoeff_zero
     {a : MvPowerSeries τ S}
     (ha : MvPowerSeries.constantCoeff τ S a = 0) :
@@ -480,7 +617,6 @@ theorem subst_add (f g : PowerSeries R) :
 theorem subst_pow (f : PowerSeries R) (n : ℕ) :
     subst a (f ^ n) = (subst a f ) ^ n := by
   rw [coe_subst ha, map_pow]
-
 
 theorem subst_mul (f g : PowerSeries R) :
     subst a (f * g) = subst a f * subst a g := by
@@ -571,7 +707,7 @@ theorem subst_X :
     subst a (X : PowerSeries R) = a := by
   rw [← Polynomial.coe_X, subst_coe ha, Polynomial.aeval_X]
 
---#exit --TODO: remove
+-- TODO: remove
 /-
 theorem comp_substAlgHom
     {T : Type*} [CommRing T] [Algebra R T] {ε : S →ₐ[R] T} :
@@ -614,5 +750,74 @@ theorem subst_comp_subst :
 theorem subst_comp_subst_apply (f : PowerSeries R) :
     subst b (subst a f) = subst (subst b a) f :=
   congr_fun (subst_comp_subst (R := R) ha hb) f
+
+section scale
+
+theorem substDomain_scale (r : R) : SubstDomain (r • (X : R⟦X⟧)) :=
+  (substDomain_iff _).mpr (MvPowerSeries.substDomain_scale _)
+
+noncomputable def scale (r : R) : R⟦X⟧ →ₐ[R] R⟦X⟧ :=
+  MvPowerSeries.scale (Function.const Unit r)
+
+theorem scale_eq_substAlgHom (r : R) (f : R⟦X⟧) :
+    scale r f = substAlgHom (substDomain_scale r) f := rfl
+
+theorem scale_eq_subst (r : R) (f : R⟦X⟧) :
+    scale r f = subst (r • (X : R⟦X⟧)) f := by
+  rw [scale_eq_substAlgHom, ← coe_subst]
+
+theorem scale_comp (a b : R) :
+    (scale a).comp (scale b) = scale (a * b) := by
+  unfold scale
+  rw [MvPowerSeries.scale_comp]
+  rfl
+
+theorem scale_one :
+    scale (1 : R) = AlgHom.id R R⟦X⟧ := by
+  unfold scale
+  rw [MvPowerSeries.scale_one]
+  rfl
+
+theorem scale_MonoidHom : R →* R⟦X⟧ →ₐ[R] R⟦X⟧ where
+  toFun r := scale r
+  map_one' := scale_one
+  map_mul' r s := by
+    dsimp only
+    rw [← scale_comp, AlgHom.End_toSemigroup_toMul_mul]
+
+theorem coeff_scale (r : R) (f : R⟦X⟧) (d : ℕ) :
+    coeff R d (scale r f) = r ^ d • coeff R d f := by
+  convert MvPowerSeries.coeff_scale (Function.const Unit r) f (Finsupp.single default d)
+  simp only [PUnit.default_eq_unit, Function.const_apply, pow_zero, Finsupp.prod_single_index]
+
+theorem scale_zero_apply (f : R⟦X⟧) :
+    scale (0 : R) f = PowerSeries.C R (constantCoeff R f) :=
+  MvPowerSeries.scale_zero_apply f
+
+/-- When p is linear, substitution of p and then a scalar homothety
+  is substitution of the homothety then p -/
+lemma subst_linear_subst_scalar_comm (r : R)
+    {σ : Type*} [DecidableEq σ] [Finite σ] (p : MvPowerSeries σ R)
+    (hp_lin : ∀ (d : σ →₀ ℕ), (d.sum (fun _ n ↦ n) ≠ 1) → MvPowerSeries.coeff R d p = 0)
+    (f : PowerSeries R) :
+    subst p (scale r f)
+      = MvPowerSeries.scale (Function.const σ r) (subst p f) := by
+  have hp : PowerSeries.SubstDomain p := by
+    apply substDomain_of_constantCoeff_zero
+    rw [← MvPowerSeries.coeff_zero_eq_constantCoeff_apply]
+    apply hp_lin
+    simp only [Finsupp.sum_zero_index, ne_eq, zero_ne_one, not_false_eq_true]
+  rw [scale_eq_subst, MvPowerSeries.scale_eq_subst]
+  rw [subst_comp_subst_apply (substDomain_scale _) hp]
+  nth_rewrite 3 [subst]
+  rw [MvPowerSeries.subst_comp_subst_apply hp.const (MvPowerSeries.substDomain_scale _)]
+  rw [Function.funext_iff]
+  intro _
+  rw [subst_smul hp, ← Polynomial.coe_X, subst_coe hp, Polynomial.aeval_X]
+  rw [← MvPowerSeries.scale_eq_subst]
+  rw [MvPowerSeries.scale_linear_eq_smul _ _ hp_lin]
+  rfl
+
+end scale
 
 end PowerSeries
