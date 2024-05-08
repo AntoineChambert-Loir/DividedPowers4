@@ -40,6 +40,201 @@ structure IsExponential (f : R⟦X⟧) : Prop where
     = subst (MvPowerSeries.X 0) f * PowerSeries.subst (MvPowerSeries.X 1) f
   constantCoeff : constantCoeff R f = 1
 
+private lemma coeff_add_pow (d : Fin 2 →₀ ℕ) (n : ℕ) :
+    MvPolynomial.coeff d ((MvPolynomial.X 0 + MvPolynomial.X 1 : MvPolynomial (Fin 2) R) ^ n) =
+    if (d 0, d 1) ∈ Finset.antidiagonal n
+    then Nat.choose n (d 0)
+    else 0 := by
+  have hmon : ∀ (u v : ℕ),
+    MvPolynomial.X (0 : Fin 2) ^ u * MvPolynomial.X 1 ^ v
+      = MvPolynomial.monomial (Finsupp.single 0 u + Finsupp.single 1 v) (1 : R) := by
+    intro u v
+    rw [MvPolynomial.monomial_eq]
+    rw [Finsupp.prod_of_support_subset _ (Finset.subset_univ _)]
+    · simp only [map_one, Fin.prod_univ_two, Fin.isValue, one_mul]
+      simp only [Fin.isValue, Finsupp.coe_add, Pi.add_apply,
+        Finsupp.single_eq_same, ne_eq, one_ne_zero, not_false_eq_true,
+        Finsupp.single_eq_of_ne, add_zero, zero_ne_one, zero_add]
+    · exact fun i _ ↦ by simp only [pow_zero]
+  rw [Commute.add_pow' (Commute.all _ _), MvPolynomial.coeff_sum]
+  simp only [nsmul_eq_smul, MvPolynomial.coeff_smul]
+  simp only [Fin.isValue, Nat.cast_ite, Nat.cast_zero, hmon]
+  split_ifs with hd
+  · rw [Finset.sum_eq_single (d 0, d 1)]
+    · rw [MvPolynomial.coeff_monomial, if_pos]
+      simp only [Fin.isValue, nsmul_eq_mul, mul_one]
+      ext i
+      match i with
+      | 0 => simp
+      | 1 => simp
+    · intro e _ hed
+      rw [MvPolynomial.coeff_monomial, if_neg, smul_zero]
+      intro hde
+      apply hed
+      rw [← hde]
+      simp
+    · intro hd'
+      contradiction
+  · apply Finset.sum_eq_zero
+    intro e he
+    simp only [Finset.mem_antidiagonal] at he
+    rw [MvPolynomial.coeff_monomial, if_neg, smul_zero]
+    intro hed
+    apply hd
+    rw [← hed, Finset.mem_antidiagonal]
+    simpa using he
+
+lemma coeff_subst_single {σ : Type*} [DecidableEq σ] [Finite σ]
+    (s : σ) (f : R⟦X⟧) (e : σ →₀ ℕ) :
+    MvPowerSeries.coeff R e (subst (MvPowerSeries.X s) f) =
+      if e = Finsupp.single s (e s)
+      then PowerSeries.coeff R (e s) f
+      else 0 := by
+  rw [PowerSeries.coeff_subst (PowerSeries.substDomain_of_constantCoeff_zero (by simp))]
+  rw [finsum_eq_single _ (e s)]
+  · rw [MvPowerSeries.coeff_X_pow]
+    simp only [Fin.isValue, ↓reduceIte, smul_eq_mul, mul_one]
+    split_ifs with he
+    · rw [mul_one]
+    · rw [mul_zero]
+  · intro d hd
+    simp only [MvPowerSeries.coeff_X_pow, smul_eq_mul, mul_ite, mul_one, mul_zero, ite_eq_right_iff]
+    intro hd'
+    simp only [hd', Finsupp.single_eq_same, ne_eq, not_true_eq_false] at hd
+
+lemma ne_zero_of_mul_ne_zero {M : Type*} [MonoidWithZero M] {a b : M}
+    (h : a * b ≠ 0) : a ≠ 0 ∧ b ≠ 0 := by
+  constructor
+  · intro ha
+    apply h
+    rw [ha, zero_mul]
+  · intro hb
+    apply h
+    rw [hb, mul_zero]
+
+lemma fin_two_equiv_prod (α : Type*) [Zero α] : ((Fin 2) →₀ α) ≃ α × α :=
+  Finsupp.equivFunOnFinite.trans {
+  toFun := fun e ↦ (e 0, e 1)
+  invFun := fun (a, b) i ↦ match i with
+    | 0 => a
+    | 1 => b
+  left_inv := fun e ↦ by
+    ext i
+    match i with
+    | 0 => rfl
+    | 1 => rfl
+  right_inv := fun (a, b) ↦ by
+    simp only
+  }
+
+lemma forall_congr_curry {α : Type*}
+    {p : (Fin 2 → α) → Prop} {q : α → α → Prop}
+    (hpq : ∀ e : Fin 2 → α, p e ↔ q (e 0) (e 1)) :
+    (∀ (e : Fin 2 → α), p e) ↔ ∀ (u v : α), q u v := by
+  constructor
+  · intro H u v
+    set e : Fin 2 → α := fun
+    | 0 => u
+    | 1 => v
+    specialize hpq e
+    simp [e] at hpq
+    rw [← hpq]
+    apply H
+  · intro H e
+    rw [hpq]
+    apply H
+
+lemma forall_congr_curry₀ {α : Type*} [Zero α]
+    {p : (Fin 2 →₀ α) → Prop} {q : α → α → Prop}
+    (hpq : ∀ e : Fin 2 →₀ α, p e ↔ q (e 0) (e 1)) :
+    (∀ e, p e) ↔ ∀ u v, q u v := by
+  constructor
+  · intro H u v
+    set e : Fin 2 → α := fun
+    | 0 => u
+    | 1 => v
+    specialize hpq (Finsupp.equivFunOnFinite.symm e)
+    simp [e] at hpq
+    rw [← hpq]
+    apply H
+  · intro H e
+    rw [hpq]
+    apply H
+
+/-- A power series f is exponential iff its coefficients (f n) satisfy
+  the relations `Nat.choose (p + q) p * f (p + q)= f p * f q`
+  and its constant coefficient is 1 -/
+theorem isExponential_add_mul_iff (f : R⟦X⟧) :
+    (subst (MvPowerSeries.X 0 + MvPowerSeries.X 1) f : MvPowerSeries (Fin 2) R)
+      = (subst (MvPowerSeries.X 0) f : MvPowerSeries (Fin 2) R) * (subst (MvPowerSeries.X 1) f : MvPowerSeries (Fin 2) R)
+    ↔ ∀ (p q : ℕ), Nat.choose (p + q) p * (coeff R (p + q) f) =
+        coeff R p f * coeff R q f:= by
+  have he : ∀ (e : Fin 2 →₀ ℕ), (MvPowerSeries.coeff R e) (subst (MvPowerSeries.X 0 + MvPowerSeries.X 1) f) = Nat.choose (e 0 + e 1) (e 0) * coeff R (e 0 + e 1) f := by
+    intro e
+    rw [PowerSeries.subst, MvPowerSeries.coeff_subst _]
+    simp only [Fin.isValue, Finsupp.prod_pow, Finset.univ_unique,
+      PUnit.default_eq_unit, Finset.prod_singleton, smul_eq_mul]
+    simp only [← MvPolynomial.coe_X, ← MvPolynomial.coe_add, ← MvPolynomial.coe_pow, MvPolynomial.coeff_coe]
+    rw [finsum_eq_single _ (Finsupp.single () (e 0 + e 1)), mul_comm]
+    · apply congr_arg₂
+      simp only [Finsupp.single_add, Finsupp.coe_add, Pi.add_apply, Finsupp.single_eq_same]
+      simp only [Fin.isValue, coeff_add_pow e _, Finset.mem_antidiagonal, ↓reduceIte, coeff]
+      rfl
+    · intro d hd'
+      simp [coeff_add_pow]
+      intro hd
+      exfalso
+      apply hd'
+      ext
+      simp only [PUnit.default_eq_unit, hd, Finsupp.single_eq_same]
+    · exact MvPowerSeries.substDomain_of_constantCoeff_zero
+            (fun _ ↦ by simp)
+  have he' : ∀ (e : Fin 2 →₀ ℕ),
+    MvPowerSeries.coeff R e
+      (subst (MvPowerSeries.X 0) f * subst (MvPowerSeries.X 1) f) =
+        coeff R (e 0) f * coeff R (e 1) f := by
+    intro e
+    rw [MvPowerSeries.coeff_mul]
+    rw [Finset.sum_eq_single (Finsupp.single 0 (e 0), Finsupp.single 1 (e 1))]
+    · apply congr_arg₂
+      · simp only [coeff_subst_single, Finsupp.single_eq_same, if_pos]
+      · simp only [coeff_subst_single, Finsupp.single_eq_same, if_pos]
+    · intro b hb hb'
+      rw [Finset.mem_antidiagonal] at hb
+      by_contra hmul_ne_zero
+      rcases ne_zero_of_mul_ne_zero hmul_ne_zero with ⟨h0, h1⟩
+      simp only [Fin.isValue, coeff_subst_single, ne_eq, ite_eq_right_iff,
+        not_forall, exists_prop] at h0 h1
+      apply hb'
+      rw [Prod.ext_iff, ← hb, h0.1, h1.1]
+      simp
+    · intro he
+      exfalso
+      apply he
+      simp only [Finset.mem_antidiagonal]
+      ext i
+      match i with
+      | 0 => simp
+      | 1 => simp
+  rw [MvPowerSeries.ext_iff]
+  convert forall_congr_curry₀ _
+  intro e
+  rw [he, he']
+
+
+/-- A power series f is exponential iff its coefficients (f n) satisfy
+  the relations `Nat.choose (p + q) p * f (p + q)= f p * f q`
+  and its constant coefficient is 1 -/
+theorem isExponential_iff (f : R⟦X⟧) :
+    IsExponential f
+    ↔  (constantCoeff R f = 1) ∧ ∀ p q, Nat.choose (p + q) p * coeff R (p + q) f = coeff R p f * coeff R q f := by
+  rw [← isExponential_add_mul_iff]
+  constructor
+  · exact fun hf ↦ ⟨hf.constantCoeff, hf.add_mul⟩
+  · exact fun hf ↦ {
+      constantCoeff := hf.1
+      add_mul := hf.2 }
+
 /-- The unit power series is exponential -/
 theorem isExponential_one : IsExponential (1 : R⟦X⟧) where
   add_mul := by
@@ -210,3 +405,18 @@ noncomputable instance instExponentialModule_module :
     simp only [ZeroMemClass.coe_zero]
     apply Additive.toMul.injective
     simp only [toAdditive_smul_coe', scale_zero_apply, toMul_zero, f.prop.constantCoeff, map_one]
+
+def _root_.PowerSeries.ofExponentialModule (f : ExponentialModule R) :
+  R⟦X⟧ := toMul ↑f
+
+variable (R) in
+@[coe]
+instance instExponentialModule_coe : Coe (ExponentialModule R) R⟦X⟧ := ⟨ofExponentialModule⟩
+
+lemma ofExponentialModule_injective :
+    Function.Injective (ofExponentialModule (R := R)) := fun f g ↦ by
+  simp only [ofExponentialModule, EmbeddingLike.apply_eq_iff_eq, SetLike.coe_eq_coe, imp_self]
+
+lemma ofExponentialModule_add (f g : ExponentialModule R) :
+    ofExponentialModule (f + g) = ofExponentialModule f * ofExponentialModule g := by
+  simp only [ofExponentialModule, AddSubmonoid.coe_add, toMul_add]
