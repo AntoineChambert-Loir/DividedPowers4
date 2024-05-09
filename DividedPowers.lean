@@ -43,7 +43,7 @@ import DividedPowers.ForMathlib.RingTheory.TensorProduct.Polynomial
 import DividedPowers.ForMathlib.Topology.Algebra.Algebra.Basic
 import DividedPowers.ForMathlib.Topology.LinearTopology -- It has sorrys
 import DividedPowers.ForMathlib.WeightedHomogeneous
-import DividedPowers.IdealAdd -- It uses sorry
+import DividedPowers.IdealAdd
 import DividedPowers.PolynomialMap.Basic -- It has sorrys
 import DividedPowers.PolynomialMap.Coeff
 import DividedPowers.PolynomialMap.Homogeneous -- It has a sorry

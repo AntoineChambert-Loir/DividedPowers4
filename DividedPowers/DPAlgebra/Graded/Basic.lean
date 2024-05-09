@@ -33,12 +33,10 @@ theorem rel_isPureHomogeneous :
   . use n
     refine' ⟨(mem_weightedHomogeneousSubmodule _ _ _ _).mpr (isWeightedHomogeneous_X _ _ _), _⟩
     . apply Submodule.sum_mem
-      intro c hc
-      suffices n = c + (n - c) by
-        nth_rewrite 2 [this]
-        apply IsWeightedHomogeneous.mul <;> simp only [isWeightedHomogeneous_X]
-      rw [mem_range, Nat.lt_succ_iff] at hc
-      rw [Nat.add_sub_of_le hc]
+      intro (c, d) hcd
+      simp only [mem_antidiagonal] at hcd
+      rw [← hcd]
+      apply IsWeightedHomogeneous.mul <;> simp only [isWeightedHomogeneous_X]
 
 theorem Rel_isHomogeneous :
     Rel.IsHomogeneous (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) (Rel R M) :=
@@ -137,8 +135,12 @@ theorem mem_grade_iff' {n : ℕ} (p : DividedPowerAlgebra R M) :
 def ι : M →ₗ[R] DividedPowerAlgebra R M := {
   toFun     := fun m ↦ dp R 1 m
   map_add'  := fun x y ↦ by
-    simp only [dp_add, sum_range_succ', sum_range_zero, zero_add, Nat.sub_zero, Nat.sub_self,
-      dp_zero, mul_one, one_mul]
+    simp only [dp_add]
+    simp only [Nat.antidiagonal_succ, zero_add, antidiagonal_zero, map_singleton,
+      Embedding.coe_prodMap, Embedding.coeFn_mk, Prod_map, Nat.reduceSucc, Embedding.refl_apply,
+      cons_eq_insert, mem_singleton, Prod.mk.injEq, and_self, not_false_eq_true, sum_insert,
+      sum_singleton]
+    simp only [dp_zero, one_mul, mul_one, add_comm]
   map_smul' := fun r x ↦ by
     simp only [dp_smul, pow_one, RingHom.id_apply] }
 
@@ -187,7 +189,7 @@ theorem liftAux_isHomogeneous {A : Type*} [CommSemiring A] [Algebra R A]
     [GradedAlgebra 𝒜] {f : ℕ × M → A} (hf_zero : ∀ m, f (0, m) = 1)
     (hf_smul : ∀ (n : ℕ) (r : R) (m : M), f ⟨n, r • m⟩ = r ^ n • f ⟨n, m⟩)
     (hf_mul : ∀ n p m, f ⟨n, m⟩ * f ⟨p, m⟩ = (n + p).choose n • f ⟨n + p, m⟩)
-    (hf_add : ∀ n u v, f ⟨n, u + v⟩ = (range (n + 1)).sum fun x : ℕ => f ⟨x, u⟩ * f ⟨n - x, v⟩)
+    (hf_add : ∀ n u v, f ⟨n, u + v⟩ = (antidiagonal n).sum fun (x, y) => f ⟨x, u⟩ * f ⟨y, v⟩)
     (hf : ∀ n m, f (n, m) ∈ 𝒜 n) :
     GalgHom.IsHomogeneous (DividedPowerAlgebra.grade R M) 𝒜
       (lift' f hf_zero hf_smul hf_mul hf_add) := by
