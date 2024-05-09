@@ -149,6 +149,10 @@ section BasicLemmas
 
 variable {A : Type _} [CommSemiring A] {I : Ideal A}
 
+def dpow_add' (hI : DividedPowers I) (n : ℕ) {x y : A} (hx : x ∈ I) (hy : y ∈ I):
+    hI.dpow n (x + y) = (Finset.range (n + 1)).sum fun k => hI.dpow k x * hI.dpow (n - k) y := by
+  rw [hI.dpow_add n hx hy, Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk]
+
 def dpowExp (hI : DividedPowers I) (a : A) :=
   PowerSeries.mk fun n => hI.dpow n a
 #align divided_powers.dpow_exp DividedPowers.dpowExp
@@ -161,8 +165,7 @@ theorem add_dpowExp (hI : DividedPowers I) {a b : A} (ha : a ∈ I) (hb : b ∈ 
 #align divided_powers.add_dpow_exp DividedPowers.add_dpowExp
 
 theorem eq_of_eq_on_ideal (hI : DividedPowers I) (hI' : DividedPowers I)
-    (h_eq : ∀ (n : ℕ) {x : A} (_ : x ∈ I), hI.dpow n x = hI'.dpow n x) : hI = hI' :=
-  by
+    (h_eq : ∀ (n : ℕ) {x : A} (_ : x ∈ I), hI.dpow n x = hI'.dpow n x) : hI = hI' := by
   ext n x
   by_cases hx : x ∈ I
   · exact h_eq n hx
@@ -285,11 +288,7 @@ theorem dpow_sum_aux (dpow : ℕ → A → A)
     {ι : Type _} [DecidableEq ι] {s : Finset ι} {x : ι → A} (hx : ∀ i ∈ s, x i ∈ I) (n : ℕ) :
     dpow n (s.sum x) =
       (Finset.sym s n).sum fun k => s.prod fun i => dpow (Multiset.count i k) (x i) := by
-  have dpow_add' : ∀ n {x y} (_ : x ∈ I) (_ : y ∈ I),
-    dpow n (x + y) = (range (n + 1)).sum fun k => dpow k x * dpow (n - k) y := by
-      intro n x y hx hy
-      rw [dpow_add n hx hy,
-        Finset.Nat.sum_antidiagonal_eq_sum_range_succ (fun k l ↦ dpow k x * dpow l y) n]
+  simp only [Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk] at dpow_add
   induction s using Finset.induction generalizing n with -- a s ha ih
   | empty =>
     simp only [sum_empty, prod_empty, sum_const, nsmul_eq_mul, mul_one]
@@ -307,7 +306,7 @@ theorem dpow_sum_aux (dpow : ℕ → A → A)
   | @insert a s ha ih =>
     have hx' : ∀ i, i ∈ s → x i ∈ I := fun i hi => hx i (Finset.mem_insert_of_mem hi)
     simp_rw [sum_insert ha,
-      dpow_add' n (hx a (Finset.mem_insert_self a s)) (I.sum_mem fun i => hx' i),
+      dpow_add n (hx a (Finset.mem_insert_self a s)) (I.sum_mem fun i => hx' i),
       sum_range, ih hx', mul_sum, sum_sigma']
     apply symm
     apply sum_bij'
@@ -363,11 +362,7 @@ theorem dpow_sum_aux' {M D : Type _} [AddCommMonoid M] [CommSemiring D] (dp : �
     {ι : Type _} [DecidableEq ι] {s : Finset ι} {x : ι → M} (n : ℕ) :
     dp n (s.sum x) =
       (Finset.sym s n).sum fun k => s.prod fun i => dp (Multiset.count i k) (x i) := by
-  have dpow_add' : ∀ n x y,
-    dp n (x + y) = (range (n + 1)).sum fun k => dp k x * dp (n - k) y := by
-      intro n x y
-      rw [dpow_add,
-        Finset.Nat.sum_antidiagonal_eq_sum_range_succ (fun k l ↦ dp k x * dp l y) n]
+  simp only [Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk] at dpow_add
   induction s using Finset.induction_on generalizing n with -- a s ha ih
   | empty =>
     rw [sum_empty]
@@ -382,7 +377,7 @@ theorem dpow_sum_aux' {M D : Type _} [AddCommMonoid M] [CommSemiring D] (dp : �
       rw [sym_eq_empty]
       exact ⟨hn, rfl⟩
   | @insert a s ha ih =>
-    simp_rw [sum_insert ha, dpow_add' n, sum_range, ih, mul_sum, sum_sigma']
+    simp_rw [sum_insert ha, dpow_add n, sum_range, ih, mul_sum, sum_sigma']
     apply symm
     apply sum_bij'
       (fun m _ => Sym.filterNe a m)

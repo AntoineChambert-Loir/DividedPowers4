@@ -111,6 +111,31 @@ and then one would apply the permutation (13)(24) -/
 open BigOperators
 
 /-- Rewrites a 4-fold sum from variables (12)(34) to (13)(24) -/
+theorem Finset.sum_4_rw' {α : Type _} [AddCommMonoid α]
+  (f : ℕ × ℕ × ℕ × ℕ → α) (n : ℕ) :
+  (Finset.sum (antidiagonal n) fun (k, l) =>
+    Finset.sum (antidiagonal k) fun (a, b) =>
+      Finset.sum (antidiagonal l) fun (c, d) => f (a, b, c, d)) =
+    Finset.sum (antidiagonal n) fun (k, l) =>
+      Finset.sum (antidiagonal k) fun (a, c) =>
+        Finset.sum (antidiagonal l) fun (b, d) => f (a, b, c, d) := by
+  simp only [Finset.sum_sigma']
+  set φ : ((_ : ℕ × ℕ) × (_ : ℕ × ℕ) × ℕ × ℕ) → ((_ : ℕ × ℕ) × (_ : ℕ × ℕ) × ℕ × ℕ) :=
+    fun ⟨⟨_, _⟩, ⟨⟨a, b⟩, ⟨c, d⟩⟩⟩ ↦ ⟨⟨a+c, b+ d⟩, ⟨⟨a, c⟩, ⟨b, d⟩⟩⟩
+  suffices hφ : _ by
+    suffices hφ' : _ by
+      apply Finset.sum_bij' (fun m _ => φ m) (fun m _ => φ m) hφ hφ hφ' hφ'
+      rintro ⟨⟨k, l⟩, ⟨⟨a, b⟩, ⟨c, d⟩⟩⟩ H
+      simp only [mem_sigma, mem_antidiagonal] at H ⊢
+    rintro ⟨⟨k, l⟩, ⟨⟨a, b⟩, ⟨c, d⟩⟩⟩ H
+    simp only [mem_sigma, mem_antidiagonal] at H ⊢
+    simp only [Sigma.mk.inj_iff, Prod.mk.injEq, heq_eq_eq, and_true, φ, H.2.1, H.2.2]
+  rintro ⟨⟨k, l⟩, ⟨⟨a, b⟩, ⟨c, d⟩⟩⟩ H
+  simp only [mem_sigma, mem_antidiagonal, and_self, and_true] at H ⊢
+  rw [← H.1, ← H.2.1, ← H.2.2]; abel
+
+
+ /-- Rewrites a 4-fold sum from variables (12)(34) to (13)(24) -/
 theorem Finset.sum_4_rw {α : Type _} [AddCommMonoid α]
   (f : ℕ × ℕ × ℕ × ℕ → α) (n : ℕ) :
   (Finset.sum (Finset.range (n + 1)) fun k =>

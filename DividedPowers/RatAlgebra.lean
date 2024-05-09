@@ -242,8 +242,7 @@ variable [Algebra ℚ R]
 
 variable (I)
 
-noncomputable def dividedPowers : DividedPowers I
-    where
+noncomputable def dividedPowers : DividedPowers I where
   dpow := dpow I
   dpow_null {_ _} hx := OfInvertibleFactorial.dpow_null hx
   dpow_zero {_} hx := OfInvertibleFactorial.dpow_zero hx
@@ -264,10 +263,23 @@ theorem dividedPowers_dpow_apply (n : ℕ) (x : R) : (dividedPowers I).dpow n x 
   rfl
 #align divided_powers.rat_algebra.divided_powers_dpow_apply DividedPowers.RatAlgebra.dividedPowers_dpow_apply
 
-theorem dpow_eq_inv_fact_smul (n : ℕ) {x : R} (hx : x ∈ I) :
-  dpow I n x = (Ring.inverse (Nat.factorial n : ℚ) : ℚ) • x ^ n := by
-  rw [dpow, OfInvertibleFactorial.dpow, if_pos hx]
-  rw [Nat.inv_smul_eq_invCast_mul]
+theorem dpow_eq_inv_fact_smul {hI : DividedPowers I} (n : ℕ) {x : R} (hx : x ∈ I) :
+  hI.dpow n x = (Ring.inverse (Nat.factorial n : ℚ) : ℚ) • x ^ n := by
+  simp only [Ring.inverse_eq_inv']
+  rw [← factorial_mul_dpow_eq_pow hI n x hx]
+  rw [← smul_eq_mul]
+  rw [← smul_assoc]
+  nth_rewrite 1 [← one_smul R (hI.dpow n x)]
+  congr
+  have this_rat : ((n !) : R) = (n ! : ℚ) • (1 : R) := by
+    rw [← nsmul_eq_smul_cast, nsmul_eq_mul, mul_one]
+  rw [this_rat, ← mul_smul]
+  suffices (n ! : ℚ)⁻¹ * (n !) = 1 by
+    rw [this, one_smul]
+  apply Rat.inv_mul_cancel
+  rw [← cast_zero, ne_eq]
+  simp only [cast_zero, cast_eq_zero]
+  apply Nat.factorial_ne_zero
 
 variable {I}
 
