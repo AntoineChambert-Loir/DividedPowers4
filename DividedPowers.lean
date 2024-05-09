@@ -12,6 +12,7 @@ import DividedPowers.DPAlgebra.Misc
 --import DividedPowers.DPAlgebra.PolynomialMap
 import DividedPowers.DPAlgebra.RobyLemma9
 import DividedPowers.DPMorphism
+import DividedPowers.Exponential
 --import DividedPowers.ForMathlib.AlgebraComp -- This file has errors, but I think we should not use it
 import DividedPowers.ForMathlib.AlgebraLemmas
 import DividedPowers.ForMathlib.CombinatoricsLemmas

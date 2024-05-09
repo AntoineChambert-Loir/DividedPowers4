@@ -280,11 +280,16 @@ example {α : Type*}  {n : ℕ} [DecidableEq α] (a : α) (m : Sym α n) (i : α
 theorem dpow_sum_aux (dpow : ℕ → A → A)
     (dpow_zero : ∀ {x} (_ : x ∈ I), dpow 0 x = 1)
     (dpow_add : ∀ (n) {x y} (_ : x ∈ I) (_ : y ∈ I),
-      dpow n (x + y) = (range (n + 1)).sum fun k => dpow k x * dpow (n - k) y)
+      dpow n (x + y) = (antidiagonal n).sum fun k => dpow k.1 x * dpow k.2 y)
     (dpow_eval_zero : ∀ {n : ℕ} (_ : n ≠ 0), dpow n 0 = 0)
     {ι : Type _} [DecidableEq ι] {s : Finset ι} {x : ι → A} (hx : ∀ i ∈ s, x i ∈ I) (n : ℕ) :
     dpow n (s.sum x) =
       (Finset.sym s n).sum fun k => s.prod fun i => dpow (Multiset.count i k) (x i) := by
+  have dpow_add' : ∀ n {x y} (_ : x ∈ I) (_ : y ∈ I),
+    dpow n (x + y) = (range (n + 1)).sum fun k => dpow k x * dpow (n - k) y := by
+      intro n x y hx hy
+      rw [dpow_add n hx hy,
+        Finset.Nat.sum_antidiagonal_eq_sum_range_succ (fun k l ↦ dpow k x * dpow l y) n]
   induction s using Finset.induction generalizing n with -- a s ha ih
   | empty =>
     simp only [sum_empty, prod_empty, sum_const, nsmul_eq_mul, mul_one]
@@ -302,7 +307,7 @@ theorem dpow_sum_aux (dpow : ℕ → A → A)
   | @insert a s ha ih =>
     have hx' : ∀ i, i ∈ s → x i ∈ I := fun i hi => hx i (Finset.mem_insert_of_mem hi)
     simp_rw [sum_insert ha,
-      dpow_add n (hx a (Finset.mem_insert_self a s)) (I.sum_mem fun i => hx' i),
+      dpow_add' n (hx a (Finset.mem_insert_self a s)) (I.sum_mem fun i => hx' i),
       sum_range, ih hx', mul_sum, sum_sigma']
     apply symm
     apply sum_bij'
@@ -342,17 +347,27 @@ theorem dpow_sum_aux (dpow : ℕ → A → A)
     -- adjust once multinomial has been incorporated to mathlib
     #align divided_powers.dpow_sum_aux DividedPowers.dpow_sum_aux
 
+/- (Finset.sum (Finset.sigma (antidiagonal n) fun a ↦ Finset.sym s a.2) fun x_1 ↦
+    dp x_1.fst.1 (x a) * Finset.prod s fun i ↦ dp (Multiset.count i ↑x_1.snd) (x i)) =
+  Finset.sum (Finset.sym (insert a s) n) fun k ↦ Finset.prod (insert a s) fun i ↦ dp (Multiset.count i ↑k) (x i) -/
+
+
 /-- A generic “multinomial” theorem for divided powers — but without multinomial coefficients
   — using only dpow_zero, dpow_add and dpow_eval_zero  -/
 theorem dpow_sum_aux' {M D : Type _} [AddCommMonoid M] [CommSemiring D] (dp : ℕ → M → D)
     (dpow_zero : ∀ x, dp 0 x = 1)
     (dpow_add : ∀ n x y, dp n (x + y) =
-      Finset.sum (Finset.range (n + 1)) fun k => dp k x * dp (n - k) y)
+      (antidiagonal n).sum fun (k, l) => dp k x * dp l y)
     --  (dpow_smul : ∀ {n a x}, dp n (a • x) = a ^ n • dp n x)
     (dpow_eval_zero : ∀ {n : ℕ} (_ : n ≠ 0), dp n 0 = 0)
     {ι : Type _} [DecidableEq ι] {s : Finset ι} {x : ι → M} (n : ℕ) :
     dp n (s.sum x) =
       (Finset.sym s n).sum fun k => s.prod fun i => dp (Multiset.count i k) (x i) := by
+  have dpow_add' : ∀ n x y,
+    dp n (x + y) = (range (n + 1)).sum fun k => dp k x * dp (n - k) y := by
+      intro n x y
+      rw [dpow_add,
+        Finset.Nat.sum_antidiagonal_eq_sum_range_succ (fun k l ↦ dp k x * dp l y) n]
   induction s using Finset.induction_on generalizing n with -- a s ha ih
   | empty =>
     rw [sum_empty]
@@ -367,7 +382,7 @@ theorem dpow_sum_aux' {M D : Type _} [AddCommMonoid M] [CommSemiring D] (dp : �
       rw [sym_eq_empty]
       exact ⟨hn, rfl⟩
   | @insert a s ha ih =>
-    simp_rw [sum_insert ha, dpow_add n, sum_range, ih, mul_sum, sum_sigma']
+    simp_rw [sum_insert ha, dpow_add' n, sum_range, ih, mul_sum, sum_sigma']
     apply symm
     apply sum_bij'
       (fun m _ => Sym.filterNe a m)
@@ -416,8 +431,8 @@ theorem dpow_sum {ι : Type _} [DecidableEq ι] {s : Finset ι} {x : ι → A} (
   · intro x
     exact hI.dpow_zero
   · intro n x y hx hy
-    rw [← Finset.Nat.sum_antidiagonal_eq_sum_range_succ (fun k l ↦ hI.dpow k x * hI.dpow l y)]
-    exact hI.dpow_add n hx hy
+    rw [hI.dpow_add n hx hy,
+      Finset.Nat.sum_antidiagonal_eq_sum_range_succ (fun k l ↦ hI.dpow k x * hI.dpow l y)]
   · intro n hn
     exact hI.dpow_eval_zero hn
 #align divided_powers.dpow_sum DividedPowers.dpow_sum
