@@ -124,9 +124,9 @@ theorem isSubDPIdeal_inf_iff
   by
   refine' ⟨fun hIJ n a b ha hb hab => _, fun hIJ => _⟩
   · have hab' : a - b ∈ I := I.sub_mem ha hb
-    rw [← add_sub_cancel'_right b a, hI.dpow_add n hb hab', Finset.range_succ,
+    rw [← add_sub_cancel b a, hI.dpow_add' n hb hab', Finset.range_succ,
       Finset.sum_insert Finset.not_mem_range_self, tsub_self, hI.dpow_zero hab', mul_one,
-      add_sub_cancel']
+      add_sub_cancel_left]
     apply Ideal.sum_mem
     intro i hi
     apply SemilatticeInf.inf_le_left J I
@@ -161,7 +161,7 @@ theorem span_isSubDPIdeal_iff (S : Set A) (hS : S ⊆ I) :
       rw [hI.dpow_eval_zero hn]; apply Ideal.zero_mem _
     · -- case of sum
       rintro x hxI y hyI hx hy n hn
-      rw [hI.dpow_add n (hSI hxI) (hSI hyI)]
+      rw [hI.dpow_add' n (hSI hxI) (hSI hyI)]
       apply Submodule.sum_mem (Ideal.span S)
       intro m _
       by_cases hm0 : m = 0
@@ -278,16 +278,16 @@ def toIsSubDPIdeal (J : SubDPIdeal hI) : isSubDPIdeal hI J.carrier := {
   dpow_mem := J.dpow_mem }
 #align divided_powers.sub_pd_ideal.is_sub_pd_ideal DividedPowers.SubDPIdeal.toIsSubDPIdeal
 
-def SubDPIdeal.mk' (J : Ideal A) (hJ : isSubDPIdeal hI J) : SubDPIdeal hI :=
+def isSubDPIdeal.mk' (J : Ideal A) (hJ : isSubDPIdeal hI J) : SubDPIdeal hI :=
 { carrier := J,
   isSubIdeal := hJ.isSubIdeal,
   dpow_mem := hJ.dpow_mem }
 
 lemma IsSubDPIdeal_of_SubDPIdeal (J : SubDPIdeal hI) :
-  SubDPIdeal.mk' J.carrier J.toIsSubDPIdeal = J := rfl
+  isSubDPIdeal.mk' J.carrier J.toIsSubDPIdeal = J := rfl
 
 lemma SubDPIdeal_of_IsSubDPIdeal {J  : Ideal A} (hJ : isSubDPIdeal hI J) :
-  (SubDPIdeal.mk' J hJ).toIsSubDPIdeal = hJ := rfl
+  (isSubDPIdeal.mk' J hJ).toIsSubDPIdeal = hJ := rfl
 
 /-- If J is an ideal of A, then J ⬝ I is a sub-dp-ideal of I. (Berthelot, 1.6.1 (i)) -/
 def prod (J : Ideal A) : SubDPIdeal hI
@@ -303,7 +303,7 @@ def prod (J : Ideal A) : SubDPIdeal hI
       exact Submodule.mul_mem_mul (hI.dpow_mem hn ha) (J.pow_mem_of_mem hb n (zero_lt_iff.mpr hn))
     · -- add
       intro x hx y hy hx' hy' n hn
-      rw [hI.dpow_add n (Ideal.mul_le_right hx) (Ideal.mul_le_right hy)]
+      rw [hI.dpow_add' n (Ideal.mul_le_right hx) (Ideal.mul_le_right hy)]
       apply Submodule.sum_mem (I • J)
       intro k _
       by_cases hk0 : k = 0
@@ -379,7 +379,7 @@ theorem sInf_carrier_def (S : Set (SubDPIdeal hI)) :
 
 instance : Sup (SubDPIdeal hI) :=
   ⟨fun J J' =>
-    SubDPIdeal.mk' (J.carrier ⊔ J'.carrier) (isSubDPIdeal_sup hI J.toIsSubDPIdeal J'.toIsSubDPIdeal)⟩
+    isSubDPIdeal.mk' (J.carrier ⊔ J'.carrier) (isSubDPIdeal_sup hI J.toIsSubDPIdeal J'.toIsSubDPIdeal)⟩
 
 theorem sup_carrier_def (J J' : SubDPIdeal hI) : (J ⊔ J').carrier = J ⊔ J' :=
   rfl
@@ -387,7 +387,7 @@ theorem sup_carrier_def (J J' : SubDPIdeal hI) : (J ⊔ J').carrier = J ⊔ J' :
 
 instance : SupSet (SubDPIdeal hI) :=
   ⟨fun S =>
-    SubDPIdeal.mk' (sSup ((fun J => J.carrier) '' S)) <|
+    isSubDPIdeal.mk' (sSup ((fun J => J.carrier) '' S)) <|
       by
       have h : (⋃ (i : Ideal A) (_ : i ∈ (fun J => J.carrier) '' S), ↑i) ⊆ (I : Set A) :=
         by
@@ -480,7 +480,7 @@ def generatedDpow {S : Set A} (hS : S ⊆ I) : SubDPIdeal hI
       intro n hn
       rw [hI.dpow_eval_zero hn]; exact Ideal.zero_mem _
     · intro x hx y hy hx_pow hy_pow n hn
-      rw [hI.dpow_add n (hSI hx) (hSI hy)]
+      rw [hI.dpow_add' n (hSI hx) (hSI hy)]
       apply Submodule.sum_mem (Ideal.span _)
       intro m _
       by_cases hm0 : m = 0
@@ -584,7 +584,7 @@ def dpEqualizer {A : Type _} [CommSemiring A] {I : Ideal A} (hI hI' : DividedPow
     rw [hI.dpow_add n ha.1 hb.1, hI'.dpow_add n ha.1 hb.1]
     apply Finset.sum_congr rfl
     intro k _
-    exact congr_arg₂ (· * ·) (ha.2 k) (hb.2 (n - k))
+    rw [ha.2, hb.2]
   zero_mem' := by
     simp only [Set.mem_sep_iff, SetLike.mem_coe]
     apply And.intro (Ideal.zero_mem I)
