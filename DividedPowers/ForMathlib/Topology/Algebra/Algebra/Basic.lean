@@ -30,7 +30,12 @@ end
 
 open Set Filter TopologicalSpace Function Topology Filter BigOperators
 
-section TopologicalAlgebra
+/- MI: I am commenting out this section because in the Mathlib file, there is a comment that
+`ContinuousSMul` is reused for `TopologicalAlgebra`.
+In terms of `DContinuousSMul`, the only one of these lemmas that seems to be missing in Mathlib
+ is `DiscreteTopology.continuousSMul`.
+-/
+/- section TopologicalAlgebra
 
 /-- A topological algebra `S` over a commutative topological semiring `R` is an `R`-algebra `S`
   which is a topological semiring and such that the algebra map from `R` to `S` is continuous. -/
@@ -89,8 +94,18 @@ instance Pi.topologicalAlgebra {β : Type*} {C : β → Type*} [∀ b, Semiring 
   continuous_algebraMap :=
     continuous_pi_iff.mpr fun _ =>  TopologicalAlgebra.continuous_algebraMap }
 
-end Pi
+end Pi -/
 
+section TopologicalAlgebra
+
+variable (R : Type*) [CommSemiring R] [TopologicalSpace R] [TopologicalSemiring R]
+  (A : Type*) [Semiring A] [TopologicalSpace A] [TopologicalSemiring A]
+
+/-- If `R` is a discrete topological ring,
+  then any topological ring `S` which is an `R`-algebra
+  is also a topological `R`-algebra. -/
+instance DiscreteTopology.continuousSMul [DiscreteTopology R] [Algebra R A] :
+    ContinuousSMul R A := continuousSMul_of_algebraMap _ _ continuous_of_discreteTopology
 section
 
 /-- Continuous algebra homomorphisms between algebras. We only put the type classes that are necessary for the
@@ -121,7 +136,7 @@ variable {R} {A}
 variable {B : Type*} [Semiring B] [TopologicalSpace B] [Algebra R A] [Algebra R B]
 
 attribute [coe] ContinuousAlgHom.toAlgHom
-/-- Coerce continuous linear maps to linear maps. -/
+/-- Coerce continuous algebra morphisms to algebra morphisms. -/
 instance AlgHom.coe : Coe (A →A[R] B) (A →ₐ[R] B) := ⟨toAlgHom⟩
 
 theorem coe_injective : Function.Injective ((↑) : (A →A[R] B) → A →ₐ[R] B) := by
@@ -165,7 +180,6 @@ theorem coeFn_injective : @Function.Injective (A →A[R] B) (A → B) (↑) := D
   because it is a composition of multiple projections. -/
 def Simps.apply (h : A →A[R] B) : A → B := h
 
---TODO: Check if this is needed
 /-- See Note [custom simps projection]. -/
 def Simps.coe (h : A →A[R] B) : A →ₐ[R] B := h
 
@@ -211,13 +225,11 @@ protected theorem map_sum {ι : Type*} (f : A →A[R] B) (s : Finset ι) (g : ι
 @[simp, norm_cast]
 theorem coe_coe (f : A →A[R] B) : ⇑(f : A →ₐ[R] B) = f := rfl
 
--- TODO: delete?
 @[ext]
 theorem ext_ring [TopologicalSpace R] {f g : R →A[R] A} : f = g := by
   apply coe_inj.1
   apply Algebra.ext_id
 
--- TODO: delete?
 theorem ext_ring_iff [TopologicalSpace R] {f g : R →A[R] A} : f = g ↔ f 1 = g 1 :=
   ⟨fun h => h ▸ rfl, fun _ => ext_ring ⟩
 
@@ -326,7 +338,7 @@ instance monoidWithZero : Monoid (A →A[R] A) where
 theorem coe_pow (f : A →A[R] A) (n : ℕ) : ⇑(f ^ n) = f^[n] :=
   hom_coe_pow _ rfl (fun _ _ ↦ rfl) _ _
 
-/-- `ContinuousLinearMap.toLinearMap` as a `RingHom`. -/
+/-- `ContinuousAlgHom.toAlgHom` as a `RingHom`. -/
 @[simps]
 def toAlgHomMonoidHom : (A →A[R] A) →* A →ₐ[R] A where
   toFun        := toAlgHom
@@ -341,7 +353,7 @@ variable {R} {A}
 variable {B : Type*} [Semiring B] [TopologicalSpace B] [Algebra R A] [Algebra R B]
   {C : Type*} [Semiring C] [Algebra R C] [TopologicalSpace C]
 
-/-- The cartesian product of two bounded linear maps, as a bounded linear map. -/
+/-- The cartesian product of two continuous algebra morphisms as a continuous algebra morphism. -/
 protected def prod (f₁ : A →A[R] B) (f₂ : A →A[R] C) :
     A →A[R] B × C :=
   ⟨(f₁ : A →ₐ[R] B).prod f₂, f₁.2.prod_mk f₂.2⟩
@@ -366,12 +378,12 @@ instance completeSpace_eqLocus {D : Type*} [UniformSpace D] [CompleteSpace D]
 
 variable (R A B)
 
-/-- `Prod.fst` as a `ContinuousLinearMap`. -/
+/-- `Prod.fst` as a `ContinuousAlgHom`. -/
 def fst : A × B →A[R] A where
   cont     := continuous_fst
   toAlgHom := AlgHom.fst R A B
 
-/-- `Prod.snd` as a `ContinuousLinearMap`. -/
+/-- `Prod.snd` as a `ContinuousAlgHom`. -/
 def snd : A × B →A[R] B where
   cont := continuous_snd
   toAlgHom := AlgHom.snd R A B
@@ -440,7 +452,7 @@ section subalgebra
 variable {R A}
 variable {B : Type*} [Semiring B] [TopologicalSpace B] [Algebra R A] [Algebra R B]
 
-/-- Restrict codomain of a continuous linear map. -/
+/-- Restrict codomain of a continuous algebra morphism. -/
 def codRestrict (f : A →A[R] B) (p : Subalgebra R B) (h : ∀ x, f x ∈ p) : A →A[R] p where
   cont     := f.continuous.subtype_mk _
   toAlgHom := (f : A →ₐ[R] B).codRestrict p h
@@ -466,7 +478,7 @@ theorem coe_rangeRestrict (f : A →A[R] B) :
       (f : A →ₐ[R] B).rangeRestrict :=
   rfl
 
-/-- `Subalgebra.val` as a `ContinuousLinearMap`. -/
+/-- `Subalgebra.val` as a `ContinuousAlgHom`. -/
 def _root_.Subalgebra.valA (p : Subalgebra R A) : p →A[R] A where
   cont := continuous_subtype_val
   toAlgHom := p.val
