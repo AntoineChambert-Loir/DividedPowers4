@@ -17,7 +17,8 @@ which satisfies
 for all m : M
 
 We define
-- `DividedPowerAlgebra.exp` : the power series
+- `DividedPowerAlgebra.exp` : the power series `∑ (dp n m) X ^ n
+
 -/
 
 variable (R : Type*) [CommRing R] {A : Type*} [CommRing A] [Algebra R A]
@@ -43,7 +44,7 @@ theorem isExponential_exp' (m : M) : IsExponential (exp' R m) := by
     simp only [coeff_exp', dp_mul, nsmul_eq_mul]
 
 /-- The exponential power series of an element of a module,
-  ExponentialModule of the DividedPowerAlgebra -/
+  in the ExponentialModule of the DividedPowerAlgebra -/
 noncomputable def exp (m : M) : ExponentialModule (DividedPowerAlgebra R M) :=
   ⟨ofMul (exp' R m), isExponential_exp' R m⟩
 
@@ -64,12 +65,13 @@ noncomputable instance :
   IsScalarTower.of_compHom _ _ _
 
 -- TODO : The following could serve as a definition of an exponential structure
--- this is equivalent to the combination of dpow_null, dpow_add and dpow_smul
+-- this is equivalent to the combination of dpow_zero, dpow_add and dpow_smul
 
 /-- The exponential power series of an element of a module,
-  ExponentialModule of the DividedPowerAlgebra,
+  valued in the ExponentialModule of the DividedPowerAlgebra,
   as a LinearMap -/
-noncomputable def exp_LinearMap : M →ₗ[R] ExponentialModule (DividedPowerAlgebra R M) where
+noncomputable def exp_LinearMap :
+    M →ₗ[R] ExponentialModule (DividedPowerAlgebra R M) where
   toFun := exp R
   map_add' x y := by
     apply ExponentialModule.coe_injective
@@ -82,6 +84,14 @@ noncomputable def exp_LinearMap : M →ₗ[R] ExponentialModule (DividedPowerAlg
     rw [← IsScalarTower.algebraMap_smul (DividedPowerAlgebra R M) r (exp R m),
       ExponentialModule.coe_smul, coeff_scale, coeff_exp, ← map_pow,
       IsScalarTower.algebraMap_smul, dp_smul]
+
+variable {S : Type*} [CommRing S] [Algebra R S]
+
+example : (DividedPowerAlgebra R M →ₐ[R] S) ≃ (M →ₗ[R] ExponentialModule S) where
+  toFun := _
+  invFun := _
+  left_inv := _
+  right_inv := _
 
 /- -- Old version
 variable (R : Type _) [CommSemiring R]

@@ -407,27 +407,27 @@ theorem comp_eval₂
   rw [← RingHom.comp_apply, MvPolynomial.comp_eval₂Hom]
   rfl
 
-variable [TopologicalAlgebra R S]
+variable [Algebra R S] [ContinuousSMul R S]
 
 /-- Evaluation of power series at adequate elements, as an `AlgHom` -/
 noncomputable def aeval : MvPowerSeries σ R →ₐ[R] S where
-  toRingHom := MvPowerSeries.eval₂Hom TopologicalAlgebra.continuous_algebraMap ha
+  toRingHom := MvPowerSeries.eval₂Hom (continuous_algebraMap R S) ha
   commutes' := fun r ↦ by
     simp only [RingHom.toMonoidHom_eq_coe, OneHom.toFun_eq_coe, MonoidHom.toOneHom_coe,
       MonoidHom.coe_coe]
     rw [← c_eq_algebraMap, coe_eval₂Hom]
-    exact eval₂_C TopologicalAlgebra.continuous_algebraMap ha r
+    exact eval₂_C (continuous_algebraMap R S) ha r
 
 theorem coe_aeval :
     ⇑(MvPowerSeries.aeval ha) = MvPowerSeries.eval₂ (algebraMap R S) a :=
   rfl
 
 theorem continuous_aeval : Continuous (aeval ha : MvPowerSeries σ R → S) :=
-  continuous_eval₂ TopologicalAlgebra.continuous_algebraMap ha
+  continuous_eval₂ (continuous_algebraMap R S) ha
 
 theorem aeval_coe (p : MvPolynomial σ R) :
     MvPowerSeries.aeval ha (p : MvPowerSeries σ R) = MvPolynomial.aeval a p := by
-  simp only [coe_aeval, eval₂_coe TopologicalAlgebra.continuous_algebraMap ha, aeval_def]
+  simp only [coe_aeval, eval₂_coe (continuous_algebraMap R S) ha, aeval_def]
 
 theorem aeval_unique {ε : MvPowerSeries σ R →ₐ[R] S} (hε : Continuous ε) :
     ε = aeval (EvalDomain.evalDomain_X.map hε) := by
@@ -453,7 +453,7 @@ theorem hasSum_aeval (f : MvPowerSeries σ R) :
     (fun (d : σ →₀ ℕ) ↦ (coeff R d f) • (d.prod fun s e => (a s) ^ e))
     (MvPowerSeries.aeval ha f)
      :=  by
-  have := hasSum_eval₂ TopologicalAlgebra.continuous_algebraMap ha f
+  have := hasSum_eval₂ (continuous_algebraMap R S) ha f
   simp_rw [← smul_eq_mul, algebraMap_smul] at this
   rw [coe_aeval]
   exact this
@@ -465,13 +465,13 @@ theorem aeval_eq_sum (f : MvPowerSeries σ R) :
 
 theorem comp_aeval
     {T : Type*} [CommRing T] [UniformSpace T] [UniformAddGroup T]
-    [LinearTopology T] [T2Space T] [TopologicalRing T] [TopologicalAlgebra R T] [CompleteSpace T]
+    [LinearTopology T] [T2Space T] [TopologicalRing T] [Algebra R T] [ContinuousSMul R T] [CompleteSpace T]
     {ε : S →ₐ[R] T} (hε : Continuous ε) :
     ε.comp (aeval ha) = aeval (ha.map hε)  := by
   apply DFunLike.coe_injective
   simp only [AlgHom.coe_comp, -- AlgHom.toRingHom_eq_coe, RingHom.coe_coe,
     coe_aeval ha]
-  erw [comp_eval₂ TopologicalAlgebra.continuous_algebraMap ha hε]
+  erw [comp_eval₂ (continuous_algebraMap R S) ha hε]
   apply congr_arg₂
   simp only [AlgHom.toRingHom_eq_coe, AlgHom.comp_algebraMap_of_tower]
   simp only [AlgHom.toRingHom_eq_coe, RingHom.coe_coe]
@@ -517,7 +517,7 @@ def EvalDomain.const : MvPowerSeries.EvalDomain (fun (_ : Unit) ↦ a) where
 noncomputable def eval₂Hom : PowerSeries R →+* S :=
   MvPowerSeries.eval₂Hom hφ ha.const
 
-variable [TopologicalAlgebra R S]
+variable [Algebra R S] [ContinuousSMul R S]
 
 noncomputable def aeval : PowerSeries R →ₐ[R] S :=
   MvPowerSeries.aeval ha.const
