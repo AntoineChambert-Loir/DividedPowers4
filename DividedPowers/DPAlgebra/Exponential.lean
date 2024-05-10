@@ -1,5 +1,5 @@
 import DividedPowers.DPAlgebra.Init
-import DividedPowers.ForMathlib.MvPowerSeries.Exponential
+import DividedPowers.ExponentialModule.Basic
 -- import DividedPowers.ForMathlib.MvPowerSeries.Order
 -- import DividedPowers.ForMathlib.MvPowerSeries.Topology
 
@@ -62,6 +62,9 @@ noncomputable instance : Module R (ExponentialModule (DividedPowerAlgebra R M)) 
 noncomputable instance :
     IsScalarTower R (DividedPowerAlgebra R M) (ExponentialModule (DividedPowerAlgebra R M)) :=
   IsScalarTower.of_compHom _ _ _
+
+-- TODO : The following could serve as a definition of an exponential structure
+-- this is equivalent to the combination of dpow_null, dpow_add and dpow_smul
 
 /-- The exponential power series of an element of a module,
   ExponentialModule of the DividedPowerAlgebra,

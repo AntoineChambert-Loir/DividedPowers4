@@ -113,20 +113,8 @@ theorem add {α : Type*} [CommRing α] [TopologicalSpace α] [LinearTopology α]
   use na + nb
   intro m hm
   apply I_subset
-  -- This will be in mathlib, PR #11723
-  rw [← Nat.add_sub_of_le hm, pow_add]
-  apply I.mul_mem_right
-  rw [add_pow]
-  apply Ideal.sum_mem
-  intro c _
-  apply I.mul_mem_right
-  by_cases h : na ≤ c
-  · apply I.mul_mem_right _ (ha c h)
-  · apply I.mul_mem_left _ (hb _ ?_)
-    simp only [not_le] at h
-    rw [add_comm, Nat.add_sub_assoc (le_of_lt h)]
-    apply Nat.le_add_right
-  -- end of stuff that will be in mathlib, PR #11723
+  apply I.add_pow_mem_of_pow_mem_of_le (ha na le_rfl) (hb nb le_rfl)
+  apply le_trans hm (Nat.le_add_right _ _)
 
 theorem zero {α : Type*} [CommRing α] [TopologicalSpace α] :
   IsTopologicallyNilpotent (0 : α) := tendsto_atTop_of_eventually_const (i₀ := 1)
@@ -139,32 +127,25 @@ structure EvalDomain (a : σ → S) : Prop where
   hpow : ∀ s, IsTopologicallyNilpotent (a s)
   tendsto_zero : Filter.Tendsto a Filter.cofinite (nhds 0)
 
-def evalDomain.submodule [LinearTopology S] : Submodule S (σ → S) where
+def EvalDomain_ideal [LinearTopology S] : Ideal (σ → S) where
   carrier := setOf EvalDomain
-  add_mem' {a} {b} ha hb := by
-    simp only [Set.mem_setOf_eq] at ha hb ⊢
-    exact {
-      hpow := fun s ↦ IsTopologicallyNilpotent.add (ha.hpow s) (hb.hpow s)
-      tendsto_zero := by
-        rw [← add_zero 0]
-        apply Filter.Tendsto.add ha.tendsto_zero hb.tendsto_zero }
-  zero_mem' := by
-    simp only [Set.mem_setOf_eq]
-    exact {
-      hpow := fun s ↦ by
-        simp only [Pi.zero_apply]
-        apply tendsto_atTop_of_eventually_const (i₀ := 1)
-        intro i hi
-        rw [zero_pow (Nat.ne_zero_iff_zero_lt.mpr hi)]
-      tendsto_zero := tendsto_const_nhds }
-  smul_mem' c {x} hx := by
-    simp only [Set.mem_setOf_eq] at hx ⊢
-    exact {
-      hpow := fun s ↦ IsTopologicallyNilpotent.mul_left _ (hx.hpow s)
-      tendsto_zero := by
-        rw [← smul_zero c]
-        apply Filter.Tendsto.const_smul hx.tendsto_zero }
-
+  add_mem' {a} {b} ha hb := {
+    hpow := fun s ↦ IsTopologicallyNilpotent.add (ha.hpow s) (hb.hpow s)
+    tendsto_zero := by
+      rw [← add_zero 0]
+      apply Filter.Tendsto.add ha.tendsto_zero hb.tendsto_zero }
+  zero_mem' := {
+    hpow := fun s ↦ by
+      simp only [Pi.zero_apply]
+      apply tendsto_atTop_of_eventually_const (i₀ := 1)
+      intro i hi
+      rw [zero_pow (Nat.ne_zero_iff_zero_lt.mpr hi)]
+    tendsto_zero := tendsto_const_nhds }
+  smul_mem' c {x} hx := {
+    hpow := fun s ↦ by
+      simp only [IsTopologicallyNilpotent, Pi.smul_apply', smul_eq_mul, mul_pow]
+      exact LinearTopology.tendsto_zero_mul _ _ _ (hx.hpow s)
+    tendsto_zero := LinearTopology.tendsto_zero_mul _ _ _ hx.tendsto_zero }
 
 /-- Bourbaki, Algèbre, chap. 4, §4, n°3, Prop. 4 (i) (a & b) -/
 theorem EvalDomain.map {a : σ → R} (ha : EvalDomain a) :
@@ -196,7 +177,6 @@ theorem Continuous.tendsto_apply_variables_zero_of_cofinite
   rw [← ε.map_zero]
   exact Filter.Tendsto.comp hε.continuousAt variables_tendsto_zero
 -/
-
 
 theorem Continuous.on_scalars
     {ε : MvPowerSeries σ R →+* S} (hε : Continuous ε) :

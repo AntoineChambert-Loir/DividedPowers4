@@ -1,7 +1,7 @@
 /- Copyright  ACL and MIdFF, 2024 -/
 
 import DividedPowers.Basic
-import DividedPowers.ForMathlib.MvPowerSeries.Exponential
+import DividedPowers.ExponentialModule.Basic
 
 /-! # Divided powers and exponential power series -/
 

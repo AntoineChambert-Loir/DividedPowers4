@@ -325,6 +325,24 @@ theorem mem_nhds_zero_iff [TopologicalSpace α] [hL : LinearTopology α]
   rw [TopologicalSpace.ext_iff_nhds.mp hL.isTopology,
     hL.toIdealBasis.mem_nhds_zero_iff]
 
+theorem tendsto_zero_mul [TopologicalSpace α] [LinearTopology α]
+    {ι : Type*} {f : Filter ι} (a b : ι → α)
+    (hb : Filter.Tendsto b f (nhds 0)) :
+    Filter.Tendsto (a * b) f (nhds 0) := by
+  intro v hv
+  rw [LinearTopology.mem_nhds_zero_iff] at hv
+  obtain ⟨I, _, I_mem, I_le⟩ := hv
+  simp only [Set.le_eq_subset] at I_le
+  apply Filter.sets_of_superset _ _ I_le
+  simp only [Filter.mem_sets, Filter.mem_map]
+  rw [Filter.tendsto_def] at hb
+  specialize hb _ I_mem
+  apply Filter.sets_of_superset _ hb
+  intro x
+  simp only [Set.mem_preimage, Pi.mul_apply, SetLike.mem_coe]
+  intro hx
+  apply Ideal.mul_mem_left _ _ hx
+
 /-
 class IsLinearTopology (α : Type u) [CommRing α] [τ : TopologicalSpace α]
   (ι : Type*) [Nonempty ι]  : Prop where
