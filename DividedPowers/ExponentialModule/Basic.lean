@@ -53,7 +53,7 @@ open MvPowerSeries
 
 variable {A : Type*} [CommRing A]
 variable {R : Type*} [CommRing R] [Algebra A R]
-variable {S : Type*} [CommRing S] [Algebra A S] [Algebra R S] [IsScalarTower A R S]
+variable {S : Type*} [CommRing S] [Algebra A S]
 
 /-- A power series f : R⟦X⟧ is exponential if f(X + Y) = f(X) f(Y) and f(0) = 1 -/
 structure IsExponential (f : R⟦X⟧) : Prop where
@@ -362,8 +362,8 @@ theorem isExponential_neg_mul_self_eq_one {f : R⟦X⟧} (hf : IsExponential f) 
     (scale (-1) f) * f = 1 := by
   rw [mul_comm, isExponential_self_mul_neg_eq_one hf]
 
-theorem isExponential_map {f : R⟦X⟧} (hf : IsExponential f) :
-    IsExponential (PowerSeries.map (algebraMap R S) f) := by
+theorem isExponential_map (φ : R →+* S) {f : R⟦X⟧} (hf : IsExponential f) :
+    IsExponential (PowerSeries.map φ f) := by
   rw [isExponential_iff]
   constructor
   · rw [← coeff_zero_eq_constantCoeff_apply, coeff_map,
@@ -489,6 +489,17 @@ lemma coe_smul (r : A) (f : ExponentialModule R) :
     ((r • f) : ExponentialModule R) = scale r (f : R⟦X⟧) :=
   rfl
 
+instance inst_exponentialModule_tower
+    (R : Type*) [CommRing R] (S : Type*) [CommRing S] [Algebra R S] :
+    IsScalarTower R S (ExponentialModule S) where
+  smul_assoc r s f := by
+    apply coe_injective
+    simp only [coe_smul]
+    rw [← algebraMap_smul S, smul_eq_mul, ← scale_scale_apply]
+    apply congr_fun
+    ext f n
+    simp only [coeff_scale, ← map_pow, algebraMap_smul]
+
 lemma coe_ofMul (f : R⟦X⟧) (hf : IsExponential f) :
     ↑(⟨ofMul f, hf⟩ : ExponentialModule R) = f := rfl
 
@@ -507,12 +518,13 @@ lemma add_mul_coe' (f : ExponentialModule R) (p q : ℕ) :
     (p + q).choose p * (coeff R (p + q) (f : R⟦X⟧)) = coeff R p f * coeff R q f :=
   (isExponential_add_mul_iff (R := R) f).mp (add_mul_coe f) p q
 
-variable {S : Type*} [CommRing S] [Algebra A S] [Algebra R S] [IsScalarTower A R S]
+variable {S : Type*} [CommRing S] [Algebra A S] (φ : R →ₐ[A] S)
 
 def linearMap : ExponentialModule R →ₗ[A] ExponentialModule S where
   toFun := fun f ↦
-    ⟨ofMul (PowerSeries.map (algebraMap R S) (f : R⟦X⟧)),
-      isExponential_map f.prop⟩
+    ⟨ofMul (PowerSeries.map φ (f : R⟦X⟧)), by
+      simp [memExponentialModule_iff]
+      exact isExponential_map (φ  : R →+* S) f.prop⟩
   map_add' := fun f g ↦ by
     apply coe_injective
     simp only [coe_add, map_mul, ofMul_mul]
@@ -521,5 +533,8 @@ def linearMap : ExponentialModule R →ₗ[A] ExponentialModule S where
     apply coe_injective
     simp only [coe_smul, RingHom.id_apply, coe_ofMul]
     rw [scale_map_eq_map_scale]
+
+theorem coeff_linearMap (n : ℕ) (f : ExponentialModule R) :
+    coeff S n (linearMap φ f) = φ (coeff R n f) := rfl
 
 end ExponentialModule

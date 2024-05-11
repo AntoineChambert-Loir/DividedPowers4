@@ -26,7 +26,7 @@ variable (R : Type*) [CommRing R] {A : Type*} [CommRing A] [Algebra R A]
 
 namespace DividedPowerAlgebra
 
-open PowerSeries Additive
+open PowerSeries Additive ExponentialModule
 
 /-- The exponential power series of an element of a module, in the DividedPowerAlgebra -/
 noncomputable def exp' (m : M) : PowerSeries (DividedPowerAlgebra R M) :=
@@ -53,20 +53,10 @@ theorem coe_exp (m : M) : ↑(exp R m) = exp' R m := rfl
 theorem coeff_exp (m : M) (n : ℕ) : coeff _ n (exp R m) = dp R n m := by
   simp only [coe_exp, coeff_exp']
 
-noncomputable instance : Algebra R (DividedPowerAlgebra R M) := inferInstance
-
-noncomputable instance : Module R (ExponentialModule R) := inferInstance
-
-noncomputable instance : Module R (ExponentialModule (DividedPowerAlgebra R M)) :=
-  Module.compHom _ (algebraMap R (DividedPowerAlgebra R M))
-
-noncomputable instance :
-    IsScalarTower R (DividedPowerAlgebra R M) (ExponentialModule (DividedPowerAlgebra R M)) :=
-  IsScalarTower.of_compHom _ _ _
-
 -- TODO : The following could serve as a definition of an exponential structure
 -- this is equivalent to the combination of dpow_zero, dpow_add and dpow_smul
 
+variable (M) in
 /-- The exponential power series of an element of a module,
   valued in the ExponentialModule of the DividedPowerAlgebra,
   as a LinearMap -/
@@ -74,70 +64,73 @@ noncomputable def exp_LinearMap :
     M →ₗ[R] ExponentialModule (DividedPowerAlgebra R M) where
   toFun := exp R
   map_add' x y := by
-    apply ExponentialModule.coe_injective
+    apply coe_injective
     ext n
     simp only [ExponentialModule.coe_add, coeff_exp, coeff_mul, dp_add]
   map_smul' r m := by
-    apply ExponentialModule.coe_injective
+    apply coe_injective
     ext n
     simp only [coeff_exp, RingHom.id_apply]
-    rw [← IsScalarTower.algebraMap_smul (DividedPowerAlgebra R M) r (exp R m),
-      ExponentialModule.coe_smul, coeff_scale, coeff_exp, ← map_pow,
+    rw [← algebraMap_smul (DividedPowerAlgebra R M) r (exp R m),
+      coe_smul, coeff_scale, coeff_exp, ← map_pow,
       IsScalarTower.algebraMap_smul, dp_smul]
+
+theorem coe_exp_LinearMap :
+    ⇑(exp_LinearMap R M) = exp R := rfl
+
+theorem coeff_exp_LinearMap (n : ℕ) (m : M) :
+    coeff (DividedPowerAlgebra R M) n (exp_LinearMap R M m) = dp R n m := by
+  rw [coe_exp_LinearMap, coeff_exp]
 
 variable {S : Type*} [CommRing S] [Algebra R S]
 
-example : (DividedPowerAlgebra R M →ₐ[R] S) ≃ (M →ₗ[R] ExponentialModule S) where
-  toFun := _
-  invFun := _
-  left_inv := _
-  right_inv := _
+variable (M S) in
+/-- The equivalence between
+  algebra morphisms `DividedPowerAlgebra R M →ₐ[R] S` and
+  linear maps `M →ₗ[R] ExponentialModule S`
 
-/- -- Old version
-variable (R : Type _) [CommSemiring R]
+  [Roby1963, theorem III.1] -/
+def dividedPowerAlgebra_exponentialModule_equiv :
+    (DividedPowerAlgebra R M →ₐ[R] S) ≃ (M →ₗ[R] ExponentialModule S) where
+  toFun α := (linearMap α).comp (exp_LinearMap R M)
+  invFun β := by
+    apply DividedPowerAlgebra.lift' (fun (n, m) ↦ coeff S n (β m))
+    · intro m
+      simp only [coeff_zero_eq_constantCoeff]
+      exact constantCoeff_coe (β m)
+    · intro n r m
+      simp only [LinearMapClass.map_smul, coe_smul, coeff_scale]
+    · intro n p m
+      simp only [nsmul_eq_mul]
+      rw [((isExponential_iff _).mp (isExponential_coe _)).2]
+    · intro n x y
+      simp only [map_add, coe_add, coeff_mul]
+  left_inv := by
+    intro α
+    simp only [LinearMap.coe_comp, Function.comp_apply]
+    apply ext
+    intro n m
+    simp only [lift'AlgHom_apply_dp]
+    rw [coeff_linearMap]
+    simp only [coeff_exp_LinearMap]
+  right_inv := by
+    intro β
+    ext m n
+    simp only [LinearMap.coe_comp, Function.comp_apply]
+    rw [coeff_linearMap]
+    rw [coeff_exp_LinearMap]
+    simp only [lift'AlgHom_apply_dp]
 
-def IsExponential (f : ℕ → R) : Prop :=
-  f 0 = 1 ∧ ∀ p q, f (p + q) = Nat.choose (p + q) q * f p * f q
-#align is_exponential IsExponential
+variable {R} in
+theorem dividedPowerAlgebra_exponentialModule_equiv_apply
+    (α : DividedPowerAlgebra R M →ₐ[R] S) :
+    dividedPowerAlgebra_exponentialModule_equiv R M S α = (linearMap α).comp (exp_LinearMap R M) :=
+  rfl
 
-set_option linter.uppercaseLean3 false
-structure Exp (R : Type _) [Semiring R] where
-  toFun : ℕ → R
-  map_zero : toFun 0 = 1
-  map_add : ∀ p q, toFun (p + q) = Nat.choose (p + q) q * toFun p * toFun q
-#align Exp Exp
-
-namespace Exp
-
-instance funLike : DFunLike (Exp R) ℕ (fun _ => R)
-    where
-  coe := Exp.toFun
-  coe_injective' f g h := by cases f ; cases g ; congr
-#align Exp.fun_like Exp.funLike
-
-@[simp] theorem toFun_eq_coe {f : Exp R} : f.toFun = (f : ℕ → R) := rfl
-#align Exp.to_fun_eq_coe Exp.toFun_eq_coe
-
-@[ext] theorem ext {f g : Exp R} (h : ∀ n, f n = g n) : f = g := DFunLike.ext f g h
-#align Exp.ext Exp.ext
-
-protected def copy (f : Exp R) (f' : ℕ → R) (h : f' = f) : Exp R where
-  toFun    := f'
-  map_zero := h.symm ▸ f.map_zero
-  map_add  := h.symm ▸ f.map_add
-#align Exp.copy Exp.copy
-
-def add : Exp R → Exp R → Exp R := fun f g =>
-  { toFun := fun p => (Finset.antidiagonal p).sum fun rs => f rs.1 * g rs.2
-    map_zero := by
-      simp only [Finset.Nat.antidiagonal_zero, Finset.sum_singleton, ← toFun_eq_coe, map_zero,
-        mul_one]
-    map_add := by sorry }
-#align Exp.add Exp.add
-
-/- example : add_comm_group (Exp R) := {
-
-} -/
---#print is_exponential
-end Exp
--/
+variable {R} in
+theorem dividedPowerAlgebra_exponentialModule_equiv_symm_apply
+    (β : M →ₗ[R] ExponentialModule S) (n : ℕ) (m : M):
+    (dividedPowerAlgebra_exponentialModule_equiv R M S).symm β (dp R n m)
+      = coeff S n (β m) := by
+  unfold dividedPowerAlgebra_exponentialModule_equiv
+  simp only [Equiv.coe_fn_symm_mk, lift'AlgHom_apply_dp]

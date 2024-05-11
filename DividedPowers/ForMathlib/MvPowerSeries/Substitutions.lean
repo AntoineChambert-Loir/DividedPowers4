@@ -870,6 +870,12 @@ theorem coeff_scale (a : A) (f : R⟦X⟧) (d : ℕ) :
   convert MvPowerSeries.coeff_scale (Function.const Unit a) f (Finsupp.single default d)
   simp only [PUnit.default_eq_unit, Function.const_apply, pow_zero, Finsupp.prod_single_index]
 
+theorem scale_algebraMap (a : A) :
+    scale (algebraMap A R a) = scale (R := R) a := by
+  ext f n
+  simp only [coeff_scale]
+  rw [← algebraMap_smul (R := A) R, map_pow]
+
 theorem scale_one : scale (1 : A) = @id (R⟦X⟧) :=
   MvPowerSeries.scale_one
 
@@ -912,14 +918,18 @@ lemma subst_linear_subst_scalar_comm (a : A)
   rw [MvPowerSeries.scale_linear_eq_smul _ _ hp_lin]
   rfl
 
-theorem scale_map_eq_map_scale (a : A) (f : R⟦X⟧) :
-    scale a (PowerSeries.map (algebraMap R S) f)
-    = PowerSeries.map (algebraMap R S) (scale a f) := by
-  simp only [map_algebraMap_eq_subst_X, scale_eq_subst]
-  rw [subst_comp_subst_apply substDomain_X (substDomain_smul_X _)]
-  rw [subst_comp_subst_apply (substDomain_smul_X _) substDomain_X]
-  rw [subst_smul substDomain_X, subst_X (substDomain_smul_X _),
-    subst_X substDomain_X]
+theorem scale_map_eq_map_scale' (φ : R →+* S) (a : A) (f : R⟦X⟧) :
+    scale (φ (algebraMap A R a)) (PowerSeries.map φ f)
+    = PowerSeries.map (φ : R →+* S) (scale a f) := by
+  ext n
+  simp only [coeff_scale, coeff_map,
+    algebra_compatible_smul S (a ^ n), algebra_compatible_smul R (a ^ n),
+    smul_eq_mul, smul_eq_mul, map_mul, map_pow]
+
+theorem scale_map_eq_map_scale (φ : R →ₐ[A] S) (a : A) (f : R⟦X⟧) :
+    scale a (PowerSeries.map φ f)
+    = PowerSeries.map (φ : R →+* S) (scale a f) := by
+  rw [← scale_map_eq_map_scale', ← scale_algebraMap, RingHom.coe_coe, AlgHom.commutes]
 
 end scale
 
