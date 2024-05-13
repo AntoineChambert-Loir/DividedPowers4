@@ -17,7 +17,7 @@ for the divided power algebra:
 
 * `dpScalarExtensionEquiv :
   S ⊗[R] DividedPowerAlgebra R M ≃ₐ[S] DividedPowerAlgebra S (S ⊗[R] M)`
-
+(Theorem III.3 of [Roby1963])
 * `dpScalarExtension_apply` and `dpScalarExtensionInv_apply` compute
 its action on basic elements in both directions.
 
@@ -93,7 +93,9 @@ noncomputable def _root_.TensorProduct.includeRight {R S N : Type _} [CommSemiri
   map_smul' := fun r x ↦ by
     simp only [TensorProduct.tmul_smul, TensorProduct.smul_tmul', RingHom.id_apply]
 
-/-- A base change morphism for the divided power algebra -/
+--TODO : prove uniqueness
+/-- A base change morphism for the divided power algebra
+[Roby1963, Proposition III.4] -/
 noncomputable def dpScalarExtension'
     (R : Type u) [CommSemiring R]
     (S : Type _) [CommSemiring S] [Algebra R S]
@@ -151,6 +153,8 @@ def dpScalarExtensionInv  :
     DividedPowerAlgebra S (S ⊗[R] M) →ₐ[S] S ⊗[R] DividedPowerAlgebra R M :=
   (dividedPowerAlgebra_exponentialModule_equiv S (S ⊗[R] M) (S ⊗[R] DividedPowerAlgebra R M)).symm (dpScalarExtensionExp R S M)
 
+-- TODO : add uniqueness of `dpScalarExtensionInv` satisfying this
+/-- Roby1963, theorem III.2 -/
 theorem dpScalarExtensionInv_apply (n : ℕ) (s : S) (m : M) :
     dpScalarExtensionInv R S M (dp S n (s ⊗ₜ[R] m)) = (s ^ n) ⊗ₜ[R] (dp R n m) := by
   simp [dpScalarExtensionInv]
@@ -170,7 +174,7 @@ noncomputable example (R : Type _) [CommSemiring R]
 
 /-- The base change isomorphism for the divided power algebra
 
-[Roby1963, theorem III.2] -/
+[Roby1963, theorem III.3] -/
 noncomputable
 def dpScalarExtensionEquiv :
   S ⊗[R] DividedPowerAlgebra R M ≃ₐ[S] DividedPowerAlgebra S (S ⊗[R] M) :=
