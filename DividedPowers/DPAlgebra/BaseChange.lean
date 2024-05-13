@@ -167,6 +167,8 @@ theorem dpScalarExtensionInv_apply (n : ℕ) (s : S) (m : M) :
   simp only [coeff_exp_LinearMap]
   rw [TensorProduct.smul_tmul', smul_eq_mul, mul_one]
 
+
+
 noncomputable example (R : Type _) [CommSemiring R]
     (A : Type _) [CommSemiring A] [Algebra R A]
     (S : Type _) [CommSemiring S] [Algebra R S] :
