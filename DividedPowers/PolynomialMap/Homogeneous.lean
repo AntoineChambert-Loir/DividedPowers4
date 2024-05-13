@@ -665,6 +665,11 @@ noncomputable def component (p : ℕ) (f : PolynomialMap R M N) :
     ext s n
     simp [baseChange_monomial]
 
+theorem component_toFun (p : ℕ) (f : PolynomialMap R M N) (S : Type*) [CommRing S] [Algebra R S] :
+    (f.component p).toFun S = fun m ↦
+      Polynomial.rTensor R N S (f.toFun S[X] (((monomial 1).restrictScalars R).rTensor M m)) p :=
+  sorry
+
 /-
 -- Faire une preuve directe  qui court-circuite `lcoeff_comp_baseChange_eq`?
 /-- The homogeneous components of a `PolynomialMap` -/
@@ -774,7 +779,10 @@ theorem support_component (f : M →ₚ[R] N) {S : Type*} [CommRing S] [Algebra 
     (m : S ⊗[R] M) :
     Function.support (fun i => ((fun p => component p f) i).toFun S m)
     = (rTensor R N S ((f.toFun S[X] ((rTensor M ((monomial 1).restrictScalars R)) m)))).support := by
-  sorry
+  ext i
+  simp only [Function.mem_support, ne_eq, Finset.mem_coe, Finsupp.mem_support_iff]
+  rw [not_iff_not]
+  simp only [component_toFun]
 
 theorem LocFinsupp_component (f : PolynomialMap R M N) :
     LocFinsupp (fun p ↦ f.component p) := fun S _ _ m ↦ by
