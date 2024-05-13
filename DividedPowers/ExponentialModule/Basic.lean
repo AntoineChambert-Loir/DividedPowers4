@@ -372,7 +372,11 @@ theorem isExponential_map (φ : R →+* S) {f : R⟦X⟧} (hf : IsExponential f)
     simp only [coeff_map, ← map_mul, ← ((isExponential_iff f).mp hf).2 p q]
     simp only [map_mul, map_natCast]
 
-open Additive
+end PowerSeries
+
+variable {A R : Type*} [CommRing A] [CommRing R] [Algebra A R]
+
+open Additive PowerSeries
 
 noncomputable instance : SMul A (Additive R⟦X⟧) where
   smul r f := ofMul.toFun (scale r (toMul f))
@@ -419,7 +423,6 @@ def memExponentialModule_iff' (f : Additive R⟦X⟧) :
     f ∈ ExponentialModule R ↔ IsExponential (toMul f) := by
   simp only [ExponentialModule, AddSubmonoid.mem_mk, AddSubsemigroup.mem_mk, Set.mem_setOf_eq]
 
-end PowerSeries
 
 namespace ExponentialModule
 
@@ -489,7 +492,7 @@ lemma coe_smul (r : A) (f : ExponentialModule R) :
     ((r • f) : ExponentialModule R) = scale r (f : R⟦X⟧) :=
   rfl
 
-instance inst_exponentialModule_tower
+/- instance inst_exponentialModule_tower
     (R : Type*) [CommRing R] (S : Type*) [CommRing S] [Algebra R S] :
     IsScalarTower R S (ExponentialModule S) where
   smul_assoc r s f := by
@@ -498,7 +501,21 @@ instance inst_exponentialModule_tower
     rw [← algebraMap_smul S, smul_eq_mul, ← scale_scale_apply]
     apply congr_fun
     ext f n
+    simp only [coeff_scale, ← map_pow, algebraMap_smul] -/
+
+instance inst_exponentialModule_tower
+    (R : Type*) [CommRing R] (S : Type*) [CommRing S] [Algebra R S]
+    (A : Type*) [CommRing A] [Algebra R A] [Algebra S A] [IsScalarTower R S A] :
+    IsScalarTower R S (ExponentialModule A) where
+  smul_assoc r s f := by
+    apply coe_injective
+    simp only [coe_smul]
+    rw [← algebraMap_smul S, smul_eq_mul, ← scale_scale_apply]
+    apply congr_fun
+    ext f n
     simp only [coeff_scale, ← map_pow, algebraMap_smul]
+
+
 
 lemma coe_ofMul (f : R⟦X⟧) (hf : IsExponential f) :
     ↑(⟨ofMul f, hf⟩ : ExponentialModule R) = f := rfl

@@ -1,4 +1,5 @@
 import DividedPowers.DPAlgebra.Init
+import DividedPowers.DPAlgebra.Exponential
 import DividedPowers.DPAlgebra.Misc
 import Mathlib.Algebra.Algebra.Operations
 import Mathlib.RingTheory.MvPolynomial.Basic
@@ -9,6 +10,29 @@ import Mathlib.RingTheory.TensorProduct.Basic
 universe u
 
 open scoped TensorProduct
+
+section baseChange
+
+variable (R : Type*) [CommRing R]
+  (S : Type*) [CommRing S] [Algebra R S]
+  (M : Type*) [AddCommMonoid M] [Module R M]
+  (N : Type*) [AddCommMonoid N] [Module R N] [Module S N] [IsScalarTower R S N]
+
+noncomputable def LinearMap.baseChangeEquiv : (S ⊗[R] M →ₗ[S] N) ≃ₗ[S] (M →ₗ[R] N) where
+  toFun g := LinearMap.comp (g.restrictScalars R) ({
+    toFun := fun m ↦ 1 ⊗ₜ[R] m
+    map_add' := fun x y ↦ by simp only [TensorProduct.tmul_add]
+    map_smul' := fun r x ↦ by
+      simp only [TensorProduct.tmul_smul, RingHom.id_apply] } : M →ₗ[R] S ⊗[R] M)
+  invFun f := TensorProduct.AlgebraTensorModule.lift ((LinearMap.lsmul S (M →ₗ[R] N)).flip f)
+  left_inv g := by ext m; simp
+  right_inv f := by ext m; simp
+  map_add' _ _ := by ext m; simp
+  map_smul' s g := by ext m; simp
+
+end baseChange
+
+
 
 namespace DividedPowerAlgebra
 
@@ -25,6 +49,16 @@ noncomputable def AlgHom.baseChange
         AlgHom.toFun_eq_coe, Algebra.TensorProduct.productMap_apply_tmul,
         IsScalarTower.coe_toAlgHom', map_one, _root_.mul_one] }
 #align alg_hom.base_change DividedPowerAlgebra.AlgHom.baseChange
+
+theorem AlgHom.baseChange_tmul
+    {R A B C : Type _} [CommSemiring R] [CommSemiring A] [Algebra R A]
+    [CommSemiring B] [Algebra R B]
+    [CommSemiring C] [Algebra R C] [Algebra A C] [IsScalarTower R A C]
+    (φ : B →ₐ[R] C) (a : A) (b : B) :
+    AlgHom.baseChange φ (a ⊗ₜ[R] b) = a • (φ b) := by
+  simp only [baseChange, AlgHom.toRingHom_eq_coe, AlgHom.coe_mk,
+    RingHom.coe_coe, productMap_apply_tmul, IsScalarTower.coe_toAlgHom']
+  rw [← smul_eq_mul, algebraMap_smul]
 
 noncomputable def _root_.TensorProduct.includeRight {R S N : Type _} [CommSemiring R]
     [CommSemiring S] [Algebra R S] [AddCommMonoid N] [Module R N] :
@@ -48,11 +82,28 @@ noncomputable def dpScalarExtension'
   · intro n x y; dsimp only; rw [dp_add]
 #align divided_power_algebra.dp_scalar_extension' DividedPowerAlgebra.dpScalarExtension'
 
+example
+    {R A B C : Type _} [CommSemiring R] [CommSemiring A] [Algebra R A]
+    [CommSemiring B] [Algebra R B]
+    [CommSemiring C] [Algebra R C] [Algebra A C] [IsScalarTower R A C] (φ : B →ₐ[R] C)
+    (f g : A ⊗[R] B →ₐ[A] C)
+    (h : (f.restrictScalars R).comp (includeRight) = (g.restrictScalars R).comp (includeRight)) :
+    f = g := by
+  ext b
+  rw [DFunLike.ext_iff] at h
+  specialize h b
+  simpa using h
+
+
+section dpScalarExtension
+
+variable (A : Type*) [CommSemiring A]
+    (R : Type*) [CommSemiring R] [Algebra A R]
+    (M : Type*) [AddCommMonoid M] [Module A M]
+
 noncomputable
-def dpScalarExtension (A : Type _) [CommSemiring A] (R : Type _) [CommSemiring R]
-    [Algebra A R] (M : Type _) [AddCommMonoid M] [Module A M] :
-    R ⊗[A] DividedPowerAlgebra A M →ₐ[R] DividedPowerAlgebra R (R ⊗[A] M) :=
-  by
+def dpScalarExtension :
+    R ⊗[A] DividedPowerAlgebra A M →ₐ[R] DividedPowerAlgebra R (R ⊗[A] M) := by
   apply AlgHom.baseChange
   apply lift'
     (fun nm => dp R nm.1 (1 ⊗ₜ[A] nm.2) : ℕ × M → DividedPowerAlgebra R (R ⊗[A] M))
@@ -64,44 +115,80 @@ def dpScalarExtension (A : Type _) [CommSemiring A] (R : Type _) [CommSemiring R
   · intro n x y; dsimp only; simp only [TensorProduct.tmul_add]; rw [dp_add]
 #align divided_power_algebra.dp_scalar_extension DividedPowerAlgebra.dpScalarExtension
 
---noncomputable
-def dpScalarExtensionInv (R : Type _) [CommSemiring R]
-    (S : Type _) [CommSemiring S] [Algebra R S]
-    (M : Type _) [AddCommMonoid M] [Module R M] :
-  DividedPowerAlgebra S (S ⊗[R] M) →ₐ[S] S ⊗[R] DividedPowerAlgebra R M := by
-  -- TODO: Roby's proof uses the exponential module
-  sorry
+theorem dpScalarExtension_apply (r : R) (n : ℕ) (m : M) :
+    dpScalarExtension A R M ((r ^ n) ⊗ₜ[A] (dp A n m)) = dp R n (r ⊗ₜ[A] m) := by
+  simp [dpScalarExtension]
+  simp [AlgHom.baseChange_tmul, lift'AlgHom_apply_dp]
+  rw [← dp_smul, TensorProduct.smul_tmul', smul_eq_mul, mul_one]
 
+end dpScalarExtension
+variable
+    (R : Type*) [CommRing R]
+    (S : Type*) [CommRing S] [Algebra R S]
+    (M : Type*) [AddCommMonoid M] [Module R M]
 
-#align divided_power_algebra.dp_scalar_extension_inv DividedPowerAlgebra.dpScalarExtensionInv
+noncomputable def dpScalarExtensionExp :
+    S ⊗[R] M →ₗ[S] ExponentialModule (S ⊗[R] DividedPowerAlgebra R M) :=
+  (LinearMap.baseChangeEquiv R S M (ExponentialModule (S ⊗[R] DividedPowerAlgebra R M))).symm
+    ((ExponentialModule.linearMap (Algebra.TensorProduct.includeRight)).comp (exp_LinearMap R M))
 
-noncomputable instance (R : Type _) [CommSemiring R]
+noncomputable
+def dpScalarExtensionInv  :
+    DividedPowerAlgebra S (S ⊗[R] M) →ₐ[S] S ⊗[R] DividedPowerAlgebra R M :=
+  (dividedPowerAlgebra_exponentialModule_equiv S (S ⊗[R] M) (S ⊗[R] DividedPowerAlgebra R M)).symm (dpScalarExtensionExp R S M)
+
+theorem dpScalarExtensionInv_apply (n : ℕ) (s : S) (m : M) :
+    dpScalarExtensionInv R S M (dp S n (s ⊗ₜ[R] m)) = (s ^ n) ⊗ₜ[R] (dp R n m) := by
+  simp [dpScalarExtensionInv]
+  rw [dividedPowerAlgebra_exponentialModule_equiv_symm_apply]
+  simp [dpScalarExtensionExp, LinearMap.baseChangeEquiv]
+  simp only [ExponentialModule.coe_smul]
+  simp only [PowerSeries.coeff_scale]
+  simp only [ExponentialModule.coeff_linearMap]
+  simp [includeRight]
+  simp only [coeff_exp_LinearMap]
+  rw [TensorProduct.smul_tmul', smul_eq_mul, mul_one]
+
+noncomputable example (R : Type _) [CommSemiring R]
     (A : Type _) [CommSemiring A] [Algebra R A]
     (S : Type _) [CommSemiring S] [Algebra R S] :
   Algebra S (S ⊗[R] A) := inferInstance
 
-/- let f : ℕ × M → R ⊗[A] (divided_power_algebra A M) :=
-  λ nm, algebra.tensor_product.include_right (dp A nm.1 nm.2),
-  apply lift_aux R M (λ nm, algebra.tensor_product.include_right (dp A nm.1 nm.2)),
-  { intro m, dsimp only, rw dp_zero, rw map_one, },
-  { intros n r m, dsimp only,
-  -- does not seem obvious !
-    sorry, },
-  { intros n p m, dsimp only, rw [← map_mul, ← map_nsmul,dp_mul], },
-  { intros n x y, dsimp only, simp_rw [← map_mul, ← map_sum], rw dp_add, } -/
--- TODO ! But in Roby, this follows from the exponential power series interpretation
+/-- The base change isomorphism for the divided power algebra
+
+[Roby1963, theorem III.2] -/
 noncomputable
-def dpScalarExtensionEquiv (R : Type _) [CommSemiring R]
-    (S : Type _) [CommSemiring S] [Algebra R S]
-    (M : Type _) [AddCommMonoid M] [Module R M] :
+def dpScalarExtensionEquiv :
   S ⊗[R] DividedPowerAlgebra R M ≃ₐ[S] DividedPowerAlgebra S (S ⊗[R] M) :=
-  AlgEquiv.ofAlgHom
-    (dpScalarExtension R S M)
-    (dpScalarExtensionInv R S M)
-    (sorry)
-    (sorry)
-
-
-#align divided_power_algebra.dp_scalar_extension_equiv DividedPowerAlgebra.dpScalarExtensionEquiv
+  AlgEquiv.ofAlgHom (dpScalarExtension R S M) (dpScalarExtensionInv R S M)
+    (by
+      apply DividedPowerAlgebra.ext
+      rintro n sm
+      simp only [AlgHom.coe_comp, Function.comp_apply, AlgHom.coe_id, id_eq]
+      revert n
+      induction sm using TensorProduct.induction_on with
+      | zero =>
+        intro n
+        rw [dp_null]
+        split_ifs
+        · simp only [map_one]
+        · simp only [map_zero]
+      | tmul s m =>
+        intro n
+        rw [dpScalarExtensionInv_apply, dpScalarExtension_apply]
+      | add x y hx hy =>
+        intro n
+        rw [dp_add, map_sum, map_sum]
+        apply Finset.sum_congr rfl
+        rintro ⟨k, l⟩ hkl
+        rw [map_mul, map_mul, hx, hy])
+    (by
+      apply Algebra.TensorProduct.ext
+      · ext
+      · apply DividedPowerAlgebra.ext
+        intro n m
+        simp only [AlgHom.coe_comp, AlgHom.coe_restrictScalars',
+          Function.comp_apply, includeRight_apply, AlgHom.coe_id, id_eq]
+        rw [← one_pow n, dpScalarExtension_apply, dpScalarExtensionInv_apply])
 
 end DividedPowerAlgebra

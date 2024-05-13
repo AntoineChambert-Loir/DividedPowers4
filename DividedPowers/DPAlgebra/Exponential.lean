@@ -22,7 +22,7 @@ We define
 -/
 
 variable (R : Type*) [CommRing R] {A : Type*} [CommRing A] [Algebra R A]
-  {M : Type*} [AddCommGroup M] [Module R M] [Module A M] [IsScalarTower R A M]
+  {M : Type*} [AddCommMonoid M] [Module R M] [Module A M] [IsScalarTower R A M]
 
 namespace DividedPowerAlgebra
 
@@ -90,6 +90,7 @@ variable (M S) in
   linear maps `M →ₗ[R] ExponentialModule S`
 
   [Roby1963, theorem III.1] -/
+noncomputable
 def dividedPowerAlgebra_exponentialModule_equiv :
     (DividedPowerAlgebra R M →ₐ[R] S) ≃ (M →ₗ[R] ExponentialModule S) where
   toFun α := (linearMap α).comp (exp_LinearMap R M)
