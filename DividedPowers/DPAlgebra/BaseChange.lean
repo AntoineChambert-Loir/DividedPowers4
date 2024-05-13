@@ -6,7 +6,30 @@ import Mathlib.RingTheory.MvPolynomial.Basic
 import Mathlib.RingTheory.TensorProduct.Basic
 
 -- import DividedPowers.ForMathlib.RingTheory.TensorProduct
+/-! # Base change properties of the divided power algebra
 
+
+The file starts with complements, to dispatch elsewhere,
+regarding base change of algebras/modules.
+
+The main result is the construction of a base change isomorphism
+for the divided power algebra:
+
+* `dpScalarExtensionEquiv :
+  S ⊗[R] DividedPowerAlgebra R M ≃ₐ[S] DividedPowerAlgebra S (S ⊗[R] M)`
+
+* `dpScalarExtension_apply` and `dpScalarExtensionInv_apply` compute
+its action on basic elements in both directions.
+
+## Note on the proof
+
+The existence of the base change morphism  is relatively straightforward,
+but the existence of the morphism in the other direction is nontrivial.
+As in [Roby1963], the proof relies on the `ExponentialModule` that allows
+to linearize the divided power algebra, and then we apply the standard
+base change adjunction for linear maps.
+
+-/
 universe u
 
 open scoped TensorProduct
@@ -18,6 +41,7 @@ variable (R : Type*) [CommRing R]
   (M : Type*) [AddCommMonoid M] [Module R M]
   (N : Type*) [AddCommMonoid N] [Module R N] [Module S N] [IsScalarTower R S N]
 
+/-- The base change adjunction for linear maps -/
 noncomputable def LinearMap.baseChangeEquiv : (S ⊗[R] M →ₗ[S] N) ≃ₗ[S] (M →ₗ[R] N) where
   toFun g := LinearMap.comp (g.restrictScalars R) ({
     toFun := fun m ↦ 1 ⊗ₜ[R] m
@@ -38,6 +62,7 @@ namespace DividedPowerAlgebra
 
 open Algebra.TensorProduct DividedPowers DividedPowerAlgebra
 
+/-- base change morphism for morphism of algebras -/
 noncomputable def AlgHom.baseChange
     {R A B C : Type _} [CommSemiring R] [CommSemiring A] [Algebra R A]
     [CommSemiring B] [Algebra R B]
@@ -68,6 +93,7 @@ noncomputable def _root_.TensorProduct.includeRight {R S N : Type _} [CommSemiri
   map_smul' := fun r x ↦ by
     simp only [TensorProduct.tmul_smul, TensorProduct.smul_tmul', RingHom.id_apply]
 
+/-- A base change morphism for the divided power algebra -/
 noncomputable def dpScalarExtension'
     (R : Type u) [CommSemiring R]
     (S : Type _) [CommSemiring S] [Algebra R S]
@@ -81,18 +107,6 @@ noncomputable def dpScalarExtension'
   · intro n p m; dsimp only; rw [dp_mul]
   · intro n x y; dsimp only; rw [dp_add]
 #align divided_power_algebra.dp_scalar_extension' DividedPowerAlgebra.dpScalarExtension'
-
-example
-    {R A B C : Type _} [CommSemiring R] [CommSemiring A] [Algebra R A]
-    [CommSemiring B] [Algebra R B]
-    [CommSemiring C] [Algebra R C] [Algebra A C] [IsScalarTower R A C] (φ : B →ₐ[R] C)
-    (f g : A ⊗[R] B →ₐ[A] C)
-    (h : (f.restrictScalars R).comp (includeRight) = (g.restrictScalars R).comp (includeRight)) :
-    f = g := by
-  ext b
-  rw [DFunLike.ext_iff] at h
-  specialize h b
-  simpa using h
 
 
 section dpScalarExtension
