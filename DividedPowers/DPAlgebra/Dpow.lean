@@ -240,9 +240,6 @@ theorem cond_D_uniqueness [DecidableEq R] {M : Type u} [AddCommGroup M] [Module 
       rw [hh]; rw [liftAlgHom_apply_dp]
 #align divided_power_algebra.cond_D_uniqueness DividedPowerAlgebra.cond_D_uniqueness
 
-
-/- I have commented out this proof for now because it times out (and since it is quite long, it
-  is hard to see where the problem is). -/
 -- Roby, lemma 4
 theorem T_free_and_D_to_Q (A : Type u) [CommRing A] [DecidableEq A] :
     CondTFree A → CondD A → CondQ A := by
