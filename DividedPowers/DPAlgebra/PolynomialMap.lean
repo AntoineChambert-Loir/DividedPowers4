@@ -7,6 +7,11 @@ import DividedPowers.DPAlgebra.BaseChange
 The universal homogeneous PolynomialMap from a module to the degree n
 part of its DividedPowerAlgebra
 
+Application : If M is free as a R-module with basis (e i),
+  then the degree n component of DividedPowerAlgebra R M is free,
+  with basis the family of all
+  h.prod fun i n ↦ dp R n (e i)
+  where h : ι →₀ ℕ satisfies h.total = n
 -/
 open scoped TensorProduct
 
@@ -47,10 +52,8 @@ theorem isHomogeneousOfDegree_gamma (n : ℕ) :
 
 theorem gamma_mem_grade (n : ℕ) (S : Type*) [CommRing S] [Algebra R S] (m : S ⊗[R] M) :
     (gamma R M n).toFun S m ∈ LinearMap.range (LinearMap.lTensor S (grade R M n).subtype) := by
-  revert n
-  induction m using TensorProduct.induction_on with
+  induction m using TensorProduct.induction_on generalizing n with
   | zero =>
-    intro n
     simp only [gamma_toFun, dp_null]
     split_ifs with h
     · rw [AlgEquiv.map_one, h]
@@ -60,7 +63,6 @@ theorem gamma_mem_grade (n : ℕ) (S : Type*) [CommRing S] [Algebra R S] (m : S 
       rw [Algebra.TensorProduct.one_def]
     · simp only [map_zero, zero_mem]
   | tmul s m =>
-    intro n
     simp only [gamma_toFun, dpScalarExtensionEquiv]
     simp only [ofAlgHom_symm_apply]
     rw [dpScalarExtensionInv_apply]
@@ -68,7 +70,6 @@ theorem gamma_mem_grade (n : ℕ) (S : Type*) [CommRing S] [Algebra R S] (m : S 
     use (s ^ n) ⊗ₜ[R] ⟨dp R n m, dp_mem_grade R M n m⟩
     simp only [LinearMap.lTensor_tmul, Submodule.coeSubtype]
   | add x y hx hy =>
-    intro n
     simp only [gamma_toFun, dpScalarExtensionEquiv, ofAlgHom_symm_apply]
     simp only [dp_add, _root_.map_sum]
     apply Submodule.sum_mem
@@ -97,7 +98,6 @@ def gamma' (n : ℕ) : PolynomialMap R M (DividedPowerAlgebra.grade n (R := R) (
   toFun' S _ _ := sorry
   isCompat' {S _ _ S' _ _} φ := sorry
 
-
 example {N : Type*} [AddCommGroup N] [Module R N] (n : ℕ) :
   PolynomialMap.grade (R := R) (M := M) (N := N) n ≃ₗ[R]
     ((DividedPowerAlgebra.grade R M n) →ₗ[R] N) where
@@ -107,3 +107,31 @@ example {N : Type*} [AddCommGroup N] [Module R N] (n : ℕ) :
   invFun f := sorry
   left_inv := sorry
   right_inv := sorry
+
+/-- For `b : Basis ι R M`, a basis of `DividedPowerAlgebra.grade R M n` -/
+noncomputable
+def grade_basis (n : ℕ) {ι : Type*} (b : Basis ι R M) :
+    Basis { h : ι →₀ ℕ // (h.sum fun i n ↦ n) = n } R (grade R M n) := by
+  let v : (ι →₀ ℕ) → DividedPowerAlgebra R M :=
+    fun h ↦ h.prod (fun i n ↦ dp R n (b i))
+  have hv : ∀ h, v h ∈ grade R M (h.sum fun i n ↦ n) := sorry
+  have v' : { h : ι →₀ ℕ // (h.sum fun i n ↦ n) = n} → grade R M n :=
+    fun ⟨h, hh⟩ ↦ ⟨v h, by rw [← hh]; apply hv⟩
+  apply Basis.mk (v := v')
+  · /- Linear independence is the difficult part, it relies on the PolynomialMap
+       interpretation -/
+    sorry
+  · /- It should be easy to prove that these elements generate
+      * the `dp R n (b i)` generate -/
+    sorry
+
+theorem grade_free [Module.Free R M] (n : ℕ): Module.Free R (grade R M n) :=
+  Module.Free.of_basis (grade_basis R M n (Module.Free.chooseBasis R M))
+
+theorem toModule_free [Module.Free R M]  :
+    Module.Free R (DividedPowerAlgebra R M) := by
+  classical
+  haveI : ∀ i, Module.Free R (grade R M i) := fun i ↦ grade_free R M i
+  haveI : Module.Free R (DirectSum ℕ fun i ↦ ↥(grade R M i)) := by
+    apply Module.Free.directSum
+  apply Module.Free.of_equiv (DirectSum.decomposeLinearEquiv (grade R M)).symm
