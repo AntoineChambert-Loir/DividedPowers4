@@ -200,7 +200,7 @@ def dpScalarExtensionEquiv :
         intro n
         rw [dp_add, map_sum, map_sum]
         apply Finset.sum_congr rfl
-        rintro ⟨k, l⟩ hkl
+        rintro ⟨k, l⟩ _
         rw [map_mul, map_mul, hx, hy])
     (by
       apply Algebra.TensorProduct.ext
@@ -210,5 +210,13 @@ def dpScalarExtensionEquiv :
         simp only [AlgHom.coe_comp, AlgHom.coe_restrictScalars',
           Function.comp_apply, includeRight_apply, AlgHom.coe_id, id_eq]
         rw [← one_pow n, dpScalarExtension_apply, dpScalarExtensionInv_apply])
+
+theorem coe_dpScalarExtensionEquiv :
+    ⇑(dpScalarExtensionEquiv R S M) = ⇑(dpScalarExtension R S M) := by
+  rfl
+
+theorem coe_dpScalarExtensionEquiv_symm :
+    ⇑(dpScalarExtensionEquiv R S M).symm = ⇑(dpScalarExtensionInv R S M) := by
+  rfl
 
 end DividedPowerAlgebra
