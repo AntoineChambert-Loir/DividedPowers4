@@ -53,6 +53,8 @@ example {R S T A B : Type*} [CommRing R] [Semiring S] [Algebra R S] [Semiring T]
 instance (R S S' M M': Type*) [CommSemiring R] [AddCommMonoid S] [AddCommMonoid S']
   [AddCommMonoid M] [AddCommMonoid M'] [Module R S] [Module R S'] [Module R M] [Module R M']: AddMonoidHomClass (S ⊗[R] M →ₗ[R] S' ⊗[R] M') (S ⊗[R] M) (S' ⊗[R]  M') := inferInstance
 
+/- TODO:  we need to prove that DividedPoweAlgebra.dpScalarExtensionEquiv
+  is compatible with the graded structure and induces equivs componentwise -/
 /-- The universal polynomial map (homogeneous of degree n) on a module -/
 noncomputable
 def gamma (n : ℕ) : PolynomialMap R M (DividedPowerAlgebra R M) where
