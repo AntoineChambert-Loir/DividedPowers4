@@ -191,7 +191,7 @@ variable (R : Type u) [CommRing R]
     (M : Type*) [AddCommGroup M] [Module R M]
     (N : Type*) [AddCommGroup N] [Module R N]
 
-/-- A polynomial map `M →ₚ[R] N` between `R`-modules
+ /-- A polynomial map `M →ₚ[R] N` between `R`-modules
   is a functorial family of maps `S ⊗[R] M → S ⊗[R] N`,
   for all `R`-algebras `S` -/
 @[ext]
