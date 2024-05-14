@@ -223,6 +223,11 @@ theorem coe_dpScalarExtensionEquiv_symm :
     ⇑(dpScalarExtensionEquiv R S M).symm = ⇑(dpScalarExtensionInv R S M) := by
   rfl
 
+/- Once one replaces (dpScalarExtensionEquiv _ _ _).symm
+  by dpScalarExtensionInv,
+  the following proof is very close to the 3rd step of the proof of the dpScalarExtensionEquiv.
+  Can one unify them? -/
+
 theorem rTensor_comp_dpScalarExtensionEquiv_symm_eq
     {S : Type*} [CommRing S] [Algebra R S]
     {S' : Type*} [CommRing S'] [Algebra R S'] (φ : S →ₐ[R] S')
@@ -243,6 +248,5 @@ theorem rTensor_comp_dpScalarExtensionEquiv_symm_eq
     apply Finset.sum_congr rfl
     rintro ⟨k, l⟩ _
     simp only [hx, hy]
-
 
 end DividedPowerAlgebra
