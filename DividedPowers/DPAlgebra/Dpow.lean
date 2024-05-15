@@ -558,7 +558,7 @@ theorem roby_D (A : Type*) [CommRing A] [DecidableEq A] : DividedPowerAlgebra.Co
 theorem roby_τ (A R S : Type u) [CommRing A] [DecidableEq A] [CommRing R] [Algebra A R]
     [CommRing S] [Algebra A S]
     {I : Ideal R} {J : Ideal S} (hI : DividedPowers I) (hJ : DividedPowers J) : Condτ A hI hJ :=
-  condT_holds A R S hI hJ
+  condT_holds A R hI S hJ
 #align divided_power_algebra.roby_τ DividedPowerAlgebra.roby_τ
 
 theorem roby_T (A : Type*) [CommRing A] [DecidableEq A] : CondT A :=
