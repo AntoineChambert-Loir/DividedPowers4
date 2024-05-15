@@ -65,6 +65,7 @@ structure DividedPowers {A : Type _} [CommSemiring A] (I : Ideal A) where
     dpow m (dpow n x) = mchoose m n * dpow (m * n) x
 #align divided_powers DividedPowers
 
+-- MI: Shouldn't this be renames?
 def dividedPowersBot (A : Type _) [CommSemiring A] [DecidableEq A] : DividedPowers (⊥ : Ideal A)
     where
   dpow n a := ite (a = 0 ∧ n = 0) 1 0
