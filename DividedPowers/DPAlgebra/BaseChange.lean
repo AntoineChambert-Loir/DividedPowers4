@@ -36,6 +36,16 @@ open scoped TensorProduct
 
 section baseChange
 
+lemma Algebra.TensorProduct.coe_map_id₁ (R : Type*) [CommSemiring R]
+    {S S' : Type*} [Semiring S] [Semiring S'] [Algebra R S] [Algebra R S']
+    (φ : S →ₐ[R] S') (A : Type*) [Semiring A] [Algebra R A] :
+    ⇑(Algebra.TensorProduct.map (AlgHom.id R A) φ) = ⇑(LinearMap.lTensor A (AlgHom.toLinearMap φ)) := by rfl
+
+lemma Algebra.TensorProduct.coe_map_id₂ (R : Type*) [CommSemiring R]
+    {S S' : Type*} [Semiring S] [Semiring S'] [Algebra R S] [Algebra R S']
+    (φ : S →ₐ[R] S') (A : Type*) [Semiring A] [Algebra R A] :
+    ⇑(Algebra.TensorProduct.map φ (AlgHom.id R A)) = ⇑(LinearMap.rTensor A (AlgHom.toLinearMap φ)) := by rfl
+
 variable (R : Type*) [CommRing R]
   (S : Type*) [CommRing S] [Algebra R S]
   (M : Type*) [AddCommMonoid M] [Module R M]
@@ -157,7 +167,7 @@ def dpScalarExtensionInv  :
 /-- Roby1963, theorem III.2 -/
 theorem dpScalarExtensionInv_apply (n : ℕ) (s : S) (m : M) :
     dpScalarExtensionInv R S M (dp S n (s ⊗ₜ[R] m)) = (s ^ n) ⊗ₜ[R] (dp R n m) := by
-  simp [dpScalarExtensionInv]
+  simp only [dpScalarExtensionInv]
   rw [dividedPowerAlgebra_exponentialModule_equiv_symm_apply]
   simp [dpScalarExtensionExp, LinearMap.baseChangeEquiv]
   simp only [ExponentialModule.coe_smul]
@@ -166,8 +176,6 @@ theorem dpScalarExtensionInv_apply (n : ℕ) (s : S) (m : M) :
   simp [includeRight]
   simp only [coeff_exp_LinearMap]
   rw [TensorProduct.smul_tmul', smul_eq_mul, mul_one]
-
-
 
 noncomputable example (R : Type _) [CommSemiring R]
     (A : Type _) [CommSemiring A] [Algebra R A]
@@ -185,22 +193,18 @@ def dpScalarExtensionEquiv :
       apply DividedPowerAlgebra.ext
       rintro n sm
       simp only [AlgHom.coe_comp, Function.comp_apply, AlgHom.coe_id, id_eq]
-      revert n
-      induction sm using TensorProduct.induction_on with
+      induction sm using TensorProduct.induction_on generalizing n with
       | zero =>
-        intro n
         rw [dp_null]
         split_ifs
         · simp only [map_one]
         · simp only [map_zero]
       | tmul s m =>
-        intro n
         rw [dpScalarExtensionInv_apply, dpScalarExtension_apply]
       | add x y hx hy =>
-        intro n
         rw [dp_add, map_sum, map_sum]
         apply Finset.sum_congr rfl
-        rintro ⟨k, l⟩ hkl
+        rintro ⟨k, l⟩ _
         rw [map_mul, map_mul, hx, hy])
     (by
       apply Algebra.TensorProduct.ext
@@ -210,5 +214,39 @@ def dpScalarExtensionEquiv :
         simp only [AlgHom.coe_comp, AlgHom.coe_restrictScalars',
           Function.comp_apply, includeRight_apply, AlgHom.coe_id, id_eq]
         rw [← one_pow n, dpScalarExtension_apply, dpScalarExtensionInv_apply])
+
+theorem coe_dpScalarExtensionEquiv :
+    ⇑(dpScalarExtensionEquiv R S M) = ⇑(dpScalarExtension R S M) := by
+  rfl
+
+theorem coe_dpScalarExtensionEquiv_symm :
+    ⇑(dpScalarExtensionEquiv R S M).symm = ⇑(dpScalarExtensionInv R S M) := by
+  rfl
+
+/- Once one replaces (dpScalarExtensionEquiv _ _ _).symm
+  by dpScalarExtensionInv,
+  the following proof is very close to the 3rd step of the proof of the dpScalarExtensionEquiv.
+  Can one unify them? -/
+
+theorem rTensor_comp_dpScalarExtensionEquiv_symm_eq
+    {S : Type*} [CommRing S] [Algebra R S]
+    {S' : Type*} [CommRing S'] [Algebra R S'] (φ : S →ₐ[R] S')
+    (n : ℕ) (m : S ⊗[R] M) :
+    φ.toLinearMap.rTensor (DividedPowerAlgebra R M)
+      ((dpScalarExtensionEquiv R S M).symm (dp S n m)) =
+      (dpScalarExtensionEquiv R S' M).symm (dp S' n (φ.toLinearMap.rTensor M m)) := by
+  rw [← Algebra.TensorProduct.coe_map_id₂]
+  induction m using TensorProduct.induction_on generalizing n with
+  | zero =>
+    simp only [Function.comp_apply, dp_null, RingHom.map_ite_one_zero, map_zero]
+  | tmul s m =>
+    simp only [coe_dpScalarExtensionEquiv_symm, dpScalarExtensionInv_apply,
+      Algebra.TensorProduct.map_tmul, map_pow, AlgHom.coe_id, id_eq, LinearMap.rTensor_tmul,
+      AlgHom.toLinearMap_apply]
+  | add x y hx hy =>
+    simp only [dp_add, _root_.map_sum, _root_.map_mul, map_add]
+    apply Finset.sum_congr rfl
+    rintro ⟨k, l⟩ _
+    simp only [hx, hy]
 
 end DividedPowerAlgebra
