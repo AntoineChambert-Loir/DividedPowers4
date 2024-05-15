@@ -29,6 +29,14 @@ theorem mchoose_succ (m n : ℕ) :
   simp only [mchoose, Finset.prod_range_succ, mul_comm]
 #align mchoose_succ mchoose_succ
 
+theorem mchoose_one (n : ℕ) : mchoose 1 n = 1 := by
+  simp only [mchoose, Finset.range_one, Finset.prod_singleton, zero_mul,
+    zero_add, Nat.choose_self]
+
+theorem mchoose_one' (m : ℕ) : mchoose m 1 = 1 := by
+  simp only [mchoose, mul_one, add_tsub_cancel_right, ge_iff_le, le_refl,
+    tsub_eq_zero_of_le, Nat.choose_zero_right, Finset.prod_const_one]
+
 theorem mchoose_lemma (m : ℕ) {n : ℕ} (hn : n ≠ 0) :
     m.factorial * n.factorial ^ m * mchoose m n = (m * n).factorial :=
   by
