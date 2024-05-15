@@ -1,0 +1,24 @@
+% In this file you should put the actual content of the blueprint.
+% It will be used both by the web and the print version.
+% It should *not* include the \begin{document}
+%
+% If you want to split the blueprint content into several files then
+% the current file can be a simple sequence of \input. Otherwise It
+% can start with a \section or \chapter for instance.
+
+\chapter{Blueprint test}
+
+\begin{definition}
+	\label{def:divided_powers}
+	\lean{DividedPowers}
+	\leanok
+	The divided power structure on an ideal $I$ of a commutative ring $A$ is ...
+\end{definition}
+
+\begin{definition}
+	\label{def:divided_powers_bot}
+	\lean{dividedPowersBot}
+	\uses{def:divided_powers}
+	\leanok
+	The divided power structure on the zero ideal of a commutative ring $A$.
+\end{definition}
