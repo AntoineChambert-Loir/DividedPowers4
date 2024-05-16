@@ -318,6 +318,25 @@ theorem ext {A : Type*} [CommSemiring A] [Algebra R A]
   DividedPowerAlgebra.ext_iff.mpr h
 #align divided_power_algebra.unique_on_dp DividedPowerAlgebra.ext
 
+protected theorem induction_on {P : DividedPowerAlgebra R M → Prop} (f : DividedPowerAlgebra R M)
+    (h_C : ∀ a, P (mk (C a)))
+    (h_add : ∀ f g, P f → P g → P (f + g))
+    (h_dp : ∀ (f : DividedPowerAlgebra R M) (n : ℕ) (m : M), P f → P (f * dp R n m)) : P f := by
+  obtain ⟨F, hf⟩ :=  RingQuot.mkRingHom_surjective (DividedPowerAlgebra.Rel R M) f
+  rw [← hf]
+  induction F using MvPolynomial.induction_on generalizing f with
+  | h_C a =>
+      convert h_C a using 1;
+      rw [mk, mkAlgHom, AlgHom.coe_mk]
+  | h_add g1 g2 hg1 hg2 =>
+      rw [map_add]
+      exact h_add _ _ (hg1 ((mkRingHom (Rel R M)) g1) rfl) (hg2 ((mkRingHom (Rel R M)) g2) rfl)
+  | h_X g nm h =>
+      have h' : (mkRingHom (Rel R M)) (X nm) = dp R nm.1 nm.2 := by
+        simp only [dp_def, Prod.mk.eta, mkAlgHom, AlgHom.coe_mk]
+      rw [_root_.map_mul, h']
+      exact h_dp _ _ _ (h (mkRingHom (Rel R M) g) rfl)
+
 variable (R)
 
 section UniversalProperty
