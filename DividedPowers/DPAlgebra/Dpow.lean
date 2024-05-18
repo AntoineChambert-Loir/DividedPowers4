@@ -254,8 +254,6 @@ example {A R S : Type*} [CommSemiring A]
       simp [IsScalarTower.algebraMap_eq A R S]
 
 
-section lemma_4
-
 namespace roby4
 
 variable (A : Type u) [CommRing A] [DecidableEq A]
@@ -282,8 +280,6 @@ instance : IsScalarTower A (MvPolynomial S A) S := {
     simp only [Algebra.smul_def, algebraMap_eq]
     simp only [AlgHom.toRingHom_eq_coe, AlgHom.coe_toRingHom, _root_.map_mul, AlgHom.commutes]
     rw [← mul_assoc] }
-
--- M := I →₀ A
 
 variable {S} (I) in
 def f : (I →₀ A) →ₗ[A] S :=
@@ -341,19 +337,17 @@ def dpΦ : dpMorphism hM hI := by
     apply ι_mem_augIdeal
 
 -- We consider `R ⊗[A] DividedPowerAlgebra A (I →₀ A)`
-def ψ := Algebra.TensorProduct.productMap
+def Ψ := Algebra.TensorProduct.productMap
   (IsScalarTower.toAlgHom A (MvPolynomial S A) S)
   (Φ A S hI)
 
-variable (I) in
-def Ψ : (MvPolynomial S A) ⊗[A] (DividedPowerAlgebra A (I →₀ A)) →ₐ[A] S := by
-  apply Algebra.TensorProduct.lift
-  · exact fun _ _ ↦ by apply Commute.all
-  · exact {
-      toRingHom := algebraMap (MvPolynomial S A) S
-      commutes' := fun a ↦ by
-        simp [IsScalarTower.algebraMap_eq A (MvPolynomial S A) S] }
-  · exact Φ A S hI
+theorem Ψ_surjective : Function.Surjective (Ψ A S hI) := by
+  rw [← Algebra.range_top_iff_surjective _, eq_top_iff]
+  intro s _
+  simp only [AlgHom.mem_range]
+  use (X s) ⊗ₜ[A] 1
+  simp only [Ψ, Algebra.TensorProduct.productMap_apply_tmul, IsScalarTower.coe_toAlgHom',
+    algebraMap_eq, AlgHom.toRingHom_eq_coe, RingHom.coe_coe, aeval_X, id_eq, map_one, mul_one]
 
 variable (I) in
 theorem K_eq_span : K A (⊥ : Ideal (MvPolynomial S A)) (augIdeal A (↥I →₀ A))
@@ -364,7 +358,7 @@ theorem K_eq_span : K A (⊥ : Ideal (MvPolynomial S A)) (augIdeal A (↥I →�
 
 def dpΨ : dpMorphism (condτ A S I condTFree hM).choose hI := by
   apply dpMorphismFromGens (condτ A S I condTFree hM).choose hI
-    (f := (Ψ A S I hI).toRingHom) (K_eq_span A S I)
+    (f := (Ψ A S hI).toRingHom) (K_eq_span A S I)
   · simp only [AlgHom.toRingHom_eq_coe, K, Ideal.map_bot, i2, ge_iff_le,
       bot_le, sup_of_le_right, map_le_iff_le_comap]
     rw [augIdeal_eq_span, span_le]
@@ -372,9 +366,8 @@ def dpΨ : dpMorphism (condτ A S I condTFree hM).choose hI := by
     simp only [Set.mem_setOf_eq] at hn
     simp only [SetLike.mem_coe, mem_comap, Algebra.TensorProduct.includeRight_apply,
       RingHom.coe_coe]
-    simp only [Ψ, Algebra.TensorProduct.lift_tmul, map_one, one_mul]
+    simp only [Ψ, Algebra.TensorProduct.productMap_apply_tmul, map_one, one_mul]
     apply (dpΦ A S hI hM hM_eq).ideal_comp
-    simp only [dpΦ, AlgHom.toRingHom_eq_coe]
     apply Ideal.mem_map_of_mem
     exact dp_mem_augIdeal A (I →₀ A) hn b
   · rintro n _ ⟨m, hm, b, _, rfl⟩
@@ -382,14 +375,14 @@ def dpΨ : dpMorphism (condτ A S I condTFree hM).choose hI := by
     simp only [AlgHom.toRingHom_eq_coe, RingHom.coe_coe]
     erw [← ((condτ A S I condTFree hM).choose_spec.2).map_dpow]
     simp only [Ψ, i2, RingHom.coe_coe, Algebra.TensorProduct.includeRight_apply,
-      Algebra.TensorProduct.lift_tmul, map_one, one_mul]
+      Algebra.TensorProduct.productMap_apply_tmul, map_one, one_mul]
     erw [(dpΦ A S hI hM hM_eq).dpow_comp]
     · rfl
     all_goals
       apply dp_mem_augIdeal _ _ hm
 
 -- Roby, lemma 4
-theorem T_free_and_D_to_Q : CondQ A := by
+theorem _root_.DividedPowerAlgebra.T_free_and_D_to_Q : CondQ A := by
   intro S _ _ I hI
   let M := I →₀ A
   let R := MvPolynomial S A
@@ -401,94 +394,26 @@ theorem T_free_and_D_to_Q : CondQ A := by
   -- We consider `R ⊗[A] DividedPowerAlgebra A M` as a comm ring and an A-algebra
   use R ⊗[A] DividedPowerAlgebra A M, by infer_instance, by infer_instance
   use by infer_instance -- tensor product of free modules is free
-  use Ψ A S I hI
+  use Ψ A S hI
   use K A ⊥ (augIdeal A M)
   use (condτ A S I condTFree hM).choose
   use (dpΨ A S hI condTFree hM hM_eq).isDPMorphism
   constructor
-  · sorry
-  · sorry
-
-    -- THIS IS PROBABLY NOT THE CORRECT IDEAL TO CONSIDER
-    -- SEE ROBY, §5 and 6
-    constructor
-    · rw [← Algebra.range_top_iff_surjective _]
-      rw [Algebra.TensorProduct.productMap_range]
-      suffices (IsScalarTower.toAlgHom A R S).range = ⊤ by
-        constructor
-        · -- unfold isDPMorphism at  hM_pd
-          apply le_antisymm
-          · intro i hi
-            let m : M := Finsupp.single ⟨i, hi⟩ 1
-            let x : DividedPowerAlgebra A M := ι A M m
-            have hx : (1 : R) ⊗ₜ[A] x ∈ K A ⊥ (augIdeal A M) := by
-              unfold K
-              apply Ideal.mem_sup_right
-              apply Ideal.mem_map_of_mem _ (ι_mem_augIdeal A M m)
-            convert Ideal.mem_map_of_mem _ hx
-            simp only [Algebra.TensorProduct.productMap_apply_tmul, map_one, one_mul]
-            simp [x, f, m]
-            simp [Basis.constr_apply]
-          · rw [Ideal.map_le_iff_le_comap]
-            unfold K
-            simp only [Ideal.map_bot, ge_iff_le, bot_le, sup_of_le_right]
-            apply le_trans hM_pd.1
-            rw [← Ideal.map_le_iff_le_comap]
-            sorry
-        · rw [this, top_sup_eq]
-      rw [Algebra.range_top_iff_surjective]
-      simp only [mapRS, IsScalarTower.coe_toAlgHom', AlgHom.toRingHom_eq_coe, AlgHom.coe_toRingHom]
-      exact fun s ↦ ⟨X s, by rw [aeval_X, id.def]⟩
-    · suffices hmap_le : _ by
-        apply And.intro hmap_le
-        intro n a ha
-        let ha' := id ha
-        simp only [K, Ideal.map_bot, bot_sup_eq] at ha
-        simp only [isDPMorphism] at hM_pd
-        apply dp_uniqueness hK hI
-        simp only [K, Ideal.map_bot, bot_sup_eq]
-        · rw [Ideal.map]
-        · rintro s ⟨a, ha, rfl⟩
-          simp only [i2, Algebra.TensorProduct.includeRight_apply, AlgHom.coe_toRingHom,
-            Algebra.TensorProduct.productMap_apply_tmul, map_one, one_mul]
-          apply lift_mem_of_mem_augIdeal _ _ _ _ _ _ ha
-        · rintro n s ⟨a, ha, rfl⟩
-          simp only [SetLike.mem_coe] at ha
-          have := hM_pd.2 n a ha
-          simp only [AlgHom.coe_toRingHom] at this
-          rw [this]
-          simp only [i2, Algebra.TensorProduct.includeRight_apply, AlgHom.coe_toRingHom,
-            Algebra.TensorProduct.productMap_apply_tmul, map_one, one_mul]
-          apply symm
-          apply dp_uniqueness hM hI _ (augIdeal_eq_span _ _) _ _ n a ha
-          · rintro s ⟨q, hq, m, _, rfl⟩
-            change (lift hI f hf) (dp A q m) ∈ I
-            rw [liftAlgHom_apply_dp]
-            exact hI.dpow_mem (ne_of_gt hq) (hf m)
-          · rintro n s ⟨q, hq, m, _, rfl⟩
-            change (lift hI f hf) (hM.dpow n (dp A q m)) = hI.dpow n ((lift hI f hf) (dp A q m))
-            rw [liftAlgHom_apply_dp, ← hM_eq, hM.dpow_comp n (ne_of_gt hq), hM_eq,
-              hI.dpow_comp n (ne_of_gt hq) (hf m)]
-            simp only [← nsmul_eq_mul]; rw [map_nsmul]
-            rw [liftAlgHom_apply_dp]
-            exact ι_mem_augIdeal A M m
-        exact ha'
-      · rw [K, Ideal.map_bot, bot_sup_eq]
-        simp only [Ideal.map_le_iff_le_comap]
-        intro x hx
-        simp only [Ideal.mem_comap, i2, Algebra.TensorProduct.includeRight_apply,
-          AlgHom.coe_toRingHom, Algebra.TensorProduct.productMap_apply_tmul, map_one, one_mul]
-        apply lift_mem_of_mem_augIdeal
-        exact hx
-  · -- cond_τ
-    apply hT_free
-    exact hR_free
-    exact hdpM_free
+  · refine le_antisymm ?_ (dpΨ A S hI condTFree hM hM_eq).ideal_comp
+    intro i hi
+    let m : M := Finsupp.single ⟨i, hi⟩ 1
+    have : i = Ψ A S hI (Algebra.TensorProduct.includeRight (ι A M m)) :=  by
+      simp [m, Ψ, Φ, f, Basis.constr_apply]
+    rw [this]
+    apply Ideal.mem_map_of_mem
+    apply Ideal.mem_sup_right
+    apply Ideal.mem_map_of_mem
+    apply ι_mem_augIdeal
+  · apply Ψ_surjective
 #align divided_power_algebra.T_free_and_D_to_Q DividedPowerAlgebra.T_free_and_D_to_Q
 
 end roby4
 
-end lemma_4
 
 example {A : Type*} [CommRing A] (a : A) (n : ℕ) : n • a = n * a := by refine' nsmul_eq_mul n a
 
