@@ -126,6 +126,17 @@ theorem mem_augIdeal_iff (f : DividedPowerAlgebra R M) :
     f ∈ augIdeal R M ↔ algebraMapInv R M f = 0 := by
   rw [augIdeal, AlgHom.toRingHom_eq_coe, RingHom.mem_ker, RingHom.coe_coe]
 
+/-- For `Nontrivial R`, `dp R n m` is contained in the augmentation ideal iff `0 < n` -/
+theorem dp_mem_augIdeal_iff [Nontrivial R] (n : ℕ) (m : M) :
+    dp R n m ∈ augIdeal R M ↔ 0 < n := by
+  rw [mem_augIdeal_iff, dp, algebraMapInv_eq, aeval_X]
+  simp only [ite_eq_left_iff, not_not, one_ne_zero, imp_false]
+
+/-- `dp R n m` is contained in the augmentation ideal for `0 < n` -/
+theorem dp_mem_augIdeal {n : ℕ} (hn : 0 < n) (m : M) :
+    dp R n m ∈ augIdeal R M := by
+  rw [mem_augIdeal_iff, dp, algebraMapInv_eq, aeval_X, if_pos hn]
+
 /-- The image of ι is contained in the augmentation ideal -/
 theorem ι_mem_augIdeal (m : M) : ι R M m ∈ augIdeal R M := by
   simp only [mem_augIdeal_iff, ι_def, dp, algebraMapInv_eq, aeval_X, zero_lt_one, ite_true]
