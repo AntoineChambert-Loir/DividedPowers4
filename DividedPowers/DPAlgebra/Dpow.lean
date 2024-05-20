@@ -422,29 +422,20 @@ where A₊ is the PD-ideal. In other words, the PD-ideal is an augmentation idea
 Moreover, PD-morphisms map A₀ to B₀ and A₊ to B₊,
 so that their kernel is a direct sum K₀ ⊕ K₊
 
-Roby states this as a sory of `pre-graded algebras`,
-which correspond to graded algebras by the monoid {⊥, ⊤} with carrier set (fin 0)
-or fin 2 (with multiplication)
+Roby's framework is stated in terms of `pre-graded algebras`,
+namely graded algebras by the monoid {⊥, ⊤} with carrier set `Fin 2`
+(with multiplication, ⊤ = 0 and ⊥ = 1)
 
-I am not sure that the proofs can avoid this hypothesis,
-especially for tensor products (alas…).
+Most of the paper works in greater generality, as noted by Berthelot,
+but not all the results hold in general.
+Berthelot gives an example (1.7) of a tensor product of algebras
+with divided power ideals whose natural ideal does not have compatible
+divided powers.
 
-The question is about the formalism to use.
-With `is_augmentation_ideal A I`, and `is_augmentation_ideal B J`,
-we need to state out the assumption that `f : A →+* B` is homogeneous.
-
-It maps A₊ to B₊ by definition of a PD-morphism,
-but A₀ and B₀ are not canonical.
-The definition of an augmentation ideal is the existence of
-a section A/A₊ →+* A, whose image is A₀.
-Write r₀ for the composition A →+* A/A₊ →+* A₀.
-The assumptions are : A₊ ≤ r₀.ker, r₀.range ⊓ A₊ = 0
-
-If f is homogeneous (for the two chosen maps r₀), then r₀ (f a) = f (r₀ a)
-and f.ker = (f.ker ⊓ A₀) ⊕ (f.ker ⊓ A₊)
-or map f I is an augmentation ideal in f.range
-
-This looks less convenient than imposing the graded structure
+[Berthelot, 1.7.1] gives the explicit property that holds for tensor products.
+For an `A`-algebra `R` and `I : Ideal R`, one assumes the
+existence of `R₀ : Subalgebra A R` such that `R = R₀ ⊕ I` as an `I`-module.
+Equivalently, the map `R →ₐ[A] R ⧸ I` has a left inverse.
 
 In lemma 6, we have two surjective algebra morphisms
  f : R →+* R',  g : S →+* S'
@@ -456,13 +447,16 @@ with quotient PD structures
 
 Lemma 5 has proved that  fg.ker = (f.ker ⊗ 1) ⊔ (1 ⊗ g.ker)
 
+The implicit hypothesis in lemma 6 is that f is homogeneous,
+ie, maps R₊ = I to R'₊ = J and R₀ to R'₀, and same for g
+
 In the end, Roby applies his proposition 4 which we
 apparently haven't formalized and make use of yet another definition,
 namely of a `divised ideal` :
 Up to the homogeneous condition, this is exactly that `K ⊓ I` is a sub-pd-ideal.
 The proof of proposition goes by using that
-`ideal.span s ⊓ I = ideal.span s ⊓ I`
-if `s` is made of homogeneous elements.
+`Ideal.span (s ∩ ↑I) = Ideal.span s ⊓ I`
+if `s` consists of homogeneous elements.
 
 So we assume the `roby` condition in the statement, in the hope
 that will be possible to prove it each time we apply cond_τ_rel
@@ -481,8 +475,8 @@ theorem condτ_rel (A : Type u) [CommRing A] {R S R' S' : Type u} [CommRing R] [
     {J' : Ideal S'} (hJ' : DividedPowers J') (hg' : isDPMorphism hJ hJ' g) (hJ'J : J' = J.map g)
     (roby :
       RingHom.ker (Algebra.TensorProduct.map f g) ⊓ K A I J =
-        Ideal.map (Algebra.TensorProduct.includeLeft : R →ₐ[A] R ⊗[A] S) (RingHom.ker f ⊓ I) ⊔
-          map (Algebra.TensorProduct.includeRight : S →ₐ[A] R ⊗[A] S) (RingHom.ker g ⊓ J))
+        Ideal.map (Algebra.TensorProduct.includeLeft (S := A)) (RingHom.ker f ⊓ I)
+          ⊔ Ideal.map (Algebra.TensorProduct.includeRight) (RingHom.ker g ⊓ J))
     (hRS : Condτ A hI hJ) : Condτ A hI' hJ' := by
   obtain ⟨hK, hK_pd⟩ := hRS
   simp only [Condτ]
@@ -573,7 +567,7 @@ theorem condQ_and_condTFree_imply_condT (A : Type*) [CommRing A]
   obtain ⟨R, _, _, hR_free, f, I, hI, hfDP, hfI, hf⟩ := hQ R' I' hI'
   obtain ⟨S, _, _, hS_free, g, J, hJ, hgDP, hgJ, hg⟩ := hQ S' J' hJ'
   apply condτ_rel A f hf hI hI' hfDP hfI g  hg hJ hJ' hgDP hgJ
-  · rw [Algebra.TensorProduct.map_ker]
+  · rw [Algebra.TensorProduct.map_ker _ _ hf hg]
     sorry
   · apply hT_free
     exact hR_free
@@ -583,7 +577,8 @@ theorem condQ_and_condTFree_imply_condT (A : Type*) [CommRing A]
 
 -- Roby, lemma 8
 theorem condT_and_condD_imply_cond_D' (A : Type*) [CommRing A] [DecidableEq A]
-    (R : Type*) [CommRing R]  [DecidableEq R] [Algebra A R] (hT : CondT A) (hD : CondD A) :
+    (hT : CondT A) (hD : CondD A)
+    (R : Type*) [CommRing R]  [DecidableEq R] [Algebra A R] :
     CondD R :=
   sorry
 #align divided_power_algebra.cond_T_and_cond_D_imply_cond_D'
@@ -616,7 +611,7 @@ theorem condT_int : CondT ℤ :=
 #align divided_power_algebra.cond_T_int DividedPowerAlgebra.condT_int
 
 theorem condD_holds (A : Type*) [CommRing A] [DecidableEq A] : CondD A :=
-  condT_and_condD_imply_cond_D' ℤ A condT_int condD_int
+  condT_and_condD_imply_cond_D' ℤ condT_int condD_int A
 #align divided_power_algebra.cond_D_holds DividedPowerAlgebra.condD_holds
 
 theorem condTFree_holds (A : Type*) [CommRing A] : CondTFree A :=
