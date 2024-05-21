@@ -14,6 +14,22 @@ def isDPMorphism {A B : Type _} [CommSemiring A] [CommSemiring B] {I : Ideal A} 
   I.map f ≤ J ∧ ∀ (n : ℕ), ∀ a ∈ I, hJ.dpow n (f a) = f (hI.dpow n a)
 #align divided_powers.is_pd_morphism DividedPowers.isDPMorphism
 
+theorem isDPMorphism.map_dpow
+    {A B : Type _} [CommSemiring A] [CommSemiring B] {I : Ideal A} {J : Ideal B}
+    {hI : DividedPowers I} {hJ : DividedPowers J} {f : A →+* B}
+    (hf : isDPMorphism hI hJ f) (n : ℕ) (a : A) (ha : a ∈ I) :
+    f (hI.dpow n a) = hJ.dpow n (f a) := (hf.2 n a ha).symm
+
+/- Suggestion  : make it a structure,
+  so that dpMorphism just needs to copy it :
+/-- Compatibility of a ring morphism with dp-structures -/
+structure isDPMorphism {A B : Type _} [CommSemiring A] [CommSemiring B] {I : Ideal A} {J : Ideal B}
+    (hI : DividedPowers I) (hJ : DividedPowers J) (f : A →+* B) : Prop where
+  ideal_comp : I.map f ≤ J
+  dpow_comp n a (ha : a ∈ I) : hJ.dpow n (f a) = f (hI.dpow n a)
+#align divided_powers.is_pd_morphism DividedPowers.isDPMorphism
+-/
+
 theorem isDPMorphism.comp {A B C : Type _} [CommSemiring A] [CommSemiring B] [CommSemiring C] {I : Ideal A}
     {J : Ideal B} {K : Ideal C} (hI : DividedPowers I) (hJ : DividedPowers J) (hK : DividedPowers K)
     (f : A →+* B) (g : B →+* C) (h : A →+* C) (hcomp : g.comp f = h) :
