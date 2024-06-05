@@ -556,7 +556,7 @@ theorem scale_algHom_one :
   intro f
   simp only [Function.const_one, coe_scale_algHom, AlgHom.coe_id, id_eq, scale_one]
 
-theorem scale_MonoidHom : (σ → A) →* MvPowerSeries σ R →ₐ[R] MvPowerSeries σ R where
+noncomputable def scale_MonoidHom : (σ → A) →* MvPowerSeries σ R →ₐ[R] MvPowerSeries σ R where
   toFun := scale_algHom R
   map_one' := scale_algHom_one
   map_mul' a b := by
@@ -575,7 +575,7 @@ theorem scale_zero_apply (f : MvPowerSeries σ R) :
     simp only [DFunLike.ext_iff, Finsupp.coe_zero, Pi.zero_apply, not_forall] at hd
     obtain ⟨s, hs⟩ := hd
     simp only [Finsupp.prod]
-    apply Finset.prod_eq_zero (a := s)
+    apply Finset.prod_eq_zero (i := s)
     rw [Finsupp.mem_support_iff]
     exact hs
     simp only [Function.const_apply, zero_pow hs]
@@ -883,7 +883,7 @@ theorem scale_algHom_one :
     scale_algHom R (1 : A) = AlgHom.id R R⟦X⟧ :=
   MvPowerSeries.scale_algHom_one
 
-theorem scale_MonoidHom : A →* R⟦X⟧ →ₐ[R] R⟦X⟧ where
+noncomputable def scale_MonoidHom : A →* R⟦X⟧ →ₐ[R] R⟦X⟧ where
   toFun := scale_algHom R
   map_one' := scale_algHom_one
   map_mul' a b := by

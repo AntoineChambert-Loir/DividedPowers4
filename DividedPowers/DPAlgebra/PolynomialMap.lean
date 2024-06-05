@@ -1,7 +1,6 @@
 import DividedPowers.PolynomialMap.Homogeneous
 import DividedPowers.DPAlgebra.Graded.Basic
 import DividedPowers.DPAlgebra.BaseChange
-import Mathlib.RingTheory.TensorProduct.Basic
 
 /-
 
@@ -84,26 +83,8 @@ theorem gamma_mem_grade (n : ℕ) (S : Type*) [CommRing S] [Algebra R S] (m : S 
     simp only [LinearMap.mem_range]
     -- we need the graded structure on the base change of a graded algebra
     rw [← hx', ← hy']
-    /- more precisely, we have multiplication
-      grade R M k × grade R M l → grade R M (k + l)
-      induced by multiplication of DividedPowerAlgebra R M
-      thanks to `SetLike.GradedMul.mul_mem`
-      and we want to base change this bilinear map to
-      S ⊗[R] grade R M k × S ⊗[R] grade R M l → S⊗[R] grade R M (k + l)
-    -/
+
     sorry
-
-#check LinearMap.tensorProduct
-
-example (A : Type*) [CommRing A] (M N P : Type*) [AddCommGroup M] [Module A M]
-  [AddCommGroup N] [Module A N] [AddCommGroup P] [Module A P]
-  (Φ : M →ₗ[A] N →ₗ[A] P)
-  (R : Type*) [CommRing R] [Algebra A R] :
-  R ⊗[A] M →ₗ[R] R ⊗[A] N →ₗ[R] R ⊗[A] P := by
-  have := LinearMap.baseChange R Φ
-  apply LinearMap.comp ?_ this
-  have := LinearMap.tensorProduct A R N P
-  exact this
 
 /- to do this, it seems that we have to understand polynomial maps
 valued into a submodule (in this case, it is a direct factor,

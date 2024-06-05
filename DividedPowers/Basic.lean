@@ -261,7 +261,7 @@ theorem mul_dpow {ι : Type _} {s : Finset ι} (n : ι → ℕ) {a : A} (ha : a 
   classical
   induction s using Finset.induction with
   | empty =>
-    simp only [prod_empty, Nat.multinomial_nil, Nat.cast_one, sum_empty, one_mul]
+    simp only [prod_empty, Nat.multinomial_empty, Nat.cast_one, sum_empty, one_mul]
     rw [hI.dpow_zero ha]
   | insert hi hrec =>
     rw [Finset.prod_insert hi, hrec, ← mul_assoc, mul_comm (hI.dpow (n _) a),
@@ -447,7 +447,7 @@ theorem prod_dpow_self {ι : Type _} {s : Finset ι} {n : ι → ℕ} (a : A) (h
     (s.prod fun i => hI.dpow (n i) a) = Nat.multinomial s n * hI.dpow (s.sum n) a := by
   classical
   induction' s using Finset.induction with i s hi ih
-  · rw [Finset.prod_empty, Finset.sum_empty, hI.dpow_zero ha, Nat.multinomial_nil, Nat.cast_one,
+  · rw [Finset.prod_empty, Finset.sum_empty, hI.dpow_zero ha, Nat.multinomial_empty, Nat.cast_one,
       mul_one]
   · rw [Finset.prod_insert hi, ih, ← mul_assoc, mul_comm (hI.dpow _ a), mul_assoc,
       hI.dpow_mul _ _ ha, ← Finset.sum_insert hi, ← mul_assoc]

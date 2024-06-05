@@ -87,7 +87,7 @@ theorem algebraMap_right_inv_of_degree_zero (x : grade R M 0) :
     rw [eq_comm, ← Finsupp.support_eq_empty] at hexp
     obtain  ⟨nm, hnm⟩ := nonempty_of_ne_empty hexp
     specialize hp0 h
-    simp only [weightedDegree', LinearMap.toAddMonoidHom_coe, Finsupp.total_apply, Finsupp.sum,
+    simp only [weightedDegree, LinearMap.toAddMonoidHom_coe, Finsupp.total_apply, Finsupp.sum,
       sum_eq_zero_iff] at hp0
     specialize hp0 nm hnm
     simp only [smul_eq_mul, mul_eq_zero] at hp0
@@ -242,7 +242,7 @@ theorem  augIdeal_eq_span :
     · -- supp_ss
       intro nm hnm
       apply mem_supported.mp hf
-      simp only [mem_vars, mem_coe, mem_support_iff, Ne.def, Finsupp.mem_support_iff, exists_prop]
+      simp only [mem_vars, mem_coe, mem_support_iff, ne_eq, Finsupp.mem_support_iff, exists_prop]
       rw [mem_coe, Finsupp.mem_support_iff] at hnm
       exact ⟨c, ⟨mem_support_iff.mp hc, hnm⟩⟩
   · rw [span_le]

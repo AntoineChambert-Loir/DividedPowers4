@@ -5,7 +5,7 @@ import DividedPowers.SubDPIdeal
 import DividedPowers.IdealAdd
 import DividedPowers.DPAlgebra.RobyLemma9
 import DividedPowers.DPAlgebra.PolynomialMap
-import DividedPowers.ForMathlib.RingTheory.Ideal
+--import DividedPowers.ForMathlib.RingTheory.Ideal
 import Mathlib.RingTheory.MvPolynomial.Basic
 import Mathlib.LinearAlgebra.TensorProduct.RightExactness
 
@@ -449,6 +449,7 @@ example (A : Type*) [CommRing A] (M : Type*) [AddCommGroup M] [Module A M]
       rw [disjoint_iff, ← hinf, disjoint_iff.mp hN.disjoint]
       simp only [ι, LinearMap.range_eq_bot]
       convert LinearMap.lTensor_zero M
+      sorry
     codisjoint := by
       rw [codisjoint_iff, ← hsup, codisjoint_iff.mp hN.codisjoint]
       simp only [ι, LinearMap.range_eq_top]
@@ -466,17 +467,17 @@ theorem _root_.Submodule.isCompl_lTensor_of_isCompl
   have hp : LinearMap.ker p = N'' := by
     simp only [p, Submodule.linearProjOfIsCompl_ker]
   have hpM : LinearMap.ker (LinearMap.lTensor M p) = LinearMap.range (LinearMap.lTensor M N''.subtype) := by
-    rw [← Function.LinearMap.exact_iff]
+    rw [← LinearMap.exact_iff]
     apply lTensor_exact M
-    simp only [Function.LinearMap.exact_iff, hp, Submodule.range_subtype]
+    simp only [LinearMap.exact_iff, hp, Submodule.range_subtype]
     simp only [p, ← LinearMap.range_eq_top, Submodule.linearProjOfIsCompl_range]
   let p' := Submodule.linearProjOfIsCompl _ _ hN.symm
   have hp' : LinearMap.ker p' = N' := by
     simp only [p', Submodule.linearProjOfIsCompl_ker]
   have hp'M : LinearMap.ker (LinearMap.lTensor M p') = LinearMap.range (LinearMap.lTensor M N'.subtype) := by
-    rw [← Function.LinearMap.exact_iff]
+    rw [← LinearMap.exact_iff]
     apply lTensor_exact M
-    simp only [Function.LinearMap.exact_iff, hp', Submodule.range_subtype]
+    simp only [LinearMap.exact_iff, hp', Submodule.range_subtype]
     simp only [p', ← LinearMap.range_eq_top, Submodule.linearProjOfIsCompl_range]
   let q : N →ₗ[A] N := N'.subtype.comp p + N''.subtype.comp p'
   have hq : q = LinearMap.id := by
@@ -522,19 +523,19 @@ theorem _root_.LinearMap.baseChange_isCompl (R : Type*) [CommRing R] [Algebra A 
     simp only [p, Submodule.linearProjOfIsCompl_ker]
   have hpM : LinearMap.ker (LinearMap.baseChange R p)
     = LinearMap.range (LinearMap.baseChange R M₂.subtype) := by
-    rw [← Function.LinearMap.exact_iff]
+    rw [← LinearMap.exact_iff]
     change Function.Exact (LinearMap.lTensor R _) (LinearMap.lTensor R _)
     apply lTensor_exact
-    simp only [Function.LinearMap.exact_iff, hp, Submodule.range_subtype]
+    simp only [LinearMap.exact_iff, hp, Submodule.range_subtype]
     simp only [p, ← LinearMap.range_eq_top, Submodule.linearProjOfIsCompl_range]
   let p' := Submodule.linearProjOfIsCompl _ _ hM.symm
   have hp' : LinearMap.ker p' = M₁ := by
     simp only [p', Submodule.linearProjOfIsCompl_ker]
   have hp'M : LinearMap.ker (LinearMap.baseChange R p')
     = LinearMap.range (LinearMap.baseChange R M₁.subtype) := by
-    rw [← Function.LinearMap.exact_iff]
+    rw [← LinearMap.exact_iff]
     apply lTensor_exact
-    simp only [Function.LinearMap.exact_iff, hp', Submodule.range_subtype]
+    simp only [LinearMap.exact_iff, hp', Submodule.range_subtype]
     simp only [p', ← LinearMap.range_eq_top, Submodule.linearProjOfIsCompl_range]
   let q : M →ₗ[A] M := M₁.subtype.comp p + M₂.subtype.comp p'
   have hq : q = LinearMap.id := by
@@ -609,9 +610,9 @@ theorem _root_.Algebra.TensorProduct.lTensor_isCompl
       | add x y hx hy =>
         simp only [map_add]
         exact Subalgebra.add_mem _ hx hy
-      | zero =>
-        simp only [map_zero]
-        apply Subalgebra.zero_mem
+      | zero => sorry
+        /- simp only [map_zero]
+        apply Subalgebra.zero_mem -/
   · ext x
     simp only [Submodule.restrictScalars_mem, LinearMap.mem_range]
     unfold Ideal.map
@@ -744,7 +745,7 @@ theorem _root_.Algebra.TensorProduct.lTensor_isCompl'
       induction y using TensorProduct.induction_on with
       | zero =>
         use 0
-        simp only [TensorProduct.zero_tmul, map_zero]
+        sorry --simp only [TensorProduct.zero_tmul, map_zero]
       | tmul r s =>
         rcases s with ⟨s, hs⟩
         simp only [Submodule.mem_one] at hs

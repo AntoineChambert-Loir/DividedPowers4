@@ -145,7 +145,7 @@ theorem weightedOrder_tendsto_top_iff [Finite σ] {ι : Type _} {w : σ → ℕ}
         exact ((finite_of_weight_le w hw n).biUnion fun d _ => hf d).subset h_ss
       · intro i hi
         simp only [mem_setOf_eq] at hi
-        simp only [mem_setOf_eq, Nat.cast_id, Ne.def, mem_iUnion, mem_setOf_eq, exists_prop]
+        simp only [mem_setOf_eq, Nat.cast_id, ne_eq, mem_iUnion, mem_setOf_eq, exists_prop]
         have heq: (ENat.toNat (weightedOrder w (f i))) = weightedOrder w (f i) := by
           rw [ENat.coe_toNat_eq_self]
           exact ne_of_lt (lt_of_le_of_lt hi hn)
@@ -212,7 +212,7 @@ theorem support_add [DecidableEq ι] {f g : ι → MvPowerSeries σ α} (hf : St
     ∀ d : σ →₀ ℕ, (fun i => coeff α d ((f + g) i)).support ⊆
       ((hf d).toFinset ∪ (hg d).toFinset : Finset ι) := by
   intro d i
-  simp only [Pi.add_apply, map_add, Function.mem_support, Ne.def, coe_union, Finite.coe_toFinset,
+  simp only [Pi.add_apply, map_add, Function.mem_support, ne_eq, coe_union, Finite.coe_toFinset,
     Set.mem_union]
   intro h
   by_cases h₁ : coeff α d (f i) = 0
@@ -232,7 +232,7 @@ theorem smul {f : ι → MvPowerSeries σ α} (a : ι → α) (hf : StronglySumm
   intro d
   apply Finite.subset (hf d)
   intro i
-  simp only [Pi.smul_apply', Pi.smul_apply, Function.mem_support, Ne.def]
+  simp only [Pi.smul_apply', Pi.smul_apply, Function.mem_support, ne_eq]
   intro h h'
   apply h
   rw [coeff_smul, h', MulZeroClass.mul_zero]
@@ -311,7 +311,7 @@ theorem sum_congr {f g : ι → MvPowerSeries σ α} {hf : StronglySummable f} {
   simp only [coeff_sum_def]
   refine' Finset.sum_congr _ fun i _ => by rw [h]
   ext i
-  simp only [Finite.mem_toFinset, mem_support, Ne.def, h]
+  simp only [Finite.mem_toFinset, mem_support, ne_eq, h]
 #align mv_power_series.strongly_summable.sum_congr MvPowerSeries.StronglySummable.sum_congr
 
 --ADDED
@@ -373,7 +373,7 @@ theorem of_indicator {f : ι → MvPowerSeries σ α} (hf : StronglySummable f) 
   intro d
   apply (hf d).subset
   intro i
-  simp only [mem_support, Ne.def, not_imp_not]
+  simp only [mem_support, ne_eq, not_imp_not]
   intro hi
   cases' s.indicator_eq_zero_or_self f i with h h <;>
   . simp only [h, hi, map_zero]
@@ -396,7 +396,7 @@ theorem on_subtype {f : ι → MvPowerSeries σ α} (hf : StronglySummable f) (s
   apply Finite.of_finite_image _ (injOn_of_injective Subtype.coe_injective _)
   apply (hf d).subset
   rintro i ⟨j, hj, rfl⟩
-  simp only [comp_apply, mem_support, Ne.def] at hj ⊢
+  simp only [comp_apply, mem_support, ne_eq] at hj ⊢
   exact hj
 #align mv_power_series.strongly_summable.on_subtype MvPowerSeries.StronglySummable.on_subtype
 
@@ -427,7 +427,7 @@ theorem homogeneous_components_self_stronglySummable (w : σ → ℕ) (f : MvPow
   intro d
   apply (finite_toSet {weight w d}).subset
   intro p
-  rw [Function.mem_support, Ne.def, mem_coe, coeff_homogeneousComponent, Finset.mem_singleton,
+  rw [Function.mem_support, ne_eq, mem_coe, coeff_homogeneousComponent, Finset.mem_singleton,
     ite_eq_right_iff, not_forall, exists_prop, and_imp]
   intro h _
   exact h.symm
@@ -481,7 +481,7 @@ theorem support_partialProduct_subset [DecidableEq ι] [DecidableEq σ]
     (support fun I => coeff α d (partialProduct f I)) ⊆
       (hf.unionOfSupportOfCoeffLe d).powerset := by
   intro I
-  simp only [mem_support, Ne.def, coe_powerset, Set.mem_preimage, Set.mem_powerset_iff,
+  simp only [mem_support, ne_eq, coe_powerset, Set.mem_preimage, Set.mem_powerset_iff,
     Finset.coe_subset, not_imp_comm, Finset.not_subset]
   rintro ⟨i, hi, h⟩
   rw [StronglySummable.not_mem_unionOfSupportOfCoeffLe_iff] at h
@@ -552,7 +552,7 @@ theorem finset_prod_eq [DecidableEq ι] (s : Finset ι) (hf : StronglyMultipliab
     rw [indicator, if_pos]; rfl
     · exact Finset.mem_powerset.mp ht
   · intro t
-    rw [mem_support, Ne.def, mem_coe, Finset.mem_powerset, not_imp_comm]
+    rw [mem_support, ne_eq, mem_coe, Finset.mem_powerset, not_imp_comm]
     intro ht'
     rw [indicator, if_neg, map_zero]
     exact ht'

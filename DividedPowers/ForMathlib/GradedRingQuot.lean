@@ -332,13 +332,15 @@ theorem DirectSum.sum_of_support_le {ι : Type*} [dec_ι : DecidableEq ι] (β :
     rw [hi', map_zero]
 
 theorem DirectSum.finsupp_sum_support_decompose'
-    {ι : Type u_3} {M : Type u_1} {σ : Type u_2} [inst : DecidableEq ι] [inst : AddCommMonoid M] [inst : SetLike σ M]
+    {ι : Type u_3} {M : Type u_1} {σ : Type u_2} [inst : DecidableEq ι] [inst : AddCommMonoid M]
+    [inst : SetLike σ M]
     [inst : AddSubmonoidClass σ M]
     (ℳ : ι → σ) [inst : Decomposition ℳ]
     [inst : (i : ι) → (x : { x // x ∈ ℳ i }) → Decidable (x ≠ 0)]
     (r : M) :
     r = ((decompose ℳ) r).sum (fun i x => ↑x) := by
   conv_lhs => rw [← sum_support_decompose ℳ r]
+  rfl
 
 theorem EqvGenIsHomogeneous_of [GradedAlgebra 𝒜] (hr : Rel.IsHomogeneous 𝒜 rel) :
     Rel.IsHomogeneous 𝒜 (EqvGen rel) := by
@@ -766,6 +768,7 @@ theorem Ideal.quotDecomposition_left_inv' [h𝒜 : GradedAlgebra 𝒜] (hI : I.I
   conv_rhs =>
     rw [← h𝒜.left_inv a]
     simp only [← LinearMap.comp_apply]
+  rfl
 
 theorem Ideal.quotDecomposition_left_inv [GradedAlgebra 𝒜] (hI : I.IsHomogeneous 𝒜) :
     LeftInverse (DirectSum.coeAddMonoidHom (I.quotSubmodule R 𝒜)) (I.quotDecompose R 𝒜 hI) :=

@@ -538,13 +538,13 @@ theorem dpow_comp_coeffs {m n p : ℕ} (hn : n ≠ 0) (hp : p ≤ m * n) :
   rw [← hI.factorial_mul_dpow_eq_pow (m * n) (X + 1) Submodule.mem_top]
   rw [← Polynomial.coeff_C_mul]
   rw [← mul_assoc, mul_comm (C ((mchoose m n) : ℚ)), mul_assoc]
-  simp only [C_eq_nat_cast]
+  simp only [C_eq_natCast]
   rw [← hI.dpow_comp m hn Submodule.mem_top]
 
   rw [← dpow_eq_of_mem_left hI hI hII n Submodule.mem_top,
     ← dpow_eq_of_mem_left hI hI hII m Submodule.mem_top]
   rw [dpow_comp_aux hI hI hII m hn hX h1]
-  rw [← C_eq_nat_cast]
+  rw [← C_eq_natCast]
   simp only [Finset.mul_sum]
   simp only [finset_sum_coeff]
   simp only [hI]

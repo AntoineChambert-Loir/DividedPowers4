@@ -368,7 +368,7 @@ theorem dpScalarExtension_mem_grade {a : DividedPowerAlgebra R M} {n : ℕ} (ha 
       intro h
       simp only [h, map_zero, ne_eq, not_true_eq_false] at hd0
     convert hpn hd0'
-    simp only [weightedDegree', LinearMap.toAddMonoidHom_coe, Finsupp.total_mapDomain]
+    simp only [weightedDegree, LinearMap.toAddMonoidHom_coe, Finsupp.total_mapDomain]
     rfl
   · simp only [MvPolynomial.rename]
     --rw [hp']

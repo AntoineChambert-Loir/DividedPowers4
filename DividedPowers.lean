@@ -35,7 +35,7 @@ import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Topology
 import DividedPowers.ForMathlib.MvPowerSeries.Substitutions
 import DividedPowers.ForMathlib.MvPowerSeries.Topology
 import DividedPowers.ForMathlib.PowerSeries.Topology
-import DividedPowers.ForMathlib.RingTheory.Ideal
+--import DividedPowers.ForMathlib.RingTheory.Ideal
 import DividedPowers.ForMathlib.RingTheory.SubmoduleMem
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.LinearEquiv
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.MvPolynomial

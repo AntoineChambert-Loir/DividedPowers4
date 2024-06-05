@@ -172,7 +172,8 @@ variable {R}
 @[simp] theorem lift_ι_apply {A : Type*} [CommRing A] [Algebra R A] {I : Ideal A}
     (hI : DividedPowers I) {φ : M →ₗ[R] A} (hφ : ∀ m, φ m ∈ I) (x : M) :
     lift hI φ hφ (ι R M x) = φ x := by
-  conv_rhs => rw [← ι_comp_lift R hI hφ]; rfl
+  conv_rhs => rw [← ι_comp_lift R hI hφ]
+  rfl
 
 def HasGradedDpow {A : Type*} [CommSemiring A] [Algebra R A]
     (𝒜 : ℕ → Submodule R A) {I : Ideal A} (hI : DividedPowers I) :=

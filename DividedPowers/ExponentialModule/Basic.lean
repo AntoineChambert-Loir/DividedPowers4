@@ -38,10 +38,10 @@ lemma MvPolynomial.coe_smul (φ : MvPolynomial σ R) (r : R) :
 lemma Polynomial.coe_smul (φ : Polynomial R) (r : R) :
   (r • φ : Polynomial R) = r • (φ : PowerSeries R) := rfl
 
-@[simp]
+/- @[simp] -- Already defined
 theorem PowerSeries.constantCoeff_smul (a : R) (f : PowerSeries R) :
     PowerSeries.constantCoeff R (a • f) = a • PowerSeries.constantCoeff R f :=
-  rfl
+  rfl -/
 
 end complements
 
@@ -133,7 +133,7 @@ lemma ne_zero_of_mul_ne_zero {M : Type*} [MonoidWithZero M] {a b : M}
     apply h
     rw [hb, mul_zero]
 
-lemma fin_two_equiv_prod (α : Type*) [Zero α] : ((Fin 2) →₀ α) ≃ α × α :=
+noncomputable def fin_two_equiv_prod (α : Type*) [Zero α] : ((Fin 2) →₀ α) ≃ α × α :=
   Finsupp.equivFunOnFinite.trans {
   toFun := fun e ↦ (e 0, e 1)
   invFun := fun (a, b) i ↦ match i with
