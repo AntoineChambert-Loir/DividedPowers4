@@ -274,7 +274,7 @@ theorem mem_nhds_zero_iff (B : IdealBasis α)
   · rintro ⟨i, hi, mem_nhds, subset_s⟩
     exact ⟨i, mem_nhds, hi, subset_s⟩
 
-lemma ofComm {α : Type*} [CommRing α] (B : Set (Ideal α))
+def ofComm {α : Type*} [CommRing α] (B : Set (Ideal α))
     (nonempty : Set.Nonempty B)
     (inter : ∀ {i j}, i ∈ B → j ∈ B → ∃ k ∈ B, k ≤ i ⊓ j) : IdealBasis α where
   sets := B

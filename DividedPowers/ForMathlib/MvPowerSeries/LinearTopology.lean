@@ -144,7 +144,7 @@ theorem topology_eq_ideals_basis_topology :
   rw [← coeff_eq_apply f e, hf e]
   exact mem_of_mem_nhds (ht e)
   . have he' : e ∈ (Finite.toFinset hD) := by
-      simp only [id.def, Finite.mem_toFinset]
+      simp only [id_eq, Finite.mem_toFinset]
       exact he
     apply Finset.le_sup he'
 #align mv_power_series.topology_eq_ideals_basis_topolgy MvPowerSeries.topology_eq_ideals_basis_topology
@@ -218,7 +218,7 @@ lemma mem_nhds_zero_iff (U : Set (MvPowerSeries σ α)) :
     --change f ∈ basis σ α _ at hf
     rw [← coeff_eq_apply f e, hf e]
     · exact mem_of_mem_nhds (ht e)
-    · rw [← id.def e]
+    · rw [← id_eq e]
       exact Finset.le_sup ((Set.Finite.mem_toFinset _).mpr he)
   · rintro ⟨d, hd⟩
     exact (@nhds _ τ 0).sets_of_superset (basis_mem_nhds_zero σ α d) hd
