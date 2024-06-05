@@ -5,7 +5,7 @@ import DividedPowers.SubDPIdeal
 import DividedPowers.IdealAdd
 import DividedPowers.DPAlgebra.RobyLemma9
 import DividedPowers.DPAlgebra.PolynomialMap
-import DividedPowers.ForMathlib.RingTheory.Ideal
+-- import DividedPowers.ForMathlib.RingTheory.Ideal
 import Mathlib.RingTheory.MvPolynomial.Basic
 import Mathlib.LinearAlgebra.TensorProduct.RightExactness
 
