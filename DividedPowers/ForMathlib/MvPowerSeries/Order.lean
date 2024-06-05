@@ -15,7 +15,7 @@ theorem coeff_apply (f : MvPowerSeries σ α) (d : σ →₀ ℕ) : coeff α d f
 
 theorem exists_coeff_ne_zero_iff_ne_zero (f : MvPowerSeries σ α) :
     (∃ d : σ →₀ ℕ, coeff α d f ≠ 0) ↔ f ≠ 0 := by
-  simp only [ext_iff, Ne.def, coeff_zero, not_forall]
+  simp only [ext_iff, ne_eq, coeff_zero, not_forall]
 #align mv_power_series.exists_coeff_ne_zero_iff_ne_zero
   MvPowerSeries.exists_coeff_ne_zero_iff_ne_zero
 
@@ -167,10 +167,9 @@ the `d`th coefficient is `0` for all `d` such that `weight w d < n`.-/
 theorem le_weightedOrder {f : MvPowerSeries σ α} {n : ℕ∞}
     (h : ∀ d : σ →₀ ℕ, ↑(weight w d) < n → coeff α d f = 0) : n ≤ f.weightedOrder w := by
   cases n
-  · rw [none_eq_top, top_le_iff, weightedOrder_eq_top_iff]
+  · rw [top_le_iff, weightedOrder_eq_top_iff]
     ext d; exact h d (coe_lt_top _)
-  · rw [WithTop.some_eq_coe] at h ⊢
-    apply nat_le_weightedOrder;
+  · apply nat_le_weightedOrder;
     simpa only [ENat.some_eq_coe, Nat.cast_lt] using h
 #align mv_power_series.le_weighted_order MvPowerSeries.le_weightedOrder
 
@@ -264,7 +263,7 @@ theorem weightedOrder_monomial (d : σ →₀ ℕ) (a : α) [Decidable (a = 0)] 
   · rw [h, weightedOrder_eq_top_iff, LinearMap.map_zero]
   · rw [weightedOrder_eq_nat]
     constructor
-    · use d; simp only [coeff_monomial_same, eq_self_iff_true, Ne.def, true_and_iff]; exact h
+    · use d; simp only [coeff_monomial_same, eq_self_iff_true, ne_eq, true_and_iff]; exact h
     · intro b hb
       rw [coeff_monomial, if_neg]
       intro h
@@ -335,8 +334,8 @@ theorem degree_apply (d : σ →₀ ℕ) : degree d = d.sum fun _ => id := by
 
 theorem degree_eq_zero_iff (d : σ →₀ ℕ) : degree d = 0 ↔ d = 0 := by
   simp only [degree, weight, one_mul, AddMonoidHom.coe_mk, Finsupp.sum, Finset.sum_eq_zero_iff,
-    Finsupp.mem_support_iff, not_imp_self, DFunLike.ext_iff, Finsupp.coe_zero, Pi.zero_apply,
-    ZeroHom.coe_mk, Finset.sum_eq_zero_iff, Finsupp.mem_support_iff, ne_eq, not_imp_self]
+    Finsupp.mem_support_iff, _root_.not_imp_self, DFunLike.ext_iff, Finsupp.coe_zero, Pi.zero_apply,
+    ZeroHom.coe_mk, Finset.sum_eq_zero_iff, Finsupp.mem_support_iff, ne_eq]
 #align mv_power_series.degree_eq_zero_iff MvPowerSeries.degree_eq_zero_iff
 
 theorem le_degree (x : σ) (d : σ →₀ ℕ) : d x ≤ degree d := by

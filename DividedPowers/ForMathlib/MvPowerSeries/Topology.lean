@@ -1,5 +1,5 @@
 import Mathlib.Topology.Algebra.Ring.Basic
-import Mathlib.RingTheory.Nilpotent
+import Mathlib.RingTheory.Nilpotent.Basic
 import Mathlib.RingTheory.PowerSeries.Basic
 import Mathlib.Topology.Algebra.InfiniteSum.Constructions
 import Mathlib.Topology.UniformSpace.Pi
@@ -160,7 +160,7 @@ end Uniform
 example [σ_ne : Nonempty σ] : NoMaxOrder (σ →₀ ℕ) where
   exists_gt := fun a => by
     use a + Finsupp.single σ_ne.some 1
-    simp only [lt_iff_le_and_ne, zero_le, le_add_iff_nonneg_right, Ne.def, self_eq_add_right,
+    simp only [lt_iff_le_and_ne, zero_le, le_add_iff_nonneg_right, ne_eq, self_eq_add_right,
       Finsupp.single_eq_zero, Nat.one_ne_zero, not_false_iff, and_self_iff]
 
 section
