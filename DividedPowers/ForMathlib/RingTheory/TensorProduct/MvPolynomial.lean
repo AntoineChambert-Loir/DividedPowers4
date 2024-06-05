@@ -71,10 +71,11 @@ lemma rTensor_apply (t : MvPolynomial σ S ⊗[R] N) (d : σ →₀ ℕ) :
     rTensor t d = ((lcoeff S d).restrictScalars R).rTensor N t :=
   TensorProduct.finsuppLeft_apply t d
 
+-- Timeout
 lemma rTensor_symm_apply_single (d : σ →₀ ℕ) (s : S) (n : N) :
     rTensor.symm (Finsupp.single d (s ⊗ₜ n)) =
       (monomial d s) ⊗ₜ[R] n :=
-  TensorProduct.finsuppLeft_symm_apply_single d s n
+  TensorProduct.finsuppLeft_symm_apply_single (R := R) d s n
 
 /-- The tensor product of the polynomial algebra by a module
   is linearly equivalent to a Finsupp of that module -/
@@ -152,7 +153,7 @@ noncomputable def rTensorAlgEquiv :
   · simp only [Algebra.TensorProduct.one_def]
     apply symm
     rw [← LinearEquiv.symm_apply_eq]
-    exact finsuppLeft_symm_apply_single (0 : σ →₀ ℕ) (1 : S) (1 : N)
+    exact finsuppLeft_symm_apply_single (R := R) (0 : σ →₀ ℕ) (1 : S) (1 : N)
   · intro x y
     erw [← rTensorAlgHom_apply_eq (S := S)]
     simp only [_root_.map_mul, rTensorAlgHom_apply_eq]

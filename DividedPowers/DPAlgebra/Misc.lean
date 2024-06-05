@@ -8,6 +8,7 @@ import Mathlib.Algebra.TrivSqZeroExt
 import Mathlib.Algebra.Algebra.Operations
 import Mathlib.Algebra.MvPolynomial.Supported
 import Mathlib.Algebra.MvPolynomial.CommRing
+import Mathlib.RingTheory.Ideal.Maps
 
 noncomputable section
 
@@ -367,7 +368,7 @@ theorem GalgHom.isHomogeneous'_aeval (σ : Type _)
   rw [aeval_monomial, ← smul_eq_mul, algebraMap_smul]
   apply Submodule.smul_mem
   convert Finsupp.prod.mem_grade 𝒜 c f _ fun s _ => h s
-  rw [← hp (mem_support_iff.mp hc), MvPolynomial.weightedDegree'_apply]
+  rw [← hp (mem_support_iff.mp hc), MvPolynomial.weightedDegree_apply]
   rw [Finsupp.sum, map_sum, Finsupp.sum_of_support_subset _ le_rfl]
   apply Finset.sum_congr rfl
   . intro x _ ; simp only [map_nsmul]
@@ -383,9 +384,9 @@ theorem MvPolynomial.vars_X_subset {R : Type _} {σ : Type _} (n : σ) [CommSemi
   rw [X, mem_vars, mem_singleton]
   rintro ⟨c, hc, hc'⟩
   by_contra h'
-  rw [mem_support_iff, coeff_monomial, Ne.def] at hc
+  rw [mem_support_iff, coeff_monomial, ne_eq] at hc
   by_cases h : Finsupp.single n 1 = c
-  · rw [← h, Finsupp.mem_support_iff, Ne.def, Finsupp.single_apply] at hc'
+  · rw [← h, Finsupp.mem_support_iff, ne_eq, Finsupp.single_apply] at hc'
     apply hc'; rw [if_neg (Ne.symm h')]
   · apply hc; rw [if_neg h]
 set_option linter.uppercaseLean3 false
@@ -460,10 +461,10 @@ variable (M)
 
 -- TODO: generalize
 theorem eq_finsupp_single_of_degree_one [DecidableEq M]
-    {d : ℕ × M →₀ ℕ} (hd : (weightedDegree' Prod.fst) d = 1)
+    {d : ℕ × M →₀ ℕ} (hd : (weightedDegree Prod.fst) d = 1)
     (hsupp : ∀ nm ∈ d.support, 0 < nm.fst) :
   ∃ m : M, Finsupp.single (1, m) 1 = d := by
-  rw [weightedDegree'_apply, Finsupp.sum] at hd
+  rw [weightedDegree_apply, Finsupp.sum] at hd
   have hnm : ∃ nm : ℕ × M, d nm • nm.fst = 1 := by
     by_contra h0
     rw [not_exists] at h0

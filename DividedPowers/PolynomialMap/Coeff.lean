@@ -149,10 +149,10 @@ noncomputable def lLfsum {ι : Type _} [DecidableEq ι] :
       Finsupp.sum_of_support_subset _ (subset_union_left _ _),
       Finsupp.sum_of_support_subset _ (subset_union_right _ _), ← sum_add_distrib]
     apply sum_congr rfl
-    all_goals try intro i hi; rfl
+    all_goals try intro i _hi; rfl
     · intro x
       simp only [Finsupp.ofSupportFinite_support, Set.Finite.mem_toFinset,
-        Function.mem_support, Ne.def, mem_union, ← not_and_or, not_imp_not]
+        Function.mem_support, ne_eq, mem_union, ← not_and_or, not_imp_not]
       intro h
       rw [h.1, h.2, add_zero]
   map_smul' := fun a ⟨f,hf⟩ ↦ by
@@ -424,6 +424,7 @@ theorem span_tensorProduct_eq_top_of_span_eq_top (σ : Type _) (e : σ → M)
         apply Submodule.span_le_restrictScalars R
         convert Submodule.apply_mem_span_image_of_mem_span (s := Set.range e) f _
         . conv_rhs => rw [← Set.image_univ, Set.image_image, Set.image_univ]
+          rfl
         . rw [hm]; exact Submodule.mem_top
       rw [TensorProduct.smul_tmul']; simp only [Algebra.id.smul_eq_mul, _root_.mul_one]
   | add x y hx hy => exact Submodule.add_mem _ (hx Submodule.mem_top) (hy Submodule.mem_top)
@@ -557,7 +558,7 @@ noncomputable def coeffPolynomialMapEquiv [DecidableEq ι] (b : Basis ι R M) :
       Finsupp.sum_of_support_subset (h + k) Finsupp.support_add]
     simp_rw [Finsupp.coe_add, Pi.add_apply, TensorProduct.tmul_add]
     rw [sum_add_distrib]
-    all_goals intro i hi; rw [TensorProduct.tmul_zero]
+    all_goals intro i _hi; rw [TensorProduct.tmul_zero]
   map_smul' a h := by
     ext S _ _ m
     simp only [← toFun_eq_toFun', RingHom.id_apply, smul_toFun, Pi.smul_apply,

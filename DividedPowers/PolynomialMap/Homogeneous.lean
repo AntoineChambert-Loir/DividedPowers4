@@ -60,11 +60,8 @@ we have `ε ∘ j = @id S`, and the compatibility properties of `f` implies that
 -/
 namespace Polynomial
 
-open Polynomial
-
 variable {R : Type*} [CommSemiring R] {S : Type _} [CommSemiring S] [Algebra R S]
   {S' : Type _} [CommSemiring S'] [Algebra R S']
-
 
 lemma C_eq_algebraMap' (r : R) : C (algebraMap R S r) = algebraMap R S[X] r := rfl
 
@@ -86,8 +83,8 @@ lemma coeff_baseChange_apply (φ : S →ₐ[R] S') (f : S[X]) (p : ℕ) :
       eval₂_X_pow, coeff_C_mul, _root_.map_mul, coeff_X_pow, apply_ite φ, _root_.map_one, map_zero]
 
 lemma lcoeff_comp_baseChange_eq (φ : S →ₐ[R] S') (p : ℕ) :
-  LinearMap.comp (AlgHom.toLinearMap φ) ((lcoeff S p).restrictScalars R)
-    = LinearMap.comp ((lcoeff S' p).restrictScalars R) (baseChange φ).toLinearMap := by
+    LinearMap.comp (AlgHom.toLinearMap φ) ((lcoeff S p).restrictScalars R) =
+      LinearMap.comp ((lcoeff S' p).restrictScalars R) (baseChange φ).toLinearMap := by
   ext f
   simp only [LinearMap.coe_comp, LinearMap.coe_restrictScalars, Function.comp_apply, lcoeff_apply,
     AlgHom.toLinearMap_apply, coeff_baseChange_apply]
@@ -382,7 +379,7 @@ theorem Finsupp.sum_eq_one_iff {α : Type*} [DecidableEq α] (d : α →₀ ℕ)
         apply symm
         rw [← Finsupp.not_mem_support_iff, Finsupp.mem_support_iff, ne_eq, not_not]
         simp only [ne_eq, Finsupp.mem_support_iff, and_imp] at ha'
-        simpa only [Finsupp.erase_ne (ne_comm.mp hb), not_imp_self] using ha' b (ne_comm.mp hb)
+        simpa only [Finsupp.erase_ne (ne_comm.mp hb), _root_.not_imp_self] using ha' b (ne_comm.mp hb)
     exact fun _ ↦ rfl
   · rintro ⟨a, rfl⟩
     rw [Finsupp.sum_eq_single a, Finsupp.single_eq_same]
@@ -422,7 +419,7 @@ theorem isHomogeneousOfDegreeOne_coeff_single {f : PolynomialMap R M N}
       (fun hi => by simp only [Finset.mem_univ, not_true_eq_false] at hi), Pi.single_eq_same,
       one_pow, _root_.one_smul]
   · intro j _ hj
-    rw [Finset.prod_eq_zero (a := j), _root_.zero_smul]
+    rw [Finset.prod_eq_zero (i := j), _root_.zero_smul]
     exact Finset.mem_univ _
     rw [Finsupp.single_eq_same, Pi.single_eq_of_ne hj, pow_one]
   · simp only [mem_univ, not_true_eq_false, IsEmpty.forall_iff]
