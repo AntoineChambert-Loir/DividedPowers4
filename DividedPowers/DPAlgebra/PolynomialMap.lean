@@ -1,6 +1,7 @@
 import DividedPowers.PolynomialMap.Homogeneous
 import DividedPowers.DPAlgebra.Graded.Basic
 import DividedPowers.DPAlgebra.BaseChange
+import Mathlib.RingTheory.TensorProduct.Basic
 
 /-
 
@@ -92,6 +93,8 @@ theorem gamma_mem_grade (n : ℕ) (S : Type*) [CommRing S] [Algebra R S] (m : S 
     -/
     sorry
 
+#check LinearMap.tensorProduct
+
 example (A : Type*) [CommRing A] (M N P : Type*) [AddCommGroup M] [Module A M]
   [AddCommGroup N] [Module A N] [AddCommGroup P] [Module A P]
   (Φ : M →ₗ[A] N →ₗ[A] P)
@@ -100,6 +103,7 @@ example (A : Type*) [CommRing A] (M N P : Type*) [AddCommGroup M] [Module A M]
   have := LinearMap.baseChange R Φ
   apply LinearMap.comp ?_ this
   have := LinearMap.tensorProduct A R N P
+  exact this
 
 /- to do this, it seems that we have to understand polynomial maps
 valued into a submodule (in this case, it is a direct factor,
