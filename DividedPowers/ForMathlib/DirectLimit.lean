@@ -134,9 +134,10 @@ theorem rTensor_fgEquiv_of (P : Submodules_fg R M) (u : P.val ⊗[R] N) :
       = LinearMap.rTensor N (Submodule.subtype P.val) by
     exact DFunLike.congr_fun this u
   ext p n
-  simp [rTensor_fgEquiv]
-  simp only [LinearEquiv.rTensor]
-  simp only [congr_tmul, LinearEquiv.refl_apply]
+  simp only [rTensor_fgEquiv, AlgebraTensorModule.curry_apply, curry_apply,
+    LinearMap.coe_restrictScalars, LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply,
+    LinearEquiv.trans_apply, directLimitLeft_symm_of_tmul, LinearEquiv.rTensor_tmul,
+    LinearMap.rTensor_tmul, Submodule.coeSubtype]
   congr
   simp only [Submodules_fg_equiv, LinearEquiv.ofBijective_apply]
   simp only [Submodules_fg_map]
