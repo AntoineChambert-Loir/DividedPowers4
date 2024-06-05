@@ -5,8 +5,8 @@ import Mathlib.Data.Nat.Choose.Vandermonde
 section Combinatorics
 
 -- Because mathlib hasn't it yet!
-@[eliminator]
-theorem Nat.rec' {motive : Nat → Sort*}
+@[induction_eliminator]
+def Nat.rec' {motive : Nat → Sort*}
     (zero : motive 0) (add_one : (n : Nat) → motive n → motive (n + 1)) (t : Nat) :
     motive t :=
   Nat.rec zero add_one t
