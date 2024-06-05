@@ -188,20 +188,20 @@ noncomputable def dpScalarExtension :
     R ⊗[A] DividedPowerAlgebra A M →ₐ[R] DividedPowerAlgebra R (R ⊗[A] M) := by
   apply AlgHom.baseChange
   apply lift' (fun nm => dp R nm.1 (1 ⊗ₜ[A] nm.2) : ℕ × M → DividedPowerAlgebra R (R ⊗[A] M))
-  · intro m; rw [dp_zero]
+    (fun _ => by simp only [dp_zero])
   · intro n a m; simp only [tmul_smul]
     rw [← algebraMap_smul R a, dp_smul, ← map_pow, algebraMap_smul R]
   · intro n p m; rw [dp_mul]
   · intro n x y; rw [tmul_add, dp_add]
 
-theorem dpScalarExtension_apply (r : R) (n : ℕ) (m : M) :
+theorem dpScalarExtension_apply_dp (r : R) (n : ℕ) (m : M) :
     dpScalarExtension A R M ((r ^ n) ⊗ₜ[A] (dp A n m)) = dp R n (r ⊗ₜ[A] m) := by
   rw [dpScalarExtension, AlgHom.baseChange_tmul, lift'AlgHom_apply_dp, ← dp_smul, smul_tmul',
     smul_eq_mul, mul_one]
 
-theorem dpScalarExtension_apply_one (n : ℕ) (m : M) :
+theorem dpScalarExtension_apply_one_dp (n : ℕ) (m : M) :
     dpScalarExtension A R M (1 ⊗ₜ[A] (dp A n m)) = dp R n (1 ⊗ₜ[A] m) := by
-  rw [← one_pow n, dpScalarExtension_apply, one_pow]
+  rw [← one_pow n, dpScalarExtension_apply_dp, one_pow]
 
 /-- Uniqueness for [Roby1963, Theorem III.2] (opposite map) -/
 theorem dpScalarExtension_unique
@@ -221,7 +221,7 @@ theorem dpScalarExtension_unique
     | h_add f g hf hg => simp only [tmul_add, map_add, hf, hg]
     | h_dp f n m hf =>
         rw [← mul_one s, ← tmul_mul_tmul, _root_.map_mul, _root_.map_mul, hf, hφ n m,
-          dpScalarExtension_apply_one]
+          dpScalarExtension_apply_one_dp]
   | add x y hx hy => simp only [map_add, hx, hy]
 
 end dpScalarExtension
@@ -240,7 +240,7 @@ noncomputable def dpScalarExtensionInv  :
     (S ⊗[R] DividedPowerAlgebra R M)).symm (dpScalarExtensionExp R S M)
 
 /-- Roby1963, theorem III.2 -/
-theorem dpScalarExtensionInv_apply (n : ℕ) (s : S) (m : M) :
+theorem dpScalarExtensionInv_apply_dp (n : ℕ) (s : S) (m : M) :
     dpScalarExtensionInv R S M (dp S n (s ⊗ₜ[R] m)) = (s ^ n) ⊗ₜ[R] (dp R n m) := by
   rw [dpScalarExtensionInv, dividedPowerAlgebra_exponentialModule_equiv_symm_apply]
   simp only [dpScalarExtensionExp, LinearMap.baseChangeEquiv, LinearEquiv.coe_symm_mk,
@@ -270,7 +270,7 @@ theorem dpScalarExtensionInv_unique
       split_ifs
       · simp only [_root_.map_one]
       · simp only [_root_.map_zero]
-    | tmul s m => rw [hφ, dpScalarExtensionInv_apply]
+    | tmul s m => rw [hφ, dpScalarExtensionInv_apply_dp]
     | add x y hx hy =>
       simp only [dp_add, map_sum, _root_.map_mul]
       apply Finset.sum_congr rfl
@@ -297,7 +297,7 @@ noncomputable def dpScalarExtensionEquiv :
         · simp only [_root_.map_one]
         · simp only [map_zero]
       | tmul s m =>
-        rw [dpScalarExtensionInv_apply, dpScalarExtension_apply]
+        rw [dpScalarExtensionInv_apply_dp, dpScalarExtension_apply_dp]
       | add x y hx hy =>
         rw [dp_add, map_sum, map_sum]
         apply Finset.sum_congr rfl
@@ -310,7 +310,7 @@ noncomputable def dpScalarExtensionEquiv :
         intro n m
         simp only [coe_comp, coe_restrictScalars', Function.comp_apply, includeRight_apply,
           coe_id, id_eq]
-        rw [← one_pow n, dpScalarExtension_apply, dpScalarExtensionInv_apply])
+        rw [← one_pow n, dpScalarExtension_apply_dp, dpScalarExtensionInv_apply_dp])
 
 theorem coe_dpScalarExtensionEquiv :
     ⇑(dpScalarExtensionEquiv R S M) = ⇑(dpScalarExtension R S M) := by
@@ -334,7 +334,7 @@ theorem rTensor_comp_dpScalarExtensionEquiv_symm_eq {S : Type*} [CommRing S] [Al
   induction m using TensorProduct.induction_on generalizing n with
   | zero => simp only [Function.comp_apply, dp_null, RingHom.map_ite_one_zero, map_zero]
   | tmul s m =>
-    simp only [coe_dpScalarExtensionEquiv_symm, dpScalarExtensionInv_apply, toLinearMap_apply,
+    simp only [coe_dpScalarExtensionEquiv_symm, dpScalarExtensionInv_apply_dp, toLinearMap_apply,
       Algebra.TensorProduct.map_tmul, map_pow, coe_id, id_eq, LinearMap.rTensor_tmul ]
   | add x y hx hy =>
     simp only [dp_add, _root_.map_sum, _root_.map_mul, map_add]
@@ -342,18 +342,48 @@ theorem rTensor_comp_dpScalarExtensionEquiv_symm_eq {S : Type*} [CommRing S] [Al
     rintro ⟨k, l⟩ _
     rw [hx, hy]
 
+    variable {R} {S} {M}
+
+open MvPolynomial
+
+noncomputable def aux (p : MvPolynomial (ℕ × M) S) : MvPolynomial (ℕ × S ⊗[R] M) S :=
+  rename (Prod.map id (fun m => 1 ⊗ₜ m)) p
+
 theorem dpScalarExtension_mem_grade {a : DividedPowerAlgebra R M} {n : ℕ} (ha : a ∈ grade R M n)
     (s : S) : dpScalarExtension R S M (s ⊗ₜ[R] a) ∈ grade S (S ⊗[R] M) n := by
-  obtain ⟨p, hpn, hpa⟩ := ha
   rw [mem_grade_iff]
-  set q := s ⊗ₜ[R] p
-  set f : R →ₐ[R] S := {
+  set f : R →ₐ[R] S := { -- Where is this in Mathlib?
     (algebraMap R S) with
-    commutes' := sorry
-  }
-  have p' := MvPolynomial.baseChange f p
-  --have := @MvPolynomial.baseChange R _ R _ _ S _ _ (ℕ × M) f p
-  sorry
+    commutes' := fun r => rfl }
+  obtain ⟨p, hpn, hpa⟩ := ha
+  set p' : MvPolynomial (ℕ × M) S := MvPolynomial.baseChange f p with hp'
+  use rename (Prod.map id (fun m => 1 ⊗ₜ m)) p'
+  constructor
+  · simp only [SetLike.mem_coe, mem_weightedHomogeneousSubmodule, IsWeightedHomogeneous] at hpn ⊢
+    intro d' hd'
+    obtain ⟨d, hdd', hd0⟩ := coeff_rename_ne_zero _ _ _ hd'
+    rw [← hdd']
+    rw [hp', coeff_baseChange_apply] at hd0
+    have hd0' : coeff d p ≠ 0 := by
+      intro h
+      simp only [h, map_zero, ne_eq, not_true_eq_false] at hd0
+    convert hpn hd0'
+    simp only [weightedDegree', LinearMap.toAddMonoidHom_coe, Finsupp.total_mapDomain]
+    rfl
+  · simp only [MvPolynomial.rename]
+    --rw [hp']
+    --simp only [aeval, coe_mk, coe_eval₂Hom]
+    induction a using DividedPowerAlgebra.induction_on generalizing p with
+    | h_C r => sorry
+    | h_add => sorry
+    | h_dp a n m ha => sorry
 
+theorem dpScalarExtension_mem_grade' {a : DividedPowerAlgebra R M} {n : ℕ} (ha : a ∈ grade R M n)
+    (s : S) : dpScalarExtension R S M (s ⊗ₜ[R] a) ∈ grade S (S ⊗[R] M) n := by
+  induction a using DividedPowerAlgebra.induction_on with
+    | h_C r => sorry
+    | h_add a b ha' hb =>
+      sorry
+    | h_dp a n m ha => sorry
 
 end DividedPowerAlgebra
