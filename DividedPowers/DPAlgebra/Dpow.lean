@@ -190,6 +190,7 @@ def CondTFree (A : Type u) [CommRing A] : Prop :=
   Condτ A hI hJ
 #align divided_power_algebra.cond_T_free DividedPowerAlgebra.CondTFree
 
+
 /-- Existence, for any algebra with divided powers,
   of an over-algebra with divided powers which is free as a module -/
 def CondQ (A : Type u) [CommRing A] : Prop :=
@@ -199,6 +200,19 @@ def CondQ (A : Type u) [CommRing A] : Prop :=
       (J : Ideal T) (hJ : DividedPowers J) (_ : isDPMorphism hJ hI f),
   I = J.map f ∧ Function.Surjective f
 #align divided_power_algebra.cond_Q DividedPowerAlgebra.CondQ
+
+/-- Existence, for any split algebra with divided powers,
+  of an over-algebra with split divided powers
+  which is free as a module -/
+def CondQSplit (A : Type u) [CommRing A] : Prop :=
+  ∀ (R : Type u) [CommRing R],
+  ∀ [Algebra A R] (I : Ideal R) (hI : DividedPowers I)
+    (R₀ : Subalgebra A R) (_ : IsCompl (Subalgebra.toSubmodule R₀) (I.restrictScalars A)),
+  ∃ (T : Type u) (_ : CommRing T) (_ : Algebra A T)
+    (J : Ideal T) (hJ : DividedPowers J)
+    (T₀ : Subalgebra A T) (_ : IsCompl (Subalgebra.toSubmodule T₀) (J.restrictScalars A))
+    (f : T →ₐ[A] R),
+    J.map f = I ∧ T₀.map f = R₀ ∧ Function.Surjective f ∧ isDPMorphism hJ hI f ∧ Module.Free A T
 
 end free
 
@@ -266,20 +280,24 @@ It involves a lifting construction -/
 
 variable (S : Type u) [CommRing S] [Algebra A S]
   {I : Ideal S} (hI : DividedPowers I)
+  (S₀ : Subalgebra A S)
+  (hIS₀ : IsCompl (Subalgebra.toSubmodule S₀) (I.restrictScalars A))
 
--- We construct MvPolynomial S A = A[S] →ₐ[A] S
-instance : Algebra (MvPolynomial S A) S :=
+-- We construct MvPolynomial S₀ A = A[S₀] →ₐ[A] S₀
+instance : Algebra (MvPolynomial S₀ A) S₀ :=
   RingHom.toAlgebra (MvPolynomial.aeval id).toRingHom
 
 theorem algebraMap_eq :
-    algebraMap (MvPolynomial S A) S = (MvPolynomial.aeval id).toRingHom :=
-  RingHom.algebraMap_toAlgebra (algebraMap (MvPolynomial S A) S)
+    algebraMap (MvPolynomial S₀ A) S₀ = (MvPolynomial.aeval id).toRingHom :=
+  rfl -- RingHom.algebraMap_toAlgebra (algebraMap (MvPolynomial S₀ A) S₀)
 
-instance : IsScalarTower A (MvPolynomial S A) S := {
+example : IsScalarTower A (MvPolynomial S₀ A) S₀ := inferInstance
+
+/- instance : IsScalarTower A (MvPolynomial S A) S := {
   smul_assoc := fun a r s => by
     simp only [Algebra.smul_def, algebraMap_eq]
     simp only [AlgHom.toRingHom_eq_coe, AlgHom.coe_toRingHom, _root_.map_mul, AlgHom.commutes]
-    rw [← mul_assoc] }
+    rw [← mul_assoc] } -/
 
 variable {S} (I) in
 def f : (I →₀ A) →ₗ[A] S :=
@@ -308,7 +326,7 @@ instance hR_free : Module.Free A (MvPolynomial S A) :=
 def hR := dividedPowersBot (MvPolynomial S A)
 
 variable (I) in
-theorem condτ : Condτ A (dividedPowersBot (MvPolynomial S A)) hM := by
+theorem condτ : Condτ A (dividedPowersBot (MvPolynomial S₀ A)) hM := by
   apply condTFree
   infer_instance
   infer_instance
@@ -336,29 +354,41 @@ def dpΦ : dpMorphism hM hI := by
     exact ne_of_gt hm
     apply ι_mem_augIdeal
 
--- We consider `R ⊗[A] DividedPowerAlgebra A (I →₀ A)`
-def Ψ := Algebra.TensorProduct.productMap
-  (IsScalarTower.toAlgHom A (MvPolynomial S A) S)
-  (Φ A S hI)
+-- We consider `(MvPolynomial S₀ A) ⊗[A] DividedPowerAlgebra A (I →₀ A) → S`
+def Ψ : MvPolynomial S₀ A ⊗[A] DividedPowerAlgebra A (I →₀ A) →ₐ[A] S :=
+  Algebra.TensorProduct.productMap
+    ((Subalgebra.val S₀).comp (IsScalarTower.toAlgHom A (MvPolynomial S₀ A) S₀))
+    (Φ A S hI)
 
-theorem Ψ_surjective : Function.Surjective (Ψ A S hI) := by
+theorem Ψ_surjective : Function.Surjective (Ψ A S hI S₀) := by
   rw [← Algebra.range_top_iff_surjective _, eq_top_iff]
   intro s _
-  simp only [AlgHom.mem_range]
-  use (X s) ⊗ₜ[A] 1
-  simp only [Ψ, Algebra.TensorProduct.productMap_apply_tmul, IsScalarTower.coe_toAlgHom',
-    algebraMap_eq, AlgHom.toRingHom_eq_coe, RingHom.coe_coe, aeval_X, id_eq, map_one, mul_one]
+  obtain ⟨s₀, hs₀, s₁, hs₁, rfl⟩ := Submodule.exists_add_eq_of_codisjoint (hIS₀.codisjoint) s
+  apply Subalgebra.add_mem
+  · -- case s₀
+    use (X ⟨s₀, hs₀⟩) ⊗ₜ[A] 1
+    simp only [Ψ, AlgHom.toRingHom_eq_coe, RingHom.coe_coe,
+      Algebra.TensorProduct.productMap_apply_tmul, AlgHom.coe_comp, Subalgebra.coe_val,
+      IsScalarTower.coe_toAlgHom', algebraMap_eq, Function.comp_apply, aeval_X, id_eq, map_one,
+      mul_one]
+  · -- case s₁
+    use 1 ⊗ₜ[A] (ι A _ (Finsupp.single ⟨s₁, hs₁⟩ 1))
+    simp only [Ψ, Φ, f, AlgHom.toRingHom_eq_coe, RingHom.coe_coe,
+      Algebra.TensorProduct.productMap_apply_tmul, map_one, lift_ι_apply, one_mul]
+    simp only [Basis.constr_apply, Finsupp.basisSingleOne_repr, LinearEquiv.refl_apply, zero_smul,
+      Finsupp.sum_single_index, one_smul]
 
 variable (I) in
-theorem K_eq_span : K A (⊥ : Ideal (MvPolynomial S A)) (augIdeal A (↥I →₀ A))
-  = span (Set.image2 (fun n a ↦ 1 ⊗ₜ[A] dp A n a) {n | 0 < n} Set.univ) := by
+theorem K_eq_span :
+    K A (⊥ : Ideal (MvPolynomial S₀ A)) (augIdeal A (↥I →₀ A))
+      = span (Set.image2 (fun n a ↦ 1 ⊗ₜ[A] dp A n a) {n | 0 < n} Set.univ) := by
   simp [K, i1, i2]
   rw [augIdeal_eq_span, Ideal.map_span]
   simp only [Algebra.TensorProduct.includeRight_apply, Set.image_image2]
 
-def dpΨ : dpMorphism (condτ A S I condTFree hM).choose hI := by
-  apply dpMorphismFromGens (condτ A S I condTFree hM).choose hI
-    (f := (Ψ A S hI).toRingHom) (K_eq_span A S I)
+def dpΨ : dpMorphism (condτ A S I S₀ condTFree hM).choose hI := by
+  apply dpMorphismFromGens (condτ A S I S₀ condTFree hM).choose hI
+    (f := (Ψ A S hI S₀).toRingHom) (K_eq_span A S I S₀)
   · simp only [AlgHom.toRingHom_eq_coe, K, Ideal.map_bot, i2, ge_iff_le,
       bot_le, sup_of_le_right, map_le_iff_le_comap]
     rw [augIdeal_eq_span, span_le]
@@ -373,7 +403,7 @@ def dpΨ : dpMorphism (condτ A S I condTFree hM).choose hI := by
   · rintro n _ ⟨m, hm, b, _, rfl⟩
     simp only [Set.mem_setOf_eq] at hm
     simp only [AlgHom.toRingHom_eq_coe, RingHom.coe_coe]
-    erw [← ((condτ A S I condTFree hM).choose_spec.2).map_dpow]
+    erw [← ((condτ A S I S₀ condTFree hM).choose_spec.2).map_dpow]
     simp only [Ψ, i2, RingHom.coe_coe, Algebra.TensorProduct.includeRight_apply,
       Algebra.TensorProduct.productMap_apply_tmul, map_one, one_mul]
     erw [(dpΦ A S hI hM hM_eq).dpow_comp]
@@ -381,19 +411,478 @@ def dpΨ : dpMorphism (condτ A S I condTFree hM).choose hI := by
     all_goals
       apply dp_mem_augIdeal _ _ hm
 
+/-- `MvPolynomial.C` as an `AlgHom`. -/
+@[simps! apply]
+def _root_.MvPolynomial.CAlgHom {R : Type*} [CommSemiring R] {A : Type*} [CommSemiring A] [Algebra R A]
+ {σ : Type*} : A →ₐ[R] MvPolynomial σ A where
+  toRingHom := C
+  commutes' _ := rfl
+
+section
+
+
+variable {R : Type*} [Ring R] {E : Type*} [AddCommGroup E] [Module R E]
+variable (p q : Submodule R E)
+
+variable {p q}
+
+open LinearMap Submodule
+
+theorem _root_.Submodule.linearProjOfIsCompl_comp_subtype' (h : IsCompl p q) :
+    (linearProjOfIsCompl p q h).comp q.subtype = 0 :=
+  LinearMap.ext <| linearProjOfIsCompl_apply_right h
+
+end
+
+example (A : Type*) [CommRing A] (M : Type*) [AddCommGroup M] [Module A M]
+    (N : Type*) [AddCommGroup N] [Module A N]
+    (N' N'' : Submodule A N) (hN : IsCompl N' N'') :
+  IsCompl
+    (LinearMap.range (LinearMap.lTensor M N'.subtype))
+    (LinearMap.range (LinearMap.lTensor M N''.subtype)) := by
+  let ι : Submodule A N → Submodule A (M ⊗[A] N) :=
+    fun N' ↦ LinearMap.range (LinearMap.lTensor M N'.subtype)
+  have hsup : ∀ N₁ N₂, ι (N₁ ⊔ N₂) = ι N₁ ⊔ ι N₂ := sorry
+  have hinf : ∀ N₁ N₂, ι (N₁ ⊓ N₂) = ι N₁ ⊓ ι N₂ := sorry
+  exact {
+    disjoint := by
+      rw [disjoint_iff, ← hinf, disjoint_iff.mp hN.disjoint]
+      simp only [ι, LinearMap.range_eq_bot]
+      convert LinearMap.lTensor_zero M
+    codisjoint := by
+      rw [codisjoint_iff, ← hsup, codisjoint_iff.mp hN.codisjoint]
+      simp only [ι, LinearMap.range_eq_top]
+      apply LinearMap.lTensor_surjective
+      rw [← LinearMap.range_eq_top, Submodule.range_subtype] }
+
+theorem _root_.Submodule.isCompl_lTensor_of_isCompl
+    (A : Type*) [CommRing A] (M : Type*) [AddCommGroup M] [Module A M]
+    (N : Type*) [AddCommGroup N] [Module A N]
+    (N' N'' : Submodule A N) (hN : IsCompl N' N'') :
+  IsCompl
+    (LinearMap.range (LinearMap.lTensor M N'.subtype))
+    (LinearMap.range (LinearMap.lTensor M N''.subtype)) :=
+  let p := Submodule.linearProjOfIsCompl _ _ hN
+  have hp : LinearMap.ker p = N'' := by
+    simp only [p, Submodule.linearProjOfIsCompl_ker]
+  have hpM : LinearMap.ker (LinearMap.lTensor M p) = LinearMap.range (LinearMap.lTensor M N''.subtype) := by
+    rw [← Function.LinearMap.exact_iff]
+    apply lTensor_exact M
+    simp only [Function.LinearMap.exact_iff, hp, Submodule.range_subtype]
+    simp only [p, ← LinearMap.range_eq_top, Submodule.linearProjOfIsCompl_range]
+  let p' := Submodule.linearProjOfIsCompl _ _ hN.symm
+  have hp' : LinearMap.ker p' = N' := by
+    simp only [p', Submodule.linearProjOfIsCompl_ker]
+  have hp'M : LinearMap.ker (LinearMap.lTensor M p') = LinearMap.range (LinearMap.lTensor M N'.subtype) := by
+    rw [← Function.LinearMap.exact_iff]
+    apply lTensor_exact M
+    simp only [Function.LinearMap.exact_iff, hp', Submodule.range_subtype]
+    simp only [p', ← LinearMap.range_eq_top, Submodule.linearProjOfIsCompl_range]
+  let q : N →ₗ[A] N := N'.subtype.comp p + N''.subtype.comp p'
+  have hq : q = LinearMap.id := by
+    ext x
+    simp only [LinearMap.add_apply, LinearMap.coe_comp, Submodule.coeSubtype,
+      Function.comp_apply, LinearMap.id_coe, id_eq, q]
+    rw [Submodule.linear_proj_add_linearProjOfIsCompl_eq_self]
+
+  { disjoint := by
+      rw [Submodule.disjoint_def]
+      intro x h h'
+      have hp : LinearMap.lTensor M p x = 0 := by
+        rw [← LinearMap.mem_ker, hpM]
+        exact h'
+      have hp' : LinearMap.lTensor M p' x = 0 := by
+        rw [← LinearMap.mem_ker, hp'M]
+        exact h
+      rw [← LinearMap.id_apply x (R := A), ← LinearMap.lTensor_id, ← hq]
+      simp only [LinearMap.lTensor_add, LinearMap.lTensor_comp,
+        LinearMap.add_apply, LinearMap.coe_comp, Function.comp_apply,
+        hp, map_zero, hp', add_zero, q]
+    codisjoint := by
+      rw [codisjoint_iff]
+      rw [eq_top_iff]
+      intro x _
+      rw [← LinearMap.lTensor_id_apply M _ x, ← hq]
+      simp only [LinearMap.lTensor_add, LinearMap.add_apply, q]
+      simp only [LinearMap.lTensor_comp, LinearMap.comp_apply]
+      apply Submodule.add_mem
+      · apply Submodule.mem_sup_left
+        apply LinearMap.mem_range_self
+      · apply Submodule.mem_sup_right
+        apply LinearMap.mem_range_self }
+
+theorem _root_.LinearMap.baseChange_isCompl (R : Type*) [CommRing R] [Algebra A R]
+  (M : Type*) [AddCommGroup M] [Module A M]
+  {M₁ M₂ : Submodule A M} (hM : IsCompl M₁ M₂) :
+  IsCompl
+    (LinearMap.range (LinearMap.baseChange R (M₁.subtype)))
+    (LinearMap.range (LinearMap.baseChange R (M₂.subtype))) := by
+  let p := Submodule.linearProjOfIsCompl _ _ hM
+  have hp : LinearMap.ker p = M₂ := by
+    simp only [p, Submodule.linearProjOfIsCompl_ker]
+  have hpM : LinearMap.ker (LinearMap.baseChange R p)
+    = LinearMap.range (LinearMap.baseChange R M₂.subtype) := by
+    rw [← Function.LinearMap.exact_iff]
+    change Function.Exact (LinearMap.lTensor R _) (LinearMap.lTensor R _)
+    apply lTensor_exact
+    simp only [Function.LinearMap.exact_iff, hp, Submodule.range_subtype]
+    simp only [p, ← LinearMap.range_eq_top, Submodule.linearProjOfIsCompl_range]
+  let p' := Submodule.linearProjOfIsCompl _ _ hM.symm
+  have hp' : LinearMap.ker p' = M₁ := by
+    simp only [p', Submodule.linearProjOfIsCompl_ker]
+  have hp'M : LinearMap.ker (LinearMap.baseChange R p')
+    = LinearMap.range (LinearMap.baseChange R M₁.subtype) := by
+    rw [← Function.LinearMap.exact_iff]
+    apply lTensor_exact
+    simp only [Function.LinearMap.exact_iff, hp', Submodule.range_subtype]
+    simp only [p', ← LinearMap.range_eq_top, Submodule.linearProjOfIsCompl_range]
+  let q : M →ₗ[A] M := M₁.subtype.comp p + M₂.subtype.comp p'
+  have hq : q = LinearMap.id := by
+    ext x
+    simp only [LinearMap.add_apply, LinearMap.coe_comp, Submodule.coeSubtype,
+      Function.comp_apply, LinearMap.id_coe, id_eq, q]
+    rw [Submodule.linear_proj_add_linearProjOfIsCompl_eq_self]
+  have hdisjoint : Disjoint
+    (LinearMap.range (LinearMap.baseChange R (M₁.subtype)))
+    (LinearMap.range (LinearMap.baseChange R (M₂.subtype))) := by
+      rw [Submodule.disjoint_def]
+      intro x h h'
+      have hp : LinearMap.lTensor R p x = 0 := by
+        rw [← LinearMap.mem_ker]
+        rw [← hpM] at h'
+        exact h'
+      have hp' : LinearMap.lTensor R p' x = 0 := by
+        rw [← LinearMap.mem_ker]
+        rw [← hp'M] at h
+        exact h
+      rw [← LinearMap.id_apply x (R := A), ← LinearMap.lTensor_id, ← hq]
+      simp only [LinearMap.lTensor_add, LinearMap.lTensor_comp,
+        LinearMap.add_apply, LinearMap.coe_comp, Function.comp_apply,
+        hp, map_zero, hp', add_zero, q]
+  have hcodisjoint : Codisjoint
+    (LinearMap.range (LinearMap.baseChange R (M₁.subtype)))
+    (LinearMap.range (LinearMap.baseChange R (M₂.subtype))) := by
+      rw [codisjoint_iff]
+      rw [eq_top_iff]
+      intro x _
+      rw [← LinearMap.lTensor_id_apply R _ x, ← hq]
+      simp only [LinearMap.lTensor_add, LinearMap.add_apply, q]
+      simp only [LinearMap.lTensor_comp, LinearMap.comp_apply]
+      apply Submodule.add_mem
+      · apply Submodule.mem_sup_left
+        rw [← LinearMap.baseChange_eq_ltensor]
+        apply LinearMap.mem_range_self
+      · apply Submodule.mem_sup_right
+        rw [← LinearMap.baseChange_eq_ltensor]
+        apply LinearMap.mem_range_self
+  exact {
+    disjoint :=  hdisjoint
+    codisjoint := hcodisjoint }
+
+/-- The base change of an algebra with an augmentation ideal -/
+theorem _root_.Algebra.TensorProduct.lTensor_isCompl
+  (R : Type*) [CommRing R] [Algebra A R]
+  (S : Type*) [CommRing S] [Algebra A S]
+  {I : Ideal S}
+  (hI : IsCompl (Subalgebra.toSubmodule (⊥ : Subalgebra A S)) (I.restrictScalars A)) :
+  IsCompl
+    (Subalgebra.toSubmodule (⊥ : Subalgebra R (R ⊗[A] S)))
+    (Submodule.restrictScalars R (Ideal.map Algebra.TensorProduct.includeRight I)) := by
+  convert LinearMap.baseChange_isCompl A R S hI
+  · ext x
+    simp only [Subalgebra.mem_toSubmodule, AlgHom.mem_range,
+      Algebra.TensorProduct.includeLeft_apply, LinearMap.mem_range]
+    constructor
+    · rintro ⟨x, rfl⟩
+      use x ⊗ₜ[A] (1 : (⊥ : Subalgebra A S))
+      rfl
+    · rintro ⟨y, rfl⟩
+      induction y using TensorProduct.induction_on with
+      | tmul r s =>
+        rcases s with ⟨s, hs⟩
+        simp only [Subalgebra.mem_toSubmodule, Algebra.mem_bot] at hs
+        obtain ⟨a, rfl⟩ := hs
+        simp only [LinearMap.baseChange_tmul, Submodule.coeSubtype, Algebra.mem_bot]
+        use a • r
+        simp only [Algebra.TensorProduct.algebraMap_apply, Algebra.id.map_eq_id, RingHom.id_apply]
+        rw [TensorProduct.smul_tmul, Algebra.algebraMap_eq_smul_one]
+      | add x y hx hy =>
+        simp only [map_add]
+        exact Subalgebra.add_mem _ hx hy
+      | zero =>
+        simp only [map_zero]
+        apply Subalgebra.zero_mem
+  · ext x
+    simp only [Submodule.restrictScalars_mem, LinearMap.mem_range]
+    unfold Ideal.map
+    constructor
+    · intro hx
+      apply Submodule.span_induction hx (p := fun x ↦ ∃ y, _ = x)
+      · rintro _ ⟨s, hs, rfl⟩
+        use (1 : R) ⊗ₜ[A] ⟨s, hs⟩
+        rfl
+      · use 0
+        simp only [map_zero]
+      · rintro _ _ ⟨x, rfl⟩ ⟨y, rfl⟩
+        use x + y
+        simp only [map_add]
+      · rintro a _ ⟨x, rfl⟩
+        induction x using TensorProduct.induction_on with
+        | zero =>
+          use 0
+          simp only [map_zero, smul_eq_mul, mul_zero]
+        | tmul r b =>
+          induction a using TensorProduct.induction_on with
+          | zero =>
+            use 0
+            simp only [map_zero, LinearMap.baseChange_tmul, Submodule.coeSubtype, smul_eq_mul,
+              zero_mul]
+          | tmul u v =>
+            simp only [LinearMap.baseChange_tmul, Submodule.coeSubtype, smul_eq_mul,
+              Algebra.TensorProduct.tmul_mul_tmul]
+            use (u * r) ⊗ₜ[A] (v • b)
+            simp only [LinearMap.baseChange_tmul, Submodule.coeSubtype]
+            rfl
+          | add u v hu hv =>
+            obtain ⟨x, hx⟩ := hu
+            obtain ⟨y, hy⟩ := hv
+            use x + y
+            simp only [map_add, add_smul, hx, hy]
+        | add x x' hx hx' =>
+          obtain ⟨y, hx⟩ := hx
+          obtain ⟨y', hx'⟩ := hx'
+          use y + y'
+          simp only [map_add, hx, hx', smul_add]
+    · rintro ⟨x, rfl⟩
+      induction x using TensorProduct.induction_on with
+      | zero =>
+        simp only [map_zero]
+        apply Submodule.zero_mem
+      | tmul r b =>
+        simp only [LinearMap.baseChange_tmul, Submodule.coeSubtype,
+          Algebra.TensorProduct.includeRight_apply]
+        suffices r ⊗ₜ[A] (b : S) = (r ⊗ₜ[A] (1 : S)) • ((1 : R) ⊗ₜ[A] (b : S)) by
+          rw [this]
+          apply Submodule.smul_mem
+          apply Ideal.subset_span
+          use b
+          constructor
+          simp only [Submodule.coe_restrictScalars, SetLike.mem_coe, SetLike.coe_mem]
+          rfl
+        simp only [Submodule.coe_restrictScalars, smul_eq_mul, Algebra.TensorProduct.tmul_mul_tmul,
+          mul_one, one_mul]
+      | add x y hx hy =>
+        simp only [map_add]
+        apply Submodule.add_mem _ hx hy
+
+section restrictScalars
+
+variable
+    {A : Type*} [CommSemiring A]
+    {R : Type*} [Semiring R] [Algebra A R]
+    {M : Type*} [AddCommMonoid M] [Module A M] [Module R M] [IsScalarTower A R M]
+    (M₁ M₂ : Submodule R M)
+
+theorem Submodule.sup_restrictScalars :
+   (M₁ ⊔ M₂).restrictScalars A = M₁.restrictScalars A ⊔ (M₂.restrictScalars A) := by
+  apply Submodule.toAddSubmonoid_injective
+  simp only [Submodule.toAddSubmonoid_restrictScalars, Submodule.sup_toAddSubmonoid]
+
+theorem Submodule.codisjoint_restrictScalars_iff :
+    Codisjoint (M₁.restrictScalars A) (M₂.restrictScalars A) ↔
+      Codisjoint M₁ M₂ := by
+  simp only [codisjoint_iff, ← Submodule.sup_restrictScalars, Submodule.restrictScalars_eq_top_iff]
+
+theorem Submodule.disjoint_restrictScalars_iff :
+    Disjoint (M₁.restrictScalars A) (M₂.restrictScalars A) ↔
+      Disjoint M₁ M₂ := by
+  simp only [Submodule.disjoint_def, Submodule.restrictScalars_mem]
+
+theorem Submodule.isCompl_restrictScalars_iff  :
+    IsCompl (M₁.restrictScalars A) (M₂.restrictScalars A) ↔ IsCompl M₁ M₂ := by
+  simp only [isCompl_iff, Submodule.disjoint_restrictScalars_iff, Submodule.codisjoint_restrictScalars_iff]
+
+theorem Subalgebra.toSubmodule_restrictScalars_eq
+    {R : Type*} [CommSemiring R] [Algebra A R]
+    {S : Type*} [CommSemiring S] [Algebra A S] [Algebra R S] [IsScalarTower A R S]
+    (S' : Subalgebra R S) :
+    Subalgebra.toSubmodule (Subalgebra.restrictScalars A S') = S'.toSubmodule.restrictScalars A :=
+  rfl
+
+end restrictScalars
+
+/-- The base change of an algebra with an augmentation ideal -/
+theorem _root_.Algebra.TensorProduct.lTensor_isCompl'
+    {R : Type*} [CommRing R] [Algebra A R]
+    {S : Type*} [CommRing S] [Algebra A S]
+    {I : Ideal S}
+    (hI : IsCompl (Subalgebra.toSubmodule (⊥ : Subalgebra A S)) (I.restrictScalars A)) :
+    IsCompl
+      (Subalgebra.toSubmodule ((⊥ : Subalgebra R (R ⊗[A] S)).restrictScalars A))
+      (Submodule.restrictScalars A (Ideal.map Algebra.TensorProduct.includeRight I)) := by
+  rw [Subalgebra.toSubmodule_restrictScalars_eq]
+
+  have : Submodule.restrictScalars A (Ideal.map Algebra.TensorProduct.includeRight I)
+    = Submodule.restrictScalars A
+      (Submodule.restrictScalars R
+        (Ideal.map Algebra.TensorProduct.includeRight I : Ideal (R ⊗[A] S)) : Submodule R (R ⊗[A] S)) := rfl
+  rw [this]
+  rw [Submodule.isCompl_restrictScalars_iff]
+  convert LinearMap.baseChange_isCompl A R S hI
+  · ext x
+    simp only [Algebra.toSubmodule_bot, Submodule.mem_one, Algebra.TensorProduct.algebraMap_apply,
+      Algebra.id.map_eq_id, RingHom.id_apply, LinearMap.mem_range]
+    constructor
+    · rintro ⟨y, rfl⟩
+      have : 1 ∈ (1 : Submodule A S) := by
+        simp only [Submodule.mem_one]
+        use 1
+        rw [map_one]
+      use y ⊗ₜ[A] ⟨1, this⟩
+      rfl
+    · rintro ⟨y, rfl⟩
+      induction y using TensorProduct.induction_on with
+      | zero =>
+        use 0
+        simp only [TensorProduct.zero_tmul, map_zero]
+      | tmul r s =>
+        rcases s with ⟨s, hs⟩
+        simp only [Submodule.mem_one] at hs
+        obtain ⟨a, rfl⟩ := hs
+        use a • r
+        simp only [TensorProduct.smul_tmul]
+        congr
+        simp only [Submodule.coeSubtype, Algebra.algebraMap_eq_smul_one]
+      | add x y hx hy =>
+        obtain ⟨x', hx⟩ := hx
+        obtain ⟨y', hy⟩ := hy
+        use x' + y'
+        simp only [TensorProduct.add_tmul, hx, hy, map_add]
+  · ext x
+    simp only [Submodule.restrictScalars_mem, LinearMap.mem_range]
+    constructor
+    · intro hx
+      apply Submodule.span_induction hx (p := fun x ↦ ∃ y, (LinearMap.baseChange R (Submodule.subtype (Submodule.restrictScalars A I))) y = x )
+      · rintro x ⟨s, hs, rfl⟩; use 1 ⊗ₜ[A] ⟨s, hs⟩; rfl
+      · use 0; simp only [map_zero]
+      · rintro _ _ ⟨x, rfl⟩ ⟨y, rfl⟩; use x + y; simp only [map_add]
+      · rintro a _ ⟨x, rfl⟩
+        induction x using TensorProduct.induction_on with
+        | zero => use 0; simp only [map_zero, smul_eq_mul, mul_zero]
+        | tmul r s => sorry
+        | add x y hx hy =>
+          obtain ⟨x', hx⟩ := hx
+          obtain ⟨y', hy⟩ := hy
+          use x' + y'
+          simp only [map_add, hx, smul_eq_mul, hy, mul_add]
+    · rintro ⟨y, rfl⟩
+      induction y using TensorProduct.induction_on with
+      | zero => simp only [map_zero, Submodule.zero_mem]
+      | tmul r s => sorry
+      | add x y hx hy =>
+        simp only [map_add]
+        exact Ideal.add_mem _ hx hy
+/-  · ext x
+    simp only [Subalgebra.mem_toSubmodule, AlgHom.mem_range,
+      Algebra.TensorProduct.includeLeft_apply, LinearMap.mem_range]
+    constructor
+    · rintro ⟨x, rfl⟩
+      use x ⊗ₜ[A] (1 : (⊥ : Subalgebra A S))
+      rfl
+    · rintro ⟨y, rfl⟩
+      induction y using TensorProduct.induction_on with
+      | tmul r s =>
+        rcases s with ⟨s, hs⟩
+        simp only [Subalgebra.mem_toSubmodule, Algebra.mem_bot] at hs
+        obtain ⟨a, rfl⟩ := hs
+        simp only [LinearMap.baseChange_tmul, Submodule.coeSubtype, Algebra.mem_bot]
+        use a • r
+        simp only [Algebra.TensorProduct.algebraMap_apply, Algebra.id.map_eq_id, RingHom.id_apply]
+        rw [TensorProduct.smul_tmul, Algebra.algebraMap_eq_smul_one]
+      | add x y hx hy =>
+        simp only [map_add]
+        exact Subalgebra.add_mem _ hx hy
+      | zero =>
+        simp only [map_zero]
+        apply Subalgebra.zero_mem
+  · ext x
+    simp only [Submodule.restrictScalars_mem, LinearMap.mem_range]
+    unfold Ideal.map
+    constructor
+    · intro hx
+      apply Submodule.span_induction hx (p := fun x ↦ ∃ y, _ = x)
+      · rintro _ ⟨s, hs, rfl⟩
+        use (1 : R) ⊗ₜ[A] ⟨s, hs⟩
+        rfl
+      · use 0
+        simp only [map_zero]
+      · rintro _ _ ⟨x, rfl⟩ ⟨y, rfl⟩
+        use x + y
+        simp only [map_add]
+      · rintro a _ ⟨x, rfl⟩
+        induction x using TensorProduct.induction_on with
+        | zero =>
+          use 0
+          simp only [map_zero, smul_eq_mul, mul_zero]
+        | tmul r b =>
+          induction a using TensorProduct.induction_on with
+          | zero =>
+            use 0
+            simp only [map_zero, LinearMap.baseChange_tmul, Submodule.coeSubtype, smul_eq_mul,
+              zero_mul]
+          | tmul u v =>
+            simp only [LinearMap.baseChange_tmul, Submodule.coeSubtype, smul_eq_mul,
+              Algebra.TensorProduct.tmul_mul_tmul]
+            use (u * r) ⊗ₜ[A] (v • b)
+            simp only [LinearMap.baseChange_tmul, Submodule.coeSubtype]
+            rfl
+          | add u v hu hv =>
+            obtain ⟨x, hx⟩ := hu
+            obtain ⟨y, hy⟩ := hv
+            use x + y
+            simp only [map_add, add_smul, hx, hy]
+        | add x x' hx hx' =>
+          obtain ⟨y, hx⟩ := hx
+          obtain ⟨y', hx'⟩ := hx'
+          use y + y'
+          simp only [map_add, hx, hx', smul_add]
+    · rintro ⟨x, rfl⟩
+      induction x using TensorProduct.induction_on with
+      | zero =>
+        simp only [map_zero]
+        apply Submodule.zero_mem
+      | tmul r b =>
+        simp only [LinearMap.baseChange_tmul, Submodule.coeSubtype,
+          Algebra.TensorProduct.includeRight_apply]
+        suffices r ⊗ₜ[A] (b : S) = (r ⊗ₜ[A] (1 : S)) • ((1 : R) ⊗ₜ[A] (b : S)) by
+          rw [this]
+          apply Submodule.smul_mem
+          apply Ideal.subset_span
+          use b
+          constructor
+          simp only [Submodule.coe_restrictScalars, SetLike.mem_coe, SetLike.coe_mem]
+          rfl
+        simp only [Submodule.coe_restrictScalars, smul_eq_mul, Algebra.TensorProduct.tmul_mul_tmul,
+          mul_one, one_mul]
+      | add x y hx hy =>
+        simp only [map_add]
+        apply Submodule.add_mem _ hx hy
+-/
+
 -- Roby, lemma 4
-theorem _root_.DividedPowerAlgebra.T_free_and_D_to_Q : CondQ A := by
-  intro S _ _ I hI
+theorem _root_.DividedPowerAlgebra.T_free_and_D_to_QSplit :
+    CondQSplit A := by
+  intro S _ _ I hI S₀ hIS₀
   let M := I →₀ A
-  let R := MvPolynomial S A
+  let R := MvPolynomial S₀ A
   obtain ⟨hM, hM_eq⟩ := condD M
   haveI hdpM_free : Module.Free A (DividedPowerAlgebra A M) := by
     apply DividedPowerAlgebra.toModule_free
   haveI hR_free : Module.Free A R :=
     Module.Free.of_basis (MvPolynomial.basisMonomials _ _)
   -- We consider `R ⊗[A] DividedPowerAlgebra A M` as a comm ring and an A-algebra
-  use R ⊗[A] DividedPowerAlgebra A M, by infer_instance, by infer_instance
-  use by infer_instance -- tensor product of free modules is free
+  let T := R ⊗[A] DividedPowerAlgebra A M
+  use T, by infer_instance, by infer_instance
   /- We need to add the fact that `R ⊗ DividedPowerAlgebra A M``
      is pregraduated in the sense of Roby
      The ideal is `K A ⊥ (augIdeal A M)`,
@@ -408,13 +897,42 @@ theorem _root_.DividedPowerAlgebra.T_free_and_D_to_Q : CondQ A := by
      and the first term should map to S₀
      so the construction needs to be refined
 
+
      -/
-  use Ψ A S hI
-  use K A ⊥ (augIdeal A M)
-  use (condτ A S I condTFree hM).choose
-  use (dpΨ A S hI condTFree hM hM_eq).isDPMorphism
+  let idK : Ideal T := K A ⊥ (augIdeal A M)
+  have hidK : idK = Ideal.map Algebra.TensorProduct.includeRight (augIdeal A M) := by
+    simp only [K, Ideal.map_bot, i2, ge_iff_le, bot_le, sup_of_le_right, idK]
+  use idK
+  let hK : DividedPowers idK := (condτ A S I S₀ condTFree hM).choose
+  use hK
+  have : MvPolynomial S₀ A →ₐ[A] MvPolynomial S₀ A ⊗[A] DividedPowerAlgebra A M := by
+    apply Algebra.TensorProduct.includeLeft
+  use Subalgebra.restrictScalars A (⊥ : Subalgebra R T)
+  have isaugΓ : IsCompl
+    (Subalgebra.toSubmodule (⊥ : Subalgebra A _))
+    ((augIdeal A M).restrictScalars A) := sorry
+  have : IsCompl (Subalgebra.toSubmodule (Subalgebra.restrictScalars A ⊥)) (Submodule.restrictScalars A idK) := by
+    simp only [hidK]
+    have := Algebra.TensorProduct.lTensor_isCompl A R (S := DividedPowerAlgebra A M) (I := augIdeal A M) isaugΓ
+
+
+  have : Subalgebra A (MvPolynomial S₀ A ⊗[A] DividedPowerAlgebra A M) :=
+    Subalgebra.map Algebra.TensorProduct.includeLeft ⊤
+  -- ???
+  have hisCompl : IsCompl
+      (Subalgebra.toSubmodule (Subalgebra.map Algebra.TensorProduct.includeLeft ⊤ : Subalgebra A (MvPolynomial S₀ A ⊗[A] DividedPowerAlgebra A M)))
+      (Submodule.restrictScalars A (K A ⊥ (augIdeal A M))) := by
+    simp only [Algebra.map_top, K, Ideal.map_bot, i2, ge_iff_le, bot_le, sup_of_le_right]
+
+    sorry
+  -- the 0 part of our algebra
+  use Subalgebra.map Algebra.TensorProduct.includeLeft ⊤
+  refine ?_
+
+  use sorry -- it is a complement
+  use Ψ A S hI S₀
   constructor
-  · refine le_antisymm ?_ (dpΨ A S hI condTFree hM hM_eq).ideal_comp
+  · refine le_antisymm ?_ (dpΨ A S hI S₀ condTFree hM hM_eq).ideal_comp
     intro i hi
     let m : M := Finsupp.single ⟨i, hi⟩ 1
     have : i = Ψ A S hI (Algebra.TensorProduct.includeRight (ι A M m)) :=  by
@@ -424,8 +942,15 @@ theorem _root_.DividedPowerAlgebra.T_free_and_D_to_Q : CondQ A := by
     apply Ideal.mem_sup_right
     apply Ideal.mem_map_of_mem
     apply ι_mem_augIdeal
-  · apply Ψ_surjective
-#align divided_power_algebra.T_free_and_D_to_Q DividedPowerAlgebra.T_free_and_D_to_Q
+    sorry
+  constructor
+  · sorry -- Ψ maps the 0 part to S₀
+  constructor
+  · apply Ψ_surjective A S hI S₀ hIS₀
+  constructor
+  · exact (dpΨ A S hI S₀ condTFree hM hM_eq).isDPMorphism
+  infer_instance -- tensor product of free modules is free
+
 
 end roby4
 
@@ -570,7 +1095,6 @@ example (A : Type*) [CommRing A] (R : Type*) [CommRing R] [Algebra A R]
     (hsplit : IsCompl (Subalgebra.toSubmodule R₀) (I.restrictScalars A))
     (F₀ : Set R₀) (FI : Set I) :
     I ⊓ (Submodule.span R (F₀ ∪ FI : Set R)) = Submodule.span R (FI : Set R) := by
-  set J :=
   sorry
 
 theorem Ideal.map_coe_toRingHom
