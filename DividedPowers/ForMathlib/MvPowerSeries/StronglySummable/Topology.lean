@@ -108,7 +108,7 @@ namespace StronglySummable
 
 variable [UniformSpace α] [UniformAddGroup α]
 
-#check MvPowerSeries.StronglyMultipliable.coeff_prod_apply_eq_finset_prod
+--#check MvPowerSeries.StronglyMultipliable.coeff_prod_apply_eq_finset_prod
 
 theorem hasProd_of_one_add (hf : StronglySummable f) :
     HasProd (fun i => 1 + f i) hf.toStronglyMultipliable.prod := by
