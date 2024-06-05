@@ -65,7 +65,7 @@ theorem gamma_mem_grade (n : ℕ) (S : Type*) [CommRing S] [Algebra R S] (m : S 
   | tmul s m =>
     simp only [gamma_toFun, dpScalarExtensionEquiv]
     simp only [ofAlgHom_symm_apply]
-    rw [dpScalarExtensionInv_apply]
+    rw [dpScalarExtensionInv_apply_dp]
     simp only [LinearMap.mem_range]
     use (s ^ n) ⊗ₜ[R] ⟨dp R n m, dp_mem_grade R M n m⟩
     simp only [LinearMap.lTensor_tmul, Submodule.coeSubtype]
