@@ -911,9 +911,11 @@ theorem _root_.DividedPowerAlgebra.T_free_and_D_to_QSplit :
   have isaugΓ : IsCompl
     (Subalgebra.toSubmodule (⊥ : Subalgebra A _))
     ((augIdeal A M).restrictScalars A) := sorry
-  have : IsCompl (Subalgebra.toSubmodule (Subalgebra.restrictScalars A ⊥)) (Submodule.restrictScalars A idK) := by
+  /- have : IsCompl
+    (Subalgebra.toSubmodule (Subalgebra.restrictScalars A ⊥)) (Submodule.restrictScalars A idK) := by
     simp only [hidK]
     have := Algebra.TensorProduct.lTensor_isCompl A R (S := DividedPowerAlgebra A M) (I := augIdeal A M) isaugΓ
+    sorry
 
 
   have : Subalgebra A (MvPolynomial S₀ A ⊗[A] DividedPowerAlgebra A M) :=
@@ -925,14 +927,18 @@ theorem _root_.DividedPowerAlgebra.T_free_and_D_to_QSplit :
     simp only [Algebra.map_top, K, Ideal.map_bot, i2, ge_iff_le, bot_le, sup_of_le_right]
 
     sorry
-  -- the 0 part of our algebra
+  use sorry
   use Subalgebra.map Algebra.TensorProduct.includeLeft ⊤
   refine ?_
+-/
+  -- the 0 part of our algebra
+
 
   use sorry -- it is a complement
   use Ψ A S hI S₀
   constructor
-  · refine le_antisymm ?_ (dpΨ A S hI S₀ condTFree hM hM_eq).ideal_comp
+  · sorry
+    /- refine le_antisymm ?_ (dpΨ A S hI S₀ condTFree hM hM_eq).ideal_comp
     intro i hi
     let m : M := Finsupp.single ⟨i, hi⟩ 1
     have : i = Ψ A S hI (Algebra.TensorProduct.includeRight (ι A M m)) :=  by
@@ -942,7 +948,7 @@ theorem _root_.DividedPowerAlgebra.T_free_and_D_to_QSplit :
     apply Ideal.mem_sup_right
     apply Ideal.mem_map_of_mem
     apply ι_mem_augIdeal
-    sorry
+    sorry -/
   constructor
   · sorry -- Ψ maps the 0 part to S₀
   constructor
@@ -1173,12 +1179,13 @@ theorem condD_int : CondD ℤ :=
   sorry
 #align divided_power_algebra.cond_D_int DividedPowerAlgebra.condD_int
 
-theorem condQ_int : CondQ ℤ :=
-  T_free_and_D_to_Q ℤ condTFree_int condD_int
+theorem condQ_int : CondQSplit ℤ :=
+  T_free_and_D_to_QSplit ℤ condTFree_int condD_int
 #align divided_power_algebra.cond_Q_int DividedPowerAlgebra.condQ_int
 
 theorem condT_int : CondT ℤ :=
-  condQ_and_condTFree_imply_condT ℤ condQ_int condTFree_int
+  sorry
+  -- condQ_and_condTFree_imply_condT ℤ condQ_int condTFree_int
 #align divided_power_algebra.cond_T_int DividedPowerAlgebra.condT_int
 
 theorem condD_holds (A : Type*) [CommRing A] [DecidableEq A] : CondD A :=
@@ -1190,7 +1197,8 @@ theorem condTFree_holds (A : Type*) [CommRing A] : CondTFree A :=
 #align divided_power_algebra.cond_T_free_holds DividedPowerAlgebra.condTFree_holds
 
 theorem condQ_holds (A : Type*) [CommRing A] [DecidableEq A] : CondQ A :=
-  T_free_and_D_to_Q A (condTFree_holds A) (condD_holds A)
+  sorry
+  -- T_free_and_D_to_Q A (condTFree_holds A) (condD_holds A)
 #align divided_power_algebra.cond_Q_holds DividedPowerAlgebra.condQ_holds
 
 theorem condT_holds (A : Type*) [CommRing A] [DecidableEq A] : CondT A :=
