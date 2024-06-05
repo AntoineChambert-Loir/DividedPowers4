@@ -28,7 +28,7 @@ open TensorProduct LinearMap
 
 variable [AddCommMonoid N] [Module R N]
 
-/-- Tensor a linear equivalence to the right gives a linear equivalence -/
+/- /-- Tensor a linear equivalence to the right gives a linear equivalence -/
 noncomputable def LinearEquiv.rTensor
     (P : Type*) [AddCommMonoid P] [Module R P] (e : M ≃ₗ[R] N) :
     M ⊗[R] P ≃ₗ[R] N ⊗[R] P := congr e (refl R P)
@@ -36,7 +36,7 @@ noncomputable def LinearEquiv.rTensor
 /-- Tensor a linear equivalence to the left gives a linear equivalence -/
 noncomputable def LinearEquiv.lTensor
     (P : Type*) [AddCommMonoid P] [Module R P] (e : M ≃ₗ[R] N) :
-    P ⊗[R] M ≃ₗ[R] P ⊗[R] N := congr (refl R P) e
+    P ⊗[R] M ≃ₗ[R] P ⊗[R] N := congr (refl R P) e -/
 
 variable [Module S M] [IsScalarTower R S M] [Module S N] [IsScalarTower R S N]
     {P : Type*} [AddCommMonoid P] [Module R P]
