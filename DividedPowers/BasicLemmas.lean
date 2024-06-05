@@ -77,7 +77,7 @@ theorem rewriting_4_fold_sums {α : Type _} [CommSemiring α] {m n u v : ℕ}
         if_true]
       · rintro ⟨⟨x, y⟩, ⟨z, t⟩⟩ hb hb'; rw [if_neg]; intro hb''
         simp only [Finset.mem_product, Finset.mem_antidiagonal] at hb
-        simp only [Ne.def, Prod.mk.inj_iff, not_and, and_imp] at hb'
+        simp only [ne_eq, Prod.mk.injEq, not_and, and_imp] at hb'
         simp only [Prod.mk.inj_iff] at hb''
         specialize hb' hb''.2.1 hb''.2.2
         rw [hb''.2.1, hb''.2.2] at hb
