@@ -84,6 +84,7 @@ theorem on_dp_algebra_unique (h h' : DividedPowers (augIdeal R M))
     h'.dpow_comp n (ne_of_gt hq) (ι_mem_augIdeal R M m), h1 _ m, h1' _ m]
 #align divided_power_algebra.on_dp_algebra_unique DividedPowerAlgebra.on_dp_algebra_unique
 
+/-- Existence of divided powers on the augmentation ideal of an `R`-module `M`-/
 def Condδ (R : Type u) [CommRing R] [DecidableEq R]
     (M : Type u) [AddCommGroup M] [Module R M] : Prop :=
   ∃ h : DividedPowers (augIdeal R M), ∀ (n : ℕ) (x : M), h.dpow n (ι R M x) = dp R n x
@@ -91,6 +92,7 @@ def Condδ (R : Type u) [CommRing R] [DecidableEq R]
 
 -- Universe constraint : one needs to have M in universe u
 set_option linter.uppercaseLean3 false
+/-- Existence, for every `R`-module, of divided powers on its divided power algebra -/
 def CondD (R : Type u) [CommRing R] [DecidableEq R] : Prop :=
   ∀ (M : Type u) [AddCommGroup M], ∀ [Module R M], Condδ R M
 #align divided_power_algebra.cond_D DividedPowerAlgebra.CondD
@@ -1092,9 +1094,104 @@ theorem condτ_rel (A : Type u) [CommRing A] {R S R' S' : Type u} [CommRing R] [
 #align divided_power_algebra.cond_τ_rel DividedPowerAlgebra.condτ_rel
 
 def _root_.Ideal.IsAugmentation
-    (A : Type*) [CommRing A] (R : Type*) [CommRing R] [Algebra A R]
+    (A : Type*) [CommRing A] {R : Type*} [CommRing R] [Algebra A R]
     (I : Ideal R) : Prop :=
-  ∃ (f : R ⧸ I →ₐ[A] R), Function.LeftInverse f (Ideal.Quotient.mk I)
+  ∃ (f : R ⧸ I →+* R), Function.RightInverse f (Ideal.Quotient.mk I)
+
+def _root_.Ideal.IsAugmentationₐ
+    (A : Type*) [CommRing A] {R : Type*} [CommRing R] [Algebra A R]
+    (I : Ideal R) : Prop :=
+  ∃ (f : R ⧸ I →ₐ[A] R), Function.RightInverse f (Ideal.Quotient.mk I)
+
+example {A : Type*} [CommRing A] {R : Type*} [CommRing R] [Algebra A R]
+    {I : Ideal R} :
+    I.IsAugmentationₐ A ↔
+    ∃ (R₀ : Subalgebra A R), IsCompl (Subalgebra.toSubmodule R₀) (I.restrictScalars A) := by
+  constructor
+  · rintro ⟨f, hf⟩
+    use f.range
+    apply IsCompl.mk
+    · rw [Submodule.disjoint_def]
+      rintro x ⟨y, rfl⟩
+      simp only [AlgHom.toRingHom_eq_coe, RingHom.coe_coe, Submodule.restrictScalars_mem]
+      intro hy
+      rw [← hf y]
+      convert AlgHom.map_zero _
+      rw [← RingHom.mem_ker, mk_ker]
+      exact hy
+    · rw [codisjoint_iff, eq_top_iff]
+      intro x _
+      have : x = f x + (x - f x) := by ring
+      rw [this]
+      apply Submodule.add_mem
+      · apply Submodule.mem_sup_left
+        simp only [Subalgebra.mem_toSubmodule, AlgHom.mem_range, exists_apply_eq_apply]
+      · apply Submodule.mem_sup_right
+        simp only [Submodule.restrictScalars_mem]
+        suffices x - f x ∈ RingHom.ker (Ideal.Quotient.mk I) by
+          convert this
+          rw [mk_ker]
+        rw [RingHom.mem_ker, map_sub, hf, sub_self]
+  · rintro ⟨R₀, ⟨hd, hc⟩⟩
+    let u : R₀ →ₐ[A] R ⧸ I := (Ideal.Quotient.mkₐ A I).comp (Subalgebra.val R₀)
+    suffices hu : Function.Bijective u by
+      let u' : R₀ ≃ₐ[A] R ⧸ I := AlgEquiv.ofBijective u hu
+      use (Subalgebra.val R₀).comp u'.symm
+      rintro x
+      rcases hu.surjective x with ⟨y, rfl⟩
+      simp only [AlgHom.coe_comp, Subalgebra.coe_val, AlgHom.coe_coe, Function.comp_apply]
+      -- Something like AlgEquiv.symm_apply_eq is missing
+      suffices u y = u' y by
+        rw [this]
+        rw [AlgEquiv.leftInverse_symm]
+        simp only [AlgEquiv.coe_ofBijective, AlgHom.coe_comp, mkₐ_eq_mk, Subalgebra.coe_val,
+          Function.comp_apply, u', u]
+      simp only [AlgEquiv.coe_ofBijective, u']
+    constructor
+    · rw [RingHom.injective_iff_ker_eq_bot, eq_bot_iff]
+      intro x
+      simp only [RingHom.mem_ker, mem_bot]
+      simp only [Submodule.disjoint_def] at hd
+      specialize hd x x.property
+      simp only [Submodule.restrictScalars_mem, ZeroMemClass.coe_eq_zero] at hd
+      intro hx
+      apply hd
+      simpa only [AlgHom.coe_comp, mkₐ_eq_mk, Subalgebra.coe_val, Function.comp_apply, u, ← RingHom.mem_ker, mk_ker] using hx
+    · -- missing RingHomClass argument for RingHom.range_top_iff_surjective
+      intro x
+      rcases Ideal.Quotient.mk_surjective x with ⟨x, rfl⟩
+      simp only [codisjoint_iff, eq_top_iff] at hc
+      obtain ⟨x, hx, y, hy, rfl⟩ := Submodule.mem_sup.mp (hc (show x ∈ ⊤ by exact trivial))
+      use ⟨x, hx⟩
+      rw [map_add]
+      convert (add_zero _).symm
+      rwa [← RingHom.mem_ker, mk_ker]
+
+theorem Ideal.IsAugmentationₐ.baseChange
+    {A : Type*} [CommRing A] {R : Type*} [CommRing R] [Algebra A R]
+    {I : Ideal R} (hI : I.IsAugmentationₐ A)
+    (S : Type*) [CommRing S] [Algebra A S] [Algebra R S] [IsScalarTower A R S] :
+    Ideal.IsAugmentationₐ A (I.map Algebra.TensorProduct.includeRight : Ideal (S ⊗[A] R)) := by
+  obtain ⟨f, hf⟩ := hI
+  have that : RingHom.ker (mkₐ A I) = I := Ideal.Quotient.mkₐ_ker A I
+  let g : S ⊗[A] R ⧸ (Ideal.map Algebra.TensorProduct.includeRight I : Ideal (S ⊗[A] R)) →ₐ[A] S ⊗[A] (R ⧸ I) := by
+    apply liftₐ (Ideal.map Algebra.TensorProduct.includeRight I)
+      ((Algebra.TensorProduct.map (AlgHom.id A S) (mkₐ A I)))
+    intro a ha
+    rwa [← that, ← Algebra.TensorProduct.lTensor_ker _ (mkₐ_surjective A I),
+      RingHom.mem_ker] at ha
+  -- let g := Ideal.kerLiftAlg (Algebra.TensorProduct.map (AlgHom.id A S) (mkₐ A I))
+  -- rw [Algebra.TensorProduct.lTensor_ker _ (mkₐ_surjective A I), that] at g
+  -- it seems unusable
+  let g' : S ⊗[A] (R ⧸ I) →ₐ[A] S ⊗[A] R :=
+    Algebra.TensorProduct.map (AlgHom.id A S) f
+  use g'.comp g
+  -- it might be better to know that both of these maps are S-linear
+  intro x
+  induction x using TensorProduct.induction_on with
+  | zero => simp only [map_zero]
+  | tmul s r => simp [g, g', hf r]
+  | add x y hx hy => simp only [map_add, hx, hy]
 
 -- Roby, Proposition 4
 example (A : Type*) [CommRing A] (R : Type*) [CommRing R] [Algebra A R]
