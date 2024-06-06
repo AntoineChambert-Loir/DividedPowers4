@@ -1,5 +1,6 @@
 import DividedPowers.DPAlgebra.Graded.Basic
 import Mathlib.LinearAlgebra.TensorAlgebra.Basic
+import DividedPowers.ForMathlib.RingTheory.AugmentationIdeal
 
 universe u v
 
@@ -112,19 +113,13 @@ variable (R : Type u) (M : Type v) [CommRing R] [AddCommMonoid M] [Module R M]
 variable [DecidableEq R] [DecidableEq M]
 
 section GradeZero
-
-/-- An ideal J of a commutative ring A is an augmentation ideal
-if ideal.quotient.mk J has a right inverse which is a RingHom -/
-def IsAugmentationIdeal (A : Type*) [CommRing A] (J : Ideal A) : Prop :=
-  ∃ g : A ⧸ J →+* A, Function.RightInverse g (Ideal.Quotient.mk J)
-
 /-- The augmentation ideal in the divided_power_algebra -/
 def augIdeal : (Ideal (DividedPowerAlgebra R M) : Type (max u v)) :=
-  RingHom.ker (algebraMapInv R M).toRingHom
+  RingHom.ker (algebraMapInv R M)
 
 theorem mem_augIdeal_iff (f : DividedPowerAlgebra R M) :
     f ∈ augIdeal R M ↔ algebraMapInv R M f = 0 := by
-  rw [augIdeal, AlgHom.toRingHom_eq_coe, RingHom.mem_ker, RingHom.coe_coe]
+  rw [augIdeal, RingHom.mem_ker]
 
 /-- For `Nontrivial R`, `dp R n m` is contained in the augmentation ideal iff `0 < n` -/
 theorem dp_mem_augIdeal_iff [Nontrivial R] (n : ℕ) (m : M) :
@@ -141,42 +136,59 @@ theorem dp_mem_augIdeal {n : ℕ} (hn : 0 < n) (m : M) :
 theorem ι_mem_augIdeal (m : M) : ι R M m ∈ augIdeal R M := by
   simp only [mem_augIdeal_iff, ι_def, dp, algebraMapInv_eq, aeval_X, zero_lt_one, ite_true]
 
-def kerLiftAlg_algebraMapInv := kerLiftAlg (algebraMapInv R M)
+def kerLiftAlg_algebraMapInv :
+    DividedPowerAlgebra R M ⧸ RingHom.ker (algebraMapInv R M) →ₐ[R] R :=
+  kerLiftAlg (algebraMapInv R M)
 --  better type would be : (DividedPowerAlgebra R M ⧸ augIdeal R M) →ₐ[R] R
+
+def kerLiftAlg_algebraMapInv' :
+    (DividedPowerAlgebra R M ⧸ augIdeal R M) →ₐ[R] R :=
+  Ideal.Quotient.liftₐ _ (algebraMapInv R M) (fun a ↦ by simp only [mem_augIdeal_iff, imp_self])
 
 def algebraMap_mod_augIdeal :
     R →+* (DividedPowerAlgebra R M ⧸ augIdeal R M) :=
   algebraMap R (DividedPowerAlgebra R M ⧸ augIdeal R M)
 
--- The next two lemmas timeout (due to an inference problem, I think)
-
 lemma kerLiftAlg_leftInverse :
-    Function.LeftInverse (kerLiftAlg_algebraMapInv R M) (algebraMap_mod_augIdeal R M) := by
-  intro r
-  exact AlgHom.commutes (kerLiftAlg (algebraMapInv R M)) r
+    Function.LeftInverse (kerLiftAlg_algebraMapInv R M) (algebraMap_mod_augIdeal R M) :=
+  AlgHom.commutes (kerLiftAlg (algebraMapInv R M))
 
 lemma kerLiftAlg_rightInverse :
-    Function.RightInverse (kerLiftAlg_algebraMapInv R M) (algebraMap_mod_augIdeal R M) := by
-  apply Function.rightInverse_of_injective_of_leftInverse
-  · apply RingHom.kerLift_injective
-  · apply kerLiftAlg_leftInverse
+    Function.RightInverse (kerLiftAlg_algebraMapInv R M) (algebraMap_mod_augIdeal R M) :=
+  Function.rightInverse_of_injective_of_leftInverse
+    (RingHom.kerLift_injective _) (kerLiftAlg_leftInverse _ _)
 
-def algebraMap_comp_kerLiftAlg :=
+def algebraMap_comp_kerLiftAlg :
+    DividedPowerAlgebra R M ⧸ RingHom.ker (algebraMapInv R M) →+* DividedPowerAlgebra R M :=
   (algebraMap R (DividedPowerAlgebra R M)).comp (kerLiftAlg_algebraMapInv R M).toRingHom
 
 lemma augIdeal_isAugmentationIdeal' :
     Function.LeftInverse (Ideal.Quotient.mk (augIdeal R M))
-      (algebraMap_comp_kerLiftAlg R M) := by
-  intro r
+      (algebraMap_comp_kerLiftAlg R M) := fun r ↦ by
   dsimp only [algebraMap_comp_kerLiftAlg]
   rw [RingHom.coe_comp, Function.comp_apply, Ideal.Quotient.mk_algebraMap]
   apply kerLiftAlg_rightInverse
 
--- We prove that the augmentation is an augmentation ideal, namely there is a section
+
+/- We prove that the augmentation is an augmentation ideal,
+  namely there is a section
+  But we know what the section is!
+  BETTER : prove the precise `IsCompl` statement.  -/
 theorem augIdeal_isAugmentationIdeal :
-  IsAugmentationIdeal (DividedPowerAlgebra R M) (augIdeal R M) := by
-  dsimp only [IsAugmentationIdeal]
+  IsAugmentation (augIdeal R M) := by
+  dsimp only [IsAugmentation]
   use algebraMap_comp_kerLiftAlg R M
+  exact augIdeal_isAugmentationIdeal' R M
+
+-- We prove that the augmentation is an augmentation ideal
+-- as an algebra, namely there is a section which is an AlgHom
+theorem augIdeal_isAugmentationₐ :
+  IsAugmentationₐ R (augIdeal R M) := by
+  dsimp only [IsAugmentationₐ]
+  use {
+      toRingHom := algebraMap_comp_kerLiftAlg R M
+      commutes' := fun r ↦ by
+        simp [algebraMap_comp_kerLiftAlg] }
   exact augIdeal_isAugmentationIdeal' R M
 
 -- Q : if algebra map has a section, is the kernel an augmentation ideal?
