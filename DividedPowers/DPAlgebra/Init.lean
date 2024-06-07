@@ -230,6 +230,9 @@ def dp (n : ℕ) (m : M) : DividedPowerAlgebra R M :=
   mk (X ⟨n, m⟩)
 #align divided_power_algebra.dp DividedPowerAlgebra.dp
 
+theorem dp_def' (n : ℕ) (m : M) :
+  dp R n m = mk (X ⟨n, m⟩) := rfl -- MI: I think this one should be called `dp_def`
+
 --lemma dp_def (n : ℕ) (m : M) : dp R n m = mkₐ R (relI R M) (X (⟨n, m⟩)) := rfl  --rename?
 theorem dp_def (n : ℕ) (m : M) :
   dp R n m = mkAlgHom R (Rel R M) (X ⟨n, m⟩) := rfl
