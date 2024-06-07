@@ -53,6 +53,27 @@ noncomputable section
 
 universe u v v₁ v₂ w
 
+section sup
+
+open Submonoid Submodule
+
+theorem Submodule.mem_sup_iff_exists_add
+  {R : Type*} [Semiring R] {M : Type*} [AddCommMonoid M] [Module R M]
+  {M₁ M₂ : Submodule R M} (m : M) :
+  m ∈ M₁ ⊔ M₂ ↔ ∃ m₁ ∈ M₁, ∃ m₂ ∈ M₂, m₁ + m₂ = m := by
+  rw [← Submodule.mem_toAddSubmonoid (M₁ ⊔ M₂),
+    Submodule.sup_toAddSubmonoid, AddSubmonoid.mem_sup]
+  simp only [Submodule.mem_toAddSubmonoid]
+
+end sup
+
+
+section augmentation
+
+open RingHom Ideal.Quotient Ideal TensorProduct Algebra.TensorProduct Function
+
+end augmentation
+
 section
 
 variable (R : Type u) [CommRing R] [DecidableEq R]
@@ -84,6 +105,7 @@ theorem on_dp_algebra_unique (h h' : DividedPowers (augIdeal R M))
     h'.dpow_comp n (ne_of_gt hq) (ι_mem_augIdeal R M m), h1 _ m, h1' _ m]
 #align divided_power_algebra.on_dp_algebra_unique DividedPowerAlgebra.on_dp_algebra_unique
 
+/-- Existence of divided powers on the augmentation ideal of an `R`-module `M`-/
 def Condδ (R : Type u) [CommRing R] [DecidableEq R]
     (M : Type u) [AddCommGroup M] [Module R M] : Prop :=
   ∃ h : DividedPowers (augIdeal R M), ∀ (n : ℕ) (x : M), h.dpow n (ι R M x) = dp R n x
@@ -91,6 +113,7 @@ def Condδ (R : Type u) [CommRing R] [DecidableEq R]
 
 -- Universe constraint : one needs to have M in universe u
 set_option linter.uppercaseLean3 false
+/-- Existence, for every `R`-module, of divided powers on its divided power algebra -/
 def CondD (R : Type u) [CommRing R] [DecidableEq R] : Prop :=
   ∀ (M : Type u) [AddCommGroup M], ∀ [Module R M], Condδ R M
 #align divided_power_algebra.cond_D DividedPowerAlgebra.CondD
@@ -610,23 +633,18 @@ theorem _root_.Algebra.TensorProduct.lTensor_isCompl
       | add x y hx hy =>
         simp only [map_add]
         exact Subalgebra.add_mem _ hx hy
-      | zero => sorry
-        /- simp only [map_zero]
-        apply Subalgebra.zero_mem -/
+      | zero =>
+        simp only [LinearMap.map_zero]
+        apply Subalgebra.zero_mem
   · ext x
     simp only [Submodule.restrictScalars_mem, LinearMap.mem_range]
     unfold Ideal.map
     constructor
     · intro hx
       apply Submodule.span_induction hx (p := fun x ↦ ∃ y, _ = x)
-      · rintro _ ⟨s, hs, rfl⟩
-        use (1 : R) ⊗ₜ[A] ⟨s, hs⟩
-        rfl
-      · use 0
-        simp only [map_zero]
-      · rintro _ _ ⟨x, rfl⟩ ⟨y, rfl⟩
-        use x + y
-        simp only [map_add]
+      · rintro _ ⟨s, hs, rfl⟩; use (1 : R) ⊗ₜ[A] ⟨s, hs⟩; rfl
+      · use 0; simp only [map_zero]
+      · rintro _ _ ⟨x, rfl⟩ ⟨y, rfl⟩; use x + y; simp only [map_add]
       · rintro a _ ⟨x, rfl⟩
         induction x using TensorProduct.induction_on with
         | zero =>
@@ -745,7 +763,7 @@ theorem _root_.Algebra.TensorProduct.lTensor_isCompl'
       induction y using TensorProduct.induction_on with
       | zero =>
         use 0
-        sorry --simp only [TensorProduct.zero_tmul, map_zero]
+        simp only [TensorProduct.zero_tmul, LinearMap.map_zero]
       | tmul r s =>
         rcases s with ⟨s, hs⟩
         simp only [Submodule.mem_one] at hs
@@ -770,7 +788,22 @@ theorem _root_.Algebra.TensorProduct.lTensor_isCompl'
       · rintro a _ ⟨x, rfl⟩
         induction x using TensorProduct.induction_on with
         | zero => use 0; simp only [map_zero, smul_eq_mul, mul_zero]
-        | tmul r s => sorry
+        | tmul r s =>
+          induction a using TensorProduct.induction_on with
+          | zero =>
+            use 0
+            simp only [map_zero, LinearMap.baseChange_tmul,
+              Submodule.coeSubtype, smul_eq_mul, zero_mul]
+          | tmul u v =>
+            use (u * r) ⊗ₜ[A] (v • s)
+            simp only [LinearMap.baseChange_tmul, Submodule.coeSubtype, smul_eq_mul,
+              Algebra.TensorProduct.tmul_mul_tmul]
+            rw [Submodule.coe_smul, smul_eq_mul]
+          | add u v hu hv =>
+            obtain ⟨x, hx⟩ := hu
+            obtain ⟨y, hy⟩ := hv
+            use x + y
+            rw [LinearMap.map_add, add_smul, hx, hy]
         | add x y hx hy =>
           obtain ⟨x', hx⟩ := hx
           obtain ⟨y', hy⟩ := hy
@@ -910,8 +943,9 @@ theorem _root_.DividedPowerAlgebra.T_free_and_D_to_QSplit :
     apply Algebra.TensorProduct.includeLeft
   use Subalgebra.restrictScalars A (⊥ : Subalgebra R T)
   have isaugΓ : IsCompl
-    (Subalgebra.toSubmodule (⊥ : Subalgebra A _))
-    ((augIdeal A M).restrictScalars A) := sorry
+      (Subalgebra.toSubmodule (⊥ : Subalgebra A _))
+      ((augIdeal A M).restrictScalars A) := by
+    sorry
   /- have : IsCompl
     (Subalgebra.toSubmodule (Subalgebra.restrictScalars A ⊥)) (Submodule.restrictScalars A idK) := by
     simp only [hidK]
@@ -1091,18 +1125,59 @@ theorem condτ_rel (A : Type u) [CommRing A] {R S R' S' : Type u} [CommRing R] [
         fg]
 #align divided_power_algebra.cond_τ_rel DividedPowerAlgebra.condτ_rel
 
-def _root_.Ideal.IsAugmentation
-    (A : Type*) [CommRing A] (R : Type*) [CommRing R] [Algebra A R]
-    (I : Ideal R) : Prop :=
-  ∃ (f : R ⧸ I →ₐ[A] R), Function.LeftInverse f (Ideal.Quotient.mk I)
-
 -- Roby, Proposition 4
 example (A : Type*) [CommRing A] (R : Type*) [CommRing R] [Algebra A R]
     (I : Ideal R) (R₀ : Subalgebra A R)
     (hsplit : IsCompl (Subalgebra.toSubmodule R₀) (I.restrictScalars A))
-    (F₀ : Set R₀) (FI : Set I) :
-    I ⊓ (Submodule.span R (F₀ ∪ FI : Set R)) = Submodule.span R (FI : Set R) := by
-  sorry
+    (J : Ideal R) (F₀ : Set R₀) (FI : Set I)
+    (hJ : J = Submodule.span R (F₀ ∪ FI : Set R)) :
+    J.restrictScalars A
+      = (Subalgebra.toSubmodule R₀ ⊓ J.restrictScalars A)
+          ⊔ (I.restrictScalars A ⊓ J.restrictScalars A) := by
+  rcases hsplit with ⟨hd, hc⟩
+  simp only [codisjoint_iff] at hc
+  simp only [Submodule.disjoint_def, Subalgebra.mem_toSubmodule,
+    Submodule.restrictScalars_mem] at hd
+  refine le_antisymm ?_ (sup_le inf_le_right inf_le_right)
+  intro x hx
+  simp only [hJ, SetLike.coe_sort_coe, Submodule.restrictScalars_mem] at hx
+  apply Submodule.span_induction hx (p := fun x ↦ x ∈ _)
+  · rintro _ (⟨x, hx, rfl⟩ | ⟨y, hy, rfl⟩)
+    · apply Submodule.mem_sup_left
+      simp only [Submodule.mem_inf, Subalgebra.mem_toSubmodule, SetLike.coe_mem,
+        Submodule.restrictScalars_mem, true_and]
+      rw [hJ]
+      apply Submodule.subset_span
+      apply Set.mem_union_left
+      simp only [SetLike.coe_sort_coe, Set.mem_image, SetLike.coe_eq_coe, exists_eq_right, hx]
+    · apply Submodule.mem_sup_right
+      simp only [hJ, SetLike.coe_sort_coe, submodule_span_eq, Submodule.mem_inf,
+        Submodule.restrictScalars_mem, SetLike.coe_mem, true_and]
+      apply Submodule.subset_span
+      apply Set.mem_union_right
+      simp only [Set.mem_image, SetLike.coe_eq_coe, exists_eq_right, hy]
+  · exact zero_mem _
+  · exact fun x y hx hy ↦ add_mem hx hy
+  · intro a x hx
+    simp only [← Submodule.add_eq_sup, ← SetLike.mem_coe, Submodule.coe_add] at hx
+    rw [Submodule.coe_add] at hx
+    simp only [SetLike.mem_coe] at hx
+
+
+    have ha : a ∈ Subalgebra.toSubmodule R₀ + Submodule.restrictScalars A I := by
+      change a ∈ Subalgebra.toSubmodule R₀ ⊔ _
+      rw [hc]
+      exact trivial
+    simp only [Submodule.add_eq_sup] at hx
+    obtain ⟨x₀, hx₀, y, hy, rfl⟩ := hx
+
+    suffices ∃ a₀ ∈ R₀, ∃ b ∈ I, a = a₀ + b by
+      obtain ⟨a₀, ha₀, b, hb, rfl⟩ := this
+      rw [add_smul]
+      apply add_mem
+      · sorry
+      · sorry
+    sorry
 
 theorem Ideal.map_coe_toRingHom
   {A : Type*} [CommRing A] {R S : Type*} [CommRing R] [CommRing S]
