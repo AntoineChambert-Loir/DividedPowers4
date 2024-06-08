@@ -60,12 +60,14 @@ theorem algebraMap_leftInverse :
     algebraMap R (DividedPowerAlgebra R M) x = 1 ↔ x = 1 :=
   map_eq_one_iff (algebraMap _ _) (algebraMap_leftInverse _ _).injective
 
-theorem mkₐ_eq_aeval {C : Type*} [CommRing C] {D : Type*} (I : Ideal (MvPolynomial D C)) :
+-- TODO : mv to MvPolynomial
+theorem _root_.MvPolynomial.mkₐ_eq_aeval {C : Type*} [CommRing C] {D : Type*} (I : Ideal (MvPolynomial D C)) :
     Ideal.Quotient.mkₐ C I = aeval fun d : D => Ideal.Quotient.mk I (X d) := by
   ext d
   simp only [mkₐ_eq_mk, aeval_X]
 
-theorem mk_eq_eval₂ {C : Type*} [CommRing C] {D : Type*} (I : Ideal (MvPolynomial D C)) :
+-- TODO : mv to MvPolynomial
+theorem _root_.MvPolynomial.mk_eq_eval₂ {C : Type*} [CommRing C] {D : Type*} (I : Ideal (MvPolynomial D C)) :
     (Ideal.Quotient.mk I).toFun =
       eval₂ (algebraMap C (MvPolynomial D C ⧸ I)) fun d : D => Ideal.Quotient.mk I (X d) := by
   ext d
@@ -73,7 +75,7 @@ theorem mk_eq_eval₂ {C : Type*} [CommRing C] {D : Type*} (I : Ideal (MvPolynom
   rfl
 
 theorem algebraMap_right_inv_of_degree_zero (x : grade R M 0) :
-  (algebraMap R (DividedPowerAlgebra R M)) ((algebraMapInv R M) x.1) = x.1 := by
+    (algebraMap R (DividedPowerAlgebra R M)) ((algebraMapInv R M) x) = x := by
   obtain ⟨p, hp0, hpx⟩ := (mem_grade_iff' _ _ _).mp x.2
   suffices ∃ (a : R), p.val = C a by
     obtain ⟨a, ha⟩ := this
@@ -137,27 +139,24 @@ theorem ι_mem_augIdeal (m : M) : ι R M m ∈ augIdeal R M := by
   simp only [mem_augIdeal_iff, ι_def, dp, algebraMapInv_eq, aeval_X, zero_lt_one, ite_true]
 
 def kerLiftAlg_algebraMapInv :
-    DividedPowerAlgebra R M ⧸ RingHom.ker (algebraMapInv R M) →ₐ[R] R :=
-  kerLiftAlg (algebraMapInv R M)
---  better type would be : (DividedPowerAlgebra R M ⧸ augIdeal R M) →ₐ[R] R
-
-def kerLiftAlg_algebraMapInv' :
     (DividedPowerAlgebra R M ⧸ augIdeal R M) →ₐ[R] R :=
   Ideal.Quotient.liftₐ _ (algebraMapInv R M) (fun a ↦ by simp only [mem_augIdeal_iff, imp_self])
 
+-- probably useless
 def algebraMap_mod_augIdeal :
     R →+* (DividedPowerAlgebra R M ⧸ augIdeal R M) :=
   algebraMap R (DividedPowerAlgebra R M ⧸ augIdeal R M)
 
 lemma kerLiftAlg_leftInverse :
-    Function.LeftInverse (kerLiftAlg_algebraMapInv R M) (algebraMap_mod_augIdeal R M) :=
+    Function.LeftInverse (kerLiftAlg_algebraMapInv R M) (algebraMap R _) :=
   AlgHom.commutes (kerLiftAlg (algebraMapInv R M))
 
 lemma kerLiftAlg_rightInverse :
-    Function.RightInverse (kerLiftAlg_algebraMapInv R M) (algebraMap_mod_augIdeal R M) :=
+    Function.RightInverse (kerLiftAlg_algebraMapInv R M) (algebraMap R _) :=
   Function.rightInverse_of_injective_of_leftInverse
     (RingHom.kerLift_injective _) (kerLiftAlg_leftInverse _ _)
 
+-- probably useless
 def algebraMap_comp_kerLiftAlg :
     DividedPowerAlgebra R M ⧸ RingHom.ker (algebraMapInv R M) →+* DividedPowerAlgebra R M :=
   (algebraMap R (DividedPowerAlgebra R M)).comp (kerLiftAlg_algebraMapInv R M).toRingHom
@@ -168,6 +167,7 @@ lemma augIdeal_isAugmentationIdeal' :
   dsimp only [algebraMap_comp_kerLiftAlg]
   rw [RingHom.coe_comp, Function.comp_apply, Ideal.Quotient.mk_algebraMap]
   apply kerLiftAlg_rightInverse
+
 
 
 /- We prove that the augmentation is an augmentation ideal,
@@ -312,5 +312,30 @@ def proj0RingHom : RingHom (DividedPowerAlgebra R M) R where
     simp only [toEquiv_eq_coe, Equiv.toFun_as_coe, coe_toEquiv, comp_apply, map_zero]
   map_add' := by
     simp only [toEquiv_eq_coe, Equiv.toFun_as_coe, coe_toEquiv, comp_apply, map_add, forall_const]
+
+/-
+def grade0Subalgebra : Subalgebra R (DividedPowerAlgebra R M) where
+  carrier := grade R M 0
+  add_mem' := add_mem
+  mul_mem' {a b} ha hb := mul_mem R M ha hb
+  algebraMap_mem' r := by
+    simp
+    sorry
+-/
+
+example : grade R M 0 =
+    Subalgebra.toSubmodule (⊥ : Subalgebra R (DividedPowerAlgebra R M)) :=  by
+  ext p
+  simp only [Subalgebra.mem_toSubmodule]
+  sorry
+
+theorem isCompl_augIdeal :
+    IsCompl
+      (Subalgebra.toSubmodule (⊥ : Subalgebra R _))
+      ((augIdeal R M).restrictScalars R) := by
+  apply IsCompl.mk
+  · rw [Submodule.disjoint_def]
+    sorry
+  · sorry
 
 end GradeZero

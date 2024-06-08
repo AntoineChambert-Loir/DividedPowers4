@@ -451,6 +451,13 @@ set_option linter.uppercaseLean3 false
 #align divided_power_algebra.lift_eqₐ_X DividedPowerAlgebra.liftAlgHom_apply_dp
 set_option linter.uppercaseLean3 true
 
+theorem liftAlgHom_unique (f : DividedPowerAlgebra R M →ₐ[R] A)
+    (hf : ∀ n m, f (dp R n m) = hI.dpow n (φ  m)) :
+    f = lift hI φ hφ := by
+  apply DividedPowerAlgebra.ext
+  intro n m
+  rw [liftAlgHom_apply_dp, hf]
+
 -- theorem lift_eq_x (n : ℕ) (m : M) :
 --   lift R M hI φ hφ (mk (relI R M) (X (n, m))) = hI.dpow n (φ m) :=
 --   by rw [← mkₐ_eq_mk R, lift_eqₐ_X]
