@@ -495,9 +495,13 @@ theorem _root_.DividedPowerAlgebra.T_free_and_D_to_QSplit :
   have : MvPolynomial S₀ A →ₐ[A] MvPolynomial S₀ A ⊗[A] DividedPowerAlgebra A M := by
     apply Algebra.TensorProduct.includeLeft
   use Subalgebra.restrictScalars A (⊥ : Subalgebra R T)
-  have isaugΓ : IsCompl
+  refine ⟨?_, ?_⟩
+  · simp only [Subalgebra.restrictScalars_toSubmodule]
+    have isaugΓ : IsCompl
       (Subalgebra.toSubmodule (⊥ : Subalgebra A _))
-      ((augIdeal A M).restrictScalars A) := by
+      ((augIdeal A M).restrictScalars A) :=
+      isCompl_augIdeal A M
+
     sorry
   /- have : IsCompl
     (Subalgebra.toSubmodule (Subalgebra.restrictScalars A ⊥)) (Submodule.restrictScalars A idK) := by
