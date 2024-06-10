@@ -313,21 +313,30 @@ def proj0RingHom : RingHom (DividedPowerAlgebra R M) R where
   map_add' := by
     simp only [toEquiv_eq_coe, Equiv.toFun_as_coe, coe_toEquiv, comp_apply, map_add, forall_const]
 
-/-
+theorem algebraMap_mem_grade_zero  (r : R) :
+    (algebraMap R (DividedPowerAlgebra R M)) r ∈ grade R M 0 := by
+  rw [mem_grade_iff]
+  use C r
+  constructor
+  · simp only [mem_weightedHomogeneousSubmodule]
+    exact isWeightedHomogeneous_C Prod.fst r
+  · rw [mk_C]
+
 def grade0Subalgebra : Subalgebra R (DividedPowerAlgebra R M) where
   carrier := grade R M 0
   add_mem' := add_mem
-  mul_mem' {a b} ha hb := mul_mem R M ha hb
-  algebraMap_mem' r := by
-    simp
-    sorry
--/
+  mul_mem' ha hb := mul_mem R M ha hb
+  algebraMap_mem'  := algebraMap_mem_grade_zero  R M
 
-example : grade R M 0 =
-    Subalgebra.toSubmodule (⊥ : Subalgebra R (DividedPowerAlgebra R M)) :=  by
-  ext p
-  simp only [Subalgebra.mem_toSubmodule]
-  sorry
+theorem grade0Subalgebra_toSubmodule :
+    Subalgebra.toSubmodule (grade0Subalgebra R M) = grade R M 0 := rfl
+
+theorem grade0Subalgebra_eq_bot : grade0Subalgebra R M = ⊥ := by
+  rw [eq_bot_iff]
+  intro p hp
+  rw [Algebra.mem_bot]
+  convert Set.mem_range_self ((algebraMapInv R M) p)
+  exact (algebraMap_right_inv_of_degree_zero R M ⟨p, hp⟩).symm
 
 theorem isCompl_augIdeal :
     IsCompl
@@ -335,7 +344,20 @@ theorem isCompl_augIdeal :
       ((augIdeal R M).restrictScalars R) := by
   apply IsCompl.mk
   · rw [Submodule.disjoint_def]
-    sorry
-  · sorry
+    intro x
+    simp only [Subalgebra.mem_toSubmodule, Algebra.mem_bot]
+    rintro ⟨r, rfl⟩
+    simp only [Submodule.restrictScalars_mem, mem_augIdeal_iff, AlgHom.commutes,
+      Algebra.id.map_eq_id, RingHom.id_apply]
+    intro hr
+    rw [hr, map_zero]
+  · rw [codisjoint_iff, eq_top_iff]
+    intro p _
+    simp only [Submodule.mem_sup, Subalgebra.mem_toSubmodule, Submodule.restrictScalars_mem]
+    refine ⟨algebraMap R _ (algebraMapInv R M p), ?_, _, ?_, add_sub_cancel _ p⟩
+    · rw [Algebra.mem_bot]
+      exact Set.mem_range_self ((algebraMapInv R M) p)
+    · simp only [mem_augIdeal_iff, map_sub, AlgHom.commutes, Algebra.id.map_eq_id,
+      RingHom.id_apply, sub_self]
 
 end GradeZero
