@@ -8,10 +8,19 @@ import Mathlib.LinearAlgebra.TensorProduct.RightExactness
 
 /-! # Augmentation ideals
 
-This is tentative
+* `Ideal.IsAugmentation` :  An ideal `I` of an `A`-algebra `S`
+is an augmentation ideal if it is a complement of `⊥ : Subalgebra A S`.
 
-probably the subalgebra / section should be data
-rather than Prop valued existence statements
+* `Ideal.isAugmentation_baseChange`: if `R` is a commring and an `A`-algebra,
+then the ideal `R ⊗[A] I` of `R ⊗[A] S` is an augmentation ideal.
+
+## Remark
+
+* There is a weaker version that holds for general commutative rings
+and would just assert that the quotient map `R →+* R ⧸ I` has a section
+which is a ring homomorphism.
+
+
 
  -/
 
@@ -61,13 +70,9 @@ open TensorProduct
 
 /-- An ideal `J` of a commutative `R`-algebra `A` is an augmentation ideal
   if this ideal is a complement to `⊥ : Subalgebra R A` -/
-def IsAugmentationₐ (R : Type*) [CommRing R]
+def IsAugmentation (R : Type*) [CommRing R]
     {A : Type*} [CommRing A] [Algebra R A] (J : Ideal A) : Prop :=
   IsCompl (Subalgebra.toSubmodule (⊥ : Subalgebra R A)) (J.restrictScalars R)
-
-#check lTensor_exact
-#check LinearMap.ker_comp_of_ker_eq_bot
-#check LinearMap.range_comp
 
 theorem _root_.LinearMap.ker_lTensor_of_linearProjOfIsCompl
     {M : Type*} [AddCommGroup M] [Module A M]
@@ -132,140 +137,100 @@ theorem _root_.LinearMap.isCompl_baseChange
   rw [← Submodule.isCompl_restrictScalars_iff A]
   exact _root_.LinearMap.isCompl_lTensor hM R
 
-/-- The base change of an algebra with an augmentation ideal -/
-theorem _root_.Algebra.TensorProduct.isCompl_baseChange
-    {R : Type*} [CommRing R] [Algebra A R]
-    {S : Type*} [CommRing S] [Algebra A S]
-    {I : Ideal S}
-    (hI : IsCompl (Subalgebra.toSubmodule (⊥ : Subalgebra A S)) (I.restrictScalars A)) :
-    IsCompl
-      (Subalgebra.toSubmodule ((⊥ : Subalgebra R (R ⊗[A] S)).restrictScalars A))
-      (Submodule.restrictScalars A (Ideal.map Algebra.TensorProduct.includeRight I)) := by
-  have : Submodule.restrictScalars A (Ideal.map Algebra.TensorProduct.includeRight I)
-    = Submodule.restrictScalars A
-      (Submodule.restrictScalars R
-        (Ideal.map Algebra.TensorProduct.includeRight I : Ideal (R ⊗[A] S)) : Submodule R (R ⊗[A] S)) := rfl
-  rw [Subalgebra.toSubmodule_restrictScalars_eq, this,
-    Submodule.isCompl_restrictScalars_iff]
-  convert LinearMap.isCompl_baseChange hI R
-  · ext x
-    simp only [Subalgebra.mem_toSubmodule, Algebra.mem_bot]
-    simp only [Set.mem_range, LinearMap.mem_range]
-    constructor
-    · rintro ⟨y, rfl⟩
-      have : 1 ∈ (1 : Submodule A S) := by
-        simp only [Submodule.mem_one]
-        use 1
-        rw [_root_.map_one]
-      use y ⊗ₜ[A] ⟨1, this⟩
-      rfl
-    · rintro ⟨y, rfl⟩
-      induction y using TensorProduct.induction_on with
-      | zero =>
-        use 0
-        simp only [TensorProduct.zero_tmul, LinearMap.map_zero]
-        simp
+theorem Algebra.baseChange_bot {R S : Type*} [CommRing R] [Algebra A R] [CommRing S] [Algebra A S] :
+    Subalgebra.toSubmodule ⊥ =
+    LinearMap.range (LinearMap.baseChange R (Subalgebra.toSubmodule (⊥ : Subalgebra A S)).subtype) := by
+  ext x
+  simp only [Subalgebra.mem_toSubmodule, Algebra.mem_bot]
+  simp only [Set.mem_range, LinearMap.mem_range]
+  constructor
+  · rintro ⟨y, rfl⟩
+    exact ⟨y ⊗ₜ[A] ⟨1, (Subalgebra.mem_toSubmodule ⊥).mpr (one_mem ⊥)⟩, rfl⟩
+  · rintro ⟨y, rfl⟩
+    induction y using TensorProduct.induction_on with
+    | zero =>
+      use 0
+      simp only [TensorProduct.zero_tmul, LinearMap.map_zero]
+      simp
+    | tmul r s =>
+      rcases s with ⟨s, hs⟩
+      simp only [Subalgebra.mem_toSubmodule] at hs
+      obtain ⟨a, rfl⟩ := hs
+      use a • r
+      simp only [Algebra.TensorProduct.algebraMap_apply, Algebra.id.map_eq_id, RingHom.id_apply,
+        toRingHom_eq_coe, coe_coe, LinearMap.baseChange_tmul, coeSubtype]
+      simp only [TensorProduct.smul_tmul]
+      rw [Algebra.ofId_apply, Algebra.algebraMap_eq_smul_one]
+    | add x y hx hy =>
+      obtain ⟨x', hx⟩ := hx
+      obtain ⟨y', hy⟩ := hy
+      use x' + y'
+      simp only [TensorProduct.add_tmul, hx, hy, map_add]
+
+theorem Algebra.TensorProduct.map_includeRight_eq_range_baseChange
+    {R S : Type*} [CommRing R] [Algebra A R] [CommRing S] [Algebra A S]
+    {I : Ideal S} :
+    Submodule.restrictScalars R (map Algebra.TensorProduct.includeRight I)
+    = LinearMap.range (LinearMap.baseChange R (Submodule.restrictScalars A I).subtype) := by
+  ext x
+  simp only [Submodule.restrictScalars_mem, LinearMap.mem_range]
+  constructor
+  · intro hx
+    apply Submodule.span_induction hx (p := fun x ↦ ∃ y, (LinearMap.baseChange R (Submodule.subtype (Submodule.restrictScalars A I))) y = x )
+    · rintro x ⟨s, hs, rfl⟩; use 1 ⊗ₜ[A] ⟨s, hs⟩; rfl
+    · use 0; simp only [_root_.map_zero]
+    · rintro _ _ ⟨x, rfl⟩ ⟨y, rfl⟩; use x + y; simp only [map_add]
+    · rintro a _ ⟨x, rfl⟩
+      induction x using TensorProduct.induction_on with
+      | zero => use 0; simp only [_root_.map_zero, smul_eq_mul, mul_zero]
       | tmul r s =>
-        rcases s with ⟨s, hs⟩
-        simp only [Subalgebra.mem_toSubmodule] at hs
-        obtain ⟨a, rfl⟩ := hs
-        use a • r
-        simp only [Algebra.TensorProduct.algebraMap_apply, Algebra.id.map_eq_id, RingHom.id_apply,
-          toRingHom_eq_coe, coe_coe, LinearMap.baseChange_tmul, coeSubtype]
-        simp only [TensorProduct.smul_tmul]
-        rw [Algebra.ofId_apply, Algebra.algebraMap_eq_smul_one]
+        induction a using TensorProduct.induction_on with
+        | zero =>
+          use 0
+          simp only [_root_.map_zero, LinearMap.baseChange_tmul,
+            Submodule.coeSubtype, smul_eq_mul, zero_mul]
+        | tmul u v =>
+          use (u * r) ⊗ₜ[A] (v • s)
+          simp only [LinearMap.baseChange_tmul, Submodule.coeSubtype, smul_eq_mul,
+            Algebra.TensorProduct.tmul_mul_tmul]
+          rw [Submodule.coe_smul, smul_eq_mul]
+        | add u v hu hv =>
+          obtain ⟨x, hx⟩ := hu
+          obtain ⟨y, hy⟩ := hv
+          use x + y
+          rw [LinearMap.map_add, add_smul, hx, hy]
       | add x y hx hy =>
         obtain ⟨x', hx⟩ := hx
         obtain ⟨y', hy⟩ := hy
         use x' + y'
-        simp only [TensorProduct.add_tmul, hx, hy, map_add]
-  · ext x
-    simp only [Submodule.restrictScalars_mem, LinearMap.mem_range]
-    constructor
-    · intro hx
-      apply Submodule.span_induction hx (p := fun x ↦ ∃ y, (LinearMap.baseChange R (Submodule.subtype (Submodule.restrictScalars A I))) y = x )
-      · rintro x ⟨s, hs, rfl⟩; use 1 ⊗ₜ[A] ⟨s, hs⟩; rfl
-      · use 0; simp only [_root_.map_zero]
-      · rintro _ _ ⟨x, rfl⟩ ⟨y, rfl⟩; use x + y; simp only [map_add]
-      · rintro a _ ⟨x, rfl⟩
-        induction x using TensorProduct.induction_on with
-        | zero => use 0; simp only [_root_.map_zero, smul_eq_mul, mul_zero]
-        | tmul r s =>
-          induction a using TensorProduct.induction_on with
-          | zero =>
-            use 0
-            simp only [_root_.map_zero, LinearMap.baseChange_tmul,
-              Submodule.coeSubtype, smul_eq_mul, zero_mul]
-          | tmul u v =>
-            use (u * r) ⊗ₜ[A] (v • s)
-            simp only [LinearMap.baseChange_tmul, Submodule.coeSubtype, smul_eq_mul,
-              Algebra.TensorProduct.tmul_mul_tmul]
-            rw [Submodule.coe_smul, smul_eq_mul]
-          | add u v hu hv =>
-            obtain ⟨x, hx⟩ := hu
-            obtain ⟨y, hy⟩ := hv
-            use x + y
-            rw [LinearMap.map_add, add_smul, hx, hy]
-        | add x y hx hy =>
-          obtain ⟨x', hx⟩ := hx
-          obtain ⟨y', hy⟩ := hy
-          use x' + y'
-          simp only [map_add, hx, smul_eq_mul, hy, mul_add]
-    · rintro ⟨y, rfl⟩
-      induction y using TensorProduct.induction_on with
-      | zero => simp only [_root_.map_zero, Submodule.zero_mem]
-      | tmul r s =>
-        rcases s with ⟨s, hs⟩
-        simp only [restrictScalars_mem] at hs
-        simp only [LinearMap.baseChange_tmul, coeSubtype]
-        rw [← mul_one r, ← smul_eq_mul, ← TensorProduct.smul_tmul']
-        rw [← IsScalarTower.algebraMap_smul (R ⊗[A] S) r, smul_eq_mul]
-        apply Ideal.mul_mem_left
-        exact Ideal.mem_map_of_mem Algebra.TensorProduct.includeRight hs
-      | add x y hx hy =>
-        simp only [map_add]
-        exact Ideal.add_mem _ hx hy
+        simp only [map_add, hx, smul_eq_mul, hy, mul_add]
+  · rintro ⟨y, rfl⟩
+    induction y using TensorProduct.induction_on with
+    | zero => simp only [_root_.map_zero, Submodule.zero_mem]
+    | tmul r s =>
+      rcases s with ⟨s, hs⟩
+      simp only [restrictScalars_mem] at hs
+      simp only [LinearMap.baseChange_tmul, coeSubtype]
+      rw [← mul_one r, ← smul_eq_mul, ← TensorProduct.smul_tmul']
+      rw [← IsScalarTower.algebraMap_smul (R ⊗[A] S) r, smul_eq_mul]
+      apply Ideal.mul_mem_left
+      exact Ideal.mem_map_of_mem Algebra.TensorProduct.includeRight hs
+    | add x y hx hy =>
+      simp only [map_add]
+      exact Ideal.add_mem _ hx hy
 
-/-- If J is an `R`-algebra augmentation ideal, then S ⊗[R] J
-  is a `S`-algebra augmentation ideal -/
-theorem IsAugmentationₐ.baseChange
-    (hJ : J.IsAugmentationₐ R)
-    (S : Type*) [CommRing S] [Algebra R S] [Algebra A S] [IsScalarTower R A S] :
-    Ideal.IsAugmentationₐ S (J.map Algebra.TensorProduct.includeRight : Ideal (S ⊗[R] A)) := by
-  let f : A ⧸ J →ₐ[R] A := sorry
-  have that : RingHom.ker (mkₐ R J) = J := mkₐ_ker R J
-  let g : S ⊗[R] A ⧸ (Ideal.map Algebra.TensorProduct.includeRight J : Ideal (S ⊗[R] A)) →ₐ[S] S ⊗[R] (A ⧸ J) := {
-    toRingHom := by
-      apply Quotient.lift (Ideal.map Algebra.TensorProduct.includeRight J)
-        ((Algebra.TensorProduct.map (AlgHom.id R S) (mkₐ R J)))
-      intro a ha
-      rwa [← that, ← Algebra.TensorProduct.lTensor_ker _ (mkₐ_surjective R J), mem_ker] at ha
-    commutes' := fun s ↦ by
-      have : algebraMap S ((S ⊗[R] A) ⧸ (map Algebra.TensorProduct.includeRight J : Ideal (S ⊗[R] A))) s = mkₐ S _ (s ⊗ₜ[R] 1) := by
-        rw [mkₐ_eq_mk, ← mk_algebraMap, Algebra.TensorProduct.algebraMap_apply,
-          Algebra.id.map_eq_self]
-      simp [this] }
-  -- let g := Ideal.kerLiftAlg (Algebra.TensorProduct.map (AlgHom.id A S) (mkₐ A I))
-  -- rw [Algebra.TensorProduct.lTensor_ker _ (mkₐ_surjective A I), that] at g
-  -- it seems unusable
-  let g' : S ⊗[R] (A ⧸ J) →ₐ[S] S ⊗[R] A := Algebra.TensorProduct.map (AlgHom.id S S) f
-  use g'.comp g
-  intro x
-  rcases mkₐ_surjective A _ x with ⟨x, rfl⟩
-  simp only [mkₐ_eq_mk, AlgHom.coe_mk, coe_coe, AlgHom.coe_comp, Function.comp_apply, liftₐ_apply,
-    Quotient.lift_mk, g]
-  induction x using TensorProduct.induction_on with
-  | zero => simp only [_root_.map_zero]
-  | tmul s r =>
-    simp only [Algebra.TensorProduct.map_tmul, AlgHom.coe_id, id_eq, mkₐ_eq_mk, g'] --  hf r]
-    rw [Ideal.Quotient.mk_eq_mk_iff_sub_mem, ← TensorProduct.tmul_sub]
-    rw [← mul_one s, ← smul_eq_mul, ← TensorProduct.smul_tmul']
-    rw [← algebraMap_smul (S ⊗[R] A), smul_eq_mul]
-    apply Ideal.mul_mem_left
-    apply Ideal.mem_map_of_mem (Algebra.TensorProduct.includeRight)
-    rw [← Ideal.Quotient.mk_eq_mk_iff_sub_mem]
-    apply hf
-  | add x y hx hy => simp only [map_add, hx, hy]
+/-- The base change of an algebra with an augmentation ideal -/
+theorem _root_.Ideal.isAugmentation_baseChange
+    {S : Type*} [CommRing S] [Algebra A S]
+    {I : Ideal S}
+    (hI : IsCompl (Subalgebra.toSubmodule (⊥ : Subalgebra A S)) (I.restrictScalars A))
+    {R : Type*} [CommRing R] [Algebra A R] :
+    Ideal.IsAugmentation R (Ideal.map Algebra.TensorProduct.includeRight I :
+      Ideal (R ⊗[A] S)) := by
+  unfold Ideal.IsAugmentation
+  rw [Algebra.baseChange_bot]
+  rw [Algebra.TensorProduct.map_includeRight_eq_range_baseChange]
+  exact LinearMap.isCompl_baseChange hI R
 
 #exit
 -- OLD VERSION
