@@ -444,6 +444,23 @@ theorem Ψ_surjective : Function.Surjective (Ψ A S hI S₀) := by
     simp only [Basis.constr_apply, Finsupp.basisSingleOne_repr, LinearEquiv.refl_apply, zero_smul,
       Finsupp.sum_single_index, one_smul]
 
+theorem Ψ_map_eq : Subalgebra.map (Ψ A S hI S₀)
+    (Subalgebra.restrictScalars A (⊥ : Subalgebra (MvPolynomial S₀ A) _)) = S₀ := by
+  ext x
+  simp only [Subalgebra.mem_map, Subalgebra.mem_restrictScalars]
+  simp only [Algebra.mem_bot, Set.mem_range, Algebra.TensorProduct.algebraMap_apply,
+    Algebra.id.map_eq_id, RingHom.id_apply, exists_exists_eq_and]
+  constructor
+  · rintro ⟨p, rfl⟩
+    simp only [Ψ, Algebra.TensorProduct.productMap_apply_tmul, AlgHom.coe_comp, Subalgebra.coe_val,
+      IsScalarTower.coe_toAlgHom', Function.comp_apply, map_one, mul_one, SetLike.coe_mem]
+  · intro hx
+    use MvPolynomial.X ⟨x, hx⟩
+    simp only [Ψ, Algebra.TensorProduct.productMap_apply_tmul, AlgHom.coe_comp, Subalgebra.coe_val,
+      IsScalarTower.coe_toAlgHom', Function.comp_apply, map_one, mul_one]
+    rw [algebraMap_eq]
+    simp only [AlgHom.toRingHom_eq_coe, RingHom.coe_coe, aeval_X, id_eq]
+
 variable (I) in
 theorem K_eq_span :
     K A (⊥ : Ideal (MvPolynomial S₀ A)) (augIdeal A (↥I →₀ A))
@@ -560,7 +577,6 @@ theorem _root_.DividedPowerAlgebra.T_free_and_D_to_QSplit :
   constructor
   · refine le_antisymm hI_le ?_
     intro i hi
-    let m : M := Finsupp.single ⟨i, hi⟩ 1
     rw [← Ψ_eq A S hI S₀ i hi]
     apply Ideal.mem_map_of_mem
     apply Ideal.mem_sup_right
@@ -568,7 +584,8 @@ theorem _root_.DividedPowerAlgebra.T_free_and_D_to_QSplit :
     apply ι_mem_augIdeal
 
   constructor
-  · sorry -- Ψ maps the 0 part to S₀
+  -- Ψ maps the 0 part to S₀
+  apply Ψ_map_eq
   constructor
   · apply Ψ_surjective A S hI S₀
     rw [← isAugmentation_iff_isCompl]
