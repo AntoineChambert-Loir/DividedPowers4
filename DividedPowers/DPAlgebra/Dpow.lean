@@ -319,6 +319,32 @@ variable (S : Type u) [CommRing S] [Algebra A S]
   (S₀ : Subalgebra A S)
   (hIS₀ : IsCompl (Subalgebra.toSubmodule S₀) (I.restrictScalars A))
 
+theorem Algebra.mem_bot_of_subalgebra_iff
+    {R : Type*} [CommRing R] {S : Type*} [CommRing S] [Algebra R S]
+    (S₀ : Subalgebra R S) (s : S) :
+    s ∈ (⊥ : Subalgebra S₀ S) ↔ s ∈ S₀ := by
+  simp only [Algebra.mem_bot, Set.mem_range, Subtype.exists]
+  constructor
+  · rintro ⟨s, hs, rfl⟩
+    exact hs
+  · intro hs
+    exact ⟨s, hs, rfl⟩
+
+theorem isAugmentation_iff_isCompl : I.IsAugmentation S₀ ↔
+    IsCompl (Subalgebra.toSubmodule S₀) (I.restrictScalars A) := by
+  unfold IsAugmentation
+  rw [← Submodule.isCompl_restrictScalars_iff A]
+  suffices Submodule.restrictScalars A (Submodule.restrictScalars S₀ I) =
+    Submodule.restrictScalars A I by
+    rw [this]
+    suffices Submodule.restrictScalars A _ = Subalgebra.toSubmodule S₀ by
+      rw [this]
+    ext x
+    simp only [Submodule.restrictScalars_mem, Subalgebra.mem_toSubmodule]
+    apply Algebra.mem_bot_of_subalgebra_iff
+  ext x
+  simp only [Submodule.restrictScalars_mem]
+
 -- We construct MvPolynomial S₀ A = A[S₀] →ₐ[A] S₀
 instance : Algebra (MvPolynomial S₀ A) S₀ :=
   RingHom.toAlgebra (MvPolynomial.aeval id).toRingHom
@@ -545,7 +571,8 @@ theorem _root_.DividedPowerAlgebra.T_free_and_D_to_QSplit :
   · sorry -- Ψ maps the 0 part to S₀
   constructor
   · apply Ψ_surjective A S hI S₀
-    sorry
+    rw [← isAugmentation_iff_isCompl]
+    exact hIS₀
   constructor
   · exact (dpΨ A S hI S₀ condTFree hM hM_eq).isDPMorphism
   infer_instance -- tensor product of free modules is free
