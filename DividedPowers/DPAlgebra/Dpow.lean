@@ -396,6 +396,10 @@ def Ψ : MvPolynomial S₀ A ⊗[A] DividedPowerAlgebra A (I →₀ A) →ₐ[A]
     ((Subalgebra.val S₀).comp (IsScalarTower.toAlgHom A (MvPolynomial S₀ A) S₀))
     (Φ A S hI)
 
+theorem Ψ_eq (i) (hi : i ∈ I) :
+    Ψ A S hI S₀ (Algebra.TensorProduct.includeRight (ι A _ (Finsupp.single ⟨i, hi⟩ 1 : I →₀ A))) = i := by
+  simp [Ψ, Φ, f, Basis.constr_apply]
+
 theorem Ψ_surjective : Function.Surjective (Ψ A S hI S₀) := by
   rw [← Algebra.range_top_iff_surjective _, eq_top_iff]
   intro s _
@@ -461,21 +465,22 @@ theorem _root_.DividedPowerAlgebra.T_free_and_D_to_QSplit :
   intro S _ _ I hI S₀ hIS₀
   let M := I →₀ A
   let R := MvPolynomial S₀ A
+  let D := DividedPowerAlgebra A M
   obtain ⟨hM, hM_eq⟩ := condD M
-  haveI hdpM_free : Module.Free A (DividedPowerAlgebra A M) := by
-    apply DividedPowerAlgebra.toModule_free
+  haveI hdpM_free : Module.Free A D := DividedPowerAlgebra.toModule_free A M
   haveI hR_free : Module.Free A R :=
     Module.Free.of_basis (MvPolynomial.basisMonomials _ _)
   -- We consider `R ⊗[A] DividedPowerAlgebra A M` as a comm ring and an A-algebra
-  let T := R ⊗[A] DividedPowerAlgebra A M
+  let T := R ⊗[A] D
   use T, by infer_instance, by infer_instance
   /- We need to add the fact that `R ⊗ DividedPowerAlgebra A M``
      is pregraduated in the sense of Roby
      The ideal is `K A ⊥ (augIdeal A M)`,
      that is, `R ⊗[A] augIdeal A M``
      hence it is a direct factor of R ⊗[A] DividedPowerAlgebra A M
-     (At this point, I wonder why one cannot prove
-      that the divided power algebra of a free module
+     (At this point, I wonder why one cannot use a different route,
+      proving base change first,
+      using that the divided power algebra of a free module
       has divided powers --- the relations come from combinatorics.)
       and then return DividedPowerAlgebra R (I →₀ R).)
      R mapsto S₀
@@ -492,61 +497,55 @@ theorem _root_.DividedPowerAlgebra.T_free_and_D_to_QSplit :
   use hK
   have : MvPolynomial S₀ A →ₐ[A] MvPolynomial S₀ A ⊗[A] DividedPowerAlgebra A M := by
     apply Algebra.TensorProduct.includeLeft
-  use (⊥ : Subalgebra (MvPolynomial S₀ A) T).restrictScalars A
-
+  -- the grade 0 part of our algebra `T`
+  use (⊥ : Subalgebra R T).restrictScalars A
+  -- it is a complement of the ideal `idK`
   refine ⟨?_, ?_⟩
   · rw [hidK]
-    have := Ideal.isAugmentation_baseChange (isCompl_augIdeal A M) (R := MvPolynomial S₀ A)
-    unfold Ideal.IsAugmentation at this ⊢
-    /- Unfortunately, `this` does not seem to be how we can get the desired property… -/
-    have isaugΓ : IsCompl
-      (Subalgebra.toSubmodule (⊥ : Subalgebra A _))
-      ((augIdeal A M).restrictScalars A) :=
-      isCompl_augIdeal A M
-
-    sorry
-  /- have : IsCompl
-    (Subalgebra.toSubmodule (Subalgebra.restrictScalars A ⊥)) (Submodule.restrictScalars A idK) := by
-    simp only [hidK]
-    have := Algebra.TensorProduct.lTensor_isCompl A R (S := DividedPowerAlgebra A M) (I := augIdeal A M) isaugΓ
-    sorry
-
-
-  have : Subalgebra A (MvPolynomial S₀ A ⊗[A] DividedPowerAlgebra A M) :=
-    Subalgebra.map Algebra.TensorProduct.includeLeft ⊤
-  -- ???
-  have hisCompl : IsCompl
-      (Subalgebra.toSubmodule (Subalgebra.map Algebra.TensorProduct.includeLeft ⊤ : Subalgebra A (MvPolynomial S₀ A ⊗[A] DividedPowerAlgebra A M)))
-      (Submodule.restrictScalars A (K A ⊥ (augIdeal A M))) := by
-    simp only [Algebra.map_top, K, Ideal.map_bot, i2, ge_iff_le, bot_le, sup_of_le_right]
-
-    sorry
-  use sorry
-  use Subalgebra.map Algebra.TensorProduct.includeLeft ⊤
-  refine ?_
--/
-  -- the 0 part of our algebra
+    obtain ⟨hd, hc⟩ := Ideal.isAugmentation_baseChange (isCompl_augIdeal A M) (R := MvPolynomial S₀ A)
+    apply IsCompl.mk
+    · simp only [Submodule.disjoint_def, Subalgebra.mem_toSubmodule, Submodule.restrictScalars_mem] at hd ⊢
+      intro x hx hx'
+      refine hd x ?_ hx'
+      rw [Algebra.mem_bot] at hx
+      obtain ⟨⟨x, hx⟩, rfl⟩ := hx
+      simp only [Subalgebra.mem_restrictScalars, Algebra.mem_bot] at hx
+      obtain ⟨x, rfl⟩ := hx
+      rw [Algebra.mem_bot]
+      exact ⟨x, rfl⟩
+    · simp only [codisjoint_iff, eq_top_iff]
+      intro x _
+      rw [Submodule.mem_sup]
+      obtain ⟨y, hy, z, hz, rfl⟩ := Submodule.exists_add_eq_of_codisjoint hc x
+      refine ⟨y, ?_, z, hz, rfl⟩
+      rw [Subalgebra.mem_toSubmodule, Algebra.mem_bot] at hy ⊢
+      obtain ⟨y, rfl⟩ := hy
+      simp only [Algebra.TensorProduct.algebraMap_apply, Algebra.id.map_eq_id,
+        RingHom.id_apply, Set.mem_range, Subtype.exists,
+        Subalgebra.mem_restrictScalars]
+      refine ⟨y ⊗ₜ[A] 1, ?_, rfl⟩
+      rw [Algebra.mem_bot, Set.mem_range]
+      exact ⟨y, rfl⟩
 
 
-  use sorry -- it is a complement
   use Ψ A S hI S₀
+  have hI_le : Ideal.map (Ψ A S hI S₀) idK ≤ I := by
+    convert (dpΨ A S hI S₀ condTFree hM hM_eq).ideal_comp
   constructor
-  · sorry
-    /- refine le_antisymm ?_ (dpΨ A S hI S₀ condTFree hM hM_eq).ideal_comp
+  · refine le_antisymm hI_le ?_
     intro i hi
     let m : M := Finsupp.single ⟨i, hi⟩ 1
-    have : i = Ψ A S hI (Algebra.TensorProduct.includeRight (ι A M m)) :=  by
-      simp [m, Ψ, Φ, f, Basis.constr_apply]
-    rw [this]
+    rw [← Ψ_eq A S hI S₀ i hi]
     apply Ideal.mem_map_of_mem
     apply Ideal.mem_sup_right
     apply Ideal.mem_map_of_mem
     apply ι_mem_augIdeal
-    sorry -/
+
   constructor
   · sorry -- Ψ maps the 0 part to S₀
   constructor
-  · apply Ψ_surjective A S hI S₀ hIS₀
+  · apply Ψ_surjective A S hI S₀
+    sorry
   constructor
   · exact (dpΨ A S hI S₀ condTFree hM hM_eq).isDPMorphism
   infer_instance -- tensor product of free modules is free

@@ -170,27 +170,6 @@ lemma augIdeal_isAugmentationIdeal' :
 
 
 
-/- We prove that the augmentation is an augmentation ideal,
-  namely there is a section
-  But we know what the section is!
-  BETTER : prove the precise `IsCompl` statement.  -/
-theorem augIdeal_isAugmentationIdeal :
-  IsAugmentation (augIdeal R M) := by
-  dsimp only [IsAugmentation]
-  use algebraMap_comp_kerLiftAlg R M
-  exact augIdeal_isAugmentationIdeal' R M
-
--- We prove that the augmentation is an augmentation ideal
--- as an algebra, namely there is a section which is an AlgHom
-theorem augIdeal_isAugmentationₐ :
-  IsAugmentationₐ R (augIdeal R M) := by
-  dsimp only [IsAugmentationₐ]
-  use {
-      toRingHom := algebraMap_comp_kerLiftAlg R M
-      commutes' := fun r ↦ by
-        simp [algebraMap_comp_kerLiftAlg] }
-  exact augIdeal_isAugmentationIdeal' R M
-
 -- Q : if algebra map has a section, is the kernel an augmentation ideal?
 theorem coeff_zero_of_mem_augIdeal {f : MvPolynomial (ℕ × M) R}
     (hf : f ∈ supported R {nm : ℕ × M | 0 < nm.fst}) (hf0 : mk f ∈ augIdeal R M) :
@@ -339,9 +318,7 @@ theorem grade0Subalgebra_eq_bot : grade0Subalgebra R M = ⊥ := by
   exact (algebraMap_right_inv_of_degree_zero R M ⟨p, hp⟩).symm
 
 theorem isCompl_augIdeal :
-    IsCompl
-      (Subalgebra.toSubmodule (⊥ : Subalgebra R _))
-      ((augIdeal R M).restrictScalars R) := by
+    Ideal.IsAugmentation R (augIdeal R M) := by
   apply IsCompl.mk
   · rw [Submodule.disjoint_def]
     intro x

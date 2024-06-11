@@ -18,9 +18,12 @@ then the ideal `R ⊗[A] I` of `R ⊗[A] S` is an augmentation ideal.
 
 * There is a weaker version that holds for general commutative rings
 and would just assert that the quotient map `R →+* R ⧸ I` has a section
-which is a ring homomorphism.
+which is a ring homomorphism (possibly with the variant “with data” that
+keeps track of the choice of one such section).
 
+## TODO
 
+Golf, dispatch
 
  -/
 
@@ -62,80 +65,66 @@ theorem Subalgebra.toSubmodule_restrictScalars_eq
   rfl
 
 end restrictScalars
-namespace Ideal
 
 open AlgHom RingHom Submodule Ideal.Quotient
 
-open TensorProduct
+open TensorProduct LinearMap
 
-/-- An ideal `J` of a commutative `R`-algebra `A` is an augmentation ideal
-  if this ideal is a complement to `⊥ : Subalgebra R A` -/
-def IsAugmentation (R : Type*) [CommRing R]
-    {A : Type*} [CommRing A] [Algebra R A] (J : Ideal A) : Prop :=
-  IsCompl (Subalgebra.toSubmodule (⊥ : Subalgebra R A)) (J.restrictScalars R)
-
-theorem _root_.LinearMap.ker_lTensor_of_linearProjOfIsCompl
+theorem LinearMap.ker_lTensor_of_linearProjOfIsCompl
     {M : Type*} [AddCommGroup M] [Module A M]
     {M₁ M₂ : Submodule A M} (hM : IsCompl M₁ M₂)
     (Q : Type*) [AddCommGroup Q] [Module A Q] :
-    LinearMap.ker (LinearMap.lTensor Q (Submodule.linearProjOfIsCompl _ _ hM))
-    = LinearMap.range (LinearMap.lTensor Q M₂.subtype) := by
-  rw [← LinearMap.exact_iff]
+    ker (lTensor Q (linearProjOfIsCompl _ _ hM)) = range (lTensor Q M₂.subtype) := by
+  rw [← exact_iff]
   apply lTensor_exact
-  simp only [LinearMap.exact_iff, Submodule.range_subtype, linearProjOfIsCompl_ker]
-  simp only [← LinearMap.range_eq_top, Submodule.linearProjOfIsCompl_range]
+  simp only [exact_iff, range_subtype, linearProjOfIsCompl_ker]
+  simp only [← range_eq_top, linearProjOfIsCompl_range]
 
-theorem _root_.LinearMap.ker_baseChange_of_linearProjOfIsCompl
+theorem LinearMap.ker_baseChange_of_linearProjOfIsCompl
     {M : Type*} [AddCommGroup M] [Module A M]
     {M₁ M₂ : Submodule A M} (hM : IsCompl M₁ M₂)
     (R : Type*) [CommRing R] [Algebra A R] :
-    LinearMap.ker (LinearMap.baseChange R (Submodule.linearProjOfIsCompl _ _ hM))
-    = LinearMap.range (LinearMap.baseChange R M₂.subtype) := by
-  simpa only [←LinearMap.exact_iff] using LinearMap.ker_lTensor_of_linearProjOfIsCompl hM R
+    ker (baseChange R (linearProjOfIsCompl _ _ hM)) = range (baseChange R M₂.subtype) := by
+  simpa only [← exact_iff] using ker_lTensor_of_linearProjOfIsCompl hM R
 
-theorem _root_.LinearMap.isCompl_lTensor
+theorem LinearMap.isCompl_lTensor
     {M : Type*} [AddCommGroup M] [Module A M]
     {M₁ M₂ : Submodule A M} (hM : IsCompl M₁ M₂)
     (Q : Type*) [AddCommGroup Q] [Module A Q] :
-    IsCompl
-      (LinearMap.range (LinearMap.lTensor Q M₁.subtype))
-      (LinearMap.range (LinearMap.lTensor Q M₂.subtype)) := by
+    IsCompl (range (lTensor Q M₁.subtype)) (range (lTensor Q M₂.subtype)) := by
   have hq :
-    M₁.subtype.comp (Submodule.linearProjOfIsCompl _ _ hM)
-      + M₂.subtype.comp (Submodule.linearProjOfIsCompl _ _ hM.symm) = LinearMap.id := by
+    M₁.subtype.comp (linearProjOfIsCompl _ _ hM)
+      + M₂.subtype.comp (linearProjOfIsCompl _ _ hM.symm) = id := by
     ext x
-    simp only [LinearMap.add_apply, LinearMap.coe_comp, coeSubtype, Function.comp_apply,
-      LinearMap.id_coe, id_eq]
-    rw [Submodule.linear_proj_add_linearProjOfIsCompl_eq_self]
+    simp only [add_apply, coe_comp, coeSubtype, Function.comp_apply,
+      id_coe, id_eq]
+    rw [linear_proj_add_linearProjOfIsCompl_eq_self]
   apply IsCompl.mk
-  · rw [Submodule.disjoint_def]
+  · rw [disjoint_def]
     intro x h h'
-    rw [← LinearMap.id_apply x (R := A), ← LinearMap.lTensor_id, ← hq]
-    simp only [LinearMap.lTensor_add, LinearMap.lTensor_comp,
+    rw [← id_apply x (R := A), ← lTensor_id, ← hq]
+    simp only [lTensor_add, lTensor_comp,
       LinearMap.add_apply, LinearMap.coe_comp, Function.comp_apply]
-    rw [← LinearMap.ker_lTensor_of_linearProjOfIsCompl hM Q] at h'
-    rw [← LinearMap.ker_lTensor_of_linearProjOfIsCompl hM.symm Q] at h
-    rw [LinearMap.mem_ker] at h h'
+    rw [← ker_lTensor_of_linearProjOfIsCompl hM Q] at h'
+    rw [← ker_lTensor_of_linearProjOfIsCompl hM.symm Q] at h
+    rw [mem_ker] at h h'
     simp only [h', _root_.map_zero, h, add_zero]
   · rw [codisjoint_iff]
     rw [eq_top_iff]
     intro x _
-    rw [← LinearMap.lTensor_id_apply Q _ x, ← hq]
-    simp only [LinearMap.lTensor_add, LinearMap.lTensor_comp,
-      LinearMap.add_apply, LinearMap.coe_comp, Function.comp_apply]
+    rw [← lTensor_id_apply Q _ x, ← hq]
+    simp only [lTensor_add, lTensor_comp, add_apply, coe_comp, Function.comp_apply]
     exact Submodule.add_mem _
-      (Submodule.mem_sup_left (LinearMap.mem_range_self _ _))
-      (Submodule.mem_sup_right (LinearMap.mem_range_self _ _))
+      (mem_sup_left (LinearMap.mem_range_self _ _))
+      (mem_sup_right (LinearMap.mem_range_self _ _))
 
-theorem _root_.LinearMap.isCompl_baseChange
+theorem LinearMap.isCompl_baseChange
     {M : Type*} [AddCommGroup M] [Module A M]
     {M₁ M₂ : Submodule A M} (hM : IsCompl M₁ M₂)
     (R : Type*) [CommRing R] [Algebra A R] :
-    IsCompl
-      (LinearMap.range (LinearMap.baseChange R M₁.subtype))
-      (LinearMap.range (LinearMap.baseChange R M₂.subtype)) := by
-  rw [← Submodule.isCompl_restrictScalars_iff A]
-  exact _root_.LinearMap.isCompl_lTensor hM R
+    IsCompl (range (baseChange R M₁.subtype)) (range (baseChange R M₂.subtype)) := by
+  rw [← isCompl_restrictScalars_iff A]
+  exact isCompl_lTensor hM R
 
 theorem Algebra.baseChange_bot {R S : Type*} [CommRing R] [Algebra A R] [CommRing S] [Algebra A S] :
     Subalgebra.toSubmodule ⊥ =
@@ -150,7 +139,7 @@ theorem Algebra.baseChange_bot {R S : Type*} [CommRing R] [Algebra A R] [CommRin
     induction y using TensorProduct.induction_on with
     | zero =>
       use 0
-      simp only [TensorProduct.zero_tmul, LinearMap.map_zero]
+      simp only [zero_tmul, LinearMap.map_zero]
       simp
     | tmul r s =>
       rcases s with ⟨s, hs⟩
@@ -158,25 +147,26 @@ theorem Algebra.baseChange_bot {R S : Type*} [CommRing R] [Algebra A R] [CommRin
       obtain ⟨a, rfl⟩ := hs
       use a • r
       simp only [Algebra.TensorProduct.algebraMap_apply, Algebra.id.map_eq_id, RingHom.id_apply,
-        toRingHom_eq_coe, coe_coe, LinearMap.baseChange_tmul, coeSubtype]
-      simp only [TensorProduct.smul_tmul]
+        toRingHom_eq_coe, coe_coe, baseChange_tmul, coeSubtype]
+      simp only [smul_tmul]
       rw [Algebra.ofId_apply, Algebra.algebraMap_eq_smul_one]
     | add x y hx hy =>
       obtain ⟨x', hx⟩ := hx
       obtain ⟨y', hy⟩ := hy
       use x' + y'
-      simp only [TensorProduct.add_tmul, hx, hy, map_add]
+      simp only [add_tmul, hx, hy, map_add]
 
 theorem Algebra.TensorProduct.map_includeRight_eq_range_baseChange
-    {R S : Type*} [CommRing R] [Algebra A R] [CommRing S] [Algebra A S]
-    {I : Ideal S} :
-    Submodule.restrictScalars R (map Algebra.TensorProduct.includeRight I)
+    {S : Type*} [CommRing S] [Algebra A S] {I : Ideal S}
+    (R : Type*) [CommRing R] [Algebra A R]  :
+    Submodule.restrictScalars R (I.map Algebra.TensorProduct.includeRight)
     = LinearMap.range (LinearMap.baseChange R (Submodule.restrictScalars A I).subtype) := by
   ext x
-  simp only [Submodule.restrictScalars_mem, LinearMap.mem_range]
+  simp only [restrictScalars_mem, LinearMap.mem_range]
   constructor
   · intro hx
-    apply Submodule.span_induction hx (p := fun x ↦ ∃ y, (LinearMap.baseChange R (Submodule.subtype (Submodule.restrictScalars A I))) y = x )
+    apply Submodule.span_induction hx
+      (p := fun x ↦ ∃ y, (LinearMap.baseChange R (Submodule.restrictScalars A I).subtype) y = x )
     · rintro x ⟨s, hs, rfl⟩; use 1 ⊗ₜ[A] ⟨s, hs⟩; rfl
     · use 0; simp only [_root_.map_zero]
     · rintro _ _ ⟨x, rfl⟩ ⟨y, rfl⟩; use x + y; simp only [map_add]
@@ -187,11 +177,10 @@ theorem Algebra.TensorProduct.map_includeRight_eq_range_baseChange
         induction a using TensorProduct.induction_on with
         | zero =>
           use 0
-          simp only [_root_.map_zero, LinearMap.baseChange_tmul,
-            Submodule.coeSubtype, smul_eq_mul, zero_mul]
+          simp only [_root_.map_zero, baseChange_tmul, coeSubtype, smul_eq_mul, zero_mul]
         | tmul u v =>
           use (u * r) ⊗ₜ[A] (v • s)
-          simp only [LinearMap.baseChange_tmul, Submodule.coeSubtype, smul_eq_mul,
+          simp only [baseChange_tmul, coeSubtype, smul_eq_mul,
             Algebra.TensorProduct.tmul_mul_tmul]
           rw [Submodule.coe_smul, smul_eq_mul]
         | add u v hu hv =>
@@ -210,7 +199,7 @@ theorem Algebra.TensorProduct.map_includeRight_eq_range_baseChange
     | tmul r s =>
       rcases s with ⟨s, hs⟩
       simp only [restrictScalars_mem] at hs
-      simp only [LinearMap.baseChange_tmul, coeSubtype]
+      simp only [baseChange_tmul, coeSubtype]
       rw [← mul_one r, ← smul_eq_mul, ← TensorProduct.smul_tmul']
       rw [← IsScalarTower.algebraMap_smul (R ⊗[A] S) r, smul_eq_mul]
       apply Ideal.mul_mem_left
@@ -219,8 +208,14 @@ theorem Algebra.TensorProduct.map_includeRight_eq_range_baseChange
       simp only [map_add]
       exact Ideal.add_mem _ hx hy
 
+/-- An ideal `J` of a commutative `R`-algebra `A` is an augmentation ideal
+  if this ideal is a complement to `⊥ : Subalgebra R A` -/
+def Ideal.IsAugmentation (R : Type*) [CommRing R]
+    {A : Type*} [CommRing A] [Algebra R A] (J : Ideal A) : Prop :=
+  IsCompl (Subalgebra.toSubmodule (⊥ : Subalgebra R A)) (J.restrictScalars R)
+
 /-- The base change of an algebra with an augmentation ideal -/
-theorem _root_.Ideal.isAugmentation_baseChange
+theorem Ideal.isAugmentation_baseChange
     {S : Type*} [CommRing S] [Algebra A S]
     {I : Ideal S}
     (hI : IsCompl (Subalgebra.toSubmodule (⊥ : Subalgebra A S)) (I.restrictScalars A))
@@ -230,7 +225,7 @@ theorem _root_.Ideal.isAugmentation_baseChange
   unfold Ideal.IsAugmentation
   rw [Algebra.baseChange_bot]
   rw [Algebra.TensorProduct.map_includeRight_eq_range_baseChange]
-  exact LinearMap.isCompl_baseChange hI R
+  exact isCompl_baseChange hI R
 
 #exit
 -- OLD VERSION
