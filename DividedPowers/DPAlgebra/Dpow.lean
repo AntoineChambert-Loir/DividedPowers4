@@ -729,30 +729,31 @@ theorem condτ_rel (A : Type u) [CommRing A] {R S R' S' : Type u} [CommRing R] [
 #align divided_power_algebra.cond_τ_rel DividedPowerAlgebra.condτ_rel
 
 -- Roby, Proposition 4
-example (A : Type*) [CommRing A] (R : Type*) [CommRing R] [Algebra A R]
-    (I : Ideal R) (R₀ : Subalgebra A R)
-    (hsplit : IsCompl (Subalgebra.toSubmodule R₀) (I.restrictScalars A))
-    (J : Ideal R) (F₀ : Set R₀) (FI : Set I)
-    (hJ : J = Submodule.span R (F₀ ∪ FI : Set R)) :
-    J.restrictScalars A
-      = (Subalgebra.toSubmodule R₀ ⊓ J.restrictScalars A)
-          ⊔ (I.restrictScalars A ⊓ J.restrictScalars A) := by
+theorem roby_prop_4
+    (A : Type*) [CommRing A] (R : Type*) [CommRing R] [Algebra A R]
+    {I : Ideal R} {R₀ : Subalgebra A R} (hsplit : IsAugmentation R₀ I)
+    {J : Ideal R} {F₀ : Set R₀} {FI : Set I} (hJ : J = Submodule.span R (F₀ ∪ FI : Set R)) :
+    J.restrictScalars R₀
+      = (Subalgebra.toSubmodule ⊥ ⊓ J.restrictScalars R₀)
+          ⊔ (I.restrictScalars R₀ ⊓ J.restrictScalars R₀) := by
   rcases hsplit with ⟨hd, hc⟩
-  simp only [codisjoint_iff] at hc
   simp only [Submodule.disjoint_def, Subalgebra.mem_toSubmodule,
     Submodule.restrictScalars_mem] at hd
   refine le_antisymm ?_ (sup_le inf_le_right inf_le_right)
   intro x hx
   simp only [hJ, SetLike.coe_sort_coe, Submodule.restrictScalars_mem] at hx
   apply Submodule.span_induction hx (p := fun x ↦ x ∈ _)
-  · rintro _ (⟨x, hx, rfl⟩ | ⟨y, hy, rfl⟩)
+  · rintro _ (⟨⟨x, hx'⟩, hx, rfl⟩ | ⟨y, hy, rfl⟩)
     · apply Submodule.mem_sup_left
-      simp only [Submodule.mem_inf, Subalgebra.mem_toSubmodule, SetLike.coe_mem,
-        Submodule.restrictScalars_mem, true_and]
+      simp only [Submodule.mem_inf, Subalgebra.mem_toSubmodule, Submodule.restrictScalars_mem]
+      constructor
+      · rw [Algebra.mem_bot]
+        exact ⟨⟨x, hx'⟩, rfl⟩
       rw [hJ]
       apply Submodule.subset_span
       apply Set.mem_union_left
-      simp only [SetLike.coe_sort_coe, Set.mem_image, SetLike.coe_eq_coe, exists_eq_right, hx]
+      simp only [SetLike.coe_sort_coe, Set.mem_image, Subtype.exists, exists_and_right,
+        exists_eq_right, hx, exists_prop, and_true, hx']
     · apply Submodule.mem_sup_right
       simp only [hJ, SetLike.coe_sort_coe, submodule_span_eq, Submodule.mem_inf,
         Submodule.restrictScalars_mem, SetLike.coe_mem, true_and]
@@ -762,25 +763,25 @@ example (A : Type*) [CommRing A] (R : Type*) [CommRing R] [Algebra A R]
   · exact zero_mem _
   · exact fun x y hx hy ↦ add_mem hx hy
   · intro a x hx
-    simp only [← Submodule.add_eq_sup, ← SetLike.mem_coe, Submodule.coe_add] at hx
-    rw [Submodule.coe_add] at hx
-    simp only [SetLike.mem_coe] at hx
-
-
-    have ha : a ∈ Subalgebra.toSubmodule R₀ + Submodule.restrictScalars A I := by
-      change a ∈ Subalgebra.toSubmodule R₀ ⊔ _
-      rw [hc]
-      exact trivial
-    simp only [Submodule.add_eq_sup] at hx
-    obtain ⟨x₀, hx₀, y, hy, rfl⟩ := hx
-
-    suffices ∃ a₀ ∈ R₀, ∃ b ∈ I, a = a₀ + b by
-      obtain ⟨a₀, ha₀, b, hb, rfl⟩ := this
-      rw [add_smul]
+    obtain ⟨a, ha, b, hb, rfl⟩ := Submodule.exists_add_eq_of_codisjoint hc a
+    simp only [Submodule.mem_sup, Submodule.mem_inf, Subalgebra.mem_toSubmodule, Submodule.restrictScalars_mem] at hx
+    obtain ⟨y, hy, z, hz, rfl⟩ := hx
+    simp only [Subalgebra.mem_toSubmodule, Algebra.mem_bot, Set.mem_range, Subtype.exists] at ha
+    obtain ⟨a, ha, rfl⟩ := ha
+    simp only [Submodule.restrictScalars_mem] at hb
+    rw [add_smul]
+    apply add_mem
+    · apply Submodule.smul_mem
       apply add_mem
-      · sorry
-      · sorry
-    sorry
+      · apply Submodule.mem_sup_left
+        simp only [Submodule.mem_inf, Subalgebra.mem_toSubmodule, hy, Submodule.restrictScalars_mem,
+          and_self]
+      · apply Submodule.mem_sup_right
+        simp only [Submodule.mem_inf, Submodule.restrictScalars_mem, hz, and_self]
+    · apply Submodule.mem_sup_right
+      exact ⟨mul_mem_right (y + z) I hb, mul_mem_left J b (add_mem hy.right hz.right)⟩
+
+
 
 theorem Ideal.map_coe_toRingHom
   {A : Type*} [CommRing A] {R S : Type*} [CommRing R] [CommRing S]
