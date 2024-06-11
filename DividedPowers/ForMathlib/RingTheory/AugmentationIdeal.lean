@@ -34,8 +34,8 @@ section restrictScalars
 
 variable
     (A : Type*) [CommSemiring A]
-    {R : Type*} [Ring R] [Algebra A R]
-    {M : Type*} [AddCommGroup M] [Module A M] [Module R M] [IsScalarTower A R M]
+    {R : Type*} [Semiring R] [Algebra A R]
+    {M : Type*} [AddCommMonoid M] [Module A M] [Module R M] [IsScalarTower A R M]
     (M₁ M₂ : Submodule R M)
 
 theorem Submodule.sup_restrictScalars :
@@ -210,8 +210,8 @@ theorem Algebra.TensorProduct.map_includeRight_eq_range_baseChange
 
 /-- An ideal `J` of a commutative `R`-algebra `A` is an augmentation ideal
   if this ideal is a complement to `⊥ : Subalgebra R A` -/
-def Ideal.IsAugmentation (R : Type*) [CommRing R]
-    {A : Type*} [CommRing A] [Algebra R A] (J : Ideal A) : Prop :=
+def Ideal.IsAugmentation (R : Type*) [CommSemiring R]
+    {A : Type*} [CommSemiring A] [Algebra R A] (J : Ideal A) : Prop :=
   IsCompl (Subalgebra.toSubmodule (⊥ : Subalgebra R A)) (J.restrictScalars R)
 
 /-- The base change of an algebra with an augmentation ideal -/
