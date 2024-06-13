@@ -27,6 +27,27 @@ Golf, dispatch
 
  -/
 
+section DistribLattice
+variable    {α : Type*} [DistribLattice α] [BoundedOrder α] {a b c : α}
+
+theorem DistribLattice.isCompl_assoc_of_disjoint
+  (hab : Disjoint a b) (h : IsCompl (a ⊔ b) c) : IsCompl a (b ⊔ c) := by
+  rcases h with ⟨hd, hc⟩
+  apply IsCompl.mk
+  · intro x hx hx'
+    refine hd (le_trans hx le_sup_left) ?_
+    rw [← left_eq_inf, inf_sup_left] at hx'
+    rw [hx']
+    simp only [sup_le_iff, inf_le_right, and_true]
+    convert bot_le
+    rw [eq_bot_iff]
+    apply hab (inf_le_of_left_le hx) inf_le_right
+  · simp only [Codisjoint, sup_le_iff, and_imp]
+    intro x hxa hxb hxc
+    exact hc (by simp only [sup_le_iff, hxa, hxb, and_self]) hxc
+
+end DistribLattice
+
 variable (R : Type*) [CommRing R]
     {A : Type*} [CommRing A] [Algebra R A] (J : Ideal A)
 
@@ -57,14 +78,45 @@ theorem Submodule.isCompl_restrictScalars_iff  :
     IsCompl (M₁.restrictScalars A) (M₂.restrictScalars A) ↔ IsCompl M₁ M₂ := by
   simp only [isCompl_iff, Submodule.disjoint_restrictScalars_iff, Submodule.codisjoint_restrictScalars_iff]
 
-theorem Subalgebra.toSubmodule_restrictScalars_eq
-    {R : Type*} [CommSemiring R] [Algebra A R]
-    {S : Type*} [CommSemiring S] [Algebra A S] [Algebra R S] [IsScalarTower A R S]
-    (S' : Subalgebra R S) :
-    Subalgebra.toSubmodule (Subalgebra.restrictScalars A S') = S'.toSubmodule.restrictScalars A :=
-  rfl
-
 end restrictScalars
+
+section bot
+
+variable {A : Type*} [CommSemiring A]
+    {R : Type*} [CommSemiring R] [Algebra A R]
+    (S : Subalgebra A R) (r : R)
+
+theorem Subalgebra.mem_bot_iff :
+    r ∈ (⊥ : Subalgebra S R) ↔ r ∈ S := by
+  simp only [Algebra.mem_bot, Set.mem_range, Subtype.exists]
+  constructor
+  · rintro ⟨r, hr, rfl⟩
+    exact hr
+  · intro hr
+    exact ⟨r, hr, rfl⟩
+
+theorem Subalgebra.restrictScalars_toSubmodule_bot :
+    Submodule.restrictScalars A (Subalgebra.toSubmodule (⊥ : Subalgebra S R))
+      = Subalgebra.toSubmodule S := by
+  rw [← Subalgebra.restrictScalars_toSubmodule A]
+  congr
+  ext x
+  simp only [Subalgebra.mem_restrictScalars, Subalgebra.mem_bot_iff]
+
+theorem Subalgebra.codisjoint_bot_iff (I : Ideal R) :
+    Codisjoint (Subalgebra.toSubmodule (⊥ : Subalgebra S R)) (I.restrictScalars S) ↔
+    Codisjoint (Subalgebra.toSubmodule S) (I.restrictScalars A) := by
+  rw [← Submodule.codisjoint_restrictScalars_iff A, Subalgebra.restrictScalars_toSubmodule_bot]
+  exact Iff.rfl
+
+theorem Subalgebra.disjoint_bot_iff (I : Ideal R) :
+    Disjoint (Subalgebra.toSubmodule (⊥ : Subalgebra S R)) (I.restrictScalars S) ↔
+    Disjoint (Subalgebra.toSubmodule S) (I.restrictScalars A) := by
+  rw [← Submodule.disjoint_restrictScalars_iff A,
+    Subalgebra.restrictScalars_toSubmodule_bot]
+  exact Iff.rfl
+
+end bot
 
 open AlgHom RingHom Submodule Ideal.Quotient
 
@@ -117,6 +169,53 @@ theorem LinearMap.isCompl_lTensor
     exact Submodule.add_mem _
       (mem_sup_left (LinearMap.mem_range_self _ _))
       (mem_sup_right (LinearMap.mem_range_self _ _))
+
+theorem Submodule.disjoint_map
+    {M : Type*} [AddCommGroup M] [Module A M]
+    {M₁ M₂ : Submodule A M} (hM : Disjoint M₁ M₂)
+    {N : Type*} [AddCommGroup N] [Module A N]
+    {f : M →ₗ[A] N} (hf : Function.Injective f):
+    Disjoint (M₁.map f) (M₂.map f) := by
+  rw [Submodule.disjoint_def] at hM ⊢
+  rintro _ ⟨x, hx, rfl⟩ ⟨y, hy, hy'⟩
+  rw [hf hy'] at hy
+  rw [hM x hx hy, LinearMap.map_zero]
+
+theorem Submodule.codisjoint_map
+    {M : Type*} [AddCommGroup M] [Module A M]
+    {M₁ M₂ : Submodule A M} (hM : Codisjoint M₁ M₂)
+    {N : Type*} [AddCommGroup N] [Module A N]
+    {f : M →ₗ[A] N} (hf : Function.Surjective f):
+    Codisjoint (M₁.map f) (M₂.map f) := by
+  rw [codisjoint_iff, eq_top_iff]
+  intro y _
+  obtain ⟨x, rfl⟩ := hf y
+  obtain ⟨y, hy, z, hz, rfl⟩ := Submodule.exists_add_eq_of_codisjoint hM x
+  rw [LinearMap.map_add]
+  exact Submodule.add_mem _
+    (Submodule.mem_sup_left (mem_map_of_mem hy))
+    (Submodule.mem_sup_right (mem_map_of_mem hz))
+
+theorem Submodule.isCompl_map
+    {M : Type*} [AddCommGroup M] [Module A M]
+    {M₁ M₂ : Submodule A M} (hM : IsCompl M₁ M₂)
+    {N : Type*} [AddCommGroup N] [Module A N]
+    (f : M ≃ₗ[A] N) :
+    IsCompl (M₁.map f) (M₂.map f) := by
+  apply IsCompl.mk
+  · exact Submodule.disjoint_map hM.disjoint f.injective
+  · exact Submodule.codisjoint_map hM.codisjoint f.surjective
+
+theorem LinearMap.isCompl_rTensor
+    {M : Type*} [AddCommGroup M] [Module A M]
+    {M₁ M₂ : Submodule A M} (hM : IsCompl M₁ M₂)
+    (Q : Type*) [AddCommGroup Q] [Module A Q] :
+    IsCompl (range (rTensor Q M₁.subtype)) (range (rTensor Q M₂.subtype)) := by
+  simp only [← comm_comp_lTensor_comp_comm_eq]
+  simp only [LinearMap.range_comp]
+  apply Submodule.isCompl_map
+  simp only [LinearEquiv.range, Submodule.map_top]
+  exact LinearMap.isCompl_lTensor hM Q
 
 theorem LinearMap.isCompl_baseChange
     {M : Type*} [AddCommGroup M] [Module A M]
@@ -227,6 +326,36 @@ theorem Ideal.isAugmentation_baseChange
   rw [Algebra.TensorProduct.map_includeRight_eq_range_baseChange]
   exact isCompl_baseChange hI R
 
+theorem Ideal.isAugmentation_subalgebra_iff (A : Type*) [CommSemiring A]
+    {R : Type*} [CommSemiring R] [Algebra A R]
+    {S : Subalgebra A R} {I : Ideal R} :
+    I.IsAugmentation S ↔
+    IsCompl (Subalgebra.toSubmodule S) (I.restrictScalars A) := by
+  unfold Ideal.IsAugmentation
+  rw [← Submodule.isCompl_restrictScalars_iff A, Subalgebra.restrictScalars_toSubmodule_bot]
+  exact Iff.rfl
+
+theorem Ideal.isAugmentation_tensorProduct
+    (A : Type*) [CommRing A]
+    {R : Type*} [CommRing R] [Algebra A R] {R₀ : Subalgebra A R} {I : Ideal R} (hI : I.IsAugmentation R₀)
+    {S : Type*} [CommRing S] [Algebra A S] {S₀ : Subalgebra A S} {J : Ideal S} (hJ : J.IsAugmentation S₀) :
+    let K : Ideal (R ⊗[A] S) := Ideal.map (Algebra.TensorProduct.includeLeft (S := A)) I ⊔ Ideal.map Algebra.TensorProduct.includeRight J
+    let T₀ : Subalgebra A (R ⊗[A] S) := Subalgebra.map (Algebra.TensorProduct.map R₀.val S₀.val) ⊤
+    K.IsAugmentation T₀ := by
+  intro K T₀
+  rw [Ideal.isAugmentation_subalgebra_iff] at hI hJ ⊢
+  have hIS := LinearMap.isCompl_rTensor hI S
+  have hJ' := codisjoint_iff.mp hJ.codisjoint
+  -- Utiliser hJ' pour écrire une somme et appliquer DistribLattice.isCompl_assoc_of_disjoint
+--  have hK : Submodule.restrictScalars A K = Submodule.restrictScalars A
+
+/- mathématiquement, on dirait
+   R = R₀ ⊕ I, S = S₀ ⊕ J,
+   R ⊗ S = R₀ ⊗ S ⊕ I ⊗ S
+        = (R₀ ⊗ S₀ ⊕ R₀ ⊗ J) ⊕ I ⊗ S
+   DistribLattice.isCompl_assoc
+
+   -/
 #exit
 -- OLD VERSION
 /-- An ideal J of a commutative ring A is an augmentation ideal
