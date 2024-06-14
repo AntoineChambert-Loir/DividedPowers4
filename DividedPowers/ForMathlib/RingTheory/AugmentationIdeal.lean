@@ -346,6 +346,10 @@ theorem Ideal.isAugmentation_tensorProduct
   rw [Ideal.isAugmentation_subalgebra_iff] at hI hJ ⊢
   have hIS := LinearMap.isCompl_rTensor hI S
   have hJ' := codisjoint_iff.mp hJ.codisjoint
+  have u : S →ₐ[A] R ⊗[A] S := Algebra.TensorProduct.includeRight
+  have := Submodule.map_sup  (Subalgebra.toSubmodule S₀) (Submodule.restrictScalars A J) (Algebra.TensorProduct.includeRight : S →ₐ[A] R ⊗[A] S)
+  rw [codisjoint_iff.mp hJ.codisjoint] at this
+
   -- Utiliser hJ' pour écrire une somme et appliquer DistribLattice.isCompl_assoc_of_disjoint
 --  have hK : Submodule.restrictScalars A K = Submodule.restrictScalars A
 
@@ -356,6 +360,106 @@ theorem Ideal.isAugmentation_tensorProduct
    DistribLattice.isCompl_assoc
 
    -/
+  sorry
+
+ /-
+comment définir, pour  M₁,  M₂  ≤ M,
+    M₁ ⊗[A] N, M₂ ⊗[A] N ≤ M ⊗[A] N
+    et compatibilité à ⊔ (et ⊓ ?)
+  M₁ ⊗[A] N = range TensorProduct.map M₁.subtype LinearMap.id
+
+  plus généralement, M' ≤ M, N' ≤ N :
+    range TensorProduct.map M'.subtype N'.subtype
+ -/
+
+section essai
+
+variable (A : Type*) [CommRing A] (M : Type*) [AddCommGroup M] [Module A M]
+  (N : Type*) [AddCommGroup N] [Module A N]
+  (P : Type*) [AddCommGroup P] [Module A P]
+
+variable {M}
+noncomputable def TPleft (M' : Submodule A M) : Submodule A (M ⊗[A] N) :=
+  LinearMap.range (rTensor N M'.subtype)
+
+def TPleft.mono {M' M'' : Submodule A M} (h : M' ≤ M'') :
+    TPleft A N M' ≤ TPleft A N M'' := by
+  rw [TPleft, ← subtype_comp_inclusion _ _ h, rTensor_comp]
+  exact LinearMap.range_comp_le_range (rTensor N (inclusion h)) (rTensor N M''.subtype)
+
+def TPleft.sup (M' M'' : Submodule A M) :
+  TPleft A N M' ⊔ TPleft A N M'' = TPleft A N (M' ⊔ M'') := by
+  apply le_antisymm
+  · simp only [sup_le_iff]
+    exact ⟨TPleft.mono _ _ le_sup_left, TPleft.mono _ _ le_sup_right⟩
+  · rintro _ ⟨x, rfl⟩
+    induction x using TensorProduct.induction_on with
+    | zero => simp only [_root_.map_zero, Submodule.zero_mem]
+    | tmul m n =>
+      rcases m with ⟨_, hm⟩
+      rcases mem_sup.mp hm with ⟨m', hm', m'', hm'', rfl⟩
+      simp only [rTensor_tmul, coeSubtype, add_tmul]
+      refine add_mem (mem_sup_left ?_) (mem_sup_right ?_)
+      · exact ⟨⟨m', hm'⟩ ⊗ₜ[A] n, rfl⟩
+      · exact ⟨⟨m'', hm''⟩ ⊗ₜ[A] n, rfl⟩
+    | add x y hx hy => simp only [map_add, add_mem hx hy]
+
+variable {N}
+noncomputable def TP (M' : Submodule A M) (N' : Submodule A N) :
+    Submodule A (M ⊗[A] N) :=
+  -- LinearMap.range (TensorProduct.map M'.subtype N'.subtype)
+  LinearMap.range (TensorProduct.mapIncl M' N')
+
+def TP.mono {M' M'' : Submodule A M} (h : M' ≤ M'') (N' : Submodule A N) :
+    TP A M' N' ≤ TP A M'' N' :=
+  TensorProduct.range_mapIncl_mono  h le_rfl
+
+def TP.sup_left (M' M'' : Submodule A M) (N' : Submodule A N) :
+    TP A (M' ⊔ M'') N' = TP A M' N' ⊔ TP A M'' N' := by
+  apply le_antisymm
+  · rintro _ ⟨x, rfl⟩
+    induction x using TensorProduct.induction_on with
+    | zero => simp only [_root_.map_zero, Submodule.zero_mem]
+    | tmul m n =>
+      rcases m with ⟨_, hm⟩
+      rcases mem_sup.mp hm with ⟨m', hm', m'', hm'', rfl⟩
+      simp only [mapIncl, map_tmul, coeSubtype, add_tmul]
+      refine add_mem (mem_sup_left ?_) (mem_sup_right ?_)
+      · exact ⟨⟨m', hm'⟩ ⊗ₜ[A] n, rfl⟩
+      · exact ⟨⟨m'', hm''⟩ ⊗ₜ[A] n, rfl⟩
+    | add x y hx hy => simp only [map_add, add_mem hx hy]
+  · simp only [sup_le_iff]
+    refine ⟨TensorProduct.range_mapIncl_mono le_sup_left le_rfl,
+      TensorProduct.range_mapIncl_mono le_sup_right le_rfl⟩
+
+def TP.sup_right (M' : Submodule A M) (N' N'' : Submodule A N) :
+    TP A M' (N' ⊔ N'') = TP A M' N' ⊔ TP A M' N'' := by
+  apply le_antisymm
+  · rintro _ ⟨x, rfl⟩
+    induction x using TensorProduct.induction_on with
+    | zero => simp only [_root_.map_zero, Submodule.zero_mem]
+    | tmul m n =>
+      rcases n with ⟨_, hn⟩
+      rcases mem_sup.mp hn with ⟨n', hn', n'', hn'', rfl⟩
+      simp only [mapIncl, map_tmul, coeSubtype, tmul_add]
+      refine add_mem (mem_sup_left ?_) (mem_sup_right ?_)
+      · exact ⟨m ⊗ₜ[A] ⟨n', hn'⟩, rfl⟩
+      · exact ⟨m ⊗ₜ[A] ⟨n'', hn''⟩, rfl⟩
+    | add x y hx hy => simp only [map_add, add_mem hx hy]
+  · simp only [sup_le_iff]
+    refine ⟨TensorProduct.range_mapIncl_mono le_rfl le_sup_left,
+      TensorProduct.range_mapIncl_mono le_rfl le_sup_right⟩
+
+def TP.disjoint_left {M' M'' : Submodule A M} (h : IsCompl M' M'') (N' : Submodule A N) :
+    Disjoint (TP A M' N') (TP A M'' N') := by
+  sorry
+
+def TP.disjoint_right (M' : Submodule A M) (N' N'' : Submodule A N) (h : IsCompl N' N'') :
+    Disjoint (TP A M' N') (TP A M' N'') := by
+  sorry
+
+end essai
+
 #exit
 -- OLD VERSION
 /-- An ideal J of a commutative ring A is an augmentation ideal
