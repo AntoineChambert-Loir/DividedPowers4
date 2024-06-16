@@ -77,7 +77,7 @@ theorem IsModularLattice.isCompl_assoc_of_disjoint'
 -- However :
 
 variable {R : Type*} [CommRing R] {M : Type*} [AddCommGroup M] [Module R M]
-theorem Submodule.isCompl_assoc_of_disjoint (a b c : Submodule R M)
+theorem Submodule.isCompl_assoc_of_disjoint {a b c : Submodule R M}
     (hab : Disjoint a b) (h : IsCompl (a ⊔ b) c) : IsCompl a (b ⊔ c) := by
   rcases h with ⟨hd, hc⟩
   apply IsCompl.mk
@@ -136,6 +136,7 @@ variable (M') in
 def mono_right (h : N' ≤ N'') : TensorProduct M' N' ≤ TensorProduct M' N'' :=
   TensorProduct.range_mapIncl_mono le_rfl h
 
+variable (N') in
 def sup_left : TensorProduct (M' ⊔ M'') N' = TensorProduct M' N' ⊔ TensorProduct M'' N' := by
   apply le_antisymm
   · rintro _ ⟨x, rfl⟩
@@ -153,6 +154,7 @@ def sup_left : TensorProduct (M' ⊔ M'') N' = TensorProduct M' N' ⊔ TensorPro
     refine ⟨range_mapIncl_mono le_sup_left le_rfl,
       range_mapIncl_mono le_sup_right le_rfl⟩
 
+variable (M') in
 def sup_right : TensorProduct M' (N' ⊔ N'') = TensorProduct M' N' ⊔ TensorProduct M' N'' := by
   apply le_antisymm
   · rintro _ ⟨x, rfl⟩
@@ -189,7 +191,7 @@ def disjoint_left (hM : IsCompl M' M'') :
   rw [← rTensor_comp_lTensor] at h h'
   replace h : x ∈ range (rTensor N M'.subtype) := range_comp_le_range _ _ h
   replace h' : x ∈ range (rTensor N M''.subtype) := range_comp_le_range _ _ h'
-  rw [← ker_rTensor_of_linearProjOfIsCompl hM.symm N, mem_ker] at h
+  rw [← .ker_rTensor_of_linearProjOfIsCompl hM.symm N, mem_ker] at h
   rw [← ker_rTensor_of_linearProjOfIsCompl hM N, mem_ker] at h'
   simp only [h, h', _root_.map_zero, add_zero]
 
@@ -232,11 +234,20 @@ theorem isCompl_right_top {N' N'' : Submodule A N} (hN : IsCompl N' N'') :
     exact top_top A M N
 
 theorem isCompl_left_left (hM : IsCompl M' M'') (hN : IsCompl N' N'') :
-    IsCompl (TensorProduct M' N') (TensorProduct M' N'' ⊔ TensorProduct M'' ⊤) := by
-  apply isCompl_assoc_of_disjoint
-  · exact disjoint_right M' hN
-  · rw [← sup_right, codisjoint_iff.mp hN.codisjoint]
-    exact isCompl_left_top N hM
+    IsCompl (TensorProduct M' N') (TensorProduct ⊤ N'' ⊔ TensorProduct M'' ⊤) := by
+  suffices TensorProduct M' N'' ⊔ TensorProduct M'' ⊤
+    = TensorProduct ⊤ N'' ⊔ M''.TensorProduct ⊤ by
+    rw [← this]
+    apply isCompl_assoc_of_disjoint
+    · exact disjoint_right M' hN
+    · rw [← sup_right, codisjoint_iff.mp hN.codisjoint]
+      exact isCompl_left_top N hM
+  rw [← codisjoint_iff.mp hM.codisjoint, sup_left,
+    ← codisjoint_iff.mp hN.codisjoint, sup_right]
+  simp only [sup_assoc]
+  apply congr_arg₂ _ rfl
+  nth_rewrite 3 [sup_comm]
+  rw [← sup_assoc, sup_idem, sup_comm]
 
 end Submodule.TensorProduct
 
@@ -560,7 +571,13 @@ theorem Ideal.isAugmentation_tensorProduct
     ext x
     simp [Submodule.TensorProduct]
     rw [sup_comm]
-
+    rw [← restrictScalars_mem A, sup_restrictScalars]
+    congr
+    have thisI : (map (Algebra.TensorProduct.includeLeft : R →ₐ[A] R ⊗[A] S) I).restrictScalars A
+      = LinearMap.range (TensorProduct.map (Submodule.restrictScalars A I).subtype (⊤ : Submodule A S).subtype) := sorry
+    have thisJ : (map (Algebra.TensorProduct.includeRight : S →ₐ[A] R ⊗[A] S) J).restrictScalars A
+      = LinearMap.range (TensorProduct.map (⊤ : Submodule A R).subtype (Submodule.restrictScalars A J).subtype) := sorry
+    rw [← thisI, ← thisJ]
     sorry
 
 /- mathématiquement, on dirait
