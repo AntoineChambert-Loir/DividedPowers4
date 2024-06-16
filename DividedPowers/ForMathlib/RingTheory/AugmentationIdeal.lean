@@ -213,6 +213,7 @@ def disjoint_right {N' N'' : Submodule A N} (hN : IsCompl N' N'') :
   rw [← lTensor_comp_rTensor] at h h'
   replace h : x ∈ range (lTensor M N'.subtype) := range_comp_le_range _ _ h
   replace h' : x ∈ range (lTensor M N''.subtype) := range_comp_le_range _ _ h'
+  -- the error is because this lemma is proved 100 lines later
   rw [← ker_lTensor_of_linearProjOfIsCompl hN.symm M, mem_ker] at h
   rw [← ker_lTensor_of_linearProjOfIsCompl hN M, mem_ker] at h'
   simp only [h, h', _root_.map_zero, add_zero]
