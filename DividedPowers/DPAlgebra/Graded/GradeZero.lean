@@ -337,4 +337,36 @@ theorem isCompl_augIdeal :
     · simp only [mem_augIdeal_iff, map_sub, AlgHom.commutes, Algebra.id.map_eq_id,
       RingHom.id_apply, sub_self]
 
+-- The following proof is clumsy
+theorem isAugmentation :
+    Ideal.IsAugmentation (grade0Subalgebra R M) (augIdeal R M) := by
+  apply IsCompl.mk
+  · rw [Submodule.disjoint_def]
+    intro x
+    simp only [Subalgebra.mem_toSubmodule, Algebra.mem_bot, Set.mem_range, Subtype.exists,
+      Submodule.restrictScalars_mem, forall_exists_index]
+    simp only [grade0Subalgebra_eq_bot, Algebra.mem_bot]
+    simp only [Set.mem_range, forall_exists_index]
+    rintro x y ⟨rfl⟩ ⟨rfl⟩ hy
+    change algebraMap R _ y ∈ augIdeal R M at hy
+    rw [mem_augIdeal_iff] at hy
+    simp only [AlgHom.commutes, Algebra.id.map_eq_id, RingHom.id_apply] at hy
+    simp only [hy, map_zero]
+    rfl
+
+  · rw [codisjoint_iff, eq_top_iff]
+    intro p _
+    simp only [Submodule.mem_sup, Subalgebra.mem_toSubmodule, Submodule.restrictScalars_mem]
+    use algebraMap R _ (algebraMapInv R M p)
+    refine ⟨?_, ?_⟩
+    · simp [Algebra.mem_bot]
+      use algebraMap R _ (algebraMapInv R M p)
+      use algebraMap_mem_grade_zero R M _
+      rfl
+    · use p - algebraMap R _ (algebraMapInv R M p)
+      constructor
+      · simp only [mem_augIdeal_iff, map_sub, AlgHom.commutes, Algebra.id.map_eq_id,
+        RingHom.id_apply, sub_self]
+      · apply add_sub_cancel
+
 end GradeZero

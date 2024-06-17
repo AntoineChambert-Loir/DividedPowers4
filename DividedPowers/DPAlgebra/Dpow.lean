@@ -518,47 +518,13 @@ theorem _root_.DividedPowerAlgebra.T_free_and_D_to_QSplit
 
 
      -/
-  let idK : Ideal T := K A ⊥ (augIdeal A M)
-  have hidK : idK = Ideal.map Algebra.TensorProduct.includeRight (augIdeal A M) := by
-    simp only [K, Ideal.map_bot, ge_iff_le, bot_le, sup_of_le_right, idK]
-  use idK
-  let hK : DividedPowers idK := (condτ A S I S₀ hM condTFree).choose
-  use hK
-  have : MvPolynomial S₀ A →ₐ[A] MvPolynomial S₀ A ⊗[A] DividedPowerAlgebra A M := by
-    apply Algebra.TensorProduct.includeLeft
-  -- the grade 0 part of our algebra `T`
-  use (⊥ : Subalgebra R T).restrictScalars A
-  -- it is a complement of the ideal `idK`
-  refine ⟨?_, ?_⟩
-  · rw [hidK]
-    obtain ⟨hd, hc⟩ := Ideal.isAugmentation_baseChange (isCompl_augIdeal A M) (R := MvPolynomial S₀ A)
-    apply IsCompl.mk
-    · simp only [Submodule.disjoint_def, Subalgebra.mem_toSubmodule, Submodule.restrictScalars_mem] at hd ⊢
-      intro x hx hx'
-      refine hd x ?_ hx'
-      rw [Algebra.mem_bot] at hx
-      obtain ⟨⟨x, hx⟩, rfl⟩ := hx
-      simp only [Subalgebra.mem_restrictScalars, Algebra.mem_bot] at hx
-      obtain ⟨x, rfl⟩ := hx
-      rw [Algebra.mem_bot]
-      exact ⟨x, rfl⟩
-    · simp only [codisjoint_iff, eq_top_iff]
-      intro x _
-      rw [Submodule.mem_sup]
-      obtain ⟨y, hy, z, hz, rfl⟩ := Submodule.exists_add_eq_of_codisjoint hc x
-      refine ⟨y, ?_, z, hz, rfl⟩
-      rw [Subalgebra.mem_toSubmodule, Algebra.mem_bot] at hy ⊢
-      obtain ⟨y, rfl⟩ := hy
-      simp only [Algebra.TensorProduct.algebraMap_apply, Algebra.id.map_eq_id,
-        RingHom.id_apply, Set.mem_range, Subtype.exists,
-        Subalgebra.mem_restrictScalars]
-      refine ⟨y ⊗ₜ[A] 1, ?_, rfl⟩
-      rw [Algebra.mem_bot, Set.mem_range]
-      exact ⟨y, rfl⟩
-
-
+  have htop : Ideal.IsAugmentation (⊤ : Subalgebra A R) (⊥ : Ideal R) := by
+    rw [isAugmentation_subalgebra_iff A]
+    exact isCompl_top_bot
+  refine ⟨_, (condτ A S I S₀ hM condTFree).choose, _,
+    Ideal.isAugmentation_tensorProduct A htop (isAugmentation A M), ?_⟩
   use Ψ A S hI S₀
-  have hI_le : Ideal.map (Ψ A S hI S₀) idK ≤ I := by
+  have hI_le : Ideal.map (Ψ A S hI S₀) (K A ⊥ (augIdeal A M)) ≤ I := by
     convert (dpΨ A S hI S₀ hM hM_eq condTFree).ideal_comp
   constructor
   · refine le_antisymm hI_le ?_
@@ -570,16 +536,39 @@ theorem _root_.DividedPowerAlgebra.T_free_and_D_to_QSplit
     apply ι_mem_augIdeal
 
   constructor
-  -- Ψ maps the 0 part to S₀
-  apply Ψ_map_eq
+  · -- Ψ maps the 0 part to S₀
+    convert Ψ_map_eq A S hI S₀
+    ext a
+    simp only [Algebra.map_top, AlgHom.mem_range, Subalgebra.mem_restrictScalars, Algebra.mem_bot,
+      Set.mem_range, Algebra.TensorProduct.algebraMap_apply, Algebra.id.map_eq_id, RingHom.id_apply]
+    constructor
+    · rintro ⟨x, rfl⟩
+      induction x using TensorProduct.induction_on with
+      | zero => use 0, by simp only [TensorProduct.zero_tmul, map_zero]
+      | tmul a b =>
+        rcases a with ⟨a, ha⟩
+        rcases b with ⟨b, hb⟩
+        simp only [grade0Subalgebra_eq_bot, Algebra.mem_bot, Set.mem_range] at hb
+        obtain ⟨b, rfl⟩ := hb
+        use b • a
+        simp only [TensorProduct.smul_tmul, Algebra.TensorProduct.map_tmul, Subalgebra.coe_val, Algebra.algebraMap_eq_smul_one]
+      | add x y hx hy =>
+        obtain ⟨x, hx⟩ := hx
+        obtain ⟨y, hy⟩ := hy
+        use x + y
+        rw [TensorProduct.add_tmul, hx, hy, AlgHom.map_add]
+    · rintro ⟨r, rfl⟩
+      use ⟨r, Algebra.mem_top⟩ ⊗ₜ[A] 1
+      rfl
   constructor
   · apply Ψ_surjective A S hI S₀
-    rw [← isAugmentation_iff_isCompl]
+    rw [← isAugmentation_subalgebra_iff]
     exact hIS₀
   constructor
   · exact (dpΨ A S hI S₀ hM hM_eq condTFree).isDPMorphism
   · infer_instance -- tensor product of free modules is free
 
+#print axioms DividedPowerAlgebra.T_free_and_D_to_QSplit
 
 end roby4
 

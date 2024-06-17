@@ -48,31 +48,6 @@ theorem DistribLattice.isCompl_assoc_of_disjoint
     exact hc (by simp only [sup_le_iff, hxa, hxb, and_self]) hxc
 
 
--- Does the following hold?
-variable    {α : Type*} [Lattice α] [IsModularLattice α] [BoundedOrder α] {a b c : α}
-theorem IsModularLattice.isCompl_assoc_of_disjoint'
-    (hab : Disjoint a b) (h : IsCompl (a ⊔ b) c) : IsCompl a (b ⊔ c) := by
-  rcases h with ⟨hd, hc⟩
-  apply IsCompl.mk
-  · intro x hxa hxbc
-    suffices ∃ y≤b, ∃ z≤c, x = y ⊔ z by
-      obtain ⟨y, hy, z, hz, rfl⟩ := this
-      suffices z = ⊥ by
-        exact hab hxa (by simp only [this, ge_iff_le, bot_le, sup_of_le_left, hy])
-      rw [eq_bot_iff]
-      exact hd (le_trans (le_trans le_sup_right hxa) le_sup_left) hz
-
-    use b ⊓ x, inf_le_left, c ⊓ x, inf_le_left
-    rw [IsModularLattice.inf_sup_inf_assoc]
-    simp only [right_eq_inf]
-    sorry
-
-
-  · simp only [Codisjoint, sup_le_iff, and_imp]
-    intro x hxa hxb hxc
-    exact hc (by simp only [sup_le_iff, hxa, hxb, and_self]) hxc
-
-
 -- The lattice of submodules is modular but is not distributive in general.
 -- However :
 
@@ -571,16 +546,12 @@ theorem Ideal.isAugmentation_tensorProduct
     let K : Ideal (R ⊗[A] S) := Ideal.map (Algebra.TensorProduct.includeLeft (S := A)) I ⊔ Ideal.map Algebra.TensorProduct.includeRight J
     let T₀ : Subalgebra A (R ⊗[A] S) := Subalgebra.map (Algebra.TensorProduct.map R₀.val S₀.val) ⊤
     K.IsAugmentation T₀ := by
-  intro K T₀
   rw [Ideal.isAugmentation_subalgebra_iff] at hI hJ ⊢
-
   convert Submodule.TensorProduct.isCompl_left_left hI hJ
   · unfold Submodule.TensorProduct
-    simp only [T₀]
     simp only [Algebra.map_top, mapIncl]
     rfl
-  · simp only [K]
-    ext x
+  · ext x
     simp [Submodule.TensorProduct]
     rw [sup_comm]
     rw [← restrictScalars_mem A, sup_restrictScalars]
