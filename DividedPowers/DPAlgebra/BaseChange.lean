@@ -411,10 +411,12 @@ theorem dpScalarExtension_mem_grade {a : DividedPowerAlgebra R M} {n : ℕ} (ha 
       simp only [Finset.mem_sdiff, mem_support_iff, ne_eq, coeff_sum, coeff_C_mul, coeff_monomial,
         mul_ite, mul_one, mul_zero, Finset.sum_ite_eq', ite_not, ite_eq_left_iff, Classical.not_imp,
         not_and, Decidable.not_not] at hx
-      have : (algebraMap R (DividedPowerAlgebra S (S ⊗[R] M))) (coeff x p) =
-        (algebraMap S (DividedPowerAlgebra S (S ⊗[R] M)))
-          (algebraMap R S (coeff x p)) := rfl
-      rw [this,hx.2 hx.1, map_zero, zero_mul]
+      -- one can use IsScalarTower.algebraMap_apply
+      rw [IsScalarTower.algebraMap_apply R S (DividedPowerAlgebra S (S ⊗[R] M))]
+      -- have : (algebraMap R (DividedPowerAlgebra S (S ⊗[R] M))) (coeff x p) =
+      --  (algebraMap S (DividedPowerAlgebra S (S ⊗[R] M)))
+      --    (algebraMap R S (coeff x p)) := rfl
+      rw [hx.2 hx.1, map_zero, zero_mul]
     · intro d _hd
       rw [← algebraMap_eq, coeff_sum]
       simp only [MvPolynomial.algebraMap_apply, coeff_C_mul, map_sum, dp_def']
