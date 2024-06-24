@@ -99,6 +99,7 @@ theorem Submodule.isCompl_restrictScalars_iff  :
     IsCompl (M₁.restrictScalars A) (M₂.restrictScalars A) ↔ IsCompl M₁ M₂ := by
   simp only [isCompl_iff, Submodule.disjoint_restrictScalars_iff, Submodule.codisjoint_restrictScalars_iff]
 
+
 end restrictScalars
 
 
@@ -516,6 +517,20 @@ open TensorProduct Ideal LinearMap Submodule
 def Ideal.IsAugmentation (R : Type*) [CommSemiring R]
     {A : Type*} [CommSemiring A] [Algebra R A] (J : Ideal A) : Prop :=
   IsCompl (Subalgebra.toSubmodule (⊥ : Subalgebra R A)) (J.restrictScalars R)
+
+example (S : Subalgebra R A) (hJS : Ideal.IsAugmentation S J)
+    (s : Set S) (t : Set J) :
+    Ideal.span ((s : Set A) ∪ (t : Set A)) ⊓ J =
+      Ideal.span (t : Set A) := by
+  apply le_antisymm
+  · sorry
+  · simp only [SetLike.coe_sort_coe, le_inf_iff]
+    simp only [Ideal.span_le]
+    constructor
+    · apply le_trans _ Ideal.subset_span
+      simp only [Set.le_eq_subset, Set.subset_union_right]
+    · rintro j ⟨a, ha, rfl⟩
+      exact Subtype.coe_prop a
 
 /-- The base change of an algebra with an augmentation ideal -/
 theorem Ideal.isAugmentation_baseChange

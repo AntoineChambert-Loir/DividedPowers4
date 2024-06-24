@@ -503,21 +503,11 @@ theorem _root_.DividedPowerAlgebra.T_free_and_D_to_QSplit
   let T := R ⊗[A] D
   use T, by infer_instance, by infer_instance
   /- We need to add the fact that `R ⊗ DividedPowerAlgebra A M``
-     is pregraduated in the sense of Roby
-     The ideal is `K A ⊥ (augIdeal A M)`,
-     that is, `R ⊗[A] augIdeal A M``
-     hence it is a direct factor of R ⊗[A] DividedPowerAlgebra A M
-     (At this point, I wonder why one cannot use a different route,
-      proving base change first,
-      using that the divided power algebra of a free module
-      has divided powers --- the relations come from combinatorics.)
-      and then return DividedPowerAlgebra R (I →₀ R).)
-     R mapsto S₀
-     DividedPowerAlgebra A M mapso I
-     and R ⊗[A] DividedPowerAlgebra A M maps to S
-
-
-     -/
+     is pregraduated in the sense of Roby,
+     that is, the ideal is an augmentation ideal (given by tensor product).
+     Note : in this case, it could maybe be given by base change,
+     and it is not clear to me why this (simpler) approach does not suffice.
+     In fact, , `dpΨ` was proved above using that! -/
   have htop : Ideal.IsAugmentation (⊤ : Subalgebra A R) (⊥ : Ideal R) := by
     rw [isAugmentation_subalgebra_iff A]
     exact isCompl_top_bot
@@ -534,7 +524,6 @@ theorem _root_.DividedPowerAlgebra.T_free_and_D_to_QSplit
     apply Ideal.mem_sup_right
     apply Ideal.mem_map_of_mem
     apply ι_mem_augIdeal
-
   constructor
   · -- Ψ maps the 0 part to S₀
     convert Ψ_map_eq A S hI S₀
@@ -568,6 +557,7 @@ theorem _root_.DividedPowerAlgebra.T_free_and_D_to_QSplit
   · exact (dpΨ A S hI S₀ hM hM_eq condTFree).isDPMorphism
   · infer_instance -- tensor product of free modules is free
 
+-- the freeness of DividedPowerAlgebra of a free module still uses `sorry`
 #print axioms DividedPowerAlgebra.T_free_and_D_to_QSplit
 
 end roby4
@@ -597,7 +587,7 @@ divided powers.
 
 [Berthelot, 1.7.1] gives the explicit property that holds for tensor products.
 For an `A`-algebra `R` and `I : Ideal R`, one assumes the
-existence of `R₀ : Subalgebra A R` such that `R = R₀ ⊕ I` as an `I`-module.
+existence of `R₀ : Subalgebra A R` such that `R = R₀ ⊕ I` as an `A`-module.
 Equivalently, the map `R →ₐ[A] R ⧸ I` has a left inverse.
 
 In lemma 6, we have two surjective algebra morphisms
@@ -765,6 +755,8 @@ example (A : Type u) [CommRing A]
   have := hR₀I.codisjoint
   sorry
 
+
+/-- Roby, Lemma 6, the condition τ descends by quotient -/
 theorem condτ_rel (A : Type u) [CommRing A]
     {R : Type u} [CommRing R] [Algebra A R]
     {R₀ : Subalgebra A R} {I : Ideal R} (hR₀I : I.IsAugmentation R₀) (hI : DividedPowers I)
@@ -796,23 +788,28 @@ theorem condτ_rel (A : Type u) [CommRing A]
   have hK'_pd : isSubDPIdeal hK (RingHom.ker fg ⊓ K A I J) := by
     have := Algebra.TensorProduct.map_ker _ _ hf hg
     have hkerf := RingHom.ker_eq_span_union A R R₀ I
-      (by
-          sorry)
+      ((Ideal.isAugmentation_subalgebra_iff A).mp hR₀I).codisjoint
       R' R₀' I'
-      (by sorry)
+      ((Ideal.isAugmentation_subalgebra_iff A).mp hR₀I').disjoint
       f
       (by simp only [hfR₀, Subalgebra.coe_map, le_refl])
       (by simp only [hI'I, Ideal.map, Set.le_eq_subset]
           apply Submodule.subset_span)
-    have hkerg := RingHom.ker_eq_span_union A S S₀ J hS₀J S' S₀' J' hS₀J' g
+    have hkerg := RingHom.ker_eq_span_union A S S₀ J
+      ((Ideal.isAugmentation_subalgebra_iff A).mp hS₀J).codisjoint
+      S' S₀' J'
+      ((Ideal.isAugmentation_subalgebra_iff A).mp hS₀J').disjoint
+      g
       (by simp only [hgS₀, Subalgebra.coe_map, le_refl])
       (by simp only [hJ'J, Ideal.map, Set.le_eq_subset]
           apply Submodule.subset_span)
-    simp only [submodule_span_eq] at hkerf hkerg
     rw [hkerf, hkerg] at this
+    simp only [submodule_span_eq] at this
     simp only [Ideal.span_union, Ideal.map_sup] at this
     rw [sup_sup_sup_comm] at this
-
+    simp only [Ideal.map_span] at this
+    rw [this]
+    -- we need a variant of `isSubDPIdeal_sup`
     apply isSubDPIdeal_sup
     exact isSubDPIdeal_map hI hK hK_pd.1 _ (isSubDPIdeal_ker hI hI' hf')
     exact isSubDPIdeal_map hJ hK hK_pd.2 _ (isSubDPIdeal_ker hJ hJ' hg')
