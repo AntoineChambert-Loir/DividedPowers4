@@ -1,0 +1,61 @@
+% In this file you should put the actual content of the blueprint.
+% It will be used both by the web and the print version.
+% It should *not* include the \begin{document}
+%
+% If you want to split the blueprint content into several files then
+% the current file can be a simple sequence of \input. Otherwise It
+% can start with a \section or \chapter for instance.
+
+\chapter{Polynomial Maps}
+
+Let $R$ be a unitary commutative ring. Unless otherwise specified, all $R$-algebras will be assumed to be commutative, associative and unitary.
+
+\begin{definition}(\cite[\S I.2]{Roby63})
+	\label{def:polynomial_map}
+	\lean{PolynomialMap}
+	\leanok
+	Let $M$ and $N$ be two $R$-modules. A \emph{polynomial map} from $M$ to $N$ is a family of maps $f_S : S \otimes_R M \to S \otimes_R N$ for all $R$-algebras $S$, such that for any $R$-algebra morphism $u : S \to S'$, the following diagram commutes:
+	\[ \begin{tikzcd}
+	S \otimes_R M \arrow[r, "f_S"] \arrow[d, "\text{id}_S \otimes_R u"]
+	& S \otimes_R N \arrow[d, "\text{id}_{S'} \otimes_R u"] \\
+	S' \otimes_R M \arrow[r, "f_{S'}" ]
+	& S' \otimes_R N
+	\end{tikzcd}\]
+	 
+	By abuse of notation, if $z \in S \otimes_R M$, the element $f_S(z)$ of $S \otimes_R N$ will be denoted by $f(z)$, and the map $f_S$ will also be denoted by $f$.
+\end{definition}
+
+\begin{theorem}(\cite[Th\'eor\`eme I.1]{Roby63})
+Let $f$ be a polynomial map from $M$ to $N$. Let $x_1, \dots, x_n$ be a finite family of elements of $M$. For each tuple $(k_1, \cdots, k_n)$ of nonnegative integers, 
+there exists an element $y_{k_1, \dots, k_n}$ of $N$ such that
+\begin{enumerate}
+\item all but finitely many of the  $y_{k_1, \dots, k_n}$ are zero, and
+\item for every $R$-algebra $S$ and every choice $s_1, \cdots s_n$ of elements of $S$, we have an equality
+\[ f_S(s_1 \otimes x_1, \dots, s_n \otimes x_n) = \sum_{k_1, \dots, k_n} y_{k_1, \dots, k_n} \otimes s_1^{k_1} \cdots s_n^{k_n}. \]
+\end{enumerate}
+
+Such a family of elements $y_{k_1, \dots, k_n}$ is unique and only dependes on $x_1, \dots, x_n$.
+
+%Conversely, if the $x_1, \dots, x_n$ are an $R$-basis of $M$, then for any choice of elements $y_{k_1, \dots, k_n}$ (almost all zero), the above formula defines a polynomial map from $M$ to $N$.
+\end{theorem}
+
+\begin{theorem}(\cite[Th\'eor\`eme I.1]{Roby63})
+\label{thm:polynomial_map}
+\lean{PolynomialMap.Finsupp.polynomialMap}
+\lean{PolynomialMap.Finsupp.polynomialMap_toFun}
+\lean{PolynomialMap.Finsupp.polynomialMap_isCompat}
+\leanok
+Let $x_1, \dots, x_n$ be an $R$-basis of $M$. Then for any choice of elements $y_{k_1, \dots, k_n}$, of which only finitely many are nonzero, the above formula defines a polynomial map from $M$ to $N$.	
+\end{theorem}
+
+\begin{proof}
+
+\end{proof}
+
+\begin{definition}
+	\label{def:divided_powers_bot}
+	\lean{dividedPowersBot}
+	%\uses{def:divided_powers}
+	\leanok
+	The divided power structure on the zero ideal of a commutative ring $A$.
+\end{definition}

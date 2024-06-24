@@ -6,6 +6,14 @@
 % the current file can be a simple sequence of \input. Otherwise It
 % can start with a \section or \chapter for instance.
 
+\input{polynomial_maps}
+
+% Bibliography
+\bibliographystyle{alpha}
+
+\bibliography{divided_powers.bib}
+
+\iffalse
 \chapter{Blueprint test}
 
 \begin{definition}
@@ -15,10 +23,14 @@
 	The divided power structure on an ideal $I$ of a commutative ring $A$ is ...
 \end{definition}
 
+\begin{theorem}
+	content...
+\end{theorem}
+
 \begin{definition}
 	\label{def:divided_powers_bot}
 	\lean{dividedPowersBot}
 	\uses{def:divided_powers}
 	\leanok
-	The divided power structure on the zero ideal of a commutative ring $A$.
 \end{definition}
+\fi
