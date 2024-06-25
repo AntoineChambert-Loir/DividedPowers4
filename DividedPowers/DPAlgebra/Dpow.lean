@@ -865,7 +865,8 @@ theorem condQSplit_and_condTFree_imply_condTSplit (A : Type*) [CommRing A]
   obtain ⟨R, _, _, I, hI, R₀, hIR₀, f, hfI, hfR₀, hf, hfDP, hR_free⟩ := hQ R' I' hI' R₀' hIR₀'
   obtain ⟨S, _, _, J, hJ, S₀, hJS₀, g, hgJ, hgS₀, hg, hgDP, hS_free⟩ := hQ S' J' hJ' S₀' hJS₀'
   apply condτ_rel A hIR₀ hI hJS₀ hJ hIR₀' hI' hJS₀' hJ' f hf hfDP hfR₀.symm hfI.symm g hg hgDP hgS₀.symm hgJ.symm
-  apply hT_free R hR_free  hI S hS_free hJ
+  apply hT_free R
+
 #align divided_power_algebra.cond_Q_and_cond_T_free_imply_cond_T
   DividedPowerAlgebra.condQSplit_and_condTFree_imply_condTSplit
 

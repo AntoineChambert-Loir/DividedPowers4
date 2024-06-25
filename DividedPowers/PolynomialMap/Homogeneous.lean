@@ -568,18 +568,26 @@ variable {R : Type u} [CommRing R] {M : Type*} [AddCommGroup M] [Module R M]
     simp only [coe_comp, coe_restrictScalars, Function.comp_apply, AlgHom.toLinearMap_apply,
       baseChange_monomial]
 
+theorem component.toFun_eq (p : ℕ) (f : PolynomialMap R M N)
+  (S : Type u) [CommRing S] [Algebra R S] (m : S ⊗[R] M):
+  (f.component p).toFun' S m = rTensor R N S (f.toFun' S[X] (((monomial 1).restrictScalars R).rTensor M m))  p := rfl
+
 theorem component_toFun (p : ℕ) (f : PolynomialMap R M N) (S : Type*) [CommRing S] [Algebra R S] :
     (f.component p).toFun S = fun m ↦
       Polynomial.rTensor R N S (f.toFun S[X] (((monomial 1).restrictScalars R).rTensor M m)) p := by
   --ext sm
   ext sm
-  simp only [toFun, Function.extend]
+  obtain ⟨n, ψ, q, rfl⟩ :=  exists_lift sm
+  rw [← PolynomialMap.isCompat_apply]
+  rw [toFun_eq_toFun'_apply, component.toFun_eq]
+
+/-  simp only [toFun, Function.extend]
   split_ifs with h h' h'
   · obtain ⟨a, ha⟩ := h
     obtain ⟨b, hb⟩ := h'
     rw [← ha] at hb
     congr
-    --rw [PolynomialMap.toFun_eq_toFunLifted_apply]
+    --rw [PolynomialMap.toFun_eq_toFunLifted_apply] -/
     sorry
 
   · sorry
