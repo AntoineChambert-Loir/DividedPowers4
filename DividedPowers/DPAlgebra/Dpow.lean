@@ -443,7 +443,7 @@ lemma map_psi_augIdeal_eq (M : Type*) [AddCommGroup M] [Module A M] [Module.Free
   apply Ideal.mem_map_of_mem
   apply ι_mem_augIdeal
 
---set_option trace.profiler true
+-- set_option trace.profiler true -- < 6 sec here!
 -- Roby, lemma 4
 theorem _root_.DividedPowerAlgebra.T_free_and_D_to_QSplit
     (condTFree: CondTFree A) (condD : CondD A) : CondQSplit A := by

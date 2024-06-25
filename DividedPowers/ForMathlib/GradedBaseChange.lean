@@ -26,9 +26,6 @@ theorem LinearMap.baseChange.lift.tmul {f : M →ₗ[R] N} (s : S) (m : M) :
     LinearMap.baseChange.lift f (s ⊗ₜ[R] m) = s • (f m) := by
   simp [LinearMap.baseChange.lift]
 
-example (f : M →ₗ[R] N) : S ⊗[R] M →ₗ[S] S ⊗[R] N := by
-  exact LinearMap.baseChange S f
-
 /-- Canonical map of a module to its base change -/
 noncomputable def LinearMap.baseChange.include : M →ₗ[R] S ⊗[R] M where
       toFun m := 1 ⊗ₜ[R] m
@@ -76,8 +73,8 @@ section decompose
 
 open TensorProduct DirectSum
 
-variable [CommRing R]
-variable [CommRing S] [Algebra R S]
+variable [CommSemiring R]
+variable [CommSemiring S] [Algebra R S]
 variable [DecidableEq ι] [AddCommMonoid M] [Module R M]
 variable (ℳ : ι → Submodule R M) [Decomposition ℳ]
 
@@ -164,6 +161,40 @@ noncomputable def DirectSum.Decomposition.baseChange [Decomposition ℳ] :
 
 end decompose
 
+section algebra
 
-variable [DecidableEq ι] [AddMonoid ι] [CommSemiring R] [Semiring A] [Algebra R A]
-variable [SetLike σ A] [AddSubmonoidClass σ A] (𝒜 : ι → σ)
+variable [DecidableEq ι] [AddMonoid ι] [CommSemiring R]
+variable [Semiring A] [Algebra R A] (𝒜 : ι → Submodule R A) [GradedAlgebra 𝒜]
+variable [CommSemiring S] [Algebra R S]
+
+open TensorProduct
+
+noncomputable def GradedAlgebra.baseChange :
+  GradedAlgebra (fun i ↦ Submodule.baseChange S (𝒜 i)) where
+    toDecomposition := DirectSum.Decomposition.baseChange 𝒜
+    one_mem := Submodule.tmul_mem_baseChange_of_mem (1 : S) SetLike.GradedOne.one_mem
+    mul_mem := fun i j gi gj hi hj ↦ by
+      simp only [Submodule.baseChange] at hi hj
+      apply Submodule.span_induction hj (p := fun gj ↦ gi * gj ∈ Submodule.baseChange S _)
+      · rintro _ ⟨y, hy, rfl⟩
+        simp only [mk_apply]
+        apply Submodule.span_induction hi (p := fun gi ↦ gi * _ ∈ _)
+        rintro _ ⟨x, hx, rfl⟩
+        · simp only [mk_apply, Algebra.TensorProduct.tmul_mul_tmul, mul_one]
+          exact Submodule.tmul_mem_baseChange_of_mem 1 (SetLike.GradedMul.mul_mem hx hy)
+        · simp
+        · intro a b ha hb
+          rw [add_mul]
+          exact add_mem ha hb
+        · intro s a ha
+          rw [← smul_eq_mul, smul_assoc]
+          apply Submodule.smul_mem
+          simp only [smul_eq_mul, ha]
+      · simp
+      · intro a b ha hb
+        rw [mul_add]
+        exact add_mem ha hb
+      · intro s a ha
+        rw [← smul_eq_mul, smul_comm]
+        apply Submodule.smul_mem
+        simp only [smul_eq_mul, ha]
