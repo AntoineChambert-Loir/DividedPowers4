@@ -119,7 +119,6 @@ lemma exists_Finsupp (S : Type*) [CommSemiring S] [Algebra R S] (μ : S ⊗[R] M
     use sx + sy
     rw [sum_add_index (fun _ ↦ by simp) (fun _ _ _ _ ↦ by rw [TensorProduct.tmul_add])]
 
-
 theorem exists_Fin (S : Type*) [CommRing S] [Algebra R S] (sm : S ⊗[R] M) :
     ∃ (n : ℕ) (s : Fin n → S) (m : Fin n → M),
       sm = Finset.univ.sum (fun i ↦ (s i) ⊗ₜ[R] (m i)) := by
@@ -129,7 +128,7 @@ theorem exists_Fin (S : Type*) [CommRing S] [Algebra R S] (sm : S ⊗[R] M) :
   rw [sum, ← Finset.sum_attach]
   apply Finset.sum_equiv e
   simp only [Finset.mem_attach, Finset.mem_univ, implies_true]
-  sorry
+  intros; simp only [Equiv.symm_apply_apply]
 
 lemma smul_rTensor {R : Type*} [CommSemiring R] {M : Type*} [AddCommMonoid M] [Module R M]
     {S : Type*} [Semiring S] [Algebra R S] {T : Type*} [Semiring T] [Algebra R T]
@@ -554,6 +553,17 @@ open Polynomial
 variable {R : Type u} [CommRing R] {M : Type*} [AddCommGroup M] [Module R M]
   {N : Type*} [AddCommGroup N] [Module R N] (f : M →ₚ[R] N) (p : ℕ)
 
+theorem Polynomial.baseChange_comp_monomial_eq
+    {S : Type*} [CommRing S] [Algebra R S]
+    {S' : Type*} [CommRing S'] [Algebra R S'] (φ : S →ₐ[R] S')
+    (p : ℕ) :
+    (Polynomial.baseChange φ).toLinearMap ∘ₗ
+      ((monomial p).restrictScalars R) =
+        ((monomial p).restrictScalars R) ∘ₗ φ.toLinearMap := by
+  ext
+  simp only [coe_comp, coe_restrictScalars, Function.comp_apply,
+    AlgHom.toLinearMap_apply, baseChange_monomial]
+
 /-- The homogeneous components of a `PolynomialMap` -/
 @[simps] noncomputable def component (p : ℕ) (f : PolynomialMap R M N) :
     PolynomialMap R M N where
@@ -561,39 +571,29 @@ variable {R : Type u} [CommRing R] {M : Type*} [AddCommGroup M] [Module R M]
     (f.toFun' S[X] (((monomial 1).restrictScalars R).rTensor M m))  p
   isCompat' {S _ _} {S' _ _} φ := by
     ext sm
+    dsimp
     simp only [LinearEquiv.rTensor'_apply, Function.comp_apply, rTensor_apply, ← rTensor_comp_apply]
     rw [lcoeff_comp_baseChange_eq, rTensor_comp_apply, f.isCompat_apply', ← rTensor_comp_apply]
-    congr 4
-    ext
-    simp only [coe_comp, coe_restrictScalars, Function.comp_apply, AlgHom.toLinearMap_apply,
-      baseChange_monomial]
+    rw [Polynomial.baseChange_comp_monomial_eq]
 
-theorem component.toFun_eq (p : ℕ) (f : PolynomialMap R M N)
-  (S : Type u) [CommRing S] [Algebra R S] (m : S ⊗[R] M):
+theorem component.toFun'_apply (p : ℕ) (f : PolynomialMap R M N)
+  (S : Type u) [CommRing S] [Algebra R S] (m : S ⊗[R] M) :
   (f.component p).toFun' S m = rTensor R N S (f.toFun' S[X] (((monomial 1).restrictScalars R).rTensor M m))  p := rfl
 
-theorem component_toFun (p : ℕ) (f : PolynomialMap R M N) (S : Type*) [CommRing S] [Algebra R S] :
-    (f.component p).toFun S = fun m ↦
+theorem component_toFun_apply (p : ℕ) (f : PolynomialMap R M N)
+    (S : Type*) [CommRing S] [Algebra R S] (m : S ⊗[R] M) :
+    (f.component p).toFun S m =
       Polynomial.rTensor R N S (f.toFun S[X] (((monomial 1).restrictScalars R).rTensor M m)) p := by
-  --ext sm
-  ext sm
-  obtain ⟨n, ψ, q, rfl⟩ :=  exists_lift sm
+  obtain ⟨n, ψ, q, rfl⟩ :=  exists_lift m
   rw [← PolynomialMap.isCompat_apply]
-  rw [toFun_eq_toFun'_apply, component.toFun_eq]
+  rw [toFun_eq_toFun'_apply, component.toFun'_apply]
+  rw [← LinearMap.rTensor_comp_apply]
+  rw [← Polynomial.baseChange_comp_monomial_eq]
+  rw [LinearMap.rTensor_comp_apply]
+  rw [← PolynomialMap.isCompat_apply]
+  simp only [LinearEquiv.rTensor'_apply, Function.comp_apply, rTensor_apply, ← rTensor_comp_apply]
+  rw [lcoeff_comp_baseChange_eq, toFun_eq_toFun'_apply]
 
-/-  simp only [toFun, Function.extend]
-  split_ifs with h h' h'
-  · obtain ⟨a, ha⟩ := h
-    obtain ⟨b, hb⟩ := h'
-    rw [← ha] at hb
-    congr
-    --rw [PolynomialMap.toFun_eq_toFunLifted_apply] -/
-    sorry
-
-  · sorry
-  · have h2 := h'.choose_spec
-    sorry
-  · simp only [map_zero, Finsupp.coe_zero, Pi.zero_apply]
 /-
 -- Faire une preuve directe  qui court-circuite `lcoeff_comp_baseChange_eq`?
 /-- The homogeneous components of a `PolynomialMap` -/
@@ -696,7 +696,7 @@ theorem support_component (f : M →ₚ[R] N) {S : Type*} [CommRing S] [Algebra 
     (rTensor R N S ((f.toFun S[X] ((rTensor M ((monomial 1).restrictScalars R)) m)))).support := by
   ext i
   rw [Function.mem_support, ne_eq, Finset.mem_coe, Finsupp.mem_support_iff, not_iff_not,
-    component_toFun]
+    component_toFun_apply]
 
 theorem LocFinsupp_component (f : PolynomialMap R M N) :
     LocFinsupp (fun p ↦ f.component p) := fun S _ _ m ↦ by
