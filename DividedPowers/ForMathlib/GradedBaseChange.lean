@@ -26,6 +26,8 @@ theorem LinearMap.baseChange.lift.tmul {f : M →ₗ[R] N} (s : S) (m : M) :
     LinearMap.baseChange.lift f (s ⊗ₜ[R] m) = s • (f m) := by
   simp [LinearMap.baseChange.lift]
 
+example (f : M →ₗ[R] N) : S ⊗[R] M →ₗ[S] S ⊗[R] N := by
+  exact LinearMap.baseChange S f
 
 /-- Canonical map of a module to its base change -/
 noncomputable def LinearMap.baseChange.include : M →ₗ[R] S ⊗[R] M where
@@ -39,6 +41,34 @@ noncomputable def Submodule.baseChange.include (N : Submodule R M) :
   toFun n := ⟨1 ⊗ₜ[R] n, Submodule.tmul_mem_baseChange_of_mem 1 (Submodule.coe_mem n)⟩
   map_add' x y := by simp [tmul_add]
   map_smul' r x := by simp
+
+theorem Submodule.baseChange_eq_range
+    {R : Type u_1} {M : Type u_2} (A : Type u_3) [CommSemiring R] [Semiring A] [Algebra R A] [AddCommMonoid M] [Module R M] (p : Submodule R M):
+    Submodule.baseChange A p =
+      LinearMap.range (LinearMap.baseChange A p.subtype) := by
+ext x
+constructor
+· simp only [Submodule.baseChange]
+  intro hx
+  apply Submodule.span_induction (p := fun x ↦ (x ∈ LinearMap.range (LinearMap.baseChange A p.subtype))) hx
+  · rintro _ ⟨x, hx, rfl⟩
+    simp only [mk_apply, LinearMap.mem_range]
+    use 1 ⊗ₜ[R] (⟨x, hx⟩ : p)
+    simp only [LinearMap.baseChange_tmul, Submodule.coeSubtype]
+  · exact zero_mem _
+  · intro x y hx hy
+    exact add_mem hx hy
+  · intro a x hx
+    exact Submodule.smul_mem _ a hx
+· rintro ⟨x, rfl⟩
+  induction x using TensorProduct.induction_on with
+  | zero => simp
+  | tmul a x =>
+    simp only [LinearMap.baseChange_tmul, coeSubtype]
+    exact tmul_mem_baseChange_of_mem a (coe_mem x)
+  | add x y hx hy =>
+    simp only [map_add]
+    exact add_mem hx hy
 
 end
 
@@ -83,6 +113,32 @@ theorem DirectSum.Decompose.baseChange.decompose_tmul_of (s : S) (i : ι) (m : �
   simp only [SetLike.mk_smul_mk, Subtype.mk.injEq]
   rw [TensorProduct.smul_tmul', smul_eq_mul, mul_one]
 
+theorem Decompose.baseChange.decompose_of_mem {m : S ⊗[R] M} {i : ι}
+    (hm : m ∈ Submodule.baseChange S (ℳ i)) :
+    (Decompose.baseChange.decompose ℳ) m =
+      (of (fun i ↦ ↥(Submodule.baseChange S (ℳ i))) i) ⟨m, hm⟩ := by
+  simp only [Submodule.baseChange] at hm
+  apply Submodule.span_induction' (p := fun m hm ↦ Decompose.baseChange.decompose ℳ m = of (fun i ↦ Submodule.baseChange S (ℳ i)) i ⟨m, hm⟩)
+  · rintro _ ⟨x, hx : x ∈ ℳ i, rfl⟩
+    simp only [mk_apply]
+    -- why doesn't `rw [← Submodule.coe_mk x hx]` work?
+    suffices ∃ (m : ℳ i), x = ↑m by
+      obtain ⟨m, rfl⟩ := this
+      rw [Decompose.baseChange.decompose_tmul_of]
+    use ⟨x, hx⟩
+  · rw [← DirectSum.lof_eq_of S, map_zero, eq_comm]
+    convert LinearMap.map_zero _
+  · intro x hx y hy px py
+    rw [LinearMap.map_add, px, py, eq_comm]
+    simp only [← DirectSum.lof_eq_of S]
+    convert LinearMap.map_add _ _ _
+    simp only [AddSubmonoid.mk_add_mk, Submodule.map_coe]
+  · intro s x hx px
+    rw [LinearMap.map_smul, px, eq_comm]
+    simp only [← DirectSum.lof_eq_of S]
+    convert LinearMap.map_smul _ _ _
+    simp only [SetLike.mk_smul_mk, Submodule.map_coe]
+
 /-- Base change of a graded module -/
 noncomputable def DirectSum.Decomposition.baseChange [Decomposition ℳ] :
     Decomposition (fun i => (ℳ i).baseChange S) where
@@ -101,29 +157,9 @@ noncomputable def DirectSum.Decomposition.baseChange [Decomposition ℳ] :
         induction m using DirectSum.induction_on with
         | H_zero => simp only [map_zero]
         | H_basic i m =>
-          rcases m with ⟨m, hm⟩
           simp only [coeAddMonoidHom_of]
-          simp only [Submodule.baseChange] at hm
-          apply Submodule.span_induction' (p := fun m hm ↦ Decompose.baseChange.decompose ℳ m = of (fun i ↦ Submodule.baseChange S (ℳ i)) i ⟨m, hm⟩)
-          · rintro _ ⟨x, hx : x ∈ ℳ i, rfl⟩
-            simp only [mk_apply]
-            -- why doesn't `rw [← Submodule.coe_mk x hx]` work?
-            suffices ∃ (m : ℳ i), x = ↑m by
-              obtain ⟨m, rfl⟩ := this
-              rw [Decompose.baseChange.decompose_tmul_of]
-            use ⟨x, hx⟩
-          · rw [← DirectSum.lof_eq_of S, map_zero, eq_comm]
-            convert LinearMap.map_zero _
-          · intro x hx y hy px py
-            rw [LinearMap.map_add, px, py, eq_comm]
-            simp only [← DirectSum.lof_eq_of S]
-            convert LinearMap.map_add _ _ _
-            simp only [AddSubmonoid.mk_add_mk, Submodule.map_coe]
-          · intro s x hx px
-            rw [LinearMap.map_smul, px, eq_comm]
-            simp only [← DirectSum.lof_eq_of S]
-            convert LinearMap.map_smul _ _ _
-            simp only [SetLike.mk_smul_mk, Submodule.map_coe]
+          rcases m with ⟨m, hm⟩
+          rw [Decompose.baseChange.decompose_of_mem ℳ hm]
         | H_plus m m' hm hm' => simp [map_add, hm, hm']
 
 end decompose
