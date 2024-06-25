@@ -404,6 +404,45 @@ def _root_.MvPolynomial.CAlgHom {R : Type*} [CommRing R] {A : Type*} [CommRing A
   toRingHom := C
   commutes' _ := rfl
 
+lemma Subalgebra_tensorProduct_top_bot [Algebra A R]
+    (S : Type*) [CommRing S] [Algebra A S] {S₀ : Subalgebra A S} (hS₀ : S₀ = ⊥)
+    {T₀ : Subalgebra A R} (hT₀ : T₀ = ⊤) :
+    Subalgebra.map (Algebra.TensorProduct.map T₀.val S₀.val) (⊤ : Subalgebra A (T₀ ⊗[A] S₀)) =
+      Subalgebra.restrictScalars A (⊥ : Subalgebra R (R ⊗[A] S)) := by
+  ext a
+  simp only [Algebra.map_top, AlgHom.mem_range, Subalgebra.mem_restrictScalars, Algebra.mem_bot,
+    Set.mem_range, Algebra.TensorProduct.algebraMap_apply, Algebra.id.map_eq_id, RingHom.id_apply]
+  constructor
+  · rintro ⟨x, rfl⟩
+    induction x using TensorProduct.induction_on with
+    | zero => use 0, by simp only [TensorProduct.zero_tmul, map_zero]
+    | tmul a b =>
+      rcases a with ⟨a, ha⟩
+      rcases b with ⟨b, hb⟩
+      simp only [hS₀, Algebra.mem_bot, Set.mem_range] at hb
+      obtain ⟨b, rfl⟩ := hb
+      use b • a
+      simp only [TensorProduct.smul_tmul, Algebra.TensorProduct.map_tmul, Subalgebra.coe_val,
+        Algebra.algebraMap_eq_smul_one]
+    | add x y hx hy =>
+      obtain ⟨x, hx⟩ := hx
+      obtain ⟨y, hy⟩ := hy
+      use x + y
+      rw [TensorProduct.add_tmul, hx, hy, AlgHom.map_add]
+  · rintro ⟨r, rfl⟩
+    exact ⟨⟨r, by rw [hT₀]; exact Algebra.mem_top⟩ ⊗ₜ[A] 1, rfl⟩
+
+lemma map_psi_augIdeal_eq (M : Type*) [AddCommGroup M] [Module A M] [Module.Free A M]
+    (condTFree: CondTFree A) :
+    Ideal.map (Ψ A S hI S₀) (K A ⊥ (augIdeal A (I →₀ A))) = I := by
+  apply le_antisymm (dpΨ A S hI S₀ hM hM_eq condTFree).ideal_comp
+  intro i hi
+  rw [← Ψ_eq A S hI S₀ i hi]
+  apply Ideal.mem_map_of_mem
+  apply Ideal.mem_sup_right
+  apply Ideal.mem_map_of_mem
+  apply ι_mem_augIdeal
+
 --set_option trace.profiler true
 -- Roby, lemma 4
 theorem _root_.DividedPowerAlgebra.T_free_and_D_to_QSplit
@@ -417,9 +456,7 @@ theorem _root_.DividedPowerAlgebra.T_free_and_D_to_QSplit
   haveI hR_free : Module.Free A R :=
     Module.Free.of_basis (MvPolynomial.basisMonomials _ _)
   -- We consider `R ⊗[A] DividedPowerAlgebra A M` as a comm ring and an A-algebra
-  --let T := R ⊗[A] D
-  use R ⊗[A] D
-  use by infer_instance, by infer_instance
+  use R ⊗[A] D, by infer_instance, by infer_instance
   /- We need to add the fact that `R ⊗ DividedPowerAlgebra A M``
      is pregraduated in the sense of Roby,
      that is, the ideal is an augmentation ideal (given by tensor product).
@@ -432,49 +469,17 @@ theorem _root_.DividedPowerAlgebra.T_free_and_D_to_QSplit
   refine ⟨_, (condτ A S I S₀ hM condTFree).choose, _,
     Ideal.isAugmentation_tensorProduct A htop (isAugmentation A M), ?_⟩
   use Ψ A S hI S₀
-  have hI_le : Ideal.map (Ψ A S hI S₀) (K A ⊥ (augIdeal A M)) ≤ I := by
-    convert (dpΨ A S hI S₀ hM hM_eq condTFree).ideal_comp
-  constructor
-  · refine le_antisymm hI_le ?_
-    intro i hi
-    rw [← Ψ_eq A S hI S₀ i hi]
-    apply Ideal.mem_map_of_mem
-    apply Ideal.mem_sup_right
-    apply Ideal.mem_map_of_mem
-    apply ι_mem_augIdeal
+  refine ⟨map_psi_augIdeal_eq A S hI S₀ hM hM_eq M condTFree, ?_⟩
   constructor
   · -- Ψ maps the 0 part to S₀
-    convert Ψ_map_eq A S hI S₀
-    ext a
-    simp only [Algebra.map_top, AlgHom.mem_range, Subalgebra.mem_restrictScalars, Algebra.mem_bot,
-      Set.mem_range, Algebra.TensorProduct.algebraMap_apply, Algebra.id.map_eq_id, RingHom.id_apply]
-    constructor
-    · rintro ⟨x, rfl⟩
-      induction x using TensorProduct.induction_on with
-      | zero => use 0, by simp only [TensorProduct.zero_tmul, map_zero]
-      | tmul a b =>
-        rcases a with ⟨a, ha⟩
-        rcases b with ⟨b, hb⟩
-        simp only [grade0Subalgebra_eq_bot, Algebra.mem_bot, Set.mem_range] at hb
-        obtain ⟨b, rfl⟩ := hb
-        use b • a
-        simp only [TensorProduct.smul_tmul, Algebra.TensorProduct.map_tmul, Subalgebra.coe_val, Algebra.algebraMap_eq_smul_one]
-      | add x y hx hy =>
-        obtain ⟨x, hx⟩ := hx
-        obtain ⟨y, hy⟩ := hy
-        use x + y
-        rw [TensorProduct.add_tmul, hx, hy, AlgHom.map_add]
-    · rintro ⟨r, rfl⟩
-      exact ⟨⟨r, Algebra.mem_top⟩ ⊗ₜ[A] 1, rfl⟩
+    convert Ψ_map_eq A S hI S₀ using 2
+    exact Subalgebra_tensorProduct_top_bot A D (grade0Subalgebra_eq_bot _ _) rfl
   constructor
   · apply Ψ_surjective A S hI S₀
-    rw [← isAugmentation_subalgebra_iff]
-    exact hIS₀
+    simp only [← isAugmentation_subalgebra_iff, hIS₀]
   constructor
   · exact (dpΨ A S hI S₀ hM hM_eq condTFree).isDPMorphism
   · infer_instance -- tensor product of free modules is free
-
-#exit
 
 -- the freeness of DividedPowerAlgebra of a free module still uses `sorry`
 #print axioms DividedPowerAlgebra.T_free_and_D_to_QSplit
