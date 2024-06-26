@@ -310,7 +310,7 @@ theorem isExponential_neg_mul_self_eq_one {f : R⟦X⟧} (hf : IsExponential f) 
   rw [mul_comm, isExponential_self_mul_neg_eq_one hf]
 
 variable (σ : Type*)
-theorem MvPowerSeries.isUnit_iff_constantCoeff (f : MvPowerSeries σ R) :
+theorem _root_.MvPowerSeries.isUnit_iff_constantCoeff (f : MvPowerSeries σ R) :
     IsUnit f ↔ IsUnit (MvPowerSeries.constantCoeff σ R f) := by
   constructor
   · rintro ⟨u, hu⟩
@@ -321,13 +321,18 @@ theorem MvPowerSeries.isUnit_iff_constantCoeff (f : MvPowerSeries σ R) :
     rw [isUnit_iff_exists_inv]
     exact ⟨f.invOfUnit u, MvPowerSeries.mul_invOfUnit f u hu.symm⟩
 
-example (f : PowerSeries R) :
+theorem _root_.PowerSeries.isUnit_iff_constantCoeff (f : PowerSeries R) :
     IsUnit f ↔ IsUnit (constantCoeff R f) := by
   exact MvPowerSeries.isUnit_iff_constantCoeff Unit f
 
+theorem IsExponential.isUnit {f : R⟦X⟧} (hf : IsExponential f) : IsUnit f := by
+  simp only [PowerSeries.isUnit_iff_constantCoeff, hf.constantCoeff,  isUnit_one]
+
 theorem isExponential_invOfUnit_eq_scale_neg_one {f : R⟦X⟧} (hf : IsExponential f) :
     (f.invOfUnit 1) = scale (-1) f := by
-  sorry
+  rw [← IsUnit.mul_right_inj hf.isUnit]
+  rw [f.mul_invOfUnit, isExponential_self_mul_neg_eq_one hf]
+  simp only [Units.val_one, hf.constantCoeff]
 
 theorem isExponential_inv {f : R⟦X⟧} (hf : IsExponential f) :
     IsExponential (f.invOfUnit 1) := by

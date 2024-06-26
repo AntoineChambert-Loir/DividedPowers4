@@ -837,6 +837,7 @@ theorem subst_comp_subst_apply (f : PowerSeries R) :
 
 section scale
 
+-- oops, it exists as PowerSeries.rescale
 noncomputable def scale (a : A) (f : R⟦X⟧) : R⟦X⟧ :=
     MvPowerSeries.scale (Function.const Unit a) f
 
