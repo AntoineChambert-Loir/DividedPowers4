@@ -330,9 +330,17 @@ theorem _root_.MvPolynomial.coeToMvPowerSeries_denseInducing :
 
 variable (φ a)
 /-- Evaluation of power series at adequate elements, as a `RingHom` -/
-noncomputable def eval₂ :
-    MvPowerSeries σ R → S :=
+noncomputable def eval₂ : MvPowerSeries σ R → S :=
   DenseInducing.extend coeToMvPowerSeries_denseInducing (MvPolynomial.eval₂ φ a)
+
+
+/-- Evaluation of power series at adequate elements, as a `RingHom` -/
+noncomputable def eval₂' (f : MvPowerSeries σ R) :
+    S := by
+  let hp := fun (p : MvPolynomial σ R) ↦ p = f
+  classical
+  exact if (Classical.epsilon hp = f) then (MvPolynomial.eval₂ φ a (Classical.epsilon hp))
+    else DenseInducing.extend coeToMvPowerSeries_denseInducing (MvPolynomial.eval₂ φ a) f
 
 variable {φ a}
 /-- Evaluation of power series at adequate elements, as a `RingHom` -/
@@ -365,13 +373,33 @@ theorem eval₂_coe (p : MvPolynomial σ R) :
     coeToMvPowerSeries_denseInducing
     (coeToMvPowerSeries_uniformContinuous hφ ha).continuous
 
+theorem eval₂'_coe (f : MvPolynomial σ R) :
+    MvPowerSeries.eval₂' φ a f = MvPolynomial.eval₂ φ a f := by
+  have hf : (Classical.epsilon fun (p : MvPolynomial σ R) ↦ p = (f : MvPowerSeries σ R)) =
+      (f : MvPowerSeries σ R) := by
+    apply Classical.epsilon_spec (p := fun (p : MvPolynomial σ R) ↦
+      p = (f : MvPowerSeries σ R))
+    use f
+  simp only [eval₂']
+  rw [if_pos hf]
+  apply congr_arg
+  rw [← MvPolynomial.coe_inj, hf]
+
 theorem eval₂_C (r : R) :
     eval₂ φ a (C σ R r) = φ r := by
   rw [← coe_C, eval₂_coe hφ ha, MvPolynomial.eval₂_C]
 
+theorem eval₂'_C (r : R)  :
+    eval₂' φ a (C σ R r) = φ r := by
+  rw [← coe_C, eval₂'_coe, MvPolynomial.eval₂_C]
+
 theorem eval₂_X (s : σ) :
     eval₂ φ a (X s) = a s := by
   rw [← coe_X, eval₂_coe hφ ha, MvPolynomial.eval₂_X]
+
+theorem eval₂'_X (s : σ) :
+    eval₂' φ a (X s) = a s := by
+  rw [← coe_X, eval₂'_coe, MvPolynomial.eval₂_X]
 
 variable (f : MvPowerSeries σ R) (d : σ →₀ ℕ)
 
