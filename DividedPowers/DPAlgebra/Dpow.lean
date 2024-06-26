@@ -26,7 +26,8 @@ so that the canonical morphisms `A →ₐ[R] A ⊗[R] B` and `B →ₐ[R] A ⊗[
 are dp-morphisms.
 
 Such  a divided power struture doesn't always exist
-(see counterexample in [Berthelot1974])
+(see counterexample in [Berthelot1974, 1.7])
+-- TODO : add it
 
 - It exists when `I` and `J` are `R`-augmentation ideals,
 ie, there are sections `A ⧸ I →ₐ[R] A` and `B ⧸ J →ₐ[R] B`.
@@ -110,6 +111,8 @@ def Condδ (R : Type u) [CommRing R] [DecidableEq R]
 def CondD (R : Type u) [CommRing R] [DecidableEq R] : Prop :=
   ∀ (M : Type u) [AddCommGroup M] [Module R M], Condδ R M
 
+-- TODO : at the end , universalize
+
 end DividedPowerAlgebra
 
 end
@@ -139,7 +142,7 @@ variable (A : Type u) [CommRing A] {R : Type u} [CommRing R] [Algebra A R]
   {I : Ideal R} (hI : DividedPowers I) {S : Type u} [CommRing S] [Algebra A S]
   {J : Ideal S} (hJ : DividedPowers J)
 
--- Lemma 1 : uniqueness of the dp structure on R ⊗ S for I + J
+-- Lemma 1 : uniqueness of the dp structure on R ⊗ S for K =I + J
 theorem on_tensorProduct_unique (hK : DividedPowers (K A I J))
     (hIK : isDPMorphism hI hK (Algebra.TensorProduct.includeLeft : R →ₐ[A] R ⊗[A] S))
     (hJK : isDPMorphism hJ hK (Algebra.TensorProduct.includeRight : S →ₐ[A] R ⊗[A] S))
@@ -169,6 +172,11 @@ def Condτ (A : Type u) [CommRing A] {R : Type u} [CommRing R] [Algebra A R]
 def CondT (A : Type u) [CommRing A] : Prop :=
   ∀ (R : Type u) [CommRing R] [Algebra A R] {I : Ideal R} (hI : DividedPowers I)
     (S : Type u) [CommRing S] [Algebra A S] {J : Ideal S} (hJ : DividedPowers J), Condτ A hI hJ
+
+def Condτ' (A : Type u) [CommRing A] {R : Type u} [CommRing R] [Algebra A R]
+    {I : Ideal R} (hI : DividedPowers I) {S : Type u} [CommRing S] [Algebra A S]
+    {J : Ideal S} (hJ : DividedPowers J) : Prop :=
+   CondT A R hI S hJ
 
 /-- Existence of divided powers on the ideal of a tensor product
   of any two *split* divided power algebras (universalization of `Condτ`)-/
@@ -329,7 +337,7 @@ def dpΦ : dpMorphism hM hI := by
 
 open Algebra Algebra.TensorProduct
 
--- We consider `(MvPolynomial S₀ A) ⊗[A] DividedPowerAlgebra A (I →₀ A) → S`
+-- We consider `(MvPolynomial S₀ A) ⊗[A] DividedPowerAlgebra A (I →₀ A) →ₐ[A] S`
 def Ψ : MvPolynomial S₀ A ⊗[A] DividedPowerAlgebra A (I →₀ A) →ₐ[A] S :=
   productMap ((Subalgebra.val S₀).comp (IsScalarTower.toAlgHom A (MvPolynomial S₀ A) S₀))
     (Φ A S hI)
