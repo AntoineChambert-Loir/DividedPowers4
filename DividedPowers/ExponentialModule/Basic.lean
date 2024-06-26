@@ -1,6 +1,7 @@
 /- Copyright ACL & MIdFF, 2024 -/
 
 import DividedPowers.ForMathlib.MvPowerSeries.Substitutions
+import Mathlib.RingTheory.PowerSeries.Inverse
 
 /-! # Exponential module of a commutative ring
 
@@ -308,15 +309,24 @@ theorem isExponential_neg_mul_self_eq_one {f : R⟦X⟧} (hf : IsExponential f) 
     (scale (-1) f) * f = 1 := by
   rw [mul_comm, isExponential_self_mul_neg_eq_one hf]
 
+theorem isExponential_invOfUnit_eq_scale_neg_one {f : R⟦X⟧} (hf : IsExponential f) :
+    (f.invOfUnit 1) = scale (-1) f := by
+  sorry
+
+theorem isExponential_inv {f : R⟦X⟧} (hf : IsExponential f) :
+    IsExponential (f.invOfUnit 1) := by
+  rw [isExponential_invOfUnit_eq_scale_neg_one hf]
+  exact isExponential_neg hf
+
 theorem isExponential_map (φ : R →+* S) {f : R⟦X⟧} (hf : IsExponential f) :
     IsExponential (PowerSeries.map φ f) := by
   rw [isExponential_iff]
   constructor
+  · intro p q
+    simp only [coeff_map, ← map_mul, ← ((isExponential_iff f).mp hf).1 p q]
+    simp only [map_mul, map_natCast]
   · rw [← coeff_zero_eq_constantCoeff_apply, coeff_map,
       coeff_zero_eq_constantCoeff, hf.constantCoeff, map_one]
-  · intro p q
-    simp only [coeff_map, ← map_mul, ← ((isExponential_iff f).mp hf).2 p q]
-    simp only [map_mul, map_natCast]
 
 end PowerSeries
 
