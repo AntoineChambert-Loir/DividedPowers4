@@ -39,9 +39,9 @@ lemma coeff_exp' (m : M) (n : ℕ) :
 theorem isExponential_exp' (m : M) : IsExponential (exp' R m) := by
   rw [isExponential_iff]
   constructor
-  · rw [← coeff_zero_eq_constantCoeff, coeff_exp', dp_zero]
   · intro p q
     simp only [coeff_exp', dp_mul, nsmul_eq_mul]
+  · rw [← coeff_zero_eq_constantCoeff, coeff_exp', dp_zero]
 
 /-- The exponential power series of an element of a module,
   in the ExponentialModule of the DividedPowerAlgebra -/
@@ -103,7 +103,8 @@ def dividedPowerAlgebra_exponentialModule_equiv :
       simp only [LinearMapClass.map_smul, coe_smul, coeff_scale]
     · intro n p m
       simp only [nsmul_eq_mul]
-      rw [((isExponential_iff _).mp (isExponential_coe _)).2]
+      rw [((isExponential_iff _).mp (isExponential_coe _)).1]
+      -- TODO: add lemmas for product of coeff and constant coeff
     · intro n x y
       simp only [map_add, coe_add, coeff_mul]
   left_inv := by

@@ -173,11 +173,6 @@ def CondT (A : Type u) [CommRing A] : Prop :=
   ∀ (R : Type u) [CommRing R] [Algebra A R] {I : Ideal R} (hI : DividedPowers I)
     (S : Type u) [CommRing S] [Algebra A S] {J : Ideal S} (hJ : DividedPowers J), Condτ A hI hJ
 
-def Condτ' (A : Type u) [CommRing A] {R : Type u} [CommRing R] [Algebra A R]
-    {I : Ideal R} (hI : DividedPowers I) {S : Type u} [CommRing S] [Algebra A S]
-    {J : Ideal S} (hJ : DividedPowers J) : Prop :=
-   CondT A R hI S hJ
-
 /-- Existence of divided powers on the ideal of a tensor product
   of any two *split* divided power algebras (universalization of `Condτ`)-/
 def CondTSplit (A : Type u) [CommRing A] : Prop :=
@@ -351,12 +346,12 @@ theorem Ψ_surjective : Function.Surjective (Ψ A S hI S₀) := by
   intro s _
   obtain ⟨s₀, hs₀, s₁, hs₁, rfl⟩ := Submodule.exists_add_eq_of_codisjoint (hIS₀.codisjoint) s
   apply Subalgebra.add_mem
-  · -- case s₀
+  · -- case s₀ ∈ Subalgebra.toSubmodule S₀
     use (X ⟨s₀, hs₀⟩) ⊗ₜ[A] 1
     simp only [Ψ, AlgHom.toRingHom_eq_coe, RingHom.coe_coe, productMap_apply_tmul, AlgHom.coe_comp,
       Subalgebra.coe_val, IsScalarTower.coe_toAlgHom', algebraMap_eq, Function.comp_apply, aeval_X,
       id_eq, map_one, mul_one]
-  · -- case s₁
+  · -- case s₁ ∈ Submodule.restrictScalars A I
     use 1 ⊗ₜ[A] (ι A _ (Finsupp.single ⟨s₁, hs₁⟩ 1))
     simp only [Ψ, Φ, f, AlgHom.toRingHom_eq_coe, RingHom.coe_coe, productMap_apply_tmul, map_one,
       lift_ι_apply, one_mul, Basis.constr_apply, Finsupp.basisSingleOne_repr,
@@ -388,7 +383,9 @@ def dpΨ (condTFree : CondTFree A) :
     dpMorphism (condτ A S I S₀ hM condTFree).choose hI := by
   apply dpMorphismFromGens (condτ A S I S₀ hM condTFree).choose hI
     (f := (Ψ A S hI S₀).toRingHom) (K_eq_span A S I S₀)
-  · simp only [AlgHom.toRingHom_eq_coe, K, Ideal.map_bot, ge_iff_le,
+  · -- Ideal.map (Ψ A S hI S₀).toRingHom (K A ⊥ (augIdeal A (↥I →₀ A))) ≤ I
+    -- TODO: extract as equality in lemma
+    simp only [AlgHom.toRingHom_eq_coe, K, Ideal.map_bot, ge_iff_le,
       bot_le, sup_of_le_right, map_le_iff_le_comap, augIdeal_eq_span, span_le]
     rintro _ ⟨n, hn, b, _, rfl⟩
     simp only [SetLike.mem_coe, mem_comap, Algebra.TensorProduct.includeRight_apply,
@@ -405,6 +402,7 @@ def dpΨ (condTFree : CondTFree A) :
     all_goals
       apply dp_mem_augIdeal _ _ hm
 
+-- TODO: add to Mathlib (with _apply, as in Polynomial case)
 /-- `MvPolynomial.C` as an `AlgHom`. -/
 @[simps! apply]
 def _root_.MvPolynomial.CAlgHom {R : Type*} [CommRing R] {A : Type*} [CommRing A] [Algebra R A]
@@ -560,11 +558,11 @@ example (A : Type u) [CommRing A] {R S R' S' : Type u} [CommRing R] [CommRing S]
     {I' : Ideal R'} (hI' : DividedPowers I') (hf' : isDPMorphism hI hI' f) (hI'I : I' = I.map f)
     (g : S →ₐ[A] S') (hg : Function.Surjective g) {J : Ideal S} (hJ : DividedPowers J)
     {J' : Ideal S'} (hJ' : DividedPowers J') (hg' : isDPMorphism hJ hJ' g) (hJ'J : J' = J.map g)
-    (roby :
-      RingHom.ker (Algebra.TensorProduct.map f g) ⊓ K A I J =
-        Ideal.map (Algebra.TensorProduct.includeLeft (S := A)) (RingHom.ker f ⊓ I)
-          ⊔ Ideal.map (Algebra.TensorProduct.includeRight) (RingHom.ker g ⊓ J))
     (hRS : Condτ A hI hJ) : Condτ A hI' hJ' := by
+  have roby : RingHom.ker (Algebra.TensorProduct.map f g) ⊓ K A I J =
+        Ideal.map (Algebra.TensorProduct.includeLeft (S := A)) (RingHom.ker f ⊓ I)
+          ⊔ Ideal.map (Algebra.TensorProduct.includeRight) (RingHom.ker g ⊓ J) := by
+    sorry
   obtain ⟨hK, hK_pd⟩ := hRS
   simp only [Condτ]
   let fg := Algebra.TensorProduct.map f g
@@ -742,9 +740,27 @@ theorem condτ_rel (A : Type u) [CommRing A]
     simp only [Ideal.map_span] at this
     rw [this]
     -- we need a variant of `isSubDPIdeal_sup`
-    apply isSubDPIdeal_sup
-    exact isSubDPIdeal_map hI hK hK_pd.1 _ (isSubDPIdeal_ker hI hI' hf')
-    exact isSubDPIdeal_map hJ hK hK_pd.2 _ (isSubDPIdeal_ker hJ hJ' hg')
+    suffices this :
+      ((span (Algebra.TensorProduct.includeLeft (R := A) (S := A) (A := R) (B := S) ''
+        (↑(RingHom.ker f) ∩ (R₀ : Set R))) ⊔
+            span (⇑Algebra.TensorProduct.includeRight '' (↑(RingHom.ker g) ∩ ↑S₀)) ⊔
+          (span (⇑Algebra.TensorProduct.includeLeft '' (↑(RingHom.ker f) ∩ ↑I)) ⊔
+            span (⇑Algebra.TensorProduct.includeRight '' (↑(RingHom.ker g) ∩ ↑J)))) ⊓
+        K A I J) = ((span (Algebra.TensorProduct.includeLeft (R := A) (S := A) (A := R) (B := S) ''
+          (↑(RingHom.ker f) ∩ ↑I)) ⊔
+        span (⇑Algebra.TensorProduct.includeRight '' (↑(RingHom.ker g) ∩ ↑J)))) by
+      rw [this]
+      rw [← Ideal.map_span]
+      apply isSubDPIdeal_sup
+      apply isSubDPIdeal_map hI hK hK_pd.1 _ -- (isSubDPIdeal_ker hI hI' ?_)
+      have : span (↑(RingHom.ker f) ∩ ↑I) = RingHom.ker f ⊓ I := sorry
+      rw [this]
+      apply isSubDPIdeal_ker hI hI' hfDP
+      sorry/- apply isSubDPIdeal_map hJ hK hK_pd.2 _ -- (isSubDPIdeal_ker hI hI' ?_)
+      have : span (↑(RingHom.ker g) ∩ ↑J) = RingHom.ker g ⊓ J := sorry
+      rw [this]
+      apply isSubDPIdeal_ker hJ hJ' hgDP -/
+    sorry
   rw [hK_map]
   use DividedPowers.Quotient.OfSurjective.dividedPowers hK s_fg hK'_pd
   constructor
@@ -928,7 +944,7 @@ theorem condQ_holds (A : Type*) [CommRing A] [DecidableEq A] : CondQ A :=
 #align divided_power_algebra.cond_Q_holds DividedPowerAlgebra.condQ_holds
 
 theorem condT_holds (A : Type*) [CommRing A] [DecidableEq A] : CondT A :=
-  condQ_and_condTFree_imply_condT A (condQ_holds A) (condTFree_holds A)
+  sorry --condQSplit_and_condTFree_imply_condT A (condQ_holds A) (condTFree_holds A)
 #align divided_power_algebra.cond_T_holds DividedPowerAlgebra.condT_holds
 
 end Proofs
@@ -1020,89 +1036,3 @@ theorem roby_prop_8 (R : Type u) [DecidableEq R] [CommRing R]
 end DividedPowerAlgebra
 
 end Roby
-#exit
-/-    let T₀ : Subalgebra A (R ⊗[A] S) := Subalgebra.map
-      (Algebra.TensorProduct.map R₀.val S₀.val) (⊤  : Subalgebra A (R₀ ⊗[A] S₀))
-  have hKT₀ : Ideal.IsAugmentation T₀ (K A I J) := by
-    apply IsCompl.mk
-    · simp only [Submodule.disjoint_def]
-      intro x hx hxK
-      rw [Subalgebra.mem_toSubmodule, Algebra.mem_bot] at hx
-      obtain ⟨⟨x, hx⟩, rfl⟩ := hx
-      simp only [Algebra.map_top, AlgHom.mem_range, T₀] at hx
-      obtain ⟨x, rfl⟩ := hx
-      simp only [K, Submodule.restrictScalars_mem] at hxK
-      suffices x = 0 by simp [this]; rfl
-      sorry
-    · sorry
-  have := Algebra.TensorProduct.map_ker _ _ hf hg
-  have hkerf := RingHom.ker_eq_span_union A R R₀ I hIR₀ R' R₀' I' hIR₀' f
-    (by simp only [← hfR₀, Subalgebra.coe_map, le_refl])
-    (by simp only [← hfI, Ideal.map, Set.le_eq_subset]
-        apply Submodule.subset_span)
-  have hkerg := RingHom.ker_eq_span_union A S S₀ J hJS₀ S' S₀' J' hJS₀' g
-    (by simp only [← hgS₀, Subalgebra.coe_map, le_refl])
-    (by simp only [← hgJ, Ideal.map, Set.le_eq_subset]
-        apply Submodule.subset_span)
-  simp only [submodule_span_eq] at hkerf hkerg
-  -- rw [Algebra.TensorProduct.map_ker _ _ hf hg]
-  rw [hkerf, hkerg] at this
-  simp only [Ideal.span_union, Ideal.map_sup] at this
-  rw [sup_sup_sup_comm] at this
-
-
-  · apply le_antisymm
-    · sorry
-    · simp only [le_inf_iff, sup_le_iff]
-      constructor
-      constructor <;> {
-        rw [Ideal.map_le_iff_le_comap]
-        rintro x ⟨hx, _⟩
-        simp only [SetLike.mem_coe, RingHom.mem_ker] at hx
-        simp only [mem_comap, Algebra.TensorProduct.includeLeft_apply, RingHom.mem_ker,
-          Algebra.TensorProduct.map_tmul, map_one, hx, TensorProduct.zero_tmul,
-            TensorProduct.tmul_zero, Algebra.TensorProduct.includeRight_apply]  }
-      constructor
-      · rw [Ideal.map_le_iff_le_comap]
-        rintro x ⟨hx, hx'⟩
-        simp only [SetLike.mem_coe] at hx'
-        simp only [mem_comap, Algebra.TensorProduct.includeLeft_apply]
-        exact mem_sup_left (Ideal.mem_map_of_mem Algebra.TensorProduct.includeLeft hx')
-      · rw [Ideal.map_le_iff_le_comap]
-        rintro x ⟨hx, hx'⟩
-        simp only [SetLike.mem_coe] at hx'
-        simp only [mem_comap, Algebra.TensorProduct.includeRight_apply]
-        exact mem_sup_right (Ideal.mem_map_of_mem Algebra.TensorProduct.includeRight hx')
-
-
-    -- rw [Algebra.TensorProduct.map_ker _ _ hf hg]
-  -- Il faudra appliquer la Proposition 4 de Roby,
-  -- en s'étant assuré que les algèbres R et S sont scindées
-  /-
-    have : ∃ (R₀ : Subalgebra A R),
-      IsCompl (Subalgebra.toSubmodule R₀) (I.restrictScalars A)
-      ∧ RingHom.ker f = (RingHom.ker f ⊓ I) ⊔
-        (Ideal.map R₀.val (Ideal.comap R₀.val (RingHom.ker f))) := sorry
-    obtain ⟨R₀, hR₀, hkerf⟩ := this
-    have : ∃ (S₀ : Subalgebra A S),
-      IsCompl (Subalgebra.toSubmodule S₀) (J.restrictScalars A)
-      ∧ RingHom.ker g = (RingHom.ker g ⊓ J) ⊔
-        (Ideal.map S₀.val (Ideal.comap S₀.val (RingHom.ker g))) := sorry
-    obtain ⟨S₀, hS₀, hkerg⟩ := this
-    conv_lhs => rw [hkerf, hkerg]
-    rw [Ideal.map_sup, Ideal.map_sup, K]
-    simp only [Ideal.map_coe_toRingHom]
-    simp only [Ideal.map_map]
-    simp only [sup_assoc]
-
-  -- still inconclusive
-  -- on paper, one split `R = R₀ ⊕ I`, `S = S₀ ⊕ J`,
-  -- this decomposes `R ⊗ S` as a sum of 4 terms
-  -- one needs to explain that `ker f = (ker f ∩ R₀) ⊕ (ker f ∩ I)
-  -- and similarly for `ker g`,
-  -- which is supposed to follow from `hkerf`, if well formulated
-  --
-  -/
-  · apply hT_free
-    exact hR_free
-    exact hS_free -/
