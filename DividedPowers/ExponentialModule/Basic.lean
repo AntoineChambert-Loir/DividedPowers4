@@ -309,6 +309,22 @@ theorem isExponential_neg_mul_self_eq_one {f : R⟦X⟧} (hf : IsExponential f) 
     (scale (-1) f) * f = 1 := by
   rw [mul_comm, isExponential_self_mul_neg_eq_one hf]
 
+variable (σ : Type*)
+theorem MvPowerSeries.isUnit_iff_constantCoeff (f : MvPowerSeries σ R) :
+    IsUnit f ↔ IsUnit (MvPowerSeries.constantCoeff σ R f) := by
+  constructor
+  · rintro ⟨u, hu⟩
+    rw [isUnit_iff_exists_inv]
+    use MvPowerSeries.constantCoeff σ R (u⁻¹ : (MvPowerSeries σ R)ˣ)
+    rw [← map_mul, ← hu, Units.mul_inv, map_one]
+  · rintro ⟨u, hu⟩
+    rw [isUnit_iff_exists_inv]
+    exact ⟨f.invOfUnit u, MvPowerSeries.mul_invOfUnit f u hu.symm⟩
+
+example (f : PowerSeries R) :
+    IsUnit f ↔ IsUnit (constantCoeff R f) := by
+  exact MvPowerSeries.isUnit_iff_constantCoeff Unit f
+
 theorem isExponential_invOfUnit_eq_scale_neg_one {f : R⟦X⟧} (hf : IsExponential f) :
     (f.invOfUnit 1) = scale (-1) f := by
   sorry
