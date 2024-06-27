@@ -167,15 +167,15 @@ def Condτ (A : Type u) [CommRing A] {R : Type u} [CommRing R] [Algebra A R]
     isDPMorphism hI hK (Algebra.TensorProduct.includeLeft : R →ₐ[A] R ⊗[A] S)
     ∧ isDPMorphism hJ hK (Algebra.TensorProduct.includeRight : S →ₐ[A] R ⊗[A] S)
 
-/-- Existence of divided powers on the ideal of a tensor product
-  of any two divided power algebras (universalization of `Condτ`)-/
+/- Existence of divided powers on the ideal of a tensor product
+  of any two divided power algebras (universalization of `Condτ`)
 def CondT (A : Type u) [CommRing A] : Prop :=
   ∀ (R : Type u) [CommRing R] [Algebra A R] {I : Ideal R} (hI : DividedPowers I)
-    (S : Type u) [CommRing S] [Algebra A S] {J : Ideal S} (hJ : DividedPowers J), Condτ A hI hJ
+    (S : Type u) [CommRing S] [Algebra A S] {J : Ideal S} (hJ : DividedPowers J), Condτ A hI hJ -/
 
 /-- Existence of divided powers on the ideal of a tensor product
   of any two *split* divided power algebras (universalization of `Condτ`)-/
-def CondTSplit (A : Type u) [CommRing A] : Prop :=
+def CondT (A : Type u) [CommRing A] : Prop :=
   ∀ (R : Type u) [CommRing R] [Algebra A R] {I : Ideal R} (hI : DividedPowers I)
     {R₀ : Subalgebra A R} (_ : I.IsAugmentation R₀) (S : Type u) [CommRing S] [Algebra A S]
     {J : Ideal S} (hJ : DividedPowers J) {S₀ : Subalgebra A S} (_ : J.IsAugmentation S₀),
@@ -451,6 +451,7 @@ lemma map_psi_augIdeal_eq (M : Type*) [AddCommGroup M] [Module A M] [Module.Free
 
 -- set_option trace.profiler true -- < 6 sec here!
 -- Roby, lemma 4
+variable {A} in
 theorem _root_.DividedPowerAlgebra.T_free_and_D_to_QSplit
     (condTFree: CondTFree A) (condD : CondD A) : CondQSplit A := by
   intro S _ _ I hI S₀ hIS₀
@@ -861,8 +862,6 @@ theorem roby_prop_4
     · apply Submodule.mem_sup_right
       exact ⟨mul_mem_right (y + z) I hb, mul_mem_left J b (add_mem hy.right hz.right)⟩
 
-
-
 theorem Ideal.map_coe_toRingHom
   {A : Type*} [CommRing A] {R S : Type*} [CommRing R] [CommRing S]
   [Algebra A R] [Algebra A S] (f : R →ₐ[A] S)
@@ -881,8 +880,8 @@ example (A : Type*) [CommRing A]
     Ideal.IsAugmentation (T₀) (K A I J) := sorry
 
 -- Roby, lemma 7
-theorem condQSplit_and_condTFree_imply_condTSplit (A : Type*) [CommRing A]
-    (hQ : CondQSplit A) (hT_free : CondTFree A) : CondTSplit A := by
+theorem condQSplit_and_condTFree_imply_condT (A : Type*) [CommRing A]
+    (hQ : CondQSplit A) (hT_free : CondTFree A) : CondT A := by
   intro R' _ _ I' hI' R₀' hIR₀' S' _ _ J' hJ' S₀' hJS₀'
   simp only [CondQSplit] at hQ
 
@@ -891,84 +890,51 @@ theorem condQSplit_and_condTFree_imply_condTSplit (A : Type*) [CommRing A]
   apply condτ_rel A hIR₀ hI hJS₀ hJ hIR₀' hI' hJS₀' hJ' f hf hfDP hfR₀.symm hfI.symm g hg hgDP hgS₀.symm hgJ.symm
   apply hT_free R
 
-#align divided_power_algebra.cond_Q_and_cond_T_free_imply_cond_T
-  DividedPowerAlgebra.condQSplit_and_condTFree_imply_condTSplit
 
 -- Roby, lemma 8
-theorem condT_and_condD_imply_cond_D' (A : Type*) [CommRing A] [DecidableEq A]
+theorem condT_and_condD_imply_condD (A : Type*) [CommRing A] [DecidableEq A]
     (hT : CondT A) (hD : CondD A)
     (R : Type*) [CommRing R]  [DecidableEq R] [Algebra A R] :
     CondD R :=
   sorry
-#align divided_power_algebra.cond_T_and_cond_D_imply_cond_D'
-  DividedPowerAlgebra.condT_and_condD_imply_cond_D'
 
--- Roby, lemma 9 is in roby9
+
+-- Roby, lemma 9 is in roby9 (other file)
 -- Roby, lemma 10
-theorem condT_implies_cond_T'_free (A : Type*) [CommRing A] (R : Type*) [CommRing R] [Algebra A R]
+theorem condT_implies_condTFree (A : Type*) [CommRing A] (R : Type*) [CommRing R] [Algebra A R]
     (hA : CondT A) : CondTFree R :=
   sorry
-#align divided_power_algebra.cond_T_implies_cond_T'_free
-  DividedPowerAlgebra.condT_implies_cond_T'_free
 
 -- Roby, lemma 11
 theorem condTFree_int : CondTFree ℤ :=
   sorry
-#align divided_power_algebra.cond_T_free_int DividedPowerAlgebra.condTFree_int
 
 -- Roby, lemma 12
 theorem condD_int : CondD ℤ :=
   sorry
 #align divided_power_algebra.cond_D_int DividedPowerAlgebra.condD_int
 
-theorem condQ_int : CondQSplit ℤ :=
-  T_free_and_D_to_QSplit ℤ condTFree_int condD_int
-#align divided_power_algebra.cond_Q_int DividedPowerAlgebra.condQ_int
+theorem condQSplit_int : CondQSplit ℤ :=
+  T_free_and_D_to_QSplit condTFree_int condD_int
 
 theorem condT_int : CondT ℤ :=
-  sorry
-  -- condQ_and_condTFree_imply_condT ℤ condQ_int condTFree_int
-#align divided_power_algebra.cond_T_int DividedPowerAlgebra.condT_int
+  condQSplit_and_condTFree_imply_condT ℤ condQSplit_int condTFree_int
 
 theorem condD_holds (A : Type*) [CommRing A] [DecidableEq A] : CondD A :=
-  condT_and_condD_imply_cond_D' ℤ condT_int condD_int A
-#align divided_power_algebra.cond_D_holds DividedPowerAlgebra.condD_holds
+  condT_and_condD_imply_condD ℤ condT_int condD_int A
 
 theorem condTFree_holds (A : Type*) [CommRing A] : CondTFree A :=
-  condT_implies_cond_T'_free ℤ A condT_int
-#align divided_power_algebra.cond_T_free_holds DividedPowerAlgebra.condTFree_holds
+  condT_implies_condTFree ℤ A condT_int
 
-theorem condQ_holds (A : Type*) [CommRing A] [DecidableEq A] : CondQ A :=
-  sorry
+theorem condQSplit_holds (A : Type*) [CommRing A] [DecidableEq A] : CondQSplit A :=
+  T_free_and_D_to_QSplit (condTFree_holds A) (condD_holds A)
+  --sorry
   -- T_free_and_D_to_Q A (condTFree_holds A) (condD_holds A)
-#align divided_power_algebra.cond_Q_holds DividedPowerAlgebra.condQ_holds
 
 theorem condT_holds (A : Type*) [CommRing A] [DecidableEq A] : CondT A :=
-  sorry --condQSplit_and_condTFree_imply_condT A (condQ_holds A) (condTFree_holds A)
-#align divided_power_algebra.cond_T_holds DividedPowerAlgebra.condT_holds
+  condQSplit_and_condTFree_imply_condT A (condQSplit_holds A) (condTFree_holds A)
 
 end Proofs
-
--- Old names
-theorem roby_δ (A : Type u) [CommRing A] [DecidableEq A] (M : Type u) [AddCommGroup M]
-    [Module A M] : DividedPowerAlgebra.Condδ A M :=
-  condD_holds A M
-#align divided_power_algebra.roby_δ DividedPowerAlgebra.roby_δ
-
-set_option linter.uppercaseLean3 false
-theorem roby_D (A : Type*) [CommRing A] [DecidableEq A] : DividedPowerAlgebra.CondD A :=
-  condD_holds A
-#align divided_power_algebra.roby_D DividedPowerAlgebra.roby_D
-
-theorem roby_τ (A R S : Type u) [CommRing A] [DecidableEq A] [CommRing R] [Algebra A R]
-    [CommRing S] [Algebra A S]
-    {I : Ideal R} {J : Ideal S} (hI : DividedPowers I) (hJ : DividedPowers J) : Condτ A hI hJ :=
-  condT_holds A R hI S hJ
-#align divided_power_algebra.roby_τ DividedPowerAlgebra.roby_τ
-
-theorem roby_T (A : Type*) [CommRing A] [DecidableEq A] : CondT A :=
-  condT_holds A
-#align divided_power_algebra.roby_T DividedPowerAlgebra.roby_T
 
 open DividedPowerAlgebra
 
@@ -976,19 +942,17 @@ open DividedPowerAlgebra
 -- Part of Roby65 Thm 1
 def dividedPowers' (A : Type u) [CommRing A] [DecidableEq A] (M : Type u) [AddCommGroup M]
     [Module A M] : DividedPowers (augIdeal A M) :=
-  (roby_D A M).choose
-#align divided_power_algebra.divided_powers' DividedPowerAlgebra.dividedPowers'
+  (condD_holds A M).choose
 
 theorem dpow_ι (A : Type u) [CommRing A] [DecidableEq A] (M : Type u) [AddCommGroup M] [Module A M]
     (x : M) (n : ℕ) : dpow (dividedPowers' A M) n (ι A M x) = dp A n x :=
-  (roby_D A M).choose_spec n x
+  (condD_holds A M).choose_spec n x
 #align divided_power_algebra.dpow_ι DividedPowerAlgebra.dpow_ι
 
 theorem dp_comp (A : Type u) [CommRing A] [DecidableEq A] (M : Type u) [AddCommGroup M] [Module A M]
     (x : M) {n : ℕ} (m : ℕ) (hn : n ≠ 0) :
     dpow (dividedPowers' A M) m (dp A n x) = ↑(mchoose m n) * dp A (m * n) x := by
-  erw [← (roby_D A M).choose_spec, dpow_comp _ m hn (ι_mem_augIdeal A M x), dpow_ι]
-#align divided_power_algebra.dp_comp DividedPowerAlgebra.dp_comp
+  erw [← (condD_holds A M).choose_spec, dpow_comp _ m hn (ι_mem_augIdeal A M x), dpow_ι]
 
 theorem roby_theorem_2 (R : Type u) [CommRing R]  [DecidableEq R]
     (M : Type u) [AddCommGroup M] [Module R M]
@@ -998,22 +962,22 @@ theorem roby_theorem_2 (R : Type u) [CommRing R]  [DecidableEq R]
   apply cond_D_uniqueness
   intro m n
   rw [dpow_ι]
-#align divided_power_algebra.roby_theorem_2 DividedPowerAlgebra.roby_theorem_2
 
--- TODO: fix the last two theorems
-theorem lift'_eq_dp_lift (R : Type u) [CommRing R]
+lemma ι_comp_mem_augIdeal (R : Type u) [CommRing R]
+    {M : Type v} [AddCommGroup M] [Module R M]
+    (S : Type w) [CommRing S] [DecidableEq S] [Algebra R S]
+    {N : Type w} [AddCommGroup N] [Module R N] [Module S N] [IsScalarTower R S N] (f : M →ₗ[R] N)
+    (m : M) : ((ι S N).restrictScalars R).comp f m ∈ augIdeal S N := by
+  simp only [LinearMap.coe_comp, LinearMap.coe_restrictScalars,
+      Function.comp_apply, ι_mem_augIdeal S N (f m)]
+
+theorem lift_eq_DPLift (R : Type u) [CommRing R]
     {M : Type v} [AddCommGroup M] [Module R M]
     (S : Type w) [CommRing S] [DecidableEq S] [Algebra R S]
     {N : Type w} [AddCommGroup N] [Module R N] [Module S N] [IsScalarTower R S N] (f : M →ₗ[R] N) :
-    ∃ hφ : ∀ m, ((ι S N).restrictScalars R).comp f m ∈ augIdeal S N,
       LinearMap.lift R S f =
         DividedPowerAlgebra.lift (dividedPowers' S N)
-          (((ι S N).restrictScalars R).comp f) hφ := by
-  have hφ : ∀ m, ((ι S N).restrictScalars R).comp f m ∈ augIdeal S N := by
-    intro m
-    simp only [LinearMap.coe_comp, LinearMap.coe_restrictScalars,
-      Function.comp_apply, ι_mem_augIdeal S N (f m)]
-  use hφ
+          (((ι S N).restrictScalars R).comp f) (ι_comp_mem_augIdeal R S f) := by
   apply DividedPowerAlgebra.ext
   intro n m
   simp only [liftAlgHom_apply_dp, LinearMap.coe_comp, LinearMap.coe_restrictScalars,
@@ -1029,9 +993,8 @@ theorem roby_prop_8 (R : Type u) [DecidableEq R] [CommRing R]
     {N : Type u} [AddCommGroup N] [Module R N] [Module S N]
     [IsScalarTower R S N] (f : M →ₗ[R] N) :
     isDPMorphism (dividedPowers' R M) (dividedPowers' S N) (LinearMap.lift R S f) := by
-  obtain ⟨hφ, phφ'⟩ := lift'_eq_dp_lift R S f
-  convert roby_theorem_2 R M (dividedPowers' S N) hφ
-#align divided_power_algebra.roby_prop_8 DividedPowerAlgebra.roby_prop_8
+  rw [lift_eq_DPLift R S f]
+  exact roby_theorem_2 R M (dividedPowers' S N) (ι_comp_mem_augIdeal R S f)
 
 end DividedPowerAlgebra
 
