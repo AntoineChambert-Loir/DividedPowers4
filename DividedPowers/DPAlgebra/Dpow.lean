@@ -40,7 +40,7 @@ for which `dpow n (DividedPower.linearEquivDegreeOne m) = dp n m` for any `m : M
 where `linearEquivDegreeOne` is the `LinearEquiv`  from `M`
 to the degree 1 part of `DividedPowerAlgebra R M`
 
-- `on_dp_algebra_unique`: uniqueness of this structure
+- `on_dpalgebra_unique`: uniqueness of this structure
 
 ## Reference
 
@@ -92,7 +92,7 @@ namespace DividedPowerAlgebra
 open DividedPowerAlgebra
 
 /-- Lemma 2 of Roby 65. -/
-theorem on_dp_algebra_unique (h h' : DividedPowers (augIdeal R M))
+theorem on_dpalgebra_unique (h h' : DividedPowers (augIdeal R M))
     (h1 : ∀ (n : ℕ) (x : M), h.dpow n (ι R M x) = dp R n x)
     (h1' : ∀ (n : ℕ) (x : M), h'.dpow n (ι R M x) = dp R n x) : h = h' := by
   apply DividedPowers.dp_uniqueness_self h' h (augIdeal_eq_span R M)
@@ -185,7 +185,6 @@ end TensorProduct
 
 section free
 
--- MI: I have changed the Module.Free arguments from explicit to instances.
 /-- Existence of divided powers on the canonical ideal of a tensor product of divided power
   algebras which are free as modules -/
 def CondTFree (A : Type u) [CommRing A] : Prop :=
@@ -897,7 +896,6 @@ theorem condT_and_condD_imply_condD (A : Type*) [CommRing A] [DecidableEq A]
     (R : Type*) [CommRing R]  [DecidableEq R] [Algebra A R] :
     CondD R :=
   sorry
-
 
 -- Roby, lemma 9 is in roby9 (other file)
 -- Roby, lemma 10
