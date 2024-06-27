@@ -17,13 +17,11 @@ theorem DirectSum.mk_apply_of_mem {s : Finset ι} {f : ∀ i : (↑s : Set ι), 
     (hn : n ∈ s) : DirectSum.mk β s f n = f ⟨n, hn⟩ := by
   dsimp only [Finset.coe_sort_coe, mk, AddMonoidHom.coe_mk, ZeroHom.coe_mk, DFinsupp.mk_apply]
   rw [dif_pos hn]
-#align direct_sum.mk_apply_of_mem DirectSum.mk_apply_of_mem
 
 theorem DirectSum.mk_apply_of_not_mem {s : Finset ι} {f : ∀ i : (↑s : Set ι), β i.val} {n : ι}
     (hn : n ∉ s) : DirectSum.mk β s f n = 0 := by
   dsimp only [Finset.coe_sort_coe, mk, AddMonoidHom.coe_mk, ZeroHom.coe_mk, DFinsupp.mk_apply]
   rw [dif_neg hn]
-#align direct_sum.mk_apply_of_not_mem DirectSum.mk_apply_of_not_mem
 
 end Mk
 
