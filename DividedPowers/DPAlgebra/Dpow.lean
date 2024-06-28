@@ -194,7 +194,7 @@ def CondTFree (A : Type u) [CommRing A] : Prop :=
 
 /-- Existence, for any algebra with divided powers,
   of an over-algebra with divided powers which is free as a module -/
-def CondQ (A : Type u) [CommRing A] : Prop :=
+def CondQ' (A : Type u) [CommRing A] : Prop :=
   ∀ (R : Type u) [CommRing R] [Algebra A R] (I : Ideal R) (hI : DividedPowers I),
     ∃ (T : Type u) (_ : CommRing T) (_ : Algebra A T) (_ : Module.Free A T) (f : T →ₐ[A] R)
       (J : Ideal T) (hJ : DividedPowers J),
@@ -202,7 +202,7 @@ def CondQ (A : Type u) [CommRing A] : Prop :=
 
 /-- Existence, for any split algebra with divided powers, of an over-algebra with split divided
   powers which is free as a module -/
-def CondQSplit (A : Type u) [CommRing A] : Prop :=
+def CondQ (A : Type u) [CommRing A] : Prop :=
   ∀ (R : Type u) [CommRing R] [Algebra A R] (I : Ideal R) (hI : DividedPowers I)
     (R₀ : Subalgebra A R) (_ : Ideal.IsAugmentation R₀ I),
     ∃ (T : Type u) (_ : CommRing T) (_ : Algebra A T) (J : Ideal T) (hJ : DividedPowers J)
@@ -451,8 +451,8 @@ lemma map_psi_augIdeal_eq (M : Type*) [AddCommGroup M] [Module A M] [Module.Free
 -- set_option trace.profiler true -- < 6 sec here!
 -- Roby, lemma 4
 variable {A} in
-theorem _root_.DividedPowerAlgebra.T_free_and_D_to_QSplit
-    (condTFree: CondTFree A) (condD : CondD A) : CondQSplit A := by
+theorem _root_.DividedPowerAlgebra.condTFree_and_condD_to_condQ
+    (condTFree: CondTFree A) (condD : CondD A) : CondQ A := by
   intro S _ _ I hI S₀ hIS₀
   let M := I →₀ A
   let R := MvPolynomial S₀ A
@@ -488,7 +488,7 @@ theorem _root_.DividedPowerAlgebra.T_free_and_D_to_QSplit
   · infer_instance -- tensor product of free modules is free
 
 -- the freeness of DividedPowerAlgebra of a free module still uses `sorry`
-#print axioms DividedPowerAlgebra.T_free_and_D_to_QSplit
+#print axioms DividedPowerAlgebra.condTFree_and_condD_to_condQ
 
 end roby4
 
@@ -879,10 +879,10 @@ example (A : Type*) [CommRing A]
     Ideal.IsAugmentation (T₀) (K A I J) := sorry
 
 -- Roby, lemma 7
-theorem condQSplit_and_condTFree_imply_condT (A : Type*) [CommRing A]
-    (hQ : CondQSplit A) (hT_free : CondTFree A) : CondT A := by
+theorem CondQ_and_condTFree_imply_condT (A : Type*) [CommRing A]
+    (hQ : CondQ A) (hT_free : CondTFree A) : CondT A := by
   intro R' _ _ I' hI' R₀' hIR₀' S' _ _ J' hJ' S₀' hJS₀'
-  simp only [CondQSplit] at hQ
+  simp only [CondQ] at hQ
 
   obtain ⟨R, _, _, I, hI, R₀, hIR₀, f, hfI, hfR₀, hf, hfDP, hR_free⟩ := hQ R' I' hI' R₀' hIR₀'
   obtain ⟨S, _, _, J, hJ, S₀, hJS₀, g, hgJ, hgS₀, hg, hgDP, hS_free⟩ := hQ S' J' hJ' S₀' hJS₀'
@@ -912,11 +912,11 @@ theorem condD_int : CondD ℤ :=
   sorry
 #align divided_power_algebra.cond_D_int DividedPowerAlgebra.condD_int
 
-theorem condQSplit_int : CondQSplit ℤ :=
-  T_free_and_D_to_QSplit condTFree_int condD_int
+theorem CondQ_int : CondQ ℤ :=
+  condTFree_and_condD_to_condQ condTFree_int condD_int
 
 theorem condT_int : CondT ℤ :=
-  condQSplit_and_condTFree_imply_condT ℤ condQSplit_int condTFree_int
+  CondQ_and_condTFree_imply_condT ℤ CondQ_int condTFree_int
 
 theorem condD_holds (A : Type*) [CommRing A] [DecidableEq A] : CondD A :=
   condT_and_condD_imply_condD ℤ condT_int condD_int A
@@ -924,13 +924,13 @@ theorem condD_holds (A : Type*) [CommRing A] [DecidableEq A] : CondD A :=
 theorem condTFree_holds (A : Type*) [CommRing A] : CondTFree A :=
   condT_implies_condTFree ℤ A condT_int
 
-theorem condQSplit_holds (A : Type*) [CommRing A] [DecidableEq A] : CondQSplit A :=
-  T_free_and_D_to_QSplit (condTFree_holds A) (condD_holds A)
+theorem CondQ_holds (A : Type*) [CommRing A] [DecidableEq A] : CondQ A :=
+  condTFree_and_condD_to_condQ (condTFree_holds A) (condD_holds A)
   --sorry
   -- T_free_and_D_to_Q A (condTFree_holds A) (condD_holds A)
 
 theorem condT_holds (A : Type*) [CommRing A] [DecidableEq A] : CondT A :=
-  condQSplit_and_condTFree_imply_condT A (condQSplit_holds A) (condTFree_holds A)
+  CondQ_and_condTFree_imply_condT A (CondQ_holds A) (condTFree_holds A)
 
 end Proofs
 

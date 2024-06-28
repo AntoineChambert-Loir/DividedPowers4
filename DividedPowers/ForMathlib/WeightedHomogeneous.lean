@@ -184,6 +184,8 @@ theorem weightedHomogeneousComponent_eq_zero_of_not_mem [DecidableEq M]
 
 variable (R)
 
+#check DirectSum.mk_apply_of_mem
+
 /-- The `decompose'` argument of `weightedDecomposition`.  -/
 def decompose' [DecidableEq M] := fun φ : MvPolynomial σ R =>
   DirectSum.mk (fun i : M => ↥(weightedHomogeneousSubmodule R w i))
@@ -199,10 +201,11 @@ theorem decompose'_apply [DecidableEq M] (φ : MvPolynomial σ R) (m : M) :
     weightedHomogeneousComponent_eq_zero_of_not_mem w φ m hm]
 
 /-- Given a weight w, the decomposition of mv_polynomial σ R into weighted homogeneous submodules -/
-def weightedDecomposition [DecidableEq σ] [DecidableEq R] [DecidableEq M] :
+def weightedDecomposition /- [DecidableEq σ] [DecidableEq R]-/ [DecidableEq M] :
   DirectSum.Decomposition (weightedHomogeneousSubmodule R w) where
   decompose' := decompose' R w
   left_inv φ := by
+    classical
     conv_rhs => rw [← sum_weightedHomogeneousComponent w φ]
     rw [← DirectSum.sum_support_of (fun m => ↥(weightedHomogeneousSubmodule R w m))
         (decompose' R w φ)]
@@ -215,13 +218,14 @@ def weightedDecomposition [DecidableEq σ] [DecidableEq R] [DecidableEq M] :
     conv_lhs => rw [← Subtype.coe_inj]
     rw [decompose'_apply, Submodule.coe_zero]
   right_inv x := by
+    classical
     apply DFinsupp.ext
     intro m
     rw [← Subtype.coe_inj, decompose'_apply]
     exact weightedHomogeneousComponent_directSum R w x m
 
 /-- Given a weight, `MvPolynomial` as a graded algebra -/
-def weightedGradedAlgebra [DecidableEq σ] [DecidableEq R] [DecidableEq M] :
+def weightedGradedAlgebra /- [DecidableEq σ] [DecidableEq R] -/ [DecidableEq M] :
     GradedAlgebra (weightedHomogeneousSubmodule R w) where
   toDecomposition := weightedDecomposition R w
   toGradedMonoid  := inferInstance

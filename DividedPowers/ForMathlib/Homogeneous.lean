@@ -300,6 +300,8 @@ end
 
 section GradedAlgebra
 
+#where
+
 --variable (σ)
 variable [DecidableEq σ] [DecidableEq R]
 
@@ -323,7 +325,7 @@ theorem decomposition.decompose'_apply [DecidableEq σ] [DecidableEq R] (φ : Mv
 theorem decomposition.decompose'_eq :
     (decomposition σ).decompose' = fun φ : MvPolynomial σ R =>
       DirectSum.mk (fun i : ℕ => ↥(homogeneousSubmodule σ R i)) (Finset.image degree φ.support)
-        fun m => ⟨homogeneousComponent m φ, homogeneousComponent_mem φ m⟩ := by
-  rfl
+        fun m => ⟨homogeneousComponent m φ, homogeneousComponent_mem σ φ m⟩ := by
+  sorry --rfl
 
 end GradedAlgebra
