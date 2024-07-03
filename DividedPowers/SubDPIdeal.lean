@@ -14,65 +14,49 @@ theorem Submodule.iSup_eq_span' {R M : Type _} [Semiring R] [AddCommMonoid M] [M
   {ι : Sort _} (p : ι → Submodule R M) (h : ι → Prop) :
   (⨆ (i : ι) (_ : h i), p i) = Submodule.span R (⋃ (i : ι) (_ : h i), ↑(p i)) := by
   simp_rw [← Submodule.iSup_span, Submodule.span_eq]
-#align submodule.supr_eq_span' Submodule.iSup_eq_span'
 
+-- Is any of this is in Mathlib? For Submodule, maybe?
 namespace Subideal
 
 variable {A : Type _} [CommSemiring A] {I : Ideal A}
 
 def galoisCoinsertion :
-  GaloisCoinsertion
-    (fun J : { J : Ideal A // J ≤ I } => (J : Ideal A))
+  GaloisCoinsertion (fun J : { J : Ideal A // J ≤ I } => (J : Ideal A))
     (fun J : Ideal A => ⟨J ⊓ I, inf_le_right⟩) :=
-  GaloisCoinsertion.monotoneIntro
-    (fun J J' h => mk_le_mk.mpr (inf_le_inf_right I h))
-    (fun J J' h => h)
-    (fun J => inf_le_left)
-    (fun ⟨J, hJ⟩ => by simp only [ge_iff_le, mk.injEq, inf_eq_left]; exact hJ)
-#align subideal.galois_coinsertion Subideal.galoisCoinsertion
+  GaloisCoinsertion.monotoneIntro (fun _ _ h => mk_le_mk.mpr (inf_le_inf_right I h))
+    (fun _ _ h => h) (fun _ => inf_le_left)
+    (fun ⟨J, hJ⟩ => by simp only [ge_iff_le, mk.injEq, inf_eq_left, hJ])
 
 instance : CompleteLattice { J : Ideal A // J ≤ I } :=
   GaloisCoinsertion.liftCompleteLattice galoisCoinsertion
 
 theorem top_def : (⟨I, le_refl I⟩ : { J : Ideal A // J ≤ I }) = ⊤ :=
   eq_top_iff.mpr (⊤ : { J : Ideal A // J ≤ I }).property
-#align subideal.top_def Subideal.top_def
 
 theorem bot_def : (⟨⊥, bot_le⟩ : { J : Ideal A // J ≤ I }) = ⊥ := by rw [mk_bot]
-#align subideal.bot_def Subideal.bot_def
 
 theorem inf_def (J J' : { J : Ideal A // J ≤ I }) :
   (J ⊓ J' : { J : Ideal A // J ≤ I }) =
     ⟨(J : Ideal A) ⊓ (J' : Ideal A), inf_le_of_left_le J.2⟩ := by
   ext x
   exact ⟨fun ⟨h, _⟩ => h, fun h => ⟨h, J.property h.left⟩⟩
-#align subideal.inf_def Subideal.inf_def
 
 -- `coe` has been replaced by `val`
 example {α : Type _} (p : α → Prop) : { a // p a} → α := fun ⟨a, _⟩ => a
 
 theorem sInf_def (S : Set { J : Ideal A // J ≤ I }) :
-  (sInf S : { J : Ideal A // J ≤ I }) =
-    ⟨sInf (val '' S) ⊓ I, inf_le_right⟩ := by
-  ext x
-  rfl
-#align subideal.Inf_def Subideal.sInf_def
+    (sInf S : { J : Ideal A // J ≤ I }) = ⟨sInf (val '' S) ⊓ I, inf_le_right⟩ := rfl
 
 theorem sup_def (J J' : { J : Ideal A // J ≤ I }) :
-    (J ⊔ J' : { J : Ideal A // J ≤ I }) =
-      ⟨sInf {B | (J : Ideal A) ≤ B ∧ (J' : Ideal A) ≤ B}, sInf_le_of_le ⟨J.2, J'.2⟩ (le_refl I)⟩ :=
-  by
+    (J ⊔ J' : { J : Ideal A // J ≤ I }) = ⟨sInf {B | (J : Ideal A) ≤ B ∧ (J' : Ideal A) ≤ B},
+      sInf_le_of_le ⟨J.2, J'.2⟩ (le_refl I)⟩ := by
   ext x
-  refine' ⟨fun ⟨h, _⟩ => h, fun h => ⟨h, _⟩⟩
+  refine ⟨fun ⟨h, _⟩ => h, fun h => ⟨h, ?_⟩⟩
   rw [coe_mk, Submodule.mem_sInf] at h
   exact h I ⟨J.2, J'.2⟩
-#align subideal.sup_def Subideal.sup_def
 
 theorem sSup_def (S : Set { J : Ideal A // J ≤ I }) :
-    (sSup S : { J : Ideal A // J ≤ I }) = ⟨sSup (val '' S) ⊓ I, inf_le_right⟩ := by
-  ext x
-  rfl
-#align subideal.Sup_def Subideal.sSup_def
+    (sSup S : { J : Ideal A // J ≤ I }) = ⟨sSup (val '' S) ⊓ I, inf_le_right⟩ := rfl
 
 end Subideal
 
@@ -80,11 +64,9 @@ namespace DividedPowers
 
 /-- The structure of a sub-dp-ideal of a dp-ideal -/
 structure isSubDPIdeal {A : Type _} [CommSemiring A] {I : Ideal A} (hI : DividedPowers I)
-  (J : Ideal A) : Prop where
+    (J : Ideal A) : Prop where
   isSubIdeal : J ≤ I
   dpow_mem : ∀ n (_ : n ≠ 0), ∀ j ∈ J, hI.dpow n j ∈ J
-#align divided_powers.is_sub_pd_ideal DividedPowers.isSubDPIdeal
-
 section isSubDPIdeal
 
 variable {A : Type _} [CommSemiring A] {I : Ideal A} (hI : DividedPowers I)
@@ -92,23 +74,18 @@ variable {A : Type _} [CommSemiring A] {I : Ideal A} (hI : DividedPowers I)
 def isSubDPIdeal.dividedPowers {J : Ideal A} (hJ : isSubDPIdeal hI J) [∀ x, Decidable (x ∈ J)] :
     DividedPowers J where
   dpow n x := if x ∈ J then hI.dpow n x else 0
-  dpow_null {n x} hx := by dsimp; rw [if_neg hx]
-  dpow_zero {x} hx := by dsimp ; rw [if_pos hx] ; exact hI.dpow_zero (hJ.isSubIdeal hx)
-  dpow_one {x} hx := by dsimp ; rw [if_pos hx] ; exact hI.dpow_one (hJ.isSubIdeal hx)
-  dpow_mem {n x} hn hx := by dsimp ; rw [if_pos hx] ; exact hJ.dpow_mem n hn x hx
-  dpow_add n {x y} hx hy := by
-    simp_rw [if_pos hx, if_pos hy, if_pos (Ideal.add_mem J hx hy)]
-    rw [hI.dpow_add n (hJ.isSubIdeal hx) (hJ.isSubIdeal hy)]
+  dpow_null {n x} hx := by simp only [if_neg hx]
+  dpow_zero {x} hx := by simp only [if_pos hx]; exact hI.dpow_zero (hJ.isSubIdeal hx)
+  dpow_one {x} hx := by simp only [if_pos hx]; exact hI.dpow_one (hJ.isSubIdeal hx)
+  dpow_mem {n x} hn hx := by simp only [if_pos hx, hJ.dpow_mem n hn x hx]
+  dpow_add n {x y} hx hy := by simp_rw [if_pos hx, if_pos hy, if_pos (Ideal.add_mem J hx hy),
+    hI.dpow_add n (hJ.isSubIdeal hx) (hJ.isSubIdeal hy)]
   dpow_smul n {a x} hx := by
-    dsimp
-    rw [if_pos hx, if_pos (Ideal.mul_mem_left J a hx), hI.dpow_smul n (hJ.isSubIdeal hx)]
+    simp only [if_pos hx, if_pos (Ideal.mul_mem_left J a hx), hI.dpow_smul n (hJ.isSubIdeal hx)]
   dpow_mul m n {x} hx := by simp only [if_pos hx, hI.dpow_mul m n (hJ.isSubIdeal hx)]
   dpow_comp m n {x} hn hx := by
-    dsimp
-    simp_rw [if_pos hx]
-    rw [if_pos (hJ.dpow_mem n hn x hx)]
+    simp_rw [if_pos hx, if_pos (hJ.dpow_mem n hn x hx)]
     exact hI.dpow_comp m hn (hJ.isSubIdeal hx)
-#align divided_powers.is_sub_pd_ideal.divided_powers DividedPowers.isSubDPIdeal.dividedPowers
 
 -- TODO : CommSemiring ?
 
