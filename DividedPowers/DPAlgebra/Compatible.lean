@@ -12,14 +12,6 @@ def isDPMorphism' {A B : Type _} [CommSemiring A] [CommSemiring B] {I : Ideal A}
     (hI : DividedPowers I) (hJ : DividedPowers J) (f : A →+* B) : Prop :=
   I.map f ≤ J ∧ ∀ (n : ℕ), ∀ a : A, hJ.dpow n (f a) = f (hI.dpow n a)
 
-/- /-- Compatibility of a ring morphism with dp-structures -/
-structure isDPMorphism' {A B : Type _} [CommSemiring A] [CommSemiring B] {I : Ideal A} {J : Ideal B}
-    (hI : DividedPowers I) (hJ : DividedPowers J) (f : A →+* B) : Prop where
-  map_le : I.map f ≤ J
-  map_mem : ∀ (n : ℕ), ∀ a ∈ I, hJ.dpow n (f a) = f (hI.dpow n a)
-  map_not_mem : ∀ (n : ℕ), ∀ a ∈ I, hJ.dpow n (f a) = f (hI.dpow n a) -/
-
-
 --Move these to "Extensions/Compatible" file
 /-- B-0 Def 3.14 -/
 def extends_to {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I) {B : Type v}
@@ -31,15 +23,24 @@ lemma extends_to_unique {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPow
     [CommRing B] (f : A →+* B) (hext : extends_to hI f) {hK : DividedPowers (I.map f)}
     (hmap : isDPMorphism' hI hK f) :
     hK = hext.choose := by
-  obtain ⟨hI', hI'map⟩ := hext
+  set hI' := hext.choose with hI'_def
+  let hI'map := hext.choose_spec
   simp only [isDPMorphism', le_refl, true_and] at hmap hI'map
   ext n b
-  sorry
+  by_cases hb : b ∈ I.map f
+  · rw [map, ← submodule_span_eq] at hb
+    revert n
+    apply Submodule.span_induction hb (p := fun b ↦ ∀ n, hK.dpow n b = hI'.dpow n b)
+    · sorry
+    · sorry
+    · sorry
+    · sorry
+  · rw [dpow_null _ hb, dpow_null _ hb]
 
 -- Note (2) after 3.14
 lemma extends_to_iff_exists_dpIdeal {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I)
     {B : Type v} [CommRing B] (f : A →+* B) :
-    extends_to hI f ↔  ∃ (J : Ideal B) (hJ : DividedPowers J), isDPMorphism' hI hJ f := by
+    extends_to hI f ↔ ∃ (J : Ideal B) (hJ : DividedPowers J), isDPMorphism' hI hJ f := by
   classical
   refine ⟨fun ⟨hJ, hmap⟩ ↦ ⟨I.map f, hJ, hmap⟩, fun ⟨J, hJ, hmap⟩ ↦  ?_⟩
   have hsub : isSubDPIdeal hJ (I.map f) := sorry -- use 3.6
@@ -48,11 +49,12 @@ lemma extends_to_iff_exists_dpIdeal {A : Type u} [CommRing A] {I : Ideal A} (hI 
   refine ⟨le_refl _, ?_⟩
   intros n a
   rw [isSubDPIdeal.dividedPowers.dpow_eq]
-  by_cases ha : a ∈ I
-  · rw [← hmap.2 n a, if_pos (mem_map_of_mem _ ha)]
-  · rw [if_neg, dpow_null _ ha, map_zero]
-    sorry
-
+  split_ifs with hfa
+  · rw [hmap.2 n a]
+  · have ha : a ∉ I := by
+      intro haI
+      exact hfa (I.mem_map_of_mem f haI)
+    rw [dpow_null _ ha, map_zero]
 
 -- Note (3) after 3.14: in general the extension does not exist.
 
@@ -60,6 +62,56 @@ lemma extends_to_iff_exists_dpIdeal {A : Type u} [CommRing A] {I : Ideal A} (hI 
 lemma extends_to_of_principal {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I)
     (hIp : Submodule.IsPrincipal I) {B : Type v} [CommRing B] (f : A →+* B) :
     extends_to hI f  := by
+  classical
+  obtain ⟨t, ht⟩ := hIp
+  --TODO: PR lemma
+  have hIp' : Submodule.IsPrincipal (I.map f) := by
+    use f t
+    simp only [ht, submodule_span_eq, map_span, Set.image_singleton]
+  have hIf : I.map f = Ideal.span {f t} := sorry
+  set hI' : DividedPowers (I.map f) := {
+    dpow      := fun n b ↦ if hb : b ∈ Ideal.span {f t} then
+      let c := (Submodule.mem_span_singleton.mp hb).choose
+      c^n * f (hI.dpow n t)
+      else 0
+    dpow_null := by
+      intro n b hb
+      simp only [← hIf, smul_eq_mul, dite_eq_right_iff]
+      intro hb'
+      exact absurd hb' hb
+    dpow_zero := by
+      intro b hb
+      rw [hIf] at hb
+      simp only [dif_pos hb, smul_eq_mul, pow_zero, one_mul]
+      rw [dpow_zero, map_one]
+      · rw [ht]
+        exact Ideal.mem_span_singleton_self t
+    dpow_one  := by
+      intro b hb
+      simp only
+      sorry
+    dpow_mem  := sorry
+    dpow_add  := by
+      intro n b c hb hc
+      simp only
+      split_ifs
+      · sorry
+      · sorry
+      · sorry
+      · simp -- Something seems wrong with addition...
+        sorry
+      · sorry
+      · simp
+      · simp
+      · simp
+    dpow_smul := sorry
+    dpow_mul  := sorry
+    dpow_comp := sorry}
+  use hI'
+  rw [isDPMorphism']
+  refine ⟨le_refl _, ?_⟩
+  intro n a
+
   sorry
 
 -- B-O Prop. 3.16
@@ -67,7 +119,7 @@ lemma IsCompatibleWith_tfae {A : Type u} [CommRing A] {I : Ideal A} (hI : Divide
     {B : Type v} [CommRing B] {J : Ideal B} (hJ : DividedPowers J) (f : A →+* B) :
     List.TFAE  [∃ hI' : DividedPowers (I.map f),  isDPMorphism' hI hI' f ∧
       ∀ (n : ℕ) (b : B) (_ : b ∈ J ⊓ I.map f), hJ.dpow n b = hI'.dpow n b,
-      ∃ hK : DividedPowers (I.map f + J),  isDPMorphism' hI hK f ∧ isDPMorphism' hJ hK (RingHom.id _),
+      ∃ hK : DividedPowers (I.map f + J), isDPMorphism' hI hK f ∧ isDPMorphism' hJ hK (RingHom.id _),
       ∃ (K' : Ideal B) (hIJK : I.map f + J ≤ K') (hK' : DividedPowers K'),
       isDPMorphism' hI hK' f ∧ isDPMorphism' hJ hK' (RingHom.id _)] := by
   tfae_have 1 → 2
@@ -82,11 +134,25 @@ lemma IsCompatibleWith_tfae {A : Type u} [CommRing A] {I : Ideal A} (hI : Divide
     use hI', hI'J
     rintro n b ⟨hbJ, hbI⟩
     simp only [isDPMorphism', le_refl, true_and, map_id, RingHom.id_apply] at hIK hI'J hJK
+    /- have hsub : isSubDPIdeal hK (I.map f) := {
+      isSubIdeal := hIK.1
+      dpow_mem   := by
+        intro n hn c hc
+        --have hc' : c ∈ Ideal.span J (⇑f '' ↑I) := sorry
+        rw [map, ← submodule_span_eq] at hc
+        revert n
+        apply Submodule.span_induction hc (p := fun c ↦  ∀ n (hn : n ≠ 0), hK.dpow n c ∈ map f I)
+        sorry
+        sorry
+        · intro x y hx hy n hn
+          sorry
+        sorry }
+    rw [ ← hJK.2 n b]
+    sorry -/
     rw [ ← hJK.2 n b]
     rw [SetLike.mem_coe, map, ← submodule_span_eq] at hbI
     revert n
-    apply Submodule.span_induction hbI
-      (p := fun b ↦ ∀ n, hK.dpow n b = hI'.dpow n b)
+    apply Submodule.span_induction hbI (p := fun b ↦ ∀ n, hK.dpow n b = hI'.dpow n b)
     · rintro b ⟨a, haI, rfl⟩ n
       rw [hIK.2 n a, hI'J n a]
     · intro n
@@ -106,7 +172,10 @@ lemma IsCompatibleWith_tfae {A : Type u} [CommRing A] {I : Ideal A} (hI : Divide
       · rw [dpow_smul' _ _ _ (hJK.1 hxJ), hx n]
         by_cases hxI' : x ∈ I.map f
         · rw [dpow_smul' _ _ _ hxI']
-        · sorry
+        · by_cases hcxI' : c • x ∈ I.map f
+          ·
+            sorry
+          · rw [dpow_null _ hxI', dpow_null _ hcxI', smul_zero]
       · sorry
 
   tfae_finish
