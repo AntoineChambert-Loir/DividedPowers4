@@ -87,6 +87,14 @@ def isSubDPIdeal.dividedPowers {J : Ideal A} (hJ : isSubDPIdeal hI J) [∀ x, De
     simp_rw [if_pos hx, if_pos (hJ.dpow_mem n hn x hx)]
     exact hI.dpow_comp m hn (hJ.isSubIdeal hx)
 
+lemma isSubDPIdeal.dividedPowers.dpow_eq {J : Ideal A} (hJ : isSubDPIdeal hI J)
+  [∀ x, Decidable (x ∈ J)] (n : ℕ) (a : A) :
+  (isSubDPIdeal.dividedPowers hI hJ).dpow n a = if a ∈ J then hI.dpow n a else 0 := rfl
+
+lemma isSubDPIdeal.dividedPowers.dpow_eq_of_mem {J : Ideal A} (hJ : isSubDPIdeal hI J)
+  [∀ x, Decidable (x ∈ J)] (n : ℕ) {a : A} (ha : a ∈ J) :
+  (isSubDPIdeal.dividedPowers hI hJ).dpow n a = hI.dpow n a := by rw [dpow_eq, if_pos ha]
+
 -- TODO : CommSemiring ?
 
 /-- The ideal J ⊓ I is a sub-dp-ideal of I,
