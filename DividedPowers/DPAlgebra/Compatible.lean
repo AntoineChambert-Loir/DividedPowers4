@@ -68,10 +68,12 @@ lemma extends_to_of_principal {A : Type u} [CommRing A] {I : Ideal A} (hI : Divi
   have hIp' : Submodule.IsPrincipal (I.map f) := by
     use f t
     simp only [ht, submodule_span_eq, map_span, Set.image_singleton]
-  have hIf : I.map f = Ideal.span {f t} := sorry
+
+  have hIf : ∀ {x : B}, x ∈ I.map f ↔ ∃ c : B, x = c * (f t) := by
+    sorry
   set hI' : DividedPowers (I.map f) := {
-    dpow      := fun n b ↦ if hb : b ∈ Ideal.span {f t} then
-      let c := (Submodule.mem_span_singleton.mp hb).choose
+    dpow      := fun n b ↦ if hb : b ∈ I.map f then
+      let c := (hIf.mp hb).choose
       c^n * f (hI.dpow n t)
       else 0
     dpow_null := by
@@ -81,7 +83,6 @@ lemma extends_to_of_principal {A : Type u} [CommRing A] {I : Ideal A} (hI : Divi
       exact absurd hb' hb
     dpow_zero := by
       intro b hb
-      rw [hIf] at hb
       simp only [dif_pos hb, smul_eq_mul, pow_zero, one_mul]
       rw [dpow_zero, map_one]
       · rw [ht]
@@ -93,17 +94,9 @@ lemma extends_to_of_principal {A : Type u} [CommRing A] {I : Ideal A} (hI : Divi
     dpow_mem  := sorry
     dpow_add  := by
       intro n b c hb hc
-      simp only
-      split_ifs
-      · sorry
-      · sorry
-      · sorry
-      · simp -- Something seems wrong with addition...
-        sorry
-      · sorry
-      · simp
-      · simp
-      · simp
+      simp only [dif_pos (add_mem hb hc), dif_pos hb, dif_pos hc]
+      simp_rw [mul_assoc, ← mul_assoc (f _), mul_comm (f _), mul_assoc, ← mul_assoc]
+      sorry
     dpow_smul := sorry
     dpow_mul  := sorry
     dpow_comp := sorry}
