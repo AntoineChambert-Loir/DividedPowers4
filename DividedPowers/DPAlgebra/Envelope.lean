@@ -1,10 +1,15 @@
 import DividedPowers.DPAlgebra.Dpow
---import DividedPowers.ForMathlib.AlgebraComp -- TODO: We should not use this
-
+-- import DividedPowers.DPAlgebra.Compatible -- TODO: change to this
 universe u v w
 
-open DividedPowers Ideal DividedPowerAlgebra
+open DividedPowerAlgebra DividedPowers Ideal
 
+--Move these to "Extensions/Compatible" file
+-- TODO: Def 14
+-- TODO: Prove Prop. 3.16
+
+-- TODO: use (2) instead
+-- Or use 3.6 to construct this.
 /-- B-0 Def 3.17 (using condition 1 of Prop. 3.16) -/
 def IsCompatibleWith {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I) {B : Type v}
     [CommRing B] {J : Ideal B} (hJ : DividedPowers J) (f : A →+* B) : Prop :=
@@ -45,6 +50,7 @@ variable {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I) {B : Typ
   [Algebra A B] (J : Ideal B)
 
 -- Case 1 of the proof, B-O pg 61 in pdf
+-- 2.3 in B.
 section Included
 
 open DividedPowers DividedPowerAlgebra
@@ -56,6 +62,10 @@ variable (hIJ : I.map (algebraMap A B) ≤ J)
 -- (i)
 inductive rel1 : Rel (DividedPowerAlgebra B J) (DividedPowerAlgebra B J)
   | Rel {x : J} : rel1 (ι B J x) (algebraMap _ _ (x : B))
+
+variable {J} in
+lemma rel1_apply (x : J) :
+  rel1 J ((ι B ↥J) x) ((algebraMap B (DividedPowerAlgebra B ↥J)) ↑x) := by constructor
 
 -- J1
 noncomputable def J1 : Ideal (DividedPowerAlgebra B J) :=
@@ -86,11 +96,31 @@ noncomputable def J2 : Ideal (DividedPowerAlgebra B J) :=
 noncomputable def J12 : Ideal (DividedPowerAlgebra B J) :=
   J1 J + J2 hI J hIJ
 
+variable {J}
+
+
+lemma rel1_mem_J1 (x : J) :
+    ((ι B ↥J) x - ((algebraMap B (DividedPowerAlgebra B ↥J)) ↑x)) ∈ J1 J := by
+  rw [J1, ofRel]
+  apply subset_span
+  simp only [Set.mem_setOf_eq]
+  use (ι B ↥J) x, (algebraMap B (DividedPowerAlgebra B ↥J)) ↑x
+  constructor
+  · exact rel1_apply x
+  simp only [sub_add_cancel]
+
+-- TODO: we might need something similar for rel2
+lemma rel1_mem_J12 (x : J) :
+    ((ι B ↥J) x - ((algebraMap B (DividedPowerAlgebra B ↥J)) ↑x)) ∈ J12 hI J hIJ :=
+  mem_sup_left (rel1_mem_J1 x)
+
 -- B-O : Claim in pg 61, proof in pg 62
 theorem J12_isSubDPIdeal [DecidableEq B] :
     isSubDPIdeal (DividedPowerAlgebra.dividedPowers' B J)
       (J12 hI J hIJ ⊓ DividedPowerAlgebra.augIdeal B J) :=
   sorry
+
+variable (J)
 
 -- 𝒟 at the end of pg 62 in B-O
 def DPEnvelopeOfIncluded : Type v :=
@@ -106,6 +136,9 @@ noncomputable instance : Algebra B (DPEnvelopeOfIncluded hI J hIJ) :=
 noncomputable instance algebraOfIncluded : Algebra A (DPEnvelopeOfIncluded hI J hIJ) :=
   ((algebraMap B (DPEnvelopeOfIncluded hI J hIJ)).comp (algebraMap A B)).toAlgebra
 
+noncomputable instance algebraOfIncluded'' : Algebra (DividedPowerAlgebra B J) (DPEnvelopeOfIncluded hI J hIJ) :=
+  Ideal.Quotient.algebra _
+
 instance isScalarTower_of_included : IsScalarTower A B (DPEnvelopeOfIncluded hI J hIJ) :=
   IsScalarTower.of_algebraMap_eq (congrFun rfl)
 
@@ -113,24 +146,55 @@ instance isScalarTower_of_included : IsScalarTower A B (DPEnvelopeOfIncluded hI 
 noncomputable def dpIdealOfIncluded [DecidableEq B] : Ideal (DPEnvelopeOfIncluded hI J hIJ) :=
   map (Ideal.Quotient.mk (J12 hI J hIJ)) (DividedPowerAlgebra.augIdeal B J)
 
+
 -- J_bar has DP
 theorem sub_ideal_dpIdealOfIncluded [DecidableEq B] :
     J.map (algebraMap B (DPEnvelopeOfIncluded hI J hIJ)) ≤ dpIdealOfIncluded hI J hIJ := by
+  have heq : algebraMap B (DPEnvelopeOfIncluded hI J hIJ) =
+    (algebraMap (DividedPowerAlgebra B J) (DPEnvelopeOfIncluded hI J hIJ)).comp (algebraMap B (DividedPowerAlgebra B J)) := rfl
+
+  have heq' : ∀ x : J, algebraMap B (DPEnvelopeOfIncluded hI J hIJ) x =
+    (algebraMap (DividedPowerAlgebra B J) (DPEnvelopeOfIncluded hI J hIJ)) (ι B J x) := by
+    intro x
+    rw [heq]
+    simp only [RingHom.coe_comp, Function.comp_apply]
+    erw [eq_comm, Ideal.Quotient.mk_eq_mk_iff_sub_mem]
+    exact rel1_mem_J12 hI hIJ x
   intro x hx
   rw [dpIdealOfIncluded]
   rw [Ideal.mem_map_iff_of_surjective]
-  sorry
+  rw [heq, ← map_map, mem_map_iff_of_surjective] at hx
+  obtain ⟨y, hyJ, hyx⟩ := hx
+  · rw [← hyx]
+    rw [map, ← submodule_span_eq] at hyJ
+    --TODO:lemma
+    have : algebraMap (DividedPowerAlgebra B ↥J) (DPEnvelopeOfIncluded hI J hIJ) = Ideal.Quotient.mk (J12 hI J hIJ) := rfl
+    simp_rw [this]
+    suffices y ∈ (augIdeal B J) ⊔ (J12 hI J hIJ) by
+
+      rw [Submodule.mem_sup] at this
+      obtain ⟨y, hy, z, hz, rfl⟩ := this
+      use y, hy
+      erw [eq_comm, Ideal.Quotient.mk_eq_mk_iff_sub_mem]
+      simp only [add_sub_cancel_left, hz]
+    apply Submodule.span_induction hyJ (p := fun y ↦ y ∈ (augIdeal B J) ⊔ (J12 hI J hIJ))
+    · sorry
+    · sorry
+    · sorry
+    · sorry
+  exact Quotient.mk_surjective
   exact Quotient.mk_surjective
 
 -- End of case 1
 theorem dpEnvelopeOfIncluded_IsWeakDPEnvelope [DecidableEq B] :
     IsWeakDPEnvelope hI J (dpIdealOfIncluded hI J hIJ)
-      (Quotient.dividedPowers (DividedPowerAlgebra.dividedPowers' B J) (J12_isSubDPIdeal hI J hIJ))
+      (Quotient.dividedPowers (DividedPowerAlgebra.dividedPowers' B J) (J12_isSubDPIdeal hI hIJ))
       (algebraMap B (DPEnvelopeOfIncluded hI J hIJ)) (sub_ideal_dpIdealOfIncluded hI J hIJ) :=
   sorry
 
 end Included
 
+-- 2.4 in B. (with compatibility property)
 section General
 
 variable (I)
@@ -173,7 +237,7 @@ noncomputable def J₁_bar : Ideal (DPEnvelope hI J) :=
 -- The divided power structure on the DP envelope associated to `J₁_bar hI J`.
 noncomputable def dividedPowers' : DividedPowers (J₁_bar hI J) :=
   Quotient.dividedPowers (DividedPowerAlgebra.dividedPowers' B ↥(J' I J))
-    (J12_isSubDPIdeal hI (J' I J) (sub_ideal_J' I J))
+    (J12_isSubDPIdeal hI (sub_ideal_J' I J))
 /-
 lemma J_le_augIdeal :
     J.map (algebraMap B (DividedPowerAlgebra B (J' I J))) ≤ (augIdeal B ↥(J' I J)) := sorry
@@ -182,13 +246,12 @@ noncomputable def dpIdeal' : (dividedPowers' B ↥(J' I J)).SubDPIdeal :=
   SubDPIdeal.generatedDpow (DividedPowerAlgebra.dividedPowers' B (J' I J)) (J_le_augIdeal J) -/
 
 lemma J_le_J₁_bar : (map (algebraMap B (DPEnvelope hI J)) J) ≤ (J₁_bar hI J) := by
-  have heq : algebraMap B (DPEnvelope hI J) =
-    (algebraMap (DividedPowerAlgebra B ↥(J' I J)) (DPEnvelope hI J)).comp
-      (algebraMap B (DividedPowerAlgebra B ↥(J' I J))) := rfl
-  rw [J₁_bar, dpIdealOfIncluded, heq, ← Ideal.map_map]
+  have hss : map (algebraMap B (DPEnvelope hI J)) (J' I J) ≤ J₁_bar hI J := by
+    rw [J₁_bar]
+    apply sub_ideal_dpIdealOfIncluded
+  apply le_trans _ hss
   apply map_mono
-  intro x hx
-  sorry
+  exact le_sup_of_le_left (le_refl _)
 
 -- J_bar in pg 63 of B-O
 noncomputable def dpIdeal : (dividedPowers' hI J).SubDPIdeal :=
@@ -207,6 +270,8 @@ noncomputable def dividedPowers [∀ x, Decidable (x ∈  (dpIdeal hI J).carrier
   isSubDPIdeal.dividedPowers (dividedPowers' hI J) (dpIdeal hI J).toIsSubDPIdeal
 
 -- I am not sure this is the right approach
+-- Need compatibility btw I, ker f
+-- x ∈ I ∩ ker f, dpow n x ∈ ker f (for n > 0)
 noncomputable def dividedPowers_of_map {C : Type*} [CommRing C] (f : A →+* C)
     [∀ c, Decidable (c ∈ map f I)] : DividedPowers (I.map f) where
   dpow      := fun n c ↦
@@ -309,7 +374,7 @@ theorem dpEnvelope_IsDPEnvelope [DecidableEq B]  [∀ x, Decidable (x ∈  (dpId
   intro α hα
 
   set β : (Quotient.dividedPowers (DividedPowerAlgebra.dividedPowers' B ↥(J' I J))
-    (J12_isSubDPIdeal hI (J' I J) (sub_ideal_J' I J))).dpMorphism h1 :=
+    (J12_isSubDPIdeal hI (sub_ideal_J' I J))).dpMorphism h1 :=
   { toRingHom  := α.toRingHom
     ideal_comp := by
       have hKK1 : K ≤ K1 := sorry
