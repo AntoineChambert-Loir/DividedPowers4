@@ -64,11 +64,11 @@ lemma extends_to_iff_exists_dpIdeal {A : Type u} [CommRing A] {I : Ideal A} (hI 
   use hsub.dividedPowers
   rw [isDPMorphism'] at hmap ⊢
   refine ⟨le_refl _, ?_⟩
-  intros n a
+  intros n hn a
   rw [isSubDPIdeal.dividedPowers.dpow_eq]
   split_ifs with hfa
   · intro haI
-    rw [hmap.2 n a haI]
+    rw [hmap.2 n hn a haI]
   · have ha : a ∉ I := by
       intro haI
       exact hfa (I.mem_map_of_mem f haI)
