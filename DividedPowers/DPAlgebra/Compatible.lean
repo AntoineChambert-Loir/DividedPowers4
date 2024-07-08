@@ -6,27 +6,27 @@ open DividedPowerAlgebra DividedPowers Ideal
 
 namespace DividedPowers
 
-/- -- I think we need to remove the condition `a ∈ I` from the definition of isDPMorphism
+-- I think we  need to remove the condition `a ∈ I` from the definition of isDPMorphism
 /-- Compatibility of a ring morphism with dp-structures -/
-def isDPMorphism {A B : Type _} [CommSemiring A] [CommSemiring B] {I : Ideal A} {J : Ideal B}
+def isDPMorphism' {A B : Type _} [CommSemiring A] [CommSemiring B] {I : Ideal A} {J : Ideal B}
     (hI : DividedPowers I) (hJ : DividedPowers J) (f : A →+* B) : Prop :=
-  I.map f ≤ J ∧ ∀ (n : ℕ), ∀ a : A, hJ.dpow n (f a) = f (hI.dpow n a) -/
+  I.map f ≤ J ∧ ∀ n > 0, ∀ a : A, hJ.dpow n (f a) = f (hI.dpow n a)
 
 --Move these to "Extensions/Compatible" file
 /-- B-0 Def 3.14 -/
 def extends_to {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I) {B : Type v}
     [CommRing B] (f : A →+* B) : Prop :=
-  ∃ hI' : DividedPowers (I.map f), isDPMorphism hI hI' f
+  ∃ hI' : DividedPowers (I.map f), isDPMorphism' hI hI' f
 
 -- Note (1) after 3.14
 lemma extends_to_unique {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I) {B : Type v}
     [CommRing B] (f : A →+* B) (hext : extends_to hI f) {hK : DividedPowers (I.map f)}
-    (hmap : isDPMorphism hI hK f) :
+    (hmap : isDPMorphism' hI hK f) :
     hK = hext.choose := by
   set hI' := hext.choose with hI'_def
   let hI'map := hext.choose_spec
   rw [← hI'_def] at hI'map
-  simp only [isDPMorphism, le_refl, true_and] at hmap hI'map
+  simp only [isDPMorphism', le_refl, true_and] at hmap hI'map
   ext n b
   by_cases hb : b ∈ I.map f
   · rw [map, ← submodule_span_eq] at hb
@@ -35,7 +35,14 @@ lemma extends_to_unique {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPow
     · intro x hx n
       simp only [Set.mem_image, SetLike.mem_coe] at hx
       obtain ⟨a, haI, rfl⟩ := hx
-      rw [hmap n a haI, hI'map n a haI]
+      by_cases hn : n > 0
+      · rw [hmap n hn a, hI'map n hn a]
+      · simp only [gt_iff_lt, not_lt, nonpos_iff_eq_zero] at hn
+        simp only [hn]
+        rw [hK.dpow_zero, hI'.dpow_zero]
+        exact mem_map_of_mem f haI
+        exact mem_map_of_mem f haI
+
     · intro n
       by_cases hn0 : n = 0
       · rw [hn0, hK.dpow_zero (Submodule.zero_mem (map f I)),
