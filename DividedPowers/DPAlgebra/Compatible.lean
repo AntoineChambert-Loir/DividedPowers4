@@ -10,7 +10,7 @@ namespace DividedPowers
 /-- Compatibility of a ring morphism with dp-structures -/
 def isDPMorphism' {A B : Type _} [CommSemiring A] [CommSemiring B] {I : Ideal A} {J : Ideal B}
     (hI : DividedPowers I) (hJ : DividedPowers J) (f : A →+* B) : Prop :=
-  I.map f ≤ J ∧ ∀ n > 0, ∀ a : A, hJ.dpow n (f a) = f (hI.dpow n a)
+  I.map f ≤ J ∧ ∀ n > 0, ∀ a ∈ I, hJ.dpow n (f a) = f (hI.dpow n a)
 
 --Move these to "Extensions/Compatible" file
 /-- B-0 Def 3.14 -/
@@ -36,7 +36,7 @@ lemma extends_to_unique {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPow
       simp only [Set.mem_image, SetLike.mem_coe] at hx
       obtain ⟨a, haI, rfl⟩ := hx
       by_cases hn : n > 0
-      · rw [hmap n hn a, hI'map n hn a]
+      · rw [hmap n hn a haI, hI'map n hn a haI]
       · simp only [gt_iff_lt, not_lt, nonpos_iff_eq_zero] at hn
         simp only [hn]
         rw [hK.dpow_zero, hI'.dpow_zero]
@@ -219,15 +219,14 @@ lemma extends_to_of_principal {A : Type u} [CommRing A] {I : Ideal A} (hI : Divi
     rw [sub_mul, sub_eq_zero, (hIf.mp (mem_map_of_mem _ haI)).choose_spec, ← _root_.map_mul]
     rfl
 
-#exit
 -- B-O Prop. 3.16
 lemma IsCompatibleWith_tfae {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I)
     {B : Type v} [CommRing B] {J : Ideal B} (hJ : DividedPowers J) (f : A →+* B) :
-    List.TFAE  [∃ hI' : DividedPowers (I.map f),  isDPMorphism hI hI' f ∧
+    List.TFAE  [∃ hI' : DividedPowers (I.map f),  isDPMorphism' hI hI' f ∧
       ∀ (n : ℕ) (b : B) (_ : b ∈ J ⊓ I.map f), hJ.dpow n b = hI'.dpow n b,
-      ∃ hK : DividedPowers (I.map f + J), isDPMorphism hI hK f ∧ isDPMorphism hJ hK (RingHom.id _),
+      ∃ hK : DividedPowers (I.map f + J), isDPMorphism' hI hK f ∧ isDPMorphism' hJ hK (RingHom.id _),
       ∃ (K' : Ideal B) (hIJK : I.map f + J ≤ K') (hK' : DividedPowers K'),
-      isDPMorphism hI hK' f ∧ isDPMorphism hJ hK' (RingHom.id _)] := by
+      isDPMorphism' hI hK' f ∧ isDPMorphism' hJ hK' (RingHom.id _)] := by
   tfae_have 1 → 2
   · sorry
   tfae_have 2 → 3
@@ -239,7 +238,7 @@ lemma IsCompatibleWith_tfae {A : Type u} [CommRing A] {I : Ideal A} (hI : Divide
     obtain ⟨hI', hI'J⟩ := hB
     use hI', hI'J
     rintro n b ⟨hbJ, hbI⟩
-    simp only [isDPMorphism, le_refl, true_and, map_id, RingHom.id_apply] at hIK hI'J hJK
+    simp only [isDPMorphism', le_refl, true_and, map_id, RingHom.id_apply] at hIK hI'J hJK
     /- have hsub : isSubDPIdeal hK (I.map f) := {
       isSubIdeal := hIK.1
       dpow_mem   := by
@@ -255,9 +254,11 @@ lemma IsCompatibleWith_tfae {A : Type u} [CommRing A] {I : Ideal A} (hI : Divide
         sorry }
     rw [ ← hJK.2 n b]
     sorry -/
-    rw [ ← hJK.2 n b]
-    rw [SetLike.mem_coe, map, ← submodule_span_eq] at hbI
-    revert n
+    rcases Nat.eq_zero_or_pos n with (hn | hn)
+    · sorry
+    · rw [ ← hJK.2 n hn b]
+      rw [SetLike.mem_coe, map, ← submodule_span_eq] at hbI
+      revert n
     apply Submodule.span_induction hbI (p := fun b ↦ ∀ n, hK.dpow n b = hI'.dpow n b)
     · rintro b ⟨a, haI, rfl⟩ n
       rw [hIK.2 n a, hI'J n a]
