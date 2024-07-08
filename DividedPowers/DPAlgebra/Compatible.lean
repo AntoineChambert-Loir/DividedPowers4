@@ -57,12 +57,12 @@ lemma extends_to_unique {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPow
 -- Note (2) after 3.14
 lemma extends_to_iff_exists_dpIdeal {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I)
     {B : Type v} [CommRing B] (f : A →+* B) :
-    extends_to hI f ↔ ∃ (J : Ideal B) (hJ : DividedPowers J), isDPMorphism hI hJ f := by
+    extends_to hI f ↔ ∃ (J : Ideal B) (hJ : DividedPowers J), isDPMorphism' hI hJ f := by
   classical
   refine ⟨fun ⟨hJ, hmap⟩ ↦ ⟨I.map f, hJ, hmap⟩, fun ⟨J, hJ, hmap⟩ ↦  ?_⟩
   have hsub : isSubDPIdeal hJ (I.map f) := sorry -- use 3.6
   use hsub.dividedPowers
-  rw [isDPMorphism] at hmap ⊢
+  rw [isDPMorphism'] at hmap ⊢
   refine ⟨le_refl _, ?_⟩
   intros n a
   rw [isSubDPIdeal.dividedPowers.dpow_eq]
@@ -197,9 +197,9 @@ lemma extends_to_of_principal {A : Type u} [CommRing A] {I : Ideal A} (hI : Divi
       sorry
        }
   use hI'
-  rw [isDPMorphism]
+  rw [isDPMorphism']
   refine ⟨le_refl _, ?_⟩
-  intro n a haI
+  intro n hn a haI
   simp only [dif_pos (mem_map_of_mem _ haI)]
   set s := (hIf.mp (mem_map_of_mem _ haI)).choose with hs
   by_cases hn : n = 0
@@ -255,35 +255,36 @@ lemma IsCompatibleWith_tfae {A : Type u} [CommRing A] {I : Ideal A} (hI : Divide
     rw [ ← hJK.2 n b]
     sorry -/
     rcases Nat.eq_zero_or_pos n with (hn | hn)
-    · sorry
+    · simp only [hn, hJ.dpow_zero hbJ, hI'.dpow_zero hbI]
     · rw [ ← hJK.2 n hn b]
       rw [SetLike.mem_coe, map, ← submodule_span_eq] at hbI
       revert n
-    apply Submodule.span_induction hbI (p := fun b ↦ ∀ n, hK.dpow n b = hI'.dpow n b)
-    · rintro b ⟨a, haI, rfl⟩ n
-      rw [hIK.2 n a, hI'J n a]
-    · intro n
-      by_cases hn : n = 0
-      · rw [hn, dpow_zero _ (Submodule.zero_mem _), dpow_zero _ (Submodule.zero_mem _)]
-      · rw [dpow_eval_zero _ hn, dpow_eval_zero _ hn]
-    · intro x y hx hy n
-      by_cases hxJ : x ∈ J
-      · have hyJ : y ∈ J := sorry
-        rw [dpow_add _ _ (hJK.1 hxJ) (hJK.1 hyJ)]
-        sorry
-      ·
-        sorry --  rw [dpow_add]
+      apply Submodule.span_induction hbI (p := fun b ↦ ∀ n > 0, hK.dpow n b = hI'.dpow n b)
+      · rintro b ⟨a, haI, rfl⟩ n hn
+        rw [hIK.2 n hn a haI, hI'J n hn a haI]
+      · intro n
+        by_cases hn : n = 0
+        · rw [hn, dpow_zero _ (Submodule.zero_mem _), dpow_zero _ (Submodule.zero_mem _)]
+          exact fun a ↦ rfl
+        · rw [dpow_eval_zero _ hn, dpow_eval_zero _ hn]
+          exact fun a ↦ rfl
+
+      · intro x y hx hy n
+        by_cases hxJ : x ∈ J
+        · have hyJ : y ∈ J := sorry
+          rw [dpow_add _ _ (hJK.1 hxJ) (hJK.1 hyJ)]
+          sorry
+        · sorry --  rw [dpow_add]
       --simp? [dpow_zero]
-    · intro c x hx n
-      by_cases hxJ : x ∈ J
-      · rw [dpow_smul' _ _ _ (hJK.1 hxJ), hx n]
-        by_cases hxI' : x ∈ I.map f
-        · rw [dpow_smul' _ _ _ hxI']
-        · by_cases hcxI' : c • x ∈ I.map f
-          ·
-            sorry
-          · rw [dpow_null _ hxI', dpow_null _ hcxI', smul_zero]
-      · sorry
+      · intro c x hx n hn
+        by_cases hxJ : x ∈ J
+        · rw [dpow_smul' _ _ _ (hJK.1 hxJ), hx n hn]
+          by_cases hxI' : x ∈ I.map f
+          · rw [dpow_smul' _ _ _ hxI']
+          · by_cases hcxI' : c • x ∈ I.map f
+            · sorry
+            · rw [dpow_null _ hxI', dpow_null _ hcxI', smul_zero]
+        · sorry
 
   tfae_finish
 
