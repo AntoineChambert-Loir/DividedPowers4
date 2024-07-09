@@ -580,8 +580,8 @@ example (A : Type u) [CommRing A] {R S R' S' : Type u} [CommRing R] [CommRing S]
   have hK'_pd : isSubDPIdeal hK (RingHom.ker fg ⊓ K A I J) := by
     rw [roby]
     apply isSubDPIdeal_sup
-    exact isSubDPIdeal_map hI hK hK_pd.1 _ (isSubDPIdeal_ker hI hI' hf')
-    exact isSubDPIdeal_map hJ hK hK_pd.2 _ (isSubDPIdeal_ker hJ hJ' hg')
+    exact isSubDPIdeal_map_of_isSubDPIdeal hI hK hK_pd.1 _ (isSubDPIdeal_ker hI hI' hf')
+    exact isSubDPIdeal_map_of_isSubDPIdeal hJ hK hK_pd.2 _ (isSubDPIdeal_ker hJ hJ' hg')
   rw [hK_map]
   use DividedPowers.Quotient.OfSurjective.dividedPowers hK s_fg hK'_pd
   constructor
@@ -685,6 +685,22 @@ example (A : Type u) [CommRing A]
   have := hR₀I.codisjoint
   sorry
 
+theorem RingHom.ker_eq_span_union' (A : Type*) [CommRing A]
+    (R : Type*) [CommRing R] [Algebra A R]
+    (R₀ : Subalgebra A R) (I : Ideal R) (hI : I.IsAugmentation R₀)
+    (S : Type*) [CommRing S] [Algebra A S]
+    (S₀ : Subalgebra A S) (J : Ideal S) (hJ : J.IsAugmentation S₀)
+    (f : R →ₐ[A] S) (hf0 : f '' R₀ ≤ S₀) (hfI : f '' I ≤ J) :
+    RingHom.ker f ⊓ I = Submodule.span _ (RingHom.ker f ∩ I) := by
+  apply le_antisymm
+  · rw [RingHom.ker_eq_span_union A R R₀ I ?_ S S₀ J ?_ f hf0 hfI]
+    sorry
+    · convert hI.codisjoint
+      sorry
+    · convert hJ.disjoint
+      sorry
+  · sorry
+
 
 /-- Roby, Lemma 6, the condition τ descends by quotient -/
 theorem condτ_rel (A : Type u) [CommRing A]
@@ -750,16 +766,14 @@ theorem condτ_rel (A : Type u) [CommRing A]
           (↑(RingHom.ker f) ∩ ↑I)) ⊔
         span (⇑Algebra.TensorProduct.includeRight '' (↑(RingHom.ker g) ∩ ↑J)))) by
       rw [this]
-      rw [← Ideal.map_span]
+      simp only [← Ideal.map_span]
       apply isSubDPIdeal_sup
-      apply isSubDPIdeal_map hI hK hK_pd.1 _ -- (isSubDPIdeal_ker hI hI' ?_)
-      have : span (↑(RingHom.ker f) ∩ ↑I) = RingHom.ker f ⊓ I := sorry
-      rw [this]
-      apply isSubDPIdeal_ker hI hI' hfDP
-      sorry/- apply isSubDPIdeal_map hJ hK hK_pd.2 _ -- (isSubDPIdeal_ker hI hI' ?_)
-      have : span (↑(RingHom.ker g) ∩ ↑J) = RingHom.ker g ⊓ J := sorry
-      rw [this]
-      apply isSubDPIdeal_ker hJ hJ' hgDP -/
+      · have : span (↑(RingHom.ker f) ∩ ↑I) = RingHom.ker f ⊓ I := sorry
+        rw [this]
+        exact isSubDPIdeal_map_of_isSubDPIdeal hI hK hK_pd.1 _ (isSubDPIdeal_ker hI hI' hfDP)
+      · have : span (↑(RingHom.ker g) ∩ ↑J) = RingHom.ker g ⊓ J := sorry
+        rw [this]
+        exact isSubDPIdeal_map_of_isSubDPIdeal hJ hK hK_pd.2 _ (isSubDPIdeal_ker hJ hJ' hgDP)
     sorry
   rw [hK_map]
   use DividedPowers.Quotient.OfSurjective.dividedPowers hK s_fg hK'_pd
@@ -809,7 +823,7 @@ theorem condτ_rel (A : Type u) [CommRing A]
 #align divided_power_algebra.cond_τ_rel DividedPowerAlgebra.condτ_rel
 
 -- Roby, Variante de la proposition 4
-theorem roby_prop_4
+theorem roby_prop_4'
     (A : Type*) [CommRing A] (R : Type*) [CommRing R] [Algebra A R]
     {I : Ideal R} {R₀ : Subalgebra A R} (hsplit : IsAugmentation R₀ I)
     {J : Ideal R} {F₀ : Set R₀} {FI : Set I} (hJ : J = Submodule.span R (F₀ ∪ FI : Set R)) :
@@ -860,6 +874,37 @@ theorem roby_prop_4
         simp only [Submodule.mem_inf, Submodule.restrictScalars_mem, hz, and_self]
     · apply Submodule.mem_sup_right
       exact ⟨mul_mem_right (y + z) I hb, mul_mem_left J b (add_mem hy.right hz.right)⟩
+
+-- Roby, Proposition 4
+theorem roby_prop_4
+    {A : Type*} [CommRing A] {R : Type*} [CommRing R] [Algebra A R]
+    {I : Ideal R} {R₀ : Subalgebra A R}
+    (hsplit : IsAugmentation R₀ I)
+    (hI : DividedPowers I)
+    {J : Ideal R} {F₀ : Set R₀} {FI : Set I}
+    (hJ : J = Ideal.span (F₀ : Set R) ⊔ Ideal.span (FI : Set R)):
+    hI.isSubDPIdeal (J ⊓ I) ↔ (∀ a ∈ FI, ∀ n ≠ 0, hI.dpow n a ∈ I):= by
+  have hJI : J ⊓ I = Ideal.span (FI : Set R) := sorry
+  constructor
+  · intro hJ'
+    intro a ha n hn
+    have := hJ'.dpow_mem n hn
+    apply inf_le_right (a := J)
+    apply hJ'.dpow_mem n hn a
+    simp only [hJI, SetLike.coe_sort_coe]
+    apply Ideal.subset_span
+    use a
+  · intro H
+    set T := { s ∈ J ⊓ I | ∀ n ≠ 0, hI.dpow n s ∈ J } with hJ'
+
+    exact {
+      isSubIdeal := inf_le_right
+      dpow_mem := fun n hn a ha ↦ by
+        simp only [Ideal.mem_inf] at ha ⊢
+        constructor
+        · sorry
+        · sorry
+    }
 
 theorem Ideal.map_coe_toRingHom
   {A : Type*} [CommRing A] {R S : Type*} [CommRing R] [CommRing S]

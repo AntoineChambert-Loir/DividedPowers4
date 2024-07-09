@@ -518,19 +518,66 @@ def Ideal.IsAugmentation (R : Type*) [CommSemiring R]
     {A : Type*} [CommSemiring A] [Algebra R A] (J : Ideal A) : Prop :=
   IsCompl (Subalgebra.toSubmodule (⊥ : Subalgebra R A)) (J.restrictScalars R)
 
-example (S : Subalgebra R A) (hJS : Ideal.IsAugmentation S J)
-    (s : Set S) (t : Set J) :
-    Ideal.span ((s : Set A) ∪ (t : Set A)) ⊓ J =
-      Ideal.span (t : Set A) := by
-  apply le_antisymm
-  · sorry
-  · simp only [SetLike.coe_sort_coe, le_inf_iff]
-    simp only [Ideal.span_le]
-    constructor
-    · apply le_trans _ Ideal.subset_span
-      simp only [Set.le_eq_subset, Set.subset_union_right]
-    · rintro j ⟨a, ha, rfl⟩
-      exact Subtype.coe_prop a
+theorem Ideal.isAugmentation_subalgebra_iff (A : Type*) [CommSemiring A]
+    {R : Type*} [CommSemiring R] [Algebra A R]
+    {S : Subalgebra A R} {I : Ideal R} :
+    I.IsAugmentation S ↔
+    IsCompl (Subalgebra.toSubmodule S) (I.restrictScalars A) := by
+  unfold Ideal.IsAugmentation
+  rw [← Submodule.isCompl_restrictScalars_iff A, Subalgebra.restrictScalars_toSubmodule_bot]
+  exact Iff.rfl
+
+def Ideal.isHomogeneous {A : Type*} [CommSemiring A]
+    {R : Type*} [CommSemiring R] [Algebra A R]
+    {S : Subalgebra A R} {I : Ideal R}
+    (hIS : I.IsAugmentation S) (J : Ideal R) : Prop :=
+  IsCompl (Subalgebra.toSubmodule S ⊓ J.restrictScalars A)
+    (I.restrictScalars A ⊓ J.restrictScalars A)
+
+-- Roby 1965, end of §1
+theorem Ideal.span_isHomogeneous {A : Type*} [CommSemiring A]
+    {R : Type*} [CommSemiring R] [Algebra A R]
+    {S : Subalgebra A R} {I : Ideal R}
+    (hIS : I.IsAugmentation S)
+    (FS : Set S) (FI : Set I) :
+    Ideal.isHomogeneous hIS (Ideal.span (FS ∪ FI : Set R)) := by
+  simp only [Ideal.isAugmentation_subalgebra_iff] at hIS
+  unfold Ideal.isHomogeneous
+  apply IsCompl.mk
+  · simp only [Submodule.disjoint_def]
+    intro x hx hx'
+    simp only [SetLike.coe_sort_coe, Submodule.mem_inf, Subalgebra.mem_toSubmodule,
+      restrictScalars_mem] at hx hx'
+    exact disjoint_def.mp hIS.disjoint x hx.left hx'.left
+  · rw [codisjoint_iff]
+    rw [eq_top_iff]
+    intro x hx
+    simp only [SetLike.coe_sort_coe, mem_sup, Submodule.mem_inf, Subalgebra.mem_toSubmodule,
+      restrictScalars_mem]
+    have hx' := eq_top_iff.mp (codisjoint_iff.mp hIS.codisjoint)
+      (Submodule.mem_top (x := x))
+    simp only [mem_sup, Subalgebra.mem_toSubmodule, restrictScalars_mem] at hx'
+    obtain ⟨y, hy, z, hz, rfl⟩ := hx'
+    refine ⟨y, ⟨⟨hy, ?_⟩, z, ⟨⟨hz, ?_⟩, rfl⟩⟩⟩
+    sorry
+    sorry
+
+
+def Subalgebra.isHomogeneous {A : Type*} [CommSemiring A]
+    {R : Type*} [CommSemiring R] [Algebra A R]
+    {S : Subalgebra A R} {I : Ideal R}
+    (hIS : I.IsAugmentation S) (T : Subalgebra A R) : Prop :=
+  IsCompl (Subalgebra.toSubmodule S ⊓ Subalgebra.toSubmodule T)
+    (I.restrictScalars A ⊓ Subalgebra.toSubmodule T)
+
+-- Roby 1965, end of §1
+theorem Subalgebra.span_isHomogeneous {A : Type*} [CommSemiring A]
+    {R : Type*} [CommSemiring R] [Algebra A R]
+    {S : Subalgebra A R} {I : Ideal R}
+    (hIS : I.IsAugmentation S)
+    (FS : Set S) (FI : Set I) :
+    Subalgebra.isHomogeneous hIS (Algebra.adjoin A (FS ∪ FI : Set R)) := by
+  sorry
 
 /-- The base change of an algebra with an augmentation ideal -/
 theorem Ideal.isAugmentation_baseChange
@@ -544,15 +591,6 @@ theorem Ideal.isAugmentation_baseChange
   rw [Algebra.baseChange_bot]
   rw [Algebra.TensorProduct.map_includeRight_eq_range_baseChange]
   exact isCompl_baseChange hI R
-
-theorem Ideal.isAugmentation_subalgebra_iff (A : Type*) [CommSemiring A]
-    {R : Type*} [CommSemiring R] [Algebra A R]
-    {S : Subalgebra A R} {I : Ideal R} :
-    I.IsAugmentation S ↔
-    IsCompl (Subalgebra.toSubmodule S) (I.restrictScalars A) := by
-  unfold Ideal.IsAugmentation
-  rw [← Submodule.isCompl_restrictScalars_iff A, Subalgebra.restrictScalars_toSubmodule_bot]
-  exact Iff.rfl
 
 theorem Ideal.isAugmentation_tensorProduct
     (A : Type*) [CommRing A]

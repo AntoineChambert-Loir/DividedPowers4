@@ -66,10 +66,14 @@ namespace DividedPowers
 structure isSubDPIdeal {A : Type _} [CommSemiring A] {I : Ideal A} (hI : DividedPowers I)
     (J : Ideal A) : Prop where
   isSubIdeal : J ≤ I
-  dpow_mem : ∀ n (_ : n ≠ 0), ∀ j ∈ J, hI.dpow n j ∈ J
+  dpow_mem : ∀ n ≠ 0, ∀ j ∈ J, hI.dpow n j ∈ J
 section isSubDPIdeal
 
 variable {A : Type _} [CommSemiring A] {I : Ideal A} (hI : DividedPowers I)
+
+theorem isSubDPIdeal.self : isSubDPIdeal hI I where
+  isSubIdeal := le_rfl
+  dpow_mem _ hn _ ha := hI.dpow_mem hn ha
 
 def isSubDPIdeal.dividedPowers {J : Ideal A} (hJ : isSubDPIdeal hI J) [∀ x, Decidable (x ∈ J)] :
     DividedPowers J where
@@ -216,6 +220,11 @@ theorem isSubDPIdeal_map_of_isSubDPIdeal {B : Type _} [CommSemiring B] {J : Idea
   rintro y ⟨x, hx, rfl⟩
   exact hf.1 (Ideal.mem_map_of_mem f (hK.1 hx))
 #align divided_powers.is_sub_pd_ideal_map DividedPowers.isSubDPIdeal_map_of_isSubDPIdeal
+
+theorem isSubDPIdeal_map {B : Type _} [CommSemiring B] {J : Ideal B} (hJ : DividedPowers J)
+    {f : A →+* B} (hf : isDPMorphism hI hJ f) :
+    isSubDPIdeal hJ (Ideal.map f I) :=
+  isSubDPIdeal_map_of_isSubDPIdeal hI hJ hf _ (isSubDPIdeal.self hI)
 
 end isSubDPIdeal
 
