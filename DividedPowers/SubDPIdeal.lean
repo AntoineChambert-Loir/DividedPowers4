@@ -203,7 +203,7 @@ theorem isSubDPIdeal_iSup {ι : Type _}
     intro i; exact (hJ i).1
 #align divided_powers.is_sub_pd_ideal_supr DividedPowers.isSubDPIdeal_iSup
 
-theorem isSubDPIdeal_map {B : Type _} [CommSemiring B] {J : Ideal B} (hJ : DividedPowers J)
+theorem isSubDPIdeal_map_of_isSubDPIdeal {B : Type _} [CommSemiring B] {J : Ideal B} (hJ : DividedPowers J)
     {f : A →+* B} (hf : isDPMorphism hI hJ f)
     (K : Ideal A) (hK : isSubDPIdeal hI K) :
     isSubDPIdeal hJ (Ideal.map f K) := by
@@ -215,7 +215,7 @@ theorem isSubDPIdeal_map {B : Type _} [CommSemiring B] {J : Ideal B} (hJ : Divid
   exact hK.2 n hn x hx
   rintro y ⟨x, hx, rfl⟩
   exact hf.1 (Ideal.mem_map_of_mem f (hK.1 hx))
-#align divided_powers.is_sub_pd_ideal_map DividedPowers.isSubDPIdeal_map
+#align divided_powers.is_sub_pd_ideal_map DividedPowers.isSubDPIdeal_map_of_isSubDPIdeal
 
 end isSubDPIdeal
 

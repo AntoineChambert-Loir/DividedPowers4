@@ -18,6 +18,13 @@ def extends_to {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I) {B
     [CommRing B] (f : A →+* B) : Prop :=
   ∃ hI' : DividedPowers (I.map f), isDPMorphism' hI hI' f
 
+lemma isDPMorphism'.span_map_le {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I)
+    {B : Type v} [CommRing B] (f : A →+* B) (K : Ideal B) (hK : DividedPowers K)
+      (hIKf : isDPMorphism' hI hK f) :
+      Submodule.span B (f '' I) ≤ K := by
+  apply le_trans _ hIKf.1
+  rw [submodule_span_eq, map]
+
 -- Note (1) after 3.14
 lemma extends_to_unique {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I) {B : Type v}
     [CommRing B] (f : A →+* B) (hext : extends_to hI f) {hK : DividedPowers (I.map f)}
@@ -31,7 +38,8 @@ lemma extends_to_unique {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPow
   by_cases hb : b ∈ I.map f
   · rw [map, ← submodule_span_eq] at hb
     revert n
-    apply Submodule.span_induction hb (p := fun b ↦ ∀ n, hK.dpow n b = hI'.dpow n b)
+    apply Submodule.span_induction' (p := fun b _ ↦  ∀ n, hK.dpow n b = hI'.dpow n b)
+          _ _ _ _ hb
     · intro x hx n
       simp only [Set.mem_image, SetLike.mem_coe] at hx
       obtain ⟨a, haI, rfl⟩ := hx
@@ -42,16 +50,18 @@ lemma extends_to_unique {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPow
         rw [hK.dpow_zero, hI'.dpow_zero]
         exact mem_map_of_mem f haI
         exact mem_map_of_mem f haI
-
     · intro n
       by_cases hn0 : n = 0
       · rw [hn0, hK.dpow_zero (Submodule.zero_mem (map f I)),
           hI'.dpow_zero (Submodule.zero_mem (map f I))]
       · rw [hK.dpow_eval_zero hn0, hI'.dpow_eval_zero hn0]
-    · intros b c hb hc n
-      sorry
-    · intros c x hx n
-      sorry
+    · intros x hxmem y hymem hx hy n
+      rw [submodule_span_eq, ← map] at hxmem hymem
+      rw [hK.dpow_add _ hxmem hymem, hI'.dpow_add _ hxmem hymem]
+      exact Finset.sum_congr rfl (fun nm _ ↦ by rw [hx nm.1, hy nm.2])
+    · intro c x hxmem hx n
+      rw [submodule_span_eq, ← map] at hxmem
+      rw [dpow_smul' _ _ _ hxmem, dpow_smul' _ _ _ hxmem, hx n]
   · rw [dpow_null _ hb, dpow_null _ hb]
 
 -- Note (2) after 3.14
@@ -219,6 +229,46 @@ lemma extends_to_of_principal {A : Type u} [CommRing A] {I : Ideal A} (hI : Divi
     rw [sub_mul, sub_eq_zero, (hIf.mp (mem_map_of_mem _ haI)).choose_spec, ← _root_.map_mul]
     rfl
 
+lemma isDPMorphism'.isSubDPIdeal_map {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I)
+    {B : Type v} [CommRing B] (f : A →+* B) {K : Ideal B} (hK : DividedPowers K)
+    (hIK : isDPMorphism' hI hK f) :
+    isSubDPIdeal hK (I.map f) := {
+      isSubIdeal := hIK.1
+      dpow_mem   := by
+        have hsub : Submodule.span B (f '' I) ≤ K := by
+          apply le_trans _ hIK.1
+          rw [submodule_span_eq, map]
+        intro n hn c hc
+        rw [map, ← submodule_span_eq] at hc
+        revert n
+        apply Submodule.span_induction' (p := fun c _ ↦  ∀ n (_ : n ≠ 0), hK.dpow n c ∈ map f I)
+          _ _ _ _ hc
+        · intro x hxmem n hn
+          simp only [Set.mem_image, SetLike.mem_coe] at hxmem
+          obtain ⟨a, haI, rfl⟩ := hxmem
+          rw [hIK.2 _ (Nat.zero_lt_of_ne_zero hn) _ haI]
+          exact mem_map_of_mem _ (hI.dpow_mem hn haI)
+        · intro n hn
+          rw [hK.dpow_eval_zero hn]
+          exact Submodule.zero_mem (map f I)
+        · intro x hxmem y hymem hx hy n hn
+          suffices Submodule.span B (f '' I) ≤ K by
+            rw [hK.dpow_add n (this hxmem) (this hymem)]
+            apply Ideal.sum_mem
+            intro nm hnm
+            by_cases hnm1 : nm.1 = 0
+            · have hnm2 : nm.2 ≠ 0 := by
+                rw [Finset.mem_antidiagonal, hnm1, zero_add] at hnm
+                rwa [hnm]
+              exact (I.map f).mul_mem_left _ (hy _ hnm2)
+            · exact (I.map f).mul_mem_right _ (hx _ hnm1)
+          exact hsub
+        · intro c x hxmem hx n hn
+          suffices Submodule.span B (f '' I) ≤ K by
+            rw [hK.dpow_smul' _ _ (this hxmem)]
+            exact Submodule.smul_mem  _ _ (hx n hn)
+          exact hsub }
+
 -- B-O Prop. 3.16
 lemma IsCompatibleWith_tfae {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I)
     {B : Type v} [CommRing B] {J : Ideal B} (hJ : DividedPowers J) (f : A →+* B) :
@@ -227,6 +277,7 @@ lemma IsCompatibleWith_tfae {A : Type u} [CommRing A] {I : Ideal A} (hI : Divide
       ∃ hK : DividedPowers (I.map f + J), isDPMorphism' hI hK f ∧ isDPMorphism' hJ hK (RingHom.id _),
       ∃ (K' : Ideal B) (hIJK : I.map f + J ≤ K') (hK' : DividedPowers K'),
       isDPMorphism' hI hK' f ∧ isDPMorphism' hJ hK' (RingHom.id _)] := by
+  classical
   tfae_have 1 → 2
   · sorry
   tfae_have 2 → 3
@@ -239,55 +290,14 @@ lemma IsCompatibleWith_tfae {A : Type u} [CommRing A] {I : Ideal A} (hI : Divide
     use hI', hI'J
     rintro n b ⟨hbJ, hbI⟩
     simp only [isDPMorphism', le_refl, true_and, map_id, RingHom.id_apply] at hIK hI'J hJK
-    have hsub : isSubDPIdeal hK (I.map f) := {
-      isSubIdeal := hIK.1
-      dpow_mem   := by
-        intro n hn c hc
-        --have hc' : c ∈ Ideal.span J (⇑f '' ↑I) := sorry
-        rw [map, ← submodule_span_eq] at hc
-        revert n
-        apply Submodule.span_induction' (p := fun c _ ↦  ∀ n (hn : n ≠ 0), hK.dpow n c ∈ map f I) _ _ _ _ hc
-        · sorry
-        · sorry
-        · intro x hxmem y hymem hx hy n hn
-          suffices Submodule.span B (f '' I) ≤ K by
-            rw [hK.dpow_add n (this hxmem) (this hymem)]
-            sorry
-          apply le_trans _ hIK.1
-          rw [submodule_span_eq, map]
-        · sorry }
-    rcases Nat.eq_zero_or_pos n with (hn | hn)
-    · simp only [hn, hJ.dpow_zero hbJ, hI'.dpow_zero hbI]
-    · rw [ ← hJK.2 n hn b]
-      rw [SetLike.mem_coe, map, ← submodule_span_eq] at hbI
-      revert n
-      apply Submodule.span_induction hbI (p := fun b ↦ ∀ n > 0, hK.dpow n b = hI'.dpow n b)
-      · rintro b ⟨a, haI, rfl⟩ n hn
-        rw [hIK.2 n hn a haI, hI'J n hn a haI]
-      · intro n
-        by_cases hn : n = 0
-        · rw [hn, dpow_zero _ (Submodule.zero_mem _), dpow_zero _ (Submodule.zero_mem _)]
-          exact fun a ↦ rfl
-        · rw [dpow_eval_zero _ hn, dpow_eval_zero _ hn]
-          exact fun a ↦ rfl
-
-      · intro x y hx hy n
-        by_cases hxJ : x ∈ J
-        · have hyJ : y ∈ J := sorry
-          rw [dpow_add _ _ (hJK.1 hxJ) (hJK.1 hyJ)]
-          sorry
-        · sorry --  rw [dpow_add]
-      --simp? [dpow_zero]
-      · intro c x hx n hn
-        by_cases hxJ : x ∈ J
-        · rw [dpow_smul' _ _ _ (hJK.1 hxJ), hx n hn]
-          by_cases hxI' : x ∈ I.map f
-          · rw [dpow_smul' _ _ _ hxI']
-          · by_cases hcxI' : c • x ∈ I.map f
-            · sorry
-            · rw [dpow_null _ hxI', dpow_null _ hcxI', smul_zero]
-        · sorry
-
+    have hsub : isSubDPIdeal hK (I.map f) := isDPMorphism'.isSubDPIdeal_map hI f hK hIK
+    set hK' : DividedPowers (map f I) := isSubDPIdeal.dividedPowers hK hsub
+    have hKI' : hI' = hK' := sorry --uniqueness theorem
+    rw [hKI']
+    rw [isSubDPIdeal.dividedPowers.dpow_eq_of_mem _ _ _ hbI]
+    by_cases hn : n = 0
+    · rw [hn, dpow_zero _ (hJK.1 hbJ), dpow_zero _ hbJ]
+    · exact (hJK.2 _ (Nat.zero_lt_of_ne_zero hn) _ hbJ).symm
   tfae_finish
 
 -- TODO: use (2) instead
