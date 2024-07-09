@@ -239,21 +239,23 @@ lemma IsCompatibleWith_tfae {A : Type u} [CommRing A] {I : Ideal A} (hI : Divide
     use hI', hI'J
     rintro n b ⟨hbJ, hbI⟩
     simp only [isDPMorphism', le_refl, true_and, map_id, RingHom.id_apply] at hIK hI'J hJK
-    /- have hsub : isSubDPIdeal hK (I.map f) := {
+    have hsub : isSubDPIdeal hK (I.map f) := {
       isSubIdeal := hIK.1
       dpow_mem   := by
         intro n hn c hc
         --have hc' : c ∈ Ideal.span J (⇑f '' ↑I) := sorry
         rw [map, ← submodule_span_eq] at hc
         revert n
-        apply Submodule.span_induction hc (p := fun c ↦  ∀ n (hn : n ≠ 0), hK.dpow n c ∈ map f I)
-        sorry
-        sorry
-        · intro x y hx hy n hn
-          sorry
-        sorry }
-    rw [ ← hJK.2 n b]
-    sorry -/
+        apply Submodule.span_induction' (p := fun c _ ↦  ∀ n (hn : n ≠ 0), hK.dpow n c ∈ map f I) _ _ _ _ hc
+        · sorry
+        · sorry
+        · intro x hxmem y hymem hx hy n hn
+          suffices Submodule.span B (f '' I) ≤ K by
+            rw [hK.dpow_add n (this hxmem) (this hymem)]
+            sorry
+          apply le_trans _ hIK.1
+          rw [submodule_span_eq, map]
+        · sorry }
     rcases Nat.eq_zero_or_pos n with (hn | hn)
     · simp only [hn, hJ.dpow_zero hbJ, hI'.dpow_zero hbI]
     · rw [ ← hJK.2 n hn b]
