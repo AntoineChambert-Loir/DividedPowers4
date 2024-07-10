@@ -6,13 +6,6 @@ open DividedPowerAlgebra DividedPowers Ideal
 
 namespace DividedPowers
 
--- I think we  need to remove the condition `a ∈ I` from the definition of isDPMorphism
-/-- Compatibility of a ring morphism with dp-structures -/
-def isDPMorphism' {A B : Type _} [CommSemiring A] [CommSemiring B] {I : Ideal A} {J : Ideal B}
-    (hI : DividedPowers I) (hJ : DividedPowers J) (f : A →+* B) : Prop :=
-  I.map f ≤ J ∧ ∀ n > 0, ∀ a ∈ I, hJ.dpow n (f a) = f (hI.dpow n a)
-
---Move these to "Extensions/Compatible" file
 /-- B-0 Def 3.14 -/
 def extends_to {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I) {B : Type v}
     [CommRing B] (f : A →+* B) : Prop :=
@@ -38,8 +31,7 @@ lemma extends_to_unique {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPow
   by_cases hb : b ∈ I.map f
   · rw [map, ← submodule_span_eq] at hb
     revert n
-    apply Submodule.span_induction' (p := fun b _ ↦  ∀ n, hK.dpow n b = hI'.dpow n b)
-          _ _ _ _ hb
+    apply Submodule.span_induction' (p := fun b _ ↦  ∀ n, hK.dpow n b = hI'.dpow n b) _ _ _ _ hb
     · intro x hx n
       simp only [Set.mem_image, SetLike.mem_coe] at hx
       obtain ⟨a, haI, rfl⟩ := hx
@@ -64,9 +56,7 @@ lemma extends_to_iff_exists_dpIdeal {A : Type u} [CommRing A] {I : Ideal A} (hI 
     extends_to hI f ↔ ∃ (J : Ideal B) (hJ : DividedPowers J), isDPMorphism hI hJ f := by
   classical
   refine ⟨fun ⟨hJ, hmap⟩ ↦ ⟨I.map f, hJ, hmap⟩, fun ⟨J, hJ, hmap⟩ ↦  ?_⟩
-  have hsub : isSubDPIdeal hJ (I.map f) := by
-    apply isSubDPIdeal_map _ _ hmap
-  use hsub.dividedPowers
+  use (isSubDPIdeal_map _ _ hmap).dividedPowers
   rw [isDPMorphism] at hmap ⊢
   refine ⟨le_refl _, ?_⟩
   intros n a ha
@@ -257,36 +247,27 @@ lemma isDPMorphism.isSubDPIdeal_map {A : Type u} [CommRing A] {I : Ideal A} (hI 
           exact hsub }
 
 -- B-O Prop. 3.16
+set_option linter.unusedVariables false in
 lemma IsCompatibleWith_tfae {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I)
     {B : Type v} [CommRing B] {J : Ideal B} (hJ : DividedPowers J) (f : A →+* B) :
     List.TFAE  [∃ hI' : DividedPowers (I.map f),  isDPMorphism hI hI' f ∧
-      ∀ (n : ℕ) (b : B) (_ : b ∈ J ⊓ I.map f), hJ.dpow n b = hI'.dpow n b,
+      ∀ (n : ℕ) (b : B) (_ : b ∈ J ⊓ I.map f), hI'.dpow n b = hJ.dpow n b,
       ∃ hK : DividedPowers (I.map f + J), isDPMorphism hI hK f ∧ isDPMorphism hJ hK (RingHom.id _),
       ∃ (K' : Ideal B) (hIJK : I.map f + J ≤ K') (hK' : DividedPowers K'),
       isDPMorphism hI hK' f ∧ isDPMorphism hJ hK' (RingHom.id _)] := by
   classical
   tfae_have 1 → 2
-  · sorry
+  · rintro ⟨hI', hII', hI'J⟩
+    rw [inf_comm] at hI'J
+    exact ⟨IdealAdd.dividedPowers hI' hJ hI'J,
+      isDPMorphism.comp hI hI' (IdealAdd.dividedPowers hI' hJ hI'J) f
+        (RingHom.id B) _ rfl (IdealAdd.isDPMorphism_left hI' hJ hI'J) hII',
+      IdealAdd.isDPMorphism_right hI' hJ hI'J⟩
   tfae_have 2 → 3
   · rintro ⟨hK, hIK, hJK⟩
     use I.map f + J, le_refl _, hK
   tfae_have 3 → 1
   · rintro ⟨K, hIJK, hK, hIK, hJK⟩
-    /- -- proof by MI
-    have hB : extends_to hI f := sorry
-    obtain ⟨hI', hI'J⟩ := hB
-    use hI', hI'J
-    rintro n b ⟨hbJ, hbI⟩
-    simp only [isDPMorphism', le_refl, true_and, map_id, RingHom.id_apply] at hIK hI'J hJK
-    have hsub : isSubDPIdeal hK (I.map f) := isDPMorphism.isSubDPIdeal_map hI f hK hIK
-    set hK' : DividedPowers (map f I) := isSubDPIdeal.dividedPowers hK hsub
-    have hKI' : hI' = hK' := by
-      sorry --uniqueness theorem
-    rw [hKI']
-    rw [isSubDPIdeal.dividedPowers.dpow_eq_of_mem _ _ _ hbI]
-    by_cases hn : n = 0
-    · rw [hn, dpow_zero _ (hJK.1 hbJ), dpow_zero _ hbJ]
-    · exact (hJK.2 _ (Nat.zero_lt_of_ne_zero hn) _ hbJ).symm -/
     have hsub : isSubDPIdeal hK (I.map f) := isDPMorphism.isSubDPIdeal_map hI f hK hIK
     set hK' : DividedPowers (map f I) := isSubDPIdeal.dividedPowers hK hsub
     use hK'

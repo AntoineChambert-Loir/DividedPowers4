@@ -1,5 +1,6 @@
 import DividedPowers.RatAlgebra
 import DividedPowers.BasicLemmas
+import DividedPowers.DPMorphism
 
 
 theorem Polynomial.C_eq_smul_one {R : Type _} [Semiring R] (a : R) : (C a : Polynomial R) = a • (1 : Polynomial R) := by
@@ -659,6 +660,18 @@ theorem dpow_unique {J : Ideal A} (hJ : DividedPowers J) (hsup : DividedPowers (
   intro k _
   apply congr_arg₂ (· * ·) (hI' _ a ha).symm (hJ' _ b hb).symm
 #align divided_powers.ideal_add.dpow_unique DividedPowers.IdealAdd.dpow_unique
+
+lemma isDPMorphism_left {J : Ideal A} (hJ : DividedPowers J)
+    (hIJ : ∀ (n : ℕ), ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) :
+    hI.isDPMorphism (IdealAdd.dividedPowers hI hJ hIJ) (RingHom.id A):=
+  ⟨by simp only [Ideal.map_id]; exact le_sup_left,
+    fun n _ ha ↦ dpow_eq_of_mem_left hI hJ hIJ n ha⟩
+
+lemma isDPMorphism_right {J : Ideal A} (hJ : DividedPowers J)
+    (hIJ : ∀ (n : ℕ), ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) :
+    hJ.isDPMorphism (IdealAdd.dividedPowers hI hJ hIJ) (RingHom.id A):=
+  ⟨by simp only [Ideal.map_id]; exact le_sup_right,
+    fun n _ ha ↦ dpow_eq_of_mem_right hI hJ hIJ n ha⟩
 
 end IdealAdd
 
