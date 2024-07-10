@@ -20,6 +20,17 @@ theorem isDPMorphism.map_dpow
     (hf : isDPMorphism hI hJ f) (n : ℕ) (a : A) (ha : a ∈ I) :
     f (hI.dpow n a) = hJ.dpow n (f a) := (hf.2 n a ha).symm
 
+lemma isDPMorphism_iff {A B : Type*} [CommSemiring A] [CommSemiring B] {I : Ideal A} {J : Ideal B}
+    (hI : DividedPowers I) (hJ : DividedPowers J) (f : A →+* B) :
+    isDPMorphism hI hJ f ↔ I.map f ≤ J ∧ ∀ n > 0, ∀ a ∈ I, hJ.dpow n (f a) = f (hI.dpow n a) := by
+  rw [isDPMorphism, and_congr_right_iff]
+  intro hIJ
+  refine ⟨fun H n _ ↦ H n, fun H n ↦ ?_⟩
+  · rcases n.eq_zero_or_pos with (hn | hn)
+    · intro a ha
+      rw [hn, hI.dpow_zero ha, hJ.dpow_zero (hIJ (Ideal.mem_map_of_mem f ha)), map_one]
+    · exact H n hn
+
 /- Suggestion  : make it a structure,
   so that dpMorphism just needs to copy it :
 /-- Compatibility of a ring morphism with dp-structures -/
