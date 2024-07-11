@@ -886,6 +886,73 @@ theorem roby_prop_4'
     · apply Submodule.mem_sup_right
       exact ⟨mul_mem_right (y + z) I hb, mul_mem_left J b (add_mem hy.right hz.right)⟩
 
+-- Roby, Variante de la proposition 4
+theorem roby_prop_4''
+    (A : Type*) [CommRing A] (R : Type*) [CommRing R] [Algebra A R]
+    {I : Ideal R} {R₀ : Subalgebra A R} (hsplit : IsAugmentation R₀ I)
+    {J : Ideal R} {F₀ : Set R₀} {FI : Set I} (hJ : J = span (F₀ ∪ FI : Set R)) :
+    J ⊓ I = span (FI : Set R) := by
+  rcases hsplit with ⟨hd, hc⟩
+  apply le_antisymm
+  · intro x
+    simp only [Ideal.mem_inf, SetLike.coe_sort_coe, and_imp]
+    intro hx hx'
+    rw [hJ] at hx
+    sorry
+
+  · simp only [span_le, SetLike.coe_sort_coe, Submodule.inf_coe,
+      Set.subset_inter_iff]
+    constructor
+    rw [hJ]
+    exact subset_trans (Set.subset_union_right _ _) subset_span
+    exact Subtype.coe_image_subset _ _
+
+/-
+  simp only [Submodule.disjoint_def, Subalgebra.mem_toSubmodule,
+    Submodule.restrictScalars_mem] at hd
+  refine le_antisymm ?_ (sup_le inf_le_right inf_le_right)
+  intro x hx
+  simp only [hJ, SetLike.coe_sort_coe, Submodule.restrictScalars_mem] at hx
+  apply Submodule.span_induction hx (p := fun x ↦ x ∈ _)
+  · rintro _ (⟨⟨x, hx'⟩, hx, rfl⟩ | ⟨y, hy, rfl⟩)
+    · apply Submodule.mem_sup_left
+      simp only [Submodule.mem_inf, Subalgebra.mem_toSubmodule, Submodule.restrictScalars_mem]
+      constructor
+      · rw [Algebra.mem_bot]
+        exact ⟨⟨x, hx'⟩, rfl⟩
+      rw [hJ]
+      apply Submodule.subset_span
+      apply Set.mem_union_left
+      simp only [SetLike.coe_sort_coe, Set.mem_image, Subtype.exists, exists_and_right,
+        exists_eq_right, hx, exists_prop, and_true, hx']
+    · apply Submodule.mem_sup_right
+      simp only [hJ, SetLike.coe_sort_coe, submodule_span_eq, Submodule.mem_inf,
+        Submodule.restrictScalars_mem, SetLike.coe_mem, true_and]
+      apply Submodule.subset_span
+      apply Set.mem_union_right
+      simp only [Set.mem_image, SetLike.coe_eq_coe, exists_eq_right, hy]
+  · exact zero_mem _
+  · exact fun x y hx hy ↦ add_mem hx hy
+  · intro a x hx
+    obtain ⟨a, ha, b, hb, rfl⟩ := Submodule.exists_add_eq_of_codisjoint hc a
+    simp only [Submodule.mem_sup, Submodule.mem_inf, Subalgebra.mem_toSubmodule, Submodule.restrictScalars_mem] at hx
+    obtain ⟨y, hy, z, hz, rfl⟩ := hx
+    simp only [Subalgebra.mem_toSubmodule, Algebra.mem_bot, Set.mem_range, Subtype.exists] at ha
+    obtain ⟨a, ha, rfl⟩ := ha
+    simp only [Submodule.restrictScalars_mem] at hb
+    rw [add_smul]
+    apply add_mem
+    · apply Submodule.smul_mem
+      apply add_mem
+      · apply Submodule.mem_sup_left
+        simp only [Submodule.mem_inf, Subalgebra.mem_toSubmodule, hy, Submodule.restrictScalars_mem,
+          and_self]
+      · apply Submodule.mem_sup_right
+        simp only [Submodule.mem_inf, Submodule.restrictScalars_mem, hz, and_self]
+    · apply Submodule.mem_sup_right
+      exact ⟨mul_mem_right (y + z) I hb, mul_mem_left J b (add_mem hy.right hz.right)⟩
+-/
+
 theorem ne_zero_of_mem_antidiagonal_ne_zero {M : Type*} [AddCommMonoid M] [HasAntidiagonal M]
     {x : M × M} {m : M} (hx : x ∈ antidiagonal m) (hm : m ≠ 0) :
     x.1 ≠ 0 ∨ x.2 ≠ 0 := by
@@ -907,7 +974,6 @@ theorem roby_prop_4
     {J : Ideal R} {F₀ : Set R₀} {FI : Set I}
     (hJ : J = Ideal.span (F₀ ∪ FI : Set R)):
     hI.isSubDPIdeal (J ⊓ I) ↔ (∀ a ∈ FI, ∀ n ≠ 0, hI.dpow n a ∈ J):= by
-  have hJI : J ⊓ I = Ideal.span (FI : Set R) := sorry
   simp only [Ideal.isAugmentation_subalgebra_iff] at hsplit
   constructor
   · intro hJ'
@@ -917,8 +983,10 @@ theorem roby_prop_4
     simp only [ge_iff_le, le_refl, inf_of_le_left]
     apply inf_le_left (b := I)
     apply this
-    rw [hJI]
-    apply Ideal.subset_span
+    simp only [Ideal.mem_inf, SetLike.coe_mem, and_true]
+    rw [hJ]
+    apply subset_span
+    apply Set.mem_union_right
     use a
   · intro H
     set T := { s ∈ J ⊓ I | ∀ n ≠ 0, hI.dpow n s ∈ J } with hJ'
@@ -990,9 +1058,9 @@ theorem roby_prop_4
       · exact fun hu ↦ Submodule.subset_span hu
       · intro hu
         induction hu using Submodule.span_induction' with
-        | mem u hu => exact hu
+        | mem _ hu => exact hu
         | zero => exact zero_mem U
-        | add x hx y hy hx' hy' => exact U.add_mem hx' hy'
+        | add x _ y _ hx' hy' => exact U.add_mem hx' hy'
         | smul a x hx hx' =>
           obtain ⟨b, hb, c, hc, rfl⟩ := Submodule.exists_add_eq_of_codisjoint hsplit.codisjoint a
           simp only [Subalgebra.mem_toSubmodule, Submodule.restrictScalars_mem] at hb hc
@@ -1024,14 +1092,12 @@ theorem roby_prop_4
               apply Ideal.mul_mem_left
               rw [← Nat.succ_pred_eq_of_ne_zero hn, pow_succ]
               apply Ideal.mul_mem_left _ _ hy
-
-
     apply le_antisymm
     · rw [Submodule.span_le, hU]
       intro j hj
       simp only [SetLike.mem_coe, Submodule.mem_sup, Submodule.mem_inf,
         Submodule.restrictScalars_mem, Subalgebra.mem_toSubmodule] at hj
-      obtain ⟨y, ⟨hy, hy'⟩, z, hz, rfl⟩ := hj
+      obtain ⟨y, ⟨hy, _⟩, z, hz, rfl⟩ := hj
       simp only [SetLike.mem_coe]
       exact Submodule.add_mem _ hy (inf_le_left (b := I) (hT_le hz))
     · simp only [hJ, SetLike.coe_sort_coe, span_union, submodule_span_eq, sup_le_iff]
@@ -1056,8 +1122,11 @@ theorem roby_prop_4
         suffices b ∈ T by rwa [hT] at this
         simp only [hJ', Set.mem_setOf_eq]
         constructor
-        · rw [hJI]
-          apply Ideal.subset_span
+        · simp only [Ideal.mem_inf]
+          refine ⟨?_, hb⟩
+          rw [hJ]
+          apply  subset_span
+          apply Set.mem_union_right
           use ⟨b, hb⟩
         · intro n hn
           exact H _ hb' n hn
