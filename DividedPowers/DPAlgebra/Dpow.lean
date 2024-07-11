@@ -1152,19 +1152,36 @@ example (A : Type*) [CommRing A]
 theorem CondQ_and_condTFree_imply_condT (A : Type*) [CommRing A]
     (hQ : CondQ A) (hT_free : CondTFree A) : CondT A := by
   intro R' _ _ I' hI' R₀' hIR₀' S' _ _ J' hJ' S₀' hJS₀'
-  simp only [CondQ] at hQ
-
   obtain ⟨R, _, _, I, hI, R₀, hIR₀, f, hfI, hfR₀, hf, hfDP, hR_free⟩ := hQ R' I' hI' R₀' hIR₀'
   obtain ⟨S, _, _, J, hJ, S₀, hJS₀, g, hgJ, hgS₀, hg, hgDP, hS_free⟩ := hQ S' J' hJ' S₀' hJS₀'
   apply condτ_rel A hIR₀ hI hJS₀ hJ hIR₀' hI' hJS₀' hJ' f hf hfDP hfR₀.symm hfI.symm g hg hgDP hgS₀.symm hgJ.symm
   apply hT_free R
 
-
 -- Roby, lemma 8
-theorem condT_and_condD_imply_condD (A : Type*) [CommRing A] [DecidableEq A]
-    (hT : CondT A) (hD : CondD A)
-    (R : Type*) [CommRing R]  [DecidableEq R] [Algebra A R] :
-    CondD R :=
+theorem condT_and_condD_imply_condD (A : Type u) [CommRing A] [DecidableEq A]
+    (condT : CondT A) (condD : CondD A)
+    (R : Type u) [CommRing R]  [DecidableEq R] [Algebra A R] :
+    CondD R := by
+  classical
+  intro M _ _
+  letI : Module A M := Module.compHom M (algebraMap A R)
+  letI : IsScalarTower A R M :=
+    IsScalarTower.of_algebraMap_smul fun r ↦ congrFun rfl
+  set D := R ⊗[A] DividedPowerAlgebra A M
+  obtain ⟨hM, hM_eq⟩ := condD M
+  have hMa := isAugmentation A M
+  set hR : DividedPowers (⊥ : Ideal R) := dividedPowersBot R
+  have hRa : IsAugmentation (⊤ : Subalgebra A R) (⊥ : Ideal R) := by
+    rw [isAugmentation_subalgebra_iff A]
+    exact IsCompl.symm { disjoint := fun ⦃x⦄ a a_1 ↦ a, codisjoint := fun ⦃x⦄ a a ↦ a }
+  obtain ⟨hD, hhD1, hhD2⟩ := condT R hR hRa (DividedPowerAlgebra A M) hM hMa
+  -- e : D ≃ₐ[R] DividedPowerAlgebra R M
+  -- Ideal.map (K A ⊥ (augIdeal A M)) = augIdeal R M
+  -- transférer les puissances divisées
+
+
+
+
   sorry
 
 -- Roby, lemma 9 is in roby9 (other file)
