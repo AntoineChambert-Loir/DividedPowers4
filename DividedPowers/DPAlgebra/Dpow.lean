@@ -87,6 +87,17 @@ open Ideal
 -- direct_sum
 open RingQuot
 
+section Proposition1
+
+variable {A : Type*} [CommRing A]
+  {R : Type*} [CommRing R] [Algebra A R] {R₀ : Subalgebra A R} {I : Ideal R}
+  (hIR₀ : IsAugmentation R₀ I) (hI : DividedPowers I)
+
+theorem proposition1 (F₀ : Set R₀) (FI : Set I) :
+  isSubDPAlgebra A (Algebra.adjoin A ⊥ ((F₀ : Set R) ∪ (FI : Set R))) ↔
+    sorry := sorry
+end Proposition1
+
 namespace DividedPowerAlgebra
 
 open DividedPowerAlgebra
@@ -875,6 +886,18 @@ theorem roby_prop_4'
     · apply Submodule.mem_sup_right
       exact ⟨mul_mem_right (y + z) I hb, mul_mem_left J b (add_mem hy.right hz.right)⟩
 
+theorem ne_zero_of_mem_antidiagonal_ne_zero {M : Type*} [AddCommMonoid M] [HasAntidiagonal M]
+    {x : M × M} {m : M} (hx : x ∈ antidiagonal m) (hm : m ≠ 0) :
+    x.1 ≠ 0 ∨ x.2 ≠ 0 := by
+  rw [← not_and_or]
+  intro h
+  apply hm
+  simpa only [mem_antidiagonal, h.1, h.2, eq_comm, add_zero] using hx
+
+theorem Submodule.restrictScalars_sup {A R M : Type*} [CommSemiring A] [Semiring R] [Algebra A R] [AddCommMonoid M] [Module A M] [Module R M] [IsScalarTower A R M] {U V : Submodule R M} :
+    Submodule.restrictScalars A (U ⊔ V) = Submodule.restrictScalars A U ⊔ Submodule.restrictScalars A V := by
+  exact Submodule.sup_restrictScalars A U V
+
 -- Roby, Proposition 4
 theorem roby_prop_4
     {A : Type*} [CommRing A] {R : Type*} [CommRing R] [Algebra A R]
@@ -882,29 +905,162 @@ theorem roby_prop_4
     (hsplit : IsAugmentation R₀ I)
     (hI : DividedPowers I)
     {J : Ideal R} {F₀ : Set R₀} {FI : Set I}
-    (hJ : J = Ideal.span (F₀ : Set R) ⊔ Ideal.span (FI : Set R)):
-    hI.isSubDPIdeal (J ⊓ I) ↔ (∀ a ∈ FI, ∀ n ≠ 0, hI.dpow n a ∈ I):= by
+    (hJ : J = Ideal.span (F₀ ∪ FI : Set R)):
+    hI.isSubDPIdeal (J ⊓ I) ↔ (∀ a ∈ FI, ∀ n ≠ 0, hI.dpow n a ∈ J):= by
   have hJI : J ⊓ I = Ideal.span (FI : Set R) := sorry
+  simp only [Ideal.isAugmentation_subalgebra_iff] at hsplit
   constructor
   · intro hJ'
     intro a ha n hn
     have := hJ'.dpow_mem n hn
     apply inf_le_right (a := J)
-    apply hJ'.dpow_mem n hn a
-    simp only [hJI, SetLike.coe_sort_coe]
+    simp only [ge_iff_le, le_refl, inf_of_le_left]
+    apply inf_le_left (b := I)
+    apply this
+    rw [hJI]
     apply Ideal.subset_span
     use a
   · intro H
     set T := { s ∈ J ⊓ I | ∀ n ≠ 0, hI.dpow n s ∈ J } with hJ'
-
-    exact {
+    -- We prove that T is a subideal of J ⊓ I
+    have hT_le : span T ≤ J ⊓ I := by
+      rw [Ideal.span_le]
+      exact fun t ht ↦ Set.mem_of_mem_inter_left ht
+    have hT : T = span T := by
+      ext t
+      refine ⟨fun ht ↦ Ideal.subset_span ht, ?_⟩
+      intro (ht  : t ∈ span T)
+      rw [hJ']
+      simp only [Set.mem_setOf_eq]
+      constructor
+      · exact hT_le ht
+      · induction ht using Submodule.span_induction' with
+        | mem t ht => exact fun n hn ↦ ht.2 n hn
+        | zero => exact fun n hn ↦ by simp only [hI.dpow_eval_zero hn, zero_mem]
+        | add a ha b hb ha' hb' =>
+          intro n hn
+          rw [hI.dpow_add n]
+          · apply Ideal.sum_mem
+            rintro ⟨u, v⟩ h
+            simp only
+            rcases ne_zero_of_mem_antidiagonal_ne_zero h hn with (hu | hv)
+            · exact J.mul_mem_right _ (ha' u hu)
+            · exact J.mul_mem_left _ (hb' v hv)
+          · exact inf_le_right (a := J) (hT_le ha)
+          · exact inf_le_right (a := J) (hT_le hb)
+        | smul a x hx hx' =>
+          intro n hn
+          rw [smul_eq_mul, hI.dpow_smul]
+          exact Ideal.mul_mem_left _ _ (hx' n hn)
+          exact inf_le_right (a := J) (hT_le hx)
+    suffices T = J ⊓ I by exact {
       isSubIdeal := inf_le_right
       dpow_mem := fun n hn a ha ↦ by
         simp only [Ideal.mem_inf] at ha ⊢
+        suffices ha' : a ∈ T by
+          exact ⟨ha'.2 n hn, hI.dpow_mem hn ha.2⟩
+        simp only [this, Submodule.inf_coe, Set.mem_inter_iff, SetLike.mem_coe, ha.2, ha.1, and_true] }
+    set U := (J.restrictScalars A ⊓ Subalgebra.toSubmodule R₀) ⊔
+      (Ideal.span T).restrictScalars A with hU
+    suffices U = J.restrictScalars A by
+      rw [hT]
+      ext t
+      simp only [SetLike.mem_coe]
+      constructor
+      · exact fun ht ↦ hT_le ht
+      · simp only [Ideal.mem_inf]
+        rintro ⟨ht, ht'⟩
+        rw [← Submodule.restrictScalars_mem A, ← this, Submodule.mem_sup] at ht
+        obtain ⟨y, hy, z, hz, rfl⟩ := ht
+        simp only [Submodule.mem_inf, Submodule.restrictScalars_mem,
+          Subalgebra.mem_toSubmodule] at hy hz
+        apply Submodule.add_mem _ _ hz
+        suffices y = 0 by
+          simp only [this, zero_mem]
+        have hz' := Ideal.mem_inf.mp (hT_le hz)
+        apply Submodule.disjoint_def.mp hsplit.disjoint
+        simp only [Subalgebra.mem_toSubmodule, hy.2]
+        simp only [Submodule.restrictScalars_mem]
+        rw [← add_sub_cancel_right y z]
+        apply Submodule.sub_mem _ ht' hz'.2
+    suffices Submodule.span R U = J by
+      ext u
+      simp only [← this, Submodule.restrictScalars_mem]
+      constructor
+      · exact fun hu ↦ Submodule.subset_span hu
+      · intro hu
+        induction hu using Submodule.span_induction' with
+        | mem u hu => exact hu
+        | zero => exact zero_mem U
+        | add x hx y hy hx' hy' => exact U.add_mem hx' hy'
+        | smul a x hx hx' =>
+          obtain ⟨b, hb, c, hc, rfl⟩ := Submodule.exists_add_eq_of_codisjoint hsplit.codisjoint a
+          simp only [Subalgebra.mem_toSubmodule, Submodule.restrictScalars_mem] at hb hc
+          rw [add_smul, smul_eq_mul]
+          rw [hU]
+          simp only [hU, Submodule.mem_sup, Submodule.mem_inf,
+              Submodule.restrictScalars_mem, Subalgebra.mem_toSubmodule] at hx'
+          obtain ⟨y, ⟨hy, hy'⟩, z, hz, rfl⟩ := hx'
+          apply Submodule.add_mem
+          · simp only [mul_add]
+            apply Submodule.add_mem
+            apply Submodule.mem_sup_left
+            simp only [Submodule.mem_inf, Submodule.restrictScalars_mem, Subalgebra.mem_toSubmodule]
+            exact ⟨J.mul_mem_left b hy, R₀.mul_mem hb hy'⟩
+            apply Submodule.mem_sup_right
+            simp only [Submodule.restrictScalars_mem]
+            exact Ideal.mul_mem_left _ b hz
+          · apply Submodule.mem_sup_right
+            simp only [smul_eq_mul, Submodule.restrictScalars_mem, mul_add]
+            apply Submodule.add_mem _ _ (Ideal.mul_mem_left _ _ hz)
+            suffices c * y ∈ T by rwa [hT, SetLike.mem_coe] at this
+            simp only [hJ', Ideal.mem_inf, Set.mem_setOf_eq]
+            constructor
+            constructor
+            · exact Ideal.mul_mem_left _ _ hy
+            · exact Ideal.mul_mem_right _ _ hc
+            · intro n hn
+              rw [hI.dpow_mul_right n hc]
+              apply Ideal.mul_mem_left
+              rw [← Nat.succ_pred_eq_of_ne_zero hn, pow_succ]
+              apply Ideal.mul_mem_left _ _ hy
+
+
+    apply le_antisymm
+    · rw [Submodule.span_le, hU]
+      intro j hj
+      simp only [SetLike.mem_coe, Submodule.mem_sup, Submodule.mem_inf,
+        Submodule.restrictScalars_mem, Subalgebra.mem_toSubmodule] at hj
+      obtain ⟨y, ⟨hy, hy'⟩, z, hz, rfl⟩ := hj
+      simp only [SetLike.mem_coe]
+      exact Submodule.add_mem _ hy (inf_le_left (b := I) (hT_le hz))
+    · simp only [hJ, SetLike.coe_sort_coe, span_union, submodule_span_eq, sup_le_iff]
+      constructor
+      · rw [Ideal.span_le]
+        rintro a ⟨⟨b, hb⟩, hb', rfl⟩
+        simp only [SetLike.mem_coe]
+        apply Ideal.subset_span
+        apply Submodule.mem_sup_left
+        simp only [Submodule.mem_inf, Submodule.restrictScalars_mem, Subalgebra.mem_toSubmodule, hb,
+          and_true]
+        rw [hJ]
+        apply Ideal.subset_span
+        apply Set.mem_union_left
+        use ⟨b, hb⟩
+      · rw [Ideal.span_le]
+        rintro a ⟨⟨b, hb⟩, hb', rfl⟩
+        simp only [SetLike.mem_coe]
+        apply Ideal.subset_span
+        apply Submodule.mem_sup_right
+        simp only [Submodule.restrictScalars_mem]
+        suffices b ∈ T by rwa [hT] at this
+        simp only [hJ', Set.mem_setOf_eq]
         constructor
-        · sorry
-        · sorry
-    }
+        · rw [hJI]
+          apply Ideal.subset_span
+          use ⟨b, hb⟩
+        · intro n hn
+          exact H _ hb' n hn
 
 theorem Ideal.map_coe_toRingHom
   {A : Type*} [CommRing A] {R S : Type*} [CommRing R] [CommRing S]
