@@ -15,9 +15,9 @@ theorem isExponential_dpowExp (hI : DividedPowers I) {a : R} (ha : a ∈ I) :
     PowerSeries.IsExponential (hI.dpowExp a) := by
   rw [isExponential_iff]
   constructor
-  · simp only [dpowExp, ← coeff_zero_eq_constantCoeff_apply, coeff_mk, dpow_zero _ ha]
   · intro p q
     simp only [dpowExp, coeff_mk, hI.dpow_mul p q ha]
+  · simp only [dpowExp, ← coeff_zero_eq_constantCoeff_apply, coeff_mk, dpow_zero _ ha]
 
 def dpowExp_smul (hI : DividedPowers I) {r a : R} (ha : a ∈ I) :
     hI.dpowExp (r * a) = scale r (hI.dpowExp a) := by
