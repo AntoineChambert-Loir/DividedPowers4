@@ -457,6 +457,92 @@ theorem prod_dpow_self {ι : Type _} {s : Finset ι} {n : ι → ℕ} (a : A) (h
 
 end BasicLemmas
 
+section Equiv
+
+variable {A B : Type*} [CommRing A] {I : Ideal A} [CommRing B] {J : Ideal B}
+  (e : A ≃+* B) (h : I.map e = J)
+
+example : I.map e = I.comap e.symm := by
+  exact Eq.symm (Ideal.comap_symm I e)
+
+#check Ideal.map_symm
+
+theorem mem_aux (b : B) : e.symm b ∈ I ↔ b ∈ J := by
+  simp only [← h, ← Ideal.comap_symm]
+  rfl
+
+theorem mem_aux' (a : A) : e a ∈ J ↔ a ∈ I := by
+  rw [← mem_aux e h]
+  simp only [RingEquiv.symm_apply_apply]
+
+/-- Transfer divided powers under an equivalence -/
+def ofRingEquiv (hI : DividedPowers I) : DividedPowers J where
+  dpow n b := e (hI.dpow n (e.symm b))
+  dpow_null {n} {x} hx := by
+    rw [AddEquivClass.map_eq_zero_iff, hI.dpow_null]
+    rwa [mem_aux e h]
+  dpow_zero {x} hx := by
+    rw [MulEquivClass.map_eq_one_iff, hI.dpow_zero]
+    rwa [mem_aux e h]
+  dpow_one {x} hx := by
+    simp only
+    rw [dpow_one, RingEquiv.apply_symm_apply]
+    rwa [mem_aux e h]
+  dpow_mem {n} {x} hn hx := by
+    simp only
+    rw [mem_aux' e h]
+    apply hI.dpow_mem hn
+    rw [mem_aux e h]
+    exact hx
+  dpow_add n {x y} hx hy:= by
+    simp only [map_add]
+    rw [hI.dpow_add n ((mem_aux e h x).mpr hx) ((mem_aux e h y).mpr hy)]
+    simp only [map_sum, map_mul]
+  dpow_smul n {a x} hx := by
+    simp only [map_mul]
+    rw [hI.dpow_smul n ((mem_aux e h x).mpr hx)]
+    rw [map_mul, map_pow]
+    simp only [RingEquiv.apply_symm_apply]
+  dpow_mul m n {x} hx := by
+    simp only
+    rw [← map_mul, hI.dpow_mul, map_mul]
+    simp only [map_natCast]
+    exact (mem_aux e h x).mpr hx
+  dpow_comp m {n x} hn hx := by
+    simp only [RingEquiv.symm_apply_apply]
+    rw [hI.dpow_comp _ hn]
+    simp only [map_mul, map_natCast]
+    exact (mem_aux e h x).mpr hx
+
+@[simp]
+theorem ofRingEquiv_eq (hI : DividedPowers I) (n : ℕ) (b : B) :
+    (ofRingEquiv e h hI).dpow n b = e (hI.dpow n (e.symm b)) := rfl
+
+theorem ofRingEquiv_eq' (hI : DividedPowers I) (n : ℕ) (a : A) :
+    (ofRingEquiv e h hI).dpow n (e a) = e (hI.dpow n a) := by
+  simp
+
+/-- Transfer divided powers under an equivalence (Equiv version) -/
+def equiv : DividedPowers I ≃ DividedPowers J where
+  toFun := ofRingEquiv e h
+  invFun := ofRingEquiv e.symm (by
+    rw [← h]
+    change Ideal.map e.symm.toRingHom (I.map e.toRingHom) = I
+    rw [Ideal.map_map]
+    simp only [RingEquiv.toRingHom_eq_coe, RingEquiv.symm_comp, Ideal.map_id])
+  left_inv := fun hI ↦ by ext n a; simp [ofRingEquiv]
+  right_inv := fun hJ ↦ by ext n b; simp [ofRingEquiv]
+
+def equiv_apply (hI : DividedPowers I) (n : ℕ) (b : B) :
+    (equiv e h hI).dpow n b = e (hI.dpow n (e.symm b)) := rfl
+
+def equiv_apply' (hI : DividedPowers I) (n : ℕ) (a : A) :
+    (equiv e h hI).dpow n (e a) = e (hI.dpow n a) :=
+  ofRingEquiv_eq' e h hI n a
+
+end Equiv
+
+
 end DividedPowers
 
 /- Comparison with Berthelot, Coho. cristalline
