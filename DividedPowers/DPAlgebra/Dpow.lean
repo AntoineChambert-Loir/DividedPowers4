@@ -1183,7 +1183,7 @@ theorem condT_and_condD_imply_condD (A : Type u) [CommRing A] [DecidableEq A]
   divided power structure.
   Unfortunately, [Roby, 1963, III.3] `dpScalarExtensionEquiv` proves
   something else, namely
-      D ≃ₐ[R] DividedPowerAlgebra R (R ⊗_A M)
+      D ≃ₐ[R] DividedPowerAlgebra R (R ⊗[A] M)
   I don't know how this can be repaired… -/
   set e := dpScalarExtensionEquiv A R M
   have := K A (⊥ : Ideal R) (augIdeal A M)
