@@ -1175,8 +1175,20 @@ theorem condT_and_condD_imply_condD (A : Type u) [CommRing A] [DecidableEq A]
     rw [isAugmentation_subalgebra_iff A]
     exact IsCompl.symm { disjoint := fun ⦃x⦄ a a_1 ↦ a, codisjoint := fun ⦃x⦄ a a ↦ a }
   obtain ⟨hD, hhD1, hhD2⟩ := condT R hR hRa (DividedPowerAlgebra A M) hM hMa
-  -- e : D ≃ₐ[R] DividedPowerAlgebra R M
-  -- Ideal.map (K A ⊥ (augIdeal A M)) = augIdeal R M
+  /- Roby claims that there is an “obvious” isomorphism
+    e : D ≃ₐ[R] DividedPowerAlgebra R M
+  that maps the ideal `K` t the augmentation ideal `augIdeal R M`.
+  Using this isomorphism, the divided powers `hD` on `D` would
+  be transfered to `DividedPowerAlgebra R M` to give the desired
+  divided power structure.
+  Unfortunately, [Roby, 1963, III.3] `dpScalarExtensionEquiv` proves
+  something else, namely
+      D ≃ₐ[R] DividedPowerAlgebra R (R ⊗_A M)
+  I don't know how this can be repaired… -/
+  set e := dpScalarExtensionEquiv A R M
+  have := K A (⊥ : Ideal R) (augIdeal A M)
+  -- -- here is where the problem appeared!
+  -- have he : Ideal.map e (K A (⊥ : Ideal R) (augIdeal A M)) = augIdeal R M := sorry
   -- transférer les puissances divisées
 
 
