@@ -93,9 +93,11 @@ variable {A : Type*} [CommRing A]
   {R : Type*} [CommRing R] [Algebra A R] {R₀ : Subalgebra A R} {I : Ideal R}
   (hIR₀ : IsAugmentation R₀ I) (hI : DividedPowers I)
 
+--TODO
 /- theorem proposition1 (F₀ : Set R₀) (FI : Set I) :
   isSubDPAlgebra A (Algebra.adjoin A ⊥ ((F₀ : Set R) ∪ (FI : Set R))) ↔
-    sorry := sorry-/
+    sorry := sorry -/
+
 end Proposition1
 
 namespace DividedPowerAlgebra
@@ -1160,9 +1162,11 @@ theorem CondQ_and_condTFree_imply_condT (A : Type*) [CommRing A]
 -- Roby, lemma 8
 theorem condT_and_condD_imply_condD (A : Type u) [CommRing A] [DecidableEq A]
     (condT : CondT A) (condD : CondD A)
-    (R : Type u) [CommRing R]  [DecidableEq R] [Algebra A R] :
+    (R : Type v) [CommRing R] [DecidableEq R] [Algebra A R] :
     CondD R := by
-  classical
+  sorry
+  -- Commented out because we changed R from Type u to Type v
+  /- classical
   intro M _ _
   letI : Module A M := Module.compHom M (algebraMap A R)
   letI : IsScalarTower A R M :=
@@ -1174,7 +1178,8 @@ theorem condT_and_condD_imply_condD (A : Type u) [CommRing A] [DecidableEq A]
   have hRa : IsAugmentation (⊤ : Subalgebra A R) (⊥ : Ideal R) := by
     rw [isAugmentation_subalgebra_iff A]
     exact IsCompl.symm { disjoint := fun ⦃x⦄ a a_1 ↦ a, codisjoint := fun ⦃x⦄ a a ↦ a }
-  obtain ⟨hD, hhD1, hhD2⟩ := condT R hR hRa (DividedPowerAlgebra A M) hM hMa
+  obtain ⟨hD, hhD1, hhD2⟩ := condT R hR hRa (DividedPowerAlgebra A M) hM hMa -/
+
   /- Note (2024-07-12) — Roby claims that there is an “obvious” isomorphism
     e : D ≃ₐ[R] DividedPowerAlgebra R M
   that maps the ideal `K` t the augmentation ideal `augIdeal R M`.
@@ -1195,16 +1200,12 @@ theorem condT_and_condD_imply_condD (A : Type u) [CommRing A] [DecidableEq A]
   It seems that this approach could work in general. I hope so…
 
   -/
-  set e := dpScalarExtensionEquiv A R M
-  have := K A (⊥ : Ideal R) (augIdeal A M)
+  --set e := dpScalarExtensionEquiv A R M
+  --have := K A (⊥ : Ideal R) (augIdeal A M)
   -- -- here is where the problem appeared!
   -- have he : Ideal.map e (K A (⊥ : Ideal R) (augIdeal A M)) = augIdeal R M := sorry
   -- transférer les puissances divisées
 
-
-
-
-  sorry
 
 -- Roby, lemma 9 is in roby9 (other file)
 -- Roby, lemma 10

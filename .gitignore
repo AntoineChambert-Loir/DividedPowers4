@@ -6,6 +6,8 @@ blueprint/web
 blueprint/build
 blueprint/__pycache__
 *.pdf
+*.bbl
+*.blg
 *.paux
 *.log
 *.aux
