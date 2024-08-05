@@ -93,9 +93,9 @@ variable {A : Type*} [CommRing A]
   {R : Type*} [CommRing R] [Algebra A R] {R₀ : Subalgebra A R} {I : Ideal R}
   (hIR₀ : IsAugmentation R₀ I) (hI : DividedPowers I)
 
-theorem proposition1 (F₀ : Set R₀) (FI : Set I) :
+/- theorem proposition1 (F₀ : Set R₀) (FI : Set I) :
   isSubDPAlgebra A (Algebra.adjoin A ⊥ ((F₀ : Set R) ∪ (FI : Set R))) ↔
-    sorry := sorry
+    sorry := sorry-/
 end Proposition1
 
 namespace DividedPowerAlgebra
