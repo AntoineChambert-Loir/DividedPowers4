@@ -4,7 +4,7 @@
 
 import DividedPowers.ForMathlib.AlgebraLemmas
 import DividedPowers.ForMathlib.CombinatoricsLemmas
-import DividedPowers.ExponentialModule.Basic
+--import DividedPowers.ExponentialModule.Basic
 
 import Mathlib.RingTheory.PowerSeries.Basic
 import Mathlib.Data.Nat.Choose.Multinomial
