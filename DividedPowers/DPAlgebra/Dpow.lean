@@ -93,9 +93,11 @@ variable {A : Type*} [CommRing A]
   {R : Type*} [CommRing R] [Algebra A R] {R₀ : Subalgebra A R} {I : Ideal R}
   (hIR₀ : IsAugmentation R₀ I) (hI : DividedPowers I)
 
-theorem proposition1 (F₀ : Set R₀) (FI : Set I) :
+--TODO
+/- theorem proposition1 (F₀ : Set R₀) (FI : Set I) :
   isSubDPAlgebra A (Algebra.adjoin A ⊥ ((F₀ : Set R) ∪ (FI : Set R))) ↔
-    sorry := sorry
+    sorry := sorry -/
+
 end Proposition1
 
 namespace DividedPowerAlgebra
@@ -1160,7 +1162,7 @@ theorem CondQ_and_condTFree_imply_condT (A : Type*) [CommRing A]
 -- Roby, lemma 8
 theorem condT_and_condD_imply_condD (A : Type u) [CommRing A] [DecidableEq A]
     (condT : CondT A) (condD : CondD A)
-    (R : Type u) [CommRing R]  [DecidableEq R] [Algebra A R] :
+    (R : Type v) [CommRing R] [DecidableEq R] [Algebra A R] :
     CondD R := by
   classical
   intro M _ _
@@ -1168,13 +1170,14 @@ theorem condT_and_condD_imply_condD (A : Type u) [CommRing A] [DecidableEq A]
   letI : IsScalarTower A R M :=
     IsScalarTower.of_algebraMap_smul fun r ↦ congrFun rfl
   set D := R ⊗[A] DividedPowerAlgebra A M
-  obtain ⟨hM, hM_eq⟩ := condD M
+  -- Commented out because we changed R from Type u to Type v
+  /- obtain ⟨hM, hM_eq⟩ := condD M
   have hMa := isAugmentation A M
   set hR : DividedPowers (⊥ : Ideal R) := dividedPowersBot R
   have hRa : IsAugmentation (⊤ : Subalgebra A R) (⊥ : Ideal R) := by
     rw [isAugmentation_subalgebra_iff A]
     exact IsCompl.symm { disjoint := fun ⦃x⦄ a a_1 ↦ a, codisjoint := fun ⦃x⦄ a a ↦ a }
-  obtain ⟨hD, hhD1, hhD2⟩ := condT R hR hRa (DividedPowerAlgebra A M) hM hMa
+  obtain ⟨hD, hhD1, hhD2⟩ := condT R hR hRa (DividedPowerAlgebra A M) hM hMa -/
   /- Roby claims that there is an “obvious” isomorphism
     e : D ≃ₐ[R] DividedPowerAlgebra R M
   that maps the ideal `K` t the augmentation ideal `augIdeal R M`.
