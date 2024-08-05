@@ -1175,7 +1175,7 @@ theorem condT_and_condD_imply_condD (A : Type u) [CommRing A] [DecidableEq A]
     rw [isAugmentation_subalgebra_iff A]
     exact IsCompl.symm { disjoint := fun ⦃x⦄ a a_1 ↦ a, codisjoint := fun ⦃x⦄ a a ↦ a }
   obtain ⟨hD, hhD1, hhD2⟩ := condT R hR hRa (DividedPowerAlgebra A M) hM hMa
-  /- Roby claims that there is an “obvious” isomorphism
+  /- Note (2024-07-12) — Roby claims that there is an “obvious” isomorphism
     e : D ≃ₐ[R] DividedPowerAlgebra R M
   that maps the ideal `K` t the augmentation ideal `augIdeal R M`.
   Using this isomorphism, the divided powers `hD` on `D` would
@@ -1184,7 +1184,17 @@ theorem condT_and_condD_imply_condD (A : Type u) [CommRing A] [DecidableEq A]
   Unfortunately, [Roby, 1963, III.3] `dpScalarExtensionEquiv` proves
   something else, namely
       D ≃ₐ[R] DividedPowerAlgebra R (R ⊗[A] M)
-  I don't know how this can be repaired… -/
+  I don't know how this can be repaired…
+
+  Note (2024-07-15) — When R = ℤ, Roby's construction of divided powers on
+  the augmentation ideal of DividedPowerAlgebra R M splits into two cases:
+  - he first considers the case where M is free.
+  - then he writes M as a quotient of a free R-module L and invokes
+  his earlier paper for a description of the kernel of the natural morphism
+    DividedPowerAlgebra R L →ₐ[R] DividedPowerAlgebra R M
+  It seems that this approach could work in general. I hope so…
+
+  -/
   set e := dpScalarExtensionEquiv A R M
   have := K A (⊥ : Ideal R) (augIdeal A M)
   -- -- here is where the problem appeared!

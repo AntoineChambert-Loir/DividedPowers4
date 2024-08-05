@@ -85,7 +85,6 @@ theorem IsNilpotent.finsum {α : Type*} [CommSemiring α] {β : Type*} (f : β �
     exact IsNilpotent.finset_sum _ (fun b _ ↦ hf b)
   · simp only [finsum_def, dif_neg h, IsNilpotent.zero]
 
-
 def MvPowerSeries.mapAlgHom (σ : Type*) {R : Type*} [CommSemiring R] {S : Type*}
     [Semiring S] [Algebra R S] {T : Type*} [Semiring T] [Algebra R T] (φ : S →ₐ[R] T) :
     MvPowerSeries σ S →ₐ[R] MvPowerSeries σ T where

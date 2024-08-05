@@ -77,7 +77,6 @@ scoped instance topologicalSemiring [Semiring α] [TopologicalSemiring α] :
       continuous_mul (Continuous.prod_mk (Continuous.fst' (continuous_component σ α i.fst))
         (Continuous.snd' (continuous_component σ α i.snd))))
 
-
 /-- The ring topology on MvPowerSeries of a topological ring -/
 scoped instance topologicalRing [Ring α] [TopologicalRing α] :
     TopologicalRing (MvPowerSeries σ α) :=
