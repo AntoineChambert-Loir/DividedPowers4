@@ -135,7 +135,149 @@ lemma TensorProduct.includeRight_lid {R : Type*} [CommSemiring R] {S : Type*} [C
   simp only [LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply, lid_symm_apply,
     rTensor_tmul, toLinearMap_apply, _root_.map_one]
 
+theorem rTensor_comp_baseChange_comm_apply
+    {R : Type*} [CommRing R] {M N : Type*} [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
+    {S : Type*} [CommRing S] [Algebra R S]
+    {S' : Type*} [CommRing S'] [Algebra R S']
+    (φ : S →ₐ[R] S') (t : S ⊗[R] M) (f : M →ₗ[R] N) :
+    (φ.toLinearMap.rTensor N) (f.baseChange S t)  =
+      (f.baseChange S') (φ.toLinearMap.rTensor M t) := by
+  simp only [LinearMap.baseChange_eq_ltensor, LinearMap.rTensor, lTensor, ← LinearMap.comp_apply, ← TensorProduct.map_comp]
+  rfl
+
+
 end Lemmas
+
+section PureSubmodule
+
+open Function Submodule MvPolynomial
+
+theorem Algebra.FiniteType.exists_down
+    (R : Type u) [CommRing R] (S : Type*) [CommRing S] [Algebra R S] [Algebra.FiniteType R S] :
+    ∃ (S' : Type u) (_ : CommRing S') (_ : Algebra R S') (_ : S' ≃ₐ[R] S), True := by
+  obtain ⟨s : Finset S, hs⟩ := (Algebra.FiniteType.out : (⊤ : Subalgebra R S).FG)
+  set h : MvPolynomial (Fin s.card) R →ₐ[R] S := aeval (fun i ↦ s.equivFin.symm i)
+  have hrange : h.range = ⊤ := by
+    rw [_root_.eq_top_iff, ← hs]
+    apply Algebra.adjoin_le
+    intro x hx
+    use X (s.equivFin ⟨x, hx⟩)
+    simp only [toRingHom_eq_coe, RingHom.coe_coe, aeval_X, Equiv.symm_apply_apply, h]
+  use (MvPolynomial (Fin s.card) R) ⧸ RingHom.ker h,
+    inferInstance, inferInstance,
+    (Ideal.quotientKerEquivRange h).trans ((h.range.equivOfEq ⊤ hrange).trans Subalgebra.topEquiv)
+
+theorem AlgEquiv.self_trans_symm_eq_refl
+  {R S S' : Type*} [CommSemiring R] [Semiring S] [Semiring S']
+  [Algebra R S] [Algebra R S'] (e : S ≃ₐ[R] S') :
+  e.trans e.symm = AlgEquiv.refl := by
+  ext s
+  simp only [AlgEquiv.trans_apply, AlgEquiv.symm_apply_apply, AlgEquiv.coe_refl, id_eq]
+
+theorem AlgEquiv.symm_trans_self_eq_refl
+  {R S S' : Type*} [CommSemiring R] [Semiring S] [Semiring S']
+  [Algebra R S] [Algebra R S'] (e : S ≃ₐ[R] S') :
+  e.symm.trans e = AlgEquiv.refl := by
+  ext s
+  simp only [AlgEquiv.trans_apply, AlgEquiv.apply_symm_apply, AlgEquiv.coe_refl, id_eq]
+
+
+namespace Submodule
+
+/-- Lift an element that maps to 0 -/
+theorem exists_fg_of_baseChange_eq_zero
+    {R S M N : Type*} [CommRing R] [CommRing S] [Algebra R S] [AddCommGroup M] [AddCommGroup N] [Module R M] [Module R N]
+    (f : M →ₗ[R] N) (t : S ⊗[R] M) (ht : f.baseChange S t = 0) :
+    ∃ (A : Subalgebra R S) (_ : A.FG) (u : A ⊗[R] M),
+      f.baseChange A u = 0 ∧ A.val.toLinearMap.rTensor M u = t := by
+  obtain ⟨A, hA, ht_memA⟩ := TensorProduct.Algebra.exists_of_fg t
+  obtain ⟨u, hu⟩ := _root_.id ht_memA
+  have := TensorProduct.Algebra.eq_of_fg_of_subtype_eq hA (f.baseChange _ u) 0
+  simp only [map_zero, exists_and_left] at this
+  have hu' : (A.val.toLinearMap.rTensor N) (f.baseChange (↥A) u) = 0 := by
+    rw [← ht, ← hu, rTensor_comp_baseChange_comm_apply]
+  obtain ⟨B, hB, hAB, hu'⟩ := this hu'
+  use B, hB, LinearMap.rTensor M (Subalgebra.inclusion hAB).toLinearMap u
+  constructor
+  · rw [← rTensor_comp_baseChange_comm_apply, hu']
+    simp only [_root_.map_zero]
+  · rw [← LinearMap.comp_apply, ← LinearMap.rTensor_comp, ← hu]
+    congr
+
+class IsPure {R : Type u} [CommRing R]
+    {M : Type v} [AddCommGroup M] [Module R M] (N : Submodule R M) :=
+  baseChange_injective' (S : Type u) [CommRing S] [Algebra R S] :
+    Injective (N.subtype.baseChange S)
+
+variable {R : Type u} [CommRing R] {M : Type*} [AddCommGroup M] [Module R M]
+
+variable (N : Submodule R M) [pureN : N.IsPure]
+
+namespace IsPure
+
+theorem baseChange_injective (S : Type*) [CommRing S] [Algebra R S] :
+    Function.Injective (N.subtype.baseChange S) := by
+  rw [← ker_eq_bot, eq_bot_iff]
+  intro t
+  simp only [mem_ker, Submodule.mem_bot]
+  intro ht
+  obtain ⟨A, hA, u, hu0, hut⟩ := exists_fg_of_baseChange_eq_zero N.subtype t ht
+  have : Algebra.FiniteType R A := by
+    exact (Subalgebra.fg_iff_finiteType A).mp hA
+  obtain ⟨A', _, _, e, _⟩ := Algebra.FiniteType.exists_down R A
+  set u' := LinearMap.rTensor N e.symm.toLinearMap u with hu'
+  have hN := pureN.baseChange_injective' A'
+  rw [← ker_eq_bot, eq_bot_iff] at hN
+  have hu : u = LinearMap.rTensor N e.toLinearMap u' := by
+    rw [← LinearMap.rTensor_id_apply N A u]
+    simp only [u']
+    rw [← LinearMap.comp_apply, ← rTensor_comp, ← AlgEquiv.trans_toLinearMap]
+    rw [AlgEquiv.symm_trans_self_eq_refl]
+    congr
+  suffices u' = 0 by
+    simp only [← hut, hu, this, _root_.map_zero]
+  rw [← Submodule.mem_bot (R := R)]
+  apply hN
+  rw [mem_ker, hu']
+  rw [← AlgEquiv.toAlgHom_toLinearMap, ← rTensor_comp_baseChange_comm_apply,
+    AlgEquiv.toAlgHom_toLinearMap, hu0]
+  simp only [_root_.map_zero]
+
+theorem _root_.Submodule.baseChange_eq {R : Type*} [CommSemiring R]
+    (N : Type*) [AddCommMonoid N] [Module R N] (P : Submodule R N)
+    (S : Type*) [Semiring S] [Algebra R S] :
+    P.baseChange S = LinearMap.range (P.subtype.baseChange S) := by
+  simp only [Submodule.baseChange, Submodule.map_coe, TensorProduct.mk_apply]
+  apply le_antisymm
+  · rw [Submodule.span_le, Set.image_subset_iff]
+    intro p hp
+    simp only [Set.mem_preimage, SetLike.mem_coe, LinearMap.mem_range]
+    use 1 ⊗ₜ[R] ⟨p, hp⟩
+    simp only [baseChange_tmul, Submodule.coeSubtype]
+  · intro t
+    simp only [LinearMap.mem_range, forall_exists_index]
+    rintro x ⟨rfl⟩
+    induction x using TensorProduct.induction_on with
+    | zero => simp only [_root_.map_zero, Submodule.zero_mem]
+    | tmul s p =>
+      simp only [baseChange_tmul, Submodule.coeSubtype]
+      rw [← mul_one s, ← smul_eq_mul, ← TensorProduct.smul_tmul']
+      apply Submodule.smul_mem
+      apply Submodule.subset_span
+      exact Set.mem_image_of_mem (TensorProduct.tmul R 1) p.coe_prop
+    | add x y hx hy =>
+      rw [map_add]
+      exact Submodule.add_mem _ hx hy
+
+theorem _root_.Submodule.exists_lift_of_mem_baseChange
+    {R : Type*} [CommSemiring R]
+    {N : Type*} [AddCommMonoid N] [Module R N] {P : Submodule R N}
+    {S : Type*} [Semiring S] [Algebra R S]
+    {t : S ⊗[R] N} (ht : t ∈ P.baseChange S) :
+    ∃ u : S ⊗[R] P, P.subtype.baseChange S u = t := by
+  rwa [Submodule.baseChange_eq, LinearMap.mem_range] at ht
+
+end Submodule.IsPure
 
 noncomputable section PolynomialMap
 
@@ -184,21 +326,11 @@ private def φ (s : Finset S) : MvPolynomial (Fin s.card) R →ₐ[R] S :=
   MvPolynomial.aeval  (R := R) (fun n ↦ (s.equivFin.symm n : S))
 
 private theorem φ_range (s : Finset S) : (φ R s).range = Algebra.adjoin R s := by
-  apply le_antisymm
-  · rintro _ ⟨p, rfl⟩
-    induction p using MvPolynomial.induction_on with
-    | h_C r => simp only [toRingHom_eq_coe, ← algebraMap_eq, RingHom.coe_coe, commutes,
-        algebraMap_mem]
-    | h_add p q hp hq => simp only [map_add, add_mem hp hq]
-    | h_X p n hp =>
-      rw [_root_.map_mul]
-      refine mul_mem hp (Algebra.subset_adjoin ?_)
-      simp only [φ, toRingHom_eq_coe, RingHom.coe_coe, aeval_X, Finset.mem_coe, Finset.coe_mem]
-  · rw [Algebra.adjoin_le_iff]
-    intro x hx
-    simp only [φ, coe_range, Set.mem_range]
-    use X (s.equivFin ⟨x, hx⟩)
-    simp only [aeval_X, Equiv.symm_apply_apply]
+  simp only [φ]
+  rw [aeval_range]
+  congr
+  rw [← Function.comp_def, Set.range_comp]
+  simp only [Equiv.range_eq_univ, Set.image_univ, Subtype.range_coe_subtype, Finset.setOf_mem]
 
 variable (M S)
 /-- The projection from `φ` to `S ⊗[R] M`. -/
@@ -339,11 +471,15 @@ theorem π_surjective : Function.Surjective (π R M S) := by
   obtain ⟨p, hp⟩ := exists_lift_of_le_rTensor_range M B (le_of_eq hs.symm) ht
   exact ⟨⟨s, p⟩, hp⟩
 
+example {A : Type*} [CommRing A] [Algebra R A] [Algebra A S] [IsScalarTower R A S] :
+    A →ₗ[R] S := AlgHom.toLinearMap (IsScalarTower.toAlgHom R A S)
+
 /-- Lift an element of a tensor product -/
 theorem exists_lift (t : S ⊗[R] M) : ∃ (n : ℕ) (ψ : MvPolynomial (Fin n) R →ₐ[R] S)
     (p : MvPolynomial (Fin n) R ⊗[R] M), ψ.toLinearMap.rTensor M p = t := by
   obtain ⟨⟨s, p⟩, ha⟩ := π_surjective t
   use s.card, φ R s, p, ha
+
 
 /-- Lift an element of a tensor product and a scalar -/
 theorem exists_lift' (t : S ⊗[R] M) (s : S) : ∃ (n : ℕ) (ψ : MvPolynomial (Fin n) R →ₐ[R] S)
@@ -439,7 +575,7 @@ theorem zero_toFun (S : Type*) [CommRing S] [Algebra R S] :
     (0 : M →ₚ[R] N).toFun S = 0 := by
   ext t
   obtain ⟨⟨s, p⟩, ha⟩ := π_surjective t
-  simp only [toFun_eq_toFunLifted_apply _ ha, zero_def, Pi.zero_apply, map_zero]
+  simp only [toFun_eq_toFunLifted_apply _ ha, zero_def, Pi.zero_apply, _root_.map_zero]
 
 noncomputable def add : M →ₚ[R] N where
   toFun' S _ _ := f.toFun' S + g.toFun' S

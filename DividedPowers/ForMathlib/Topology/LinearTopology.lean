@@ -314,10 +314,9 @@ class LinearTopology [τ : TopologicalSpace α]
   isTopology :  τ = toIdealBasis.toIsBasis.topology
 
 example [TopologicalSpace α] [hLT : LinearTopology α] :
-  TopologicalRing α where
-    continuous_add := sorry
-    continuous_mul := sorry
-    continuous_neg := sorry
+  TopologicalRing α  :=
+  hLT.isTopology ▸ Ideal.IsBasis.to_topologicalRing hLT.toIdealBasis.toIsBasis
+
 namespace LinearTopology
 
 theorem mem_nhds_zero_iff [TopologicalSpace α] [hL : LinearTopology α]

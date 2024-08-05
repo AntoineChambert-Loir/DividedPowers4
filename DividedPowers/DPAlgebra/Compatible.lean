@@ -250,7 +250,7 @@ lemma isDPMorphism.isSubDPIdeal_map {A : Type u} [CommRing A] {I : Ideal A} (hI 
 set_option linter.unusedVariables false in
 lemma IsCompatibleWith_tfae {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I)
     {B : Type v} [CommRing B] {J : Ideal B} (hJ : DividedPowers J) (f : A →+* B) :
-    List.TFAE  [∃ hI' : DividedPowers (I.map f),  isDPMorphism hI hI' f ∧
+    List.TFAE  [∃ hI' : DividedPowers (I.map f), isDPMorphism hI hI' f ∧
       ∀ (n : ℕ) (b : B) (_ : b ∈ J ⊓ I.map f), hI'.dpow n b = hJ.dpow n b,
       ∃ hK : DividedPowers (I.map f + J), isDPMorphism hI hK f ∧ isDPMorphism hJ hK (RingHom.id _),
       ∃ (K' : Ideal B) (hIJK : I.map f + J ≤ K') (hK' : DividedPowers K'),
