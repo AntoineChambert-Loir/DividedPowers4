@@ -1,2 +1,11 @@
-DividedPowers
+PolynomialMap
+PolynomialMap.Finsupp.polynomialMap
+PolynomialMap.Finsupp.polynomialMap_toFun
+PolynomialMap.Finsupp.polynomialMap_isCompat
 dividedPowersBot
+on_tensorProduct_unique
+Condτ
+CondT
+on_dpalgebra_unique
+CondD
+CondQ

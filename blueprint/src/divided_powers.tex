@@ -1,0 +1,108 @@
+% In this file you should put the actual content of the blueprint.
+% It will be used both by the web and the print version.
+% It should *not* include the \begin{document}
+%
+% If you want to split the blueprint content into several files then
+% the current file can be a simple sequence of \input. Otherwise It
+% can start with a \section or \chapter for instance.
+
+\chapter{Divided Power Algebras}
+
+\section{Divided Powers}
+
+\section{Divided Power Algebras}
+
+\section{Sub-DP Algebras}
+
+\section{DP-Algebra Morphisms}
+
+\section{Id\'eaux Divis\'es}
+(Do we have/need this?)
+
+\section{DP-Algebra Quotients}
+
+\section{The Pre-Universal Character of \texorpdfstring{$\Gamma(M)$}{Gamma(M)}}
+
+\section{Statement of Three Problems}
+Let $R = R_0 + R_+$ and $S = S_0 + S_+$ be two pre-graded algebras. From now on, we will consider the algebra $T = R \otimes S$ with the pregraduation
+\begin{align*}
+	T_0 &= R_0 + S_0,\\
+	T_+ &= (R_0 \otimes S_+) \oplus (R_+ \otimes S_0) \oplus (R_+ \otimes S_+).
+\end{align*}
+The maps
+\begin{align*}
+	\iota_1 : R &\to T &\iota_2 : S &\to T \\
+			r &\mapsto r \otimes 1 &\quad s &\mapsto 1 \otimes s
+\end{align*}
+are morphisms of pre-graded algebras.
+
+\begin{lemma}
+	\label{lem:roby65-1}
+	\lean{on_tensorProduct_unique}
+	\leanok
+	%\uses{def:divided_power_algebra}
+	If $R$ and $S$ are DP-algebras, then $T = R \oplus S$ admits at most one DP-algebra structure for which $\iota_1$ and $\iota_2$ are DP-morphisms.
+\end{lemma}
+
+\begin{proof}\leanok
+\cite[Lemme 1]{Roby65}.
+\end{proof}
+
+\begin{definition}
+	\label{def:cond_tau}
+	\lean{Condτ}
+	\leanok
+	We say that a pair of $DP$-algebras $R$ and $S$ over $A$ satisfies the condition $\tau$ if the tensor product $T = R \otimes_A S$ admits a divided power structure for which  $\iota_1$ and $\iota_2$ are DP-morphisms.
+\end{definition}
+
+\begin{definition}
+	\label{def:cond_T}
+	\lean{CondT}
+	\leanok
+	We say that a ring $A$ verifies condition $\mathcal{T}$, and denote it by $\mathcal{T}(A)$, if every pair of split $DP$-algebras $R = R_0 + R_+$ and $S = S_0 + S_+$ over $A$ satisfies condition $\tau$.
+\end{definition}
+
+\begin{lemma}
+	\label{lem:roby65-2}
+	\lean{on_dpalgebra_unique}
+	\leanok
+	%\uses{def:divided_power_algebra}
+	Let $M$ be an $A$-module. $\Gamma(M)$ admits at most one divided power structure $\{\gamma_n\}_n$ such that
+	\[ \gamma_n(x) = x^{[n]} \quad\text{for all } x \in M, n \ge 0.  \]
+\end{lemma}
+
+\begin{proof}\leanok
+	\cite[Lemme 2]{Roby65}.
+\end{proof}
+
+\begin{definition}
+	\label{def:cond_D}
+	\lean{CondD}
+	\leanok
+	We say that a ring $A$ verifies condition $\mathcal{D}$, and denote it by $\mathcal{D}(A)$, if for every $A$-module $M$, $\Gamma(M)$ admits a divided power structure satisfying the condition from Lemma \ref{lem:roby65-2}.
+\end{definition}
+
+% I think we should delete condQ and replace it everywhere by condQSplit.
+% OTherwise, add it here.
+\begin{definition}
+	\label{def:cond_Q}
+	\lean{CondQ}
+	\leanok
+	We say that a ring $A$ verifies condition $\mathcal{Q}$, and denote it by $\mathcal{Q}(A)$, if every split DP-algebra over A is the quotient of a free DP-algebra over $A$.
+	
+	, $\Gamma(M)$ admits a divided power structure satisfying the condition from Lemma \ref{lem:roby65-2}.
+\end{definition}
+
+
+In \cite{Roby65}, Roby proposes the following three problems and shows that all of them have positive answers:
+\begin{enumerate}
+\item Does condition $\mathcal{T}(A)$ hold for every ring $A$?
+\item Does condition $\mathcal{D}(A)$ hold for every ring $A$?
+\item Does condition $\mathcal{Q}(A)$ hold for every ring $A$?
+\end{enumerate}
+
+\section{Proof Ingredients}
+
+\section{The DP-Algebra \texorpdfstring{$\Gamma(M)$}{Gamma(M)}}
+
+\section{Tensor Products of DP-Algebras}

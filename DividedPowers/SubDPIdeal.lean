@@ -3,7 +3,6 @@
 -/
 import DividedPowers.Basic
 import DividedPowers.BasicLemmas
-
 import DividedPowers.DPMorphism
 import Mathlib.RingTheory.Ideal.QuotientOperations
 
