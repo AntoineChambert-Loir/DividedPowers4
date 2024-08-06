@@ -64,245 +64,123 @@ lemma extends_to_iff_exists_dpIdeal {A : Type u} [CommRing A] {I : Ideal A} (hI 
 
 -- Note (3) after 3.14: in general the extension does not exist.
 
-section Principal
+namespace IsPrincipal
+-- In this section we proveB-O Prop. 3.15
+
+open Function Ideal
 
 lemma _root_.Submodule.map_isPrincipal {A : Type u} [CommRing A] {I : Ideal A}
     (hIp : Submodule.IsPrincipal I) {B : Type v} [CommRing B] (f : A →+* B) :
     Submodule.IsPrincipal (I.map f) := by
   obtain ⟨t, ht⟩ := hIp
-  use f t
-  simp only [ht, submodule_span_eq, map_span, Set.image_singleton]
+  use f t, by simp only [ht, submodule_span_eq, map_span, Set.image_singleton]
 
 lemma _root_.Ideal.map_span_singleton {A : Type u} [CommRing A] (a : A) {B : Type v} [CommRing B]
-    (f : A →+* B) : (Ideal.span {a}).map f = Ideal.span {f a} := by
+    (f : A →+* B) : (span {a}).map f = span {f a} := by
   simp only [map_span, Set.image_singleton]
 
-
-example {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I) {t : A} --(ht : t ∈ I)
-    (hIt : I = Ideal.span {t})
-    {B : Type v} [CommRing B] (f : A →+* B) {c d : B} (hcd : c * f t = d * f t) (n : ℕ) :
-    c^n * f (hI.dpow n t) = d^n * f (hI.dpow n t) := by
-  rw [← sub_eq_zero, ← sub_mul]
-
-
-  /- rw [← sub_eq_zero, dpow_smul' _ _ _ htI, smul_eq_mul, _root_.map_mul, map_pow, ← sub_mul, ← hct,
-      smul_eq_mul, _root_.map_mul, mul_comm (f c), ← mul_assoc]
+lemma factorsThrough {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I) {t : A}
+    (hIt : I = span {t}) {B : Type v} [CommRing B] (f : A →+* B) (n : ℕ) :
+    Function.FactorsThrough (fun (c : B) ↦ c^n * f (hI.dpow n t)) (fun (c : B) ↦ c * f t) := by
+  intro b c hbc
+  simp only at hbc ⊢
+  by_cases hn : n = 0
+  · rw [hn, pow_zero, pow_zero]
+  · have hnt : hI.dpow n t ∈ I := dpow_mem hI hn (hIt ▸ mem_span_singleton_self t)
+    simp only [hIt, mem_span_singleton'] at hnt
+    obtain ⟨cnt, hcnt⟩ := hnt
+    rw [← sub_eq_zero, ← sub_mul, ← hcnt, _root_.map_mul, mul_comm (f cnt), ← mul_assoc]
     apply mul_eq_zero_of_left
-    obtain ⟨k, hk⟩ := dvd_iff_exists_eq_mul_left.mp (sub_dvd_pow_sub_pow s (f a) n)
+    obtain ⟨k, hk⟩ := dvd_iff_exists_eq_mul_left.mp (sub_dvd_pow_sub_pow b c n)
     rw [hk, mul_assoc]
     apply mul_eq_zero_of_right
-    rw [sub_mul, sub_eq_zero, (hIf.mp (mem_map_of_mem _ haI)).choose_spec, ← _root_.map_mul]
-    rfl-/
+    rw [sub_mul, sub_eq_zero, hbc]
 
-  sorry
+variable {A : Type u} [CommRing A] {I : Ideal A} {t : A} (hIt : I = span {t})
+  {B : Type v} [CommRing B] {f : A →+* B} {x : B}
 
-lemma factorsThrough {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I) {t : A}
-    (hIt : I = Ideal.span {t})
-    {B : Type v} [CommRing B] (f : A →+* B) (n : ℕ) :
-    Function.FactorsThrough (fun (c : B) ↦ c^n * f (hI.dpow n t)) (fun (c : B) ↦ c * f t)  :=
-  sorry
+lemma _root_.Ideal.mem_map_span_singleton : x ∈ I.map f ↔ ∃ c : B, c * (f t) = x := by
+  simp_rw [hIt, map_span_singleton, ← submodule_span_eq, Submodule.mem_span_singleton, smul_eq_mul]
 
-open Function
+lemma _root_.Ideal.not_mem_map_span_singleton : x ∉ I.map f ↔ ¬ ∃ c : B, c * (f t) = x := by
+  rw [mem_map_span_singleton hIt]
 
-variable {A : Type u} [CommRing A] {I : Ideal A}
-    {t : A} (hIt : I = Ideal.span {t}) {B : Type v} [CommRing B] (f : A →+* B)
+variable (f)
 
-lemma foo (x : B) : x ∈ I.map f ↔ ∃ c : B, c * (f t) = x := by
-  rw [hIt,  map_span_singleton, ← submodule_span_eq, Submodule.mem_span_singleton]
-  simp_rw [smul_eq_mul]
-
-noncomputable def extension (hIt : I = Ideal.span {t})  (hI : DividedPowers I) :
+/-- The extension of the divided power structure on the principal ideal `I` to `I.map f`. -/
+noncomputable def extension (hIt : I = span {t}) (hI : DividedPowers I) :
     DividedPowers (I.map f) where
-  dpow n := Function.extend
-      (fun (c : B) ↦ c * f t) (fun (c : B) ↦ c^n * f (hI.dpow n t))  0
-  dpow_null := sorry
-  dpow_zero := sorry
-  dpow_one := sorry
-  dpow_mem := sorry
+  dpow n := extend (fun (c : B) ↦ c * f t) (fun (c : B) ↦ c^n * f (hI.dpow n t)) 0
+  dpow_null hx := by
+    simp only [extend_apply' _ _ _ ((not_mem_map_span_singleton hIt).mp hx),
+      Pi.zero_apply]
+  dpow_zero hx := by
+    obtain ⟨cx, rfl⟩ := (mem_map_span_singleton hIt).mp hx
+    dsimp only
+    rw [(factorsThrough hI hIt f 0).extend_apply, pow_zero, one_mul,
+      hI.dpow_zero (hIt ▸ mem_span_singleton_self t), map_one]
+  dpow_one hx := by
+    obtain ⟨cx, rfl⟩ := (mem_map_span_singleton hIt).mp hx
+    dsimp only
+    rw [(factorsThrough hI hIt f 1).extend_apply, pow_one,
+      hI.dpow_one (hIt ▸ mem_span_singleton_self t)]
+  dpow_mem hn hx := by
+    obtain ⟨cx, rfl⟩ := (mem_map_span_singleton hIt).mp hx
+    simp only [(factorsThrough hI hIt f _).extend_apply]
+    exact Submodule.smul_mem _ _ (mem_map_of_mem _
+      (hI.dpow_mem hn (hIt ▸ mem_span_singleton_self t)))
   dpow_add n x y hx hy := by
-    simp only
-    rw [foo hIt] at hx hy
-    obtain ⟨cx, rfl⟩ := hx
-    obtain ⟨cy, rfl⟩ := hy
-    rw [← add_mul, (factorsThrough hI hIt f n).extend_apply, (Commute.all cx cy).add_pow',
+    obtain ⟨cx, rfl⟩ := (mem_map_span_singleton hIt).mp hx
+    obtain ⟨cy, rfl⟩ := (mem_map_span_singleton hIt).mp hy
+    simp only [← add_mul, (factorsThrough hI hIt f n).extend_apply, (Commute.all cx cy).add_pow',
       Finset.sum_mul]
     apply Finset.sum_congr rfl
     rintro ⟨r, s⟩ hrs
-    simp only [Finset.mem_antidiagonal] at hrs
     simp only [(factorsThrough hI hIt f _).extend_apply]
     have : cx ^ r * f (hI.dpow r t) * (cy ^ s * f (hI.dpow s t)) =
         cx ^ r * cy ^ s * (f ((hI.dpow r t) * (hI.dpow s t))) := by
       rw [_root_.map_mul]
       ring
-    rw [this, hI.dpow_mul _ _ (hIt ▸ Ideal.mem_span_singleton_self t), hrs,
-      _root_.map_mul, map_natCast]
+    rw [this, hI.dpow_mul _ _ (hIt ▸ mem_span_singleton_self t),
+      Finset.mem_antidiagonal.mp hrs, _root_.map_mul, map_natCast]
     ring
-  dpow_smul := sorry
-  dpow_mul := sorry
-  dpow_comp := sorry
+  dpow_smul n a x hx := by
+    obtain ⟨cx, rfl⟩ := (mem_map_span_singleton hIt).mp hx
+    dsimp only
+    rw [← mul_assoc, (factorsThrough hI hIt f n).extend_apply,
+      (factorsThrough hI hIt f n).extend_apply, mul_pow, mul_assoc]
+  dpow_mul m n x hx := by
+    obtain ⟨cx, rfl⟩ := (mem_map_span_singleton hIt).mp hx
+    simp only [(factorsThrough hI hIt f _).extend_apply]
+    rw [mul_assoc, mul_comm _ (f _), ← mul_assoc (f _), ← _root_.map_mul,
+      hI.dpow_mul _ _ (hIt ▸ mem_span_singleton_self t), _root_.map_mul, map_natCast]
+    ring
+  dpow_comp m n x hn hx := by
+    obtain ⟨cx, rfl⟩ := (mem_map_span_singleton hIt).mp hx
+    have hnt : hI.dpow n t ∈ I := dpow_mem hI hn (hIt ▸ mem_span_singleton_self t)
+    simp only [hIt, mem_span_singleton'] at hnt
+    obtain ⟨cnt, hcnt⟩ := hnt
+    simp only
+    rw [(factorsThrough hI hIt f _).extend_apply, ← hcnt, _root_.map_mul, ← mul_assoc]
+    simp only [(factorsThrough hI hIt f _).extend_apply]
+    rw [← mul_assoc, mul_comm _ (cx^_), ← map_natCast f, mul_assoc, ← _root_.map_mul,
+      ← hI.dpow_comp _ hn (hIt ▸ mem_span_singleton_self t), ← hcnt,
+      hI.dpow_smul _ (hIt ▸ mem_span_singleton_self t), _root_.map_mul, map_pow]
+    ring
 
 -- B-O Prop. 3.15
-lemma extends_to_of_principal' {J : Ideal A} (hJ : DividedPowers J)
-    (hJp : Submodule.IsPrincipal J) :
+lemma extends_to_of_principal {J : Ideal A} (hJ : DividedPowers J) (hJp : Submodule.IsPrincipal J) :
     extends_to hJ f := by
-  classical
   obtain ⟨t, ht⟩ := hJp
-  have htJ : t ∈ J := ht ▸ Ideal.mem_span_singleton_self t
-  /- have hIf : ∀ {x : B}, x ∈ J.map f ↔ ∃ c : B, c * (f t) = x := by
-    intro x
-    rw [ht, submodule_span_eq, map_span_singleton, ← submodule_span_eq,
-      Submodule.mem_span_singleton]
-    simp_rw [smul_eq_mul] -/
-  set hJ' : DividedPowers (J.map f) := extension f ht hJ
-  use hJ'
-  rw [isDPMorphism]
-  refine ⟨le_refl _, ?_⟩
-  intro n a haJ
+  use extension f ht hJ
+  refine ⟨le_refl _, fun n a haJ ↦ ?_⟩
   rw [ht, submodule_span_eq, ← submodule_span_eq, Submodule.mem_span_singleton] at haJ
   obtain ⟨a, rfl⟩ := haJ
-  simp only [hJ', extension]
-  rw [smul_eq_mul, _root_.map_mul f, (factorsThrough hJ ht f n).extend_apply, dpow_smul _ _ htJ,
-    _root_.map_mul, map_pow]
+  simp only [extension]
+  rw [smul_eq_mul, _root_.map_mul f, (factorsThrough hJ ht f n).extend_apply,
+    dpow_smul _ _ (ht ▸ mem_span_singleton_self t), _root_.map_mul, map_pow]
 
-#exit
-
-
--- B-O Prop. 3.15
-lemma extends_to_of_principal {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I)
-    (hIp : Submodule.IsPrincipal I) {B : Type v} [CommRing B] (f : A →+* B) :
-    extends_to hI f := by
-  classical
-  obtain ⟨t, ht⟩ := hIp
-  have htI : t ∈ I := ht ▸ Ideal.mem_span_singleton_self t
-  have hIf : ∀ {x : B}, x ∈ I.map f ↔ ∃ c : B, c * (f t) = x := by
-    intro x
-    rw [ht, submodule_span_eq, map_span_singleton, ← submodule_span_eq,
-      Submodule.mem_span_singleton]
-    simp_rw [smul_eq_mul]
-  set hI' : DividedPowers (I.map f) := {
-    dpow      := fun n ↦ Function.extend (fun (c : B) ↦ c^n * f (hI.dpow n t))
-      (fun (c : B) ↦ c * f t) 0
-      /- fun n b ↦ if hb : b ∈ I.map f then
-      let c := (hIf.mp hb).choose
-      c^n * f (hI.dpow n t)
-      else 0 -/
-    dpow_null := fun hb ↦ by
-      sorry
-      /- simp only [← hIf, smul_eq_mul, dite_eq_right_iff]
-      exact fun hb' ↦ absurd hb' hb -/
-    dpow_zero  := fun hb ↦ by
-      sorry--simp only [dif_pos hb, smul_eq_mul, pow_zero, one_mul, dpow_zero _ htI, map_one]
-    dpow_one  := fun hb ↦  by
-      sorry --simp only [dif_pos hb, dpow_one _ htI, pow_one, (hIf.mp hb).choose_spec]
-    dpow_mem  := fun hn hb ↦ by
-      simp only [dif_pos hb]
-      sorry --exact Submodule.smul_mem _ _ (mem_map_of_mem _ (hI.dpow_mem hn htI))
-    dpow_add  := fun n b c hb hc ↦ by
-      simp only [dif_pos (add_mem hb hc), dif_pos hb, dif_pos hc]
-      simp_rw [mul_assoc, ← mul_assoc (f _), mul_comm (f _), mul_assoc, ← _root_.map_mul f,
-        dpow_mul hI _ _ htI, _root_.map_mul]
-
-      sorry
-    dpow_smul := by
-      intro n c x hx
-      have hcx : c * x ∈ map f I := by simp only [← smul_eq_mul, Submodule.smul_mem _ _ hx]
-      simp only [dif_pos hcx, dif_pos hx]
-      sorry
-      /- by_cases hn : n = 0
-      · simp only [hn, pow_zero, one_mul]
-      · rw [hIf] at hx hcx
-        set a := hx.choose with ha
-        set ca := hcx.choose with hca
-        rw [← mul_assoc, ← sub_eq_zero, ← sub_mul, ← mul_pow]
-        obtain ⟨k, hk⟩ := dvd_iff_exists_eq_mul_left.mp (sub_dvd_pow_sub_pow ca (c * a) n)
-        rw [hk, mul_assoc]
-        apply mul_eq_zero_of_right
-        have hnt : hI.dpow n t ∈ I := dpow_mem hI hn htI
-        simp only [ht] at hnt
-        rw [submodule_span_eq, ← submodule_span_eq, Submodule.mem_span_singleton] at hnt
-        obtain ⟨ct, hct⟩ := hnt
-        rw [← hct, smul_eq_mul, _root_.map_mul, mul_comm (f _), ← mul_assoc, sub_mul]
-        apply mul_eq_zero_of_left
-        rw [sub_eq_zero, hcx.choose_spec, mul_assoc, hx.choose_spec] -/
-    dpow_mul  := fun _ _ _ hx ↦ by
-      simp only [dif_pos hx]
-      sorry/- rw [mul_assoc, mul_comm _ (f _), ← mul_assoc (f _), ← _root_.map_mul, dpow_mul _ _ _ htI,
-        _root_.map_mul, map_natCast]
-      ring -/
-    dpow_comp := by
- /-     intro m n x hn hx
-      have hnt : hI.dpow n t ∈ I := dpow_mem hI hn htI
-      /- simp only [ht] at hnt
-      rw [submodule_span_eq, ← submodule_span_eq, Submodule.mem_span_singleton] at hnt
-      set cnt := hnt.choose with hcnt -/
-      simp only [dif_pos hx]
-      simp only [ht] at hx
-      rw [submodule_span_eq, map_span_singleton, ← submodule_span_eq, Submodule.mem_span_singleton]
-        at hx
-      set cx := hx.choose with hcx
-      have := hx.choose_spec
-      simp_rw [← hcx]
-      have h :  cx ^ n * f (hI.dpow n t) ∈ map f I := sorry
-      rw [dif_pos h]
-      simp only [ht] at h
-      rw [submodule_span_eq, map_span_singleton, ← submodule_span_eq, Submodule.mem_span_singleton]
-        at h
-      set cxn := h.choose with hcxn_def
-      set hcxn := h.choose_spec
-      rw [← mul_assoc, mul_comm _ (cx^_)]
-      rw [← map_natCast f, mul_assoc, ← _root_.map_mul]
-      rw [← hI.dpow_comp _ hn htI]
-      have hm : cx ^ (m * n) = (cx ^n)^m := sorry
-      rw [hm]
-      rw [← sub_eq_zero]
-
-      have hcm : f (hI.dpow m (hI.dpow n t)) ∈ map f I := sorry
-      simp only [ht] at hcm
-      rw [submodule_span_eq, map_span_singleton, ← submodule_span_eq, Submodule.mem_span_singleton]
-        at hcm
-      set cxm := hcm.choose with hcxm_def
-      set hcxm := hcm.choose_spec
-      rw [← hcxm, ← hcxm_def]
-
-      /- suffices f (cxn * hI.dpow m t) = f (cx^n * hI.dpow m (hI.dpow n t)) by
-        sorry -/
-
-
-      --rw [hI.dpow_smul]
-      --have h := Submodule.smul_mem (I.map f) _ (mem_map_of_mem _ (hI.dpow_mem hn htI))
-      --rw [dif_pos (Submodule.smul_mem (I.map f) _ (mem_map_of_mem _ (hI.dpow_mem hn htI)))]
-      --simp only [smul_eq_mul]
-     /-  rw [← smul_assoc]
-      simp only [smul_eq_mul]
-      rw [← map_natCast f]
-      nth_rewrite 2 [mul_comm] -/
-      --rw [hI.dpow_comp] -/
-      sorry
-       }
-  use hI'
-  rw [isDPMorphism]
-  refine ⟨le_refl _, ?_⟩
-  intro n a haI
-  simp only [dif_pos (mem_map_of_mem _ haI)]
-  set s := (hIf.mp (mem_map_of_mem _ haI)).choose with hs
-  by_cases hn : n = 0
-  · rw [hn, dpow_zero _ htI, dpow_zero _ haI, pow_zero, one_mul]
-  · rw [ht, submodule_span_eq, ← submodule_span_eq, Submodule.mem_span_singleton] at haI
-    obtain ⟨a, rfl⟩ := haI
-    have hnt : ∃ (c : A), c • t = hI.dpow n t := by
-      rw [← Submodule.mem_span_singleton, ← ht]
-      exact dpow_mem hI hn htI
-    obtain ⟨c, hct⟩ := hnt
-    rw [← sub_eq_zero, dpow_smul' _ _ _ htI, smul_eq_mul, _root_.map_mul, map_pow, ← sub_mul, ← hct,
-      smul_eq_mul, _root_.map_mul, mul_comm (f c), ← mul_assoc]
-    apply mul_eq_zero_of_left
-    obtain ⟨k, hk⟩ := dvd_iff_exists_eq_mul_left.mp (sub_dvd_pow_sub_pow s (f a) n)
-    rw [hk, mul_assoc]
-    apply mul_eq_zero_of_right
-    rw [sub_mul, sub_eq_zero, (hIf.mp (mem_map_of_mem _ haI)).choose_spec, ← _root_.map_mul]
-    rfl
-
-end Principal
+end IsPrincipal
 
 lemma isDPMorphism.isSubDPIdeal_map {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I)
     {B : Type v} [CommRing B] (f : A →+* B) {K : Ideal B} (hK : DividedPowers K)
@@ -379,13 +257,11 @@ lemma IsCompatibleWith_tfae {A : Type u} [CommRing A] {I : Ideal A} (hI : Divide
       simp only [SetLike.mem_coe] at hb hb'
       -- we need some API to use isSubDPIdeal.dividedPowers
       simp only [hK', isSubDPIdeal.dividedPowers]
-      have := hJK.map_dpow n b hb
-      simp only [RingHom.id_apply] at this
       rw [if_pos hb', show hJ.dpow n b = hK.dpow n b by
         simpa only [RingHom.id_apply] using hJK.map_dpow n b hb]
   tfae_finish
 
--- TODO: use (2) instead
+-- TODO (maybe): use (2) instead
 -- Or use 3.6 to construct this.
 /-- B-0 Def 3.17 (using condition 1 of Prop. 3.16) -/
 def IsCompatibleWith {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I) {B : Type v}
@@ -393,6 +269,5 @@ def IsCompatibleWith {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers
   ∃ hI' : DividedPowers (I.map f),
     (∀ (n : ℕ) (a : A), hI'.dpow n (f a) = f (hI.dpow n a)) ∧
       ∀ (n : ℕ) (b : B) (_ : b ∈ J ⊓ I.map f), hJ.dpow n b = hI'.dpow n b
-
 
 end DividedPowers
