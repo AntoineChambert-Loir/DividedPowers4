@@ -117,10 +117,10 @@ theorem rBell_dvd (m : Multiset ℕ) :
       simp only [m', mem_toFinset, ← one_le_count_iff_mem, count_sub]
       rw [Nat.one_le_iff_ne_zero, ne_eq, not_iff_comm, count_replicate]
       split_ifs with hx
-      · simp  [hx, has]
+      · simp  [← hx, has]
       · simp only [tsub_zero, count_eq_zero, not_iff_not]
-        rw [← mem_toFinset, hs, mem_insert]
-        simp [has, hx]
+        rw [← mem_toFinset, hs, mem_insert, iff_or_self, eq_comm]
+        intro _; contradiction
     nth_rewrite 1 [hm]
     simp only [Multiset.map_add, map_replicate, Multiset.prod_add, prod_replicate]
     obtain ⟨k, hk⟩ := hrec m' hs'
@@ -140,7 +140,7 @@ theorem rBell_dvd (m : Multiset ℕ) :
           apply congr_arg
           rw [hm, count_add, count_replicate, if_neg, add_zero]
           intro hx' 
-          rw [hx'] at hx
+          rw [← hx'] at hx
           exact has (Finset.mem_of_mem_erase hx))]
       apply Nat.dvd_mul_right
     · have this : (insert a s).erase 0 = insert a (s.erase 0) := by 
@@ -149,7 +149,7 @@ theorem rBell_dvd (m : Multiset ℕ) :
         constructor
         · rintro ⟨hx, hx'⟩
           rcases hx' with (hx' | hx')
-          . left; exact hx'
+          · left; exact hx'
           · right; exact ⟨hx, hx'⟩
         · intro hx
           rcases hx with (hx | hx)
@@ -166,7 +166,7 @@ theorem rBell_dvd (m : Multiset ℕ) :
           intro x hx 
           apply congr_arg
           rw [count_replicate, if_neg, add_zero]
-          exact ne_of_mem_of_not_mem hx this')]
+          intro hx'; rw [hx'] at this'; exact this' hx)]
       rw [← add_choose_mul_factorial_mul_factorial m'.sum, hk]
       simp only [mul_assoc]
       conv_rhs => 
@@ -203,8 +203,7 @@ theorem rBell_replicate (m n : ℕ) : rBell (replicate m n) = mchoose m n := by
     rw [Finset.prod_eq_one, Nat.div_one]
     intro x hx
     simp only [replicate_toFinset, mem_erase, ne_eq] at hx
-    simp only [count_replicate, if_neg hx.1, factorial_zero]
-    
+    simp only [count_replicate, if_neg (Ne.symm hx.1), factorial_zero]
   · rw [mchoose_eq m hn]
     unfold rBell 
     apply congr_arg₂ 
