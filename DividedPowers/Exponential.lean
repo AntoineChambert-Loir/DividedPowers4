@@ -50,7 +50,7 @@ noncomputable def ofExp (e : I →ₗ[R] ExponentialModule R)
     (coeff_mem : ∀ a {n} (_ : n ≠ 0), coeff R n ↑(e a) ∈ I)
     (coeff_comp : ∀ a m {n} (hn : n ≠ 0),
       coeff R m (e ⟨coeff R n (e a), coeff_mem a hn⟩)
-        = mchoose m n * coeff R (m * n) (e a)) :
+        = uniformBell m n * coeff R (m * n) (e a)) :
     DividedPowers I where
   dpow n a := if ha : a ∈ I then coeff R n (toPowerSeries (e ⟨a, ha⟩)) else 0
   dpow_null {n a} ha := by simp only [dif_neg ha]

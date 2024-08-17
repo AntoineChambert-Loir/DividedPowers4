@@ -139,11 +139,11 @@ theorem dpow_mul' {n : ℕ} (hn_fac : IsUnit ((n - 1).factorial : A)) (hnI : I ^
 
 theorem dpow_comp_of_mul_lt' {n : ℕ} (hn_fac : IsUnit ((n - 1) ! : A)) {m k : ℕ} (hk : k ≠ 0)
     (hkm : m * k < n) {x : A} (hx : x ∈ I) :
-    dpow' I m (dpow' I k x) = ↑(mchoose m k) * dpow' I (m * k) x := by
+    dpow' I m (dpow' I k x) = ↑(uniformBell m k) * dpow' I (m * k) x := by
   have hmn : m < n := lt_of_le_of_lt (Nat.le_mul_of_pos_right _ (Nat.pos_of_ne_zero hk)) hkm
   rw [dpow_eq_of_mem' (m * k) hx, dpow_eq_of_mem' _ (dpow_mem' hk hx)]
   by_cases hm0 : m = 0
-  · simp only [hm0, MulZeroClass.zero_mul, _root_.pow_zero, mul_one, mchoose_zero, Nat.cast_one, one_mul]
+  · simp only [hm0, MulZeroClass.zero_mul, _root_.pow_zero, mul_one, uniformBell_zero, Nat.cast_one, one_mul]
   · have hkn : k < n := lt_of_le_of_lt (Nat.le_mul_of_pos_left _ (Nat.pos_of_ne_zero hm0)) hkm
     rw [dpow_eq_of_mem' _ hx]
     rw [mul_pow, ← pow_mul, mul_comm k, ← mul_assoc, ← mul_assoc]
@@ -151,13 +151,13 @@ theorem dpow_comp_of_mul_lt' {n : ℕ} (hn_fac : IsUnit ((n - 1) ! : A)) {m k : 
     rw [Ring.eq_mul_inverse_iff_mul_eq _ _ _ (natCast_factorial_isUnit_of_lt hn_fac hkm),
       mul_assoc, Ring.inverse_mul_eq_iff_eq_mul _ _ _ (natCast_factorial_isUnit_of_lt hn_fac hmn)]
     rw [Ring.inverse_pow_mul_eq_iff_eq_mul _ _ (natCast_factorial_isUnit_of_lt hn_fac hkn)]
-    rw [← mchoose_lemma _ hk]
+    rw [← uniformBell_mul_eq _ hk]
     simp only [Nat.cast_mul, Nat.cast_pow]
-    rw [mul_comm (m ! : A), mul_assoc]
+    ring_nf
 
 theorem dpow_comp' {n : ℕ} (hn_fac : IsUnit ((n - 1).factorial : A)) (hnI : I ^ n = 0) (m : ℕ)
     {k : ℕ} (hk : k ≠ 0) {x : A} (hx : x ∈ I) :
-    dpow' I m (dpow' I k x) = ↑(mchoose m k) * dpow' I (m * k) x := by
+    dpow' I m (dpow' I k x) = ↑(uniformBell m k) * dpow' I (m * k) x := by
   by_cases hmk : m * k < n
   · exact dpow_comp_of_mul_lt' hn_fac hk hmk hx
   · have hxmk : x ^ (m * k) = 0 := Ideal.mem_pow_eq_zero hnI (not_lt.mp hmk) hx
