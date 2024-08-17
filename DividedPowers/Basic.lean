@@ -3,7 +3,7 @@
 -/
 
 import DividedPowers.ForMathlib.AlgebraLemmas
-import DividedPowers.ForMathlib.CombinatoricsLemmas
+import DividedPowers.ForMathlib.Bell
 --import DividedPowers.ExponentialModule.Basic
 
 import Mathlib.RingTheory.PowerSeries.Basic
@@ -62,7 +62,7 @@ structure DividedPowers {A : Type _} [CommSemiring A] (I : Ideal A) where
   dpow_mul : ∀ (m n) {x} (_ : x ∈ I),
     dpow m x * dpow n x = choose (m + n) m * dpow (m + n) x
   dpow_comp : ∀ (m) {n x} (_ : n ≠ 0) (_ : x ∈ I),
-    dpow m (dpow n x) = mchoose m n * dpow (m * n) x
+    dpow m (dpow n x) = uniformBell m n * dpow (m * n) x
 
 -- MI: Shouldn't this be renames?
 def dividedPowersBot (A : Type _) [CommSemiring A] [DecidableEq A] : DividedPowers (⊥ : Ideal A)
@@ -114,7 +114,7 @@ def dividedPowersBot (A : Type _) [CommSemiring A] [DecidableEq A] : DividedPowe
     rw [Ideal.mem_bot.mp ha]
     simp only [true_and, ite_eq_right_iff, _root_.mul_eq_zero, mul_ite, mul_one, mul_zero]
     by_cases hm: m = 0
-    · simp only [hm, and_true, true_or, ite_true, mchoose_zero, cast_one]
+    · simp only [hm, and_true, true_or, ite_true, uniformBell_zero, cast_one]
       rw [if_pos]
       exact fun h => False.elim (hn h)
     · simp only [hm, and_false, ite_false, false_or, if_neg hn]
