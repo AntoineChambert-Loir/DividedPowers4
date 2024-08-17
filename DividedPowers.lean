@@ -16,7 +16,8 @@ import DividedPowers.ExponentialModule.Basic
 import DividedPowers.Exponential
 --import DividedPowers.ForMathlib.AlgebraComp -- This file has errors, but I think we should not use it
 import DividedPowers.ForMathlib.AlgebraLemmas
-import DividedPowers.ForMathlib.CombinatoricsLemmas
+import DividedPowers.ForMathlib.Bell
+-- import DividedPowers.ForMathlib.CombinatoricsLemmas -- this was a previous version, now Bell
 import DividedPowers.ForMathlib.DirectLimit
 import DividedPowers.ForMathlib.GradedAlgebra
 --import DividedPowers.ForMathlib.GradedModuleQuot -- Not ported
