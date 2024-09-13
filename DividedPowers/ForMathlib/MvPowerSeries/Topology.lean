@@ -4,7 +4,10 @@ import Mathlib.RingTheory.PowerSeries.Basic
 import Mathlib.Topology.Algebra.InfiniteSum.Constructions
 import Mathlib.Topology.UniformSpace.Pi
 import Mathlib.Topology.Algebra.UniformGroup
-import DividedPowers.ForMathlib.MvPowerSeries.Basic
+import Mathlib.RingTheory.MvPowerSeries.Basic
+import DividedPowers.ForMathlib.MvPowerSeries.Order
+
+-- In PR 14866 and 14989
 
 /-! # Topology on power series
 
@@ -182,6 +185,7 @@ theorem continuous_C :
   · convert continuousAt_const
     rw [coeff_C, if_neg hd]
 
+omit [TopologicalRing α] in
 theorem variables_tendsto_zero :
     Filter.Tendsto (fun s : σ => (X s : MvPowerSeries σ α)) Filter.cofinite (nhds 0) := by
   classical
@@ -211,6 +215,7 @@ theorem variables_tendsto_zero :
       apply h
       exact ⟨x, h'⟩
 
+omit [DecidableEq σ] [TopologicalRing α] in
 theorem tendsto_pow_zero_of_constantCoeff_nilpotent {f : MvPowerSeries σ α}
     (hf : IsNilpotent (constantCoeff σ α f)) :
     Filter.Tendsto (fun n : ℕ => f ^ n) Filter.atTop (nhds 0) := by
@@ -218,14 +223,16 @@ theorem tendsto_pow_zero_of_constantCoeff_nilpotent {f : MvPowerSeries σ α}
   obtain ⟨m, hm⟩ := hf
   simp_rw [tendsto_iff_coeff_tendsto, coeff_zero]
   exact fun d =>  tendsto_atTop_of_eventually_const fun n hn =>
-    coeff_eq_zero_of_constantCoeff_nilpotent f m hm d n hn
+    coeff_eq_zero_of_constantCoeff_nilpotent hm hn
 
+omit [DecidableEq σ] [TopologicalRing α] in
 theorem tendsto_pow_zero_of_constantCoeff_zero {f : MvPowerSeries σ α} (hf : constantCoeff σ α f = 0) :
     Filter.Tendsto (fun n : ℕ => f ^ n) Filter.atTop (nhds 0) := by
   apply tendsto_pow_zero_of_constantCoeff_nilpotent
   rw [hf]
   exact IsNilpotent.zero
 
+omit [DecidableEq σ] [TopologicalRing α] in
 /-- Bourbaki, Algèbre, chap. 4, §4, n°2, corollaire de la prop. 3 -/
 theorem tendsto_pow_of_constantCoeff_nilpotent_iff [DiscreteTopology α] (f : MvPowerSeries σ α) :
     Filter.Tendsto (fun n : ℕ => f ^ n) Filter.atTop (nhds 0) ↔
@@ -265,13 +272,9 @@ theorem hasSum_of_monomials_self (f : MvPowerSeries σ α) :
     HasSum (fun d : σ →₀ ℕ => monomial α d (coeff α d f)) f := by
   rw [Pi.hasSum]
   intro d
-  have hd : ∀ (d' : σ →₀ ℕ), d' ≠ d → (monomial α d') ((coeff α d') f) d = 0 := by
-    intro d' h
-    change coeff α d ((monomial α d') ((coeff α d') f)) = 0
-    rw [coeff_monomial_ne (Ne.symm h)]
-  convert hasSum_single d hd using 1
-  · rw [← coeff_apply f d, ← coeff_apply (monomial α d (coeff α d f)) d, coeff_apply,
-      coeff_monomial_same]
+  convert hasSum_single d ?_ using 1
+  exact (coeff_monomial_same d _).symm
+  exact fun d' h ↦ coeff_monomial_ne (Ne.symm h) _
 
 /-- If the coefficient space is T2, then the power series is `tsum` of its monomials -/
 theorem as_tsum [T2Space α] (f : MvPowerSeries σ α) :

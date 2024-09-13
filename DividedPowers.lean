@@ -34,7 +34,7 @@ import DividedPowers.ForMathlib.MvPowerSeries.Order -- -- In PR 14983
 import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Basic
 import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Topology
 import DividedPowers.ForMathlib.MvPowerSeries.Substitutions
-import DividedPowers.ForMathlib.MvPowerSeries.Topology
+import DividedPowers.ForMathlib.MvPowerSeries.Topology -- In PR 14866 and 14989
 import DividedPowers.ForMathlib.PowerSeries.Topology
 --import DividedPowers.ForMathlib.RingTheory.Ideal
 import DividedPowers.ForMathlib.RingTheory.SubmoduleMem
