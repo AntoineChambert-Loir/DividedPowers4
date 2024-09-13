@@ -27,7 +27,7 @@ import DividedPowers.ForMathlib.Homogeneous
 --import DividedPowers.ForMathlib.InfiniteSum.Order -- In mathlib
 import DividedPowers.ForMathlib.Lcoeff
 import DividedPowers.ForMathlib.MvPowerSeries.Basic
-import DividedPowers.ForMathlib.MvPowerSeries.Evaluation
+import DividedPowers.ForMathlib.MvPowerSeries.Evaluation -- In PR 15019
 import DividedPowers.ForMathlib.MvPowerSeries.LinearTopology
 import DividedPowers.ForMathlib.MvPowerSeries.Order -- -- In PR 14983
 --import DividedPowers.ForMathlib.MvPowerSeries.Sandbox
