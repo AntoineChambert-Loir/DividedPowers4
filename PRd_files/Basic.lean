@@ -2,7 +2,8 @@
  inspired by a file of Bhavik Mehta
 ! This file was ported from Lean 3 source module antidiagonal
 -/
-import Mathlib.Data.Finset.PiAntidiagonal
+--import Mathlib.Data.Finset.PiAntidiagonal
+import Mathlib.Algebra.Order.Antidiag.Pi
 import Mathlib.RingTheory.PowerSeries.Basic
 import DividedPowers.ForMathlib.MvPowerSeries.Order
 

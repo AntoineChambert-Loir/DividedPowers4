@@ -29,7 +29,7 @@ import DividedPowers.ForMathlib.Lcoeff
 import DividedPowers.ForMathlib.MvPowerSeries.Basic
 import DividedPowers.ForMathlib.MvPowerSeries.Evaluation
 import DividedPowers.ForMathlib.MvPowerSeries.LinearTopology
-import DividedPowers.ForMathlib.MvPowerSeries.Order
+import DividedPowers.ForMathlib.MvPowerSeries.Order -- -- In PR 14983
 --import DividedPowers.ForMathlib.MvPowerSeries.Sandbox
 import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Basic
 import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Topology
