@@ -225,18 +225,18 @@ lemma isHomogeneousOfDegree_coeff {f : PolynomialMap R M N} {p : ℕ} (hf : IsHo
     Finsupp.update (Finsupp.mapDomainEmbedding (Function.Embedding.some) b) none k
   have he : ∀ b k, (X none ^ k * (Finset.prod Finset.univ
       fun x => X (some x) ^ b x) : MvPolynomial (Option ι) R) = monomial (e b k) 1 := fun b k ↦ by
-    simp only [monomial_eq, Finsupp.prod_pow, Fintype.prod_option, _root_.map_one, one_mul,
-      Finsupp.mapDomainEmbedding_apply, Function.Embedding.some_apply, Finsupp.coe_update,
-      Function.update_same, ne_eq, not_false_eq_true, Function.update_noteq, e]
+    simp only [Finsupp.mapDomainEmbedding_apply, Function.Embedding.some_apply, monomial_eq,
+      map_one, Finsupp.prod_pow, Finsupp.coe_update, Fintype.prod_option, Function.update_same,
+      ne_eq, reduceCtorEq, not_false_eq_true, Function.update_noteq, one_mul, e]
     exact congr_arg₂ _ rfl (Finset.prod_congr rfl (fun _ _ => by
       rw [Finsupp.mapDomain_apply (Option.some_injective ι)]))
   have he_some : ∀ b k i, e b k (some i) = b i := fun b k i ↦ by
     simp only [Finsupp.update, Finsupp.mapDomainEmbedding_apply, Function.Embedding.some_apply,
-      Finsupp.coe_mk, Function.update, ↓reduceDite,
+      Finsupp.coe_mk, Function.update, reduceCtorEq, ↓reduceDIte,
       Finsupp.mapDomain_apply (Option.some_injective ι), e]
   have he_none : ∀ b k, k = e b k none := fun b k ↦ by
     simp only [Finsupp.update, Finsupp.mapDomainEmbedding_apply, Function.Embedding.some_apply,
-      Finsupp.coe_mk, Function.update, ↓reduceDite, e]
+      Finsupp.coe_mk, Function.update, ↓reduceDIte, e]
    /-  On écrit l'homogénéité : f (∑ T ⬝ X_i m_i) = T ^ p ⬝ f(∑ X_i m_i)
    ∑ coeff f e (T X) ^ e = T ^ p ⬝ ∑ coeff f e X ^ e
    Identification : (coeff f e) T^|e| X^ e = coeff f e T ^ p X ^ e
@@ -308,7 +308,6 @@ open MvPolynomial
 noncomputable def ofConstant (n : N) : PolynomialMap R M N where
   toFun' S _ _ _:= TensorProduct.tmul R 1 n
   isCompat' φ   := by ext; simp
-#align polynomial_map.of_constant PolynomialMap.ofConstant
 
 /-- Homogeneous Polynomial maps of degree 0 are constant maps -/
 noncomputable def ofConstantHom : N →ₗ[R] (grade 0 : Submodule R (PolynomialMap R M N)) := {
@@ -320,7 +319,7 @@ noncomputable def ofConstantHom : N →ₗ[R] (grade 0 : Submodule R (Polynomial
       rw [pow_zero, _root_.one_smul]
       rfl }
   map_add'  := fun x y ↦ by
-    simp only [AddSubmonoid.mk_add_mk, Subtype.mk.injEq, ofConstant]
+    simp only [ofConstant, AddMemClass.mk_add_mk, Subtype.mk.injEq]
     ext
     simp only [add_def_apply, TensorProduct.tmul_add]
   map_smul' := fun r x ↦ by
@@ -464,7 +463,7 @@ noncomputable def ofLinearMapHom :
   toFun         := fun u ↦ ⟨ofLinearMap u, ofLinearMap_mem_grade_one u⟩
   map_add' u v  := by
     ext S _ _ m
-    simp only [AddSubmonoid.coe_add, add_def_apply, ofLinearMap_toFun', baseChange_add, add_apply]
+    simp only [ofLinearMap_toFun', baseChange_add, add_apply, Submodule.coe_add, add_def_apply]
   map_smul' a v := by
     ext S _ _ m
     simp only [smul_def, ofLinearMap_toFun', LinearMap.baseChange_smul]
