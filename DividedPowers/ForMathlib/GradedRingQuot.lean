@@ -40,7 +40,7 @@ section DirectSum
 
 namespace DirectSum
 
-variable {ι : Type*} [DecidableEq ι] {R : Type*} [Semiring R]
+variable {ι : Type*} /- [DecidableEq ι] -/ {R : Type*} [Semiring R]
 
 /-- The components of a direct sum, as add_monoid_hom -/
 def component' {β : ι → Type*} [∀ i, AddCommMonoid (β i)] (i : ι) : (⨁ i, β i) →+ β i :=
@@ -58,6 +58,8 @@ theorem ext_iff' {β : ι → Type*} [∀ i, AddCommMonoid (β i)]
    direct_sum.lmap'  : for linear_map
    the unprimed versions are defined in terms of classes
    In principle, the latter should suffice. -/
+
+variable [DecidableEq ι]
 
 /-- `AddMonoidHom` from a direct sum to a direct sum given by families of
   `AddMonoidHomClass` maps. -/
@@ -124,7 +126,7 @@ theorem map_apply {β γ : ι → Type*} [Π i, AddCommMonoid (β i)] [Π i, Add
   simp only [AddMonoidHom.coe_mk, ZeroHom.coe_mk, map_of, f, g]
   by_cases hj : j = i
   · rw [← hj]; simp only [of_eq_same]
-  · simp only [of_eq_of_ne _ j i _ hj, map_zero]
+  · simp only [of_eq_of_ne j i _ hj, map_zero]
 
 theorem map'_of {β γ : ι → Type*} [∀ i, AddCommMonoid (β i)] [∀ i, AddCommMonoid (γ i)]
     (h : ∀ i, β i →+ γ i) (i : ι) (x : β i) :
@@ -158,7 +160,7 @@ theorem lmap'_apply {β γ : ι → Type*} [∀ i, AddCommMonoid (β i)] [∀ i,
   simp only [lof_eq_of, ← apply_eq_component]
   by_cases hji : j = i
   · rw [← hji]; simp only [of_eq_same]
-  · simp only [of_eq_of_ne _ j i _ hji, map_zero]
+  · simp only [of_eq_of_ne j i _ hji, map_zero]
 
 theorem toModule_comp_lmap'_eq {β γ : ι → Type*} {δ : Type*} [∀ i, AddCommMonoid (β i)]
     [∀ i, AddCommMonoid (γ i)] [AddCommMonoid δ] [∀ i, Module R (β i)] [∀ i, Module R (γ i)]
@@ -186,7 +188,7 @@ theorem map'_apply {β γ : ι → Type*} [∀ i, AddCommMonoid (β i)] [∀ i, 
     map'_of]
   by_cases hj : j = i
   · rw [← hj]; simp only [of_eq_same]
-  · simp only [of_eq_of_ne _ j i _ hj, map_zero]
+  · simp only [of_eq_of_ne j i _ hj, map_zero]
 
 theorem mk_apply {β : ι → Type*} [∀ i, AddCommMonoid (β i)] (s : Finset ι)
     (f : (∀ i : (↑s : Set ι), β i.1)) (i : ι) :
@@ -200,9 +202,9 @@ theorem mk_eq_sum' {β : ι → Type*} [∀ i, AddCommMonoid (β i)] (s : Finset
   convert mk_apply s _ i
   rw [DFinsupp.finset_sum_apply]
   split_ifs with hi
-  · rw [Finset.sum_eq_single_of_mem i hi (fun j _ hij => of_eq_of_ne _ _ _ _ hij),
+  · rw [Finset.sum_eq_single_of_mem i hi (fun j _ hij => of_eq_of_ne _ _ _ hij),
       ← lof_eq_of ℕ, lof_apply]
-  · exact Finset.sum_eq_zero (fun j hj => of_eq_of_ne _ _ _ _ (ne_of_mem_of_not_mem hj hi))
+  · exact Finset.sum_eq_zero (fun j hj => of_eq_of_ne _ _ _ (ne_of_mem_of_not_mem hj hi))
 
 -- TODO: move to right file
 theorem _root_.DFinsupp.mk_eq_sum {β : ι → Type*} [∀ i, AddCommMonoid (β i)] (s : Finset ι)
@@ -211,9 +213,9 @@ theorem _root_.DFinsupp.mk_eq_sum {β : ι → Type*} [∀ i, AddCommMonoid (β 
   simp only [DFinsupp.mk_apply, DFinsupp.finset_sum_apply]
   split_ifs with hi
   · rw [DFinsupp.finset_sum_apply, Finset.sum_eq_single_of_mem i hi
-      (fun j _ hij =>  of_eq_of_ne _ _ _ _ hij), of_eq_same]
+      (fun j _ hij =>  of_eq_of_ne _ _ _ hij), of_eq_same]
   · rw [DFinsupp.finset_sum_apply, Finset.sum_eq_zero
-      (fun j hj => of_eq_of_ne _ _ _ _ (ne_of_mem_of_not_mem hj hi))]
+      (fun j hj => of_eq_of_ne _ _ _ (ne_of_mem_of_not_mem hj hi))]
 
 theorem mk_eq_sum {β : ι → Type*} [∀ i, AddCommMonoid (β i)] (s : Finset ι) (x : ∀ i : s, β i) :
   mk β s x = s.sum fun i => of β i (if h : i ∈ s then x ⟨i, h⟩ else 0) := by
@@ -221,12 +223,12 @@ theorem mk_eq_sum {β : ι → Type*} [∀ i, AddCommMonoid (β i)] (s : Finset 
   intro i
   rw [mk_apply]
   split_ifs with hi
-  · rw [DFinsupp.finset_sum_apply, Finset.sum_eq_single i (fun j _ hji => of_eq_of_ne _ _ _ _ hji),
+  · rw [DFinsupp.finset_sum_apply, Finset.sum_eq_single i (fun j _ hji => of_eq_of_ne _ _ _ hji),
       of_eq_same, dif_pos hi]
     · intro his
       rw [of_eq_same, dif_neg his]
   · rw [DFinsupp.finset_sum_apply, Finset.sum_eq_zero
-      (fun j hj => of_eq_of_ne _ _ _ _ (ne_of_mem_of_not_mem hj hi))]
+      (fun j hj => of_eq_of_ne _ _ _ (ne_of_mem_of_not_mem hj hi))]
 
 theorem toAddMonoid_mk {β : ι → Type*} [∀ i, AddCommMonoid (β i)] {γ : Type*} [AddCommMonoid γ]
     (ψ : ∀ i, β i →+ γ) (s : Finset ι) (x : ∀ i : s, β i) :
@@ -238,7 +240,7 @@ theorem map_apply' {β γ : ι → Type*} [∀ i, AddCommMonoid (β i)] [∀ i, 
     [∀ (i : ι) (x : β i), Decidable (x ≠ 0)]  {F : ∀ _, Type*} [∀ i, FunLike (F i) (β i) (γ i)]
     [∀ i, AddMonoidHomClass (F i) (β i) (γ i)] (h : ∀ i, F i) (x : ⨁ i, β i) :
     map h x = mk γ x.support (fun i => (h i) (x i)) := by
-  conv_lhs => rw [← sum_support_of β x]
+  conv_lhs => rw [← sum_support_of x]
   simp_rw [map_sum, map_of]
   rw [eq_comm]
   convert mk_eq_sum x.support fun i => (h i) (x i)
@@ -253,7 +255,7 @@ section GradedQuot
 section Semiring
 
 variable (R : Type*) [CommSemiring R] {ι : Type*} [DecidableEq ι] [AddCommMonoid ι]
-   {A : Type*} [CommSemiring A] [DecidableEq A] [Algebra R A] (𝒜 : ι → Submodule R A)
+   {A : Type*} [CommSemiring A] /- [DecidableEq A] -/ [Algebra R A] (𝒜 : ι → Submodule R A)
 
 section HomogeneousRelation
 
@@ -324,7 +326,7 @@ theorem DirectSum.sum_of_support_le {ι : Type*} [dec_ι : DecidableEq ι] (β :
     [inst : (i : ι) → AddCommMonoid (β i)] [inst : (i : ι) → (x : β i) → Decidable (x ≠ 0)]
     {x : ⨁ (i : ι), β i} {s : Finset ι} (hs : DFinsupp.support x ⊆ s) :
     s.sum (fun i => (of β i) (x i)) = x := by
-  conv_rhs => rw [← sum_support_of β x]
+  conv_rhs => rw [← sum_support_of x]
   rw [eq_comm]
   apply Finset.sum_subset hs
   . intro i _ hi'
@@ -341,6 +343,8 @@ theorem DirectSum.finsupp_sum_support_decompose'
     r = ((decompose ℳ) r).sum (fun i x => ↑x) := by
   conv_lhs => rw [← sum_support_decompose ℳ r]
   rfl
+
+open Relation
 
 theorem EqvGenIsHomogeneous_of [GradedAlgebra 𝒜] (hr : Rel.IsHomogeneous 𝒜 rel) :
     Rel.IsHomogeneous 𝒜 (EqvGen rel) := by
@@ -367,8 +371,8 @@ lemma rel_of_finsupp_sum_of_rel_add {A : Type*} [AddCommMonoid A] {r : A → A �
     (hr_zero : r 0 0) (hr_add : ∀ {a b c d} (_ : r a c) (_ : r b d), r (a + b) (c + d))
     {ι : Type*} [DecidableEq ι] {f g : ι →₀ A} (H : ∀ i, r (f i) (g i)) :
     r (f.sum fun _ x => x) (g.sum fun _ x => x) := by
-  rw [Finsupp.sum_of_support_subset f (Finset.subset_union_left _ g.support),
-    Finsupp.sum_of_support_subset g (Finset.subset_union_right f.support _)]
+  rw [Finsupp.sum_of_support_subset f Finset.subset_union_left,
+    Finsupp.sum_of_support_subset g Finset.subset_union_right]
   exact rel_of_sum_of_rel_add hr_zero hr_add (fun i _ =>  H i)
   all_goals { intro _ _ ; rfl }
 
@@ -392,8 +396,9 @@ lemma rel_of_dfinsupp_sum_of_rel_add {A : Type*} [AddCommMonoid A] {r : A → A 
     [∀ i (y : β i), Decidable (y ≠ 0)] (h : (i : ι) → (β i →+ A)) (h' : (i : ι) → (β i →+ A))
     {f g : DFinsupp β} (H : ∀ i, r (h i (f i)) (h' i (g i))) :
     r (f.sum fun i y => h i y) (g.sum fun i y => h' i y) := by
-  rw [DFinsupp.sum_of_support_le (Finset.subset_union_left f.support g.support),
-    DFinsupp.sum_of_support_le (Finset.subset_union_right f.support g.support)]
+  have := Finset.subset_union_left (s₁ := f.support) (s₂ := g.support)
+  rw [DFinsupp.sum_of_support_le (Finset.subset_union_left (s₁ := f.support) (s₂ := g.support)),
+    DFinsupp.sum_of_support_le (Finset.subset_union_right (s₁ := f.support) (s₂ := g.support))]
   exact rel_of_sum_of_rel_add hr_zero hr_add (fun i _ => H i)
 
 
@@ -403,25 +408,24 @@ def Φ (n i j : ι) : 𝒜 i →+ 𝒜 j →+ A := {
   toFun   := fun x => {
     toFun     := fun y => if i + j = n then x * y else (0 : A)
     map_add'  := fun a a' => by
-      split_ifs <;>
-      simp only [AddSubmonoid.coe_add, Submodule.coe_toAddSubmonoid, mul_add, add_zero]
+      split_ifs <;> simp only [Submodule.coe_add, mul_add, add_zero]
     map_zero' := by simp only [ZeroMemClass.coe_zero, mul_zero, ite_self] }
   map_add' := fun b b' => by
     ext a
     simp only [AddSubmonoid.coe_add, Submodule.coe_toAddSubmonoid, AddMonoidHom.coe_mk,
       ZeroHom.coe_mk, AddMonoidHom.add_apply]
-    split_ifs <;> simp only [add_mul, add_zero]
+    split_ifs <;> simp only [Submodule.coe_add, add_mul, add_zero]
   map_zero' := by simp only [ZeroMemClass.coe_zero, zero_mul, ite_self]; rfl }
 
-def Φy (n : ι) (y : DirectSum ι (fun i => 𝒜 i)) (i : ι) : (𝒜 i) →+ A := {
+def Φy [DecidableEq A] (n : ι) (y : DirectSum ι (fun i => 𝒜 i)) (i : ι) : (𝒜 i) →+ A := {
     toFun    := fun a => y.sum (fun j b => Φ 𝒜 n i j a b)
     map_add' := fun a a' => by simp only [map_add, AddMonoidHom.coe_mk, ZeroHom.coe_mk,
       AddMonoidHom.add_apply, DFinsupp.sum_add]
     map_zero' := by simp only [map_zero, AddMonoidHom.zero_apply, DFinsupp.sum_zero] }
 
 /-- The equivalence ring relation generated by a homogeneous relation is homogeneous -/
-theorem RingConGen.RelIsHomogeneous_of [GradedAlgebra 𝒜] (hr : Rel.IsHomogeneous 𝒜 rel) :
-    Rel.IsHomogeneous 𝒜 (RingConGen.Rel rel) := by
+theorem RingConGen.RelIsHomogeneous_of [DecidableEq A] [GradedAlgebra 𝒜]
+    (hr : Rel.IsHomogeneous 𝒜 rel) : Rel.IsHomogeneous 𝒜 (RingConGen.Rel rel) := by
   intro a b h
   induction h with
   | of x y h => exact fun i =>  RingConGen.Rel.of _ _ (hr h i)
@@ -450,7 +454,7 @@ theorem RingConGen.RelIsHomogeneous_of [GradedAlgebra 𝒜] (hr : Rel.IsHomogene
 section Ring
 
 variable {R : Type*} [CommRing R] {ι : Type*} [DecidableEq ι] [AddCommMonoid ι] {A : Type*}
-  [CommRing A] [DecidableEq A] [Algebra R A] (𝒜 : ι → Submodule R A) (r : A → A → Prop)
+  [CommRing A] /- [DecidableEq A] -/ [Algebra R A] (𝒜 : ι → Submodule R A) (r : A → A → Prop)
 
 /-- The ideal generated by a pure homogeneous relation is homogeneous -/
 theorem _root_.Ideal.IsHomogeneous_of_rel_isPureHomogeneous [GradedAlgebra 𝒜]
@@ -463,7 +467,7 @@ theorem _root_.Ideal.IsHomogeneous_of_rel_isPureHomogeneous [GradedAlgebra 𝒜]
   exact Submodule.sub_mem _ hi.1 hi.2
 
 /-- The ideal generated by a homogeneous relation is homogeneous -/
-theorem _root_.Ideal.IsHomogeneous_of_rel_isHomogeneous [h𝒜 : GradedAlgebra 𝒜]
+theorem _root_.Ideal.IsHomogeneous_of_rel_isHomogeneous [DecidableEq A] [h𝒜 : GradedAlgebra 𝒜]
     (hr : Rel.IsHomogeneous 𝒜 r) : Ideal.IsHomogeneous 𝒜 (Ideal.ofRel r):= by
   let r' : A → A → Prop := fun a b => ∃ i, a ∈ 𝒜 i ∧ b ∈ 𝒜 i ∧ r a b
   suffices Ideal.ofRel r = Ideal.ofRel r' by
@@ -475,7 +479,7 @@ theorem _root_.Ideal.IsHomogeneous_of_rel_isHomogeneous [h𝒜 : GradedAlgebra �
   . intro x hx
     refine' Submodule.span_induction hx _ _ _ _
     . rintro x ⟨a, b, h', h⟩
-      rw [← h𝒜.left_inv x, ← sum_support_of _ (Decomposition.decompose' x),
+      rw [← h𝒜.left_inv x, ← sum_support_of (Decomposition.decompose' x),
         map_sum]
       apply Ideal.sum_mem
       intro i _
@@ -489,8 +493,7 @@ theorem _root_.Ideal.IsHomogeneous_of_rel_isHomogeneous [h𝒜 : GradedAlgebra �
         simp only [Decomposition.decompose'_eq, SetLike.coe_mem, true_and]
         simp only [Rel.IsHomogeneous] at hr
         exact hr h' i
-      . simp only [← h, Decomposition.decompose'_eq, decompose_add,
-          add_apply, AddSubmonoid.coe_add, Submodule.coe_toAddSubmonoid]
+      . simp only [Decomposition.decompose'_eq, ← h, decompose_add, add_apply, Submodule.coe_add]
     . simp only [Submodule.zero_mem]
     . intro x y hx hy
       exact Ideal.add_mem _ hx hy
@@ -523,8 +526,7 @@ def quotCompMap (i : ι) : (𝒜 i) →ₗ[R] (quotSubmodule R 𝒜 rel i) where
       rw [quotSubmodule, Submodule.mem_map]
       exact ⟨↑u, u.prop, rfl⟩⟩
   map_add' u v := by
-    simp only [AddSubmonoid.coe_add, Submodule.coe_toAddSubmonoid, map_add,
-      Ideal.Quotient.mkₐ_eq_mk, AddSubmonoid.mk_add_mk]
+    simp only [Submodule.coe_add, map_add, AddMemClass.mk_add_mk]
   map_smul' r u := by
     simp only [SetLike.val_smul, map_smul, Ideal.Quotient.mkₐ_eq_mk, RingHom.id_apply]; rfl
 
@@ -547,6 +549,9 @@ instance SetLike.GradedMonoid_RingQuot [h𝒜 : SetLike.GradedMonoid 𝒜] :
       rintro ⟨a, ha, rfl⟩ ⟨b, hb, rfl⟩
       exact ⟨a*b, ⟨h𝒜.mul_mem ha hb, map_mul _ _ _⟩⟩
 
+-- TODO: can these be moved outside the scope of `[AddCommMonoid ι]`?
+
+omit [AddCommMonoid ι] in
 theorem quotDecompose_left_inv'_aux :
     (coeLinearMap fun i => Submodule.map (RingQuot.mkAlgHom R rel) (𝒜 i)).comp
       (lmap' (quotCompMap R 𝒜 rel)) =
@@ -558,6 +563,7 @@ theorem quotDecompose_left_inv'_aux :
   simp only [lof_eq_of, coeLinearMap_of]
   rfl
 
+omit [AddCommMonoid ι] in
 theorem quotDecompose_left_inv'_aux_apply (x) :
     (coeLinearMap fun i => Submodule.map (RingQuot.mkAlgHom R rel) (𝒜 i))
       (lmap' (quotCompMap R 𝒜 rel) x) =
@@ -566,6 +572,7 @@ theorem quotDecompose_left_inv'_aux_apply (x) :
   simp only [LinearMap.ext_iff, LinearMap.comp_apply, AlgHom.toLinearMap_apply] at e
   apply e
 
+omit [AddCommMonoid ι] in
 lemma quotDecompose'_apply (a : DirectSum ι (fun i => 𝒜 i)) :
     (quotDecompose' R 𝒜 rel) (lmap' (quotCompMap R 𝒜 rel) a) =
       RingQuot.mkAlgHom R rel (coeLinearMap 𝒜 a) := by
@@ -616,19 +623,21 @@ lemma obvious_iff {x y : A} :
     | add _ _ k k' => simp only [map_add, k, k']
     | mul _ _ k k' => simp only [map_mul, k, k']
 
-theorem quotDecompose_injective [h𝒜 : GradedAlgebra 𝒜] (hrel : Rel.IsHomogeneous 𝒜 rel) {x y : A}
+theorem quotDecompose_injective [DecidableEq A] [h𝒜 : GradedAlgebra 𝒜]
+    (hrel : Rel.IsHomogeneous 𝒜 rel) {x y : A}
     (hxy : RingQuot.mkAlgHom R rel x = RingQuot.mkAlgHom R rel y) (i : ι) :
     RingQuot.mkAlgHom R rel (h𝒜.decompose' x i) = RingQuot.mkAlgHom R rel (h𝒜.decompose' y i) := by
   rw [← AlgHom.coe_toRingHom, RingQuot.mkAlgHom_coe R rel, obvious_iff] at hxy ⊢
   exact RingConGen.RelIsHomogeneous_of 𝒜 _ hrel hxy i
 
+omit [AddCommMonoid ι] in
 theorem quotDecompose_surjective2 : Surjective (lmap' (quotCompMap R 𝒜 rel)) := by
   apply lmap'_surjective (quotCompMap R 𝒜 rel)
   rintro i ⟨x, ⟨a, ha, rfl⟩⟩
   exact ⟨⟨a, ha⟩, rfl⟩
 
-theorem quotDecompose'_injective [h𝒜 : GradedAlgebra 𝒜] (hrel : Rel.IsHomogeneous 𝒜 rel) :
-    Injective (quotDecompose' R 𝒜 rel) := by
+theorem quotDecompose'_injective [DecidableEq A] [h𝒜 : GradedAlgebra 𝒜]
+    (hrel : Rel.IsHomogeneous 𝒜 rel) : Injective (quotDecompose' R 𝒜 rel) := by
   intro x y hxy
   obtain ⟨a, ha, rfl⟩ := quotDecompose_surjective2 R 𝒜 rel x
   obtain ⟨b, hb, rfl⟩ := quotDecompose_surjective2 R 𝒜 rel y
@@ -647,7 +656,8 @@ theorem quotDecompose'_injective [h𝒜 : GradedAlgebra 𝒜] (hrel : Rel.IsHomo
   exact h𝒜.right_inv a
 
 
-theorem quotDecompose_injective' [h𝒜 : GradedAlgebra 𝒜] (hrel : Rel.IsHomogeneous 𝒜 rel) :
+theorem quotDecompose_injective' [DecidableEq A] [h𝒜 : GradedAlgebra 𝒜]
+    (hrel : Rel.IsHomogeneous 𝒜 rel) :
     Injective (coeLinearMap (fun i => (𝒜 i).map (RingQuot.mkAlgHom R rel))) := by
   have hφ : ∀ i, Surjective (quotCompMap R 𝒜 rel i) := by
     rintro i ⟨x, ⟨a, ha, rfl⟩ ⟩
@@ -663,28 +673,27 @@ theorem quotDecompose_injective' [h𝒜 : GradedAlgebra 𝒜] (hrel : Rel.IsHomo
   simp only [Decomposition.decompose'_eq] at hxy'
   simpa only [lmap'_quotCompMap_apply, SetLike.coe_eq_coe] using hxy'
 
-lemma quotDecompose'_bijective [GradedAlgebra 𝒜] (hrel : Rel.IsHomogeneous 𝒜 rel) :
-    Bijective (quotDecompose' R 𝒜 rel) :=
+lemma quotDecompose'_bijective [DecidableEq A] [GradedAlgebra 𝒜]
+    (hrel : Rel.IsHomogeneous 𝒜 rel) : Bijective (quotDecompose' R 𝒜 rel) :=
   ⟨quotDecompose_injective' R 𝒜 rel hrel, quotDecompose'_surjective R 𝒜 rel⟩
 
 /-- The decomposition of the quotient ring is an internal direct sum -/
-lemma quotDecomposition_IsInternal [GradedAlgebra 𝒜] (hrel : Rel.IsHomogeneous 𝒜 rel) :
-    IsInternal (quotSubmodule R 𝒜 rel) :=
+lemma quotDecomposition_IsInternal [DecidableEq A] [GradedAlgebra 𝒜]
+    (hrel : Rel.IsHomogeneous 𝒜 rel) : IsInternal (quotSubmodule R 𝒜 rel) :=
   quotDecompose'_bijective R 𝒜 rel hrel
 
 -- We need a full decomposition with an explicit left inverse
 -- (here, it is obtained by `invFun`)
-noncomputable def quotDecomposition [GradedAlgebra 𝒜] (hrel : Rel.IsHomogeneous 𝒜 rel) :
-  Decomposition (quotSubmodule R 𝒜 rel) := {
-  decompose' := invFun (quotDecompose' R 𝒜 rel)
-  left_inv   := rightInverse_invFun (quotDecompose'_surjective R 𝒜 rel)
-  right_inv  := leftInverse_invFun (quotDecompose_injective' R 𝒜 rel hrel) }
+noncomputable def quotDecomposition [DecidableEq A] [GradedAlgebra 𝒜]
+    (hrel : Rel.IsHomogeneous 𝒜 rel) : Decomposition (quotSubmodule R 𝒜 rel) :=
+  { decompose' := invFun (quotDecompose' R 𝒜 rel)
+    left_inv   := rightInverse_invFun (quotDecompose'_surjective R 𝒜 rel)
+    right_inv  := leftInverse_invFun (quotDecompose_injective' R 𝒜 rel hrel) }
 
-noncomputable def DirectSum.Decomposition_RingQuot [GradedAlgebra 𝒜]
-    (hrel : Rel.IsHomogeneous 𝒜 rel) :
-    GradedAlgebra (quotSubmodule R 𝒜 rel) := {
-  toGradedMonoid  := SetLike.GradedMonoid_RingQuot R 𝒜 rel
-  toDecomposition := quotDecomposition R 𝒜 rel hrel }
+noncomputable def DirectSum.Decomposition_RingQuot [DecidableEq A] [GradedAlgebra 𝒜]
+    (hrel : Rel.IsHomogeneous 𝒜 rel) : GradedAlgebra (quotSubmodule R 𝒜 rel) :=
+  { toGradedMonoid  := SetLike.GradedMonoid_RingQuot R 𝒜 rel
+    toDecomposition := quotDecomposition R 𝒜 rel hrel }
 
 end Rel
 
@@ -693,7 +702,7 @@ end Semiring
 section Ideal
 
 variable (R : Type*) [CommRing R] {ι : Type*} [DecidableEq ι] [AddCommMonoid ι] {A : Type*}
-  [CommRing A] [DecidableEq A] [Algebra R A] (𝒜 : ι → Submodule R A) (I : Ideal A)
+  [CommRing A] /- [DecidableEq A] -/ [Algebra R A] (𝒜 : ι → Submodule R A) (I : Ideal A)
   (rel : A → A → Prop)
 
 /-- The graded pieces of A ⧸ I -/
@@ -704,8 +713,7 @@ def Ideal.quotCompMap (i : ι) : ↥(𝒜 i) →ₗ[R] ↥(quotSubmodule R 𝒜 
   toFun := fun u ↦ ⟨Ideal.Quotient.mkₐ R I ↑u, by
       rw [quotSubmodule, Submodule.mem_map]; exact ⟨↑u, u.prop, rfl⟩⟩
   map_add' := fun u v ↦ by
-    simp only [AddSubmonoid.coe_add, Submodule.coe_toAddSubmonoid, map_add,
-      Ideal.Quotient.mkₐ_eq_mk, AddSubmonoid.mk_add_mk]
+    simp only [Submodule.coe_add, map_add, Quotient.mkₐ_eq_mk, AddMemClass.mk_add_mk]
   map_smul' := fun r u ↦ by
     simp only [SetLike.val_smul, map_smul, Ideal.Quotient.mkₐ_eq_mk, RingHom.id_apply]; rfl }
 
@@ -807,6 +815,7 @@ def Ideal.quotDecomposition [GradedAlgebra 𝒜] (hI : I.IsHomogeneous 𝒜) :
   left_inv   := I.quotDecomposition_left_inv R 𝒜 hI
   right_inv  := I.quotDecomposition_right_inv R 𝒜 hI }
 
+omit [DecidableEq ι] [AddCommMonoid ι] in
 theorem Ideal.mem_quotSubmodule_iff (i : ι) (g : A ⧸ I) :
     g ∈ I.quotSubmodule R 𝒜 i ↔ ∃ a ∈ 𝒜 i, Ideal.Quotient.mk I a = g := by
   rw [Ideal.quotSubmodule, Submodule.mem_map, Ideal.Quotient.mkₐ_eq_mk]
