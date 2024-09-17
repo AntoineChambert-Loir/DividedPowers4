@@ -2,6 +2,7 @@
 
 import DividedPowers.Basic
 import DividedPowers.ExponentialModule.Basic
+import DividedPowers.ForMathlib.Bell
 
 /-! # Divided powers and exponential power series -/
 
@@ -34,7 +35,7 @@ def exp_LinearMap (hI : DividedPowers I) : I →ₗ[R] ExponentialModule R where
   toFun := hI.exp
   map_add' := fun a b ↦ by
     apply coe_injective
-    simp only [coe_exp, AddSubmonoid.coe_add, Submodule.coe_toAddSubmonoid, coe_add]
+    simp only [coe_exp, Submodule.coe_add, coe_add]
     rw [hI.add_dpowExp a.prop b.prop]
   map_smul' := fun r a ↦ by
     simp only [RingHom.id_apply]
@@ -50,7 +51,7 @@ noncomputable def ofExp (e : I →ₗ[R] ExponentialModule R)
     (coeff_mem : ∀ a {n} (_ : n ≠ 0), coeff R n ↑(e a) ∈ I)
     (coeff_comp : ∀ a m {n} (hn : n ≠ 0),
       coeff R m (e ⟨coeff R n (e a), coeff_mem a hn⟩)
-        = uniformBell m n * coeff R (m * n) (e a)) :
+        = Nat.uniformBell m n * coeff R (m * n) (e a)) :
     DividedPowers I where
   dpow n a := if ha : a ∈ I then coeff R n (toPowerSeries (e ⟨a, ha⟩)) else 0
   dpow_null {n a} ha := by simp only [dif_neg ha]

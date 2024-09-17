@@ -11,19 +11,31 @@ open DirectSum Finset Function Ideal Ideal.Quotient MvPolynomial RingEquiv RingQ
 section CommRing
 
 variable (R : Type*) [CommRing R] {M : Type*} [AddCommGroup M] [Module R M]
-  [DecidableEq R] [DecidableEq M]
+
 
 section GradeOne
 
 theorem ι_mem_grade_one (m : M) : ι R M m ∈ grade R M 1 :=
   ⟨X ⟨1,m⟩, ⟨isWeightedHomogeneous_X R Prod.fst ⟨1,m⟩, rfl⟩⟩
 
+
+variable [DecidableEq R]
+
+section Module
+
 variable [Module Rᵐᵒᵖ M] [IsCentralScalar R M]
 
+-- MI: inferInstance does not work!
+instance [hR : DecidableEq R] : DecidablePred (fun x ↦ x ∈ kerIdeal R M) :=
+  fun a ↦ hR ((fstHom R R M) a) 0
+
+-- MI: I had to add `classical` in this definition (?)
 variable (M)
+
 /-- The canonical map from `divided_power_algebra R M` into `triv_sq_zero_ext R M`
   that sends `DividedPowerAlgebra.ι` to `TrivSqZeroExt.inr`. -/
-def toTrivSqZeroExt : DividedPowerAlgebra R M →ₐ[R] TrivSqZeroExt R M :=
+def toTrivSqZeroExt :
+    DividedPowerAlgebra R M →ₐ[R] TrivSqZeroExt R M :=
   lift (DividedPowers.OfSquareZero.dividedPowers
       (TrivSqZeroExt.sqZero R M) : DividedPowers (kerIdeal R M))
     (inrHom R M) (fun m => (mem_kerIdeal_iff_exists R M _).mpr ⟨m, rfl⟩)
@@ -33,13 +45,16 @@ variable {M}
 @[simp] theorem toTrivSqZeroExt_ι (x : M) :
     toTrivSqZeroExt R M (ι R M x) = inr x := lift_ι_apply _ _ x
 
-theorem toTrivSqZeroExt_apply_dp_of_two_le (n : ℕ) (m : M) (hn : 2 ≤ n) :
+theorem toTrivSqZeroExt_apply_dp_of_two_le  (n : ℕ) (m : M) (hn : 2 ≤ n) :
     toTrivSqZeroExt R M (dp R n m) = 0 := by
   rw [toTrivSqZeroExt, liftAlgHom_apply_dp, DividedPowers.OfSquareZero.dpow_of_two_le]
   exact hn
 
+end Module
+
 variable (M)
 
+variable [DecidableEq M]
 
 theorem grade_one_eq_span :
     grade R M 1 = Submodule.span R (Set.range (dp R 1)) := by
@@ -74,6 +89,10 @@ theorem grade_one_eq_span' :
   rw [Submodule.map_subtype_top, Submodule.map_span]
   simp_rw [grade_one_eq_span R M]
   rw [← Set.range_comp]; rfl
+
+section Module
+
+variable [Module Rᵐᵒᵖ M] [IsCentralScalar R M]
 
 theorem deg_one_right_inv :
     RightInverse
@@ -128,6 +147,8 @@ theorem mem_grade_one_iff (a : DividedPowerAlgebra R M) :
     rw [ι_toTrivSqZeroExt_of_mem_grade_one R M ha]
   . rintro ⟨m, rfl⟩
     apply ι_mem_grade_one
+
+end Module
 
 end GradeOne
 

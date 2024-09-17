@@ -1,4 +1,4 @@
-import DividedPowers.ForMathlib.WeightedHomogeneous
+import Mathlib.RingTheory.MvPolynomial.WeightedHomogeneous
 import Mathlib.Algebra.DirectSum.Basic
 import Mathlib.Algebra.DirectSum.Ring
 import Mathlib.Algebra.DirectSum.Internal

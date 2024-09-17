@@ -12,7 +12,6 @@ section DividedPowersMorphisms
 def isDPMorphism {A B : Type _} [CommSemiring A] [CommSemiring B] {I : Ideal A} {J : Ideal B}
     (hI : DividedPowers I) (hJ : DividedPowers J) (f : A →+* B) : Prop :=
   I.map f ≤ J ∧ ∀ (n : ℕ), ∀ a ∈ I, hJ.dpow n (f a) = f (hI.dpow n a)
-#align divided_powers.is_pd_morphism DividedPowers.isDPMorphism
 
 theorem isDPMorphism.map_dpow
     {A B : Type _} [CommSemiring A] [CommSemiring B] {I : Ideal A} {J : Ideal B}
@@ -56,7 +55,6 @@ theorem isDPMorphism.comp {A B C : Type _} [CommSemiring A] [CommSemiring B] [Co
     rw [hg.2]
     apply hf.1
     exact Ideal.mem_map_of_mem f ha
-#align divided_powers.is_pd_morphism.comp DividedPowers.isDPMorphism.comp
 
 /-- The structure of a dp_morphism between rings endowed with dp-rings -/
 @[ext]
@@ -65,7 +63,6 @@ structure dpMorphism {A B : Type _} [CommSemiring A] [CommSemiring B] {I : Ideal
   extends RingHom A B where
   ideal_comp : I.map toRingHom ≤ J
   dpow_comp : ∀ (n : ℕ), ∀ a ∈ I, hJ.dpow n (toRingHom a) = toRingHom (hI.dpow n a)
-#align divided_powers.pd_morphism DividedPowers.dpMorphism
 
 instance dpMorphism.instFunLike {A B : Type _} [CommSemiring A] [CommSemiring B] {I : Ideal A} {J : Ideal B}
     (hI : DividedPowers I) (hJ : DividedPowers J) :
@@ -74,13 +71,11 @@ instance dpMorphism.instFunLike {A B : Type _} [CommSemiring A] [CommSemiring B]
   coe_injective' h h' hh' := by
     cases h; cases h'; congr
     dsimp at hh' ; ext; rw [hh']
-#align divided_powers.pd_morphism_fun_like DividedPowers.dpMorphism.instFunLike
 
 def dpMorphism.isDPMorphism {A B : Type _} [CommSemiring A] [CommSemiring B] {I : Ideal A} {J : Ideal B}
     {hI : DividedPowers I} {hJ : DividedPowers J} (f : dpMorphism hI hJ) :
     isDPMorphism hI hJ f.toRingHom :=
   ⟨f.ideal_comp, f.dpow_comp⟩
-#align divided_powers.pd_morphism.is_pd_morphism DividedPowers.dpMorphism.isDPMorphism
 
 -- Roby65, Proposition 2. (TODO: rename?)
 /-- The ideal on which two divided power structures on two ideals coincide -/
@@ -111,7 +106,6 @@ def dpMorphismIdeal {A B : Type _} [CommSemiring A] [CommSemiring B] {I : Ideal 
     intro n
     rw [smul_eq_mul, hI.dpow_smul _ hx.1, map_mul, map_mul, map_pow,
       hJ.dpow_smul _ (hf (Ideal.mem_map_of_mem f hx.1)), hx.2 n]
-#align divided_powers.pd_morphism_ideal DividedPowers.dpMorphismIdeal
 
 -- Roby65, Proposition 3.  (TODO: rename?)
 /-- The dp morphism induced by a ring morphism, provided divided powers match on a generating set -/
@@ -131,7 +125,6 @@ def dpMorphismFromGens {A B : Type _} [CommSemiring A] [CommSemiring B] {I : Ide
       exact ⟨by rw [hS]; exact Ideal.subset_span hy, fun n => h n y hy⟩
     rw [← Ideal.span_le, ← hS] at hS'
     exact ((hS' hx).2 n).symm
-#align divided_powers.pd_morphism_from_gens DividedPowers.dpMorphismFromGens
 
 /-- Identity as a dp morphism -/
 def dpMorphism.id {A : Type _} [CommSemiring A] {I : Ideal A} (hI : DividedPowers I) : dpMorphism hI hI
@@ -139,7 +132,6 @@ def dpMorphism.id {A : Type _} [CommSemiring A] {I : Ideal A} (hI : DividedPower
   toRingHom := RingHom.id A
   ideal_comp := by simp only [Ideal.map_id, le_refl]
   dpow_comp n a _ := by simp only [RingHom.id_apply]
-#align divided_powers.pd_morphism.id DividedPowers.dpMorphism.id
 
 instance {A : Type _} [CommSemiring A] {I : Ideal A} (hI : DividedPowers I) :
     Inhabited (dpMorphism hI hI) :=
@@ -151,7 +143,6 @@ theorem dpMorphismFromGens_coe {A B : Type _} [CommSemiring A] [CommSemiring B] 
     (h : ∀ (n : ℕ), ∀ x ∈ S, f (hI.dpow n x) = hJ.dpow n (f x)) :
     (dpMorphismFromGens hI hJ hS hf h).toRingHom = f :=
   rfl
-#align divided_powers.pd_morphism_from_gens_coe DividedPowers.dpMorphismFromGens_coe
 
 /- lemma dp_morphism_from_gens_apply {A B : Type*} [comm_ring A] [comm_ring B] {I : ideal A}
   (hI : divided_powers I) {J : ideal B} (hJ : divided_powers J) {f : A →+* B} {S : set A}
@@ -189,28 +180,23 @@ theorem isDPMorphism_on_span {A B : Type _} [CommSemiring A] [CommSemiring B] {I
   rw [hS, Ideal.map_span, Ideal.span_le]
   rintro b ⟨a, has, rfl⟩
   exact hS' a has
-#align divided_powers.is_pd_morphism_on_span DividedPowers.isDPMorphism_on_span
 
 theorem dp_uniqueness {A B : Type _} [CommSemiring A] [CommSemiring B] {I : Ideal A} {J : Ideal B}
     (hI : DividedPowers I) (hJ : DividedPowers J) (f : A →+* B) {S : Set A} (hS : I = Ideal.span S)
     (hS' : ∀ s ∈ S, f s ∈ J) (hdp : ∀ (n : ℕ), ∀ a ∈ S, f (hI.dpow n a) = hJ.dpow n (f a)) :
     ∀ (n), ∀ a ∈ I, hJ.dpow n (f a) = f (hI.dpow n a) :=
   (isDPMorphism_on_span hI hJ f hS hS' hdp).2
-#align divided_powers.dp_uniqueness DividedPowers.dp_uniqueness
 
 theorem isDPMorphism.of_comp {A B C : Type _} [CommSemiring A] [CommSemiring B] [CommSemiring C] {I : Ideal A}
     {J : Ideal B} {K : Ideal C} (hI : DividedPowers I) (hJ : DividedPowers J) (hK : DividedPowers K)
     (f : A →+* B) (g : B →+* C) (h : A →+* C) (hcomp : g.comp f = h) (sf : J = I.map f) :
-    isDPMorphism hI hJ f → isDPMorphism hI hK h → isDPMorphism hJ hK g :=
-  by
+    isDPMorphism hI hJ f → isDPMorphism hI hK h → isDPMorphism hJ hK g := by
   intro hf hh
   apply isDPMorphism_on_span; exact sf
   rintro b ⟨a, ha, rfl⟩; rw [← RingHom.comp_apply]; rw [hcomp]
   apply hh.1; apply Ideal.mem_map_of_mem; exact ha
   rintro n b ⟨a, ha, rfl⟩
-  rw [← RingHom.comp_apply, hcomp, hh.2 n a ha, ← hcomp, RingHom.comp_apply]
-  rw [hf.2 n a ha]
-#align divided_powers.is_pd_morphism.of_comp DividedPowers.isDPMorphism.of_comp
+  rw [← RingHom.comp_apply, hcomp, hh.2 n a ha, ← hcomp, RingHom.comp_apply, hf.2 n a ha]
 
 -- Roby65, corollary after proposition 3
 /-- Uniqueness of a divided powers given its values on a generating set -/
@@ -225,7 +211,6 @@ theorem dp_uniqueness_self {A : Type _} [CommSemiring A] {I : Ideal A} (hI hI' :
       exact Ideal.subset_span hs
     . simpa only [RingHom.id_apply] using hdp
   · rw [hI.dpow_null ha, hI'.dpow_null ha]
-#align divided_powers.dp_uniqueness_self DividedPowers.dp_uniqueness_self
 
 -- For the moment, the notation does not work
 -- notation `p(` A `,` I, `,` hI `)` →ₚ  `(` B `,` J, `,` hJ `)` := dp_morphism hI hJ

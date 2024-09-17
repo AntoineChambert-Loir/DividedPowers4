@@ -92,6 +92,7 @@ def eval₂RingHom (f : R →+* S) (g : σ → S) : (MvPolynomial σ R) →+* S 
     map_one' := eval₂_one _ _
     map_mul' := fun _ _ => eval₂_mul _ _ }
 
+omit [Algebra R S] in
 @[simp]
 theorem coe_eval₂RingHom (f : R →+* S) (g : σ → S) : ⇑(eval₂RingHom f g) = eval₂ f g :=
   rfl
@@ -251,8 +252,9 @@ theorem dpScalarExtensionInv_apply_dp (n : ℕ) (s : S) (m : M) :
     AlgebraTensorModule.lift_apply, lift.tmul, LinearMap.coe_restrictScalars, LinearMap.flip_apply,
     LinearMap.lsmul_apply, LinearMap.smul_apply, LinearMap.coe_comp, Function.comp_apply]
   rw [ExponentialModule.coe_smul, PowerSeries.coeff_scale, ExponentialModule.coeff_linearMap,
-    Algebra.TensorProduct.includeRight, coe_mk, RingHom.coe_mk, MonoidHom.coe_mk,
-    OneHom.coe_mk, coeff_exp_LinearMap, smul_tmul', smul_eq_mul, mul_one]
+    Algebra.TensorProduct.includeRight, coe_mk, RingHom.coe_mk]
+  sorry
+  --rw [MonoidHom.coe_mk, OneHom.coe_mk, coeff_exp_LinearMap, smul_tmul', smul_eq_mul, mul_one]
 
 /-- Uniqueness claim of Roby1963, theorem III.2 -/
 theorem dpScalarExtensionInv_unique
@@ -373,7 +375,7 @@ theorem dpScalarExtension_mem_grade {a : DividedPowerAlgebra R M} {n : ℕ} (ha 
       intro h
       simp only [h, map_zero, ne_eq, not_true_eq_false] at hd0
     convert hpn hd0'
-    simp only [weightedDegree, LinearMap.toAddMonoidHom_coe, Finsupp.total_mapDomain]
+    simp only [Finsupp.weight, LinearMap.toAddMonoidHom_coe, Finsupp.linearCombination_mapDomain]
     rfl
   · have h_eq : (algebraMap S (MvPolynomial (ℕ × M) S)).comp (algebraMap R S) =
       (algebraMap R (MvPolynomial (ℕ × M) S)) := rfl
@@ -386,7 +388,7 @@ theorem dpScalarExtension_mem_grade {a : DividedPowerAlgebra R M} {n : ℕ} (ha 
       MvPolynomial.rename, ← algebraMap_eq, h_eq, dpScalarExtension, AlgHom.baseChange,
       toRingHom_eq_coe, coe_mk, RingHom.coe_coe, productMap_apply_tmul,
       _root_.map_one, one_mul, lift', RingQuot.liftAlgHom_mkAlgHom_apply, coe_eval₂AlgHom,
-      Function.comp_def, Prod_map, id_eq, baseChange, hf, coe_ringHom_mk, coe_mk,
+      Function.comp_def, Prod.map_apply, id_eq, baseChange, hf, coe_ringHom_mk, coe_mk,
       coe_eval₂RingHom]
     rw [← AlgHom.comp_apply, MvPolynomial.comp_aeval, aeval_def]
     simp only [eval₂_eq, MvPolynomial.algebraMap_apply, prod_X_pow_eq_monomial, RingHom.coe_comp,
@@ -422,6 +424,7 @@ theorem dpScalarExtension_mem_grade {a : DividedPowerAlgebra R M} {n : ℕ} (ha 
       simp only [MvPolynomial.algebraMap_apply, coeff_C_mul, map_sum, dp_def']
       rw [← h_eq', RingHom.coe_comp, Function.comp_apply, h_sum d, coeff_sum, map_sum]
       simp only [Algebra.id.map_eq_id, RingHomCompTriple.comp_apply, _root_.map_mul, coeff_C_mul]
+      sorry
 
 -- TODO: add IsHomogeneous for maps of graded algebras/modules (?)
 
