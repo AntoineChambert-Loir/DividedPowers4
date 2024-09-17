@@ -611,7 +611,6 @@ theorem Ideal.isAugmentation_tensorProduct
     simp [Submodule.TensorProduct]
     rw [sup_comm]
     rw [← restrictScalars_mem A, sup_restrictScalars]
-    congr
     simp only [Ideal.map_includeLeft_eq, Ideal.map_includeRight_eq]
     rw [← id_comp (⊤ : Submodule A R).subtype]
     rw [← comp_id (Submodule.restrictScalars A J).subtype]

@@ -8,7 +8,7 @@ import DividedPowers.DPAlgebra.Graded.Basic
 import DividedPowers.DPAlgebra.Graded.GradeOne
 import DividedPowers.DPAlgebra.Graded.GradeZero
 import DividedPowers.DPAlgebra.Init
-import DividedPowers.DPAlgebra.Misc
+import DividedPowers.DPAlgebra.Misc -- It uses sorry
 import DividedPowers.DPAlgebra.PolynomialMap -- It uses sorry
 import DividedPowers.DPAlgebra.RobyLemma9
 import DividedPowers.DPMorphism
@@ -28,7 +28,7 @@ import DividedPowers.ForMathlib.Homogeneous
 import DividedPowers.ForMathlib.Lcoeff
 --import DividedPowers.ForMathlib.MvPowerSeries.Basic
 import DividedPowers.ForMathlib.MvPowerSeries.Evaluation -- In PR 15019
-import DividedPowers.ForMathlib.MvPowerSeries.LinearTopology
+import DividedPowers.ForMathlib.MvPowerSeries.LinearTopology -- it uses sorry
 import DividedPowers.ForMathlib.MvPowerSeries.Order -- -- In PR 14983
 --import DividedPowers.ForMathlib.MvPowerSeries.Sandbox
 import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Basic

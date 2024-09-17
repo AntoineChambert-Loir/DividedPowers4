@@ -670,9 +670,9 @@ instance addCommGroup : AddCommGroup (M →ₚ[R] N) where
     simp only [Int.cast_negSucc, Nat.cast_add, Nat.cast_one, neg_add_rev, smul_def_apply,
       _root_.add_smul, neg_smul, _root_.one_smul, Nat.cast_succ, Int.cast_add, Int.cast_natCast,
       Int.cast_one, neg_def, smul_def, Pi.neg_apply, Pi.add_apply, Pi.smul_apply]
-  add_left_neg f  := by
+  neg_add_cancel f  := by
     ext
-    simp only [add_def_apply, neg_def, Pi.neg_apply, add_left_neg, zero_def, Pi.zero_apply]
+    simp only [add_def_apply, neg_def, Pi.neg_apply, neg_add_cancel, zero_def, Pi.zero_apply]
   add_comm f g    := by ext; simp only [add_def, add_comm]
 
 instance instModule : Module R (M →ₚ[R] N) where

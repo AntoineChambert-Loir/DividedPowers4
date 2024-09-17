@@ -62,9 +62,10 @@ section Topology
 
 variable [TopologicalSpace R]
 
+-- TODO: make σ explicit
 variable (R) in
 /-- The pointwise topology on MvPowerSeries -/
-scoped instance : TopologicalSpace (MvPowerSeries σ R) := Pi.topologicalSpace
+scoped instance topologicalSpace : TopologicalSpace (MvPowerSeries σ R) := Pi.topologicalSpace
 
 /-- MvPowerSeries on a T0Space form a T0Space -/
 @[scoped instance]

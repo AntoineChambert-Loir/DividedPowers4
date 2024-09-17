@@ -11,7 +11,7 @@ lemma Nat.isUnitFactorial (n : ℕ) : IsUnit (n ! : ℚ) := by
 lemma Nat.inv_smul_eq_invCast_mul {A : Type*} [CommSemiring A] [Algebra ℚ A] (n : ℕ) (a : A) :
   Ring.inverse (n : ℚ) • a = Ring.inverse (n : A) * a := by
   cases' Nat.eq_zero_or_pos n with hn hn
-  · simp only [hn, Nat.cast_zero, isUnit_zero_iff, not_false_eq_true, Ring.inverse_non_unit, 
+  · simp only [hn, Nat.cast_zero, isUnit_zero_iff, not_false_eq_true, Ring.inverse_non_unit,
       zero_smul, Ring.inverse_zero, zero_mul]
   · suffices hn' : IsUnit (n : ℚ) by
       simp only [Algebra.smul_def, ← map_natCast (algebraMap ℚ A)]
@@ -84,7 +84,7 @@ theorem dpow_add_of_lt' {n : ℕ}
   ring_nf
   simp only [mul_assoc]; congr; rw [← mul_assoc]
   refine castChoose_eq (natCast_factorial_isUnit_of_lt hn_fac hmn) hk
-  
+
 theorem dpow_add' {n : ℕ} (hn_fac : IsUnit ((n - 1) ! : A)) (hnI : I ^ n = 0) (m : ℕ) {x : A}
     (hx : x ∈ I) {y : A} (hy : y ∈ I) :
     dpow' I m (x + y) = (Finset.antidiagonal m).sum fun k ↦ dpow' I k.1 x * dpow' I k.2 y := by
@@ -128,7 +128,7 @@ theorem dpow_mul_of_add_lt' {n : ℕ} (hn_fac : IsUnit ((n - 1) ! : A)) {m k : �
   rw [← Nat.add_choose_mul_factorial_mul_factorial, mul_comm, mul_comm _ (m !), Nat.choose_symm_add]
 
 theorem dpow_mul' {n : ℕ} (hn_fac : IsUnit ((n - 1).factorial : A)) (hnI : I ^ n = 0)
-    (m k : ℕ) {x : A} (hx : x ∈ I) : 
+    (m k : ℕ) {x : A} (hx : x ∈ I) :
     dpow' I m x * dpow' I k x = ↑((m + k).choose m) * dpow' I (m + k) x := by
   by_cases hkm : m + k < n
   · exact dpow_mul_of_add_lt' hn_fac hkm hx
@@ -205,8 +205,8 @@ namespace CharP
 variable {A : Type*} [CommRing A] {p : Nat} [Fact (Nat.Prime p)] [CharP A p]
   {I : Ideal A} [DecidablePred (fun x ↦ x ∈ I)] (hIp : I ^ p = 0)
 
-noncomputable def dividedPowers : DividedPowers I := 
-  OfInvertibleFactorial.dividedPowers (n := p) 
+noncomputable def dividedPowers : DividedPowers I :=
+  OfInvertibleFactorial.dividedPowers (n := p)
     (natCast_factorial_isUnit_of_charP p (Nat.sub_one_lt (NeZero.ne' p).symm))
     hIp
 
@@ -252,11 +252,12 @@ noncomputable def dividedPowers : DividedPowers I where
     (natCast_factorial_isUnit_of_ratAlgebra _) hk (lt_add_one _) hx
 
 @[simp]
-lemma dpow_def (n : ℕ) (x : R) : 
-    (dividedPowers I).dpow n x = 
+lemma dpow_def (n : ℕ) (x : R) :
+    (dividedPowers I).dpow n x =
       if x ∈ I then Ring.inverse (n.factorial : R) * x ^ n else 0 :=
   rfl
 
+omit [DecidablePred fun x ↦ x ∈ I] in
 theorem dpow_eq_inv_fact_smul {hI : DividedPowers I} (n : ℕ) {x : R} (hx : x ∈ I) :
   hI.dpow n x = (Ring.inverse (Nat.factorial n : ℚ) : ℚ) • x ^ n := by
   simp only [Ring.inverse_eq_inv']

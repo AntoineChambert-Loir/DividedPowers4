@@ -19,7 +19,6 @@ theorem RingHom.ker_eq_ideal_iff {A B : Type _} [CommRing A] [CommRing B] (f : A
     simp only [RingHom.injective_iff_ker_eq_bot, Ideal.ker_quotient_lift f hI,
       Ideal.map_eq_bot_iff_le_ker, Ideal.mk_ker] at h
     exact le_antisymm h hI
-#align ring_hom.ker_eq_ideal_iff RingHom.ker_eq_ideal_iff
 
 end RingHom
 
@@ -43,7 +42,6 @@ theorem AlgHom.ker_eq_ideal_iff {R A B : Type _} [CommRing R] [CommRing A] [Alge
     intro x y hxy
     apply h
     simpa only [Ideal.Quotient.liftₐ_apply] using hxy
-#align alg_hom.ker_eq_ideal_iff AlgHom.ker_eq_ideal_iff
 
 end AlgHom
 
@@ -61,12 +59,10 @@ noncomputable def φ : M ⊗[R] N →ₐ[R] M ⊗[S] N :=
   Algebra.TensorProduct.productMap
     Algebra.TensorProduct.includeLeft
     (Algebra.TensorProduct.includeRight.restrictScalars R)
-#align φ φ
 
 theorem φ_apply (m : M) (n : N) : φ R S M N (m ⊗ₜ[R] n) = m ⊗ₜ[S] n := by
   simp only [φ, productMap_apply_tmul, AlgHom.coe_restrictScalars', includeLeft_apply,
     includeRight_apply, tmul_mul_tmul, _root_.mul_one, _root_.one_mul]
-#align φ_apply φ_apply
 
 theorem φ_surjective : Function.Surjective (φ R S M N) := by
   intro z
@@ -77,11 +73,9 @@ theorem φ_surjective : Function.Surjective (φ R S M N) := by
       obtain ⟨a, rfl⟩ := hx
       obtain ⟨b, rfl⟩ := hy
       exact ⟨a + b, map_add _ _ _⟩
-#align φ_surjective φ_surjective
 
 def kerφ : Ideal (M ⊗[R] N) :=
   Ideal.span ((fun r : S => (r • (1 : M)) ⊗ₜ[R] (1 : N) - (1 : M) ⊗ₜ[R] (r • (1 : N))) '' ⊤)
-#align kerφ kerφ
 
 /- example : N →ₐ[R] M ⊗[R] N :=
   includeRight
@@ -100,9 +94,8 @@ noncomputable def ψLeft : M →ₐ[S] M ⊗[R] N ⧸ kerφ R S M N := {
     simp only [AlgHom.toFun_eq_coe, AlgHom.coe_comp, AlgHom.coe_restrictScalars',
       Function.comp_apply, includeLeft_apply, Algebra.algebraMap_eq_smul_one]
     suffices (s • (1 : M)) ⊗ₜ[R] (1 : N) = s • (1 : M ⊗[R] N) by
-      rw [this, AlgHom.map_smul, AlgHom.map_one]
+      rw [this, AlgHom.map_smul, map_one] -- map_smul does not work
     rfl }
-  #align ψ_left ψLeft
 
 -- why is it noncomputable
 noncomputable def ψRight : N →ₐ[S] M ⊗[R] N ⧸ kerφ R S M N := {
@@ -111,18 +104,16 @@ noncomputable def ψRight : N →ₐ[S] M ⊗[R] N ⧸ kerφ R S M N := {
     simp only [AlgHom.toFun_eq_coe, AlgHom.coe_comp, Ideal.Quotient.mkₐ_eq_mk,
       Function.comp_apply, includeRight_apply]
     simp only [Algebra.algebraMap_eq_smul_one]
-    rw [← (Ideal.Quotient.mk (kerφ R S M N)).map_one,
-      ← Ideal.Quotient.mkₐ_eq_mk S, ← AlgHom.map_smul]
+    rw [← (Ideal.Quotient.mk (kerφ R S M N)).map_one, ← Ideal.Quotient.mkₐ_eq_mk S, ← AlgHom.map_smul]
     simp only [Ideal.Quotient.mkₐ_eq_mk]
     apply symm
     rw [Ideal.Quotient.eq]
     exact Ideal.subset_span ⟨s, Set.mem_univ s, rfl⟩ }
-#align ψ_right ψRight
 
 noncomputable def ψ : M ⊗[S] N →ₐ[S] M ⊗[R] N ⧸ kerφ R S M N :=
   productMap (ψLeft R S M N) (ψRight R S M N)
-#align ψ ψ
 
+omit [IsScalarTower R S N] in
 theorem ψ_apply (m : M) (n : N) :
   ψ R S M N (m ⊗ₜ[S] n) =
     Ideal.Quotient.mk (kerφ R S M N) (m ⊗ₜ[R] n) := by
@@ -131,7 +122,6 @@ theorem ψ_apply (m : M) (n : N) :
     Function.comp_apply, includeLeft_apply, includeRight_apply]
   rw [← RingHom.map_mul]
   simp only [tmul_mul_tmul, _root_.mul_one, _root_.one_mul]
-#align ψ_apply ψ_apply
 
 theorem kerφ_eq : RingHom.ker (φ R S M N).toRingHom = kerφ R S M N := by
   suffices h : kerφ R S M N ≤ RingHom.ker (φ R S M N).toRingHom by
@@ -143,10 +133,10 @@ theorem kerφ_eq : RingHom.ker (φ R S M N).toRingHom = kerφ R S M N := by
     obtain ⟨y, rfl⟩ := Ideal.Quotient.mk_surjective z
     simp only [AlgHom.toRingHom_eq_coe, Ideal.Quotient.lift_mk, AlgHom.coe_toRingHom]
     induction y using TensorProduct.induction_on with
-    | zero => simp only [RingHom.map_zero, AlgHom.map_zero]
+    | zero => simp only [RingHom.map_zero, map_zero]
     | tmul m n => simp only [ψ_apply, φ_apply]
     | add x y hx hy =>
-      simp only [RingHom.map_add, AlgHom.map_add, ← Ideal.Quotient.mkₐ_eq_mk, hx, hy]
+      simp only [RingHom.map_add, map_add, ← Ideal.Quotient.mkₐ_eq_mk, hx, hy]
   simp only [kerφ]
   rw [Ideal.span_le]
   intro z hz
@@ -155,4 +145,3 @@ theorem kerφ_eq : RingHom.ker (φ R S M N).toRingHom = kerφ R S M N := by
   simp only [SetLike.mem_coe, RingHom.sub_mem_ker_iff,AlgHom.toRingHom_eq_coe, AlgHom.coe_toRingHom,
     φ_apply, TensorProduct.tmul_smul]
   rfl
-#align kerφ_eq kerφ_eq

@@ -278,7 +278,7 @@ theorem TensorProduct.Algebra.eq_of_fg_of_subtype_eq
   simp only [← LinearMap.comp_apply, ← LinearMap.rTensor_comp]
   have hP'₁_le : P'₁ ≤ Subalgebra.toSubmodule B := by
     simp only [← hs, Finset.coe_union, Submodule.span_le, Subalgebra.coe_toSubmodule, B]
-    exact subset_trans (Set.subset_union_left _ _) Algebra.subset_adjoin
+    exact subset_trans Set.subset_union_left Algebra.subset_adjoin
   have k : (Subalgebra.inclusion hBA).toLinearMap ∘ₗ P.subtype
     = Submodule.inclusion hP'₁_le ∘ₗ Submodule.inclusion hP₁_le ∘ₗ j := by ext; rfl
   have k' : (Subalgebra.inclusion hBA).toLinearMap ∘ₗ P'.subtype
@@ -287,8 +287,7 @@ theorem TensorProduct.Algebra.eq_of_fg_of_subtype_eq
   simp only [LinearMap.rTensor_comp, LinearMap.comp_apply]
   rw [← hu₁, ← hu'₁, h]
 
-theorem Subalgebra.FG.sup
-    {R S : Type*} [CommSemiring R] [Semiring S] [Algebra R S]
+theorem Subalgebra.FG.sup {R S : Type*} [CommSemiring R] [Semiring S] [Algebra R S]
     {A A' : Subalgebra R S} (hA : Subalgebra.FG A) (hA' : Subalgebra.FG A') :
     Subalgebra.FG (A ⊔ A') :=
   let ⟨s, hs⟩ := Subalgebra.fg_def.1 hA

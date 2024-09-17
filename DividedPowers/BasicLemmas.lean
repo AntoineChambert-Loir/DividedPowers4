@@ -85,7 +85,7 @@ theorem rewriting_4_fold_sums {α : Type _} [CommSemiring α] {m n u v : ℕ}
         apply Nat.add_left_cancel; rw [Nat.add_sub_of_le hij'.1, ← hb''.2.1, hb''.1.1]
         apply Nat.add_left_cancel; rw [Nat.add_sub_of_le hij'.2, ← hb''.2.2, hb''.1.2]
       · intro hb; rw [if_neg]; intro hb'; apply hb
-        simp only [eq_self_iff_true, and_true_iff] at hb'
+        simp only [eq_self_iff_true, and_true] at hb'
         simp only [Finset.mem_product, Finset.mem_antidiagonal]
         apply And.intro hij
         apply Nat.add_left_cancel; rw [h, ← hij]
@@ -99,7 +99,6 @@ theorem rewriting_4_fold_sums {α : Type _} [CommSemiring α] {m n u v : ℕ}
     split_ifs with hx
     · simp only [one_mul, hgf]; rw [hx.2]
     · rw [MulZeroClass.zero_mul]
-#align rewriting_4_fold_sums rewriting_4_fold_sums
 
 
 /- TODO : There should be some general rewriting pattern
@@ -183,7 +182,6 @@ theorem Finset.sum_4_rw {α : Type _} [AddCommMonoid α]
     simp only [mem_sigma, mem_range, Nat.lt_succ_iff] at h
     simp only [Nat.add_sub_self_left a c, Nat.sub_sub,
       add_comm (a + c), ← add_assoc, Nat.sub_add_cancel h.1.2]
-#align finset.sum_4_rw Finset.sum_4_rw
 
 end FourFoldSums
 
@@ -203,7 +201,6 @@ theorem range_sym_prop {m n : ℕ} {k : Sym ℕ m} (hk : k ∈ (Finset.range (n 
     simp only [Multiset.count_eq_zero, Sym.mem_coe]
     exact hx.2
   · intro x _; rfl
-#align range_sym_prop range_sym_prop
 
 theorem range_sym_weighted_sum_le {m n : ℕ} {k : Sym ℕ m}
     (hk : k ∈ (Finset.range (n + 1)).sym m) :
@@ -214,7 +211,6 @@ theorem range_sym_weighted_sum_le {m n : ℕ} {k : Sym ℕ m}
   intro i hi
   apply Nat.mul_le_mul_left
   exact Nat.lt_succ_iff.mp (Finset.mem_range.mp hi)
-#align range_sym_weighted_sum_le range_sym_weighted_sum_le
 
 theorem sum_range_sym_mul_compl {m n : ℕ} {k : Sym ℕ m} (hk : k ∈ (Finset.range (n + 1)).sym m) :
     (Finset.sum (Finset.range (n + 1)) fun i => Multiset.count i k * (n - i)) =
@@ -230,4 +226,3 @@ theorem sum_range_sym_mul_compl {m n : ℕ} {k : Sym ℕ m} (hk : k ∈ (Finset.
     intro x hx
     rw [Nat.sub_add_cancel (Nat.lt_succ_iff.mp (Finset.mem_range.mp hx))]
   rw [Finset.sum_congr rfl this, ← Finset.sum_mul, range_sym_prop hk]
-#align sum_range_sym_mul_compl sum_range_sym_mul_compl
