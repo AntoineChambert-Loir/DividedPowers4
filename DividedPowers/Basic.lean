@@ -77,7 +77,7 @@ def dividedPowersBot (A : Type _) [CommSemiring A] [DecidableEq A] : DividedPowe
     rw [Ideal.mem_bot.mp ha]
     simp only [and_self, ite_true]
   dpow_one {a} ha := by
-    simp only [and_false, ite_false]
+    simp only [one_ne_zero, and_false, ↓reduceIte]
     rw [Ideal.mem_bot.mp ha]
   dpow_mem {n a} hn _ := by
     simp only [Ideal.mem_bot, ite_eq_right_iff, and_imp]
@@ -441,21 +441,21 @@ end BasicLemmas
 section Equiv
 
 variable {A B : Type*} [CommRing A] {I : Ideal A} [CommRing B] {J : Ideal B}
-  (e : A ≃+* B) (h : I.map e = J)
+  (e : A ≃+* B)
 
 example : I.map e = I.comap e.symm := by
   exact Eq.symm (Ideal.comap_symm I e)
 
-theorem mem_aux (b : B) : e.symm b ∈ I ↔ b ∈ J := by
+theorem mem_aux (h : I.map e = J) (b : B) : e.symm b ∈ I ↔ b ∈ J := by
   simp only [← h, ← Ideal.comap_symm]
   rfl
 
-theorem mem_aux' (a : A) : e a ∈ J ↔ a ∈ I := by
+theorem mem_aux' (h : I.map e = J) (a : A) : e a ∈ J ↔ a ∈ I := by
   rw [← mem_aux e h]
   simp only [RingEquiv.symm_apply_apply]
 
 /-- Transfer divided powers under an equivalence -/
-def ofRingEquiv (hI : DividedPowers I) : DividedPowers J where
+def ofRingEquiv (h : I.map e = J) (hI : DividedPowers I) : DividedPowers J where
   dpow n b := e (hI.dpow n (e.symm b))
   dpow_null {n} {x} hx := by
     rw [AddEquivClass.map_eq_zero_iff, hI.dpow_null]
@@ -494,15 +494,15 @@ def ofRingEquiv (hI : DividedPowers I) : DividedPowers J where
     exact (mem_aux e h x).mpr hx
 
 @[simp]
-theorem ofRingEquiv_eq (hI : DividedPowers I) (n : ℕ) (b : B) :
+theorem ofRingEquiv_eq (h : I.map e = J) (hI : DividedPowers I) (n : ℕ) (b : B) :
     (ofRingEquiv e h hI).dpow n b = e (hI.dpow n (e.symm b)) := rfl
 
-theorem ofRingEquiv_eq' (hI : DividedPowers I) (n : ℕ) (a : A) :
+theorem ofRingEquiv_eq' (h : I.map e = J) (hI : DividedPowers I) (n : ℕ) (a : A) :
     (ofRingEquiv e h hI).dpow n (e a) = e (hI.dpow n a) := by
   simp
 
 /-- Transfer divided powers under an equivalence (Equiv version) -/
-def equiv : DividedPowers I ≃ DividedPowers J where
+def equiv (h : I.map e = J) : DividedPowers I ≃ DividedPowers J where
   toFun := ofRingEquiv e h
   invFun := ofRingEquiv e.symm (by
     rw [← h]
@@ -512,10 +512,10 @@ def equiv : DividedPowers I ≃ DividedPowers J where
   left_inv := fun hI ↦ by ext n a; simp [ofRingEquiv]
   right_inv := fun hJ ↦ by ext n b; simp [ofRingEquiv]
 
-def equiv_apply (hI : DividedPowers I) (n : ℕ) (b : B) :
+def equiv_apply (h : I.map e = J) (hI : DividedPowers I) (n : ℕ) (b : B) :
     (equiv e h hI).dpow n b = e (hI.dpow n (e.symm b)) := rfl
 
-def equiv_apply' (hI : DividedPowers I) (n : ℕ) (a : A) :
+def equiv_apply' (h : I.map e = J) (hI : DividedPowers I) (n : ℕ) (a : A) :
     (equiv e h hI).dpow n (e a) = e (hI.dpow n a) :=
   ofRingEquiv_eq' e h hI n a
 

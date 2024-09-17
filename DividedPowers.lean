@@ -19,14 +19,14 @@ import DividedPowers.ForMathlib.AlgebraLemmas
 import DividedPowers.ForMathlib.Bell
 -- import DividedPowers.ForMathlib.CombinatoricsLemmas -- this was a previous version, now Bell
 import DividedPowers.ForMathlib.DirectLimit
-import DividedPowers.ForMathlib.GradedAlgebra
+--import DividedPowers.ForMathlib.GradedAlgebra -- This does not exist
 --import DividedPowers.ForMathlib.GradedModuleQuot -- Not ported
 import DividedPowers.ForMathlib.GradedRingQuot
 import DividedPowers.ForMathlib.Homogeneous
 --import DividedPowers.ForMathlib.InfiniteSum.Basic -- In mathlib
 --import DividedPowers.ForMathlib.InfiniteSum.Order -- In mathlib
 import DividedPowers.ForMathlib.Lcoeff
-import DividedPowers.ForMathlib.MvPowerSeries.Basic
+--import DividedPowers.ForMathlib.MvPowerSeries.Basic
 import DividedPowers.ForMathlib.MvPowerSeries.Evaluation -- In PR 15019
 import DividedPowers.ForMathlib.MvPowerSeries.LinearTopology
 import DividedPowers.ForMathlib.MvPowerSeries.Order -- -- In PR 14983
@@ -34,16 +34,19 @@ import DividedPowers.ForMathlib.MvPowerSeries.Order -- -- In PR 14983
 import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Basic
 import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Topology
 import DividedPowers.ForMathlib.MvPowerSeries.Substitutions
-import DividedPowers.ForMathlib.MvPowerSeries.Topology -- In PR 14866 and 14989
+import DividedPowers.ForMathlib.MvPowerSeries.PiTopology -- In PR 14866 and 14989
+import DividedPowers.ForMathlib.MvPowerSeries.Sandbox
+import DividedPowers.ForMathlib.MvPowerSeries.Substitutions
+import DividedPowers.ForMathlib.MvPowerSeries.Trunc
 import DividedPowers.ForMathlib.PowerSeries.Topology
 --import DividedPowers.ForMathlib.RingTheory.Ideal
+import DividedPowers.ForMathlib.RingTheory.AugmentationIdeal -- uses sorry.
 import DividedPowers.ForMathlib.RingTheory.SubmoduleMem
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.LinearEquiv
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.MvPolynomial
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.Polynomial
 import DividedPowers.ForMathlib.Topology.Algebra.Algebra.Basic
 import DividedPowers.ForMathlib.Topology.LinearTopology -- It has sorrys
-import DividedPowers.ForMathlib.WeightedHomogeneous
 import DividedPowers.IdealAdd
 import DividedPowers.PolynomialMap.Basic
 import DividedPowers.PolynomialMap.Coeff

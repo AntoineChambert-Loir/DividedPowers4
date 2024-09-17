@@ -4,6 +4,7 @@ import Mathlib.RingTheory.Ideal.QuotientOperations
 import Mathlib.Algebra.Module.Submodule.RestrictScalars
 import Mathlib.RingTheory.Ideal.Maps
 import Mathlib.RingTheory.TensorProduct.Basic
+import Mathlib.LinearAlgebra.Projection
 import Mathlib.LinearAlgebra.TensorProduct.RightExactness
 
 /-! # Augmentation ideals
@@ -246,7 +247,7 @@ theorem Algebra.baseChange_bot {R S : Type*} [CommRing R] [Algebra A R] [CommRin
       obtain ⟨a, rfl⟩ := hs
       use a • r
       simp only [Algebra.TensorProduct.algebraMap_apply, Algebra.id.map_eq_id, RingHom.id_apply,
-        toRingHom_eq_coe, coe_coe, baseChange_tmul, coeSubtype]
+        toRingHom_eq_coe, RingHom.coe_coe, baseChange_tmul, coeSubtype]
       simp only [smul_tmul]
       rw [Algebra.ofId_apply, Algebra.algebraMap_eq_smul_one]
     | add x y hx hy =>
@@ -530,17 +531,18 @@ theorem Ideal.isAugmentation_subalgebra_iff (A : Type*) [CommSemiring A]
 def Ideal.isHomogeneous {A : Type*} [CommSemiring A]
     {R : Type*} [CommSemiring R] [Algebra A R]
     {S : Subalgebra A R} {I : Ideal R}
-    (hIS : I.IsAugmentation S) (J : Ideal R) : Prop :=
+    /- (hIS : I.IsAugmentation S)  -/(J : Ideal R) : Prop :=
   IsCompl (Subalgebra.toSubmodule S ⊓ J.restrictScalars A)
     (I.restrictScalars A ⊓ J.restrictScalars A)
 
+-- TODO: reinstate
 -- Roby 1965, end of §1
-theorem Ideal.span_isHomogeneous {A : Type*} [CommSemiring A]
+/- theorem Ideal.span_isHomogeneous {A : Type*} [CommSemiring A]
     {R : Type*} [CommSemiring R] [Algebra A R]
     {S : Subalgebra A R} {I : Ideal R}
     (hIS : I.IsAugmentation S)
     (FS : Set S) (FI : Set I) :
-    Ideal.isHomogeneous hIS (Ideal.span (FS ∪ FI : Set R)) := by
+    Ideal.isHomogeneous hIS (Ideal.span ((FS : Set R) ∪ FI : Set R)) := by
   simp only [Ideal.isAugmentation_subalgebra_iff] at hIS
   unfold Ideal.isHomogeneous
   apply IsCompl.mk
@@ -560,24 +562,25 @@ theorem Ideal.span_isHomogeneous {A : Type*} [CommSemiring A]
     obtain ⟨y, hy, z, hz, rfl⟩ := hx'
     refine ⟨y, ⟨⟨hy, ?_⟩, z, ⟨⟨hz, ?_⟩, rfl⟩⟩⟩
     sorry
-    sorry
+    sorry -/
 
 
 def Subalgebra.isHomogeneous {A : Type*} [CommSemiring A]
     {R : Type*} [CommSemiring R] [Algebra A R]
     {S : Subalgebra A R} {I : Ideal R}
-    (hIS : I.IsAugmentation S) (T : Subalgebra A R) : Prop :=
+    /- (hIS : I.IsAugmentation S) -/ (T : Subalgebra A R) : Prop :=
   IsCompl (Subalgebra.toSubmodule S ⊓ Subalgebra.toSubmodule T)
     (I.restrictScalars A ⊓ Subalgebra.toSubmodule T)
 
+-- TODO: reinstate
 -- Roby 1965, end of §1
-theorem Subalgebra.span_isHomogeneous {A : Type*} [CommSemiring A]
+/- theorem Subalgebra.span_isHomogeneous {A : Type*} [CommSemiring A]
     {R : Type*} [CommSemiring R] [Algebra A R]
     {S : Subalgebra A R} {I : Ideal R}
     (hIS : I.IsAugmentation S)
     (FS : Set S) (FI : Set I) :
     Subalgebra.isHomogeneous hIS (Algebra.adjoin A (FS ∪ FI : Set R)) := by
-  sorry
+  sorry -/
 
 /-- The base change of an algebra with an augmentation ideal -/
 theorem Ideal.isAugmentation_baseChange
