@@ -2,7 +2,6 @@ import Mathlib.Data.ENat.Basic
 import Mathlib.RingTheory.PowerSeries.Basic
 
 -- In PR 14983
-
 namespace MvPowerSeries
 
 noncomputable section
