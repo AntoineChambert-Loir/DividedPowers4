@@ -1,4 +1,5 @@
-import DividedPowers.ForMathlib.MvPowerSeries.Topology
+import DividedPowers.ForMathlib.MvPowerSeries.PiTopology
+import Mathlib.RingTheory.PowerSeries.Basic
 
 /-! # Topology on power series
 
@@ -56,31 +57,30 @@ variable (α)
 
 /-- The semiring topology on PowerSeries of a topological semiring -/
 scoped instance topologicalSemiring [Semiring α] [TopologicalSemiring α] :
-    TopologicalSemiring (PowerSeries α) := MvPowerSeries.WithPiTopology.topologicalSemiring Unit α
+    TopologicalSemiring (PowerSeries α) := MvPowerSeries.WithPiTopology.instTopologicalSemiring Unit α
 
 /-- The ring topology on PowerSeries of a topological ring -/
 scoped instance topologicalRing [Ring α] [TopologicalRing α] :
-    TopologicalRing (PowerSeries α) := MvPowerSeries.WithPiTopology.topologicalRing Unit α
+    TopologicalRing (PowerSeries α) := MvPowerSeries.WithPiTopology.instTopologicalRing Unit α
 
 /-- PowerSeries on a T2Space form a T2Space -/
 scoped instance t2Space [T2Space α] : T2Space (PowerSeries α) :=
-  MvPowerSeries.WithPiTopology.t2Space Unit α
-
+  MvPowerSeries.WithPiTopology.instT2Space
 end WithPiTopology
 
 end Topological
 
 section Uniform
 
-namespace WithPiUniformity
+namespace WithPiTopology
 
 open WithPiTopology
 
 variable [UniformSpace α]
 
 /-- The componentwise uniformity on PowerSeries -/
-scoped instance uniformSpace : UniformSpace (PowerSeries α) :=
-  MvPowerSeries.WithPiUniformity.uniformSpace Unit α
+scoped instance instUniformSpace : UniformSpace (PowerSeries α) :=
+  MvPowerSeries.WithPiTopology.instUniformSpace Unit α
 
 /-- Components are uniformly continuous -/
 theorem uniformContinuous_component :
@@ -88,24 +88,24 @@ theorem uniformContinuous_component :
   uniformContinuous_pi.mp uniformContinuous_id
 
 /-- The uniform_add_group structure on PowerSeries of a uniform_add_group -/
-scoped instance uniformAddGroup [AddGroup α] [UniformAddGroup α] :
+scoped instance instUniformAddGroup [AddGroup α] [UniformAddGroup α] :
     UniformAddGroup (PowerSeries α) :=
-  MvPowerSeries.WithPiUniformity.uniformAddGroup Unit α
+  MvPowerSeries.WithPiTopology.instUniformAddGroup Unit α
 
 /-- Completeness of the uniform structure on PowerSeries -/
-scoped instance completeSpace [AddGroup α] [CompleteSpace α] :
+scoped instance instCompleteSpace [AddGroup α] [CompleteSpace α] :
     CompleteSpace (PowerSeries α) :=
-  MvPowerSeries.WithPiUniformity.completeSpace Unit α
+  MvPowerSeries.WithPiTopology.instCompleteSpace
 
 /-- Separation of the uniform structure on PowerSeries -/
-scoped instance t0Space [T0Space α] : T0Space (PowerSeries α) :=
-  MvPowerSeries.WithPiUniformity.t0Space Unit α
+scoped instance instT0Space [T0Space α] : T0Space (PowerSeries α) :=
+  MvPowerSeries.WithPiTopology.instT0Space
 
-scoped instance uniform_topologicalRing [Ring α] [UniformAddGroup α] [TopologicalRing α] :
+/- scoped instance instTopologicalRing [Ring α] [UniformAddGroup α] [TopologicalRing α] :
     TopologicalRing (PowerSeries α) :=
-  MvPowerSeries.WithPiUniformity.uniform_topologicalRing Unit α
-
-end WithPiUniformity
+  MvPowerSeries.WithPiTopology.instTopologicalRing Unit α
+ -/
+end WithPiTopology
 
 end Uniform
 
@@ -113,26 +113,26 @@ section
 
 variable {α}
 
-variable [TopologicalSpace α] [CommRing α] [TopologicalRing α]
+variable [TopologicalSpace α] [CommRing α]
 
-open WithPiTopology WithPiUniformity
+open WithPiTopology MvPowerSeries.WithPiTopology
 
-theorem continuous_C : Continuous (C α) := MvPowerSeries.continuous_C
+theorem continuous_C [TopologicalRing α] : Continuous (C α) := MvPowerSeries.WithPiTopology.continuous_C
 
 theorem tendsto_pow_zero_of_constantCoeff_nilpotent {f : PowerSeries α}
     (hf : IsNilpotent (constantCoeff α f)) :
     Filter.Tendsto (fun n : ℕ => f ^ n) Filter.atTop (nhds 0) :=
-  MvPowerSeries.tendsto_pow_zero_of_constantCoeff_nilpotent hf
+  MvPowerSeries.WithPiTopology.tendsto_pow_zero_of_constantCoeff_nilpotent hf
 
 theorem tendsto_pow_zero_of_constantCoeff_zero {f : PowerSeries α} (hf : constantCoeff α f = 0) :
     Filter.Tendsto (fun n : ℕ => f ^ n) Filter.atTop (nhds 0) :=
-  MvPowerSeries.tendsto_pow_zero_of_constantCoeff_zero hf
+  MvPowerSeries.WithPiTopology.tendsto_pow_zero_of_constantCoeff_zero hf
 
 /-- Bourbaki, Algèbre, chap. 4, §4, n°2, corollaire de la prop. 3 -/
 theorem tendsto_pow_of_constantCoeff_nilpotent_iff [DiscreteTopology α] (f : PowerSeries α) :
     Filter.Tendsto (fun n : ℕ => f ^ n) Filter.atTop (nhds 0) ↔
       IsNilpotent (constantCoeff α f) :=
-  MvPowerSeries.tendsto_pow_of_constantCoeff_nilpotent_iff f
+  MvPowerSeries.WithPiTopology.tendsto_pow_of_constantCoeff_nilpotent_iff f
 
 end
 
@@ -149,7 +149,7 @@ variable {α}
 theorem hasSum_of_monomials_self (f : PowerSeries α) :
     HasSum (fun d : ℕ => monomial α d (coeff α d f)) f := by
   rw [← (Finsupp.LinearEquiv.finsuppUnique ℕ ℕ Unit).toEquiv.hasSum_iff]
-  convert MvPowerSeries.hasSum_of_monomials_self f
+  convert MvPowerSeries.WithPiTopology.hasSum_of_monomials_self f
   simp only [LinearEquiv.coe_toEquiv, comp_apply, monomial, coeff,
     Finsupp.LinearEquiv.finsuppUnique_apply, PUnit.default_eq_unit]
   congr

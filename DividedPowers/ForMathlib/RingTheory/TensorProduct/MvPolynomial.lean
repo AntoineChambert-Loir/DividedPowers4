@@ -110,6 +110,7 @@ noncomputable def rTensorAlgHom :
     ((IsScalarTower.toAlgHom R (S ⊗[R] N) _).comp Algebra.TensorProduct.includeRight)
     (fun p n => by simp [commute_iff_eq, algebraMap_eq, mul_comm])
 
+omit [DecidableEq σ] in
 lemma rTensorAlgHom_coeff_tmul
     (p : MvPolynomial σ S) (n : N) (d : σ →₀ ℕ) :
     coeff d (rTensorAlgHom (p ⊗ₜ[R] n)) = (coeff d p) ⊗ₜ[R] n := by

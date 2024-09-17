@@ -136,7 +136,8 @@ end Module
 
 section Algebra
 
-section
+-- This section is already in Mathlib
+/- section
 
 variable {R A B : Type*} [CommSemiring R]
     [CommSemiring A] [Algebra R A]
@@ -160,7 +161,7 @@ noncomputable def mapAlgEquiv (e : A ≃ₐ[R] B) :
   { mapAlgHom (e : A →ₐ[R] B), mapEquiv (e : A ≃+* B) with
     toFun := map (e : A →+* B) }
 
-end
+end -/
 
 variable (R N)
 variable [CommSemiring N] [Algebra R N]

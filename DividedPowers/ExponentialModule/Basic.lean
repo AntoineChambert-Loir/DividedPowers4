@@ -124,14 +124,14 @@ lemma coeff_subst_single {σ : Type*} [DecidableEq σ] [Finite σ] (s : σ) (f :
 lemma forall_congr_curry {α : Type*} {p : (Fin 2 → α) → Prop} {q : α → α → Prop}
     (hpq : ∀ e : Fin 2 → α, p e ↔ q (e 0) (e 1)) :
     (∀ (e : Fin 2 → α), p e) ↔ ∀ (u v : α), q u v := by
-  rw [Equiv.forall_congr_left' (finTwoArrowEquiv α)]
+  rw [Equiv.forall_congr_left (finTwoArrowEquiv α)]
   simp only [finTwoArrowEquiv_symm_apply, Prod.forall, hpq]
   rfl
 
 lemma forall_congr_curry₀ {α : Type*} [Zero α] {p : (Fin 2 →₀ α) → Prop} {q : α → α → Prop}
     (hpq : ∀ e : Fin 2 →₀ α, p e ↔ q (e 0) (e 1)) :
     (∀ e, p e) ↔ ∀ u v, q u v := by
-  rw [Equiv.forall_congr_left' (Finsupp.equivFunOnFinite.trans (finTwoArrowEquiv α))]
+  rw [Equiv.forall_congr_left (Finsupp.equivFunOnFinite.trans (finTwoArrowEquiv α))]
   simp only [finTwoArrowEquiv_symm_apply, Prod.forall, hpq]
   rfl
 
@@ -303,14 +303,16 @@ theorem isExponential_self_mul_neg_eq_one {f : R⟦X⟧} (hf : IsExponential f) 
     f * (scale (-1 : A) f) = 1 := by
   convert (isExponential_scale_add (1 : A) (-1 : A) hf).symm
   · rw [scale_one, id_eq]
-  · simp only [add_right_neg, scale_zero_apply, hf.constantCoeff, map_one]
+  · simp only [add_neg_cancel, scale_zero_apply, hf.constantCoeff, map_one]
 
 theorem isExponential_neg_mul_self_eq_one {f : R⟦X⟧} (hf : IsExponential f) :
     (scale (-1) f) * f = 1 := by
   rw [mul_comm, isExponential_self_mul_neg_eq_one hf]
 
 variable (σ : Type*)
-theorem _root_.MvPowerSeries.isUnit_iff_constantCoeff (f : MvPowerSeries σ R) :
+
+-- Already in Mathlib
+/- theorem _root_.MvPowerSeries.isUnit_iff_constantCoeff (f : MvPowerSeries σ R) :
     IsUnit f ↔ IsUnit (MvPowerSeries.constantCoeff σ R f) := by
   constructor
   · rintro ⟨u, hu⟩
@@ -323,7 +325,7 @@ theorem _root_.MvPowerSeries.isUnit_iff_constantCoeff (f : MvPowerSeries σ R) :
 
 theorem _root_.PowerSeries.isUnit_iff_constantCoeff (f : PowerSeries R) :
     IsUnit f ↔ IsUnit (constantCoeff R f) := by
-  exact MvPowerSeries.isUnit_iff_constantCoeff Unit f
+  exact MvPowerSeries.isUnit_iff_constantCoeff Unit f -/
 
 theorem IsExponential.isUnit {f : R⟦X⟧} (hf : IsExponential f) : IsUnit f := by
   simp only [PowerSeries.isUnit_iff_constantCoeff, hf.constantCoeff,  isUnit_one]
@@ -405,7 +407,7 @@ namespace ExponentialModule
 
 open PowerSeries Additive
 
-variable {A R : Type*} [CommRing A] [CommRing R] [Algebra A R]
+--variable {A R : Type*} [CommRing A] [CommRing R] [Algebra A R]
 
 /-- The coercion map from `ExponentialModule R` to `R⟦X⟧` -/
 @[coe]
@@ -513,7 +515,9 @@ lemma add_mul_coe' (f : ExponentialModule R) (p q : ℕ) :
 
 variable {S : Type*} [CommRing S] [Algebra A S] (φ : R →ₐ[A] S)
 
-def linearMap : ExponentialModule R →ₗ[A] ExponentialModule S where
+
+def linearMap :
+    ExponentialModule R →ₗ[A] ExponentialModule S where
   toFun := fun f ↦
     ⟨ofMul (PowerSeries.map φ (f : R⟦X⟧)), by
       simp [memExponentialModule_iff]

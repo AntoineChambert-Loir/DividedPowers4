@@ -31,12 +31,12 @@ import DividedPowers.ForMathlib.MvPowerSeries.Evaluation -- In PR 15019
 import DividedPowers.ForMathlib.MvPowerSeries.LinearTopology -- it uses sorry
 import DividedPowers.ForMathlib.MvPowerSeries.Order -- -- In PR 14983
 --import DividedPowers.ForMathlib.MvPowerSeries.Sandbox
-import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Basic
+import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Basic -- it uses sorry
 import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Topology
 import DividedPowers.ForMathlib.MvPowerSeries.Substitutions
 import DividedPowers.ForMathlib.MvPowerSeries.PiTopology -- In PR 14866 and 14989
 import DividedPowers.ForMathlib.MvPowerSeries.Sandbox
-import DividedPowers.ForMathlib.MvPowerSeries.Substitutions
+import DividedPowers.ForMathlib.MvPowerSeries.Substitutions -- it uses sorry
 import DividedPowers.ForMathlib.MvPowerSeries.Trunc
 import DividedPowers.ForMathlib.PowerSeries.Topology
 --import DividedPowers.ForMathlib.RingTheory.Ideal

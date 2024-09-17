@@ -1,6 +1,6 @@
 --import Mathlib.Data.Finsupp.Union
 import DividedPowers.ForMathlib.MvPowerSeries.Order
-import DividedPowers.ForMathlib.MvPowerSeries.Topology
+import DividedPowers.ForMathlib.MvPowerSeries.PiTopology
 import Mathlib.Data.Finsupp.Antidiagonal
 import Mathlib.Data.Finsupp.Interval
 import Mathlib.RingTheory.PowerSeries.Basic
@@ -11,7 +11,6 @@ import Mathlib.Topology.Order.Basic
 open Finset Filter Set
 
 instance ENat.topology : TopologicalSpace ℕ∞ := Preorder.topology ℕ∞
-#align enat.topology ENat.topology
 
 instance : OrderTopology ℕ∞ := ⟨rfl⟩
 
@@ -32,14 +31,12 @@ theorem finite_support_of_tendsto_zero [AddCommMonoid α] [TopologicalSpace α] 
   rw [mem_compl_iff]
   by_contra hxs
   exact hx (p x hxs)
-#align function.finite_support_of_tendsto_zero Function.finite_support_of_tendsto_zero
 
 /-- If a function `f` to a discrete topological commutative additive group is summable, then it has
   finite support. -/
 theorem finite_support_of_summable [AddCommGroup α] [TopologicalSpace α] [DiscreteTopology α]
     [TopologicalAddGroup α] {f : ι → α} (hf : Summable f) : f.support.Finite :=
   finite_support_of_tendsto_zero hf.tendsto_cofinite_zero
-#align function.finite_support_of_summable Function.finite_support_of_summable
 
 /-- If a function `f` to a topological commutative additive group is summable, then it tends to zero
   along the cofinite filter. -/
@@ -75,7 +72,6 @@ theorem tendsto_zero_of_summable [AddCommGroup α] [TopologicalSpace α] [Topolo
       rintro z ⟨x, hx, y, hy, rfl⟩
       exact ⟨x, mem_of_mem_inter_left hx, y, mem_of_mem_inter_right hy, rfl⟩
     · exact IsOpen.preimage continuous_sub hU₀
-#align function.tendsto_zero_of_summable Function.tendsto_zero_of_summable
 
 end Function
 
@@ -83,7 +79,7 @@ namespace MvPowerSeries
 
 open Function
 
-variable {σ α : Type*} [DecidableEq σ]
+variable {σ α : Type*} --[DecidableEq σ]
 
 section StronglySummable
 
@@ -97,13 +93,11 @@ variable [Semiring α]
   `(d : σ →₀ ℕ)`, the function `λ i, coeff α d (f i)` is finitely supported. -/
 def StronglySummable (f : ι → MvPowerSeries σ α) : Prop :=
   ∀ d : σ →₀ ℕ, (fun i => coeff α d (f i)).support.Finite
-#align mv_power_series.strongly_summable MvPowerSeries.StronglySummable
 
 namespace StronglySummable
 
 theorem congr {f g : ι → MvPowerSeries σ α} (h : f = g) : StronglySummable f ↔ StronglySummable g :=
   by rw [h]
-#align mv_power_series.strongly_summable.congr MvPowerSeries.StronglySummable.congr
 
 section Order
 
@@ -118,14 +112,12 @@ theorem of_weightedOrder_tendsto_top (w : σ → ℕ) (f : ι → MvPowerSeries 
   intro i  h' h
   apply h'
   exact coeff_of_lt_weightedOrder w _ h
-#align mv_power_series.strongly_summable.of_weighted_order_tendsto_top
-  MvPowerSeries.StronglySummable.of_weightedOrder_tendsto_top
+
 
 theorem of_order_tendsto_top (f : ι → MvPowerSeries σ α)
     (hf : Tendsto (fun i => order (f i)) cofinite (nhds ⊤)) : StronglySummable f :=
   of_weightedOrder_tendsto_top _ f hf
-#align mv_power_series.strongly_summable.of_order_tendsto_top
-  MvPowerSeries.StronglySummable.of_order_tendsto_top
+
 
 /-- When σ is finite, a family of power series is strongly summable
   iff their weighted orders tend to infinity. -/
@@ -152,16 +144,12 @@ theorem weightedOrder_tendsto_top_iff [Finite σ] {ι : Type _} {w : σ → ℕ}
         obtain ⟨d, hd⟩ := exists_coeff_ne_zero_of_weightedOrder w (f i) heq
         refine' ⟨d, _, hd.2⟩
         simpa [← hd.1, WithTop.some_eq_coe, Nat.cast_le] using hi
-#align mv_power_series.strongly_summable.weighted_order_tendsto_top_iff
-  MvPowerSeries.StronglySummable.weightedOrder_tendsto_top_iff
 
 /-- When σ is finite, a family of power series is strongly summable
   iff their orders tend to infinity. -/
 theorem order_tendsto_top_iff [Finite σ] (f : ι → MvPowerSeries σ α) :
     StronglySummable f ↔ Tendsto (fun i => order (f i)) cofinite (nhds ⊤) :=
   weightedOrder_tendsto_top_iff (by simp) f
-#align mv_power_series.strongly_summable.order_tendsto_top_iff
-  MvPowerSeries.StronglySummable.order_tendsto_top_iff
 
 end Order
 
@@ -170,8 +158,6 @@ end Order
 noncomputable def unionOfSupportOfCoeffLe [DecidableEq ι] {f : ι → MvPowerSeries σ α}
     (hf : StronglySummable f) (d : σ →₀ ℕ) : Finset ι :=
   Finset.biUnion (Iic d) fun e => (hf e).toFinset
-#align mv_power_series.strongly_summable.union_of_support_of_coeff_le
-  MvPowerSeries.StronglySummable.unionOfSupportOfCoeffLe
 
 /-- A term `i : ι` does not belong to the union of the supports of the functions
   `λ i, coeff α e (f i)`, where `e` runs over the coefficients bounded by `d` if and only if
@@ -181,8 +167,6 @@ theorem not_mem_unionOfSupportOfCoeffLe_iff [DecidableEq ι] {f : ι → MvPower
     i ∉ hf.unionOfSupportOfCoeffLe d ↔ ∀ (e) (_ : e ≤ d), coeff α e (f i) = 0 := by
   simp only [unionOfSupportOfCoeffLe, Finset.mem_biUnion, Finset.mem_Iic, Finite.mem_toFinset,
     mem_support, not_exists, ne_eq, not_and, not_not]
-#align mv_power_series.strongly_summable.not_mem_union_of_support_of_coeff_le_iff
-  MvPowerSeries.StronglySummable.not_mem_unionOfSupportOfCoeffLe_iff
 
 /- lemma union_of_coeff_support_finite {f : ι → mv_power_series σ α}
   (hf : strongly_summable f) (d : σ →₀ ℕ) :
@@ -201,8 +185,6 @@ theorem of_subset_unionOfSupportOfCoeffLe_finite [DecidableEq ι] {f : ι → Mv
     rw [this]; apply finite_toSet
   ext I
   simp only [mem_setOf_eq, coe_powerset, Set.mem_preimage, mem_powerset_iff, Finset.coe_subset]
-#align mv_power_series.strongly_summable.of_subset_union_of_coeff_support_finite
-  MvPowerSeries.StronglySummable.of_subset_unionOfSupportOfCoeffLe_finite
 
 /-- If `f` and `g` are strongly summable, then for all `d : σ →₀ ℕ`, the support of the function
   `λ i, coeff α d ((f + g) i)` is contained in the union of the supports of `λ i, coeff α d (f i)`
@@ -218,13 +200,11 @@ theorem support_add [DecidableEq ι] {f g : ι → MvPowerSeries σ α} (hf : St
   by_cases h₁ : coeff α d (f i) = 0
   · right; simpa [h₁] using h
   · left; exact h₁
-#align mv_power_series.strongly_summable.support_add MvPowerSeries.StronglySummable.support_add
 
 /-- If `f` and `g` are strongly summable, then so is `f + g`.  -/
 theorem add {f g : ι → MvPowerSeries σ α} (hf : StronglySummable f) (hg : StronglySummable g) :
     StronglySummable (f + g) := by
   classical exact fun d => Finite.subset (finite_toSet _) (support_add hf hg d)
-#align mv_power_series.strongly_summable.add MvPowerSeries.StronglySummable.add
 
 /-- If `f` is strongly summable, then for every `a : ι → α`, `a • f` is strongly summable. -/
 theorem smul {f : ι → MvPowerSeries σ α} (a : ι → α) (hf : StronglySummable f) :
@@ -236,7 +216,6 @@ theorem smul {f : ι → MvPowerSeries σ α} (a : ι → α) (hf : StronglySumm
   intro h h'
   apply h
   rw [coeff_smul, h', MulZeroClass.mul_zero]
-#align mv_power_series.strongly_summable.smul MvPowerSeries.StronglySummable.smul
 
 /-- If `f` and `g` are strongly summable, then for all `d : σ →₀ ℕ`, the support of the function
   `λ i, coeff α d (f i.fst * g i.snd)` is contained in the finite set
@@ -273,25 +252,20 @@ theorem support_mul [DecidableEq ι] [DecidableEq σ] {f : ι → MvPowerSeries 
     simp only [mem_antidiagonal] at h' ⊢
     exact h'
 
-#align mv_power_series.strongly_summable.support_mul MvPowerSeries.StronglySummable.support_mul
-
 /-- If `f` and `g` are strongly summable, then `λ i, coeff α d (f i.fst * g i.snd)` is strongly
   summable. -/
 theorem mul {f : ι → MvPowerSeries σ α} {κ : Type _} {g : κ → MvPowerSeries σ α}
     (hf : StronglySummable f) (hg : StronglySummable g) :
     StronglySummable fun i : ι × κ => f i.fst * g i.snd := by
   classical exact fun d => Finite.subset (finite_toSet _) (support_mul hf hg d)
-#align mv_power_series.strongly_summable.mul MvPowerSeries.StronglySummable.mul
 
 /-- The sum of a strongly summable family of power series. -/
 noncomputable def sum {f : ι → MvPowerSeries σ α} (hf : StronglySummable f) : MvPowerSeries σ α :=
   fun d => (hf d).toFinset.sum fun i => coeff α d (f i)
-#align mv_power_series.strongly_summable.sum MvPowerSeries.StronglySummable.sum
 
 theorem coeff_sum_def {f : ι → MvPowerSeries σ α} {hf : StronglySummable f} (d : σ →₀ ℕ) :
     coeff α d hf.sum = (hf d).toFinset.sum fun i => coeff α d (f i) :=
   rfl
-#align mv_power_series.strongly_summable.coeff_sum.def MvPowerSeries.StronglySummable.coeff_sum_def
 
 /-- If `f` is strongly summable, then for any `d : σ →₀ ℕ)` and any finite set `s` containing the
   support of `λ i, coeff α d (f i)`, the coefficient `coeff α d hf.sum` is equal to the sum
@@ -302,7 +276,6 @@ theorem coeff_sum {f : ι → MvPowerSeries σ α} {hf : StronglySummable f} (d 
   rw [coeff_sum_def, sum_subset (Finite.toFinset_subset.mpr hs)]
   intro i _ hi'
   simpa only [Finite.mem_toFinset, Function.mem_support, Classical.not_not] using hi'
-#align mv_power_series.strongly_summable.coeff_sum MvPowerSeries.StronglySummable.coeff_sum
 
 /-- If `f` and `g` are strongly summable and equal, then their sums agree. -/
 theorem sum_congr {f g : ι → MvPowerSeries σ α} {hf : StronglySummable f} {hg : StronglySummable g}
@@ -312,7 +285,6 @@ theorem sum_congr {f g : ι → MvPowerSeries σ α} {hf : StronglySummable f} {
   refine' Finset.sum_congr _ fun i _ => by rw [h]
   ext i
   simp only [Finite.mem_toFinset, mem_support, ne_eq, h]
-#align mv_power_series.strongly_summable.sum_congr MvPowerSeries.StronglySummable.sum_congr
 
 --ADDED
 /-- If `f` and `g` are strongly summable, then the sum of `f + g` is equal to the sum of `f`
@@ -339,7 +311,6 @@ theorem sum_add' {f g : ι → MvPowerSeries σ α} (hf : StronglySummable f) (h
   rw [sum_add_distrib]
   all_goals
     simp only [coe_union, Finite.coe_toFinset, Set.subset_union_right, Set.subset_union_left]
-#align mv_power_series.strongly_summable.sum_add MvPowerSeries.StronglySummable.sum_add'
 
 /-- If `f` and `g` are strongly summable, then the sum of `λ i, coeff α d (f i.fst * g i.snd)`
   is equal to the sum of `f` times the sum of `g`. -/
@@ -377,8 +348,7 @@ theorem of_indicator {f : ι → MvPowerSeries σ α} (hf : StronglySummable f) 
   intro hi
   cases' s.indicator_eq_zero_or_self f i with h h <;>
   . simp only [h, hi, map_zero]
-#align mv_power_series.strongly_summable.of_indicator
-  MvPowerSeries.StronglySummable.of_indicator
+
 
 /-- If `f` is strongly summable and `s : Set ι` is any set, then the sum of `f` equals the sum of
   `f` over `s` plus the sum of `f` over the complement of `s`. -/
@@ -386,19 +356,17 @@ theorem add_compl {f : ι → MvPowerSeries σ α} (hf : StronglySummable f) (s 
     hf.sum = (hf.of_indicator s).sum + (hf.of_indicator (sᶜ)).sum := by
   rw [← sum_add (hf.of_indicator s) (hf.of_indicator (sᶜ))]
   exact sum_congr (s.indicator_self_add_compl f).symm
-#align mv_power_series.strongly_summable.add_compl MvPowerSeries.StronglySummable.add_compl
 
 /-- If `f` is strongly summable and `s : Set ι` is any set, then
   `f ∘ (↑) : ↥s → MvPowerSeries σ α` is strongly summable. -/
-theorem on_subtype {f : ι → MvPowerSeries σ α} (hf : StronglySummable f) (s : Set ι) :
+theorem on_subtype  {f : ι → MvPowerSeries σ α} (hf : StronglySummable f) (s : Set ι) :
     StronglySummable (f ∘ (↑) : ↥s → MvPowerSeries σ α) := by
   intro d
-  apply Finite.of_finite_image _ (injOn_of_injective Subtype.coe_injective _)
+  apply Finite.of_finite_image _ (injOn_of_injective Subtype.coe_injective)
   apply (hf d).subset
   rintro i ⟨j, hj, rfl⟩
   simp only [comp_apply, mem_support, ne_eq] at hj ⊢
   exact hj
-#align mv_power_series.strongly_summable.on_subtype MvPowerSeries.StronglySummable.on_subtype
 
 /-- If `f` is strongly summable and `d : σ →₀ ℕ`, then the infinite sum of
   `λ i, coeff α d (f i)` is equal to `coeff α d hf.sum`. -/
@@ -408,15 +376,11 @@ theorem hasSum_coeff [TopologicalSpace α] {f : ι → MvPowerSeries σ α} (hf 
   intro b hb
   rw [Finite.mem_toFinset, Function.mem_support, Classical.not_not] at hb
   exact hb
-#align mv_power_series.strongly_summable.has_sum_coeff
-  MvPowerSeries.StronglySummable.hasSum_coeff
 
 /-- If `f` is strongly summable and `d : σ →₀ ℕ`, then `λ i, coeff α d (f i)` is summable. -/
 theorem summable_coeff [TopologicalSpace α] {f : ι → MvPowerSeries σ α} (hf : StronglySummable f)
     (d : σ →₀ ℕ) : Summable fun i => coeff α d (f i) :=
   ⟨coeff α d hf.sum, hf.hasSum_coeff d⟩
-#align mv_power_series.strongly_summable.summable_coeff
-  MvPowerSeries.StronglySummable.summable_coeff
 
 end StronglySummable
 
@@ -431,8 +395,6 @@ theorem homogeneous_components_self_stronglySummable (w : σ → ℕ) (f : MvPow
     ite_eq_right_iff, not_forall, exists_prop, and_imp]
   intro h _
   exact h.symm
-#align mv_power_series.homogeneous_components_self_strongly_summable
-  MvPowerSeries.homogeneous_components_self_stronglySummable
 
 /-- Given `w : σ → ℕ` and `f : MvPowerSeries σ α`, then `f` is equal to the sum of its
   homogeneous components. -/
@@ -459,8 +421,6 @@ theorem as_sum_of_homogeneous_components' (w : σ → ℕ) (f : MvPowerSeries σ
   · intro b _ h'
     rw [if_neg (Ne.symm h')]
   · simp only [Finite.mem_toFinset, Function.mem_support, Classical.not_not, imp_self]
-#align mv_power_series.as_sum_of_homogeneous_components
-  MvPowerSeries.as_sum_of_homogeneous_components'
 
 end Semiring
 
@@ -472,7 +432,6 @@ variable [CommRing α] {ι : Type _} (f : ι → MvPowerSeries σ α)
 
 /-- The map sending `(I : finset ι)` to the finite product `I.prod (λ i, f i)`. -/
 noncomputable def partialProduct : Finset ι → MvPowerSeries σ α := fun I => I.prod fun i => f i
-#align mv_power_series.partial_product MvPowerSeries.partialProduct
 
 /-- If `f` is strongly summable, the support of `λ I, coeff α d (partialProduct f I)` is contained
   in the powerset of `hf.unionOfSupportOfCoeffLe d`. -/
@@ -492,8 +451,6 @@ theorem support_partialProduct_subset [DecidableEq ι] [DecidableEq σ]
   intro hxy
   rw [h x _, MulZeroClass.zero_mul]
   simp only [← hxy, Finsupp.le_def, Finsupp.coe_add, Pi.add_apply, le_self_add]
-#align mv_power_series.strongly_summable.support_partial_product_le
-  MvPowerSeries.support_partialProduct_subset
 
 
 
@@ -506,22 +463,18 @@ theorem support_partialProduct_subset [DecidableEq ι] [DecidableEq σ]
   formed by all finite products `I.prod (λ i, f i)` is strongly_summable -/
 def StronglyMultipliable : Prop :=
   StronglySummable (partialProduct f)
-#align mv_power_series.strongly_multipliable MvPowerSeries.StronglyMultipliable
 
 variable {f}
 
 namespace StronglyMultipliable
 
 /-- The product of the family of `(1 + f ι)`, when `f` is strongly_multipliable  -/
-noncomputable def prod (hf : StronglyMultipliable f) : MvPowerSeries σ α :=
-  hf.sum
-#align mv_power_series.strongly_multipliable.prod MvPowerSeries.StronglyMultipliable.prod
+noncomputable def prod (hf : StronglyMultipliable f) : MvPowerSeries σ α := hf.sum
 
 /-- If `f` is strongly_multipliable, the product of the family of `(1 + f ι)` is equal to the
   sum of `partialProduct f`.   -/
 theorem prod_eq (hf : StronglyMultipliable f) : hf.prod = hf.sum :=
   rfl
-#align mv_power_series.strongly_multipliable.prod_eq MvPowerSeries.StronglyMultipliable.prod_eq
 
 end StronglyMultipliable
 namespace StronglySummable
@@ -532,8 +485,6 @@ theorem toStronglyMultipliable (hf : StronglySummable f) :
     StronglyMultipliable f := by
   classical
   exact fun d => Finite.subset (finite_toSet _) (support_partialProduct_subset f hf d)
-#align mv_power_series.strongly_summable.to_strongly_multipliable
-  MvPowerSeries.StronglySummable.toStronglyMultipliable
 
 end StronglySummable
 namespace StronglyMultipliable
@@ -543,7 +494,9 @@ namespace StronglyMultipliable
 theorem finset_prod_eq [DecidableEq ι] (s : Finset ι) (hf : StronglyMultipliable f) :
     (s.prod fun i => 1 + f i)
       = (hf.of_indicator {I : Finset ι | I ⊆ s}).sum := by
-  rw [Finset.prod_one_add]
+  sorry -- I can't find `Finset.prod_one_add`
+
+  /- rw [Finset.prod_one_add]
   ext d
   rw [map_sum, StronglySummable.coeff_sum d]
   · apply sum_congr rfl
@@ -555,9 +508,7 @@ theorem finset_prod_eq [DecidableEq ι] (s : Finset ι) (hf : StronglyMultipliab
     rw [mem_support, ne_eq, mem_coe, Finset.mem_powerset, not_imp_comm]
     intro ht'
     rw [indicator, if_neg, map_zero]
-    exact ht'
-#align mv_power_series.strongly_multipliable.finset_prod_eq
-  MvPowerSeries.StronglyMultipliable.finset_prod_eq
+    exact ht' -/
 
 /-- If `f` is strongly_multipliable and `s : Set ι`, the product of the family `(1 + f ι)`
   is equal to the sum `(hf.of_indicator {I : Finset ι | ↑I ⊆ s}).sum +
@@ -566,15 +517,11 @@ theorem prod_eq_sum_add_sum (hf : StronglyMultipliable f) (s : Set ι) :
     hf.prod = (hf.of_indicator {I : Finset ι | ↑I ⊆ s}).sum +
       (hf.of_indicator ({I : Finset ι | ↑I ⊆ s}ᶜ)).sum :=
   by rw [hf.prod_eq, ← hf.add_compl]
-#align mv_power_series.strongly_multipliable.prod_eq_sum_add_sum
-  MvPowerSeries.StronglyMultipliable.prod_eq_sum_add_sum
 
 /-- A version of `prod_eq_sum_add_sum` for `s : Finset ι`. -/
 theorem prod_eq_finset_prod_add [DecidableEq ι] (hf : StronglyMultipliable f) (s : Finset ι) :
     hf.prod = (s.prod fun i => 1 + f i) + (hf.of_indicator ({I : Finset ι | I ⊆ s}ᶜ)).sum := by
   rw [hf.prod_eq_sum_add_sum s, hf.finset_prod_eq s]
-#align mv_power_series.strongly_multipliable.prod_eq_finset_prod_add
-  MvPowerSeries.StronglyMultipliable.prod_eq_finset_prod_add
 
 /-- If `f` is strongly summable, `d : σ →₀ ℕ`, and `J` is a finite set containing
   `hf.unionOfSupportOfCoeffLe d`, then the `d`th coefficients of the product of the strongly

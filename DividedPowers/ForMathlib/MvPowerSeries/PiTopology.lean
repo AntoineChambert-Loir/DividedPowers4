@@ -65,7 +65,7 @@ variable [TopologicalSpace R]
 -- TODO: make σ explicit
 variable (R) in
 /-- The pointwise topology on MvPowerSeries -/
-scoped instance topologicalSpace : TopologicalSpace (MvPowerSeries σ R) := Pi.topologicalSpace
+scoped instance instTopologicalSpace : TopologicalSpace (MvPowerSeries σ R) := Pi.topologicalSpace
 
 /-- MvPowerSeries on a T0Space form a T0Space -/
 @[scoped instance]
@@ -213,7 +213,7 @@ variable [UniformSpace R]
 
 variable (σ R) in
 /-- The componentwise uniformity on MvPowerSeries -/
-scoped instance : UniformSpace (MvPowerSeries σ R) :=
+scoped instance instUniformSpace : UniformSpace (MvPowerSeries σ R) :=
   Pi.uniformSpace fun _ : σ →₀ ℕ => R
 
 /-- Completeness of the uniform structure on MvPowerSeries -/
@@ -228,7 +228,7 @@ theorem uniformContinuous_coeff [Semiring R] (d : σ →₀ ℕ) :
     UniformContinuous fun f : MvPowerSeries σ R => coeff R d f :=
   uniformContinuous_pi.mp uniformContinuous_id d
 
-variable [Ring R]
+variable [AddGroup R]
 
 variable (σ)
 

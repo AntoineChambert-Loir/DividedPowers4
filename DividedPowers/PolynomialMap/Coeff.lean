@@ -138,8 +138,8 @@ noncomputable def lLfsum {ι : Type _} [DecidableEq ι] :
       lfsum_eq (LocFinsupp_add hf hg)]
     simp only [Pi.add_apply, add_def_apply]
     rw [sum_of_support_subset (s := (hf S m).toFinset ∪ (hg S m).toFinset),
-      sum_of_support_subset _ (subset_union_left _ _),
-      sum_of_support_subset _ (subset_union_right _ _), ← sum_add_distrib]
+      sum_of_support_subset _ subset_union_left,
+      sum_of_support_subset _ subset_union_right, ← sum_add_distrib]
     apply sum_congr rfl
     all_goals try intro i _hi; rfl
     · intro x
@@ -170,7 +170,11 @@ section Coefficients
 variable {R : Type u} [CommRing R] {M : Type uM} [AddCommGroup M]  [Module R M]
   {N : Type uN} [AddCommGroup N][Module R N]
 
-variable {ι : Type uι} [DecidableEq ι] [Fintype ι]
+variable {ι : Type uι} /- [DecidableEq ι]   -/
+
+section Fintype
+
+variable [Fintype ι]
 
 noncomputable def generize (m : ι → M) :
   PolynomialMap R M N →ₗ[R] MvPolynomial ι R ⊗[R] N where
@@ -202,7 +206,6 @@ theorem generize_comp_equiv' {κ : Type*} [Fintype κ] {e : ι ≃ κ} {m : κ �
   apply congr_arg
   simp only [sum_congr_equiv e, map_univ_equiv]
   exact sum_congr rfl (fun k _ => by rw [Function.comp_apply, Equiv.apply_symm_apply])
-
 
 /-
 theorem generize_comp_embed (f : PolynomialMap R M N)
@@ -241,10 +244,10 @@ theorem generize_comp_embed (f : PolynomialMap R M N)
 -/
 
 /-- The coefficients of a `polynomial_map` -/
-noncomputable def coeff (m : ι → M) : PolynomialMap R M N →ₗ[R] (ι →₀ ℕ) →₀ N :=
+noncomputable def coeff [DecidableEq ι] (m : ι → M) : PolynomialMap R M N →ₗ[R] (ι →₀ ℕ) →₀ N :=
   scalarRTensor.toLinearMap.comp (generize m)
 
-theorem generize_eq (m : ι → M) (f : PolynomialMap R M N)  :
+theorem generize_eq [DecidableEq ι] (m : ι → M) (f : PolynomialMap R M N)  :
     generize m f = (coeff m f).sum (fun k n => (monomial k 1) ⊗ₜ n)  := by
   dsimp only [coeff, coe_comp, LinearEquiv.coe_coe, Function.comp_apply]
   generalize h : scalarRTensor (generize m f) = p
@@ -276,13 +279,15 @@ theorem _root_.MvPolynomial.scalarRTensor_apply {σ : Type*} [DecidableEq σ]
     scalarRTensor sn k = TensorProduct.lid R N ((LinearMap.rTensor N (lcoeff R k)) sn) := by
   rw [← LinearEquiv.symm_apply_eq, TensorProduct.lid_symm_apply, rTensor_lcoeff]
 
-theorem coeff_eq (m : ι → M) (k : ι →₀ ℕ) (f : PolynomialMap R M N) :
+theorem coeff_eq [DecidableEq ι] (m : ι → M) (k : ι →₀ ℕ) (f : PolynomialMap R M N) :
   coeff m f k = (TensorProduct.lid R N) ((LinearMap.rTensor N (MvPolynomial.lcoeff R k))
       (f.toFun (MvPolynomial ι R) (univ.sum fun i : ι => MvPolynomial.X i ⊗ₜ[R] m i))) := by
   rw [coeff, coe_comp, LinearEquiv.coe_coe, Function.comp_apply, ]
   exact scalarRTensor_apply _ _
 
-theorem coeff_comp_equiv {ι : Type*} [DecidableEq ι] [Fintype ι] {κ : Type*} [DecidableEq κ]
+
+-- Unsolved goals (?)
+theorem coeff_comp_equiv [DecidableEq ι] [Fintype ι] {κ : Type*} [DecidableEq κ]
     [Fintype κ] (e : ι ≃ κ) (m : κ → M) (k : ι →₀ ℕ) (f : PolynomialMap R M N) :
     coeff m f (k.equivMapDomain e) = coeff (m.comp e) f (k) := by
   simp only [coeff, coe_comp, LinearEquiv.coe_coe, Function.comp_apply,
@@ -314,11 +319,12 @@ theorem coeff_comp_equiv {ι : Type*} [DecidableEq ι] [Fintype ι] {κ : Type*}
     . simp only [monomial_eq, _root_.map_one, Finsupp.prod_pow, Finsupp.equivMapDomain_apply,
         _root_.one_mul, prod_congr_equiv e, map_univ_equiv, Function.comp_apply,
          Equiv.apply_symm_apply]
+    sorry
   . rw [generize, coe_mk, AddHom.coe_mk]
     apply congr_arg
     simp only [sum_congr_equiv e, map_univ_equiv, Function.comp_apply, Equiv.apply_symm_apply]
 
-theorem coeff_comp_equiv' {κ : Type*} [DecidableEq κ] [Fintype κ] (e : ι ≃ κ) (m : κ → M)
+theorem coeff_comp_equiv' [DecidableEq ι] {κ : Type*} [DecidableEq κ] [Fintype κ] (e : ι ≃ κ) (m : κ → M)
     (k : κ →₀ ℕ) (f : PolynomialMap R M N) :
     coeff m f k = coeff (m ∘ e) f (k.equivMapDomain e.symm) := by
   rw [coeff_comp_equiv]
@@ -326,7 +332,7 @@ theorem coeff_comp_equiv' {κ : Type*} [DecidableEq κ] [Fintype κ] (e : ι ≃
   ext k
   simp only [Function.comp_apply, Equiv.apply_symm_apply]
 
-theorem image_eq_coeff_sum (m : ι → M) (f : PolynomialMap R M N) (S : Type*) [CommRing S]
+theorem image_eq_coeff_sum [DecidableEq ι] (m : ι → M) (f : PolynomialMap R M N) (S : Type*) [CommRing S]
     [Algebra R S] (r : ι → S) : f.toFun S (univ.sum fun i => r i ⊗ₜ[R] m i) =
       (coeff m f).sum (fun k n => (univ.prod fun i => r i ^ k i) ⊗ₜ[R] n) := by
   have this := congr_fun (f.isCompat (MvPolynomial.aeval r))
@@ -342,10 +348,12 @@ theorem image_eq_coeff_sum (m : ι → M) (f : PolynomialMap R M N) (S : Type*) 
   apply congr_arg₂ _ _ rfl
   simp only [aeval_monomial, _root_.map_one, Finsupp.prod_pow, one_mul]
 
+end Fintype
+
 open Function
 
 /-- Variant of `image_eq_coeff_sum` over a Finset -/
-theorem image_eq_coeff_finset_sum {ι : Type*} [DecidableEq ι] (m : ι → M) (f : PolynomialMap R M N)
+theorem image_eq_coeff_finset_sum  [DecidableEq ι] (m : ι → M) (f : PolynomialMap R M N)
     (S : Type*) [CommRing S] [Algebra R S] (r : ι → S) (s : Finset ι) :
     f.toFun S (s.sum fun i => r i ⊗ₜ[R] m i) = (coeff (fun i : s => m i) f).sum
       (fun k n => (s.prod fun i =>
@@ -372,6 +380,14 @@ theorem image_eq_coeff_sum' {ι : Type*} [DecidableEq ι] (m : ι → M) (f : Po
         (fun i => r i ^ ((Function.extend (fun x => x.val) k (const ι 0)) i)) ⊗ₜ[R] n)) := by
   rw [Finsupp.sum, image_eq_coeff_finset_sum]
 
+section Fintype
+
+variable  [Fintype ι]
+
+section Decidable_Fintype
+
+variable [DecidableEq ι]
+
 theorem ground_image_eq_coeff_sum (m : ι → M) (f : PolynomialMap R M N) (r : ι → R) :
     ground f (univ.sum fun i => (r i) • (m i)) =
       (coeff m f).sum (fun k n => (univ.prod fun i => r i ^ k i) • n) := by
@@ -386,7 +402,7 @@ theorem ground_image_eq_coeff_sum_one (m : M) (f : PolynomialMap R M N) (r : R) 
     ground f (r • m) = (coeff (const Unit m) f).sum (fun k n => r ^ (k 0) • n) := by
   suffices r • m = univ.sum fun i ↦ (const Unit r) i • (const Unit m i) by
     rw [this, ground_image_eq_coeff_sum]
-    exact sum_congr rfl (fun i _ => by simp only [univ_unique, const_apply, prod_singleton]; rfl)
+    exact sum_congr rfl (fun i _ => by simp only [univ_unique, const_apply, prod_singleton])
   simp only [univ_unique, const_apply, sum_const, card_singleton, _root_.one_smul]
 
 theorem ground_image_eq_coeff_sum_two (r₁ r₂ : R) (m₁ m₂ : M) (f : PolynomialMap R M N) :
@@ -421,6 +437,8 @@ theorem span_tensorProduct_eq_top_of_span_eq_top (σ : Type _) (e : σ → M)
         . rw [hm]; exact Submodule.mem_top
       rw [TensorProduct.smul_tmul']; simp only [Algebra.id.smul_eq_mul, _root_.mul_one]
   | add x y hx hy => exact Submodule.add_mem _ (hx Submodule.mem_top) (hy Submodule.mem_top)
+
+end Decidable_Fintype
 
 theorem coeff_injective [DecidableEq ι] (m : ι → M) (hm : Submodule.span R (Set.range m) = ⊤)
     (f g : PolynomialMap R M N) (h : coeff m f = coeff m g) : f = g := by
@@ -478,6 +496,8 @@ noncomputable def polynomialMap (b : Basis ι R M) (h : (ι →₀ ℕ) →₀ N
   toFun' S _ _ x := polynomialMap_toFun b h S x
   isCompat' φ    := polynomialMap_isCompat b h φ
 
+variable (S : Type*) [CommRing S] [Algebra R S]
+
 theorem polynomialMap_toFun_apply (b : Basis ι R M) (h : (ι →₀ ℕ) →₀ N) (m : S ⊗[R] M) :
     (Finsupp.polynomialMap b h).toFun S m = h.sum fun k n =>
       (univ.prod (fun i => (LinearForm.baseChange R S _ (b.coord i)) m ^ k i)) ⊗ₜ[R] n := by
@@ -494,6 +514,8 @@ theorem polynomialMap_toFun_apply (b : Basis ι R M) (h : (ι →₀ ℕ) →₀
   rw [LinearForm.baseChange_compat_apply]
 
 end Finsupp
+
+open LinearMap
 
 theorem generize_finsupp_eq [DecidableEq ι] (b : Basis ι R M) (h : (ι →₀ ℕ) →₀ N) :
     ((generize ⇑b) (Finsupp.polynomialMap b h)) =
@@ -550,8 +572,8 @@ noncomputable def coeffPolynomialMapEquiv [DecidableEq ι] (b : Basis ι R M) :
   map_add' h k := by
     ext S _ _ m
     simp only [← toFun_eq_toFun', add_toFun, Finsupp.polynomialMap_toFun_apply, Pi.add_apply]
-    rw [Finsupp.sum_of_support_subset h (h.support.subset_union_left k.support),
-      Finsupp.sum_of_support_subset k (h.support.subset_union_right k.support),
+    rw [Finsupp.sum_of_support_subset h (h.support.subset_union_left),
+      Finsupp.sum_of_support_subset k (h.support.subset_union_right),
       Finsupp.sum_of_support_subset (h + k) Finsupp.support_add]
     simp_rw [Finsupp.coe_add, Pi.add_apply, TensorProduct.tmul_add]
     rw [sum_add_distrib]
@@ -566,6 +588,8 @@ noncomputable def coeffPolynomialMapEquiv [DecidableEq ι] (b : Basis ι R M) :
   invFun f    := coeff (DFunLike.coe b) f
   left_inv h  := by dsimp; rw [coeff_of_finsupp_polynomialMap]
   right_inv f := by dsimp; rw [finsupp_polynomialMap_of_coeff b]
+
+end Fintype
 
 end Coefficients
 

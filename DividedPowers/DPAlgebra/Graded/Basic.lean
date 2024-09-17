@@ -9,8 +9,8 @@ open DirectSum Finset Function Ideal Ideal.Quotient MvPolynomial RingEquiv RingQ
 
 section CommSemiring
 
-variable (R M : Type*) [CommSemiring R] [AddCommMonoid M] [Module R M] [DecidableEq R]
-  [DecidableEq M]
+variable (R M : Type*) [CommSemiring R] [AddCommMonoid M] [Module R M]
+  --[DecidableEq R] [DecidableEq M]
 
 local instance : GradedAlgebra (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) :=
   weightedGradedAlgebra R (Prod.fst : ℕ × M → ℕ)
@@ -62,12 +62,13 @@ theorem one_mem : (1 : DividedPowerAlgebra R M) ∈ grade R M 0 :=
   ⟨1, isWeightedHomogeneous_one R _, map_one _⟩
 
 /-- The canonical decomposition of `divided_power_algebra R M` -/
-def decomposition : DirectSum.Decomposition (M := DividedPowerAlgebra R M) (grade R M) :=
+def decomposition [DecidableEq R] [DecidableEq M] :
+    DirectSum.Decomposition (M := DividedPowerAlgebra R M) (grade R M) :=
   quotDecomposition R (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ))
     (DividedPowerAlgebra.Rel R M) (Rel_isHomogeneous R M)
 
 /-- The graded algebra structure on the divided power algebra-/
-def gradedAlgebra : GradedAlgebra (DividedPowerAlgebra.grade R M) :=
+def gradedAlgebra[DecidableEq R] [DecidableEq M] : GradedAlgebra (DividedPowerAlgebra.grade R M) :=
   DirectSum.Decomposition_RingQuot R (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ))
     (DividedPowerAlgebra.Rel R M) (Rel_isHomogeneous R M)
 
@@ -83,15 +84,17 @@ theorem dp_mem_grade (n : ℕ) (m : M) : dp R n m ∈ grade R M n :=
  -/
 
 /-- degree of a product is sum of degrees -/
-theorem mul_mem ⦃i j : ℕ⦄ {gi gj : DividedPowerAlgebra R M} (hi : gi ∈ grade R M i)
-    (hj : gj ∈ grade R M j) : gi * gj ∈ grade R M (i + j) :=
+theorem mul_mem [DecidableEq R] [DecidableEq M] ⦃i j : ℕ⦄ {gi gj : DividedPowerAlgebra R M}
+    (hi : gi ∈ grade R M i) (hj : gj ∈ grade R M j) : gi * gj ∈ grade R M (i + j) :=
   (gradedAlgebra R M).toGradedMonoid.mul_mem hi hj
 
-def decompose : DividedPowerAlgebra R M → DirectSum ℕ fun i : ℕ => ↥(grade R M i) :=
+def decompose [DecidableEq R] [DecidableEq M] :
+    DividedPowerAlgebra R M → DirectSum ℕ fun i : ℕ => ↥(grade R M i) :=
   (gradedAlgebra R M).toDecomposition.decompose'
 
 -- graded_algebra (grade R M )
-instance : GradedAlgebra (DividedPowerAlgebra.grade R M) := gradedAlgebra R M
+instance [DecidableEq R] [DecidableEq M] : GradedAlgebra (DividedPowerAlgebra.grade R M) :=
+  gradedAlgebra R M
 
 theorem mk_comp_toSupported :
     (@mk R M).comp ((Subalgebra.val _).comp (toSupported R)) = mk := by
@@ -112,7 +115,7 @@ theorem surjective_of_supported :
   use toSupported R p'
   rw [← AlgHom.comp_apply, AlgHom.comp_assoc, mk_comp_toSupported, ← hp']
 
-theorem surjective_of_supported' {n : ℕ} (p : grade R M n) :
+theorem surjective_of_supported' [DecidableEq R] [DecidableEq M] {n : ℕ} (p : grade R M n) :
     ∃ q : supported R {nm : ℕ × M | 0 < nm.1},
       IsWeightedHomogeneous Prod.fst q.1 n ∧ (@mk R M) q.1 = ↑p := by
   obtain ⟨p', hpn', hp'⟩ := (mem_grade_iff R M _ _).mpr p.2
@@ -121,7 +124,7 @@ theorem surjective_of_supported' {n : ℕ} (p : grade R M n) :
   erw [DFunLike.congr_fun (mk_comp_toSupported R M) p', hp']
   -- TODO: write mk_comp_to_supported
 
-theorem mem_grade_iff' {n : ℕ} (p : DividedPowerAlgebra R M) :
+theorem mem_grade_iff' [DecidableEq R] [DecidableEq M] {n : ℕ} (p : DividedPowerAlgebra R M) :
     p ∈ grade R M n ↔ ∃ q : supported R {nm : ℕ × M | 0 < nm.1},
       IsWeightedHomogeneous Prod.fst q.1 n ∧ (@mk R M) q.1 = p := by
   constructor
@@ -137,10 +140,11 @@ def ι : M →ₗ[R] DividedPowerAlgebra R M := {
   map_add'  := fun x y ↦ by
     simp only [dp_add]
     simp only [Nat.antidiagonal_succ, zero_add, antidiagonal_zero, map_singleton,
-      Embedding.coe_prodMap, Embedding.coeFn_mk, Prod_map, Nat.reduceSucc, Embedding.refl_apply,
-      cons_eq_insert, mem_singleton, Prod.mk.injEq, and_self, not_false_eq_true, sum_insert,
-      sum_singleton]
-    simp only [dp_zero, one_mul, mul_one, add_comm]
+      Embedding.coe_prodMap, Embedding.coeFn_mk, Prod.map_apply, Nat.reduceSucc,
+      Embedding.refl_apply, cons_eq_insert, mem_singleton, Prod.mk.injEq, and_self,
+      not_false_eq_true, sum_insert, sum_singleton]
+    simp only [mem_singleton, Prod.mk.injEq, zero_ne_one, one_ne_zero, and_self, not_false_eq_true,
+      sum_insert, dp_zero, one_mul, sum_singleton, mul_one, add_comm]
   map_smul' := fun r x ↦ by
     simp only [dp_smul, pow_one, RingHom.id_apply] }
 
@@ -207,7 +211,8 @@ theorem liftAux_isHomogeneous {A : Type*} [CommSemiring A] [Algebra R A]
 
 --variable {R}
 
-instance : GradedAlgebra (DividedPowerAlgebra.grade R M) := gradedAlgebra R M
+instance [DecidableEq R] [DecidableEq M]: GradedAlgebra (DividedPowerAlgebra.grade R M) :=
+  gradedAlgebra R M
 
 theorem lift_isHomogeneous {A : Type*} [CommSemiring A] [Algebra R A] (𝒜 : ℕ → Submodule R A)
     [GradedAlgebra 𝒜] {I : Ideal A} (hI : DividedPowers I) (hI' : HasGradedDpow 𝒜 hI)
@@ -229,12 +234,13 @@ theorem lift'_isHomogeneous (f : M →ₗ[R] N) :
 more generally for graded algebras -/
 variable (R M)
 
-def proj' (n : ℕ) : DividedPowerAlgebra R M →ₗ[R] grade R M n := proj (grade R M) n
+def proj' [DecidableEq R] [DecidableEq M] (n : ℕ) : DividedPowerAlgebra R M →ₗ[R] grade R M n :=
+  proj (grade R M) n
 
-theorem proj'_zero_one : (proj' R M 0) 1 = 1 := by
+theorem proj'_zero_one [DecidableEq R] [DecidableEq M] : (proj' R M 0) 1 = 1 := by
   rw [proj', proj, LinearMap.coe_mk, AddHom.coe_mk, decompose_one]; rfl
 
-theorem proj'_zero_mul (x y : DividedPowerAlgebra R M) :
+theorem proj'_zero_mul [DecidableEq R] [DecidableEq M] (x y : DividedPowerAlgebra R M) :
     (proj' R M 0) (x * y) = (proj' R M 0) x * (proj' R M 0) y := by
   simp only [proj', ← projZeroRingHom'_apply, _root_.map_mul]
 
