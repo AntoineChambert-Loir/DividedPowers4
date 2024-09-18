@@ -46,7 +46,7 @@ import DividedPowers.ForMathlib.RingTheory.TensorProduct.LinearEquiv
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.MvPolynomial
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.Polynomial
 import DividedPowers.ForMathlib.Topology.Algebra.LinearTopology -- It has sorrys
---import DividedPowers.IdealAdd --TODO: fix
+import DividedPowers.IdealAdd
 import DividedPowers.PolynomialMap.Basic
 import DividedPowers.PolynomialMap.Coeff
 import DividedPowers.PolynomialMap.Homogeneous -- It has a sorry

@@ -5,7 +5,6 @@ import DividedPowers.SubDPIdeal
 import DividedPowers.IdealAdd
 import DividedPowers.DPAlgebra.RobyLemma9
 import DividedPowers.DPAlgebra.PolynomialMap
---import DividedPowers.ForMathlib.RingTheory.Ideal
 import Mathlib.RingTheory.MvPolynomial.Basic
 import Mathlib.LinearAlgebra.TensorProduct.RightExactness
 
@@ -73,8 +72,8 @@ universe u v v₁ v₂ w uA uR uS uM
 
 section
 
-variable (R : Type u) [CommRing R] [DecidableEq R]
-  (M : Type v) [AddCommGroup M] [DecidableEq M] [Module R M]
+variable (R : Type u) [CommRing R] /- [DecidableEq R] -/
+  (M : Type v) [AddCommGroup M] /- [DecidableEq M] -/ [Module R M]
 
 variable (x : M) (n : ℕ)
 
@@ -105,7 +104,7 @@ namespace DividedPowerAlgebra
 open DividedPowerAlgebra
 
 /-- Lemma 2 of Roby 65. -/
-theorem on_dpalgebra_unique (h h' : DividedPowers (augIdeal R M))
+theorem on_dpalgebra_unique [DecidableEq R] (h h' : DividedPowers (augIdeal R M))
     (h1 : ∀ (n : ℕ) (x : M), h.dpow n (ι R M x) = dp R n x)
     (h1' : ∀ (n : ℕ) (x : M), h'.dpow n (ι R M x) = dp R n x) : h = h' := by
   apply DividedPowers.dp_uniqueness_self h' h (augIdeal_eq_span R M)
@@ -233,7 +232,6 @@ open DividedPowerAlgebra Ideal
 open scoped TensorProduct
 
 -- Roby, lemma 3
-set_option linter.uppercaseLean3 false
 /-- Any divided power structure on the divided power algebra makes the canonical morphisms to a
   divided power ring a DP morphism -/
 theorem cond_D_uniqueness [DecidableEq R] {M : Type uM} [AddCommGroup M] [Module R M]
@@ -269,7 +267,7 @@ theorem cond_D_uniqueness [DecidableEq R] {M : Type uM} [AddCommGroup M] [Module
 -- We open a namespace to privatize the complicated construction
 namespace roby4
 
-variable (A : Type u) [CommRing A] [DecidableEq A]
+variable (A : Type u) [CommRing A] /- [DecidableEq A] -/
 
 open Classical
 
@@ -353,7 +351,8 @@ theorem Ψ_eq (i) (hi : i ∈ I) :
     Ψ A S hI S₀ (includeRight (ι A _ (Finsupp.single ⟨i, hi⟩ 1 : I →₀ A))) = i := by
   simp [Ψ, Φ, f, Basis.constr_apply]
 
-theorem Ψ_surjective : Function.Surjective (Ψ A S hI S₀) := by
+theorem Ψ_surjective (hIS₀ : IsCompl (Subalgebra.toSubmodule S₀) (I.restrictScalars A)) :
+    Function.Surjective (Ψ A S hI S₀) := by
   rw [← range_top_iff_surjective _, _root_.eq_top_iff]
   intro s _
   obtain ⟨s₀, hs₀, s₁, hs₁, rfl⟩ := Submodule.exists_add_eq_of_codisjoint (hIS₀.codisjoint) s
@@ -433,7 +432,7 @@ lemma Subalgebra_tensorProduct_top_bot [Algebra A R]
   constructor
   · rintro ⟨x, rfl⟩
     induction x using TensorProduct.induction_on with
-    | zero => use 0, by simp only [TensorProduct.zero_tmul, map_zero]
+    | zero => use 0, by sorry --simp only [TensorProduct.zero_tmul, map_zero]
     | tmul a b =>
       rcases a with ⟨a, ha⟩
       rcases b with ⟨b, hb⟩
@@ -450,7 +449,9 @@ lemma Subalgebra_tensorProduct_top_bot [Algebra A R]
   · rintro ⟨r, rfl⟩
     exact ⟨⟨r, by rw [hT₀]; exact Algebra.mem_top⟩ ⊗ₜ[A] 1, rfl⟩
 
-lemma map_psi_augIdeal_eq (M : Type*) [AddCommGroup M] [Module A M] [Module.Free A M]
+lemma map_psi_augIdeal_eq (hM : DividedPowers (augIdeal A (I →₀ A)))
+    (hM_eq : ∀ n x, hM.dpow n ((ι A (I →₀ A)) x) = dp A n x)
+    (M : Type*) [AddCommGroup M] [Module A M] [Module.Free A M]
     (condTFree: CondTFree A) :
     Ideal.map (Ψ A S hI S₀) (K A ⊥ (augIdeal A (I →₀ A))) = I := by
   apply le_antisymm (dpΨ A S hI S₀ hM hM_eq condTFree).ideal_comp
@@ -501,7 +502,7 @@ theorem _root_.DividedPowerAlgebra.condTFree_and_condD_to_condQ
   · infer_instance -- tensor product of free modules is free
 
 -- the freeness of DividedPowerAlgebra of a free module still uses `sorry`
-#print axioms DividedPowerAlgebra.condTFree_and_condD_to_condQ
+--#print axioms DividedPowerAlgebra.condTFree_and_condD_to_condQ
 
 end roby4
 

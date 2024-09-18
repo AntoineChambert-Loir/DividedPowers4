@@ -20,10 +20,10 @@ namespace IdealAdd
 
 /-- Some complicated numerical coefficients for the proof of ideal_add.dpow_comp -/
 private def cnik := fun (n i : ℕ) (k : Multiset ℕ) =>
-  ite (i = 0) (mchoose (Multiset.count i k) n)
-    (ite (i = n) (mchoose (Multiset.count i k) n)
-      ((Multiset.count i k).factorial * mchoose (Multiset.count i k) i *
-        mchoose (Multiset.count i k) (n - i)))
+  ite (i = 0) (Nat.uniformBell (Multiset.count i k) n)
+    (ite (i = n) (Nat.uniformBell (Multiset.count i k) n)
+      ((Multiset.count i k).factorial * Nat.uniformBell (Multiset.count i k) i *
+        Nat.uniformBell (Multiset.count i k) (n - i)))
 
 /-- Divided power function on a sup of two ideals -/
 noncomputable def dpow {J : Ideal A} (hJ : DividedPowers J) : ℕ → A → A := fun n =>
@@ -379,7 +379,7 @@ theorem dpow_comp_aux {J : Ideal A} (hJ : DividedPowers J)
     by_cases hi2 : i = n
     · rw [hi2]; rw [Nat.sub_self]
       rw [if_neg hn]; rw [if_pos rfl]
-      simp only [mchoose_zero', mul_one, Nat.cast_one, MulZeroClass.mul_zero, hJ.dpow_zero hb]
+      simp only [hJ.dpow_zero hb, mul_one, mul_zero]
       rw [dpow_eq_of_mem_left hI hJ hIJ _ (hI.dpow_mem hn ha)]
       rw [hI.dpow_comp _ hn ha]
     have hi2' : n - i ≠ 0 := by
@@ -387,7 +387,7 @@ theorem dpow_comp_aux {J : Ideal A} (hJ : DividedPowers J)
       rw [Finset.mem_range, Nat.lt_succ_iff] at hi
       rw [← Nat.sub_add_cancel hi, h, zero_add]
     by_cases hi1 : i = 0
-    · rw [hi1]; rw [mchoose_zero']; rw [hI.dpow_zero ha]; rw [Nat.sub_zero]; rw [one_mul]
+    · rw [hi1, hI.dpow_zero ha, Nat.sub_zero, one_mul]
       rw [if_pos rfl]
       rw [dpow_eq_of_mem_right hI hJ hIJ _ (hJ.dpow_mem hn hb)]
       rw [hJ.dpow_comp _ hn hb]
@@ -503,7 +503,7 @@ theorem Polynomial.inv_C_eq_C_inv {R : Type _} [CommSemiring R] (a : R) :
 open BigOperators
 
 theorem dpow_comp_coeffs {m n p : ℕ} (hn : n ≠ 0) (hp : p ≤ m * n) :
-  mchoose m n =
+  Nat.uniformBell m n =
     (Finset.filter (fun l : Sym ℕ m =>
       ((Finset.range (n + 1)).sum fun i : ℕ => Multiset.count i ↑l * i) = p)
         ((Finset.range (n + 1)).sym m)).sum
@@ -525,7 +525,7 @@ theorem dpow_comp_coeffs {m n p : ℕ} (hn : n ≠ 0) (hp : p ≤ m * n) :
 
   rw [← hI.factorial_mul_dpow_eq_pow (m * n) (X + 1) Submodule.mem_top]
   rw [← Polynomial.coeff_C_mul]
-  rw [← mul_assoc, mul_comm (C ((mchoose m n) : ℚ)), mul_assoc]
+  rw [← mul_assoc, mul_comm (C ((Nat.uniformBell m n) : ℚ)), mul_assoc]
   simp only [C_eq_natCast]
   rw [← hI.dpow_comp m hn Submodule.mem_top]
 
@@ -575,7 +575,7 @@ theorem dpow_comp_coeffs {m n p : ℕ} (hn : n ≠ 0) (hp : p ≤ m * n) :
 theorem dpow_comp {J : Ideal A} (hJ : DividedPowers J)
     (hIJ : ∀ (n : ℕ), ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
     (m : ℕ) {n : ℕ} {x : A} (hn : n ≠ 0) (hx : x ∈ I + J) :
-  dpow hI hJ m (dpow hI hJ n x) = ↑(mchoose m n) * dpow hI hJ (m * n) x := by
+  dpow hI hJ m (dpow hI hJ n x) = ↑(Nat.uniformBell m n) * dpow hI hJ (m * n) x := by
   rw [Ideal.add_eq_sup, Submodule.mem_sup] at hx
   obtain ⟨a, ha, b, hb, rfl⟩ := hx
   rw [dpow_comp_aux hI hJ hIJ m hn ha hb,
