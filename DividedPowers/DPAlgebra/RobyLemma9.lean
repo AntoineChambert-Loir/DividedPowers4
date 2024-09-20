@@ -9,8 +9,9 @@ open scoped TensorProduct
 section RingHom
 
 theorem RingHom.ker_eq_ideal_iff {A B : Type _} [CommRing A] [CommRing B] (f : A →+* B)
-    (I : Ideal A) : RingHom.ker f = I ↔ ∃ h : I ≤ RingHom.ker f, Function.Injective (Ideal.Quotient.lift I f h) :=
-  by
+    (I : Ideal A) :
+    RingHom.ker f = I ↔
+      ∃ h : I ≤ RingHom.ker f, Function.Injective (Ideal.Quotient.lift I f h) := by
   constructor
   · intro hI; use le_of_eq hI.symm
     apply RingHom.lift_injective_of_ker_le_ideal
@@ -50,7 +51,55 @@ variable (R : Type _) [CommRing R] (S : Type _) [CommRing S]
 variable (M : Type _) [CommRing M] [Algebra R M] [Algebra S M]
   (N : Type _) [CommRing N] [Algebra R N] [Algebra S N]
 
-variable [Algebra R S] [IsScalarTower R S M] [IsScalarTower R S N]
+variable [Algebra R S] [IsScalarTower R S M]
+
+def kerφ : Ideal (M ⊗[R] N) :=
+  Ideal.span ((fun r : S => (r • (1 : M)) ⊗ₜ[R] (1 : N) - (1 : M) ⊗ₜ[R] (r • (1 : N))) '' ⊤)
+
+/-  TODO: when we PR this, ask about why `mkₐ_smul_one_tmul_one` is so slow (and becomes even
+  slower inside `ψLeft`.)
+
+  The most general version `mkₐ_smul_one_tmul_one''` is the "correct" one, but it is the
+  slowest one inside `ψLeft`.
+
+  Main point: `AlgHom.map_smul` (which we were using before) is deprecated, and `map_smul` is
+  much slower.
+  -/
+
+
+--set_option profiler true in
+omit [Algebra S N] in
+lemma mkₐ_smul_one_tmul_one'' (s : S) {B : Type*} [CommRing B] [Algebra R B]
+  [Algebra S B] [IsScalarTower R S B] (f : M ⊗[R] N →ₐ[S] B)  :
+    f ((s • (1 : M)) ⊗ₜ[R] (1 : N)) = s • (1 : B ) := by
+  suffices (s • (1 : M)) ⊗ₜ[R] (1 : N) = s • (1 : M ⊗[R] N) by
+    rw [this, map_smul, map_one]
+  rfl
+
+--set_option profiler true in
+--set_option trace.Meta.synthInstance true in
+lemma mkₐ_smul_one_tmul_one' (s : S) :
+    (Ideal.Quotient.mkₐ S (kerφ R S M N)) ((s • (1 : M)) ⊗ₜ[R] (1 : N)) =
+      s • (1 : M ⊗[R] N ⧸ kerφ R S M N) := by
+  apply mkₐ_smul_one_tmul_one''
+
+omit [Algebra S N] in
+lemma mkₐ_smul_one_tmul_one (s : S) (I : Ideal (M ⊗[R] N)) :
+    (Ideal.Quotient.mkₐ S I) ((s • (1 : M)) ⊗ₜ[R] (1 : N)) =
+      s • (1 : M ⊗[R] N ⧸ I) := by
+  suffices (s • (1 : M)) ⊗ₜ[R] (1 : N) = s • (1 : M ⊗[R] N) by
+    rw [this, map_smul, map_one]
+  rfl
+
+lemma mkₐ_one_tmul_smul_one (s : S) :
+    (Ideal.Quotient.mk (kerφ R S M N)) (1 ⊗ₜ[R] (s • 1)) = s • 1 := by
+  rw [← (Ideal.Quotient.mk (kerφ R S M N)).map_one, ← Ideal.Quotient.mkₐ_eq_mk S, ← map_smul]
+  simp only [Ideal.Quotient.mkₐ_eq_mk]
+  apply symm
+  rw [Ideal.Quotient.eq]
+  exact Ideal.subset_span ⟨s, Set.mem_univ s, rfl⟩
+
+variable [IsScalarTower R S N]
 
 -- [tensor_product.compatible_smul R S M N]
 open Algebra.TensorProduct TensorProduct
@@ -74,18 +123,7 @@ theorem φ_surjective : Function.Surjective (φ R S M N) := by
       obtain ⟨b, rfl⟩ := hy
       exact ⟨a + b, map_add _ _ _⟩
 
-def kerφ : Ideal (M ⊗[R] N) :=
-  Ideal.span ((fun r : S => (r • (1 : M)) ⊗ₜ[R] (1 : N) - (1 : M) ⊗ₜ[R] (r • (1 : N))) '' ⊤)
-
-/- example : N →ₐ[R] M ⊗[R] N :=
-  includeRight
-
-example : N →ₐ[R] M ⊗[R] N :=
-  includeRight
-
-example : N →ₐ[S] M ⊗[S] N :=
-  includeRight -/
-
+--set_option profiler true in
 -- must be noncomputable, why ?
 noncomputable def ψLeft : M →ₐ[S] M ⊗[R] N ⧸ kerφ R S M N := {
   ((Ideal.Quotient.mkₐ S (kerφ R S M N)).restrictScalars R).comp
@@ -93,9 +131,7 @@ noncomputable def ψLeft : M →ₐ[S] M ⊗[R] N ⧸ kerφ R S M N := {
   commutes' := fun s => by
     simp only [AlgHom.toFun_eq_coe, AlgHom.coe_comp, AlgHom.coe_restrictScalars',
       Function.comp_apply, includeLeft_apply, Algebra.algebraMap_eq_smul_one]
-    suffices (s • (1 : M)) ⊗ₜ[R] (1 : N) = s • (1 : M ⊗[R] N) by
-      rw [this, AlgHom.map_smul, map_one] -- map_smul does not work
-    rfl }
+    apply mkₐ_smul_one_tmul_one }
 
 -- why is it noncomputable
 noncomputable def ψRight : N →ₐ[S] M ⊗[R] N ⧸ kerφ R S M N := {
@@ -104,11 +140,7 @@ noncomputable def ψRight : N →ₐ[S] M ⊗[R] N ⧸ kerφ R S M N := {
     simp only [AlgHom.toFun_eq_coe, AlgHom.coe_comp, Ideal.Quotient.mkₐ_eq_mk,
       Function.comp_apply, includeRight_apply]
     simp only [Algebra.algebraMap_eq_smul_one]
-    rw [← (Ideal.Quotient.mk (kerφ R S M N)).map_one, ← Ideal.Quotient.mkₐ_eq_mk S, ← AlgHom.map_smul]
-    simp only [Ideal.Quotient.mkₐ_eq_mk]
-    apply symm
-    rw [Ideal.Quotient.eq]
-    exact Ideal.subset_span ⟨s, Set.mem_univ s, rfl⟩ }
+    apply mkₐ_one_tmul_smul_one }
 
 noncomputable def ψ : M ⊗[S] N →ₐ[S] M ⊗[R] N ⧸ kerφ R S M N :=
   productMap (ψLeft R S M N) (ψRight R S M N)

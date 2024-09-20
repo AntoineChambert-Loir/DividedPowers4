@@ -167,18 +167,12 @@ theorem one_mem : (1 : A) ∈ 𝒜 0 := SetLike.one_mem_graded 𝒜
 example : AddCommMonoid (𝒜 0) :=
   inferInstance
 
--- TODO: check https://leanprover.zulipchat.com/#narrow/stream/116395-maths/topic/.E2.9C.94.20LinearOrderedCommGroup.20on.20a.20subgroup/near/451764070
-
-/- ERROR: (???)
-  The rfl tactic failed. Possible reasons:
-- The goal is not a reflexive relation (neither `=` nor a relation with a @[refl] lemma).
-- The arguments of the relation are not equal.
-Try using the reflexivity lemma for your relation explicitly, e.g. `exact Eq.refl _` or
-`exact HEq.rfl` etc.-/
-instance gradeZeroCommSemiring : CommSemiring (𝒜 0) := sorry
- /-  { (inferInstance : AddCommMonoid (𝒜 0)) with
+instance gradeZeroCommSemiring : CommSemiring (𝒜 0) :=
+  { (inferInstance : AddCommMonoid (𝒜 0)) with
     add := (· + ·)
     zero := 0
+    natCast_zero := by simp only [Nat.cast_zero]
+    natCast_succ := fun n ↦ by simp only [Nat.cast_succ] -- TODO: Zulip?
     one := 1
     mul := (· * ·)
     zero_mul := fun x => by
@@ -205,7 +199,7 @@ instance gradeZeroCommSemiring : CommSemiring (𝒜 0) := sorry
     mul_comm := fun x y => by
       ext
       simp only [gradeZero_coe_mul, mul_comm]
-     } -/
+     }
 
 instance gradeZeroAlgebra : Algebra R (𝒜 0) :=
   Algebra.ofModule'
@@ -252,19 +246,16 @@ variable {ι : Type _} [CanonicallyOrderedAddCommMonoid ι]
 
 variable (𝒜 : ι → Submodule R A) [DecidableEq ι] [GradedAlgebra 𝒜]
 
-
-/- ERROR: (???)
-  The rfl tactic failed. Possible reasons:
-- The goal is not a reflexive relation (neither `=` nor a relation with a @[refl] lemma).
-- The arguments of the relation are not equal.
-Try using the reflexivity lemma for your relation explicitly, e.g. `exact Eq.refl _` or
-`exact HEq.rfl` etc.-/
-instance gradeZeroCommRing : CommRing (𝒜 0) := sorry
-/-   { (inferInstance : AddCommGroup (𝒜 0)) with
+instance gradeZeroCommRing : CommRing (𝒜 0) :=
+{ (inferInstance : AddCommGroup (𝒜 0)) with
     add := (· + ·)
     zero := 0
     one := 1
     mul := (· * ·)
+    natCast_zero := by simp only [Nat.cast_zero]
+    natCast_succ := fun n ↦ by simp only [Nat.cast_succ]
+    intCast_ofNat := fun n ↦ by simp only [Int.cast_natCast]
+    intCast_negSucc := fun n ↦ by rw [← Int.cast_negSucc]
     zero_mul := fun x => by
       ext
       rw [gradeZero_coe_mul, gradeZero_coe_zero, zero_mul]
@@ -289,7 +280,7 @@ instance gradeZeroCommRing : CommRing (𝒜 0) := sorry
     mul_comm := fun x y => by
       ext
       simp only [gradeZero_coe_mul, mul_comm]
-     }  -/
+     }
 
 end CommRing
 

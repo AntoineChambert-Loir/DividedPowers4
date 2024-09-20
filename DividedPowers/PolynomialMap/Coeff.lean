@@ -287,7 +287,7 @@ theorem coeff_eq [DecidableEq ι] (m : ι → M) (k : ι →₀ ℕ) (f : Polyno
 
 
 -- Unsolved goals (?)
-theorem coeff_comp_equiv [DecidableEq ι] [Fintype ι] {κ : Type*} [DecidableEq κ]
+theorem coeff_comp_equiv [DecidableEq ι] {κ : Type*} [DecidableEq κ]
     [Fintype κ] (e : ι ≃ κ) (m : κ → M) (k : ι →₀ ℕ) (f : PolynomialMap R M N) :
     coeff m f (k.equivMapDomain e) = coeff (m.comp e) f (k) := by
   simp only [coeff, coe_comp, LinearEquiv.coe_coe, Function.comp_apply,
@@ -301,7 +301,7 @@ theorem coeff_comp_equiv [DecidableEq ι] [Fintype ι] {κ : Type*} [DecidableEq
     rw [← hf]
     generalize h : generize (fun x ↦ m (e x)) f = g
     simp only [generize, coe_mk, AddHom.coe_mk] at h
-    rw [h, EmbeddingLike.apply_eq_iff_eq, ← LinearMap.rTensor_comp_apply]
+    rw [h, EmbeddingLike.apply_eq_iff_eq, ← LinearMap.rTensor_comp_apply, ← h]
     congr
     ext p
     simp only [coe_comp, Function.comp_apply, AlgHom.toLinearMap_apply, MvPolynomial.aeval_monomial,
@@ -319,7 +319,6 @@ theorem coeff_comp_equiv [DecidableEq ι] [Fintype ι] {κ : Type*} [DecidableEq
     . simp only [monomial_eq, _root_.map_one, Finsupp.prod_pow, Finsupp.equivMapDomain_apply,
         _root_.one_mul, prod_congr_equiv e, map_univ_equiv, Function.comp_apply,
          Equiv.apply_symm_apply]
-    sorry
   . rw [generize, coe_mk, AddHom.coe_mk]
     apply congr_arg
     simp only [sum_congr_equiv e, map_univ_equiv, Function.comp_apply, Equiv.apply_symm_apply]
