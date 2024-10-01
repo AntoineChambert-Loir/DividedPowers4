@@ -561,7 +561,7 @@ noncomputable def rescale (a : σ → R) (f : MvPowerSeries σ R) :
     MvPowerSeries σ R :=
   subst (a • X) f
 
-theorem scale_eq_subst (a : σ → R) (f : MvPowerSeries σ R) :
+theorem rescale_eq_subst (a : σ → R) (f : MvPowerSeries σ R) :
     rescale a f = subst (a • X) f := rfl
 
 variable (R) in
@@ -672,8 +672,9 @@ theorem rescaleUnit (a : R) (f : R⟦X⟧) :
 
 end rescale
 
-/- section scale
+section scale
 
+-- NOTE: we use this in ExponentialModule.Basic, so I uncommented it.
 -- More general version, deleted for the moment, because it often needs more explicit [Algebra...]
 
 /-- Scale multivariate power series -/
@@ -786,7 +787,7 @@ lemma scale_linear_eq_smul (r : A) (f : MvPowerSeries σ R)
 
 
 end scale
--/
+
 end MvPowerSeries
 
 namespace PowerSeries
@@ -1040,7 +1041,8 @@ theorem subst_comp_subst_apply [Algebra R S] [Algebra S T] [IsScalarTower R S T]
     subst b (subst a f) = subst (subst b a) f :=
   congr_fun (subst_comp_subst (R := R) ha hb) f
 
-/- -- Duplicates PowerSeries.rescale, the additional generality is probably useless
+-- NOTE: we use this in ExponentialModule.Basic, so I uncommented it.
+-- Duplicates PowerSeries.rescale, the additional generality is probably useless
 section scale
 
 /-- Scale power series` -/
@@ -1130,9 +1132,8 @@ theorem scale_map_eq_map_scale' (φ : R →+* S) (a : A) (f : R⟦X⟧) :
     scale (φ (algebraMap A R a)) (PowerSeries.map φ f) =
       PowerSeries.map (φ : R →+* S) (scale a f) := by
   ext n
-  simp only [coeff_scale, coeff_map]
- --   algebra_compatible_smul S (a ^ n), algebra_compatible_smul R (a ^ n),
-  rw [smul_eq_mul, smul_eq_mul, map_mul, map_pow]
+  simp only [coeff_scale, coeff_map, algebra_compatible_smul R (a ^ n)]
+  simp only [smul_eq_mul, map_pow, map_mul]
 
 theorem scale_map_eq_map_scale [Algebra A S] (φ : R →ₐ[A] S) (a : A) (f : R⟦X⟧) :
     scale a (PowerSeries.map φ f)
@@ -1140,6 +1141,6 @@ theorem scale_map_eq_map_scale [Algebra A S] (φ : R →ₐ[A] S) (a : A) (f : R
   rw [← scale_map_eq_map_scale', ← scale_algebraMap, RingHom.coe_coe, AlgHom.commutes]
 
 end scale
--/
+
 
 end PowerSeries

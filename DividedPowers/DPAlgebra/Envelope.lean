@@ -67,7 +67,8 @@ inductive rel2 : Rel (DividedPowerAlgebra B J) (DividedPowerAlgebra B J)
     rel2 (dp B n (⟨algebraMap A B x, hIJ (Ideal.mem_map_of_mem _ x.2)⟩ : J))
       (algebraMap _ _ (algebraMap A B (dpow hI n x)))
 
-lemma algebraMap_dpow_mem (x : I) {n : ℕ} (hn : n ≠ 0) : algebraMap _ _ (algebraMap A B (dpow hI n x)) ∈ J := by
+lemma algebraMap_dpow_mem (hIJ : I.map (algebraMap A B) ≤ J) (x : I) {n : ℕ} (hn : n ≠ 0) :
+    algebraMap _ _ (algebraMap A B (dpow hI n x)) ∈ J := by
   apply hIJ
   simp only [Algebra.id.map_eq_id, RingHomCompTriple.comp_apply]
   exact Ideal.mem_map_of_mem _ (dpow_mem _ hn x.2)
@@ -251,6 +252,8 @@ noncomputable instance algebra'' : Algebra (DividedPowerAlgebra B (J' I J)) (DPE
 instance : IsScalarTower A B (DPEnvelope hI J) :=
   IsScalarTower.of_algebraMap_eq (congrFun rfl)
 
+section DecidableEq
+
 variable [DecidableEq B]
 
 -- J₁_bar
@@ -281,7 +284,7 @@ noncomputable def dpIdeal : (dividedPowers' hI J).SubDPIdeal :=
   SubDPIdeal.generatedDpow (dividedPowers' hI J) (J_le_J₁_bar hI J)
 
 -- First claim in Theorem 3.19 : `J⬝D_{B, γ} ⊆ J_bar`.
-theorem sub_ideal_dpIdeal [DecidableEq B] :
+theorem sub_ideal_dpIdeal :
     J.map (algebraMap B (DPEnvelope hI J)) ≤ (dpIdeal hI J).carrier := by
   rw [dpIdeal, SubDPIdeal.generatedDpow_carrier]
   intros x hx
@@ -328,6 +331,8 @@ lemma isCompatibleWith [∀ x, Decidable (x ∈ (dpIdeal hI J).carrier)] :
     IsCompatibleWith hI (dividedPowers hI J) (algebraMap A (DPEnvelope hI J)) := by
   rw [IsCompatibleWith]
   sorry
+
+end DecidableEq
 section
 -- TODO: move to IdealAdd file
 variable {J} in

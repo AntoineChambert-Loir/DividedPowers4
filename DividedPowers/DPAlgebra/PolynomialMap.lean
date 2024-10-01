@@ -56,10 +56,10 @@ theorem gamma_mem_grade (n : ℕ) (S : Type*) [CommRing S] [Algebra R S] (m : S 
   | zero =>
     simp only [gamma_toFun, dp_null]
     split_ifs with h
-    · rw [AlgEquiv.map_one, h]
+    · rw [map_one, h]
       simp only [LinearMap.mem_range]
       use (1 : S) ⊗ₜ[R] ⟨(1 : DividedPowerAlgebra R M), one_mem R M⟩
-      simp only [LinearMap.lTensor_tmul, Submodule.coeSubtype]
+      simp only [LinearMap.lTensor_tmul, Submodule.coe_subtype]
       rw [Algebra.TensorProduct.one_def]
     · simp only [map_zero, zero_mem]
   | tmul s m =>
@@ -68,7 +68,7 @@ theorem gamma_mem_grade (n : ℕ) (S : Type*) [CommRing S] [Algebra R S] (m : S 
     rw [dpScalarExtensionInv_apply_dp]
     simp only [LinearMap.mem_range]
     use (s ^ n) ⊗ₜ[R] ⟨dp R n m, dp_mem_grade R M n m⟩
-    simp only [LinearMap.lTensor_tmul, Submodule.coeSubtype]
+    simp only [LinearMap.lTensor_tmul, Submodule.coe_subtype]
   | add x y hx hy =>
     simp only [gamma_toFun, dpScalarExtensionEquiv, ofAlgHom_symm_apply]
     simp only [dp_add, _root_.map_sum]

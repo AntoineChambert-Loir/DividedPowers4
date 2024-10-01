@@ -269,7 +269,8 @@ namespace roby4
 
 variable (A : Type u) [CommRing A] /- [DecidableEq A] -/
 
-open Classical
+-- NOTE: I am removing this to avoid an error in `CondQ_int`.
+--open Classical
 
 /- The goal of this section is to establish [Roby1963, Lemme 4]
 `T_free_and_D_to_Q`, that under the above assumptions, `CondQ A` holds.
@@ -308,7 +309,10 @@ theorem f_mem_I (p) : f A I p ∈ I := by
 
 -- variable  (condTFree : CondTFree A) (condD : CondD A)
 
-variable (hM : DividedPowers (augIdeal A (I →₀ A)))
+open Algebra Algebra.TensorProduct
+section DecidableEq
+
+variable [DecidableEq A] (hM : DividedPowers (augIdeal A (I →₀ A)))
   (hM_eq : ∀ n x, hM.dpow n ((ι A (I →₀ A)) x) = dp A n x)
 
 instance hdpM_free : Module.Free A (DividedPowerAlgebra A (I →₀ A)) :=
@@ -317,10 +321,10 @@ instance hdpM_free : Module.Free A (DividedPowerAlgebra A (I →₀ A)) :=
 instance hR_free : Module.Free A (MvPolynomial S A) :=
   Module.Free.of_basis (MvPolynomial.basisMonomials _ _)
 
-def hR := dividedPowersBot (MvPolynomial S A)
+def hR [DecidableEq (MvPolynomial S A)] := dividedPowersBot (MvPolynomial S A)
 
 variable (I) in
-theorem condτ (condTFree : CondTFree A) :
+theorem condτ [DecidableEq (MvPolynomial (↥S₀) A)] (condTFree : CondTFree A) :
     Condτ A (dividedPowersBot (MvPolynomial S₀ A)) hM := by apply condTFree
 
 def Φ : DividedPowerAlgebra A (I →₀ A) →ₐ[A] S :=
@@ -340,12 +344,12 @@ def dpΦ : dpMorphism hM hI := by
     apply congr_arg₂ _ rfl
     rw [hM_eq, liftAlgHom_apply_dp]
 
-open Algebra Algebra.TensorProduct
-
 -- We consider `(MvPolynomial S₀ A) ⊗[A] DividedPowerAlgebra A (I →₀ A) →ₐ[A] S`
 def Ψ : MvPolynomial S₀ A ⊗[A] DividedPowerAlgebra A (I →₀ A) →ₐ[A] S :=
   productMap ((Subalgebra.val S₀).comp (IsScalarTower.toAlgHom A (MvPolynomial S₀ A) S₀))
     (Φ A S hI)
+
+end DecidableEq
 
 theorem Ψ_eq (i) (hi : i ∈ I) :
     Ψ A S hI S₀ (includeRight (ι A _ (Finsupp.single ⟨i, hi⟩ 1 : I →₀ A))) = i := by
@@ -384,13 +388,16 @@ theorem Ψ_map_eq : Subalgebra.map (Ψ A S hI S₀)
       AlgHom.toRingHom_eq_coe, RingHom.coe_coe, aeval_X, id_eq]
 
 variable (I) in
-theorem K_eq_span :
+theorem K_eq_span [DecidableEq A] :
     K A (⊥ : Ideal (MvPolynomial S₀ A)) (augIdeal A (↥I →₀ A))
       = span (Set.image2 (fun n a ↦ 1 ⊗ₜ[A] dp A n a) {n | 0 < n} Set.univ) := by
   simp only [K, Ideal.map_bot, ge_iff_le, bot_le, sup_of_le_right, augIdeal_eq_span,
     Ideal.map_span, includeRight_apply, Set.image_image2]
 
-def dpΨ (condTFree : CondTFree A) :
+def dpΨ [DecidableEq A] [DecidableEq (MvPolynomial (↥S₀) A)]
+   (hM : DividedPowers (augIdeal A (I →₀ A)))
+   (hM_eq : ∀ n x, hM.dpow n ((ι A (I →₀ A)) x) = dp A n x)
+   (condTFree : CondTFree A) :
     dpMorphism (condτ A S I S₀ hM condTFree).choose hI := by
   apply dpMorphismFromGens (condτ A S I S₀ hM condTFree).choose hI
     (f := (Ψ A S hI S₀).toRingHom) (K_eq_span A S I S₀)
@@ -421,6 +428,9 @@ def _root_.MvPolynomial.CAlgHom {R : Type*} [CommRing R] {A : Type*} [CommRing A
   toRingHom := C
   commutes' _ := rfl
 
+-- NOTE: we are having the same issues with `map_zero` and `map_add` that we did with `map_smul`
+-- (previously `AlgHom.map_smul`) in RobyLemma9.
+
 lemma Subalgebra_tensorProduct_top_bot [Algebra A R]
     (S : Type*) [CommRing S] [Algebra A S] {S₀ : Subalgebra A S} (hS₀ : S₀ = ⊥)
     {T₀ : Subalgebra A R} (hT₀ : T₀ = ⊤) :
@@ -432,7 +442,10 @@ lemma Subalgebra_tensorProduct_top_bot [Algebra A R]
   constructor
   · rintro ⟨x, rfl⟩
     induction x using TensorProduct.induction_on with
-    | zero => use 0, by sorry --simp only [TensorProduct.zero_tmul, map_zero]
+    | zero =>
+        use 0
+        --simp only [TensorProduct.zero_tmul, map_zero]
+        sorry
     | tmul a b =>
       rcases a with ⟨a, ha⟩
       rcases b with ⟨b, hb⟩
@@ -445,15 +458,16 @@ lemma Subalgebra_tensorProduct_top_bot [Algebra A R]
       obtain ⟨x, hx⟩ := hx
       obtain ⟨y, hy⟩ := hy
       use x + y
-      rw [TensorProduct.add_tmul, hx, hy, AlgHom.map_add]
+      rw [TensorProduct.add_tmul, hx, hy, AlgHom.map_add] -- TODO: find out how to fix this.
   · rintro ⟨r, rfl⟩
     exact ⟨⟨r, by rw [hT₀]; exact Algebra.mem_top⟩ ⊗ₜ[A] 1, rfl⟩
 
-lemma map_psi_augIdeal_eq (hM : DividedPowers (augIdeal A (I →₀ A)))
+lemma map_psi_augIdeal_eq [DecidableEq A] (hM : DividedPowers (augIdeal A (I →₀ A)))
     (hM_eq : ∀ n x, hM.dpow n ((ι A (I →₀ A)) x) = dp A n x)
     (M : Type*) [AddCommGroup M] [Module A M] [Module.Free A M]
     (condTFree: CondTFree A) :
     Ideal.map (Ψ A S hI S₀) (K A ⊥ (augIdeal A (I →₀ A))) = I := by
+  classical
   apply le_antisymm (dpΨ A S hI S₀ hM hM_eq condTFree).ideal_comp
   intro i hi
   rw [← Ψ_eq A S hI S₀ i hi]
@@ -465,8 +479,9 @@ lemma map_psi_augIdeal_eq (hM : DividedPowers (augIdeal A (I →₀ A)))
 -- set_option trace.profiler true -- < 6 sec here!
 -- Roby, lemma 4
 variable {A} in
-theorem _root_.DividedPowerAlgebra.condTFree_and_condD_to_condQ
+theorem _root_.DividedPowerAlgebra.condTFree_and_condD_to_condQ [DecidableEq A]
     (condTFree: CondTFree A) (condD : CondD A) : CondQ A := by
+  classical
   intro S _ _ I hI S₀ hIS₀
   let M := I →₀ A
   let R := MvPolynomial S₀ A
@@ -834,13 +849,15 @@ theorem condτ_rel (A : Type u) [CommRing A]
       intro x
       simp only [AlgHom.toRingHom_eq_coe, RingHom.coe_coe, Algebra.TensorProduct.map_tmul, map_one,
         fg]
-#align divided_power_algebra.cond_τ_rel DividedPowerAlgebra.condτ_rel
+
+        --((S.val '' FS) ∪ (I.subtype '' FI) : Set R)
 
 -- Roby, Variante de la proposition 4
 theorem roby_prop_4'
     (A : Type*) [CommRing A] (R : Type*) [CommRing R] [Algebra A R]
     {I : Ideal R} {R₀ : Subalgebra A R} (hsplit : IsAugmentation R₀ I)
-    {J : Ideal R} {F₀ : Set R₀} {FI : Set I} (hJ : J = Submodule.span R (F₀ ∪ FI : Set R)) :
+    {J : Ideal R} {F₀ : Set R₀} {FI : Set I}
+    (hJ : J = Submodule.span R ((R₀.val '' F₀) ∪ (I.subtype '' FI) : Set R)) :
     J.restrictScalars R₀
       = (Subalgebra.toSubmodule ⊥ ⊓ J.restrictScalars R₀)
           ⊔ (I.restrictScalars R₀ ⊓ J.restrictScalars R₀) := by
@@ -857,17 +874,19 @@ theorem roby_prop_4'
       constructor
       · rw [Algebra.mem_bot]
         exact ⟨⟨x, hx'⟩, rfl⟩
-      rw [hJ]
-      apply Submodule.subset_span
-      apply Set.mem_union_left
-      simp only [SetLike.coe_sort_coe, Set.mem_image, Subtype.exists, exists_and_right,
-        exists_eq_right, hx, exists_prop, and_true, hx']
+      · rw [hJ]
+        apply Submodule.subset_span
+        apply Set.mem_union_left
+        simp only [Subalgebra.coe_val, Set.mem_image, Subtype.exists, exists_and_right,
+          exists_eq_right, hx, hx', exists_const]
     · apply Submodule.mem_sup_right
       simp only [hJ, SetLike.coe_sort_coe, submodule_span_eq, Submodule.mem_inf,
         Submodule.restrictScalars_mem, SetLike.coe_mem, true_and]
-      apply Submodule.subset_span
-      apply Set.mem_union_right
-      simp only [Set.mem_image, SetLike.coe_eq_coe, exists_eq_right, hy]
+      constructor
+      . simp only [Submodule.coe_subtype, SetLike.coe_mem]
+      · apply Submodule.subset_span
+        apply Set.mem_union_right
+        simp only [Submodule.coe_subtype, Set.mem_image, SetLike.coe_eq_coe, exists_eq_right, hy]
   · exact zero_mem _
   · exact fun x y hx hy ↦ add_mem hx hy
   · intro a x hx
@@ -893,8 +912,9 @@ theorem roby_prop_4'
 theorem roby_prop_4''
     (A : Type*) [CommRing A] (R : Type*) [CommRing R] [Algebra A R]
     {I : Ideal R} {R₀ : Subalgebra A R} (hsplit : IsAugmentation R₀ I)
-    {J : Ideal R} {F₀ : Set R₀} {FI : Set I} (hJ : J = span (F₀ ∪ FI : Set R)) :
-    J ⊓ I = span (FI : Set R) := by
+    {J : Ideal R} {F₀ : Set R₀} {FI : Set I}
+    (hJ : J = Submodule.span R ((R₀.val '' F₀) ∪ (I.subtype '' FI) : Set R)) :
+    J ⊓ I = span (I.subtype '' FI) := by
   rcases hsplit with ⟨hd, hc⟩
   apply le_antisymm
   · intro x
@@ -905,10 +925,8 @@ theorem roby_prop_4''
 
   · simp only [span_le, SetLike.coe_sort_coe, Submodule.inf_coe,
       Set.subset_inter_iff]
-    constructor
-    rw [hJ]
-    exact subset_trans (Set.subset_union_right _ _) subset_span
-    exact Subtype.coe_image_subset _ _
+    exact ⟨hJ ▸ subset_trans Set.subset_union_right subset_span, Subtype.coe_image_subset _ _⟩
+
 
 /-
   simp only [Submodule.disjoint_def, Subalgebra.mem_toSubmodule,
@@ -970,12 +988,10 @@ theorem Submodule.restrictScalars_sup {A R M : Type*} [CommSemiring A] [Semiring
 
 -- Roby, Proposition 4
 theorem roby_prop_4
-    {A : Type*} [CommRing A] {R : Type*} [CommRing R] [Algebra A R]
-    {I : Ideal R} {R₀ : Subalgebra A R}
-    (hsplit : IsAugmentation R₀ I)
-    (hI : DividedPowers I)
-    {J : Ideal R} {F₀ : Set R₀} {FI : Set I}
-    (hJ : J = Ideal.span (F₀ ∪ FI : Set R)):
+    {A : Type*} [CommRing A] {R : Type*} [CommRing R] [Algebra A R] {I : Ideal R}
+    {R₀ : Subalgebra A R} (hsplit : IsAugmentation R₀ I) (hI : DividedPowers I) {J : Ideal R}
+    {F₀ : Set R₀} {FI : Set I}
+    (hJ : J = Submodule.span R ((R₀.val '' F₀) ∪ (I.subtype '' FI) : Set R)) :
     hI.isSubDPIdeal (J ⊓ I) ↔ (∀ a ∈ FI, ∀ n ≠ 0, hI.dpow n a ∈ J):= by
   simp only [Ideal.isAugmentation_subalgebra_iff] at hsplit
   constructor
@@ -990,7 +1006,7 @@ theorem roby_prop_4
     rw [hJ]
     apply subset_span
     apply Set.mem_union_right
-    use a
+    exact ⟨a, ha, rfl⟩
   · intro H
     set T := { s ∈ J ⊓ I | ∀ n ≠ 0, hI.dpow n s ∈ J } with hJ'
     -- We prove that T is a subideal of J ⊓ I
@@ -1113,6 +1129,7 @@ theorem roby_prop_4
         simp only [Submodule.mem_inf, Submodule.restrictScalars_mem, Subalgebra.mem_toSubmodule, hb,
           and_true]
         rw [hJ]
+        refine ⟨?_, hb⟩
         apply Ideal.subset_span
         apply Set.mem_union_left
         use ⟨b, hb⟩
@@ -1124,15 +1141,8 @@ theorem roby_prop_4
         simp only [Submodule.restrictScalars_mem]
         suffices b ∈ T by rwa [hT] at this
         simp only [hJ', Set.mem_setOf_eq]
-        constructor
-        · simp only [Ideal.mem_inf]
-          refine ⟨?_, hb⟩
-          rw [hJ]
-          apply  subset_span
-          apply Set.mem_union_right
-          use ⟨b, hb⟩
-        · intro n hn
-          exact H _ hb' n hn
+        exact ⟨Ideal.mem_inf.mpr ⟨hJ ▸ subset_span (Set.mem_union_right _ ⟨⟨b, hb⟩, hb', rfl⟩), hb⟩,
+          fun n hn ↦ H _ hb' n hn⟩
 
 theorem Ideal.map_coe_toRingHom
   {A : Type*} [CommRing A] {R S : Type*} [CommRing R] [CommRing S]
@@ -1221,7 +1231,6 @@ theorem condTFree_int : CondTFree ℤ :=
 -- Roby, lemma 12
 theorem condD_int : CondD ℤ :=
   sorry
-#align divided_power_algebra.cond_D_int DividedPowerAlgebra.condD_int
 
 theorem CondQ_int : CondQ ℤ :=
   condTFree_and_condD_to_condQ condTFree_int condD_int
@@ -1256,11 +1265,10 @@ def dividedPowers' (A : Type u) [CommRing A] [DecidableEq A] (M : Type u) [AddCo
 theorem dpow_ι (A : Type u) [CommRing A] [DecidableEq A] (M : Type u) [AddCommGroup M] [Module A M]
     (x : M) (n : ℕ) : dpow (dividedPowers' A M) n (ι A M x) = dp A n x :=
   (condD_holds A M).choose_spec n x
-#align divided_power_algebra.dpow_ι DividedPowerAlgebra.dpow_ι
 
 theorem dp_comp (A : Type u) [CommRing A] [DecidableEq A] (M : Type u) [AddCommGroup M] [Module A M]
     (x : M) {n : ℕ} (m : ℕ) (hn : n ≠ 0) :
-    dpow (dividedPowers' A M) m (dp A n x) = ↑(mchoose m n) * dp A (m * n) x := by
+    dpow (dividedPowers' A M) m (dp A n x) = ↑(Nat.uniformBell m n) * dp A (m * n) x := by
   erw [← (condD_holds A M).choose_spec, dpow_comp _ m hn (ι_mem_augIdeal A M x), dpow_ι]
 
 theorem roby_theorem_2 (R : Type u) [CommRing R]  [DecidableEq R]
@@ -1294,7 +1302,7 @@ theorem lift_eq_DPLift (R : Type u) [CommRing R]
   simp only [LinearMap.liftAlgHom_dp]
   simp only [ι, LinearMap.coe_mk, AddHom.coe_mk]
   rw [dp_comp _ _ _ _ Nat.one_ne_zero]
-  simp only [mchoose_one', Nat.cast_one, mul_one, one_mul]
+  simp only [uniformBell_one', Nat.cast_one, mul_one, one_mul]
 
 theorem roby_prop_8 (R : Type u) [DecidableEq R] [CommRing R]
     {M : Type u} [AddCommGroup M] [Module R M]

@@ -96,13 +96,15 @@ lemma factorsThrough {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers
     apply mul_eq_zero_of_right
     rw [sub_mul, sub_eq_zero, hbc]
 
-variable {A : Type u} [CommRing A] {I : Ideal A} {t : A} (hIt : I = span {t})
+variable {A : Type u} [CommRing A] {I : Ideal A} {t : A}
   {B : Type v} [CommRing B] {f : A →+* B} {x : B}
 
-lemma _root_.Ideal.mem_map_span_singleton : x ∈ I.map f ↔ ∃ c : B, c * (f t) = x := by
+lemma _root_.Ideal.mem_map_span_singleton (hIt : I = span {t}) :
+    x ∈ I.map f ↔ ∃ c : B, c * (f t) = x := by
   simp_rw [hIt, map_span_singleton, ← submodule_span_eq, Submodule.mem_span_singleton, smul_eq_mul]
 
-lemma _root_.Ideal.not_mem_map_span_singleton : x ∉ I.map f ↔ ¬ ∃ c : B, c * (f t) = x := by
+lemma _root_.Ideal.not_mem_map_span_singleton (hIt : I = span {t}) :
+    x ∉ I.map f ↔ ¬ ∃ c : B, c * (f t) = x := by
   rw [mem_map_span_singleton hIt]
 
 variable (f)

@@ -1,20 +1,20 @@
 import DividedPowers.Basic
 import DividedPowers.BasicLemmas
---import DividedPowers.DPAlgebra.BaseChange -- TODO: import after updating from PR #15158 -- It uses sorry
---import DividedPowers.DPAlgebra.Compatible -- TODO: fix (depends on Dpow) -- It uses sorry (depended on AlgebraComp)
---import DividedPowers.DPAlgebra.Dpow -- It uses sorry (depended on RobyLemma5) --TODO: fix (depends on IdealAdd)
---import DividedPowers.DPAlgebra.Envelope  -- TODO: fix (depends on Dpow) -- It uses sorry (depended on AlgebraComp)
---import DividedPowers.DPAlgebra.Exponential -- TODO: import after updating from PR #15158
+import DividedPowers.DPAlgebra.BaseChange -- It uses sorry
+import DividedPowers.DPAlgebra.Compatible -- It uses sorry (depended on AlgebraComp)
+import DividedPowers.DPAlgebra.Dpow -- It uses sorry (depended on RobyLemma5)
+import DividedPowers.DPAlgebra.Envelope -- It uses sorry (depended on AlgebraComp)
+import DividedPowers.DPAlgebra.Exponential
 import DividedPowers.DPAlgebra.Graded.Basic
 import DividedPowers.DPAlgebra.Graded.GradeOne
 import DividedPowers.DPAlgebra.Graded.GradeZero
 import DividedPowers.DPAlgebra.Init
 import DividedPowers.DPAlgebra.Misc
---import DividedPowers.DPAlgebra.PolynomialMap -- TODO: import after updating from PR #15158 -- It uses sorry
+import DividedPowers.DPAlgebra.PolynomialMap -- It uses sorry
 import DividedPowers.DPAlgebra.RobyLemma9
 import DividedPowers.DPMorphism
---import DividedPowers.ExponentialModule.Basic -- TODO: import after updating from PR #15158
--- import DividedPowers.Exponential -- TODO: import after updating from PR #15158
+import DividedPowers.ExponentialModule.Basic
+import DividedPowers.Exponential
 import DividedPowers.ForMathlib.AlgebraLemmas
 import DividedPowers.ForMathlib.Bell
 import DividedPowers.ForMathlib.DirectLimit
@@ -22,7 +22,6 @@ import DividedPowers.ForMathlib.GradedRingQuot
 --import DividedPowers.ForMathlib.InfiniteSum.Basic -- In mathlib
 --import DividedPowers.ForMathlib.InfiniteSum.Order -- In mathlib
 import DividedPowers.ForMathlib.Lcoeff
---import DividedPowers.ForMathlib.MvPowerSeries.Basic
 import DividedPowers.ForMathlib.MvPowerSeries.Evaluation -- In PR 15019
 import DividedPowers.ForMathlib.MvPowerSeries.LinearTopology
 import DividedPowers.ForMathlib.MvPowerSeries.Order -- -- In PR 14983
