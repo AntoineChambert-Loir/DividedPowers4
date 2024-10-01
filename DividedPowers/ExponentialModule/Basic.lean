@@ -1,6 +1,6 @@
 /- Copyright ACL & MIdFF, 2024 -/
 
-import DividedPowers.ForMathlib.MvPowerSeries.Substitutions
+import DividedPowers.ForMathlib.MvPowerSeries.Substitution
 import Mathlib.RingTheory.PowerSeries.Inverse
 
 /-! # Exponential module of a commutative ring

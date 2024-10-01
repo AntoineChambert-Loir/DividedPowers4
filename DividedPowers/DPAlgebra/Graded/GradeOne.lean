@@ -104,7 +104,7 @@ theorem deg_one_right_inv :
   apply LinearMap.ext_on_range (grade_one_eq_span' R M).symm
   intro m
   simp only [proj', proj, ι, LinearMap.coe_comp, LinearMap.coe_mk, AddHom.coe_mk,
-    Submodule.coeSubtype, comp_apply, AlgHom.toLinearMap_apply, sndHom_apply,
+    Submodule.coe_subtype, comp_apply, AlgHom.toLinearMap_apply, sndHom_apply,
     LinearMap.id_coe, id_eq]
   ext
   dsimp only

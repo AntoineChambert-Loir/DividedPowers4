@@ -103,7 +103,7 @@ noncomputable def Submodules_fg_equiv :
     let Px := (⟨Submodule.span R {x}, Submodule.fg_span_singleton x⟩ : Submodules_fg R M)
     use Module.DirectLimit.of R (Submodules_fg R M) (fun P ↦ P.val)
       (Submodules_fg_inclusion R M) Px ⟨x, Submodule.mem_span_singleton_self x⟩
-    simp only [Submodules_fg_map, Module.DirectLimit.lift_of, Submodule.coeSubtype]
+    simp only [Submodules_fg_map, Module.DirectLimit.lift_of, Submodule.coe_subtype]
 
 end Ring
 
@@ -137,12 +137,12 @@ theorem rTensor_fgEquiv_of (P : Submodules_fg R M) (u : P.val ⊗[R] N) :
   simp only [rTensor_fgEquiv, AlgebraTensorModule.curry_apply, curry_apply,
     LinearMap.coe_restrictScalars, LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply,
     LinearEquiv.trans_apply, directLimitLeft_symm_of_tmul, LinearEquiv.rTensor_tmul,
-    LinearMap.rTensor_tmul, Submodule.coeSubtype]
+    LinearMap.rTensor_tmul, Submodule.coe_subtype]
   congr
   simp only [Submodules_fg_equiv, LinearEquiv.ofBijective_apply]
   simp only [Submodules_fg_map]
   simp only [Module.DirectLimit.lift_of]
-  simp only [Submodule.coeSubtype]
+  simp only [Submodule.coe_subtype]
 
 def Submodules_fg_of {P : Submodule R M} (hP : Submodule.FG P) :
     Submodules_fg R M := ⟨P, hP⟩
@@ -245,12 +245,12 @@ theorem TensorProduct.Algebra.eq_of_fg_of_subtype_eq
   -- the embeddings from P and P' to P₁
   let j : P →ₗ[R] P₁ := LinearMap.restrict (Subalgebra.toSubmodule A).subtype
       (fun p hp ↦ by
-        simp only [Submodule.coeSubtype, Submodule.map_sup, P₁]
+        simp only [Submodule.coe_subtype, Submodule.map_sup, P₁]
         apply Submodule.mem_sup_left
         use p; simp only [SetLike.mem_coe]; exact ⟨hp, rfl⟩)
   let j' : P' →ₗ[R] P₁ := LinearMap.restrict (Subalgebra.toSubmodule A).subtype
       (fun p hp ↦ by
-        simp only [Submodule.coeSubtype, Submodule.map_sup, P₁]
+        simp only [Submodule.coe_subtype, Submodule.map_sup, P₁]
         apply Submodule.mem_sup_right
         use p; simp only [SetLike.mem_coe]; exact ⟨hp, rfl⟩)
   -- we map u and u' to P₁ ⊗[R] N, getting u₁ and u'₁

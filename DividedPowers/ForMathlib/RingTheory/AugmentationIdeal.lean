@@ -149,7 +149,7 @@ theorem LinearMap.isCompl_lTensor
     M₁.subtype.comp (linearProjOfIsCompl _ _ hM)
       + M₂.subtype.comp (linearProjOfIsCompl _ _ hM.symm) = id := by
     ext x
-    simp only [add_apply, coe_comp, coeSubtype, Function.comp_apply,
+    simp only [add_apply, coe_comp, coe_subtype, Function.comp_apply,
       id_coe, id_eq]
     rw [linear_proj_add_linearProjOfIsCompl_eq_self]
   apply IsCompl.mk
@@ -247,7 +247,7 @@ theorem Algebra.baseChange_bot {R S : Type*} [CommRing R] [Algebra A R] [CommRin
       obtain ⟨a, rfl⟩ := hs
       use a • r
       simp only [Algebra.TensorProduct.algebraMap_apply, Algebra.id.map_eq_id, RingHom.id_apply,
-        toRingHom_eq_coe, RingHom.coe_coe, baseChange_tmul, coeSubtype]
+        toRingHom_eq_coe, RingHom.coe_coe, baseChange_tmul, coe_subtype]
       simp only [smul_tmul]
       rw [Algebra.ofId_apply, Algebra.algebraMap_eq_smul_one]
     | add x y hx hy =>
@@ -277,10 +277,10 @@ theorem Algebra.TensorProduct.map_includeRight_eq_range_baseChange
         induction a using TensorProduct.induction_on with
         | zero =>
           use 0
-          simp only [_root_.map_zero, baseChange_tmul, coeSubtype, smul_eq_mul, zero_mul]
+          simp only [_root_.map_zero, baseChange_tmul, coe_subtype, smul_eq_mul, zero_mul]
         | tmul u v =>
           use (u * r) ⊗ₜ[A] (v • s)
-          simp only [baseChange_tmul, coeSubtype, smul_eq_mul,
+          simp only [baseChange_tmul, coe_subtype, smul_eq_mul,
             Algebra.TensorProduct.tmul_mul_tmul]
           rw [Submodule.coe_smul, smul_eq_mul]
         | add u v hu hv =>
@@ -299,7 +299,7 @@ theorem Algebra.TensorProduct.map_includeRight_eq_range_baseChange
     | tmul r s =>
       rcases s with ⟨s, hs⟩
       simp only [restrictScalars_mem] at hs
-      simp only [baseChange_tmul, coeSubtype]
+      simp only [baseChange_tmul, coe_subtype]
       rw [← mul_one r, ← smul_eq_mul, ← TensorProduct.smul_tmul']
       rw [← IsScalarTower.algebraMap_smul (R ⊗[A] S) r, smul_eq_mul]
       apply Ideal.mul_mem_left
@@ -359,7 +359,7 @@ def sup_left : TensorProduct (M' ⊔ M'') N' = TensorProduct M' N' ⊔ TensorPro
     | tmul m n =>
       rcases m with ⟨_, hm⟩
       rcases mem_sup.mp hm with ⟨m', hm', m'', hm'', rfl⟩
-      simp only [mapIncl, map_tmul, coeSubtype, add_tmul]
+      simp only [mapIncl, map_tmul, coe_subtype, add_tmul]
       refine add_mem (mem_sup_left ?_) (mem_sup_right ?_)
       · exact ⟨⟨m', hm'⟩ ⊗ₜ[A] n, rfl⟩
       · exact ⟨⟨m'', hm''⟩ ⊗ₜ[A] n, rfl⟩
@@ -377,7 +377,7 @@ def sup_right : TensorProduct M' (N' ⊔ N'') = TensorProduct M' N' ⊔ TensorPr
     | tmul m n =>
       rcases n with ⟨_, hn⟩
       rcases mem_sup.mp hn with ⟨n', hn', n'', hn'', rfl⟩
-      simp only [mapIncl, map_tmul, coeSubtype, tmul_add]
+      simp only [mapIncl, map_tmul, coe_subtype, tmul_add]
       refine add_mem (mem_sup_left ?_) (mem_sup_right ?_)
       · exact ⟨m ⊗ₜ[A] ⟨n', hn'⟩, rfl⟩
       · exact ⟨m ⊗ₜ[A] ⟨n'', hn''⟩, rfl⟩
@@ -393,7 +393,7 @@ def disjoint_left (hM : IsCompl M' M'') :
     M'.subtype.comp (linearProjOfIsCompl _ _ hM)
       + M''.subtype.comp (linearProjOfIsCompl _ _ hM.symm) = LinearMap.id := by
     ext x
-    simp only [add_apply, LinearMap.coe_comp, coeSubtype, Function.comp_apply,
+    simp only [add_apply, LinearMap.coe_comp, coe_subtype, Function.comp_apply,
       id_coe, id_eq]
     rw [linear_proj_add_linearProjOfIsCompl_eq_self]
   rw [disjoint_def]
@@ -416,7 +416,7 @@ def disjoint_right {N' N'' : Submodule A N} (hN : IsCompl N' N'') :
     N'.subtype.comp (linearProjOfIsCompl _ _ hN)
       + N''.subtype.comp (linearProjOfIsCompl _ _ hN.symm) = LinearMap.id := by
     ext x
-    simp only [add_apply, LinearMap.coe_comp, coeSubtype, Function.comp_apply,
+    simp only [add_apply, LinearMap.coe_comp, coe_subtype, Function.comp_apply,
       id_coe, id_eq]
     rw [linear_proj_add_linearProjOfIsCompl_eq_self]
   rw [disjoint_def]

@@ -33,7 +33,7 @@ import DividedPowers.ForMathlib.MvPowerSeries.PiTopology -- In PR 14866 and 1498
 import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Basic -- it uses sorry
 import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Topology
 --import DividedPowers.ForMathlib.MvPowerSeries.Sandbox -- Test file, do not import here.
---import DividedPowers.ForMathlib.MvPowerSeries.Substitution -- TODO: import after updating from PR #15158
+import DividedPowers.ForMathlib.MvPowerSeries.Substitution -- TODO: import after updating from PR #15158
 import DividedPowers.ForMathlib.MvPowerSeries.Trunc
 import DividedPowers.ForMathlib.PowerSeries.Topology
 --import DividedPowers.ForMathlib.RingTheory.Ideal

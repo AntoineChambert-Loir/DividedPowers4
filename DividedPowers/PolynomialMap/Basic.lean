@@ -253,14 +253,14 @@ theorem _root_.Submodule.baseChange_eq {R : Type*} [CommSemiring R]
     intro p hp
     simp only [Set.mem_preimage, SetLike.mem_coe, LinearMap.mem_range]
     use 1 ⊗ₜ[R] ⟨p, hp⟩
-    simp only [baseChange_tmul, Submodule.coeSubtype]
+    simp only [baseChange_tmul, Submodule.coe_subtype]
   · intro t
     simp only [LinearMap.mem_range, forall_exists_index]
     rintro x ⟨rfl⟩
     induction x using TensorProduct.induction_on with
     | zero => simp only [_root_.map_zero, Submodule.zero_mem]
     | tmul s p =>
-      simp only [baseChange_tmul, Submodule.coeSubtype]
+      simp only [baseChange_tmul, Submodule.coe_subtype]
       rw [← mul_one s, ← smul_eq_mul, ← TensorProduct.smul_tmul']
       apply Submodule.smul_mem
       apply Submodule.subset_span

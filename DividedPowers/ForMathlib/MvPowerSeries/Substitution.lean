@@ -302,6 +302,7 @@ noncomputable def substAlgHom (ha : SubstDomain a) :
   letI : UniformSpace R := ⊥
   letI : UniformSpace S := ⊥
   haveI : ContinuousSMul R S := DiscreteTopology.instContinuousSMul R S
+  haveI : ContinuousSMul S (MvPowerSeries τ S) := DiscreteTopology.instContinuousSMul _ _
   haveI : ContinuousSMul R (MvPowerSeries τ S) := IsScalarTower.continuousSMul S
   exact MvPowerSeries.aeval ha.evalDomain
 
@@ -311,6 +312,7 @@ theorem coe_substAlgHom (ha : SubstDomain a) :
   letI : UniformSpace R := ⊥
   letI : UniformSpace S := ⊥
   haveI : ContinuousSMul R S := DiscreteTopology.instContinuousSMul R S
+  haveI : ContinuousSMul S (MvPowerSeries τ S) := DiscreteTopology.instContinuousSMul _ _
   haveI : ContinuousSMul R (MvPowerSeries τ S) := IsScalarTower.continuousSMul S
   coe_aeval (SubstDomain.evalDomain ha)
 
@@ -335,6 +337,7 @@ theorem substAlgHom_coe (ha : SubstDomain a) (p : MvPolynomial σ R) :
   letI : UniformSpace R := ⊥
   letI : UniformSpace S := ⊥
   haveI : ContinuousSMul R S := DiscreteTopology.instContinuousSMul R S
+  haveI : ContinuousSMul S (MvPowerSeries τ S) := DiscreteTopology.instContinuousSMul _ _
   haveI : ContinuousSMul R (MvPowerSeries τ S) := IsScalarTower.continuousSMul S
   aeval_coe ha.evalDomain p
 
@@ -367,7 +370,10 @@ theorem continuous_subst (ha : SubstDomain a) :
   letI : UniformSpace R := ⊥
   letI : UniformSpace S := ⊥
   haveI : ContinuousSMul R S := DiscreteTopology.instContinuousSMul R S
+  haveI : ContinuousSMul S (MvPowerSeries τ S) := DiscreteTopology.instContinuousSMul _ _
   haveI : ContinuousSMul R (MvPowerSeries τ S) := IsScalarTower.continuousSMul S
+  -- Q : is it better to use the following instance to replace the 3 previous ones?
+  --haveI : ContinuousSMul R (MvPowerSeries τ S) := DiscreteTopology.instContinuousSMul _ _
   continuous_eval₂ (continuous_algebraMap _ _) ha.evalDomain
 
 theorem coeff_subst_finite (ha : SubstDomain a) (f : MvPowerSeries σ R) (e : τ →₀ ℕ) :
@@ -375,6 +381,7 @@ theorem coeff_subst_finite (ha : SubstDomain a) (f : MvPowerSeries σ R) (e : τ
   letI : UniformSpace S := ⊥
   letI : UniformSpace R := ⊥
   haveI : ContinuousSMul R S := DiscreteTopology.instContinuousSMul R S
+  haveI : ContinuousSMul S (MvPowerSeries τ S) := DiscreteTopology.instContinuousSMul _ _
   haveI : ContinuousSMul R (MvPowerSeries τ S) := IsScalarTower.continuousSMul S
   Set.Finite.support_of_summable _
     ((hasSum_aeval ha.evalDomain f).map (coeff S e) (continuous_coeff S e)).summable
@@ -385,6 +392,7 @@ theorem coeff_subst (ha : SubstDomain a) (f : MvPowerSeries σ R) (e : τ →₀
   letI : UniformSpace S := ⊥
   letI : UniformSpace R := ⊥
   haveI : ContinuousSMul R S := DiscreteTopology.instContinuousSMul R S
+  haveI : ContinuousSMul S (MvPowerSeries τ S) := DiscreteTopology.instContinuousSMul _ _
   haveI : ContinuousSMul R (MvPowerSeries τ S) := IsScalarTower.continuousSMul S
   have := ((hasSum_aeval ha.evalDomain f).map (coeff S e) (continuous_coeff S e))
   erw [← coe_substAlgHom ha, ← this.tsum_eq, tsum_def]
@@ -422,6 +430,7 @@ theorem comp_substAlgHom (ha : SubstDomain a) :
   letI : UniformSpace S := ⊥
   haveI : ContinuousSMul R T := DiscreteTopology.instContinuousSMul R T
   haveI : ContinuousSMul R S := DiscreteTopology.instContinuousSMul R S
+  haveI : ContinuousSMul S (MvPowerSeries τ S) := DiscreteTopology.instContinuousSMul _ _
   haveI : ContinuousSMul R (MvPowerSeries τ S) := IsScalarTower.continuousSMul S
   fun hε ↦ comp_aeval ha.evalDomain hε
 
@@ -512,8 +521,10 @@ theorem substAlgHom_comp_substAlgHom (ha : SubstDomain a) (hb : SubstDomain b) :
   letI : UniformSpace S := ⊥
   letI : UniformSpace T := ⊥
   haveI : ContinuousSMul R S := DiscreteTopology.instContinuousSMul R S
+  haveI : ContinuousSMul S (MvPowerSeries τ S) := DiscreteTopology.instContinuousSMul _ _
   haveI : ContinuousSMul R (MvPowerSeries τ S) := IsScalarTower.continuousSMul S
   haveI : ContinuousSMul R T := DiscreteTopology.instContinuousSMul R T
+  haveI : ContinuousSMul T (MvPowerSeries υ T) := DiscreteTopology.instContinuousSMul _ _
   haveI : ContinuousSMul R (MvPowerSeries υ T) := IsScalarTower.continuousSMul T
   apply comp_aeval (R := R) (ε := (substAlgHom hb).restrictScalars R)
     ha.evalDomain

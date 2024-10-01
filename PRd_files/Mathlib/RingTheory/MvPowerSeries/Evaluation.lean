@@ -14,7 +14,7 @@ import Mathlib.Data.Nat.Lattice
 
 import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Trunc
 import DividedPowers.ForMathlib.Topology.LinearTopology
-import DividedPowers.ForMathlib.MvPowerSeries.Topology
+import DividedPowers.ForMathlib.MvPowerSeries.PiTopology
 import Mathlib.Topology.Algebra.Algebra
 
 -- In PR 15019

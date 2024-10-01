@@ -586,7 +586,7 @@ lemma quotDecompose'_apply (a : DirectSum ι (fun i => 𝒜 i)) :
   simp only [quotDecompose', LinearMap.coe_comp, comp_apply, AlgHom.toLinearMap_apply,
     lmap'_lof, toModule_lof]
   simp only [lof_eq_of, coeLinearMap_of, quotCompMap, LinearMap.coe_mk,
-    AddHom.coe_mk, Submodule.coeSubtype]
+    AddHom.coe_mk, Submodule.coe_subtype]
 
 lemma lmap'_quotCompMap_apply [h𝒜 : GradedAlgebra 𝒜] (i : ι) (a : DirectSum ι fun i ↦ ↥(𝒜 i)) :
     RingQuot.mkAlgHom R rel ↑(((decompose fun i => 𝒜 i) ((coeLinearMap fun i => 𝒜 i) a)) i) =
