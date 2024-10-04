@@ -8,7 +8,7 @@ open scoped TensorProduct
 -- The goal is to prove lemma 9 in Roby (1965)
 section RingHom
 
-theorem RingHom.ker_eq_ideal_iff {A B : Type _} [CommRing A] [CommRing B] (f : A →+* B)
+theorem RingHom.ker_eq_ideal_iff {A B : Type*} [CommRing A] [CommRing B] (f : A →+* B)
     (I : Ideal A) :
     RingHom.ker f = I ↔
       ∃ h : I ≤ RingHom.ker f, Function.Injective (Ideal.Quotient.lift I f h) := by
@@ -25,7 +25,7 @@ end RingHom
 
 section AlgHom
 
-theorem AlgHom.ker_eq_ideal_iff {R A B : Type _} [CommRing R] [CommRing A] [Algebra R A]
+theorem AlgHom.ker_eq_ideal_iff {R A B : Type*} [CommRing R] [CommRing A] [Algebra R A]
     [CommRing B] [Algebra R B] (f : A →ₐ[R] B) (I : Ideal A) :
     RingHom.ker f = I ↔
       ∃ h : I ≤ RingHom.ker f, Function.Injective (Ideal.Quotient.liftₐ I f h) := by
@@ -46,10 +46,10 @@ theorem AlgHom.ker_eq_ideal_iff {R A B : Type _} [CommRing R] [CommRing A] [Alge
 
 end AlgHom
 
-variable (R : Type _) [CommRing R] (S : Type _) [CommRing S]
+variable (R : Type*) [CommRing R] (S : Type*) [CommRing S]
 
-variable (M : Type _) [CommRing M] [Algebra R M] [Algebra S M]
-  (N : Type _) [CommRing N] [Algebra R N] [Algebra S N]
+variable (M : Type*) [CommRing M] [Algebra R M] [Algebra S M]
+  (N : Type*) [CommRing N] [Algebra R N] [Algebra S N]
 
 variable [Algebra R S] [IsScalarTower R S M]
 
@@ -99,6 +99,7 @@ lemma mkₐ_one_tmul_smul_one (s : S) :
   rw [Ideal.Quotient.eq]
   exact Ideal.subset_span ⟨s, Set.mem_univ s, rfl⟩
 
+
 variable [IsScalarTower R S N]
 
 -- [tensor_product.compatible_smul R S M N]
@@ -131,7 +132,8 @@ noncomputable def ψLeft : M →ₐ[S] M ⊗[R] N ⧸ kerφ R S M N := {
   commutes' := fun s => by
     simp only [AlgHom.toFun_eq_coe, AlgHom.coe_comp, AlgHom.coe_restrictScalars',
       Function.comp_apply, includeLeft_apply, Algebra.algebraMap_eq_smul_one]
-    apply mkₐ_smul_one_tmul_one }
+    rfl
+    /- apply mkₐ_smul_one_tmul_one -/ }
 
 -- why is it noncomputable
 noncomputable def ψRight : N →ₐ[S] M ⊗[R] N ⧸ kerφ R S M N := {
@@ -140,7 +142,12 @@ noncomputable def ψRight : N →ₐ[S] M ⊗[R] N ⧸ kerφ R S M N := {
     simp only [AlgHom.toFun_eq_coe, AlgHom.coe_comp, Ideal.Quotient.mkₐ_eq_mk,
       Function.comp_apply, includeRight_apply]
     simp only [Algebra.algebraMap_eq_smul_one]
-    apply mkₐ_one_tmul_smul_one }
+    rw [← (Ideal.Quotient.mk (kerφ R S M N)).map_one, ← Ideal.Quotient.mkₐ_eq_mk S, ← map_smul]
+    simp only [Ideal.Quotient.mkₐ_eq_mk]
+    apply symm
+    rw [Ideal.Quotient.eq]
+    exact Ideal.subset_span ⟨s, Set.mem_univ s, rfl⟩
+    /- apply mkₐ_one_tmul_smul_one -/ }
 
 noncomputable def ψ : M ⊗[S] N →ₐ[S] M ⊗[R] N ⧸ kerφ R S M N :=
   productMap (ψLeft R S M N) (ψRight R S M N)

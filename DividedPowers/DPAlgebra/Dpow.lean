@@ -431,6 +431,7 @@ def _root_.MvPolynomial.CAlgHom {R : Type*} [CommRing R] {A : Type*} [CommRing A
 -- NOTE: we are having the same issues with `map_zero` and `map_add` that we did with `map_smul`
 -- (previously `AlgHom.map_smul`) in RobyLemma9.
 
+
 lemma Subalgebra_tensorProduct_top_bot [Algebra A R]
     (S : Type*) [CommRing S] [Algebra A S] {S₀ : Subalgebra A S} (hS₀ : S₀ = ⊥)
     {T₀ : Subalgebra A R} (hT₀ : T₀ = ⊤) :
