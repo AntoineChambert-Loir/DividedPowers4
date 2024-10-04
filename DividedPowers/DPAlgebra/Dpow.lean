@@ -444,8 +444,9 @@ lemma Subalgebra_tensorProduct_top_bot [Algebra A R]
     induction x using TensorProduct.induction_on with
     | zero =>
         use 0
-        --simp only [TensorProduct.zero_tmul, map_zero]
-        sorry
+        simp only [TensorProduct.zero_tmul]
+        exact (map_zero (Algebra.TensorProduct.map T₀.val S₀.val)).symm
+        -- `rw [map_zero]` used to work, and it was much faster.
     | tmul a b =>
       rcases a with ⟨a, ha⟩
       rcases b with ⟨b, hb⟩
@@ -455,10 +456,14 @@ lemma Subalgebra_tensorProduct_top_bot [Algebra A R]
       simp only [TensorProduct.smul_tmul, Algebra.TensorProduct.map_tmul, Subalgebra.coe_val,
         Algebra.algebraMap_eq_smul_one]
     | add x y hx hy =>
-      obtain ⟨x, hx⟩ := hx
-      obtain ⟨y, hy⟩ := hy
-      use x + y
-      rw [TensorProduct.add_tmul, hx, hy, AlgHom.map_add] -- TODO: find out how to fix this.
+      obtain ⟨rx, hx⟩ := hx
+      obtain ⟨ry, hy⟩ := hy
+      use rx + ry
+      rw [TensorProduct.add_tmul, hx, hy]
+      -- NOTE: The following `rw` times out. `rw [AlgHom.map_add]` used to work, but
+      -- it is now deprecated.
+      --rw [map_add (Algebra.TensorProduct.map T₀.val S₀.val) x y]
+      exact Eq.symm (map_add (Algebra.TensorProduct.map T₀.val S₀.val) x y)
   · rintro ⟨r, rfl⟩
     exact ⟨⟨r, by rw [hT₀]; exact Algebra.mem_top⟩ ⊗ₜ[A] 1, rfl⟩
 
