@@ -11,6 +11,11 @@ def extends_to {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I) {B
     [CommRing B] (f : A →+* B) : Prop :=
   ∃ hI' : DividedPowers (I.map f), isDPMorphism hI hI' f
 
+/- lemma extends_to_def {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I) {B : Type v}
+    [CommRing B] (f : A →+* B) :
+    extends_to hI f ↔ ∃ hI' : DividedPowers (I.map f), isDPMorphism hI hI' f :=
+  by simp only [extends_to] -/
+
 lemma isDPMorphism.span_map_le {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I)
     {B : Type v} [CommRing B] (f : A →+* B) (K : Ideal B) (hK : DividedPowers K)
       (hIKf : isDPMorphism hI hK f) :
@@ -56,11 +61,11 @@ lemma extends_to_iff_exists_dpIdeal {A : Type u} [CommRing A] {I : Ideal A} (hI 
     extends_to hI f ↔ ∃ (J : Ideal B) (hJ : DividedPowers J), isDPMorphism hI hJ f := by
   classical
   refine ⟨fun ⟨hJ, hmap⟩ ↦ ⟨I.map f, hJ, hmap⟩, fun ⟨J, hJ, hmap⟩ ↦  ?_⟩
-  use (isSubDPIdeal_map _ _ hmap).dividedPowers
+  use (IsSubDPIdeal_map _ _ hmap).dividedPowers
   rw [isDPMorphism] at hmap ⊢
   refine ⟨le_refl _, ?_⟩
   intros n a ha
-  rw [isSubDPIdeal.dividedPowers.dpow_eq, if_pos (I.mem_map_of_mem f ha), hmap.2 n a ha]
+  rw [IsSubDPIdeal.dividedPowers.dpow_eq, if_pos (I.mem_map_of_mem f ha), hmap.2 n a ha]
 
 -- Note (3) after 3.14: in general the extension does not exist.
 
@@ -184,10 +189,10 @@ lemma extends_to_of_principal {J : Ideal A} (hJ : DividedPowers J) (hJp : Submod
 
 end IsPrincipal
 
-lemma isDPMorphism.isSubDPIdeal_map {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I)
+lemma isDPMorphism.IsSubDPIdeal_map {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I)
     {B : Type v} [CommRing B] (f : A →+* B) {K : Ideal B} (hK : DividedPowers K)
     (hIK : isDPMorphism hI hK f) :
-    isSubDPIdeal hK (I.map f) := {
+    IsSubDPIdeal hK (I.map f) := {
       isSubIdeal := hIK.1
       dpow_mem   := by
         have hsub : Submodule.span B (f '' I) ≤ K := by
@@ -246,19 +251,19 @@ lemma IsCompatibleWith_tfae {A : Type u} [CommRing A] {I : Ideal A} (hI : Divide
     use I.map f + J, le_refl _, hK
   tfae_have 3 → 1
   · rintro ⟨K, hIJK, hK, hIK, hJK⟩
-    have hsub : isSubDPIdeal hK (I.map f) := isDPMorphism.isSubDPIdeal_map hI f hK hIK
-    set hK' : DividedPowers (map f I) := isSubDPIdeal.dividedPowers hK hsub
+    have hsub : IsSubDPIdeal hK (I.map f) := isDPMorphism.IsSubDPIdeal_map hI f hK hIK
+    set hK' : DividedPowers (map f I) := IsSubDPIdeal.dividedPowers hK hsub
     use hK'
     constructor
     · simp only [isDPMorphism, le_refl, true_and]
       intro n a ha
-      -- we need some API to use isSubDPIdeal.dividedPowers
-      simp only [hK', isSubDPIdeal.dividedPowers]
+      -- we need some API to use IsSubDPIdeal.dividedPowers
+      simp only [hK', IsSubDPIdeal.dividedPowers]
       rw [if_pos (Ideal.mem_map_of_mem f ha), hIK.map_dpow n a ha]
     · rintro n b ⟨hb , hb'⟩
       simp only [SetLike.mem_coe] at hb hb'
-      -- we need some API to use isSubDPIdeal.dividedPowers
-      simp only [hK', isSubDPIdeal.dividedPowers]
+      -- we need some API to use IsSubDPIdeal.dividedPowers
+      simp only [hK', IsSubDPIdeal.dividedPowers]
       rw [if_pos hb', show hJ.dpow n b = hK.dpow n b by
         simpa only [RingHom.id_apply] using hJK.map_dpow n b hb]
   tfae_finish
@@ -268,8 +273,8 @@ lemma IsCompatibleWith_tfae {A : Type u} [CommRing A] {I : Ideal A} (hI : Divide
 /-- B-0 Def 3.17 (using condition 1 of Prop. 3.16) -/
 def IsCompatibleWith {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I) {B : Type v}
     [CommRing B] {J : Ideal B} (hJ : DividedPowers J) (f : A →+* B) : Prop :=
-  ∃ hI' : DividedPowers (I.map f),
-    (∀ (n : ℕ) (a : A), hI'.dpow n (f a) = f (hI.dpow n a)) ∧
-      ∀ (n : ℕ) (b : B) (_ : b ∈ J ⊓ I.map f), hJ.dpow n b = hI'.dpow n b
+  ∃ hI' : DividedPowers (I.map f), isDPMorphism hI hI' f
+    /- (∀ (n : ℕ) (a : A), hI'.dpow n (f a) = f (hI.dpow n a)) -/ ∧
+      ∀ (n : ℕ) (b : B) (_ : b ∈ J ⊓ I.map f),  hI'.dpow n b = hJ.dpow n b
 
 end DividedPowers

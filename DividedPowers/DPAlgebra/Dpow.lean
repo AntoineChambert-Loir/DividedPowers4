@@ -612,11 +612,11 @@ example (A : Type u) [CommRing A] {R S R' S' : Type u} [CommRing R] [CommRing S]
       ext x
       simp only [RingHom.comp_apply, AlgHom.toRingHom_eq_coe, AlgHom.coe_toRingHom,
         Algebra.TensorProduct.includeLeft_apply, Algebra.TensorProduct.includeRight_apply, Algebra.TensorProduct.map_tmul, map_one]
-  have hK'_pd : isSubDPIdeal hK (RingHom.ker fg ⊓ K A I J) := by
+  have hK'_pd : IsSubDPIdeal hK (RingHom.ker fg ⊓ K A I J) := by
     rw [roby]
-    apply isSubDPIdeal_sup
-    exact isSubDPIdeal_map_of_isSubDPIdeal hI hK hK_pd.1 _ (isSubDPIdeal_ker hI hI' hf')
-    exact isSubDPIdeal_map_of_isSubDPIdeal hJ hK hK_pd.2 _ (isSubDPIdeal_ker hJ hJ' hg')
+    exact IsSubDPIdeal_sup _
+      (IsSubDPIdeal_map_of_IsSubDPIdeal hI hK hK_pd.1 (IsSubDPIdeal_ker hI hI' hf'))
+      (IsSubDPIdeal_map_of_IsSubDPIdeal hJ hK hK_pd.2 (IsSubDPIdeal_ker hJ hJ' hg'))
   rw [hK_map]
   use DividedPowers.Quotient.OfSurjective.dividedPowers hK s_fg hK'_pd
   constructor
@@ -766,7 +766,7 @@ theorem condτ_rel (A : Type u) [CommRing A]
       ext x
       simp only [RingHom.comp_apply, AlgHom.toRingHom_eq_coe, AlgHom.coe_toRingHom,
         Algebra.TensorProduct.includeLeft_apply, Algebra.TensorProduct.includeRight_apply, Algebra.TensorProduct.map_tmul, map_one]
-  have hK'_pd : isSubDPIdeal hK (RingHom.ker fg ⊓ K A I J) := by
+  have hK'_pd : IsSubDPIdeal hK (RingHom.ker fg ⊓ K A I J) := by
     have := Algebra.TensorProduct.map_ker _ _ hf hg
     have hkerf := RingHom.ker_eq_span_union A R R₀ I
       ((Ideal.isAugmentation_subalgebra_iff A).mp hR₀I).codisjoint
@@ -790,7 +790,7 @@ theorem condτ_rel (A : Type u) [CommRing A]
     rw [sup_sup_sup_comm] at this
     simp only [Ideal.map_span] at this
     rw [this]
-    -- we need a variant of `isSubDPIdeal_sup`
+    -- we need a variant of `IsSubDPIdeal_sup`
     suffices this :
       ((span (Algebra.TensorProduct.includeLeft (R := A) (S := A) (A := R) (B := S) ''
         (↑(RingHom.ker f) ∩ (R₀ : Set R))) ⊔
@@ -802,13 +802,13 @@ theorem condτ_rel (A : Type u) [CommRing A]
         span (⇑Algebra.TensorProduct.includeRight '' (↑(RingHom.ker g) ∩ ↑J)))) by
       rw [this]
       simp only [← Ideal.map_span]
-      apply isSubDPIdeal_sup
+      apply IsSubDPIdeal_sup
       · have : span (↑(RingHom.ker f) ∩ ↑I) = RingHom.ker f ⊓ I := sorry
         rw [this]
-        exact isSubDPIdeal_map_of_isSubDPIdeal hI hK hK_pd.1 _ (isSubDPIdeal_ker hI hI' hfDP)
+        exact IsSubDPIdeal_map_of_IsSubDPIdeal hI hK hK_pd.1 (IsSubDPIdeal_ker hI hI' hfDP)
       · have : span (↑(RingHom.ker g) ∩ ↑J) = RingHom.ker g ⊓ J := sorry
         rw [this]
-        exact isSubDPIdeal_map_of_isSubDPIdeal hJ hK hK_pd.2 _ (isSubDPIdeal_ker hJ hJ' hgDP)
+        exact IsSubDPIdeal_map_of_IsSubDPIdeal hJ hK hK_pd.2 (IsSubDPIdeal_ker hJ hJ' hgDP)
     sorry
   rw [hK_map]
   use DividedPowers.Quotient.OfSurjective.dividedPowers hK s_fg hK'_pd
@@ -998,7 +998,7 @@ theorem roby_prop_4
     {R₀ : Subalgebra A R} (hsplit : IsAugmentation R₀ I) (hI : DividedPowers I) {J : Ideal R}
     {F₀ : Set R₀} {FI : Set I}
     (hJ : J = Submodule.span R ((R₀.val '' F₀) ∪ (I.subtype '' FI) : Set R)) :
-    hI.isSubDPIdeal (J ⊓ I) ↔ (∀ a ∈ FI, ∀ n ≠ 0, hI.dpow n a ∈ J):= by
+    hI.IsSubDPIdeal (J ⊓ I) ↔ (∀ a ∈ FI, ∀ n ≠ 0, hI.dpow n a ∈ J):= by
   simp only [Ideal.isAugmentation_subalgebra_iff] at hsplit
   constructor
   · intro hJ'
