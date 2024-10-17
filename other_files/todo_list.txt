@@ -1,0 +1,127 @@
+Moved from `DividedPowers.Basic.lean`:
+
+/- noncomputable
+def dpow_of_dpow_exp (I : ideal A) (ε : I → power_series A) :
+  ℕ → A → A := λ n,
+  function.extend
+    (λ (a : I), a.val)
+    (λ a, power_series.coeff A n (ε a))
+    (λ (a :A) , (0 : A))
+
+-- Golfed version of definition
+noncomputable def dpow_of_dpow_exp (I : ideal A) (ε : I → power_series A) : ℕ → A → A :=
+λ n, function.extend (λ (a : I), (a : A)) (λ (a : I), power_series.coeff A n (ε a)) 0
+
+def divided_powers_of_dpow_exp (I : ideal A) (ε : I → power_series A)
+  (hε_add : ∀ (a b : I), ε(a + b) = ε(a) * ε(b))
+  (hε_zero : ε(0) = 1) -/
+
+/- example {α : Type*} {n : ℕ} [DecidableEq α] (a : α) (m : Sym α n) (i : α) (hi : i ≠ a) :
+    Multiset.count i (Sym.filterNe a m).snd = Multiset.count i m := by
+  conv_rhs => rw [← Sym.fill_filterNe a m]
+  dsimp [Sym.fill]
+  simp only [Multiset.count_add, self_eq_add_right, Multiset.count_eq_zero, Sym.mem_coe,
+    Sym.mem_replicate, ne_eq, not_and]
+  exact fun _ => hi -/
+
+/-
+  let x' : s → I := λ i, ⟨x i, hx i i.prop⟩,
+  haveI : fintype s, exact fintype_of_option,
+  suffices :  s.sum x = coe(finset.univ.sum x'),  rw this,
+  intro n,
+--  simp only [submodule.coe_sum, submodule.coe_mk],
+  have := @dpow_sum_aux I A _ _ (λ (n : ℕ) (a : I), hI.dpow n a) (λ x, hI.dpow_zero x.prop) _ _
+    s _ finset.univ x' n,
+
+  -/
+
+  /- (Finset.sum (Finset.sigma (antidiagonal n) fun a ↦ Finset.sym s a.2) fun x_1 ↦
+    dp x_1.fst.1 (x a) * Finset.prod s fun i ↦ dp (Multiset.count i ↑x_1.snd) (x i)) =
+  Finset.sum (Finset.sym (insert a s) n) fun k ↦ Finset.prod (insert a s) fun i ↦ dp (Multiset.count i ↑k) (x i) -/
+
+
+
+/- Comparison with Berthelot, Coho. cristalline
+
+1.1 : done
+1.2.1 : follows from 1.2.7 - done (for ℚ-algebras).
+1.2.2 (*) : To be added
+1.2.4 : To be added if Cohen/Witt vectors rings exist
+1.2.7 (M) : done
+1.3 (dp -morphism) : done
+1.3.1 : To be added (needs colimits of rings)
+
+1.4 : To be added, but difficult
+1.5.: depends on 1.4
+
+1.6 : sub-dp-ideal : done
+1.6.1 Done !
+1.6.2 : Done : dpow_quot]
+1.6.4 (A) : to be added
+(should we add the remark on page 33)
+1.6.5 (A): to be added
+
+1.7 : tensor product, see Roby
+
+1.8 (M). Done!
+
+
+PRs :
+ (M) : ring_inverse, tsub_tsub - DONE
+ (A) : submodule_induction, function.extend_apply_first - DONE
+
+Delete obsolete versions
+ (A) : rewrite_4_sums -- Done, I think, but how could we simplify these lemmas?
+
+(A) Simplify,
+  remove not_eq_or_aux (see REMOVE or MOVE) -- DONE
+  Prove uniqueness of dp-structure when possible
+    (ideal_add [Done], dpow_quot [Done])
+(M) Complete the lattice structure
+
+-/
+
+/- Roby (1965):
+ - Pregraded algebra (using mathlib's graded_algebra) - with_top unit (later, if needed)
+ - Tensor product of graded algebras is a graded algebra
+ - Add III' explicitly.
+ - Proposition 1 -- I think this is essentially Lemma 3.6 of [BO].
+ - Proposition 2
+ - Proposition 3
+
+ I just noticed that we are using dp and pd in different names, we should pick a convention.
+-/
+/-
+Idea of generalizing the theory to more general divisors systems
+modeling x^n/n!, x^n/p^n, etc.
+but it is not clear what to consider
+Also, not clear it can really be done…
+
+structure divisor_system {R : Type*} [comm_ring R] :=
+(dpow_choose : ℕ → ℕ → R)
+(dpow_mchoose : ℕ → ℕ → R)
+-- (conditions : Prop)
+Two options :
+1) dpow n x = x^n/(c n)
+Examples : c n = n.factorial,  c n = p ^ n
+2) dpow n x = x ^ n / (d 1 * d 2 * ... * d n)
+Examples : d n = n,  d n = p
+
+dpow n (x + y) = (x+y)^n / c n
+ = sum  (n.choose k) x ^(n -k) y ^k / c n
+ = sum [(n.choose k) (c k) (c (n-k)) / c n] dpow (n - k) x * dpow k y
+
+  Case 1 : dpow_choose n k = 1 ;  case 2 : dpow_choose n k = choose
+
+dpow m x * dpow n x = x ^ m * x ^ n / c m * c n
+  = dpow (m + n) x * (c (n+m) / c m * c n)
+
+   Case 1 : coeff = (n+m).choose m ; Case 2 :  = 1
+
+dpow m (dpow n x) = (x ^n / c n) ^ m / c m = x ^ (m n) / ((c n ^ m) * c m)
+ = [ ] * dpow (m n) x
+  with [ ] = c (m n)/ (c n)^m (c m)
+
+  Case 1 : [ ] = mchoose m n, case 2 : p^ (-m)
+
+-/

@@ -261,7 +261,7 @@ omit [DecidablePred fun x ↦ x ∈ I] in
 theorem dpow_eq_inv_fact_smul {hI : DividedPowers I} (n : ℕ) {x : R} (hx : x ∈ I) :
   hI.dpow n x = (Ring.inverse (Nat.factorial n : ℚ) : ℚ) • x ^ n := by
   simp only [Ring.inverse_eq_inv']
-  rw [← factorial_mul_dpow_eq_pow hI n x hx]
+  rw [← factorial_mul_dpow_eq_pow hI hx]
   rw [← smul_eq_mul]
   rw [← smul_assoc]
   nth_rewrite 1 [← one_smul R (hI.dpow n x)]
@@ -285,7 +285,7 @@ theorem dividedPowers_unique (hI : DividedPowers I) : hI = dividedPowers I := by
   intro n x hx
   have hn : IsUnit (n.factorial : R) := natCast_factorial_isUnit_of_ratAlgebra n
   rw [dpow_def, if_pos hx, eq_comm, Ring.inverse_mul_eq_iff_eq_mul _ _ _ hn,
-    factorial_mul_dpow_eq_pow _ _ _ hx]
+    factorial_mul_dpow_eq_pow _ hx]
 
 end RatAlgebra
 

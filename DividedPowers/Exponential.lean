@@ -36,7 +36,7 @@ def exp_LinearMap (hI : DividedPowers I) : I →ₗ[R] ExponentialModule R where
   map_add' := fun a b ↦ by
     apply coe_injective
     simp only [coe_exp, Submodule.coe_add, coe_add]
-    rw [hI.add_dpowExp a.prop b.prop]
+    rw [hI.dpowExp_add a.prop b.prop]
   map_smul' := fun r a ↦ by
     simp only [RingHom.id_apply]
     apply coe_injective
