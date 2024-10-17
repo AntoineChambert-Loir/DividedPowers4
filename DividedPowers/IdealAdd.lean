@@ -368,7 +368,7 @@ theorem dpow_comp_aux {J : Ideal A} (hJ : DividedPowers J)
                 Nat.multinomial (Finset.range (n + 1)) fun i : ℕ => Multiset.count i ↑x * (n - i)) *
             hI.dpow p a *
           hJ.dpow (m * n - p) b := by
-  rw [dpow_eq hI hJ hIJ n ha hb, dpow_sum_aux (dpow hI hJ)]
+  rw [dpow_eq hI hJ hIJ n ha hb, dpow_sum_aux (dpow := dpow hI hJ)]
   have L1 :
     ∀ (k : Sym ℕ m) (i : ℕ) (_ : i ∈ Finset.range (n + 1)),
       dpow hI hJ (Multiset.count i ↑k) (hI.dpow i a * hJ.dpow (n - i) b) =
@@ -398,7 +398,7 @@ theorem dpow_comp_aux {J : Ideal A} (hJ : DividedPowers J)
     · rw [if_neg hi1]; rw [if_neg hi2]
       rw [mul_comm, dpow_smul hI hJ hIJ, mul_comm]
       rw [dpow_eq_of_mem_left hI hJ hIJ _ (hI.dpow_mem hi1 ha)]
-      rw [← hJ.factorial_mul_dpow_eq_pow (Multiset.count i k)]
+      rw [← hJ.factorial_mul_dpow_eq_pow]
       rw [hI.dpow_comp _ hi1 ha]
       rw [hJ.dpow_comp _ hi2' hb]
       simp only [← mul_assoc]; apply congr_arg₂ _ _ rfl
@@ -523,7 +523,7 @@ theorem dpow_comp_coeffs {m n p : ℕ} (hn : n ≠ 0) (hp : p ≤ m * n) :
   let h1 : (1 : A) ∈ I := Submodule.mem_top
   let hX : X ∈ I := Submodule.mem_top
 
-  rw [← hI.factorial_mul_dpow_eq_pow (m * n) (X + 1) Submodule.mem_top]
+  rw [← hI.factorial_mul_dpow_eq_pow Submodule.mem_top]
   rw [← Polynomial.coeff_C_mul]
   rw [← mul_assoc, mul_comm (C ((Nat.uniformBell m n) : ℚ)), mul_assoc]
   simp only [C_eq_natCast]

@@ -1113,7 +1113,7 @@ theorem roby_prop_4
             · exact Ideal.mul_mem_left _ _ hy
             · exact Ideal.mul_mem_right _ _ hc
             · intro n hn
-              rw [hI.dpow_mul_right n hc]
+              rw [hI.dpow_mul_right hc]
               apply Ideal.mul_mem_left
               rw [← Nat.succ_pred_eq_of_ne_zero hn, pow_succ]
               apply Ideal.mul_mem_left _ _ hy

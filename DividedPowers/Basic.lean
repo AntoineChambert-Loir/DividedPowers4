@@ -158,13 +158,13 @@ theorem dpow_smul' (n : ℕ) (a : A) {x : A} (hx : x ∈ I) :
   simp only [smul_eq_mul, hI.dpow_smul, hx]
 
 @[simp]
-theorem dpow_mul_right (n : ℕ) (a : A) {x : A} (ha : x ∈ I) :
+theorem dpow_mul_right {n : ℕ} {a : A} {x : A} (ha : x ∈ I) :
     hI.dpow n (x * a) = hI.dpow n x * a ^ n := by
   rw [mul_comm, hI.dpow_smul n ha, mul_comm]
 
-theorem dpow_smul_right (n : ℕ) (a : A) {x : A} (hx : x ∈ I) :
+theorem dpow_smul_right {n : ℕ} {a : A} {x : A} (hx : x ∈ I) :
     hI.dpow n (x • a) = hI.dpow n x • a ^ n := by
-  rw [smul_eq_mul, hI.dpow_mul_right n a hx, smul_eq_mul]
+  rw [smul_eq_mul, hI.dpow_mul_right hx, smul_eq_mul]
 
 theorem factorial_mul_dpow_eq_pow {n : ℕ} {x : A} (hx : x ∈ I) :
     (n.factorial : A) * hI.dpow n x = x ^ n := by
