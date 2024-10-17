@@ -34,12 +34,7 @@ def divided_powers_of_dpow_exp (I : ideal A) (ε : I → power_series A)
     s _ finset.univ x' n,
 
   -/
-
-  /- (Finset.sum (Finset.sigma (antidiagonal n) fun a ↦ Finset.sym s a.2) fun x_1 ↦
-    dp x_1.fst.1 (x a) * Finset.prod s fun i ↦ dp (Multiset.count i ↑x_1.snd) (x i)) =
-  Finset.sum (Finset.sym (insert a s) n) fun k ↦ Finset.prod (insert a s) fun i ↦ dp (Multiset.count i ↑k) (x i) -/
-
-
+  
 
 /- Comparison with Berthelot, Coho. cristalline
 
@@ -125,3 +120,29 @@ dpow m (dpow n x) = (x ^n / c n) ^ m / c m = x ^ (m n) / ((c n ^ m) * c m)
   Case 1 : [ ] = mchoose m n, case 2 : p^ (-m)
 
 -/
+
+
+----------------------------------------------------------
+
+Moved from IdealAdd:
+
+/- si on développe, on obtient une somme indexée par
+  les c : fin (n+1) → ℕ  de somme m
+  de  ∏   (hI.dpow k a)^(c k) (hJ.dpow (n-k) b)^(c k)
+  sans coefficients multinomiaux !
+    par récurrence, en utilisant dpow_mul,
+    a^[k] a^[k'] = (k + k')!/k! k'! a^ [k + k']
+    a^[k] a^[k'] a^[k''] = (k+k'+k'')!/k!k'!k''!
+   ∏ (hI.dpow k a)^(c k) = multinomial (k ^ (c k)) hI.dpow (∑ k (c k)) a
+    tandis que Π (hJ.dpow (n-k) b)^(c k)
+     = multinomial ((n-k)^ (c k)) hJ.dpow (∑ (n-k) c k) b
+    la puissance est n∑ c k - ∑ k (c k) = n m - ∑ k (c k)
+    = N!/∏ k!^(c k) * (nm - N)!/∏ (n-k)!^(c k) * a^[N] * b^[nm -N]
+
+    Lorsqu'on somme sur les c de somme m et de poids N,
+    il faudra trouver (mchoose m n)…
+    Il est probable que le plus facile est d'identifier
+    ce qui se passe pour Q[a,b] avec sa structure de puissances divisées canonique.
+
+
+  -/

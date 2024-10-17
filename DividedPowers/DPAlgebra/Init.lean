@@ -403,12 +403,12 @@ def lift : DividedPowerAlgebra R M →ₐ[R] A :=
     (fun n r m => by
       dsimp
       rw [LinearMap.map_smulₛₗ, RingHom.id_apply, ← algebraMap_smul A r (φ m), smul_eq_mul,
-        hI.dpow_smul n (hφ m), ← smul_eq_mul, ← map_pow, algebraMap_smul])
+        hI.dpow_smul (hφ m), ← smul_eq_mul, ← map_pow, algebraMap_smul])
     (fun n p m => by
-      rw [hI.dpow_mul n p (hφ m), ← nsmul_eq_mul])
+      rw [hI.dpow_mul (hφ m), ← nsmul_eq_mul])
     (fun n u v => by
       dsimp
-      rw [map_add, hI.dpow_add n (hφ u) (hφ v)])
+      rw [map_add, hI.dpow_add (hφ u) (hφ v)])
 
 variable {φ}
 
