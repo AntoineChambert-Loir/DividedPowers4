@@ -53,10 +53,10 @@ noncomputable def ofExp  [DecidablePred (fun x ↦ x ∈ I)] (e : I →ₗ[R] Ex
     (coeff_comp : ∀ a m {n} (hn : n ≠ 0), coeff R m (e ⟨coeff R n (e a), coeff_mem a hn⟩)
       = Nat.uniformBell m n * coeff R (m * n) (e a)) :
     DividedPowers I where
-  dpow n a     := if ha : a ∈ I then coeff R n (toPowerSeries (e ⟨a, ha⟩)) else 0
-  dpow_null ha := by simp only [dif_neg ha]
-  dpow_zero ha := by simp only [dif_pos ha, coeff_zero_eq_constantCoeff_apply, constantCoeff_coe]
-  dpow_one ha  := by simp only [dif_pos ha, coeff_one]
+  dpow n a       := if ha : a ∈ I then coeff R n (toPowerSeries (e ⟨a, ha⟩)) else 0
+  dpow_null ha   := by simp only [dif_neg ha]
+  dpow_zero ha   := by simp only [dif_pos ha, coeff_zero_eq_constantCoeff_apply, constantCoeff_coe]
+  dpow_one ha    := by simp only [dif_pos ha, coeff_one]
   dpow_mem hn ha := by simp only [dif_pos ha]; exact coeff_mem _ hn
   dpow_add n {a b} ha hb := by
     simp only [dif_pos (I.add_mem ha hb), dif_pos ha, dif_pos hb]

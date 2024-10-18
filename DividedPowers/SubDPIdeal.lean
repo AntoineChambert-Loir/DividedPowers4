@@ -6,11 +6,10 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 import DividedPowers.DPMorphism
 import Mathlib.RingTheory.Ideal.QuotientOperations
 
-
 open Subtype
 
 -- TODO: move
-theorem _root_.Ideal.iSup_eq_span {A : Type*} [CommSemiring A] {ι : Type*} (p : ι → Ideal A) :
+theorem Ideal.iSup_eq_span {A : Type*} [CommSemiring A] {ι : Type*} (p : ι → Ideal A) :
     (⨆ i, p i) = Ideal.span (⋃ i, ↑(p i)) :=
   Submodule.iSup_eq_span p
 
@@ -64,7 +63,6 @@ end Subideal
 
 namespace DividedPowers
 
-
 /- NOTE: I would like to make `n` implicit in this definition, but if I do that the `revert`
   in the proof of `IsSubDPIdeal_inf_iff` does not work... -/
 
@@ -112,11 +110,8 @@ end IsSubDPIdeal
 
 open Finset Ideal
 
- --[∀ x, Decidable (x ∈ J)]
-
-/-- The ideal J ⊓ I is a sub-dp-ideal of I,
-  if and only if (on I) the divided powers have some compatiblity mod J.
-  (The necessity was proved as a sanity check.) -/
+/-- The ideal `J ⊓ I` is a sub-dp-ideal of `I` if and only if (on `I`) the divided powers have
+  some compatiblity mod `J`. (The necessity was proved as a sanity check.) -/
 theorem IsSubDPIdeal_inf_iff {A : Type*} [CommRing A] {I : Ideal A} (hI : DividedPowers I)
   {J : Ideal A} : IsSubDPIdeal hI (J ⊓ I) ↔
     ∀ (n : ℕ) (a b : A) (_ : a ∈ I) (_ : b ∈ I) (_ : a - b ∈ J), hI.dpow n a - hI.dpow n b ∈ J := by
@@ -177,8 +172,6 @@ theorem IsSubDPIdeal_sup {J K : Ideal A} (hJ : IsSubDPIdeal hI J) (hK : IsSubDPI
     . exact span_mono Set.subset_union_left (subset_span (hJ.2 n hn ha))
     . exact span_mono Set.subset_union_right (subset_span (hK.2 n hn ha))
 
-
-
 theorem IsSubDPIdeal_iSup {ι : Type*} {J : ι → Ideal A} (hJ : ∀ i, IsSubDPIdeal hI (J i)) :
     IsSubDPIdeal hI (iSup J) := by
   rw [iSup_eq_span, span_IsSubDPIdeal_iff _ _ (Set.iUnion_subset_iff.mpr <| fun i ↦ (hJ i).1)]
@@ -231,16 +224,17 @@ theorem coe_def (J : SubDPIdeal hI) : J.toIdeal = J.carrier := rfl
 theorem memCarrier {s : SubDPIdeal hI} {x : A} : x ∈ s.carrier ↔ x ∈ s := Iff.rfl
 
 variable {hI}
-def toIsSubDPIdeal (J : SubDPIdeal hI) : IsSubDPIdeal hI J.carrier := {
-  isSubideal := J.isSubideal,
-  dpow_mem := J.dpow_mem }
+
+def toIsSubDPIdeal (J : SubDPIdeal hI) : IsSubDPIdeal hI J.carrier where
+  isSubideal := J.isSubideal
+  dpow_mem   := J.dpow_mem
 
 open Ideal
 
-def IsSubDPIdeal.mk' (J : Ideal A) (hJ : IsSubDPIdeal hI J) : SubDPIdeal hI :=
-{ carrier := J,
-  isSubideal := hJ.isSubideal,
-  dpow_mem := hJ.dpow_mem }
+def IsSubDPIdeal.mk' (J : Ideal A) (hJ : IsSubDPIdeal hI J) : SubDPIdeal hI where
+  carrier    := J
+  isSubideal := hJ.isSubideal
+  dpow_mem   := hJ.dpow_mem
 
 lemma IsSubDPIdeal_of_SubDPIdeal (J : SubDPIdeal hI) :
     IsSubDPIdeal.mk' J.carrier J.toIsSubDPIdeal = J := rfl
@@ -282,35 +276,35 @@ theorem lt_iff {J J' : SubDPIdeal hI} : J < J' ↔ J.carrier < J'.carrier := Iff
 
 /-- I is a sub-dp-ideal ot itself. -/
 instance : Top (SubDPIdeal hI) :=
-  ⟨{carrier := I
+  ⟨{carrier    := I
     isSubideal := le_refl _
-    dpow_mem := fun _ hn _x hx ↦ hI.dpow_mem hn hx }⟩
+    dpow_mem   := fun _ hn _ hx ↦ hI.dpow_mem hn hx }⟩
 
 instance inhabited : Inhabited hI.SubDPIdeal := ⟨⊤⟩
 
-/-- (0) is a sub-dp-ideal ot the dp-ideal I. -/
+/-- `(0)` is a sub-dp-ideal ot the dp-ideal `I`. -/
 instance : Bot (SubDPIdeal hI) :=
-  ⟨{carrier := ⊥
+  ⟨{carrier    := ⊥
     isSubideal := bot_le
-    dpow_mem := fun n hn x hx ↦ by rw [mem_bot.mp hx, hI.dpow_eval_zero hn, mem_bot]}⟩
+    dpow_mem   := fun n hn x hx ↦ by rw [mem_bot.mp hx, hI.dpow_eval_zero hn, mem_bot]}⟩
 
 --Section 1.8 of [B]
 -- The intersection of two sub-dp-ideals is a sub-dp-ideal.
 instance : Inf (SubDPIdeal hI) :=
   ⟨fun J J' ↦
-    { carrier := J.carrier ⊓ J'.carrier
+    { carrier    := J.carrier ⊓ J'.carrier
       isSubideal := fun _ hx ↦ J.isSubideal hx.1
-      dpow_mem := fun n hn x hx ↦ ⟨J.dpow_mem n hn x hx.1, J'.dpow_mem n hn x hx.2⟩ }⟩
+      dpow_mem   := fun n hn x hx ↦ ⟨J.dpow_mem n hn x hx.1, J'.dpow_mem n hn x hx.2⟩ }⟩
 
 theorem inf_carrier_def (J J' : SubDPIdeal hI) : (J ⊓ J').carrier = J.carrier ⊓ J'.carrier := rfl
 
 instance : InfSet (SubDPIdeal hI) :=
   ⟨fun S ↦
-    { carrier := ⨅ s ∈ Insert.insert ⊤ S, (s : hI.SubDPIdeal).carrier
+    { carrier    := ⨅ s ∈ Insert.insert ⊤ S, (s : hI.SubDPIdeal).carrier
       isSubideal := fun x hx ↦ by
         simp only [mem_iInf] at hx
         exact hx ⊤ (Set.mem_insert ⊤ S)
-      dpow_mem := fun n hn x hx ↦ by
+      dpow_mem   := fun n hn x hx ↦ by
         simp only [mem_iInf] at hx ⊢
         exact fun s hs ↦ s.dpow_mem n hn x (hx s hs) }⟩
 
@@ -324,20 +318,14 @@ instance : Sup (SubDPIdeal hI) :=
 theorem sup_carrier_def (J J' : SubDPIdeal hI) : (J ⊔ J').carrier = J ⊔ J' := rfl
 
 instance : SupSet (SubDPIdeal hI) :=
-  ⟨fun S ↦
-    IsSubDPIdeal.mk' (sSup ((fun J ↦ J.carrier) '' S)) <| by
+  ⟨fun S ↦ IsSubDPIdeal.mk' (sSup ((fun J ↦ J.carrier) '' S)) <| by
       have h : (⋃ (i : Ideal A) (_ : i ∈ (fun J ↦ J.carrier) '' S), ↑i) ⊆ (I : Set A) := by
         rintro a ⟨-, ⟨J, rfl⟩, haJ⟩
         rw [Set.mem_iUnion, SetLike.mem_coe, exists_prop] at haJ
         obtain ⟨J', hJ'⟩ := (Set.mem_image _ _ _).mp haJ.1
-        rw [← hJ'.2] at haJ
-        exact J'.isSubideal haJ.2
-      rw [sSup_eq_iSup, Submodule.iSup_eq_span', submodule_span_eq,
-        span_IsSubDPIdeal_iff hI _ h]
-      rintro n hn x ⟨T, hT, hTx⟩
-      obtain ⟨J, hJ⟩ := hT
-      rw [← hJ] at hTx
-      obtain ⟨J', ⟨⟨hJ', rfl⟩, h'⟩⟩ := hTx
+        exact  J'.isSubideal  (hJ'.2 ▸ haJ.2)
+      rw [sSup_eq_iSup, Submodule.iSup_eq_span', submodule_span_eq, span_IsSubDPIdeal_iff hI _ h]
+      rintro n hn x ⟨T, ⟨J, rfl⟩, ⟨J', ⟨⟨hJ', rfl⟩, h'⟩⟩⟩
       apply subset_span
       apply Set.mem_biUnion hJ'
       obtain ⟨K, hKS, rfl⟩ := hJ'
@@ -347,14 +335,11 @@ theorem sSup_carrier_def (S : Set (SubDPIdeal hI)) :
     (sSup S).carrier = sSup ((toIdeal hI) '' S) := rfl
 
 instance : CompleteLattice (SubDPIdeal hI) := by
-  refine Function.Injective.completeLattice
-    (fun J : SubDPIdeal hI ↦ (J : { J : Ideal A // J ≤ I }))
+  refine Function.Injective.completeLattice (fun J : SubDPIdeal hI ↦ (J : { J : Ideal A // J ≤ I }))
     (fun J J' h ↦ by simpa only [SubDPIdeal.ext_iff, Subtype.mk.injEq] using h)
-    (fun J J' ↦ by rw [Subideal.sup_def] ; rfl)
-    (fun J J' ↦ by rw [Subideal.inf_def] ; rfl)
-    ?_ ?_ (by rw [← Subideal.top_def] ; rfl ) (by rw [← Subideal.bot_def] ; rfl)
-  · intro S
-    conv_rhs => rw [iSup]
+    (fun J J' ↦ by rw [Subideal.sup_def] ; rfl) (fun J J' ↦ by rw [Subideal.inf_def] ; rfl)
+    (fun S ↦ ?_) (fun S ↦ ?_) (by rw [← Subideal.top_def] ; rfl ) (by rw [← Subideal.bot_def] ; rfl)
+  · conv_rhs => rw [iSup]
     rw [Subideal.sSup_def, Subtype.ext_iff]
     dsimp only
     rw [sSup_carrier_def, sSup_image, sSup_image, iSup_range]
@@ -374,8 +359,7 @@ instance : CompleteLattice (SubDPIdeal hI) := by
     · rw [ciSup_pos hJ];
       exact J.isSubideal
     · simp only [hJ, iSup_false, bot_le]
-  · intro S
-    conv_rhs => rw [iInf]
+  · conv_rhs => rw [iInf]
     rw [Subideal.sInf_def, Subtype.ext_iff]
     dsimp only
     rw [sInf_carrier_def, sInf_image, iInf_range, iInf_inf, iInf_insert, inf_iInf]
