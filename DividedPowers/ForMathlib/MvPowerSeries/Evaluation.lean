@@ -5,9 +5,9 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 
 import DividedPowers.ForMathlib.MvPowerSeries.PiTopology
+import DividedPowers.ForMathlib.MvPowerSeries.Trunc
 import DividedPowers.ForMathlib.Topology.Algebra.TopologicallyNilpotent
 import Mathlib.Algebra.MvPolynomial.CommRing
-import DividedPowers.ForMathlib.MvPowerSeries.Trunc
 import Mathlib.Topology.Algebra.Algebra
 import Mathlib.Topology.Algebra.UniformRing
 
@@ -405,3 +405,5 @@ theorem comp_aeval (ha : EvalDomain a)
 end Evaluation
 
 end MvPowerSeries
+
+#min_imports

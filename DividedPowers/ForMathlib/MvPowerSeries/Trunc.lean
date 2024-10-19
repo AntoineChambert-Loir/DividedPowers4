@@ -1,5 +1,5 @@
-import Mathlib.RingTheory.MvPowerSeries.Trunc
-
+import Mathlib.Data.Finsupp.Interval
+import Mathlib.RingTheory.MvPowerSeries.Basic
 
 -- In #15019
 

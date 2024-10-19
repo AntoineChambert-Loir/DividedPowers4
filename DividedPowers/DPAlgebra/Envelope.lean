@@ -1,4 +1,5 @@
 import DividedPowers.DPAlgebra.Compatible
+import Mathlib.Data.Rel
 
 universe u v w
 
@@ -357,6 +358,7 @@ lemma isCompatibleWith [Nontrivial B] [DecidableEq B]
     true_and]
     sorry -/
 
+
 #exit
 
 -- End of case 1
@@ -589,5 +591,3 @@ theorem dpEnvelope_IsDPEnvelope [DecidableEq B] [∀ x, Decidable (x ∈  (dpIde
   simp only [RingHom.toMonoidHom_eq_coe, OneHom.toFun_eq_coe, MonoidHom.toOneHom_coe,
     MonoidHom.coe_coe]
   rw [← hφ_unique β hβ]
-
-#min_imports

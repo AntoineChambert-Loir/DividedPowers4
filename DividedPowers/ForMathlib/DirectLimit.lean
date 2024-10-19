@@ -1,11 +1,6 @@
-import Mathlib.RingTheory.FiniteType
-import Mathlib.RingTheory.Ideal.QuotientOperations
-import Mathlib.Algebra.Algebra.Subalgebra.Basic
-import Mathlib.RingTheory.TensorProduct.Basic
-import Mathlib.Algebra.DirectLimit
 import Mathlib.LinearAlgebra.TensorProduct.DirectLimit
--- import DividedPowers.ForMathlib.LinearAlgebra.DirectSum.Finsupp
-import DividedPowers.ForMathlib.RingTheory.TensorProduct.LinearEquiv
+import Mathlib.LinearAlgebra.TensorProduct.Tower
+import Mathlib.RingTheory.Adjoin.FG
 
 /- # Tensor products and finitely generated submodules
 

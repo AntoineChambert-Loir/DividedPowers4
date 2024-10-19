@@ -1,6 +1,5 @@
-import DividedPowers.PolynomialMap.Homogeneous
-import DividedPowers.DPAlgebra.Graded.Basic
 import DividedPowers.DPAlgebra.BaseChange
+import DividedPowers.PolynomialMap.Homogeneous
 
 /-
 
@@ -83,7 +82,6 @@ theorem gamma_mem_grade (n : ℕ) (S : Type*) [CommRing S] [Algebra R S] (m : S 
     simp only [LinearMap.mem_range]
     -- we need the graded structure on the base change of a graded algebra
     rw [← hx', ← hy']
-
     sorry
 
 /- to do this, it seems that we have to understand polynomial maps

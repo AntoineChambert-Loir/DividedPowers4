@@ -4,14 +4,10 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir, María Inés de Frutos Fernández
 -/
 
-import Mathlib.Algebra.MvPolynomial.CommRing
-import Mathlib.Data.Set.Finite
 import DividedPowers.ForMathlib.MvPowerSeries.Evaluation
 import DividedPowers.ForMathlib.MvPowerSeries.LinearTopology
-import Mathlib.RingTheory.MvPowerSeries.Trunc
-import Mathlib.RingTheory.PowerSeries.Basic
 import Mathlib.RingTheory.Nilpotent.Basic
-import Mathlib.Topology.Algebra.Algebra
+import Mathlib.RingTheory.PowerSeries.Basic
 
 /-! # Substitutions in power series
 

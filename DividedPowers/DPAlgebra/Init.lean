@@ -5,11 +5,6 @@
 import DividedPowers.Basic
 import DividedPowers.DPAlgebra.Misc
 
-import Mathlib.Algebra.RingQuot
-import Mathlib.Algebra.Algebra.Operations
-import Mathlib.Data.Rel
-import Mathlib.RingTheory.Ideal.Quotient
-
 noncomputable section
 
 open Finset MvPolynomial Ideal.Quotient
@@ -544,5 +539,3 @@ end Functoriality
 end DividedPowerAlgebra
 
 end
-
---#lint

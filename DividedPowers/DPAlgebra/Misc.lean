@@ -2,13 +2,11 @@
 ! This file was ported from Lean 3 source module divided_powers.dp_algebra.misc
 -/
 
-import Mathlib.RingTheory.MvPolynomial.WeightedHomogeneous
+import Mathlib.Algebra.MvPolynomial.Supported
 import Mathlib.Algebra.RingQuot
 import Mathlib.Algebra.TrivSqZeroExt
-import Mathlib.Algebra.Algebra.Operations
-import Mathlib.Algebra.MvPolynomial.Supported
-import Mathlib.Algebra.MvPolynomial.CommRing
 import Mathlib.RingTheory.Ideal.Maps
+import Mathlib.RingTheory.MvPolynomial.WeightedHomogeneous
 
 noncomputable section
 

@@ -1,8 +1,10 @@
 /- Copyright ACL @ MIdFF 2024 -/
 
 import DividedPowers.ForMathlib.DirectLimit
-import DividedPowers.ForMathlib.RingTheory.TensorProduct.MvPolynomial
 import Mathlib.LinearAlgebra.TensorProduct.RightExactness
+import Mathlib.RingTheory.FiniteType
+import Mathlib.RingTheory.Ideal.QuotientOperations
+
 
 /-! # Polynomial laws on modules
 

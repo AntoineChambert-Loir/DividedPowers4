@@ -3,9 +3,9 @@ Copyright (c) 2024 Antoine Chambert-Loir, María Inés de Frutos-Fernández. All
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
-import Mathlib.Data.Finsupp.Interval
 import DividedPowers.ForMathlib.MvPowerSeries.PiTopology
 import DividedPowers.ForMathlib.Topology.Algebra.LinearTopology
+import Mathlib.Data.Finsupp.Interval
 
 /-! # Linear topology on the ring of multivariate power series
 

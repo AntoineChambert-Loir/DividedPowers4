@@ -1,11 +1,5 @@
---import DividedPowers.DPAlgebra.Init
 import DividedPowers.DPAlgebra.Exponential
 import DividedPowers.DPAlgebra.Graded.Basic
-import DividedPowers.ForMathlib.RingTheory.TensorProduct.MvPolynomial
-import DividedPowers.PolynomialMap.Homogeneous
---import DividedPowers.DPAlgebra.Misc
-import Mathlib.Algebra.Algebra.Operations
-import Mathlib.RingTheory.MvPolynomial.Basic
 import Mathlib.RingTheory.TensorProduct.Basic
 
 -- import DividedPowers.ForMathlib.RingTheory.TensorProduct

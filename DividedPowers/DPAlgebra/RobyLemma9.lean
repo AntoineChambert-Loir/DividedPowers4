@@ -1,7 +1,5 @@
-import Mathlib.RingTheory.TensorProduct.Basic
-import Mathlib.LinearAlgebra.TensorProduct.Tower
 import Mathlib.RingTheory.Ideal.QuotientOperations
-import Mathlib.Algebra.Algebra.Subalgebra.Basic
+import Mathlib.RingTheory.TensorProduct.Basic
 
 open scoped TensorProduct
 
