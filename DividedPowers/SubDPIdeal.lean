@@ -183,7 +183,7 @@ theorem IsSubDPIdeal_map_of_IsSubDPIdeal {f : A →+* B} (hf : IsDPMorphism hI h
     (hK : IsSubDPIdeal hI K) : IsSubDPIdeal hJ (map f K) := by
   rw [Ideal.map, span_IsSubDPIdeal_iff]
   · rintro n hn y ⟨x, hx, rfl⟩
-    exact hf.2 n x (hK.1 hx) ▸ mem_map_of_mem _ (hK.2 n hn hx)
+    exact hf.2 x (hK.1 hx) ▸ mem_map_of_mem _ (hK.2 n hn hx)
   · rintro y ⟨x, hx, rfl⟩
     exact hf.1 (mem_map_of_mem f (hK.1 hx))
 
@@ -449,7 +449,7 @@ theorem IsSubDPIdeal_ker {f : A →+* B} (hf : IsDPMorphism hI hJ f) :
   rw [IsSubDPIdeal_inf_iff]
   simp only [IsDPMorphism] at hf
   intro n a b ha hb
-  simp only [RingHom.sub_mem_ker_iff, ← hf.2 n a ha, ← hf.2 n b hb]
+  simp only [RingHom.sub_mem_ker_iff, ← hf.2 a ha, ← hf.2 b hb]
   exact congr_arg _
 
 open Ideal
@@ -460,7 +460,7 @@ def DPMorphism.ker (f : DPMorphism hI hJ) : SubDPIdeal hI where
   dpow_mem n hn a := by
     simp only [mem_inf, and_imp, RingHom.mem_ker]
     intro ha ha'
-    rw [← f.isDPMorphism.2 n a ha', ha]
+    rw [← f.isDPMorphism.2 a ha', ha]
     exact ⟨dpow_eval_zero hJ hn, hI.dpow_mem hn ha'⟩
 
 end Ker
@@ -512,7 +512,7 @@ theorem le_equalizer_of_dp_morphism {A : Type*} [CommSemiring A] {I : Ideal A}
     (hIK' : IsDPMorphism hI hK' f) : Ideal.map f I ≤ dpEqualizer hK hK' := by
   rw [Ideal.map, span_le]
   rintro b ⟨a, ha, rfl⟩
-  exact ⟨hI_le_K (mem_map_of_mem f ha), fun n ↦ by rw [hIK.2 n a ha, hIK'.2 n a ha]⟩
+  exact ⟨hI_le_K (mem_map_of_mem f ha), fun n ↦ by rw [hIK.2 a ha, hIK'.2 a ha]⟩
 
 /-- If there is a dp-structure on I(A/J) such that the quotient map is
    a dp-morphism, then J ⊓ I is a sub-dp-ideal of I -/
@@ -524,7 +524,7 @@ def interQuot {A : Type*} [CommRing A] {I : Ideal A} (hI : DividedPowers I)
   isSubideal := by simp only [ge_iff_le, inf_le_right]
   dpow_mem := fun n hn a ⟨haJ, haI⟩ ↦ by
     refine ⟨?_, hI.dpow_mem hn haI⟩
-    rw [SetLike.mem_coe, ← Quotient.eq_zero_iff_mem, ← hφ, ← φ.dpow_comp  n a haI]
+    rw [SetLike.mem_coe, ← Quotient.eq_zero_iff_mem, ← hφ, ← φ.dpow_comp a haI]
     suffices ha0 : φ.toRingHom a = 0 by
       rw [ha0, hJ.dpow_eval_zero hn]
     rw [hφ, Quotient.eq_zero_iff_mem]
@@ -621,13 +621,13 @@ theorem dpow_apply {n : ℕ} {a : A} (ha : a ∈ I) :
   rw [dpow_def, dpow_apply' hI hIf ha]
 
 theorem IsDPMorphism : IsDPMorphism hI (dividedPowers hI hf hIf) f :=
-  ⟨le_refl (Ideal.map f I), fun n a ha ↦ by rw [dpow_apply hI hf hIf ha]⟩
+  ⟨le_refl (Ideal.map f I), fun a ha ↦ by rw [dpow_apply hI hf hIf ha]⟩
 
 theorem unique (hquot : DividedPowers (I.map f)) (hm : DividedPowers.IsDPMorphism hI hquot f) :
     hquot = dividedPowers hI hf hIf :=
   eq_of_eq_on_ideal _ _ fun n x hx ↦ by
     obtain ⟨a, ha, rfl⟩ := (mem_map_iff_of_surjective f hf).mp hx
-    rw [hm.2 n a ha, dpow_apply hI hf hIf ha]
+    rw [hm.2 a ha, dpow_apply hI hf hIf ha]
 
 end OfSurjective
 

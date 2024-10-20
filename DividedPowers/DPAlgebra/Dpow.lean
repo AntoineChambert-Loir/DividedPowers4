@@ -246,7 +246,7 @@ theorem cond_D_uniqueness [DecidableEq R] {M : Type uM} [AddCommGroup M] [Module
     rw [AlgHom.coe_toRingHom, SetLike.mem_coe, liftAlgHom_apply_dp]
     exact hJ.dpow_mem (ne_of_gt hn) (hf m)
   · intro n a ha
-    rw [(unique_from_gens h hJ (lift hJ f hf) (augIdeal_eq_span R M) _ _) n a ha]
+    rw [(unique_from_gens h hJ (lift hJ f hf) (augIdeal_eq_span R M) _ _) a ha]
     · rintro a ⟨q, hq : 0 < q, m, _, rfl⟩
       rw [AlgHom.coe_toRingHom, liftAlgHom_apply_dp]
       exact hJ.dpow_mem (ne_of_gt hq) (hf m)
@@ -624,11 +624,11 @@ example (A : Type u) [CommRing A] {R S R' S' : Type u} [CommRing R] [CommRing S]
       obtain ⟨a, ha, rfl⟩ := ha'
       simp only [AlgHom.coe_toRingHom, Algebra.TensorProduct.includeLeft_apply]
       rw [← map_one g, ← Algebra.TensorProduct.map_tmul]
-      rw [← AlgHom.coe_toRingHom f, hf'.2 n a ha, RingHom.coe_coe]
+      rw [← AlgHom.coe_toRingHom f, hf'.2 a ha, RingHom.coe_coe]
       rw [← Algebra.TensorProduct.map_tmul]
       erw [Quotient.OfSurjective.dpow_apply hK s_fg hK'_pd]
       apply congr_arg
-      exact hK_pd.1.2 n a ha
+      exact hK_pd.1.2 a ha
       apply Ideal.mem_sup_left
       apply Ideal.mem_map_of_mem _ ha
   · -- hJ'.is_pd_morphism hK' ↑(i_2 A R' S')
@@ -644,12 +644,12 @@ example (A : Type u) [CommRing A] {R S R' S' : Type u} [CommRing R] [CommRing S]
       suffices ∀ y : S, fg.toRingHom (1 ⊗ₜ[A] y) = 1 ⊗ₜ[A] g y by
         rw [← this]
         rw [Quotient.OfSurjective.dpow_apply hK s_fg]
-        have that := hg'.2 n a ha
+        have that := hg'.2 (n := n) a ha
         simp only [AlgHom.coe_toRingHom] at that ; rw [that]
         rw [← this]
         apply congr_arg
         simp only [← Algebra.TensorProduct.includeRight_apply]
-        exact hK_pd.2.2 n a ha
+        exact hK_pd.2.2 a ha
         apply Ideal.mem_sup_right
         apply Ideal.mem_map_of_mem _ ha
       intro x
@@ -817,11 +817,11 @@ theorem condτ_rel (A : Type u) [CommRing A]
       obtain ⟨a, ha, rfl⟩ := ha'
       simp only [AlgHom.coe_toRingHom, Algebra.TensorProduct.includeLeft_apply]
       rw [← map_one g, ← Algebra.TensorProduct.map_tmul]
-      rw [← AlgHom.coe_toRingHom f, hfDP.2 n a ha, RingHom.coe_coe]
+      rw [← AlgHom.coe_toRingHom f, hfDP.2 a ha, RingHom.coe_coe]
       rw [← Algebra.TensorProduct.map_tmul]
       erw [Quotient.OfSurjective.dpow_apply hK s_fg hK'_pd]
       apply congr_arg
-      exact hK_pd.1.2 n a ha
+      exact hK_pd.1.2 a ha
       apply Ideal.mem_sup_left
       apply Ideal.mem_map_of_mem _ ha
   · -- hJ'.is_pd_morphism hK' ↑(i_2 A R' S')
@@ -837,12 +837,12 @@ theorem condτ_rel (A : Type u) [CommRing A]
       suffices ∀ y : S, fg.toRingHom (1 ⊗ₜ[A] y) = 1 ⊗ₜ[A] g y by
         rw [← this]
         rw [Quotient.OfSurjective.dpow_apply hK s_fg]
-        have that := hgDP.2 n a ha
+        have that := hgDP.2 (n := n) a ha
         simp only [AlgHom.coe_toRingHom] at that ; rw [that]
         rw [← this]
         apply congr_arg
         simp only [← Algebra.TensorProduct.includeRight_apply]
-        exact hK_pd.2.2 n a ha
+        exact hK_pd.2.2 a ha
         apply Ideal.mem_sup_right
         apply Ideal.mem_map_of_mem _ ha
       intro x

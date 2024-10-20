@@ -503,11 +503,11 @@ theorem dpow_unique (hsup : DividedPowers (I + J))
 
 lemma isDPMorphism_left (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) :
     hI.IsDPMorphism (IdealAdd.dividedPowers hI hJ hIJ) (RingHom.id A):=
-  ⟨by simp only [Ideal.map_id]; exact le_sup_left, fun n _ ha ↦ dpow_eq_of_mem_left hI hJ hIJ ha⟩
+  ⟨by simp only [Ideal.map_id]; exact le_sup_left, fun _ ha ↦ dpow_eq_of_mem_left hI hJ hIJ ha⟩
 
 lemma isDPMorphism_right (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) :
     hJ.IsDPMorphism (IdealAdd.dividedPowers hI hJ hIJ) (RingHom.id A) :=
-  ⟨by simp only [Ideal.map_id]; exact le_sup_right, fun n _ ha ↦ dpow_eq_of_mem_right hI hJ hIJ ha⟩
+  ⟨by simp only [Ideal.map_id]; exact le_sup_right, fun _ ha ↦ dpow_eq_of_mem_right hI hJ hIJ ha⟩
 
 end IdealAdd
 
