@@ -160,7 +160,7 @@ theorem J12_IsSubDPIdeal [DecidableEq B] :
     IsSubDPIdeal (DividedPowerAlgebra.dividedPowers' B J)
       (J12 hI J hIJ ⊓ DividedPowerAlgebra.augIdeal B J) where
   isSubideal := inf_le_right
-  dpow_mem   := fun n hn x hx ↦ by
+  dpow_mem   := fun hn x hx ↦ by
     have hJ12 : J12 hI J hIJ ⊓ augIdeal B J = (J1 J  ⊓ augIdeal B J) + J2 hI J hIJ := sorry
     --simp only [dividedPowers', Subtype.forall, mem_inf]
     rw [hJ12, Submodule.add_eq_sup, Submodule.mem_sup'] at hx
@@ -184,7 +184,7 @@ theorem J12_IsSubDPIdeal [DecidableEq B] :
       have hss : J1 J * augIdeal B ↥J ≤ J12 hI J hIJ ⊓ augIdeal B ↥J :=
         heq ▸ inf_le_inf_right (augIdeal B ↥J) le_sup_left
       rw [heq] at hx1
-      exact hss (hsub.dpow_mem n hn hx1)
+      exact hss (hsub.dpow_mem hn hx1)
     · sorry/- revert n
       induction x2 using DividedPowerAlgebra.induction_on with
       | h_C b =>

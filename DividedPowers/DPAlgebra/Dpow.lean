@@ -998,7 +998,7 @@ theorem roby_prop_4
     apply inf_le_right (a := J)
     simp only [ge_iff_le, le_refl, inf_of_le_left]
     apply inf_le_left (b := I)
-    apply hJ'.dpow_mem n hn
+    apply hJ'.dpow_mem hn
     simp only [Ideal.mem_inf, SetLike.coe_mem, and_true]
     exact hJ ▸ subset_span (Set.mem_union_right _ ⟨a, ha, rfl⟩)
   · intro H
@@ -1034,10 +1034,10 @@ theorem roby_prop_4
           exact inf_le_right (a := J) (hT_le hx)
     suffices T = J ⊓ I by exact {
       isSubideal := inf_le_right
-      dpow_mem := fun n hn a ha ↦ by
+      dpow_mem := fun hn a ha ↦ by
         simp only [Ideal.mem_inf] at ha ⊢
         suffices ha' : a ∈ T by
-          exact ⟨ha'.2 n hn, hI.dpow_mem hn ha.2⟩
+          exact ⟨ha'.2 _ hn, hI.dpow_mem hn ha.2⟩
         simp only [this, Submodule.inf_coe, Set.mem_inter_iff, SetLike.mem_coe, ha.2, ha.1, and_true] }
     set U := (J.restrictScalars A ⊓ Subalgebra.toSubmodule R₀) ⊔
       (Ideal.span T).restrictScalars A with hU
