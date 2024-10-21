@@ -83,6 +83,7 @@ theorem self : IsSubDPIdeal hI I where
   isSubideal := le_rfl
   dpow_mem hn _ ha := hI.dpow_mem hn ha
 
+/-- The divided power structure on a sub-dp-ideal. -/
 def dividedPowers {J : Ideal A} (hJ : IsSubDPIdeal hI J) [∀ x, Decidable (x ∈ J)] :
     DividedPowers J where
   dpow n x        := if x ∈ J then hI.dpow n x else 0
@@ -200,15 +201,17 @@ end IsSubDPIdeal
   `j ∈ J`, `hI.dpow n j ∈ J`. -/
 @[ext]
 structure SubDPIdeal {A : Type*} [CommSemiring A] {I : Ideal A} (hI : DividedPowers I) where
+  /-- The underlying ideal. -/
   carrier : Ideal A
   isSubideal : carrier ≤ I
   dpow_mem : ∀ {n : ℕ} (_ : n ≠ 0), ∀ j ∈ carrier, hI.dpow n j ∈ carrier
 
 namespace SubDPIdeal
 
-variable {A : Type*} [CommSemiring A] {I : Ideal A} (hI : DividedPowers I)
+variable {A : Type*} [CommSemiring A] {I : Ideal A} {hI : DividedPowers I}
 
-def mk' (J : Ideal A) (hJ : hI.IsSubDPIdeal J) : hI.SubDPIdeal := ⟨J, hJ.1, hJ.2⟩
+/-- Constructs a `SubPDIdeal` given an ideal `J` satisfying `hI.IsSubDPIdeal J`. -/
+def mk' {J : Ideal A} (hJ : hI.IsSubDPIdeal J) : hI.SubDPIdeal := ⟨J, hJ.1, hJ.2⟩
 
 instance : SetLike (SubDPIdeal hI) A where
   coe s := s.carrier
@@ -216,6 +219,7 @@ instance : SetLike (SubDPIdeal hI) A where
     rw [SetLike.coe_set_eq] at h
     cases p ; cases q ; congr
 
+/-- The coercion from `SubDPIdeal` to `Ideal`. -/
 @[coe]
 def toIdeal (J : hI.SubDPIdeal) : Ideal A := J.carrier
 
@@ -226,24 +230,17 @@ theorem coe_def (J : SubDPIdeal hI) : J.toIdeal = J.carrier := rfl
 @[simp]
 theorem memCarrier {s : SubDPIdeal hI} {x : A} : x ∈ s.carrier ↔ x ∈ s := Iff.rfl
 
-variable {hI}
-
-def toIsSubDPIdeal (J : SubDPIdeal hI) : IsSubDPIdeal hI J.carrier where
+lemma toIsSubDPIdeal (J : SubDPIdeal hI) : IsSubDPIdeal hI J.carrier where
   isSubideal := J.isSubideal
   dpow_mem   := J.dpow_mem
 
 open Ideal
 
-def IsSubDPIdeal.mk' (J : Ideal A) (hJ : IsSubDPIdeal hI J) : SubDPIdeal hI where
-  carrier    := J
-  isSubideal := hJ.isSubideal
-  dpow_mem   := hJ.dpow_mem
-
 lemma IsSubDPIdeal_of_SubDPIdeal (J : SubDPIdeal hI) :
-    IsSubDPIdeal.mk' J.carrier J.toIsSubDPIdeal = J := rfl
+    SubDPIdeal.mk' J.toIsSubDPIdeal = J := rfl
 
 lemma SubDPIdeal_of_IsSubDPIdeal {J  : Ideal A} (hJ : IsSubDPIdeal hI J) :
-    (IsSubDPIdeal.mk' J hJ).toIsSubDPIdeal = hJ := rfl
+    (SubDPIdeal.mk' hJ).toIsSubDPIdeal = hJ := rfl
 
 /-- If J is an ideal of A, then J ⬝ I is a sub-dp-ideal of I. (Berthelot, 1.6.1 (i)) -/
 def prod (J : Ideal A) : SubDPIdeal hI where
@@ -316,13 +313,12 @@ theorem sInf_carrier_def (S : Set (SubDPIdeal hI)) :
     (sInf S).carrier = ⨅ s ∈ Insert.insert ⊤ S, (s : hI.SubDPIdeal).carrier := rfl
 
 instance : Sup (SubDPIdeal hI) :=
-  ⟨fun J J' ↦ IsSubDPIdeal.mk' (J.carrier ⊔ J'.carrier)
-    (IsSubDPIdeal_sup hI J.toIsSubDPIdeal J'.toIsSubDPIdeal)⟩
+  ⟨fun J J' ↦ SubDPIdeal.mk' (IsSubDPIdeal_sup hI J.toIsSubDPIdeal J'.toIsSubDPIdeal)⟩
 
 theorem sup_carrier_def (J J' : SubDPIdeal hI) : (J ⊔ J').carrier = J ⊔ J' := rfl
 
 instance : SupSet (SubDPIdeal hI) :=
-  ⟨fun S ↦ IsSubDPIdeal.mk' (sSup ((fun J ↦ J.carrier) '' S)) <| by
+  ⟨fun S ↦ SubDPIdeal.mk' (J := sSup ((fun J ↦ J.carrier) '' S)) <| by
       have h : (⋃ (i : Ideal A) (_ : i ∈ (fun J ↦ J.carrier) '' S), ↑i) ⊆ (I : Set A) := by
         rintro a ⟨-, ⟨J, rfl⟩, haJ⟩
         rw [Set.mem_iUnion, SetLike.mem_coe, exists_prop] at haJ
@@ -335,8 +331,7 @@ instance : SupSet (SubDPIdeal hI) :=
       obtain ⟨K, hKS, rfl⟩ := hJ'
       exact K.dpow_mem hn x h'⟩
 
-theorem sSup_carrier_def (S : Set (SubDPIdeal hI)) :
-    (sSup S).carrier = sSup ((toIdeal hI) '' S) := rfl
+theorem sSup_carrier_def (S : Set (SubDPIdeal hI)) : (sSup S).carrier = sSup ((toIdeal) '' S) := rfl
 
 instance : CompleteLattice (SubDPIdeal hI) := by
   refine Function.Injective.completeLattice (fun J : SubDPIdeal hI ↦ (J : { J : Ideal A // J ≤ I }))
@@ -460,6 +455,7 @@ theorem IsSubDPIdeal_ker {f : A →+* B} (hf : IsDPMorphism hI hJ f) :
 
 open Ideal
 
+/-- The kernel of a divided power morphism, as a `SubDPIdeal`. -/
 def DPMorphism.ker (f : DPMorphism hI hJ) : SubDPIdeal hI where
   carrier := RingHom.ker f.toRingHom ⊓ I
   isSubideal := inf_le_right
@@ -477,17 +473,17 @@ variable {A : Type*} [CommSemiring A] {I : Ideal A} (hI : DividedPowers I)
 
 /- TODO : The set of elements where two divided
 powers coincide is the largest ideal which is a sub-dp-ideal in both -/
+
+/-- The ideal of `A` in which the two divided power structures `hI` and `hI'` coincide. -/
 def dpEqualizer {A : Type*} [CommSemiring A] {I : Ideal A} (hI hI' : DividedPowers I) : Ideal A
     where
   carrier := {a ∈ I | ∀ n : ℕ, hI.dpow n a = hI'.dpow n a}
   add_mem' {a b} ha hb := by
-    apply And.intro (I.add_mem ha.1 hb.1)
-    intro n
+    apply And.intro (I.add_mem ha.1 hb.1) (fun n ↦ ?_)
     rw [hI.dpow_add ha.1 hb.1, hI'.dpow_add ha.1 hb.1]
     exact Finset.sum_congr rfl (fun k _ ↦ by rw [ha.2, hb.2])
   zero_mem' := by
-    apply And.intro I.zero_mem
-    intro n
+    apply And.intro I.zero_mem (fun n ↦ ?_)
     by_cases hn : n = 0
     · rw [hn, hI.dpow_zero (zero_mem I), hI'.dpow_zero (zero_mem I)]
     · rw [hI.dpow_eval_zero hn, hI'.dpow_eval_zero hn]
@@ -522,9 +518,9 @@ theorem le_equalizer_of_dp_morphism {A : Type*} [CommSemiring A] {I : Ideal A}
 
 /-- If there is a dp-structure on I(A/J) such that the quotient map is
    a dp-morphism, then J ⊓ I is a sub-dp-ideal of I -/
-def interQuot {A : Type*} [CommRing A] {I : Ideal A} (hI : DividedPowers I)
-    (J : Ideal A) (hJ : DividedPowers (I.map (Ideal.Quotient.mk J)))
-    (φ : DPMorphism hI hJ) (hφ : φ.toRingHom = Ideal.Quotient.mk J) :
+def interQuot {A : Type*} [CommRing A] {I : Ideal A} {hI : DividedPowers I} {J : Ideal A}
+    {hJ : DividedPowers (I.map (Ideal.Quotient.mk J))} {φ : DPMorphism hI hJ}
+    (hφ : φ.toRingHom = Ideal.Quotient.mk J) :
   SubDPIdeal hI where
   carrier    := J ⊓ I
   isSubideal := by simp only [ge_iff_le, inf_le_right]
@@ -558,7 +554,8 @@ variable {B : Type*} [CommRing B] (f : A →+* B) (hf : Function.Surjective f)
 
 /- Tagged as noncomputable because it makes use of function.extend,
 but under is_sub_pd_ideal hI (J ⊓ I), dpow_quot_eq proves that no choices are involved -/
-/-- The definition of divided powers on B -/
+/-- The definition of divided powers on the codomain `B` of a surjective ring homomorphism
+  from a ring `A` with divided powers `hI`.  -/
 noncomputable def dpow : ℕ → B → B := fun n ↦
   Function.extend (fun a ↦ f a : I → B) (fun a ↦ f (hI.dpow n a) : I → B) 0
 
@@ -580,8 +577,8 @@ theorem dpow_apply' (hIf : IsSubDPIdeal hI (RingHom.ker f ⊓ I)) {n : ℕ} {a :
 
 open Ideal
 
-/--
-When `f.ker ⊓ I` is a `sub_dp_ideal` of `I`, the dpow map for the ideal `I.map f` of the target -/
+/-- When `f.ker ⊓ I` is a `sub_dp_ideal` of `I`, this is the induced divided power structure for
+  the ideal `I.map f` of the target -/
 noncomputable def dividedPowers : DividedPowers (I.map f) where
   dpow := dpow hI f
   dpow_null n {x} hx' := by
@@ -604,8 +601,7 @@ noncomputable def dividedPowers : DividedPowers (I.map f) where
     obtain ⟨b, hb, rfl⟩ := (mem_map_iff_of_surjective f hf).mp hy
     rw [← map_add, dpow_apply' hI hIf (I.add_mem ha hb), hI.dpow_add ha hb, map_sum,
       Finset.sum_congr rfl]
-    · intro k _
-      rw [dpow_apply' hI hIf ha, dpow_apply' hI hIf hb, ← _root_.map_mul]
+    · exact fun k _ ↦ by rw [dpow_apply' hI hIf ha, dpow_apply' hI hIf hb, ← _root_.map_mul]
   dpow_smul {n x y} hy := by
     obtain ⟨a, rfl⟩ := hf x
     obtain ⟨b, hb, rfl⟩ := (mem_map_iff_of_surjective f hf).mp hy
@@ -643,7 +639,7 @@ variable {J : Ideal A} (hIJ : IsSubDPIdeal hI (J ⊓ I))
 
 /- Tagged as noncomputable because it makes use of function.extend,
 but under is_sub_dp_ideal hI (J ⊓ I), dpow_quot_eq proves that no choices are involved -/
-/-- The definition of divided powers on A ⧸ J -/
+/-- The definition of divided powers on `A ⧸ J` -/
 noncomputable def dpow (J : Ideal A) : ℕ → A ⧸ J → A ⧸ J :=
   DividedPowers.Quotient.OfSurjective.dpow hI (Ideal.Quotient.mk J)
 
@@ -653,7 +649,8 @@ private theorem IsSubDPIdeal_aux (hIJ : IsSubDPIdeal hI (J ⊓ I)) :
   simpa [Ideal.mk_ker] using hIJ
 
 -- We wish for a better API to denote I.map (ideal.quotient.mk J) as I ⧸ J
-/-- When `I ⊓ J` is a `sub_dp_ideal` of `I`, the dpow map for the ideal `I(A⧸J)` of the quotient -/
+/-- When `I ⊓ J` is a `sub_dp_ideal` of `I`, the divided power structure for the ideal `I(A⧸J)` of
+  the quotient -/
 noncomputable def dividedPowers : DividedPowers (I.map (Ideal.Quotient.mk J)) := by
   apply DividedPowers.Quotient.OfSurjective.dividedPowers hI Ideal.Quotient.mk_surjective
     (IsSubDPIdeal_aux hI hIJ)
