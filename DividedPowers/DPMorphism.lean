@@ -34,7 +34,7 @@ variable {A B C : Type*} [CommSemiring A] [CommSemiring B] [CommSemiring C] {I :
 theorem map_dpow {f : A →+* B} (hf : IsDPMorphism hI hJ f) {n : ℕ} {a : A} (ha : a ∈ I) :
     f (hI.dpow n a) = hJ.dpow n (f a) := (hf.2 a ha).symm
 
-theorem comp (f : A →+* B) (g : B →+* C) (h : A →+* C) (hcomp : g.comp f = h)
+theorem comp {f : A →+* B} {g : B →+* C} {h : A →+* C} (hcomp : g.comp f = h)
     (hg : IsDPMorphism hJ hK g) (hf : IsDPMorphism hI hJ f) : IsDPMorphism hI hK h := by
   rw [← hcomp]
   constructor
@@ -132,7 +132,7 @@ variable {A B C : Type*} [CommSemiring A] [CommSemiring B] [CommSemiring C] {I :
 open DPMorphism
 
 -- Generalization
-theorem on_span  (f : A →+* B) {S : Set A} (hS : I = span S) (hS' : ∀ s ∈ S, f s ∈ J)
+theorem on_span  {f : A →+* B} {S : Set A} (hS : I = span S) (hS' : ∀ s ∈ S, f s ∈ J)
     (hdp : ∀ {n : ℕ}, ∀ a ∈ S, f (hI.dpow n a) = hJ.dpow n (f a)) : IsDPMorphism hI hJ f := by
   suffices h : I.map f ≤ J by
     exact ⟨h, fun a ha ↦ by
@@ -144,7 +144,7 @@ theorem on_span  (f : A →+* B) {S : Set A} (hS : I = span S) (hS' : ∀ s ∈ 
 theorem of_comp (f : A →+* B) (g : B →+* C) (h : A →+* C) (hcomp : g.comp f = h)
     (heq : J = I.map f) (hf : IsDPMorphism hI hJ f) (hh : IsDPMorphism hI hK h) :
     IsDPMorphism hJ hK g := by
-  apply on_span _ _ _ heq
+  apply on_span _ _ heq
   · rintro b ⟨a, ha, rfl⟩
     rw [← RingHom.comp_apply, hcomp]
     exact hh.1 (mem_map_of_mem _ ha)
@@ -156,12 +156,12 @@ end IsDPMorphism
 section Uniqueness
 
 variable {A B : Type*} [CommSemiring A] [CommSemiring B] {I : Ideal A} {J : Ideal B}
-    (hI hI' : DividedPowers I) (hJ : DividedPowers J) (f : A →+* B)
+    (hI hI' : DividedPowers I) (hJ : DividedPowers J) {f : A →+* B}
 
-theorem unique_from_gens  {S : Set A} (hS : I = span S) (hS' : ∀ s ∈ S, f s ∈ J)
+theorem unique_from_gens {S : Set A} (hS : I = span S) (hS' : ∀ s ∈ S, f s ∈ J)
     (hdp : ∀ {n : ℕ}, ∀ a ∈ S, f (hI.dpow n a) = hJ.dpow n (f a)) :
     ∀ {n}, ∀ a ∈ I, hJ.dpow n (f a) = f (hI.dpow n a) :=
-  (IsDPMorphism.on_span hI hJ f hS hS' hdp).2
+  (IsDPMorphism.on_span hI hJ hS hS' hdp).2
 
 -- Roby65, corollary after proposition 3
 /-- Uniqueness of a divided powers given its values on a generating set -/
@@ -169,7 +169,7 @@ theorem unique_from_gens_self {S : Set A} (hS : I = span S)
     (hdp : ∀ {n : ℕ}, ∀ a ∈ S, hI.dpow n a = hI'.dpow n a) : hI' = hI := by
   ext n a
   by_cases ha : a ∈ I
-  . refine hI.unique_from_gens hI' (RingHom.id A) hS ?_ ?_ a ha
+  . refine hI.unique_from_gens hI' (f := RingHom.id A) hS ?_ ?_ a ha
     . intro s hs
       simp only [RingHom.id_apply, hS]
       exact subset_span hs

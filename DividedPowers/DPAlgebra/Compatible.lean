@@ -61,7 +61,7 @@ lemma extends_to_iff_exists_dpIdeal {A : Type u} [CommRing A] {I : Ideal A} (hI 
     extends_to hI f ↔ ∃ (J : Ideal B) (hJ : DividedPowers J), IsDPMorphism hI hJ f := by
   classical
   refine ⟨fun ⟨hJ, hmap⟩ ↦ ⟨I.map f, hJ, hmap⟩, fun ⟨J, hJ, hmap⟩ ↦  ?_⟩
-  use (IsSubDPIdeal_map _ _ hmap).dividedPowers
+  use (IsSubDPIdeal_map hmap).dividedPowers
   rw [IsDPMorphism] at hmap ⊢
   refine ⟨le_refl _, ?_⟩
   intros n a ha
@@ -242,8 +242,8 @@ lemma IsCompatibleWith_tfae {A : Type u} [CommRing A] {I : Ideal A} (hI : Divide
   tfae_have 1 → 2
   · rintro ⟨hI', hII', hI'J⟩
     exact ⟨IdealAdd.dividedPowers hI' hJ hI'J,
-      IsDPMorphism.comp (IdealAdd.dividedPowers hI' hJ hI'J) f
-        (RingHom.id B) _ rfl (IdealAdd.isDPMorphism_left hI' hJ hI'J) hII',
+      IsDPMorphism.comp (IdealAdd.dividedPowers hI' hJ hI'J) (f := f)
+        (g := RingHom.id B) rfl (IdealAdd.isDPMorphism_left hI' hJ hI'J) hII',
       IdealAdd.isDPMorphism_right hI' hJ hI'J⟩
   tfae_have 2 → 3
   · rintro ⟨hK, hIK, hJK⟩

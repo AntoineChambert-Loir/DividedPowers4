@@ -246,7 +246,7 @@ theorem cond_D_uniqueness [DecidableEq R] {M : Type uM} [AddCommGroup M] [Module
     rw [AlgHom.coe_toRingHom, SetLike.mem_coe, liftAlgHom_apply_dp]
     exact hJ.dpow_mem (ne_of_gt hn) (hf m)
   · intro n a ha
-    rw [(unique_from_gens h hJ (lift hJ f hf) (augIdeal_eq_span R M) _ _) a ha]
+    rw [(unique_from_gens h hJ (augIdeal_eq_span R M) _ _) a ha]
     · rintro a ⟨q, hq : 0 < q, m, _, rfl⟩
       rw [AlgHom.coe_toRingHom, liftAlgHom_apply_dp]
       exact hJ.dpow_mem (ne_of_gt hq) (hf m)
@@ -607,9 +607,9 @@ example (A : Type u) [CommRing A] {R S R' S' : Type u} [CommRing R] [CommRing S]
         Algebra.TensorProduct.includeLeft_apply, Algebra.TensorProduct.includeRight_apply, Algebra.TensorProduct.map_tmul, map_one]
   have hK'_pd : IsSubDPIdeal hK (RingHom.ker fg ⊓ K A I J) := by
     rw [roby]
-    exact IsSubDPIdeal_sup _
-      (IsSubDPIdeal_map_of_IsSubDPIdeal hI hK hK_pd.1 (IsSubDPIdeal_ker hI hI' hf'))
-      (IsSubDPIdeal_map_of_IsSubDPIdeal hJ hK hK_pd.2 (IsSubDPIdeal_ker hJ hJ' hg'))
+    exact IsSubDPIdeal_sup
+      (IsSubDPIdeal_map_of_IsSubDPIdeal hK_pd.1 (IsSubDPIdeal_ker hI hI' hf'))
+      (IsSubDPIdeal_map_of_IsSubDPIdeal hK_pd.2 (IsSubDPIdeal_ker hJ hJ' hg'))
   rw [hK_map]
   use DividedPowers.Quotient.OfSurjective.dividedPowers hK s_fg hK'_pd
   constructor
@@ -798,10 +798,10 @@ theorem condτ_rel (A : Type u) [CommRing A]
       apply IsSubDPIdeal_sup
       · have : span (↑(RingHom.ker f) ∩ ↑I) = RingHom.ker f ⊓ I := sorry
         rw [this]
-        exact IsSubDPIdeal_map_of_IsSubDPIdeal hI hK hK_pd.1 (IsSubDPIdeal_ker hI hI' hfDP)
+        exact IsSubDPIdeal_map_of_IsSubDPIdeal hK_pd.1 (IsSubDPIdeal_ker hI hI' hfDP)
       · have : span (↑(RingHom.ker g) ∩ ↑J) = RingHom.ker g ⊓ J := sorry
         rw [this]
-        exact IsSubDPIdeal_map_of_IsSubDPIdeal hJ hK hK_pd.2 (IsSubDPIdeal_ker hJ hJ' hgDP)
+        exact IsSubDPIdeal_map_of_IsSubDPIdeal hK_pd.2 (IsSubDPIdeal_ker hJ hJ' hgDP)
     sorry
   rw [hK_map]
   use DividedPowers.Quotient.OfSurjective.dividedPowers hK s_fg hK'_pd
