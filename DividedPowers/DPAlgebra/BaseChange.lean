@@ -246,9 +246,8 @@ theorem dpScalarExtensionInv_apply_dp (n : ℕ) (s : S) (m : M) :
     AlgebraTensorModule.lift_apply, lift.tmul, LinearMap.coe_restrictScalars, LinearMap.flip_apply,
     LinearMap.lsmul_apply, LinearMap.smul_apply, LinearMap.coe_comp, Function.comp_apply]
   rw [ExponentialModule.coe_smul, PowerSeries.coeff_scale, ExponentialModule.coeff_linearMap,
-    Algebra.TensorProduct.includeRight, coe_mk, RingHom.coe_mk]
-  sorry
-  --rw [MonoidHom.coe_mk, OneHom.coe_mk, coeff_exp_LinearMap, smul_tmul', smul_eq_mul, mul_one]
+    includeRight_apply, smul_tmul', smul_eq_mul, mul_one, coeff_exp_LinearMap]
+
 
 /-- Uniqueness claim of Roby1963, theorem III.2 -/
 theorem dpScalarExtensionInv_unique
@@ -407,18 +406,14 @@ theorem dpScalarExtension_mem_grade {a : DividedPowerAlgebra R M} {n : ℕ} (ha 
       simp only [Finset.mem_sdiff, mem_support_iff, ne_eq, coeff_sum, coeff_C_mul, coeff_monomial,
         mul_ite, mul_one, mul_zero, Finset.sum_ite_eq', ite_not, ite_eq_left_iff, Classical.not_imp,
         not_and, Decidable.not_not] at hx
-      -- one can use IsScalarTower.algebraMap_apply
-      rw [IsScalarTower.algebraMap_apply R S (DividedPowerAlgebra S (S ⊗[R] M))]
-      -- have : (algebraMap R (DividedPowerAlgebra S (S ⊗[R] M))) (coeff x p) =
-      --  (algebraMap S (DividedPowerAlgebra S (S ⊗[R] M)))
-      --    (algebraMap R S (coeff x p)) := rfl
-      rw [hx.2 hx.1, map_zero, zero_mul]
+      rw [IsScalarTower.algebraMap_apply R S (DividedPowerAlgebra S (S ⊗[R] M)),
+        hx.2 hx.1, map_zero, zero_mul]
     · intro d _hd
       rw [← algebraMap_eq, coeff_sum]
       simp only [MvPolynomial.algebraMap_apply, coeff_C_mul, map_sum, dp_def']
       rw [← h_eq', RingHom.coe_comp, Function.comp_apply, h_sum d, coeff_sum, map_sum]
       simp only [Algebra.id.map_eq_id, RingHomCompTriple.comp_apply, _root_.map_mul, coeff_C_mul]
-      sorry
+      congr 1
 
 -- TODO: add IsHomogeneous for maps of graded algebras/modules (?)
 

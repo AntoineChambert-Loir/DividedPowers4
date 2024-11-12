@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2024 Antoine Chambert-Loir, María Inés de Frutos-Fernández. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
+-/
 import DividedPowers.DPAlgebra.BaseChange
 import DividedPowers.PolynomialMap.Homogeneous
 
@@ -23,7 +28,7 @@ namespace DividedPowerAlgebra
 
 open TensorProduct AlgEquiv LinearMap
 
-/- TODO:  we need to prove that DividedPoweAlgebra.dpScalarExtensionEquiv
+/- TODO :  we need to prove that DividedPowerAlgebra.dpScalarExtensionEquiv
   is compatible with the graded structure and induces equivs componentwise -/
 /-- The universal polynomial map (homogeneous of degree n) on a module -/
 noncomputable
@@ -44,7 +49,7 @@ theorem gamma_toFun (n : ℕ) {S : Type*} [CommRing S] [Algebra R S] (m : S ⊗[
 theorem isHomogeneousOfDegree_gamma (n : ℕ) :
     PolynomialMap.IsHomogeneousOfDegree n (DividedPowerAlgebra.gamma R M n) := by
   intro S _ _ r sm
-  simp only [gamma]-- , dpScalarExtensionEquiv, ofAlgHom_symm_apply]
+  simp only [gamma]
   apply (dpScalarExtensionEquiv R S M).injective
   simp only [apply_symm_apply, LinearMapClass.map_smul]
   rw [dp_smul]

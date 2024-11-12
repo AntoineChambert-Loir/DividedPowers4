@@ -136,6 +136,3 @@ theorem dividedPowerAlgebra_exponentialModule_equiv_symm_apply
       = coeff S n (β m) := by
   unfold dividedPowerAlgebra_exponentialModule_equiv
   simp only [Equiv.coe_fn_symm_mk, lift'AlgHom_apply_dp]
-
-
-#min_imports
