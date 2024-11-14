@@ -1,14 +1,10 @@
-import DividedPowers.DPAlgebra.Init
-import DividedPowers.DPAlgebra.Graded.GradeZero
-import DividedPowers.RatAlgebra
-import DividedPowers.SubDPIdeal
-import DividedPowers.IdealAdd
---import DividedPowers.DPAlgebra.RobyLemma9
-import DividedPowers.DPAlgebra.PolynomialMap
-import Mathlib.RingTheory.MvPolynomial.Basic
-import Mathlib.LinearAlgebra.TensorProduct.RightExactness
 
-/-! # Construction of divided powers of tensor products of divided power algebras
+import DividedPowers.DPAlgebra.Graded.GradeZero
+import DividedPowers.DPAlgebra.PolynomialMap
+import DividedPowers.SubDPIdeal
+import Mathlib.RingTheory.MvPolynomial.Basic
+
+/-! # The universal divided power algebra
 
 ## Main results
 
@@ -16,30 +12,29 @@ The two main constructions of this file are the following:
 
 ### Tensor products
 
-Let `R`, `A`, `B` be commutative rings, with `Algebra R A` and `Algebra R B`,
-given with divided power structures on ideals `I` and `J`.
+Let `R`, `A`, `B` be commutative rings, with `Algebra R A` and `Algebra R B` and with divided
+power structures on ideals `I` and `J`, respectively.
 
-- `on_tensorProduct_unique`: There is at most one divided power structure
-on `A ⊗[R] B`, for the ideal `I ⊔ J`,
-so that the canonical morphisms `A →ₐ[R] A ⊗[R] B` and `B →ₐ[R] A ⊗[R] B`
-are dp-morphisms.
+- `on_tensorProduct_unique` : There is at most one divided power structure
+on the ideal `I ⊔ J` of `A ⊗[R] B` so that the canonical morphisms `A →ₐ[R] A ⊗[R] B` and
+`B →ₐ[R] A ⊗[R] B` are dp-morphisms.
 
-Such  a divided power struture doesn't always exist
-(see counterexample in [Berthelot1974, 1.7])
+Such a divided power structure doesn't always exist (see counterexample in [Berthelot1974, 1.7])
 -- TODO : add it
 
-- It exists when `I` and `J` are `R`-augmentation ideals,
-ie, there are sections `A ⧸ I →ₐ[R] A` and `B ⧸ J →ₐ[R] B`.
+However, it always exists when `I` and `J` are `R`-augmentation ideals, i. e., when there are
+sections `A ⧸ I →ₐ[R] A` and `B ⧸ J →ₐ[R] B`.
 
 ### Divided power algebra
 
 Let `R` be a commutative ring, `M` an `R`-module.
-We construct the unique divided power structure on `DividedPowerAlgebra R M`
-for which `dpow n (DividedPower.linearEquivDegreeOne m) = dp n m` for any `m : M`,
-where `linearEquivDegreeOne` is the `LinearEquiv`  from `M`
-to the degree 1 part of `DividedPowerAlgebra R M`
+We construct the unique divided power structure on `DividedPowerAlgebra R M` for which
+`dpow n (ι R M m) = dp n m` for any `m : M`, where `ι R M` is the `LinearEquiv` from `M`
+to the degree 1 part of `DividedPowerAlgebra R M`.
 
-- `on_dpalgebra_unique`: uniqueness of this structure
+- `onDPAlgebra_unique`: uniqueness of this structure.
+
+
 
 ## Reference
 
@@ -48,21 +43,17 @@ to the degree 1 part of `DividedPowerAlgebra R M`
 ## Construction
 
 The construction is highly non trivial and relies on a complicated process.
-The uniqueness is clear, what is difficult is to prove the relevant
-functional equations.
-The result is banal if `R` is a ℚ-algebra and the idea is to lift `M`
-to a free module over a torsion-free algebra.
-Then the functional equations would hold by embedding everything into
-the tensorization by ℚ.
-Lifting `R` is banal (take a polynomial ring with ℤ-coefficients),
-but `M` does not lift in general,
-so one first has to lift `M` to a free module.
+The uniqueness is clear, what is difficult is to prove the relevant functional equations.
+The result is banal if `R` is a `ℚ`-algebra and the idea is to lift `M` to a free module over a
+torsion-free algebra. Then the functional equations would hold by embedding everything into
+the tensorization by `ℚ`.
+Lifting `R` is banal (take a polynomial ring with `ℤ`-coefficients), but `M` does not lift in
+general, so one first has to lift `M` to a free module.
 The process requires to know several facts regarding the divided power algebra:
-- its construction commutes with base change (`DividedPowerAlgebra.dpScalarEquiv`).
+- Its construction commutes with base change (see `dpScalarExtensionEquiv`).
 - The graded parts of the divided power algebra of a free module are free.
 
-Incidentally, there is no other proof in the litterature than the
-paper [Roby1965].
+Incidentally, there is no other proof in the literature than the paper [Roby1965].
 This formalization would be the second one.
 
 -/
@@ -70,23 +61,9 @@ noncomputable section
 
 universe u v v₁ v₂ w uA uR uS uM
 
-section
 
-variable (R : Type u) [CommRing R] /- [DecidableEq R] -/
-  (M : Type v) [AddCommGroup M] /- [DecidableEq M] -/ [Module R M]
-
-variable (x : M) (n : ℕ)
-
-
-open Finset MvPolynomial Ideal.Quotient
-
--- triv_sq_zero_ext
-open Ideal
-
--- direct_sum
-open RingQuot
-
-section Proposition1
+--TODO
+/- section Proposition1
 
 variable {A : Type*} [CommRing A]
   {R : Type*} [CommRing R] [Algebra A R] {R₀ : Subalgebra A R} {I : Ideal R}
@@ -97,14 +74,22 @@ variable {A : Type*} [CommRing A]
   isSubDPAlgebra A (Algebra.adjoin A ⊥ ((F₀ : Set R) ∪ (FI : Set R))) ↔
     sorry := sorry -/
 
-end Proposition1
+end Proposition1 -/
 
 namespace DividedPowerAlgebra
 
-open DividedPowerAlgebra
+-- Formalization of Roby 1965, section 8
+section Roby_section8
 
-/-- Lemma 2 of Roby 65. -/
-theorem on_dpalgebra_unique [DecidableEq R] (h h' : DividedPowers (augIdeal R M))
+variable (R : Type u) [CommRing R] (M : Type v) [AddCommGroup M] [Module R M]
+
+variable (x : M) (n : ℕ)
+
+open DividedPowers Finset Ideal Ideal.Quotient MvPolynomial RingQuot
+
+/-- Lemma 2 of Roby 65 : there is at most one divided power structure on the augmentation ideal
+  of `DividedPowerAlgebra R M` such that `∀ (n : ℕ) (x : M), h.dpow n (ι R M x) = dp R n x`. -/
+theorem onDPAlgebra_unique [DecidableEq R] (h h' : DividedPowers (augIdeal R M))
     (h1 : ∀ (n : ℕ) (x : M), h.dpow n (ι R M x) = dp R n x)
     (h1' : ∀ (n : ℕ) (x : M), h'.dpow n (ι R M x) = dp R n x) : h = h' := by
   apply DividedPowers.unique_from_gens_self h' h (augIdeal_eq_span R M)
@@ -113,48 +98,37 @@ theorem on_dpalgebra_unique [DecidableEq R] (h h' : DividedPowers (augIdeal R M)
   rw [← h1 q m, h.dpow_comp (ne_of_gt hq) (ι_mem_augIdeal R M m),
     h'.dpow_comp (ne_of_gt hq) (ι_mem_augIdeal R M m), h1 _ m, h1' _ m]
 
-/-- Existence of divided powers on the augmentation ideal of an `R`-module `M`-/
+/-- Existence of divided powers on the augmentation ideal of an `R`-module `M`. -/
 def Condδ (R : Type u) [CommRing R] [DecidableEq R]
     (M : Type u) [AddCommGroup M] [Module R M] : Prop :=
   ∃ h : DividedPowers (augIdeal R M), ∀ (n : ℕ) (x : M), h.dpow n (ι R M x) = dp R n x
 
--- Universe constraint : one needs to have M in universe u
-/-- Existence, for every `R`-module, of divided powers on its divided power algebra -/
+-- Universe constraint : one needs to have `R` and `M` in the same universe `u`.
+/-- Existence, for every `R`-module, of divided powers on the augmentation ideal of its
+  divided power algebra. -/
 def CondD (R : Type u) [CommRing R] [DecidableEq R] : Prop :=
   ∀ (M : Type u) [AddCommGroup M] [Module R M], Condδ R M
 
 -- TODO : at the end , universalize
 
-end DividedPowerAlgebra
-
-end
-
-section Roby
-
--- Formalization of Roby 1965, section 8
-
-open Finset MvPolynomial Ideal.Quotient Ideal RingQuot DividedPowers
-
-namespace DividedPowerAlgebra
-
-open DividedPowerAlgebra
-
 section TensorProduct
 
 open scoped TensorProduct
 
+/-- The ideal `K := I + J` in the tensor product `R ⊗[A] S`. -/
 def K (A : Type uA) [CommRing A]
     {R : Type uR} [CommRing R] [Algebra A R] (I : Ideal R)
     {S : Type uS} [CommRing S] [Algebra A S] (J : Ideal S) : Ideal (R ⊗[A] S) :=
   I.map (Algebra.TensorProduct.includeLeft : R →ₐ[A] R ⊗[A] S)
     ⊔ J.map Algebra.TensorProduct.includeRight
 
-
 variable (A : Type u) [CommRing A] {R : Type u} [CommRing R] [Algebra A R]
   {I : Ideal R} (hI : DividedPowers I) {S : Type u} [CommRing S] [Algebra A S]
   {J : Ideal S} (hJ : DividedPowers J)
 
--- Lemma 1 : uniqueness of the dp structure on R ⊗ S for K =I + J
+/-- Lemma 1 : There is a unique divided power structure on the ideal `I + J` of `R ⊗ S` for
+  which the canonical morphism `R →ₐ[A] R ⊗[A] S` and `S →ₐ[A] R ⊗[A] S` are divided power
+  morphisms. -/
 theorem on_tensorProduct_unique (hK : DividedPowers (K A I J))
     (hIK : IsDPMorphism hI hK (Algebra.TensorProduct.includeLeft : R →ₐ[A] R ⊗[A] S))
     (hJK : IsDPMorphism hJ hK (Algebra.TensorProduct.includeRight : S →ₐ[A] R ⊗[A] S))
@@ -170,8 +144,8 @@ theorem on_tensorProduct_unique (hK : DividedPowers (K A I J))
     le_equalizer_of_dp_morphism hJ _ le_sup_right hK hK' hJK hJK'⟩
 
 
-/-- Existence of divided powers on the ideal of a tensor product
-  of two divided power algebras -/
+/-- Existence of divided powers on the ideal `I + J` of a tensor product of two divided power
+  algebras. -/
 def Condτ (A : Type u) [CommRing A] {R : Type u} [CommRing R] [Algebra A R]
     {I : Ideal R} (hI : DividedPowers I) {S : Type u} [CommRing S] [Algebra A S]
     {J : Ideal S} (hJ : DividedPowers J) : Prop :=
@@ -186,7 +160,7 @@ def CondT (A : Type u) [CommRing A] : Prop :=
     (S : Type u) [CommRing S] [Algebra A S] {J : Ideal S} (hJ : DividedPowers J), Condτ A hI hJ -/
 
 /-- Existence of divided powers on the ideal of a tensor product
-  of any two *split* divided power algebras (universalization of `Condτ`)-/
+  of any two *split* divided power algebras (universalization of `Condτ`). -/
 def CondT (A : Type u) [CommRing A] : Prop :=
   ∀ (R : Type u) [CommRing R] [Algebra A R] {I : Ideal R} (hI : DividedPowers I)
     {R₀ : Subalgebra A R} (_ : I.IsAugmentation R₀) (S : Type u) [CommRing S] [Algebra A S]
@@ -223,11 +197,14 @@ def CondQ (A : Type u) [CommRing A] : Prop :=
 
 end free
 
-section Proofs
+end Roby_section8
+
+-- Formalization of Roby 1965, section 9
+section Roby_section9
+
+open DividedPowerAlgebra DividedPowers Finset Ideal Ideal.Quotient MvPolynomial RingQuot
 
 variable {R : Type uR} [CommRing R]
-
-open DividedPowerAlgebra Ideal
 
 open scoped TensorProduct
 
@@ -260,14 +237,10 @@ theorem cond_D_uniqueness [DecidableEq R] {M : Type uM} [AddCommGroup M] [Module
 -- We open a namespace to privatize the complicated construction
 namespace roby4
 
-variable (A : Type u) [CommRing A] /- [DecidableEq A] -/
+variable (A : Type u) [CommRing A]
 
--- NOTE: I am removing this to avoid an error in `CondQ_int`.
---open Classical
-
-/- The goal of this section is to establish [Roby1963, Lemme 4]
-`T_free_and_D_to_Q`, that under the above assumptions, `CondQ A` holds.
-It involves a lifting construction -/
+/- The goal of this section is to establish [Roby1963, Lemme 4] (`condTFree_and_condD_to_condQ`),
+  that under the above assumptions, `CondQ A` holds. It involves a lifting construction. -/
 
 variable (S : Type u) [CommRing S] [Algebra A S] {I : Ideal S} (hI : DividedPowers I)
   (S₀ : Subalgebra A S) (hIS₀ : IsCompl (Subalgebra.toSubmodule S₀) (I.restrictScalars A))
@@ -463,7 +436,7 @@ lemma Subalgebra_tensorProduct_top_bot [Algebra A R]
 
 lemma map_psi_augIdeal_eq [DecidableEq A] (hM : DividedPowers (augIdeal A (I →₀ A)))
     (hM_eq : ∀ n x, hM.dpow n ((ι A (I →₀ A)) x) = dp A n x)
-    (M : Type*) [AddCommGroup M] [Module A M] [Module.Free A M]
+
     (condTFree: CondTFree A) :
     Ideal.map (Ψ A S hI S₀) (K A ⊥ (augIdeal A (I →₀ A))) = I := by
   classical
@@ -503,7 +476,7 @@ theorem _root_.DividedPowerAlgebra.condTFree_and_condD_to_condQ [DecidableEq A]
   refine ⟨_, (condτ A S I S₀ hM condTFree).choose, _,
     Ideal.isAugmentation_tensorProduct A htop (isAugmentation A M), ?_⟩
   use Ψ A S hI S₀
-  refine ⟨map_psi_augIdeal_eq A S hI S₀ hM hM_eq M condTFree, ?_⟩
+  refine ⟨map_psi_augIdeal_eq A S hI S₀ hM hM_eq condTFree, ?_⟩
   constructor
   · -- Ψ maps the 0 part to S₀
     convert Ψ_map_eq A S hI S₀ using 2
@@ -1163,6 +1136,7 @@ theorem CondQ_and_condTFree_imply_condT (A : Type*) [CommRing A]
   apply hT_free R
 
 -- Roby, lemma 8
+-- TODO: remove (the proof in Roby 65 is incorrect)
 theorem condT_and_condD_imply_condD (A : Type u) [CommRing A] [DecidableEq A]
     (condT : CondT A) (condD : CondD A)
     (R : Type v) [CommRing R] [DecidableEq R] [Algebra A R] :
@@ -1203,12 +1177,6 @@ theorem condT_and_condD_imply_condD (A : Type u) [CommRing A] [DecidableEq A]
   It seems that this approach could work in general. I hope so…
 
   -/
-  --set e := dpScalarExtensionEquiv A R M
-  --have := K A (⊥ : Ideal R) (augIdeal A M)
-  -- -- here is where the problem appeared!
-  -- have he : Ideal.map e (K A (⊥ : Ideal R) (augIdeal A M)) = augIdeal R M := sorry
-  -- transférer les puissances divisées
-
 
 -- Roby, lemma 9 is in roby9 (other file)
 -- Roby, lemma 10
@@ -1244,9 +1212,12 @@ theorem CondQ_holds (A : Type*) [CommRing A] [DecidableEq A] : CondQ A :=
 theorem condT_holds (A : Type*) [CommRing A] [DecidableEq A] : CondT A :=
   CondQ_and_condTFree_imply_condT A (CondQ_holds A) (condTFree_holds A)
 
-end Proofs
+end Roby_section9
 
-open DividedPowerAlgebra
+-- Formalization of Roby65, section 10
+section Roby_section10
+
+open DividedPowers DividedPowerAlgebra
 
 -- namespace divided_power_algebra
 -- Part of Roby65 Thm 1
@@ -1305,6 +1276,6 @@ theorem roby_prop_8 (R : Type u) [DecidableEq R] [CommRing R]
   rw [lift_eq_DPLift R S f]
   exact roby_theorem_2 R M (dividedPowers' S N) (ι_comp_mem_augIdeal R S f)
 
-end DividedPowerAlgebra
+end Roby_section10
 
-end Roby
+end DividedPowerAlgebra

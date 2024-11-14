@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 import DividedPowers.DPAlgebra.Dpow
+import DividedPowers.IdealAdd
 
 universe u v w
 
