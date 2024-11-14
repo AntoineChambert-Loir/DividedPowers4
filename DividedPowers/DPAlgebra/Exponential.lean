@@ -95,7 +95,7 @@ def dividedPowerAlgebra_exponentialModule_equiv :
     (DividedPowerAlgebra R M →ₐ[R] S) ≃ (M →ₗ[R] ExponentialModule S) where
   toFun α := (linearMap α).comp (exp_LinearMap R M)
   invFun β := by
-    apply DividedPowerAlgebra.lift' (fun (n, m) ↦ coeff S n (β m))
+    apply DividedPowerAlgebra.lift' (f := fun (n, m) ↦ coeff S n (β m))
     · intro m
       simp only [coeff_zero_eq_constantCoeff]
       exact constantCoeff_coe (β m)
@@ -110,9 +110,9 @@ def dividedPowerAlgebra_exponentialModule_equiv :
   left_inv := by
     intro α
     simp only [LinearMap.coe_comp, Function.comp_apply]
-    apply ext
+    apply algHom_ext
     intro n m
-    simp only [lift'AlgHom_apply_dp]
+    simp only [lift'_apply_dp]
     rw [coeff_linearMap]
     simp only [coeff_exp_LinearMap]
   right_inv := by
@@ -121,7 +121,7 @@ def dividedPowerAlgebra_exponentialModule_equiv :
     simp only [LinearMap.coe_comp, Function.comp_apply]
     rw [coeff_linearMap]
     rw [coeff_exp_LinearMap]
-    simp only [lift'AlgHom_apply_dp]
+    simp only [lift'_apply_dp]
 
 variable {R} in
 theorem dividedPowerAlgebra_exponentialModule_equiv_apply
@@ -135,4 +135,4 @@ theorem dividedPowerAlgebra_exponentialModule_equiv_symm_apply
     (dividedPowerAlgebra_exponentialModule_equiv R M S).symm β (dp R n m)
       = coeff S n (β m) := by
   unfold dividedPowerAlgebra_exponentialModule_equiv
-  simp only [Equiv.coe_fn_symm_mk, lift'AlgHom_apply_dp]
+  simp only [Equiv.coe_fn_symm_mk, lift'_apply_dp]

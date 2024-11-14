@@ -243,18 +243,18 @@ theorem cond_D_uniqueness [DecidableEq R] {M : Type uM} [AddCommGroup M] [Module
   constructor
   · rw [augIdeal_eq_span, map_span, span_le]
     rintro s ⟨a, ⟨n, hn : 0 < n, m, _, rfl⟩, rfl⟩
-    rw [AlgHom.coe_toRingHom, SetLike.mem_coe, liftAlgHom_apply_dp]
+    rw [AlgHom.coe_toRingHom, SetLike.mem_coe, lift_apply_dp]
     exact hJ.dpow_mem (ne_of_gt hn) (hf m)
   · intro n a ha
     rw [(unique_from_gens h hJ (augIdeal_eq_span R M) _ _) a ha]
     · rintro a ⟨q, hq : 0 < q, m, _, rfl⟩
-      rw [AlgHom.coe_toRingHom, liftAlgHom_apply_dp]
+      rw [AlgHom.coe_toRingHom, lift_apply_dp]
       exact hJ.dpow_mem (ne_of_gt hq) (hf m)
     · rintro n a ⟨q, hq : 0 < q, m, _, rfl⟩
-      rw [AlgHom.coe_toRingHom, liftAlgHom_apply_dp, hJ.dpow_comp (ne_of_gt hq) (hf m), ← hh q m,
+      rw [AlgHom.coe_toRingHom, lift_apply_dp, hJ.dpow_comp (ne_of_gt hq) (hf m), ← hh q m,
         h.dpow_comp (ne_of_gt hq) (ι_mem_augIdeal R M m), _root_.map_mul, map_natCast]
       apply congr_arg₂ _ rfl
-      rw [hh, liftAlgHom_apply_dp]
+      rw [hh, lift_apply_dp]
 
 
 -- We open a namespace to privatize the complicated construction
@@ -328,14 +328,14 @@ def dpΦ : DPMorphism hM hI := by
   · rw [Ideal.map_le_iff_le_comap, augIdeal_eq_span, span_le]
     rintro x ⟨n, hn, b, _, rfl⟩
     simp only [AlgHom.toRingHom_eq_coe, SetLike.mem_coe, mem_comap, RingHom.coe_coe,
-      Φ, liftAlgHom_apply_dp]
+      Φ, lift_apply_dp]
     exact hI.dpow_mem (ne_of_gt hn) (f_mem_I A I b)
   · rintro n x ⟨m, hm, b, _, rfl⟩
-    rw [Φ, AlgHom.toRingHom_eq_coe, RingHom.coe_coe, liftAlgHom_apply_dp, ← hM_eq,
+    rw [Φ, AlgHom.toRingHom_eq_coe, RingHom.coe_coe, lift_apply_dp, ← hM_eq,
       hM.dpow_comp (ne_of_gt hm) (ι_mem_augIdeal _ _ _),
       hI.dpow_comp (ne_of_gt hm) (f_mem_I A I b), _root_.map_mul, map_natCast]
     apply congr_arg₂ _ rfl
-    rw [hM_eq, liftAlgHom_apply_dp]
+    rw [hM_eq, lift_apply_dp]
 
 -- We consider `(MvPolynomial S₀ A) ⊗[A] DividedPowerAlgebra A (I →₀ A) →ₐ[A] S`
 def Ψ : MvPolynomial S₀ A ⊗[A] DividedPowerAlgebra A (I →₀ A) →ₐ[A] S :=
@@ -507,7 +507,7 @@ theorem _root_.DividedPowerAlgebra.condTFree_and_condD_to_condQ [DecidableEq A]
   constructor
   · -- Ψ maps the 0 part to S₀
     convert Ψ_map_eq A S hI S₀ using 2
-    exact Subalgebra_tensorProduct_top_bot A D (grade0Subalgebra_eq_bot _ _) rfl
+    exact Subalgebra_tensorProduct_top_bot A D (gradeZeroSubalgebra_eq_bot _ _) rfl
   constructor
   · apply Ψ_surjective A S hI S₀
     simp only [← isAugmentation_subalgebra_iff, hIS₀]
@@ -1284,14 +1284,14 @@ theorem lift_eq_DPLift (R : Type u) [CommRing R]
     {M : Type v} [AddCommGroup M] [Module R M]
     (S : Type w) [CommRing S] [DecidableEq S] [Algebra R S]
     {N : Type w} [AddCommGroup N] [Module R N] [Module S N] [IsScalarTower R S N] (f : M →ₗ[R] N) :
-      LinearMap.lift R S f =
+      LinearMap.lift S f =
         DividedPowerAlgebra.lift (dividedPowers' S N)
           (((ι S N).restrictScalars R).comp f) (ι_comp_mem_augIdeal R S f) := by
-  apply DividedPowerAlgebra.ext
+  apply DividedPowerAlgebra.algHom_ext
   intro n m
-  simp only [liftAlgHom_apply_dp, LinearMap.coe_comp, LinearMap.coe_restrictScalars,
+  simp only [lift_apply_dp, LinearMap.coe_comp, LinearMap.coe_restrictScalars,
     Function.comp_apply]
-  simp only [LinearMap.liftAlgHom_dp]
+  simp only [DividedPowerAlgebra.LinearMap.lift_apply_dp]
   simp only [ι, LinearMap.coe_mk, AddHom.coe_mk]
   rw [dp_comp _ _ _ _ Nat.one_ne_zero]
   simp only [uniformBell_one', Nat.cast_one, mul_one, one_mul]
@@ -1301,7 +1301,7 @@ theorem roby_prop_8 (R : Type u) [DecidableEq R] [CommRing R]
     (S : Type u) [DecidableEq S] [CommRing S] [Algebra R S]
     {N : Type u} [AddCommGroup N] [Module R N] [Module S N]
     [IsScalarTower R S N] (f : M →ₗ[R] N) :
-    IsDPMorphism (dividedPowers' R M) (dividedPowers' S N) (LinearMap.lift R S f) := by
+    IsDPMorphism (dividedPowers' R M) (dividedPowers' S N) (LinearMap.lift S f) := by
   rw [lift_eq_DPLift R S f]
   exact roby_theorem_2 R M (dividedPowers' S N) (ι_comp_mem_augIdeal R S f)
 

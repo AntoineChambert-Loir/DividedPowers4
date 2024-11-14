@@ -167,7 +167,7 @@ noncomputable def dpScalarExtension' (R : Type u) [CommSemiring R] (S : Type _) 
     [Algebra R S] (M : Type _) [AddCommMonoid M] [Module R M] [Module S M] [IsScalarTower R S M] :
     S ⊗[R] DividedPowerAlgebra R M →ₐ[S] DividedPowerAlgebra S M := by
   apply AlgHom.baseChange
-  apply lift' fun nm => dp S nm.1 nm.2
+  apply lift' (f := fun nm => dp S nm.1 nm.2)
   · intro m; rw [dp_zero]
   · intro n r m
     rw [← algebraMap_smul S r m, dp_smul S (algebraMap R S r) n m, ← map_pow, algebraMap_smul]
@@ -182,7 +182,7 @@ variable (A : Type*) [CommSemiring A] (R : Type*) [CommSemiring R] [Algebra A R]
 noncomputable def dpScalarExtension :
     R ⊗[A] DividedPowerAlgebra A M →ₐ[R] DividedPowerAlgebra R (R ⊗[A] M) := by
   apply AlgHom.baseChange
-  apply lift' (fun nm => dp R nm.1 (1 ⊗ₜ[A] nm.2) : ℕ × M → DividedPowerAlgebra R (R ⊗[A] M))
+  apply lift' (f := (fun nm => dp R nm.1 (1 ⊗ₜ[A] nm.2) : ℕ × M → DividedPowerAlgebra R (R ⊗[A] M)))
     (fun _ => by simp only [dp_zero])
   · intro n a m; simp only [tmul_smul]
     rw [← algebraMap_smul R a, dp_smul, ← map_pow, algebraMap_smul R]
@@ -191,7 +191,7 @@ noncomputable def dpScalarExtension :
 
 theorem dpScalarExtension_apply_dp (r : R) (n : ℕ) (m : M) :
     dpScalarExtension A R M ((r ^ n) ⊗ₜ[A] (dp A n m)) = dp R n (r ⊗ₜ[A] m) := by
-  rw [dpScalarExtension, AlgHom.baseChange_tmul, lift'AlgHom_apply_dp, ← dp_smul, smul_tmul',
+  rw [dpScalarExtension, AlgHom.baseChange_tmul, lift'_apply_dp, ← dp_smul, smul_tmul',
     smul_eq_mul, mul_one]
 
 theorem dpScalarExtension_apply_one_dp (n : ℕ) (m : M) :
@@ -286,7 +286,7 @@ noncomputable def dpScalarExtensionEquiv :
     S ⊗[R] DividedPowerAlgebra R M ≃ₐ[S] DividedPowerAlgebra S (S ⊗[R] M) :=
   AlgEquiv.ofAlgHom (dpScalarExtension R S M) (dpScalarExtensionInv R S M)
     (by
-      apply DividedPowerAlgebra.ext
+      apply DividedPowerAlgebra.algHom_ext
       rintro n sm
       simp only [coe_comp, Function.comp_apply, coe_id, id_eq]
       induction sm using TensorProduct.induction_on generalizing n with
@@ -305,7 +305,7 @@ noncomputable def dpScalarExtensionEquiv :
     (by
       apply Algebra.TensorProduct.ext
       · ext
-      · apply DividedPowerAlgebra.ext
+      · apply DividedPowerAlgebra.algHom_ext
         intro n m
         simp only [coe_comp, coe_restrictScalars', Function.comp_apply, includeRight_apply,
           coe_id, id_eq]
@@ -410,7 +410,7 @@ theorem dpScalarExtension_mem_grade {a : DividedPowerAlgebra R M} {n : ℕ} (ha 
         hx.2 hx.1, map_zero, zero_mul]
     · intro d _hd
       rw [← algebraMap_eq, coeff_sum]
-      simp only [MvPolynomial.algebraMap_apply, coeff_C_mul, map_sum, dp_def']
+      simp only [MvPolynomial.algebraMap_apply, coeff_C_mul, map_sum, dp_def]
       rw [← h_eq', RingHom.coe_comp, Function.comp_apply, h_sum d, coeff_sum, map_sum]
       simp only [Algebra.id.map_eq_id, RingHomCompTriple.comp_apply, _root_.map_mul, coeff_C_mul]
       congr 1

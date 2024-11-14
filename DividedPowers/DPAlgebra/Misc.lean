@@ -268,6 +268,7 @@ instance commRing : CommRing (𝒜 0) :=
     right_distrib := fun x y z => by ext; simp only [Submodule.coe_add, coe_mul, right_distrib]
     mul_comm := fun x y => by ext; simp only [coe_mul, mul_comm]
      }
+
 end GradeZero
 
 end CommRing
@@ -279,28 +280,19 @@ section GradedAlgebra
 variable {R : Type*} [CommSemiring R]
 variable {S : Type*} [CommSemiring S] [Algebra R S]
 
-def GAlgHom.IsHomogeneous {ι : Type*} {A : Type*} [CommSemiring A] [Algebra R A]
-    (𝒜 : ι → Submodule R A) {B : Type*} [CommSemiring B] [Algebra S B] [Algebra R B]
-    (ℬ : ι → Submodule S B) (f : A →ₐ[R] B) :=
-  ∀ i a, a ∈ 𝒜 i → f a ∈ ℬ i
-
-
-def GAlgHom.isHomogeneous'
-    {ι κ : Type*} (A : Type*) [CommSemiring A] [Algebra R A]
-    (𝒜 : ι → Submodule R A)
-    (B : Type*) [CommSemiring B] [Algebra R B] [Algebra S B]
-    (ℬ : κ → Submodule S B) (φ : ι → κ) (f : A →ₐ[R] B) :=
+/-- An `R`-algebra map `f` between graded algebras `A` and `B` is homogeneous if for every degree
+  `i`, `f(𝒜 i) ⊆ ℬ (φ i)`, where `φ : ι → κ` is some provided map. -/
+def GAlgHom.IsHomogeneous {ι κ : Type*} {A : Type*} [CommSemiring A] [Algebra R A]
+    (𝒜 : ι → Submodule R A) {B : Type*} [CommSemiring B] [Algebra R B] [Algebra S B]
+    (ℬ : κ → Submodule S B) (φ : ι → κ) (f : A →ₐ[R] B) : Prop :=
   ∀ i a, a ∈ 𝒜 i → f a ∈ ℬ (φ i)
 
 /-- The evaluation of a weighted homogeneous polynomial at
   elements of adequate grades is homogeneous -/
-theorem GAlgHom.isHomogeneous'_aeval (σ : Type*)
-    {ι κ : Type*} [AddCommMonoid ι] [AddCommMonoid κ] [DecidableEq κ]
-    (A : Type*) [CommSemiring A] [Algebra R A]
-    (𝒜 : κ → Submodule R A) [GradedAlgebra 𝒜]
-    (w : σ → ι) (φ : ι →+ κ) (f : σ → A) (h : ∀ s : σ, f s ∈ 𝒜 (φ (w s))) :
-    GAlgHom.isHomogeneous' (MvPolynomial σ R)
-      (weightedHomogeneousSubmodule R w) A 𝒜 φ (MvPolynomial.aeval f) := by
+theorem GAlgHom.IsHomogeneous_aeval {σ : Type*} {ι κ : Type*} [AddCommMonoid ι] [AddCommMonoid κ]
+    [DecidableEq κ] (A : Type*) [CommSemiring A] [Algebra R A] (𝒜 : κ → Submodule R A)
+    [GradedAlgebra 𝒜] {w : σ → ι} (φ : ι →+ κ) (f : σ → A) (h : ∀ s : σ, f s ∈ 𝒜 (φ (w s))) :
+    GAlgHom.IsHomogeneous (weightedHomogeneousSubmodule R w) 𝒜 φ (MvPolynomial.aeval f) := by
   intro i p hp
   simp only [mem_weightedHomogeneousSubmodule, IsWeightedHomogeneous] at hp
   rw [p.as_sum, map_sum]
@@ -309,11 +301,16 @@ theorem GAlgHom.isHomogeneous'_aeval (σ : Type*)
   rw [aeval_monomial, ← smul_eq_mul, algebraMap_smul]
   apply Submodule.smul_mem
   convert Finsupp.prod_mem_grade fun s _ => h s
-  rw [← hp (mem_support_iff.mp hc), Finsupp.weight_apply]
-  rw [Finsupp.sum, map_sum, Finsupp.sum_of_support_subset _ le_rfl]
-  apply Finset.sum_congr rfl
-  . intro x _ ; simp only [map_nsmul]
-  . intro s _ ; simp only [zero_smul]
+  rw [← hp (mem_support_iff.mp hc), Finsupp.weight_apply,
+    Finsupp.sum, map_sum, Finsupp.sum_of_support_subset _ le_rfl]
+  exact Finset.sum_congr rfl (fun _ _ ↦ map_nsmul _ _ _ )
+  . exact fun _ _ ↦ zero_smul _ _
+
+-- I do not think this one is needed; we can use the general one with φ := id.
+/- def GAlgHom.IsHomogeneous_same {ι : Type*} {A : Type*} [CommSemiring A] [Algebra R A]
+    (𝒜 : ι → Submodule R A) {B : Type*} [CommSemiring B] [Algebra S B] [Algebra R B]
+    (ℬ : ι → Submodule S B) (f : A →ₐ[R] B) :=
+  ∀ i a, a ∈ 𝒜 i → f a ∈ ℬ i -/
 
 end GradedAlgebra
 
@@ -321,50 +318,51 @@ section
 
 open MvPolynomial
 
-variable {R M : Type*} [CommSemiring R]
+variable (R : Type*)  [CommSemiring R] {M : Type*}
 
+/-- The weighted graded algebra structure on `MvPolynomial (ℕ × M) R`. -/
 local instance :
     GradedAlgebra (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) :=
   weightedGradedAlgebra _ _
 
+-- Unused
+/-
 def degree (v : ℕ × M →₀ ℕ) : ℕ :=
   finsum fun x => v x * x.1
 
 def IsHomogeneousOfDegree (p : MvPolynomial (ℕ × M) R) (n : ℕ) : Prop :=
-  ∀ v ∈ p.support, _root_.degree v = n
+  ∀ v ∈ p.support, _root_.degree v = n -/
 
-variable (R)
+theorem variable_mem_supported {nm : ℕ × M} (hn : 0 < nm.1) :
+    X nm ∈ supported R {nm : ℕ × M | 0 < nm.1} :=
+  mem_supported.mpr (Set.Subset.trans (Finset.coe_subset.mpr (vars_X_subset nm))
+    (coe_singleton nm ▸ Set.singleton_subset_iff.mpr hn))
 
-theorem variable_mem_supported (nm : ℕ × M) (hn : 0 < nm.1) :
-    X nm ∈ supported R {nm : ℕ × M | 0 < nm.1} := by
-  rw [mem_supported]
-  refine' Set.Subset.trans (Finset.coe_subset.mpr (vars_X_subset nm)) _
-  rw [coe_singleton, Set.singleton_subset_iff, Set.mem_setOf_eq]
-  exact hn
-
+/-- The map from `MvPolynomial (ℕ × M) R` to the set of polynomials supported on
+  `{nm : ℕ × M | 0 < nm.1}`, sending a polynomial `P` to itself if it is supported on
+  this set and to `1` otherwise. -/
 def toSupported : MvPolynomial (ℕ × M) R →ₐ[R] supported R {nm : ℕ × M | 0 < nm.1} :=
   aeval fun nm : ℕ × M =>
-    dite (0 < nm.1) (fun h => ⟨X nm, variable_mem_supported R nm h⟩) fun _ => 1
+    dite (0 < nm.1) (fun h => ⟨X nm, variable_mem_supported R h⟩) fun _ => 1
 
-theorem toSupported_isHomogeneous' :
-    GAlgHom.isHomogeneous' (MvPolynomial (ℕ × M) R)
-      (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) (MvPolynomial (ℕ × M) R)
+/-- The map `toSupported R` is a homogeneous morphism of graded algebras. -/
+theorem toSupported_isHomogeneous :
+    GAlgHom.IsHomogeneous (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ))
       (weightedHomogeneousSubmodule R Prod.fst) (id : ℕ → ℕ)
-      ((Subalgebra.val _).comp (toSupported R)) := by
+        ((Subalgebra.val _).comp (toSupported R)) := by
   have heq : aeval
     ((supported R {nm : ℕ × M | 0 < nm.fst}).val.toFun ∘
         fun nm : ℕ × M =>
           if h : 0 < nm.fst
-          then ⟨X nm, variable_mem_supported R nm h⟩
+          then ⟨X nm, variable_mem_supported R h⟩
           else 1) =
-      (supported R {nm : ℕ × M | 0 < nm.fst}).val.comp (toSupported R) :=
-    by
+      (supported R {nm : ℕ × M | 0 < nm.fst}).val.comp (toSupported R) := by
     apply MvPolynomial.algHom_ext
     intro nm
     simp only [toSupported, AlgHom.toFun_eq_coe, Function.comp_apply, AlgHom.coe_comp, aeval_X]
   rw [← heq]
-  apply GAlgHom.isHomogeneous'_aeval (ℕ × M) (MvPolynomial (ℕ × M) R)
-    (weightedHomogeneousSubmodule R Prod.fst) Prod.fst (AddMonoidHom.id ℕ)
+  apply GAlgHom.IsHomogeneous_aeval (MvPolynomial (ℕ × M) R)
+    (weightedHomogeneousSubmodule R Prod.fst) (AddMonoidHom.id ℕ)
   · intro nm
     simp only [mem_weightedHomogeneousSubmodule, AlgHom.toFun_eq_coe, Subalgebra.coe_val,
       Function.comp_apply, AddMonoidHom.id_apply]
@@ -377,21 +375,16 @@ theorem toSupported_isHomogeneous' :
 variable (M)
 
 -- TODO: generalize
-theorem eq_finsupp_single_of_degree_one [DecidableEq M]
-    {d : ℕ × M →₀ ℕ} (hd : (Finsupp.weight Prod.fst) d = 1)
-    (hsupp : ∀ nm ∈ d.support, 0 < nm.fst) :
-  ∃ m : M, Finsupp.single (1, m) 1 = d := by
+theorem eq_finsupp_single_of_degree_one [DecidableEq M] {d : ℕ × M →₀ ℕ}
+    (hd : (Finsupp.weight Prod.fst) d = 1) (hsupp : ∀ nm ∈ d.support, 0 < nm.fst) :
+    ∃ m : M, Finsupp.single (1, m) 1 = d := by
   rw [Finsupp.weight_apply, Finsupp.sum] at hd
   have hnm : ∃ nm : ℕ × M, d nm • nm.fst = 1 := by
     by_contra h0
     rw [not_exists] at h0
     have hd0 : (d.support.sum fun a : ℕ × M => d a • a.fst) = 0 := by
-      rw [Finset.sum_eq_zero]
-      intro nm hnm
-      rw [← Nat.lt_one_iff]
-      apply lt_of_le_of_ne _ (h0 nm)
-      rw [← hd]
-      exact Finset.single_le_sum (fun x _ => zero_le (d x • x.fst)) hnm
+      rw [Finset.sum_eq_zero (fun nm hnm ↦ Nat.lt_one_iff.mp <| lt_of_le_of_ne
+        (hd ▸ Finset.single_le_sum (fun x _ => zero_le (d x • x.fst)) hnm) (h0 nm))]
     rw [hd0] at hd
     exact zero_ne_one hd
   obtain ⟨nm, hnm⟩ := hnm
@@ -413,5 +406,3 @@ theorem eq_finsupp_single_of_degree_one [DecidableEq M]
     exact hne0 (hd ab ⟨hab', hab⟩)
 
 end
-
---#lint
