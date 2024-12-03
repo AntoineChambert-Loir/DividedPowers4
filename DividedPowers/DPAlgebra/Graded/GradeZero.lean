@@ -5,7 +5,6 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 import DividedPowers.DPAlgebra.Graded.Basic
 import DividedPowers.ForMathlib.RingTheory.AugmentationIdeal
-import Mathlib.LinearAlgebra.TensorAlgebra.Basic
 
 universe u v
 
@@ -32,7 +31,6 @@ theorem mk_eq_eval₂ {C : Type*} [CommRing C] {D : Type*} (I : Ideal (MvPolynom
 end MvPolynomial
 
 namespace DividedPowerAlgebra
-
 
 open DirectSum Finset Function Ideal Ideal.Quotient MvPolynomial RingEquiv RingQuot TrivSqZeroExt
 
@@ -358,9 +356,7 @@ theorem isAugmentation [DecidableEq M] :
   · rw [Submodule.disjoint_def]
     intro x
     simp only [Subalgebra.mem_toSubmodule, Algebra.mem_bot, Set.mem_range, Subtype.exists,
-      Submodule.restrictScalars_mem, forall_exists_index]
-    simp only [gradeZeroSubalgebra_eq_bot, Algebra.mem_bot]
-    simp only [Set.mem_range, forall_exists_index]
+      Submodule.restrictScalars_mem, forall_exists_index, gradeZeroSubalgebra_eq_bot]
     rintro x y ⟨rfl⟩ ⟨rfl⟩ hy
     change algebraMap R _ y ∈ augIdeal R M at hy
     rw [mem_augIdeal_iff] at hy

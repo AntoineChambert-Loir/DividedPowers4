@@ -36,7 +36,7 @@ instance [hR : DecidableEq R] : DecidablePred (fun x ↦ x ∈ kerIdeal R M) :=
 
 variable (M)
 
-/-- The canonical map from `DividedPowerAlgebr R M` into `TrivSqZeroExt R M`
+/-- The canonical map from `DividedPowerAlgebra R M` into `TrivSqZeroExt R M`
   that sends `DividedPowerAlgebra.ι` to `TrivSqZeroExt.inr`. -/
 def toTrivSqZeroExt : DividedPowerAlgebra R M →ₐ[R] TrivSqZeroExt R M :=
   lift (DividedPowers.OfSquareZero.dividedPowers
@@ -86,9 +86,8 @@ theorem grade_one_eq_span :
     rintro p ⟨m, rfl⟩
     exact dp_mem_grade R M 1 m
 
-theorem grade_one_eq_span' :
-    (⊤ : Submodule R (grade R M 1)) =
-      Submodule.span R (Set.range fun m => ⟨dp R 1 m, dp_mem_grade R M 1 m⟩) := by
+theorem grade_one_eq_span' : (⊤ : Submodule R (grade R M 1)) =
+    Submodule.span R (Set.range fun m => ⟨dp R 1 m, dp_mem_grade R M 1 m⟩) := by
   apply Submodule.map_injective_of_injective (grade R M 1).injective_subtype
   rw [Submodule.map_subtype_top, Submodule.map_span]
   simp_rw [grade_one_eq_span R M, ← Set.range_comp]
@@ -112,7 +111,7 @@ theorem deg_one_right_inv :
   ext
   dsimp only
   rw [← ι_def m, toTrivSqZeroExt_ι, ← ι_def, snd_inr, decompose_of_mem_same]
-  apply ι_mem_grade_one
+  exact ι_mem_grade_one _ _
 
 theorem deg_one_left_inv :
     LeftInverse (fun x : grade R M 1 => (toTrivSqZeroExt R M x.1).snd) (proj' R M 1 ∘ ι R M) := by
@@ -121,11 +120,10 @@ theorem deg_one_left_inv :
   rw [← TrivSqZeroExt.snd_inr R m, ← ι_def]
   apply congr_arg
   rw [snd_inr, decompose_of_mem_same, toTrivSqZeroExt_ι]
-  apply ι_mem_grade_one
+  exact ι_mem_grade_one _ _
 
 /-- The linear equivalence `(proj' R M 1).comp (ι R M) : M → grade R M 1`. -/
-def linearEquivDegreeOne :
-    LinearEquiv (RingHom.id R) M (grade R M 1) where
+def linearEquivDegreeOne : LinearEquiv (RingHom.id R) M (grade R M 1) where
   toFun         := (proj' R M 1).comp (ι R M)
   invFun x      := TrivSqZeroExt.sndHom R M (toTrivSqZeroExt R M x.1)
   map_add' x y  := by simp only [map_add]
@@ -136,11 +134,11 @@ def linearEquivDegreeOne :
 lemma ι_toTrivSqZeroExt_of_mem_grade_one {a} (ha : a ∈ grade R M 1) :
     (ι R M) ((sndHom R M) ((toTrivSqZeroExt R M) a)) = a := by
   suffices ⟨(ι R M) ((sndHom R M) ((toTrivSqZeroExt R M) a)), ι_mem_grade_one R _⟩ =
-    (⟨a, ha⟩ : grade R M 1) by
+      (⟨a, ha⟩ : grade R M 1) by
     simpa only [sndHom_apply, Subtype.mk.injEq] using this
   apply (linearEquivDegreeOne R M).symm.injective
-  rw [← LinearEquiv.invFun_eq_symm]
-  simp only [linearEquivDegreeOne, toTrivSqZeroExt_ι, sndHom_apply, snd_inr]
+  simp only [← LinearEquiv.invFun_eq_symm, linearEquivDegreeOne, toTrivSqZeroExt_ι,
+    sndHom_apply, snd_inr]
 
 theorem mem_grade_one_iff (a : DividedPowerAlgebra R M) :
     a ∈ grade R M 1 ↔ ∃ m, a = ι R M m := by

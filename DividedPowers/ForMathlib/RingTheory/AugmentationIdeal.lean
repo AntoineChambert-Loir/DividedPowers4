@@ -519,7 +519,7 @@ def Ideal.IsAugmentation (R : Type*) [CommSemiring R]
     {A : Type*} [CommSemiring A] [Algebra R A] (J : Ideal A) : Prop :=
   IsCompl (Subalgebra.toSubmodule (⊥ : Subalgebra R A)) (J.restrictScalars R)
 
-theorem Ideal.isAugmentation_subalgebra_iff (A : Type*) [CommSemiring A]
+theorem Ideal.isAugmentation_subalgebra_iff {A : Type*} [CommSemiring A]
     {R : Type*} [CommSemiring R] [Algebra A R]
     {S : Subalgebra A R} {I : Ideal R} :
     I.IsAugmentation S ↔
