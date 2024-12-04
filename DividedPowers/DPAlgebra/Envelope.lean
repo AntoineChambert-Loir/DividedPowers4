@@ -597,8 +597,25 @@ theorem dpEnvelope_IsDPEnvelope' [DecidableEq B] [∀ x, Decidable (x ∈  (dpId
           · simp only [dpIdealOfIncluded]
             apply Set.mem_of_subset_of_mem _ hx
             simp only [SetLike.coe_subset_coe]
-
-            sorry
+            have heq : algebraMap B (dpEnvelope hI J) =
+             (algebraMap (DividedPowerAlgebra B ↥(J' I J)) (dpEnvelope hI J)).comp
+             (algebraMap B (DividedPowerAlgebra B ↥(J' I J))) := by rfl
+            rw [heq, ← Ideal.map_map]
+            apply Ideal.map_mono
+            intro x hx
+            simp only [map] at hx
+            --simp only [mem_augIdeal_iff]
+            apply Submodule.span_induction hx (p := fun x ↦ x ∈ _)
+            · intro y hy
+              simp only [Set.mem_image, SetLike.mem_coe] at hy
+              obtain ⟨z, hzJ, rfl⟩ := hy
+              simp only [mem_augIdeal_iff]
+              simp only [AlgHom.commutes, Algebra.id.map_eq_id, RingHom.id_apply]
+              -- This isn't right...
+              sorry
+            · sorry
+            · sorry
+            · sorry
       dpow_comp  := fun a ha => by
         --have := φ.dpow_comp
         obtain ⟨r, s⟩ := hI1
