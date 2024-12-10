@@ -53,7 +53,7 @@ def IsDPEnvelope {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I) 
         ∀ (K : Ideal C) (hK : DividedPowers K)
           (_ : J.map (algebraMap B C) ≤ K)
           (_ : IsCompatibleWith hI hK (algebraMap A C)),
-          ∃! φ : DPMorphism hJ' hK, φ.toRingHom ∘ ψ = algebraMap B C
+          ∃! φ : DPMorphism hJ' hK, φ.toRingHom.comp ψ = algebraMap B C
 
 /-- B-O Universal property from Theorem 3.19, with additional restriction at the end of case 1 -/
 def IsWeakDPEnvelope {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I) {B : Type v}
@@ -532,7 +532,7 @@ section
 variable [Nontrivial B]
 
 -- Universal property claim of Theorem 3.19
-theorem dpEnvelope_IsDPEnvelope' [DecidableEq B] [∀ x, Decidable (x ∈  (dpIdeal hI J).carrier)] :
+theorem dpEnvelope_IsDPEnvelope [DecidableEq B] [∀ x, Decidable (x ∈  (dpIdeal hI J).carrier)] :
     IsDPEnvelope hI J (dpIdeal hI J) (dividedPowers hI J)
       (algebraMap B (dpEnvelope hI J)) (sub_ideal_dpIdeal hI J) := by
   rw [IsDPEnvelope]
@@ -564,8 +564,10 @@ theorem dpEnvelope_IsDPEnvelope' [DecidableEq B] [∀ x, Decidable (x ∈  (dpId
     simp only [J', Submodule.add_eq_sup, Ideal.map_sup, Ideal.map_map,
       ← IsScalarTower.algebraMap_eq]
     exact le_sup_of_le_right (le_refl _)
-  -- `φ` restricts to a DP morphism from `dpIdeal hI J` to `K`, because the image of
-  -- `dpIdeal hI J` is contained in `K`.
+  /- Q: I am trying to follow "The General Case" section in page 63 of B-O. If I understand
+    correctly, what they are saying is that the map `φ` above is also a DP morphism from
+    `dpIdeal hI J` to `K`, because the image of `dpIdeal hI J` is contained in `K`. However I
+    cannot prove this (see line 609). -/
   set ψ : (dividedPowers hI J).DPMorphism hK :=
     { toRingHom  := φ.toRingHom
       ideal_comp := by
@@ -604,59 +606,48 @@ theorem dpEnvelope_IsDPEnvelope' [DecidableEq B] [∀ x, Decidable (x ∈  (dpId
             apply Ideal.map_mono
             intro x hx
             simp only [map] at hx
-            --simp only [mem_augIdeal_iff]
-            apply Submodule.span_induction hx (p := fun x ↦ x ∈ _)
-            · intro y hy
-              simp only [Set.mem_image, SetLike.mem_coe] at hy
-              obtain ⟨z, hzJ, rfl⟩ := hy
-              simp only [mem_augIdeal_iff]
-              simp only [AlgHom.commutes, Algebra.id.map_eq_id, RingHom.id_apply]
-              -- This isn't right...
-              sorry
-            · sorry
-            · sorry
-            · sorry
+            -- Q (follow up from line 567): this seems false, which would suggest that the proof
+            -- strategy from B-O does not work.
+            sorry
       dpow_comp  := fun a ha => by
         --have := φ.dpow_comp
         obtain ⟨r, s⟩ := hI1
         --rw ← hI'_ext,
         --rw φ.dpow_comp,
         sorry }
-
   use ψ
   refine ⟨by rw [← hφ]; rfl, ?_⟩
-  · intro α hα
-    simp only
-    -- Could this be some composition?
-    set β : (Quotient.dividedPowers (DividedPowerAlgebra.dividedPowers' B ↥(J' I J))
-      (J12_IsSubDPIdeal hI (sub_ideal_J' I J))).DPMorphism h1 :=
-    { toRingHom  := α.toRingHom
-      ideal_comp := by
-        have hKK1 : K ≤ K1 := sorry
-        apply le_trans _ hKK1
-        have := α.ideal_comp
-        apply le_trans _ this
-        apply Ideal.map_mono
-        rw [Ideal.map_le_iff_le_comap]
-        intros x hx
-        rw [Ideal.mem_comap]
-        simp only [augIdeal] at hx
-        /- simp only [dpIdeal]
-        convert sub_ideal_dpIdeal hI J
-        simp only [dpEnvelope] -/
-        simp only [SubDPIdeal.memCarrier, dpIdeal]
+  intro α hα
+  simp only
+  set β : (Quotient.dividedPowers (DividedPowerAlgebra.dividedPowers' B ↥(J' I J))
+    (J12_IsSubDPIdeal hI (sub_ideal_J' I J))).DPMorphism h1 :=
+  { toRingHom  := α.toRingHom
+    ideal_comp := by
+      have hKK1 : K ≤ K1 := sorry --easy
+      apply le_trans _ hKK1
+      apply le_trans _ α.ideal_comp
+      apply Ideal.map_mono
+      intro x hx
+      simp only [SubDPIdeal.memCarrier, dpIdeal, SubDPIdeal.generatedDpow]
+      refine Submodule.span_induction' ?_ ?_ ?_ ?_ hx
+      · intro x hx
+        simp only [Set.mem_image, SetLike.mem_coe] at hx
+        obtain ⟨y, hy, rfl⟩ := hx
+        rw [mem_augIdeal_iff] at hy
+        -- Q: This does not look right either, is α not the correct map to take?
         sorry
-      dpow_comp  := fun a ha => by
-        obtain ⟨hK', hmap, hint⟩ := hI1
-        --rw [← hα] at hmap
-        --simp_rw [← hI'_ext] at hmap
-        --rw φ.dpow_comp,
-        sorry }
-
-    have hβ : β.toRingHom.comp (algebraMap B (dpEnvelopeOfIncluded hI (J' I J)
-      (sub_ideal_J' I J))) = (algebraMap B C) := sorry
-
-    ext x
-    simp only [RingHom.toMonoidHom_eq_coe, OneHom.toFun_eq_coe, MonoidHom.toOneHom_coe,
-      MonoidHom.coe_coe]
-    rw [← hφ_unique β hβ]
+      · simp
+      · intro a _ b _ ha hb
+        exact Ideal.add_mem _ ha hb
+      · intro a x _ hx
+        exact Submodule.smul_mem _ a hx
+    dpow_comp  := fun a ha => by
+      obtain ⟨hK', hmap, hint⟩ := hI1
+      --rw [← hα] at hmapc
+      --simp_rw [← hI'_ext] at hmap
+      --rw φ.dpow_comp,
+      sorry }
+  ext x
+  simp only [RingHom.toMonoidHom_eq_coe, OneHom.toFun_eq_coe, MonoidHom.toOneHom_coe,
+    MonoidHom.coe_coe]
+  rw [← hφ_unique β hα]
