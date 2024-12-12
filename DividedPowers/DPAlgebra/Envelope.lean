@@ -624,12 +624,11 @@ theorem dpEnvelope_IsDPEnvelope [DecidableEq B] [∀ x, Decidable (x ∈  (dpIde
         change _ ≤ K'.carrier
         rw [dpIdeal]
         apply map_generatedDpow_le_of_subDPIdeal
-        suffices Ideal.map φ (map (algebraMap B (dpEnvelope hI J)) J) ≤ ↑K' by
+        suffices Ideal.map φ.toRingHom (map (algebraMap B (dpEnvelope hI J)) J) ≤ ↑K' by
           rwa [Ideal.map, span_le] at this
-        erw [Ideal.map_map, Ideal.map, span_le]
+        rw [Ideal.map_map, Ideal.map, span_le]
         rintro _ ⟨b, hb, rfl⟩
-        erw [hφ]
-        simp only [SetLike.mem_coe]
+        simp only [dpEnvelope, hφ, SetLike.mem_coe]
         apply le_trans hJK (le_refl K)
         exact mem_map_of_mem (algebraMap B C) hb
         /-
