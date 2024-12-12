@@ -671,8 +671,14 @@ theorem dpEnvelope_IsDPEnvelope [DecidableEq B] [∀ x, Decidable (x ∈  (dpIde
             -- strategy from B-O does not work.
             sorry -/
       dpow_comp  := fun {n} a ha => by
+        -- On `K`, `h1.dpow` coincides with `hK.dpow`, by `dpow_eq_of_mem_right`
+        -- The left hand side applies to `φ a`, so `hK` can be changed to `h1`
+        -- Then apply the property of `φ`
+        -- Get `dpow` for `dpEnvelopeOfIncluded`, for `J' I J`, 
+        -- but this will be the same as `dpow` for `dpEnvelope` because the element is there.
+        -- 
         --have := φ.dpow_comp
-        obtain ⟨r, s⟩ := hI1
+        -- obtain ⟨r, s⟩ := hI1
         --rw ← hI'_ext,
         --rw φ.dpow_comp,
         sorry }
@@ -684,8 +690,18 @@ theorem dpEnvelope_IsDPEnvelope [DecidableEq B] [∀ x, Decidable (x ∈  (dpIde
     (J12_IsSubDPIdeal hI _ (sub_ideal_J' I J))).DPMorphism h1 :=
   { toRingHom  := α.toRingHom
     ideal_comp := by
-      have hKK1 : K ≤ K1 := sorry --easy
-      apply le_trans _ hKK1
+      have hKK1 : K ≤ K1 := le_sup_right --easy
+      apply le_trans _ le_sup_right
+      rw [Ideal.map_map]
+      -- The map is a divided power morphism
+      -- The target ideal is a divided power ideal
+      -- To prove inclusion, it suffices to prove that generators for the source ideal (as a dp ideal)
+      -- map to the target
+      -- By the yet unproved example at the end of `DPAlgebra/Dpow`,
+      -- the elements of `J' I J` are such generators
+      -- and it is basically obvious that they map to `K1`
+      -- But, the elements of `J` map to `K` (hypothesis)
+      -- and the elements of `I` map to `K` as well (another hypothesis)
       apply le_trans _ α.ideal_comp
       apply Ideal.map_mono
       intro x hx
