@@ -282,4 +282,7 @@ def IsCompatibleWith {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers
     /- (∀ (n : ℕ) (a : A), hI'.dpow n (f a) = f (hI.dpow n a)) -/ ∧
       ∀ {n : ℕ} (b : B) (_ : b ∈ I.map f ⊓ J), hI'.dpow n b = hJ.dpow n b
 
+-- TODO: formalize B-O 3.18
+-- TODO: add API relating SubDPIdeal and IsCompatibleWith.
+
 end DividedPowers
