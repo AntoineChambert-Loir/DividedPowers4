@@ -207,7 +207,7 @@ theorem coeff_zero_of_mem_augIdeal {f : MvPolynomial (ℕ × M) R}
     rw [monomial_zero', aeval_C, Algebra.id.map_eq_id, RingHom.id_apply, ←
       not_mem_support_iff.mp hf']
 
-theorem  augIdeal_eq_span :
+theorem augIdeal_eq_span :
     augIdeal R M = span (Set.image2 (dp R) {n : ℕ | 0 < n} Set.univ) := by
   classical
   apply le_antisymm

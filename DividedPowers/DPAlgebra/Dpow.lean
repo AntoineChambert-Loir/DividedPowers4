@@ -1124,8 +1124,9 @@ theorem dpow_ι (A : Type u) [CommRing A] [DecidableEq A] (M : Type u) [AddCommG
     (x : M) (n : ℕ) : dpow (dividedPowers' A M) n (ι A M x) = dp A n x :=
   (condD_holds A M).choose_spec n x
 
-example (A : Type u) [CommRing A] [DecidableEq A] (M : Type u) [AddCommGroup M] [Module A M] :
-    SubDPIdeal.generatedDpow (dividedPowers' A M) (ι A M).range = ⊤ := sorry
+--TODO: make this compile
+/- example (A : Type u) [CommRing A] [DecidableEq A] (M : Type u) [AddCommGroup M] [Module A M] :
+    SubDPIdeal.generatedDpow (dividedPowers' A M) (ι A M).range = ⊤ := sorry -/
 
 theorem dp_comp (A : Type u) [CommRing A] [DecidableEq A] (M : Type u) [AddCommGroup M] [Module A M]
     (x : M) {n : ℕ} (m : ℕ) (hn : n ≠ 0) :
