@@ -31,7 +31,7 @@ lemma dpowExp_smul (hI : DividedPowers I) {r a : R} (ha : a ∈ I) :
 def exp (hI : DividedPowers I) (a : I) : ExponentialModule R :=
   ⟨hI.dpowExp a, hI.dpowExp_isExponential a.prop⟩
 
-lemma coe_exp (hI : DividedPowers I) (a : I) : ↑(hI.exp a : R⟦X⟧) = hI.dpowExp ↑a := rfl
+lemma coe_exp (hI : DividedPowers I) (a : I) : (hI.exp a : R⟦X⟧) = hI.dpowExp ↑a := rfl
 
 /-- The linear map `hI.exp` from `I` to `ExponentialModule R`. -/
 def exp_LinearMap (hI : DividedPowers I) : I →ₗ[R] ExponentialModule R where
@@ -43,6 +43,9 @@ def exp_LinearMap (hI : DividedPowers I) : I →ₗ[R] ExponentialModule R where
     rw [RingHom.id_apply]
     apply coe_injective
     simp only [coe_exp, coe_smul, SetLike.val_smul, smul_eq_mul, hI.dpowExp_smul a.prop]
+
+theorem exp_LinearMap_apply (hI : DividedPowers I) (x : I) :
+    hI.exp_LinearMap x = hI.exp x := rfl
 
 /- It remains to show that an additive map like exp : I →+ ExponentialModule R furnishes a
   partial divided power structure -/

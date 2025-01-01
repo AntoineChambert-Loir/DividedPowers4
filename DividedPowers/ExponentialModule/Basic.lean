@@ -402,7 +402,6 @@ def memExponentialModule_iff' (f : Additive R⟦X⟧) :
     f ∈ ExponentialModule R ↔ IsExponential (toMul f) := by
   simp only [ExponentialModule, AddSubmonoid.mem_mk, AddSubsemigroup.mem_mk, Set.mem_setOf_eq]
 
-
 namespace ExponentialModule
 
 open PowerSeries Additive
@@ -471,6 +470,25 @@ lemma coe_smul (r : A) (f : ExponentialModule R) :
     ((r • f) : ExponentialModule R) = scale r (f : R⟦X⟧) :=
   rfl
 
+noncomputable instance : AddCommGroup (ExponentialModule R) where
+  neg f := (-1 : ℤ) • f
+  zsmul n f := n • f
+  zsmul_zero' f := by simp [← Subtype.coe_inj]
+  zsmul_succ' n f := by
+    simp only [Nat.succ_eq_add_one, Int.ofNat_eq_coe, Nat.cast_add, Nat.cast_one, ← Subtype.coe_inj,
+      AddSubmonoid.coe_add, add_smul, one_smul, AddSubmonoid.coe_add]
+  zsmul_neg' n f := by
+    dsimp only
+    rw [Int.negSucc_eq]
+    rw [← smul_assoc]
+    simp
+  neg_add_cancel f := by
+    rw [← Subtype.coe_inj]
+    apply Additive.toMul.injective
+    simp only [toPowerSeries, AddSubmonoid.coe_add, toMul_add]
+    exact isExponential_neg_mul_self_eq_one f.2
+  add_comm f g := add_comm f g
+
 /- instance inst_exponentialModule_tower
     (R : Type*) [CommRing R] (S : Type*) [CommRing S] [Algebra R S] :
     IsScalarTower R S (ExponentialModule S) where
@@ -495,7 +513,6 @@ instance inst_exponentialModule_tower
     simp only [coeff_scale, ← map_pow, algebraMap_smul]
 
 
-
 lemma coe_ofMul (f : R⟦X⟧) (hf : IsExponential f) :
     ↑(⟨ofMul f, hf⟩ : ExponentialModule R) = f := rfl
 
@@ -514,7 +531,6 @@ lemma add_mul_coe' (f : ExponentialModule R) (p q : ℕ) :
   (isExponential_add_mul_iff (R := R) f).mp (add_mul_coe f) p q
 
 variable {S : Type*} [CommRing S] [Algebra A S] (φ : R →ₐ[A] S)
-
 
 def linearMap :
     ExponentialModule R →ₗ[A] ExponentialModule S where

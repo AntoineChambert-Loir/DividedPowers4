@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 import Mathlib.Algebra.BigOperators.Ring
+import Mathlib.Algebra.Module.BigOperators
 import Mathlib.Algebra.Order.BigOperators.Group.Finset
 import Mathlib.Data.Finset.NatAntidiagonal
 import Mathlib.Tactic.Abel
@@ -12,14 +13,14 @@ open BigOperators Finset
 
 section FourFoldSums
 
-/- This lemma is awkward and mathematically obvious, it just rewrite the sum using the variable `x`
+/- This lemma is awkward and mathematically obvious, it just rewrites the sum using the variable `x`
   which determines `y`, `z`, `t`. However, one of its points is to reduce a 4-fold sum to a
   2-fold sum.  -/
 
 /-- The sum of `f(x, y)` on `x + y = m` and `z + t = n` and `x + z = u` and `y + t = v`
   is equal to the sum of `f(x, y)` on `x + y = m`, provided `f (x, y)` vanishes if `x > u` or
   `y > v`. -/
-theorem rewriting_4_fold_sums {α : Type*} [CommSemiring α] {m n u v : ℕ} (h : m + n = u + v)
+theorem rewriting_4_fold_sums {α : Type*} [AddCommMonoid α] {m n u v : ℕ} (h : m + n = u + v)
   (f : ℕ × ℕ → α) {g : (ℕ × ℕ) × ℕ × ℕ → α} (hgf : g = fun x => f (x.fst.fst, x.fst.snd))
   (hf : ∀ x : ℕ × ℕ, u < x.fst ∨ v < x.snd → f x = 0) :
   (filter (fun x : (ℕ × ℕ) × ℕ × ℕ => x.fst.fst + x.snd.fst = u ∧ x.fst.snd + x.snd.snd = v)
@@ -36,11 +37,11 @@ theorem rewriting_4_fold_sums {α : Type*} [CommSemiring α] {m n u v : ℕ} (h 
   suffices hf' :
     ∀ x : (ℕ × ℕ) × ℕ × ℕ,
       ite ((x.fst.fst + x.snd.fst = u ∧ x.fst.snd + x.snd.snd = v) ∧ x.fst = (i, j)) (g x) 0 =
-        ite ((x.fst.fst + x.snd.fst = u ∧ x.fst.snd + x.snd.snd = v) ∧ x.fst = (i, j)) 1 0 *
+        ite ((x.fst.fst + x.snd.fst = u ∧ x.fst.snd + x.snd.snd = v) ∧ x.fst = (i, j)) 1 0 •
           f ⟨i, j⟩ by
-    rw [sum_congr rfl fun x _ => hf' x, ← sum_mul]
+    rw [sum_congr rfl fun x _ => hf' x, ← sum_smul]
     by_cases hij' : i ≤ u ∧ j ≤ v
-    · conv_rhs => rw [← one_mul (f ⟨i, j⟩)]
+    · conv_rhs => rw [← one_smul ℕ (f ⟨i, j⟩)]
       apply congr_arg₂ _ _ rfl
       rw [sum_eq_single (⟨⟨i, j⟩, ⟨u - i, v - j⟩⟩ : (ℕ × ℕ) × ℕ × ℕ)]
       simp only [Nat.add_sub_of_le hij'.1, Nat.add_sub_of_le hij'.2, eq_self_iff_true, and_self_iff,
@@ -64,11 +65,11 @@ theorem rewriting_4_fold_sums {α : Type*} [CommSemiring α] {m n u v : ℕ} (h 
         simp only [add_assoc, add_right_inj]
         rw [add_comm]
     · simp only [not_and_or, not_le] at hij'
-      rw [hf ⟨i, j⟩ hij', mul_zero]
+      rw [hf ⟨i, j⟩ hij', smul_zero]
   · intro x
     split_ifs with hx
-    · simp only [one_mul, hgf, hx.2]
-    · rw [zero_mul]
+    · simp only [one_smul, hgf, hx.2]
+    · rw [zero_smul]
 
 
 /- TODO : There should be some general rewriting pattern for sums indexed by
