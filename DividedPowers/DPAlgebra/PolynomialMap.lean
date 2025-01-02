@@ -117,17 +117,14 @@ example {N : Type*} [AddCommGroup N] [Module R N] (n : ℕ) :
 noncomputable
 def grade_basis (n : ℕ) {ι : Type*} (b : Basis ι R M) :
     Basis { h : ι →₀ ℕ // (h.sum fun i n ↦ n) = n } R (grade R M n) := by
-  let v : (ι →₀ ℕ) → DividedPowerAlgebra R M :=
-    fun h ↦ h.prod (fun i n ↦ dp R n (b i))
+  let v (h : ι →₀ ℕ) : DividedPowerAlgebra R M := h.prod (fun i n ↦ dp R n (b i))
   have hv : ∀ h, v h ∈ grade R M (h.sum fun i n ↦ n) := sorry
-  have v' : { h : ι →₀ ℕ // (h.sum fun i n ↦ n) = n} → grade R M n :=
-    fun ⟨h, hh⟩ ↦ ⟨v h, by rw [← hh]; apply hv⟩
+  set v' : { h : ι →₀ ℕ // (h.sum fun i n ↦ n) = n} → grade R M n :=
+    fun ⟨h, hh⟩ ↦ ⟨v h, by rw [← hh]; apply hv⟩ with hv'
   apply Basis.mk (v := v')
-  · /- Linear independence is the difficult part, it relies on the PolynomialMap
-       interpretation -/
+  · /- Linear independence is the difficult part, it relies on the PolynomialMap interpretation -/
     sorry
-  · /- It should be easy to prove that these elements generate
-      * the `dp R n (b i)` generate -/
+  · /- It should be easy to prove that the `dp R n (b i)` generate -/
     sorry
 
 theorem grade_free [Module.Free R M] (n : ℕ): Module.Free R (grade R M n) :=

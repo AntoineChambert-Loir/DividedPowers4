@@ -56,7 +56,7 @@ noncomputable def _root_.Submodule.quotientCoprodAddEquiv :
   rintro ⟨x, hx⟩ _
   obtain ⟨y, hy, z, hz, rfl⟩ := mem_sup.mp hx
   use ⟨⟨y, hy⟩, ⟨z, hz⟩⟩
-  simp [← Subtype.coe_inj]
+  simp only [coprod_apply, ← Subtype.coe_inj, coe_add, coe_inclusion]
 
 noncomputable def onSup (h : ∀ x (hM : x ∈ M) (hN : x ∈ N), f ⟨x, hM⟩ = g ⟨x, hN⟩) :
     M + N →ₗ[A] Y := by

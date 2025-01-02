@@ -51,7 +51,7 @@ constructor
   · rintro _ ⟨x, hx, rfl⟩
     simp only [mk_apply, LinearMap.mem_range]
     use 1 ⊗ₜ[R] (⟨x, hx⟩ : p)
-    simp only [LinearMap.baseChange_tmul, Submodule.coeSubtype]
+    simp only [LinearMap.baseChange_tmul, Submodule.coe_subtype]
   · exact zero_mem _
   · intro x y hx hy
     exact add_mem hx hy
@@ -61,7 +61,7 @@ constructor
   induction x using TensorProduct.induction_on with
   | zero => simp
   | tmul a x =>
-    simp only [LinearMap.baseChange_tmul, coeSubtype]
+    simp only [LinearMap.baseChange_tmul, coe_subtype]
     exact tmul_mem_baseChange_of_mem a (coe_mem x)
   | add x y hx hy =>
     simp only [map_add]
@@ -129,7 +129,7 @@ theorem Decompose.baseChange.decompose_of_mem {m : S ⊗[R] M} {i : ι}
     rw [LinearMap.map_add, px, py, eq_comm]
     simp only [← DirectSum.lof_eq_of S]
     convert LinearMap.map_add _ _ _
-    simp only [AddSubmonoid.mk_add_mk, Submodule.map_coe]
+    simp only [AddMemClass.mk_add_mk, Submodule.map_coe]
   · intro s x hx px
     rw [LinearMap.map_smul, px, eq_comm]
     simp only [← DirectSum.lof_eq_of S]
