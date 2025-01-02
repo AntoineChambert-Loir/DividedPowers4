@@ -101,6 +101,136 @@ theorem sum_4_rw' {α : Type*} [AddCommMonoid α] (f : ℕ × ℕ × ℕ × ℕ 
   rw [← H.1, ← H.2.1, ← H.2.2]; abel
 
 
+variable {α : Type*} [CanonicallyOrderedAddCommMonoid α] [Finset.HasAntidiagonal α]
+
+def antidiagonalTriple (n : α) : Finset (α × α × α) :=
+  (antidiagonal n).disjiUnion (fun k ↦ (antidiagonal k.2).map (Function.Embedding.sectr k.1 _))
+  (fun k _ l _ hkl ↦ by
+    simp_rw [disjoint_iff_ne]
+    intro x hx y hy hxy
+    simp only [mem_map] at hx hy
+    obtain ⟨x, hx, rfl⟩ := hx
+    obtain ⟨y, hy, rfl⟩ := hy
+    simp only [Function.Embedding.sectr_apply, Prod.mk.injEq] at hxy
+    apply hkl
+    ext
+    exact hxy.1
+    simp only [mem_antidiagonal] at hx hy
+    rw [← hy, ← hx, hxy.2])
+
+theorem mem_antidiagonalTriple {n : α} {x : α × α × α} :
+    x ∈ antidiagonalTriple n ↔ x.1 + x.2.1 + x.2.2 = n := by
+  constructor
+  · intro hx
+    simp only [antidiagonalTriple, mem_disjiUnion] at hx
+    obtain ⟨y, hy, hx⟩ := hx
+    rw [mem_map] at hx
+    obtain ⟨z, hz, rfl⟩ := hx
+    dsimp only [Function.Embedding.sectr_apply]
+    simp only [mem_antidiagonal] at hy hz
+    rw [← hy, add_assoc, hz]
+  · intro hx
+    simp only [antidiagonalTriple, mem_disjiUnion]
+    use (x.1, x.2.1 + x.2.2)
+    constructor
+    · simp only [mem_antidiagonal, ← add_assoc, hx]
+    · simp only [mem_map]
+      use (x.2.1, x.2.2)
+      constructor
+      · simp only [mem_antidiagonal]
+      · dsimp only [Function.Embedding.sectr_apply]
+
+def sum_antidiagonalTriple_eq {β : Type*} [AddCommMonoid β] (f : α × α × α → β) (n : α) :
+    ∑ x ∈ antidiagonalTriple n, f (x.1, x.2.1, x.2.2) =
+      ∑ x ∈ antidiagonal n, ∑ i ∈ antidiagonal x.2, f (x.1, i.1, i.2) := by
+  simp only [antidiagonalTriple, sum_disjiUnion]
+  simp only [Prod.mk.eta, sum_map, Function.Embedding.sectr_apply]
+
+def antidiagonalFourth (n : α) : Finset (α × α × α × α) :=
+  (antidiagonal n).disjiUnion (fun k ↦ (antidiagonalTriple k.2).map (Function.Embedding.sectr k.1 _))
+  (fun k _ l _ hkl ↦ by
+    simp_rw [disjoint_iff_ne]
+    intro x hx y hy hxy
+    simp only [mem_map] at hx hy
+    obtain ⟨x, hx, rfl⟩ := hx
+    obtain ⟨y, hy, rfl⟩ := hy
+    simp only [Function.Embedding.sectr_apply, Prod.mk.injEq] at hxy
+    apply hkl
+    ext
+    exact hxy.1
+    simp only [mem_antidiagonalTriple] at hx hy
+    rw [← hy, ← hx, hxy.2])
+
+theorem mem_antidiagonalFourth {n : α} {x : α × α × α × α} :
+    x ∈ antidiagonalFourth n ↔ x.1 + x.2.1 + x.2.2.1 + x.2.2.2 = n := by
+  constructor
+  · intro hx
+    simp only [antidiagonalFourth, mem_disjiUnion] at hx
+    obtain ⟨y, hy, hx⟩ := hx
+    rw [mem_map] at hx
+    obtain ⟨z, hz, rfl⟩ := hx
+    dsimp only [Function.Embedding.sectr_apply]
+    simp only [mem_antidiagonal] at hy
+    simp only [mem_antidiagonalTriple, add_assoc] at hz
+    rw [add_assoc, add_assoc, hz, hy]
+  · intro hx
+    simp only [antidiagonalFourth, mem_disjiUnion]
+    use (x.1, x.2.1 + x.2.2.1 + x.2.2.2)
+    constructor
+    · simp only [mem_antidiagonal, ← add_assoc, hx]
+    · simp only [mem_map]
+      use (x.2.1, x.2.2)
+      constructor
+      · simp only [mem_antidiagonalTriple]
+      · dsimp only [Function.Embedding.sectr_apply]
+
+theorem sum_antidiagonalFourth_eq {β : Type*} [AddCommMonoid β] (f : α × α × α × α → β) (n : α) :
+    ∑ x ∈ antidiagonalFourth n, f x =
+      ∑ x ∈ antidiagonal n, ∑ y ∈ antidiagonal x.2, ∑ z ∈ antidiagonal y.2, f (x.1, y.1, z) := by
+  simp only [antidiagonalFourth, sum_disjiUnion]
+  simp only [Prod.mk.eta, sum_map, Function.Embedding.sectr_apply]
+  simp only [antidiagonalTriple, sum_disjiUnion]
+  simp only [sum_map, Function.Embedding.sectr_apply]
+
+def antidiagonalFourth' (n : α) : Finset ((α × α) × (α × α)) :=
+  (antidiagonal n).disjiUnion (fun k ↦ (antidiagonal k.1) ×ˢ (antidiagonal k.2))
+  (fun k _ l _ hkl ↦ by
+    simp_rw [disjoint_iff_ne]
+    intro x hx y hy hxy
+    simp only [mem_product, mem_antidiagonal] at hx hy
+    apply hkl
+    ext
+    · simp only [← hx.1, ← hy.1, hxy]
+    · simp only [← hx.2, ← hy.2, hxy])
+
+theorem mem_antidiagonalFourth' {n : α} {x : (α × α) × (α × α)} :
+    x ∈ antidiagonalFourth' n ↔ x.1.1 + x.1.2 + x.2.1 + x.2.2 = n := by
+  constructor
+  · intro hx
+    simp only [antidiagonalFourth', mem_disjiUnion] at hx
+    obtain ⟨u, hu, hx⟩ := hx
+    simp only [mem_product, mem_antidiagonal] at hx hu
+    rw [add_assoc, hx.2, hx.1, hu]
+  · intro hx
+    simp only [antidiagonalFourth', mem_disjiUnion]
+    use (x.1.1 + x.1.2, x.2.1 + x.2.2)
+    constructor
+    · simp only [mem_antidiagonal, ← add_assoc, hx]
+    · simp only [mem_antidiagonal, mem_product, and_self]
+
+theorem sum_antidiagonalFourth'_eq {β : Type*} [AddCommMonoid β] (f : (α × α) × (α × α) → β) (n : α) :
+    ∑ x ∈ antidiagonalFourth' n, f x =
+      ∑ m ∈ antidiagonal n, ∑ x ∈ antidiagonal m.1, ∑ y ∈ antidiagonal m.2, f (x, y) := by
+  simp_rw [antidiagonalFourth', sum_disjiUnion, Finset.sum_product]
+
+example {β : Type*} [AddCommMonoid β] (f : α × α × α × α → β) (n : α) :
+    ∑ x ∈ antidiagonalFourth n, f x =
+      ∑ m ∈ antidiagonal n, ∑ u ∈ antidiagonal m.1, ∑ v ∈ antidiagonal m.2, f (u.1, u.2, v.1, v.2) := by
+ sorry
+
+theorem newsum_4_rw {α : Type*} [AddCommMonoid α] (f : ℕ × ℕ × ℕ × ℕ → α) (n : ℕ) :
+ False := sorry
+
  /-- Rewrites a 4-fold sum from variables (12)(34) to (13)(24) -/
 theorem sum_4_rw {α : Type*} [AddCommMonoid α] (f : ℕ × ℕ × ℕ × ℕ → α) (n : ℕ) :
   (Finset.sum (range (n + 1)) fun k => Finset.sum (range (k + 1)) fun a =>
