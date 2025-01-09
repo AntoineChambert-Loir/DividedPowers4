@@ -641,45 +641,14 @@ theorem dpEnvelope_IsDPEnvelope [DecidableEq B] [∀ x, Decidable (x ∈ (dpIdea
   -- δ' in page 63 of B-O
   set h1 : DividedPowers K1 := h1 hK hI' hI'_int with h1_def --IdealAdd.dividedPowers hI' hK hI'_int with h1_def
   set g' : hI.DPMorphism h1 := g' hI hK hI' hI'_ext hI'_int
-    /- { toRingHom  := algebraMap A C
-      ideal_comp := le_sup_of_le_left (le_refl _)
-      dpow_comp  := fun a ha =>
-        IdealAdd.dividedPowers_dpow_eq_algebraMap' hI hK hI' hI'_ext hI'_int _ _ ha } -/
   have hg' : (J' I J).map (algebraMap B C) ≤ K1 := algebraMap_J'_le_K1 J hJK
-    /- rw [J', Ideal.add_eq_sup, Ideal.map_sup, sup_le_iff]
-    refine ⟨le_trans hJK (le_sup_of_le_right (le_refl _)), ?_⟩
-    rw [Ideal.map_map, Eq.symm (IsScalarTower.algebraMap_eq A B C)]
-    exact le_sup_of_le_left (le_refl _) -/
   have hI1 : IsCompatibleWith hI h1 (algebraMap A C) :=
     isCompatibleWith_hI_h1 hI hK hI' hI'_int hI'_ext
-    /- rw [IsCompatibleWith]
-    use hI'; use hI'_ext
-    intro n c hc
-    simp only [hK1, Ideal.add_eq_sup, inf_of_le_right, le_sup_right] at hc
-    rw [eq_comm]
-    exact IdealAdd.dpow_eq_of_mem_left _ _ hI'_int hc.1 -/
-
   set φ := φ hI J hK hJK hI' hI'_ext hI'_int with hφ_def
   have hφ := hφ hI J hK hJK hI' hI'_ext hI'_int
   have hφ_unique := hφ_unique hI J hK hJK hI' hI'_ext hI'_int
-  /- obtain ⟨φ, hφ, hφ_unique⟩ := by
-    have : map (algebraMap A C) I ≤ K1 := algebraMap_I_le_K1 J hJK
-      /- apply le_trans _ hg'
-      simp only [J', Submodule.add_eq_sup, Ideal.map_sup, Ideal.map_map,
-        ← IsScalarTower.algebraMap_eq]
-      exact le_sup_of_le_right (le_refl _) -/
-    exact dpEnvelopeOfIncluded_IsWeakDPEnvelope hI (J' I J) (sub_ideal_J' I J) C _ h1 hg' this hI1 -/
-
-
   have := φ.ideal_comp
   set K' : SubDPIdeal h1 := K' hK hI' hI'_int
-    /- { carrier := K
-      isSubideal := le_sup_right
-      dpow_mem := fun {n} hn j hj ↦ by
-        suffices h1.dpow n j = hK.dpow n j by
-          rw [this]
-          apply hK.dpow_mem hn hj
-        exact IdealAdd.dpow_eq_of_mem_right hI' hK hI'_int hj } -/
   set ψ : (dividedPowers hI J).DPMorphism hK :=
     { toRingHom  := φ.toRingHom
       ideal_comp := by
