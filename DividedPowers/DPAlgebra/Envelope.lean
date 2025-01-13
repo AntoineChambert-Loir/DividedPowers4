@@ -584,10 +584,12 @@ variable {C : Type*} [CommRing C] [Algebra A C] [Algebra B C] [IsScalarTower A B
 
 variable (I)
 
+-- K1 in page 63 of B-O
 private abbrev K1 : Ideal C := I.map (algebraMap A C) + K
 
 variable {I K}
 
+-- δ' in page 63 of B-O
 private noncomputable abbrev h1 :  DividedPowers (K1 I K) := IdealAdd.dividedPowers hI' hK hI'_int
 
 private abbrev g' : hI.DPMorphism (h1 hK hI' hI'_int) :=
@@ -739,68 +741,16 @@ private noncomputable abbrev β [DecidableEq B] [∀ x, Decidable (x ∈ (dpIdea
     --rw φ.dpow_comp,
     sorry
 
-
 -- Universal property claim of Theorem 3.19
 theorem dpEnvelope_IsDPEnvelope [DecidableEq B] [∀ x, Decidable (x ∈ (dpIdeal hI J).carrier)] :
     IsDPEnvelope hI J (dpIdeal hI J) (dividedPowers hI J)
       (algebraMap B (dpEnvelope hI J)) (sub_ideal_dpIdeal hI J) := by
   rintro C _ _ _ _ K hK hJK ⟨hI', hI'_ext, hI'_int⟩
-  -- K1 in page 63 of B-O
-  set K1 : Ideal C := K1 I K -- with hK1
-  -- δ' in page 63 of B-O
-  --set h1 : DividedPowers K1 := h1 hK hI' hI'_int --with h1_def
-  --set g' : hI.DPMorphism h1 := g' hI hK hI' hI'_ext hI'_int
-  --have hg' : (J' I J).map (algebraMap B C) ≤ K1 := algebraMap_J'_le_K1 J hJK
-  --have hI1 : IsCompatibleWith hI h1 (algebraMap A C) :=
-   -- isCompatibleWith_hI_h1 hI hK hI' hI'_int hI'_ext
   set φ := φ hI J hK hJK hI' hI'_ext hI'_int -- with hφ_def
   have hφ := hφ hI J hK hJK hI' hI'_ext hI'_int
   have hφ_unique := hφ_unique hI J hK hJK hI' hI'_ext hI'_int
-  --have := φ.ideal_comp
-  --set K' : SubDPIdeal h1 := K' hK hI' hI'_int
   use ψ hI J hK hJK hI' hI'_ext hI'_int
-  refine ⟨by rw [← hφ]; rfl, ?_⟩
-  intro α hα
-  simp only
-  /- set β : (Quotient.dividedPowers (DividedPowerAlgebra.dividedPowers' B ↥(J' I J))
-    (J12_IsSubDPIdeal hI _ (sub_ideal_J' I J))).DPMorphism h1 :=
-  { toRingHom  := α.toRingHom
-    ideal_comp := by
-      have hKK1 : K ≤ K1 := le_sup_right --easy
-      apply le_trans _ le_sup_right
-      rw [Ideal.map_map]
-      -- The map is a divided power morphism
-      -- The target ideal is a divided power ideal
-      -- To prove inclusion, it suffices to prove that generators for the source ideal (as a dp ideal)
-      -- map to the target
-      -- By the yet unproved example at the end of `DPAlgebra/Dpow`,
-      -- the elements of `J' I J` are such generators
-      -- and it is basically obvious that they map to `K1`
-      -- But, the elements of `J` map to `K` (hypothesis)
-      -- and the elements of `I` map to `K` as well (another hypothesis)
-      sorry
-      /- apply le_trans _ α.ideal_comp
-      apply Ideal.map_mono
-      intro x hx
-      simp only [SubDPIdeal.memCarrier, dpIdeal, SubDPIdeal.generatedDpow]
-      refine Submodule.span_induction' ?_ ?_ ?_ ?_ hx
-      · intro x hx
-        simp only [Set.mem_image, SetLike.mem_coe] at hx
-        obtain ⟨y, hy, rfl⟩ := hx
-        rw [mem_augIdeal_iff] at hy
-        -- Q: This does not look right either, is α not the correct map to take?
-        sorry
-      · simp
-      · intro a _ b _ ha hb
-        exact Ideal.add_mem _ ha hb
-      · intro a x _ hx
-        exact Submodule.smul_mem _ a hx -/
-    dpow_comp  := fun a ha => by
-      obtain ⟨hK', hmap, hint⟩ := hI1
-      --rw [← hα] at hmapc
-      --simp_rw [← hI'_ext] at hmap
-      --rw φ.dpow_comp,
-      sorry } -/
+  refine ⟨by rw [← hφ]; rfl, fun _ hα ↦ ?_⟩
   ext x
   simp only [RingHom.toMonoidHom_eq_coe, OneHom.toFun_eq_coe, MonoidHom.toOneHom_coe,
     MonoidHom.coe_coe]
