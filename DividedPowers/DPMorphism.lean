@@ -67,6 +67,21 @@ instance instFunLike:
     cases h; cases h'; congr
     dsimp at hh' ; ext; rw [hh']
 
+instance coe_ringHom : CoeOut (DPMorphism hI hJ) (A →+* B) :=
+  ⟨DPMorphism.toRingHom⟩
+
+@[simp]
+theorem coe_toRingHom {f : DPMorphism hI hJ} : ⇑(f : A →+* B) = f :=
+  rfl
+
+@[simp]
+lemma toRingHom_apply {f : DPMorphism hI hJ} {a : A} :
+  f.toRingHom a = f a := rfl
+
+@[simp]
+lemma toRingHom_eq_coe {f : DPMorphism hI hJ} :
+  f.toRingHom = f := rfl
+
 variable {hI} {hJ} in
 lemma isDPMorphism (f : DPMorphism hI hJ) : IsDPMorphism hI hJ f.toRingHom :=
   ⟨f.ideal_comp, f.dpow_comp⟩
