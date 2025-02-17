@@ -17,11 +17,11 @@ def IsDPMorphism {A B : Type*} [CommSemiring A] [CommSemiring B] {I : Ideal A} {
 
 lemma IsDPMorphism_iff {A B : Type*} [CommSemiring A] [CommSemiring B] {I : Ideal A} {J : Ideal B}
     (hI : DividedPowers I) (hJ : DividedPowers J) (f : A →+* B) :
-    IsDPMorphism hI hJ f ↔ I.map f ≤ J ∧ ∀ n > 0, ∀ a ∈ I, hJ.dpow n (f a) = f (hI.dpow n a) := by
+    IsDPMorphism hI hJ f ↔ I.map f ≤ J ∧ ∀ n ≠ 0, ∀ a ∈ I, hJ.dpow n (f a) = f (hI.dpow n a) := by
   rw [IsDPMorphism, and_congr_right_iff]
   intro hIJ
   refine ⟨fun H n _ ↦ H, fun H n ↦ ?_⟩
-  rcases n.eq_zero_or_pos with (hn | hn)
+  by_cases hn : n = 0
   · intro a ha
     rw [hn, hI.dpow_zero ha, hJ.dpow_zero (hIJ (mem_map_of_mem f ha)), map_one]
   · exact H n hn
@@ -86,6 +86,9 @@ variable {hI} {hJ} in
 lemma isDPMorphism (f : DPMorphism hI hJ) : IsDPMorphism hI hJ f.toRingHom :=
   ⟨f.ideal_comp, f.dpow_comp⟩
 
+def mk' {f : A →+* B} (hf : IsDPMorphism hI hJ f) : DPMorphism hI hJ :=
+  ⟨f, hf.1, hf.2⟩
+
 -- Roby65, Proposition 2.
 /-- Given a ring homomorphism `A → B` and ideals `I ⊆ A` and `J ⊆ B` such that `I.map f ≤ J`,
   this is the `A`-ideal on which `f (hI.dpow n x) = hJ.dpow n (f x)`.-/
@@ -95,8 +98,8 @@ def ideal {f : A →+* B} (hf : I.map f ≤ J) : Ideal A where
     simp only [Set.mem_setOf_eq, map_add] at hx hy ⊢
     refine ⟨I.add_mem hx.1 hy.1, ?_⟩
     intro n
-    rw [hI.dpow_add hx.1 hy.1, map_sum,
-      hJ.dpow_add (hf (mem_map_of_mem f hx.1)) (hf (mem_map_of_mem f hy.1))]
+    rw [hI.dpow_add _ hx.1 hy.1, map_sum,
+      hJ.dpow_add _ (hf (mem_map_of_mem f hx.1)) (hf (mem_map_of_mem f hy.1))]
     apply congr_arg
     ext k
     rw [_root_.map_mul, hx.2, hy.2]
@@ -109,8 +112,8 @@ def ideal {f : A →+* B} (hf : I.map f ≤ J) : Ideal A where
   smul_mem' := fun r x hx ↦ by
     simp only [Set.mem_sep_iff, SetLike.mem_coe] at hx ⊢
     refine ⟨I.smul_mem r hx.1, (fun n ↦ ?_)⟩
-    rw [smul_eq_mul, hI.dpow_smul hx.1, _root_.map_mul, _root_.map_mul, map_pow,
-      hJ.dpow_smul (hf (mem_map_of_mem f hx.1)), hx.2 n]
+    rw [smul_eq_mul, hI.dpow_smul _ hx.1, _root_.map_mul, _root_.map_mul, map_pow,
+      hJ.dpow_smul _ (hf (mem_map_of_mem f hx.1)), hx.2 n]
 
 -- Roby65, Proposition 3.  (TODO: rename?)
 /-- The dp morphism induced by a ring morphism, provided divided powers match on a generating set -/
@@ -168,6 +171,24 @@ theorem of_comp (f : A →+* B) (g : B →+* C) (h : A →+* C) (hcomp : g.comp 
 
 end IsDPMorphism
 
+namespace DPMorphism
+
+variable {A B C : Type*} [CommSemiring A] [CommSemiring B] [CommSemiring C] {I : Ideal A}
+  {J : Ideal B} {K : Ideal C} {hI : DividedPowers I} {hJ : DividedPowers J} {hK : DividedPowers K}
+
+--TODO: think about name
+def comp' (g : DPMorphism hJ hK) (f : DPMorphism hI hJ) :
+    DPMorphism hI hK :=
+  mk' _ _ (f := g.toRingHom.comp f.toRingHom)
+    (IsDPMorphism.comp hK rfl g.isDPMorphism f.isDPMorphism)
+
+@[simp]
+lemma comp'_toRingHom (g : DPMorphism hJ hK) (f : DPMorphism hI hJ) :
+  (comp' g f).toRingHom = g.toRingHom.comp f.toRingHom := rfl
+
+
+end DPMorphism
+
 section Uniqueness
 
 variable {A B : Type*} [CommSemiring A] [CommSemiring B] {I : Ideal A} {J : Ideal B}
@@ -190,7 +211,7 @@ theorem unique_from_gens_self {S : Set A} (hS : I = span S)
       exact subset_span hs
     . intro m b hb
       simpa only [RingHom.id_apply] using (hdp b hb)
-  · rw [hI.dpow_null ha, hI'.dpow_null ha]
+  · rw [hI.dpow_null _ ha, hI'.dpow_null _ ha]
 
 end Uniqueness
 

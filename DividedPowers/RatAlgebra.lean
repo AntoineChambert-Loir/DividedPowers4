@@ -169,15 +169,15 @@ theorem dpow_comp {n : ℕ} (hn_fac : IsUnit ((n - 1).factorial : A)) (hnI : I ^
   Proposition 1.2.7 of [B74], part (ii). -/
 noncomputable def dividedPowers {n : ℕ} (hn_fac : IsUnit ((n - 1).factorial : A))
     (hnI : I ^ n = 0) : DividedPowers I where
-  dpow            := dpow I
-  dpow_null hx    := dpow_null hx
-  dpow_zero hx    := dpow_zero hx
-  dpow_one hx     := dpow_one hx
-  dpow_mem hn hx  := dpow_mem hn hx
-  dpow_add  hx hy := dpow_add hn_fac hnI hx hy
-  dpow_smul hx    := dpow_smul hx
-  dpow_mul hx     := dpow_mul hn_fac hnI hx
-  dpow_comp hk hx := dpow_comp hn_fac hnI hk hx
+  dpow             := dpow I
+  dpow_null _ _ hx := dpow_null hx
+  dpow_zero hx     := dpow_zero hx
+  dpow_one hx      := dpow_one hx
+  dpow_mem _ _ hn hx    := dpow_mem hn hx
+  dpow_add _ _ _ hx hy  := dpow_add hn_fac hnI hx hy
+  dpow_smul _ _ _ hx    := dpow_smul hx
+  dpow_mul _ _ _ hx     := dpow_mul hn_fac hnI hx
+  dpow_comp _ _ _ hk hx := dpow_comp hn_fac hnI hk hx
 
 lemma dpow_apply {n : ℕ} (hn_fac : IsUnit ((n - 1).factorial : A)) (hnI : I ^ n = 0) {m : ℕ} {x : A} :
     (dividedPowers (hn_fac) (hnI)).dpow m x =
@@ -243,16 +243,16 @@ variable (I)
   given by `dpow n x = x ^ n / n!`. -/
 noncomputable def dividedPowers : DividedPowers I where
   dpow           := dpow I
-  dpow_null hx   := OfInvertibleFactorial.dpow_null hx
+  dpow_null _ _ hx   := OfInvertibleFactorial.dpow_null hx
   dpow_zero hx   := OfInvertibleFactorial.dpow_zero hx
   dpow_one hx    := OfInvertibleFactorial.dpow_one hx
-  dpow_mem hn hx := OfInvertibleFactorial.dpow_mem hn hx
-  dpow_add {n} _ _ hx hy := OfInvertibleFactorial.dpow_add_of_lt
+  dpow_mem _ _ hn hx := OfInvertibleFactorial.dpow_mem hn hx
+  dpow_add n _ _ hx hy := OfInvertibleFactorial.dpow_add_of_lt
     (natCast_factorial_isUnit_of_ratAlgebra _) (n.lt_succ_self) hx hy
-  dpow_smul hx := OfInvertibleFactorial.dpow_smul hx
+  dpow_smul _ _ _ hx := OfInvertibleFactorial.dpow_smul hx
   dpow_mul {m} k _ hx := OfInvertibleFactorial.dpow_mul_of_add_lt
     (natCast_factorial_isUnit_of_ratAlgebra _) (m + k).lt_succ_self hx
-  dpow_comp hk hx := OfInvertibleFactorial.dpow_comp_of_mul_lt
+  dpow_comp _ _ _ hk hx := OfInvertibleFactorial.dpow_comp_of_mul_lt
     (natCast_factorial_isUnit_of_ratAlgebra _) hk (lt_add_one _) hx
 
 @[simp]

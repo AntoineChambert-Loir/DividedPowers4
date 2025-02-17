@@ -93,8 +93,8 @@ theorem onDPAlgebra_unique [DecidableEq R] (h h' : DividedPowers (augIdeal R M))
   apply DividedPowers.unique_from_gens_self h' h (augIdeal_eq_span R M)
   rintro n f ⟨q, hq : 0 < q, m, _, rfl⟩
   nth_rw 1 [← h1' q m]
-  rw [← h1 q m, h.dpow_comp (ne_of_gt hq) (ι_mem_augIdeal R M m),
-    h'.dpow_comp (ne_of_gt hq) (ι_mem_augIdeal R M m), h1 _ m, h1' _ m]
+  rw [← h1 q m, h.dpow_comp _ _ (ne_of_gt hq) (ι_mem_augIdeal R M m),
+    h'.dpow_comp _ _ (ne_of_gt hq) (ι_mem_augIdeal R M m), h1 _ m, h1' _ m]
 
 /-- Existence of divided powers on the augmentation ideal of an `R`-module `M`. -/
 def Condδ (R : Type u) [CommRing R] [DecidableEq R]
@@ -220,15 +220,15 @@ theorem cond_D_uniqueness [DecidableEq R] {M : Type uM} [AddCommGroup M] [Module
   · rw [augIdeal_eq_span, map_span, span_le]
     rintro s ⟨a, ⟨n, hn : 0 < n, m, _, rfl⟩, rfl⟩
     rw [AlgHom.coe_toRingHom, SetLike.mem_coe, lift_apply_dp]
-    exact hJ.dpow_mem (ne_of_gt hn) (hf m)
+    exact hJ.dpow_mem _ (ne_of_gt hn) (hf m)
   · intro n a ha
     rw [(unique_from_gens h hJ (augIdeal_eq_span R M) _ _) a ha]
     · rintro a ⟨q, hq : 0 < q, m, _, rfl⟩
       rw [AlgHom.coe_toRingHom, lift_apply_dp]
-      exact hJ.dpow_mem (ne_of_gt hq) (hf m)
+      exact hJ.dpow_mem _ (ne_of_gt hq) (hf m)
     · rintro n a ⟨q, hq : 0 < q, m, _, rfl⟩
-      rw [AlgHom.coe_toRingHom, lift_apply_dp, hJ.dpow_comp (ne_of_gt hq) (hf m), ← hh q m,
-        h.dpow_comp (ne_of_gt hq) (ι_mem_augIdeal R M m), _root_.map_mul, map_natCast]
+      rw [AlgHom.coe_toRingHom, lift_apply_dp, hJ.dpow_comp _ _ (ne_of_gt hq) (hf m), ← hh q m,
+        h.dpow_comp _ _ (ne_of_gt hq) (ι_mem_augIdeal R M m), _root_.map_mul, map_natCast]
       apply congr_arg₂ _ rfl
       rw [hh, lift_apply_dp]
 
@@ -300,11 +300,11 @@ def dpΦ : DPMorphism hM hI := by
     rintro x ⟨n, hn, b, _, rfl⟩
     simp only [AlgHom.toRingHom_eq_coe, SetLike.mem_coe, mem_comap, RingHom.coe_coe,
       Φ, lift_apply_dp]
-    exact hI.dpow_mem (ne_of_gt hn) (f_mem_I A I b)
+    exact hI.dpow_mem _ (ne_of_gt hn) (f_mem_I A I b)
   · rintro n x ⟨m, hm, b, _, rfl⟩
     rw [Φ, AlgHom.toRingHom_eq_coe, RingHom.coe_coe, lift_apply_dp, ← hM_eq,
-      hM.dpow_comp (ne_of_gt hm) (ι_mem_augIdeal _ _ _),
-      hI.dpow_comp (ne_of_gt hm) (f_mem_I A I b), _root_.map_mul, map_natCast]
+      hM.dpow_comp _ _ (ne_of_gt hm) (ι_mem_augIdeal _ _ _),
+      hI.dpow_comp _ _ (ne_of_gt hm) (f_mem_I A I b), _root_.map_mul, map_natCast]
     apply congr_arg₂ _ rfl
     rw [hM_eq, lift_apply_dp]
 
@@ -896,7 +896,7 @@ theorem roby_prop_4 {A : Type*} [CommRing A] {R : Type*} [CommRing R] [Algebra A
     apply inf_le_right (a := J)
     simp only [ge_iff_le, le_refl, inf_of_le_left]
     apply inf_le_left (b := I)
-    apply hJ'.dpow_mem hn
+    apply hJ'.dpow_mem n hn
     simp only [Ideal.mem_inf, SetLike.coe_mem, and_true]
     exact hJ ▸ Ideal.subset_span (Set.mem_union_right _ ⟨a, ha, rfl⟩)
   · intro H
@@ -914,7 +914,7 @@ theorem roby_prop_4 {A : Type*} [CommRing A] {R : Type*} [CommRing R] [Algebra A
       | zero => exact fun n hn ↦ by simp only [hI.dpow_eval_zero hn, zero_mem]
       | add a ha b hb ha' hb' =>
         intro n hn
-        rw [hI.dpow_add (inf_le_right (a := J) (hT_le ha)) (inf_le_right (a := J) (hT_le hb))]
+        rw [hI.dpow_add _ (inf_le_right (a := J) (hT_le ha)) (inf_le_right (a := J) (hT_le hb))]
         apply Ideal.sum_mem
         rintro ⟨u, v⟩ h
         rcases ne_zero_of_mem_antidiagonal_ne_zero h hn with (hu | hv)
@@ -922,14 +922,14 @@ theorem roby_prop_4 {A : Type*} [CommRing A] {R : Type*} [CommRing R] [Algebra A
         · exact J.mul_mem_left _ (hb' v hv)
       | smul a x hx hx' =>
         intro n hn
-        rw [smul_eq_mul, hI.dpow_smul (inf_le_right (a := J) (hT_le hx))]
+        rw [smul_eq_mul, hI.dpow_smul _ (inf_le_right (a := J) (hT_le hx))]
         exact Ideal.mul_mem_left _ _ (hx' n hn)
     suffices T = J ⊓ I by exact {
       isSubideal := inf_le_right
-      dpow_mem := fun hn a ha ↦ by
+      dpow_mem := fun _ hn a ha ↦ by
         simp only [Ideal.mem_inf] at ha ⊢
         suffices ha' : a ∈ T by
-          exact ⟨ha'.2 _ hn, hI.dpow_mem hn ha.2⟩
+          exact ⟨ha'.2 _ hn, hI.dpow_mem _ hn ha.2⟩
         simp only [this, Submodule.inf_coe, Set.mem_inter_iff, SetLike.mem_coe, ha.2, ha.1, and_true] }
     set U := (J.restrictScalars A ⊓ Subalgebra.toSubmodule R₀) ⊔
       (Ideal.span T).restrictScalars A with hU
@@ -1130,14 +1130,39 @@ lemma ι_range_subset_augIdeal (A : Type u) [CommRing A] [DecidableEq A] (M : Ty
   rintro x ⟨y, rfl⟩
   apply ι_mem_augIdeal
 
---TODO: make this compile
-example (A : Type u) [CommRing A] [DecidableEq A] (M : Type u) [AddCommGroup M] [Module A M] :
-    SubDPIdeal.generatedDpow (dividedPowers' A M) (ι_range_subset_augIdeal A M) = ⊤ := sorry
+--TODO: golf
+--TODO: add SubDPIdeal.eq_top_iff
+lemma augIdeal_eq_generatedDpow_ι_range' (A : Type u) [CommRing A] [DecidableEq A] (M : Type u)
+    [AddCommGroup M] [Module A M] :
+    (⊤ : (dividedPowers' A M).SubDPIdeal) =
+      SubDPIdeal.generatedDpow (dividedPowers' A M) (ι_range_subset_augIdeal A M) := by
+  rw [eq_comm, eq_top_iff, SubDPIdeal.le_iff]
+  have h_top : (⊤ : (dividedPowers' A M).SubDPIdeal).carrier =
+      Ideal.span (Set.image2 (dp A) {n | 0 < n} Set.univ) := by
+    rw [← augIdeal_eq_span]
+    rfl
+  rw [h_top]
+  simp only [Ideal.span_le, Set.image2_subset_iff, Set.mem_setOf_eq, Set.mem_univ, SetLike.mem_coe,
+    true_implies]
+  intro n hn y
+  simp only [SubDPIdeal.generatedDpow_carrier]
+  apply Ideal.subset_span
+  simp only [SetLike.mem_coe, LinearMap.mem_range, exists_prop', nonempty_prop,
+    exists_exists_eq_and, ne_eq, Nat.exists_ne_zero, Set.mem_setOf_eq]
+  use n - 1, y
+  rw [dpow_ι, Nat.sub_one_add_one (Nat.not_eq_zero_of_lt hn)]
+
+lemma augIdeal_eq_generatedDpow_ι_range (A : Type u) [CommRing A] [DecidableEq A] (M : Type u)
+    [AddCommGroup M] [Module A M] :
+    augIdeal A M =
+      (SubDPIdeal.generatedDpow (dividedPowers' A M) (ι_range_subset_augIdeal A M)).carrier := by
+  have : augIdeal A M = (⊤ : (dividedPowers' A M).SubDPIdeal).carrier := rfl
+  simp only [this, augIdeal_eq_generatedDpow_ι_range' A M]
 
 theorem dp_comp (A : Type u) [CommRing A] [DecidableEq A] (M : Type u) [AddCommGroup M] [Module A M]
     (x : M) {n : ℕ} (m : ℕ) (hn : n ≠ 0) :
     dpow (dividedPowers' A M) m (dp A n x) = ↑(Nat.uniformBell m n) * dp A (m * n) x := by
-  erw [← (condD_holds A M).choose_spec, dpow_comp _ hn (ι_mem_augIdeal A M x), dpow_ι]
+  erw [← (condD_holds A M).choose_spec, dpow_comp _ _ _ hn (ι_mem_augIdeal A M x), dpow_ι]
 
 theorem roby_theorem_2 (R : Type u) [CommRing R]  [DecidableEq R] (M : Type u) [AddCommGroup M]
     [Module R M] {A : Type u} [CommRing A] [Algebra R A] {I : Ideal A} (hI : DividedPowers I)
