@@ -222,7 +222,7 @@ theorem cond_D_uniqueness [DecidableEq R] {M : Type uM} [AddCommGroup M] [Module
     rw [AlgHom.coe_toRingHom, SetLike.mem_coe, lift_apply_dp]
     exact hJ.dpow_mem _ (ne_of_gt hn) (hf m)
   · intro n a ha
-    rw [(unique_from_gens h hJ (augIdeal_eq_span R M) _ _) a ha]
+    rw [(unique_from_gens h hJ (augIdeal_eq_span R M) _ _) n a ha]
     · rintro a ⟨q, hq : 0 < q, m, _, rfl⟩
       rw [AlgHom.coe_toRingHom, lift_apply_dp]
       exact hJ.dpow_mem _ (ne_of_gt hq) (hf m)
@@ -387,7 +387,7 @@ def dpΨ [DecidableEq A] [DecidableEq (MvPolynomial (↥S₀) A)]
     erw [← ((condτ A I S₀ hM condTFree).choose_spec.2).map_dpow (dp_mem_augIdeal _ _ hm _)]
     simp only [Ψ, RingHom.coe_coe, Algebra.TensorProduct.includeRight_apply,
       Algebra.TensorProduct.productMap_apply_tmul, map_one, one_mul]
-    erw [(dpΦ A hM hM_eq hI).dpow_comp _ (dp_mem_augIdeal _ _ hm _)]
+    erw [(dpΦ A hM hM_eq hI).dpow_comp _ _ (dp_mem_augIdeal _ _ hm _)]
     rfl
 
 -- TODO: add to Mathlib (with _apply, as in Polynomial case)
@@ -575,11 +575,11 @@ example (A : Type u) [CommRing A] {R S R' S' : Type u} [CommRing R] [CommRing S]
       obtain ⟨a, ha, rfl⟩ := ha'
       simp only [AlgHom.coe_toRingHom, Algebra.TensorProduct.includeLeft_apply]
       rw [← map_one g, ← Algebra.TensorProduct.map_tmul]
-      rw [← AlgHom.coe_toRingHom f, hf'.2 a ha, RingHom.coe_coe]
+      rw [← AlgHom.coe_toRingHom f, hf'.2 n a ha, RingHom.coe_coe]
       rw [← Algebra.TensorProduct.map_tmul]
       erw [Quotient.OfSurjective.dpow_apply hK s_fg hK'_pd]
       apply congr_arg
-      exact hK_pd.1.2 a ha
+      exact hK_pd.1.2 n a ha
       apply Ideal.mem_sup_left
       apply Ideal.mem_map_of_mem _ ha
   · -- hJ'.is_pd_morphism hK' ↑(i_2 A R' S')
@@ -600,7 +600,7 @@ example (A : Type u) [CommRing A] {R S R' S' : Type u} [CommRing R] [CommRing S]
         rw [← this]
         apply congr_arg
         simp only [← Algebra.TensorProduct.includeRight_apply]
-        exact hK_pd.2.2 a ha
+        exact hK_pd.2.2 n a ha
         apply Ideal.mem_sup_right
         apply Ideal.mem_map_of_mem _ ha
       intro x
@@ -741,10 +741,10 @@ theorem condτ_rel (A : Type u) [CommRing A]
       simp only [hI'I, Ideal.mem_map_iff_of_surjective f hf] at ha'
       obtain ⟨a, ha, rfl⟩ := ha'
       simp only [AlgHom.coe_toRingHom, Algebra.TensorProduct.includeLeft_apply]
-      rw [← map_one g, ← Algebra.TensorProduct.map_tmul, ← AlgHom.coe_toRingHom f, hfDP.2 a ha,
+      rw [← map_one g, ← Algebra.TensorProduct.map_tmul, ← AlgHom.coe_toRingHom f, hfDP.2 n a ha,
         RingHom.coe_coe, ← Algebra.TensorProduct.map_tmul]
       erw [Quotient.OfSurjective.dpow_apply hK s_fg hK'_pd (mem_sup_left (mem_map_of_mem _ ha))]
-      exact congr_arg _ (hK_pd.1.2 a ha)
+      exact congr_arg _ (hK_pd.1.2 n a ha)
   · -- hJ'.is_pd_morphism hK' ↑(i_2 A R' S')
     constructor
     · rw [← hK_map, map_le_iff_le_comap]
@@ -758,7 +758,7 @@ theorem condτ_rel (A : Type u) [CommRing A]
         · have that := hgDP.2 (n := n) a ha
           simp only [AlgHom.coe_toRingHom] at that;
           rw [that, ← this]
-          exact congr_arg _ (hK_pd.2.2 a ha)
+          exact congr_arg _ (hK_pd.2.2 n a ha)
         exact mem_sup_right (mem_map_of_mem _ ha)
       intro x
       simp only [AlgHom.toRingHom_eq_coe, RingHom.coe_coe, Algebra.TensorProduct.map_tmul,

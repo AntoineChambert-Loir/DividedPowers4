@@ -46,7 +46,7 @@ lemma extends_to_unique {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPow
     · intro x hx n
       simp only [Set.mem_image, SetLike.mem_coe] at hx
       obtain ⟨a, haI, rfl⟩ := hx
-      rw [hmap a haI, hI'map a haI]
+      rw [hmap n a haI, hI'map n a haI]
     · intro n
       by_cases hn0 : n = 0
       · rw [hn0, hK.dpow_zero (Submodule.zero_mem (map f I)),
@@ -71,7 +71,7 @@ lemma extends_to_iff_exists_dpIdeal {A : Type u} [CommRing A] {I : Ideal A} (hI 
   rw [IsDPMorphism] at hmap ⊢
   refine ⟨le_refl _, ?_⟩
   intros n a ha
-  rw [IsSubDPIdeal.dividedPowers.dpow_eq_of_mem _ _ (I.mem_map_of_mem f ha), hmap.2 a ha]
+  rw [IsSubDPIdeal.dpow_eq_of_mem _ _ (I.mem_map_of_mem f ha), hmap.2 n a ha]
 
 -- Note (3) after 3.14: in general the extension does not exist.
 
@@ -186,7 +186,7 @@ lemma extends_to_of_principal {J : Ideal A} (hJ : DividedPowers J) (hJp : Submod
     extends_to hJ f := by
   obtain ⟨t, ht⟩ := hJp
   use extension f ht hJ
-  refine ⟨le_refl _, fun a haJ ↦ ?_⟩
+  refine ⟨le_refl _, fun n a haJ ↦ ?_⟩
   rw [ht, submodule_span_eq, ← submodule_span_eq, Submodule.mem_span_singleton] at haJ
   obtain ⟨a, rfl⟩ := haJ
   simp only [extension]

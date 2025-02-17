@@ -74,7 +74,7 @@ lemma mk_C (a : R) : mk (C a) = algebraMap R (DividedPowerAlgebra R M) a := by
 variable (R)
 
 /-- `dp R n m` is the equivalence class of `X (⟨n, m⟩)` in `divided_power_algebra R M`. -/
-def dp (n : ℕ) (m : M) : DividedPowerAlgebra R M := mkAlgHom R (Rel R M)  (X ⟨n, m⟩)
+def dp (n : ℕ) (m : M) : DividedPowerAlgebra R M := mkAlgHom R (Rel R M) (X ⟨n, m⟩)
 
 theorem dp_def (n : ℕ) (m : M) :
   dp R n m = mkAlgHom R (Rel R M) (X ⟨n, m⟩) := rfl

@@ -13,14 +13,14 @@ namespace DividedPowers
   `A → B` is a divided power morphism if it is compatible with these divided power structures. -/
 def IsDPMorphism {A B : Type*} [CommSemiring A] [CommSemiring B] {I : Ideal A} {J : Ideal B}
     (hI : DividedPowers I) (hJ : DividedPowers J) (f : A →+* B) : Prop :=
-  I.map f ≤ J ∧ ∀ {n : ℕ}, ∀ a ∈ I, hJ.dpow n (f a) = f (hI.dpow n a)
+  I.map f ≤ J ∧ ∀ (n : ℕ), ∀ a ∈ I, hJ.dpow n (f a) = f (hI.dpow n a)
 
 lemma IsDPMorphism_iff {A B : Type*} [CommSemiring A] [CommSemiring B] {I : Ideal A} {J : Ideal B}
     (hI : DividedPowers I) (hJ : DividedPowers J) (f : A →+* B) :
     IsDPMorphism hI hJ f ↔ I.map f ≤ J ∧ ∀ n ≠ 0, ∀ a ∈ I, hJ.dpow n (f a) = f (hI.dpow n a) := by
   rw [IsDPMorphism, and_congr_right_iff]
   intro hIJ
-  refine ⟨fun H n _ ↦ H, fun H n ↦ ?_⟩
+  refine ⟨fun H n _ ↦ H n, fun H n ↦ ?_⟩
   by_cases hn : n = 0
   · intro a ha
     rw [hn, hI.dpow_zero ha, hJ.dpow_zero (hIJ (mem_map_of_mem f ha)), map_one]
@@ -32,7 +32,7 @@ variable {A B C : Type*} [CommSemiring A] [CommSemiring B] [CommSemiring C] {I :
   {J : Ideal B} {K : Ideal C} {hI : DividedPowers I} {hJ : DividedPowers J} (hK : DividedPowers K)
 
 theorem map_dpow {f : A →+* B} (hf : IsDPMorphism hI hJ f) {n : ℕ} {a : A} (ha : a ∈ I) :
-    f (hI.dpow n a) = hJ.dpow n (f a) := (hf.2 a ha).symm
+    f (hI.dpow n a) = hJ.dpow n (f a) := (hf.2 n a ha).symm
 
 theorem comp {f : A →+* B} {g : B →+* C} {h : A →+* C} (hcomp : g.comp f = h)
     (hg : IsDPMorphism hJ hK g) (hf : IsDPMorphism hI hJ f) : IsDPMorphism hI hK h := by
@@ -43,7 +43,7 @@ theorem comp {f : A →+* B} {g : B →+* C} {h : A →+* C} (hcomp : g.comp f =
     exact map_mono hf.1
   · intro n a ha
     simp only [RingHom.coe_comp, Function.comp_apply]
-    rw [← hf.2 a ha, hg.2]
+    rw [← hf.2 n a ha, hg.2]
     exact hf.1 (mem_map_of_mem f ha)
 
 end IsDPMorphism
@@ -53,7 +53,7 @@ end IsDPMorphism
 structure DPMorphism {A B : Type*} [CommSemiring A] [CommSemiring B] {I : Ideal A} {J : Ideal B}
     (hI : DividedPowers I) (hJ : DividedPowers J) extends RingHom A B where
   ideal_comp : I.map toRingHom ≤ J
-  dpow_comp : ∀ {n : ℕ}, ∀ a ∈ I, hJ.dpow n (toRingHom a) = toRingHom (hI.dpow n a)
+  dpow_comp : ∀ (n : ℕ), ∀ a ∈ I, hJ.dpow n (toRingHom a) = toRingHom (hI.dpow n a)
 
 namespace DPMorphism
 
@@ -130,9 +130,9 @@ def fromGens {f : A →+* B} {S : Set A} (hS : I = span S) (hf : I.map f ≤ J)
 
 /-- Identity as a dp morphism -/
 def id : DPMorphism hI hI where
-  toRingHom     := RingHom.id A
-  ideal_comp    := by simp only [map_id, le_refl]
-  dpow_comp _ _ := by simp only [RingHom.id_apply]
+  toRingHom       := RingHom.id A
+  ideal_comp      := by simp only [map_id, le_refl]
+  dpow_comp _ _ _ := by simp only [RingHom.id_apply]
 
 instance : Inhabited (DPMorphism hI hI) := ⟨DPMorphism.id hI⟩
 
@@ -153,8 +153,8 @@ open DPMorphism
 theorem on_span  {f : A →+* B} {S : Set A} (hS : I = span S) (hS' : ∀ s ∈ S, f s ∈ J)
     (hdp : ∀ {n : ℕ}, ∀ a ∈ S, f (hI.dpow n a) = hJ.dpow n (f a)) : IsDPMorphism hI hJ f := by
   suffices h : I.map f ≤ J by
-    exact ⟨h, fun a ha ↦ by
-      rw [← fromGens_coe hI hJ hS h hdp, (fromGens hI hJ hS h hdp).dpow_comp a ha]⟩
+    exact ⟨h, fun n a ha ↦ by
+      rw [← fromGens_coe hI hJ hS h hdp, (fromGens hI hJ hS h hdp).dpow_comp n a ha]⟩
   rw [hS, map_span, span_le]
   rintro b ⟨a, has, rfl⟩
   exact hS' a has
@@ -167,7 +167,7 @@ theorem of_comp (f : A →+* B) (g : B →+* C) (h : A →+* C) (hcomp : g.comp 
     rw [← RingHom.comp_apply, hcomp]
     exact hh.1 (mem_map_of_mem _ ha)
   · rintro n b ⟨a, ha, rfl⟩
-    rw [← RingHom.comp_apply, hcomp, hh.2 a ha, ← hcomp, RingHom.comp_apply, hf.2 a ha]
+    rw [← RingHom.comp_apply, hcomp, hh.2 n a ha, ← hcomp, RingHom.comp_apply, hf.2 n a ha]
 
 end IsDPMorphism
 
@@ -196,7 +196,7 @@ variable {A B : Type*} [CommSemiring A] [CommSemiring B] {I : Ideal A} {J : Idea
 
 theorem unique_from_gens {S : Set A} (hS : I = span S) (hS' : ∀ s ∈ S, f s ∈ J)
     (hdp : ∀ {n : ℕ}, ∀ a ∈ S, f (hI.dpow n a) = hJ.dpow n (f a)) :
-    ∀ {n}, ∀ a ∈ I, hJ.dpow n (f a) = f (hI.dpow n a) :=
+    ∀ n, ∀ a ∈ I, hJ.dpow n (f a) = f (hI.dpow n a) :=
   (IsDPMorphism.on_span hI hJ hS hS' hdp).2
 
 -- Roby65, corollary after proposition 3
@@ -205,7 +205,7 @@ theorem unique_from_gens_self {S : Set A} (hS : I = span S)
     (hdp : ∀ {n : ℕ}, ∀ a ∈ S, hI.dpow n a = hI'.dpow n a) : hI' = hI := by
   ext n a
   by_cases ha : a ∈ I
-  . refine hI.unique_from_gens hI' (f := RingHom.id A) hS ?_ ?_ a ha
+  . refine hI.unique_from_gens hI' (f := RingHom.id A) hS ?_ ?_ n a ha
     . intro s hs
       simp only [RingHom.id_apply, hS]
       exact subset_span hs
