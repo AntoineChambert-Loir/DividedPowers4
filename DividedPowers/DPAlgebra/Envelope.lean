@@ -34,7 +34,7 @@ theorem IdealAdd.dividedPowers_dpow_eq_algebraMap' (hJ : DividedPowers J)
     (n : ℕ) (a : A) (ha : a ∈ I) :
      (IdealAdd.dividedPowers hI' hJ h_int).dpow n ((algebraMap A B) a) =
       (algebraMap A B) (hI.dpow n a) := by
-  rw [← hI'_ext.2 _ ha]
+  rw [← hI'_ext.2 _ _ ha]
   exact IdealAdd.dpow_eq_of_mem_left _ _ h_int (mem_map_of_mem (algebraMap A B) ha)
 
 def IdealAdd.subDPIdeal_right {K : Ideal A} (hK : DividedPowers K)
@@ -284,6 +284,7 @@ instance isScalarTower_of_included : IsScalarTower A B (dpEnvelopeOfIncluded hI 
 noncomputable def dpIdealOfIncluded [DecidableEq B] : Ideal (dpEnvelopeOfIncluded hI J hIJ) :=
   map (Ideal.Quotient.mk (J12 hI J hIJ)) (DividedPowerAlgebra.augIdeal B J)
 
+set_option pp.instances true
 -- J_bar has DP
 theorem sub_ideal_dpIdealOfIncluded [DecidableEq B] :
     J.map (algebraMap B (dpEnvelopeOfIncluded hI J hIJ)) ≤ dpIdealOfIncluded hI J hIJ := by
@@ -297,15 +298,15 @@ theorem sub_ideal_dpIdealOfIncluded [DecidableEq B] :
   · rw [← hyx]
     rw [map, ← submodule_span_eq] at hyJ
     --TODO:lemma
-    have : algebraMap (DividedPowerAlgebra B ↥J) (dpEnvelopeOfIncluded hI J hIJ) =
+    have hmap : algebraMap (DividedPowerAlgebra B ↥J) (dpEnvelopeOfIncluded hI J hIJ) =
       Ideal.Quotient.mk (J12 hI J hIJ) := rfl
-    simp_rw [this]
+    simp_rw [hmap]
     suffices y ∈ (augIdeal B J) ⊔ (J12 hI J hIJ) by
       rw [Submodule.mem_sup] at this
       obtain ⟨y, hy, z, hz, rfl⟩ := this
       use y, hy
-      rw [eq_comm]
-      erw [Ideal.Quotient.mk_eq_mk_iff_sub_mem (y + z) y]
+      unfold dpEnvelopeOfIncluded
+      rw [eq_comm, Ideal.Quotient.mk_eq_mk_iff_sub_mem (y + z) y]
       simp only [add_sub_cancel_left, hz]
     apply Submodule.span_induction hyJ (p := fun y ↦ y ∈ (augIdeal B J) ⊔ (J12 hI J hIJ))
     · intro x hx
@@ -428,10 +429,8 @@ theorem dpEnvelopeOfIncluded_IsWeakDPEnvelope [DecidableEq B] :
     left  := hIK
     right := by
       obtain ⟨hI', h, hh⟩ := hcomp
-      --rw [isDPMorphism] at h
       intro n a haI
-      rw [← hh n ((algebraMap A C) a) (mem_map_of_mem (algebraMap A C) haI)]
-      rw [h.2 a haI]
+      rw [← hh n ((algebraMap A C) a) (mem_map_of_mem (algebraMap A C) haI), h.2 n a haI]
       exact (hIK (mem_map_of_mem (algebraMap A C) haI)) -- Q : Why does this appear??
   }
   have hDC : (DividedPowerAlgebra.dividedPowers' B J).IsDPMorphism hK (sorry) := sorry
@@ -598,7 +597,7 @@ private lemma h1_def : h1 hK hI' hI'_int = IdealAdd.dividedPowers hI' hK hI'_int
 private abbrev g' : hI.DPMorphism (h1 hK hI' hI'_int) :=
   { toRingHom  := algebraMap A C
     ideal_comp := le_sup_of_le_left (le_refl _)
-    dpow_comp  := fun _ ha =>
+    dpow_comp  := fun _ _ ha =>
       IdealAdd.dividedPowers_dpow_eq_algebraMap' hI hK hI' hI'_ext hI'_int _ _ ha }
 
 private lemma algebraMap_J'_le_K1 (hJK : map (algebraMap B C) J ≤ K) :
@@ -653,8 +652,6 @@ private lemma hφ_unique  [DecidableEq B] :
     (algebraMap_J'_le_K1 J hJK) (algebraMap_I_le_K1 J hJK)
     (isCompatibleWith_hI_h1 hI hK hI' hI'_int hI'_ext)).choose_spec.2
 
-set_option pp.proofs true
--- This is slow, probably because of the `erw` and `change`.
 private noncomputable abbrev ψ [DecidableEq B] [∀ x, Decidable (x ∈ (dpIdeal hI J).carrier)] :
     (dividedPowers hI J).DPMorphism hK where
   toRingHom  := (φ hI J hK hJK hI' hI'_ext hI'_int).toRingHom
@@ -690,18 +687,22 @@ private noncomputable abbrev ψ [DecidableEq B] [∀ x, Decidable (x ∈ (dpIdea
     · -- φ.toRingHom a ∈ K
       set K' : SubDPIdeal (h1 hK hI' hI'_int) := IdealAdd.subDPIdeal_right hI' hK hI'_int
       have hK' : K'.toIdeal = K := rfl
+      have hK'_set : (K' : Set C) = K := rfl
       suffices _ ∈ K'.toIdeal by
         rw [hK'] at this
         exact this
       simp only [dpIdeal, SubDPIdeal.memCarrier] at ha
       have hφ' : ⇑(φ hI J hK hJK hI' hI'_ext hI'_int) ''
           (map (algebraMap B (dpEnvelope hI J)) J : Set (dpEnvelope hI J)) ⊆ K' := by
-        simp only [dpEnvelope, dpEnvelopeOfIncluded, Set.image_subset_iff]
-        rw [← DPMorphism.coe_toRingHom]
-        erw [← coe_comap (f := (φ hI J hK hJK hI' hI'_ext hI'_int).toRingHom)]
+        unfold dpEnvelope dpEnvelopeOfIncluded
+        simp only [Set.image_subset_iff]
+        rw [← DPMorphism.coe_toRingHom, hK'_set,
+          ← coe_comap (f := (φ hI J hK hJK hI' hI'_ext hI'_int).toRingHom) K]
         norm_cast
         rw [Ideal.map_le_iff_le_comap, Ideal.comap_comap]
-        erw [hφ]
+        have hφ_unf := hφ hI J hK hJK hI' hI'_ext hI'_int
+        unfold dpEnvelopeOfIncluded at hφ_unf
+        rw [hφ_unf]
         exact fun _ hx ↦ hJK (Ideal.mem_map_of_mem _ hx)
       exact map_generatedDpow_le_of_subDPIdeal (J_le_J₁_bar hI J) hφ' (Ideal.mem_map_of_mem _ ha)
 
@@ -741,20 +742,49 @@ private noncomputable def β_aux [DecidableEq B] [∀ x, Decidable (x ∈ (dpIde
       rfl
     rw [this]
     rw [dp_add] -- TODO: general lemma?
-    change α.toRingHom _ ∈ _
+    rw [← DPMorphism.toRingHom_apply]
     simp only [map_sum, _root_.map_mul, DPMorphism.toRingHom_apply]
     apply Ideal.sum_mem
     intros c hc
+    by_cases hc1 : c.1 = 0
+    · have hα1 : α 1 = 1 := sorry
+      rw [hc1]
+      simp only [dp_zero, map_one, hα1, one_mul]
+      --rw [dp_def]
+      apply Ideal.mem_sup_left
+      have halg : algebraMap A C = (algebraMap B C).comp (algebraMap A B) :=
+        IsScalarTower.algebraMap_eq A B C
+      rw [halg, ← hα]
+      rw [← Ideal.map_map, ← Ideal.map_map]
+      rw [← α.toRingHom_apply]
+      apply Ideal.mem_map_of_mem
+      convert Ideal.mem_map_of_mem ?_ hi
+      have : (algebraMap B (DividedPowerAlgebra B ↥(J' I J) ⧸ J12 hI (J' I J) (sub_ideal_J' I J))) =
+        (Ideal.Quotient.mk (J12 hI (J' I J) (sub_ideal_J' I J))).comp
+          (algebraMap B (DividedPowerAlgebra B ↥(J' I J))) := by
+        simp only [Quotient.mk_comp_algebraMap]
+      unfold dpEnvelope dpEnvelopeOfIncluded
+      rw [this]
+      rw [RingHom.comp_apply]
+      congr 1
+      --apply Ideal.mem_map_of_mem
+      sorry
 
-
-    sorry
+    · apply Ideal.mem_sup_right
+      apply Ideal.mul_mem_right
+      apply α.ideal_comp
+      rw [← α.toRingHom_apply]
+      rw [dp_def]
+      apply Ideal.mem_map_of_mem
+      unfold dpIdeal
+      sorry
   dpow_comp  := by
     intro n b hb'
     rw [h1_def]
     have := α.dpow_comp (n := n)
     sorry
 
-
+set_option pp.proofs true
 private noncomputable def β [DecidableEq B] [∀ x, Decidable (x ∈ (dpIdeal hI J).carrier)]
     {α : (dividedPowers hI J).DPMorphism hK}
     (hα : α.comp (algebraMap B (dpEnvelope hI J)) = algebraMap B C) :
@@ -771,9 +801,7 @@ private noncomputable def β [DecidableEq B] [∀ x, Decidable (x ∈ (dpIdeal h
     -- and it is basically obvious that they map to `K1`
     -- But, the elements of `J` map to `K` (hypothesis)
     -- and the elements of `I` map to `K` as well (another hypothesis)
-
     have hKK1 : K ≤ K1 I K := le_sup_right
-
     rw [Ideal.map_map, augIdeal_eq_generatedDpow_ι_range]
     set aux : (DividedPowerAlgebra.dividedPowers' B ↥(J' I J)).DPMorphism (h1 hK hI' hI'_int) :=
         β_aux hI J hK hI' /- hI'_ext -/ hI'_int hα
@@ -781,13 +809,82 @@ private noncomputable def β [DecidableEq B] [∀ x, Decidable (x ∈ (dpIdeal h
         ((α.toRingHom).comp (Ideal.Quotient.mk (J12 hI (J' I J) (sub_ideal_J' I J)))) := rfl
     rw [← heq]
     exact map_generatedDpow_le aux (ι_range_subset_augIdeal B ↥(J' I J))
-
-  dpow_comp  := fun  a ha => by
+  dpow_comp  := fun n a ha => by
+    have halg : algebraMap A C = (algebraMap B C).comp (algebraMap A B) :=
+        IsScalarTower.algebraMap_eq A B C
     obtain ⟨hK', hmap, hint⟩ := isCompatibleWith_hI_h1 hI hK hI' hI'_int hI'_ext
+    simp only [K1, Submodule.add_eq_sup, le_sup_left, inf_of_le_left] at hint
+    simp only [halg, ← hα, ← map_map] at hint
+    rw [augIdeal_eq_generatedDpow_ι_range] at ha
+    simp only [SubDPIdeal.generatedDpow_carrier, SetLike.mem_coe, LinearMap.mem_range,
+      Subtype.exists, exists_prop', nonempty_prop, ne_eq, Nat.exists_ne_zero, map_span] at ha
+    refine Submodule.span_induction' ?_ ?_ ?_ ?_ ha
+    · intros c hc
+      simp only [Set.mem_image, Set.mem_setOf_eq] at hc
+      obtain ⟨d, ⟨m, d', ⟨⟨b, hb, rfl⟩, rfl⟩⟩, rfl⟩ := hc
+      rw [DividedPowerAlgebra.dpow_ι]
+      simp only [Submodule.add_eq_sup, h1, DPMorphism.toRingHom_apply]
+      simp only [J', Submodule.add_eq_sup] at hb
+      rw [IdealAdd.dpow_eq_of_mem_right]
+      have α_comp := α.dpow_comp
+      have hmap' : (algebraMap B (dpEnvelope hI J)) =
+          (Ideal.Quotient.mk (J12 hI (J' I J) (sub_ideal_J' I J))).comp
+            (algebraMap B (DividedPowerAlgebra B ↥(J' I J))) := rfl
+      · have hin : (Ideal.Quotient.mk (J12 hI (J' I J) (sub_ideal_J' I J))) (dp B (m + 1) ⟨b, hb⟩)
+            ∈ (dpIdeal hI J).carrier := by
+          simp only [dpIdeal, SubDPIdeal.generatedDpow_carrier]
+
+          sorry
+        unfold dpEnvelope dpEnvelopeOfIncluded at α_comp
+        rw [← DPMorphism.toRingHom_apply]
+        rw [α_comp n]
+        simp only [dividedPowers]
+        rw [IsSubDPIdeal.dpow_eq_of_mem]
+        rfl
+
+        · exact hin
+        · exact hin
+      ·
+        have hmap' : (algebraMap B (dpEnvelope hI J)) =
+          (Ideal.Quotient.mk (J12 hI (J' I J) (sub_ideal_J' I J))).comp
+            (algebraMap B (DividedPowerAlgebra B ↥(J' I J))) := rfl
+        rw [hmap'] at hα
+        sorry
+
+    · sorry
+    · sorry
+    · sorry
+    --have := α.ideal_comp
+    /- have α_comp := α.dpow_comp
+    rw [Ideal.map] at ha
+    refine Submodule.span_induction' ?_ ?_ ?_ ?_ ha
+    · intro c hc
+      simp only [Set.mem_image, SetLike.mem_coe, RingHom.mem_ker] at hc
+      obtain ⟨b, hb, rfl⟩ := hc
+      have hb_in :  (Ideal.Quotient.mk (J12 hI (J' I J) (sub_ideal_J' I J))) b ∈
+        (dpIdeal hI J).carrier := by
+        simp only [dpIdeal, SubDPIdeal.memCarrier, SubDPIdeal.generatedDpow]
+        apply subset_span
+        simp only [SetLike.mem_coe, exists_prop', nonempty_prop, ne_eq, Nat.exists_ne_zero,
+          Set.mem_setOf_eq]
+
+        sorry
+      sorry
+    sorry
+    · intros x hx y hy
+      sorry
+    sorry -/
+
+    /- have ha' : a ∈ (dpIdeal hI J).carrier := sorry
+    rw [h1]
+    rw [IdealAdd.dpow_eq_of_mem_right]
+    · unfold dpEnvelope dpEnvelopeOfIncluded at α_comp
+      simp only [α_comp n a ha', dividedPowers, IsSubDPIdeal.dpow_eq_of_mem _ _ ha']
+      rfl
     --rw [← hα] at hmapc
     --simp_rw [← hI'_ext] at hmap
     --rw φ.dpow_comp,
-    sorry
+    · sorry -/
 
 -- Universal property claim of Theorem 3.19
 theorem dpEnvelope_IsDPEnvelope [DecidableEq B] [∀ x, Decidable (x ∈ (dpIdeal hI J).carrier)] :
@@ -798,11 +895,10 @@ theorem dpEnvelope_IsDPEnvelope [DecidableEq B] [∀ x, Decidable (x ∈ (dpIdea
   have hφ := hφ hI J hK hJK hI' hI'_ext hI'_int
   have hφ_unique := hφ_unique hI J hK hJK hI' hI'_ext hI'_int
   use ψ hI J hK hJK hI' hI'_ext hI'_int
-  refine ⟨by rw [← hφ]; rfl, fun _ hα ↦ ?_⟩
+  refine ⟨by rw [← hφ]; rfl, fun α hα ↦ ?_⟩
   ext x
   simp only [RingHom.toMonoidHom_eq_coe, OneHom.toFun_eq_coe, MonoidHom.toOneHom_coe,
     MonoidHom.coe_coe]
-  rw [← hφ_unique (β hI J hK hI' hI'_ext hI'_int hα) hα]
-  sorry
+  rw [← hφ_unique (β hI J hK hI' hI'_ext hI'_int hα) hα, β]
 
 end dpEnvelope_IsDPEnvelope
