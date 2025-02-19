@@ -38,6 +38,7 @@ doi: https://doi.org/10.24033/asens.1148
 
 -/
 
+-- In PR #15657
 section DividedPowersDefinition
 
 open Finset Nat
