@@ -594,6 +594,7 @@ private noncomputable abbrev h1 :  DividedPowers (K1 I K) := IdealAdd.dividedPow
 
 private lemma h1_def : h1 hK hI' hI'_int = IdealAdd.dividedPowers hI' hK hI'_int := rfl
 
+-- Q: generalize and PR? (I.map (f : A →+* C)) + K, plus do left and right versions
 private abbrev g' : hI.DPMorphism (h1 hK hI' hI'_int) :=
   { toRingHom  := algebraMap A C
     ideal_comp := le_sup_of_le_left (le_refl _)
@@ -614,6 +615,7 @@ private lemma isCompatibleWith_hI_h1 (hI'_ext : hI.IsDPMorphism hI' (algebraMap 
   intro n c hc
   exact (IdealAdd.dpow_eq_of_mem_left _ _ hI'_int hc.1).symm
 
+-- TODO?: generalize to subpdideals of sums (left and right)
 private abbrev K' : SubDPIdeal (h1 hK hI' hI'_int) :=
   { carrier := K
     isSubideal := le_sup_right
@@ -623,24 +625,22 @@ private abbrev K' : SubDPIdeal (h1 hK hI' hI'_int) :=
         apply hK.dpow_mem _ hn hj
       exact IdealAdd.dpow_eq_of_mem_right hI' hK hI'_int hj }
 
-private lemma algebraMap_I_le_K1 (hJK : map (algebraMap B C) J ≤ K) :
-    map (algebraMap A C) I ≤ K1 I K := by
-  apply le_trans _ (algebraMap_J'_le_K1 J hJK)
-  simp only [J', Submodule.add_eq_sup, Ideal.map_sup, Ideal.map_map,
-    ← IsScalarTower.algebraMap_eq]
-  exact le_sup_of_le_right (le_refl _)
+-- Not needed.
+private lemma algebraMap_I_le_K1  :
+    map (algebraMap A C) I ≤ K1 I K :=
+  SemilatticeSup.le_sup_left _ _
 
 private noncomputable abbrev φ [DecidableEq B] :
     (Quotient.dividedPowers (DividedPowerAlgebra.dividedPowers' B (J' I J))
       (J12_IsSubDPIdeal hI _ (sub_ideal_J' I J))).DPMorphism (h1 hK hI' hI'_int) :=
   (dpEnvelopeOfIncluded_IsWeakDPEnvelope hI (J' I J) (sub_ideal_J' I J) C _ (h1 hK hI' hI'_int)
-    (algebraMap_J'_le_K1 J hJK) (algebraMap_I_le_K1 J hJK)
+    (algebraMap_J'_le_K1 J hJK) (SemilatticeSup.le_sup_left _ _)
     (isCompatibleWith_hI_h1 hI hK hI' hI'_int hI'_ext)).choose
 
 private lemma hφ [DecidableEq B] : (φ hI J hK hJK hI' hI'_ext hI'_int).comp
     (algebraMap B (dpEnvelopeOfIncluded hI (J' I J) (sub_ideal_J' I J))) = algebraMap B C :=
   (dpEnvelopeOfIncluded_IsWeakDPEnvelope hI (J' I J) (sub_ideal_J' I J) C _ (h1 hK hI' hI'_int)
-    (algebraMap_J'_le_K1 J hJK) (algebraMap_I_le_K1 J hJK)
+    (algebraMap_J'_le_K1 J hJK) (SemilatticeSup.le_sup_left _ _)
     (isCompatibleWith_hI_h1 hI hK hI' hI'_int hI'_ext)).choose_spec.1
 
 private lemma hφ_unique  [DecidableEq B] :
@@ -649,7 +649,7 @@ private lemma hφ_unique  [DecidableEq B] :
       (fun φ ↦ φ.comp (algebraMap B (dpEnvelopeOfIncluded hI (J' I J) (sub_ideal_J' I J))) =
         algebraMap B C) y → y = φ hI J hK hJK hI' hI'_ext hI'_int :=
   (dpEnvelopeOfIncluded_IsWeakDPEnvelope hI (J' I J) (sub_ideal_J' I J) C _ (h1 hK hI' hI'_int)
-    (algebraMap_J'_le_K1 J hJK) (algebraMap_I_le_K1 J hJK)
+    (algebraMap_J'_le_K1 J hJK) (SemilatticeSup.le_sup_left _ _)
     (isCompatibleWith_hI_h1 hI hK hI' hI'_int hI'_ext)).choose_spec.2
 
 private noncomputable abbrev ψ [DecidableEq B] [∀ x, Decidable (x ∈ (dpIdeal hI J).carrier)] :
@@ -758,7 +758,9 @@ private noncomputable def β_aux [DecidableEq B] [∀ x, Decidable (x ∈ (dpIde
       rw [← Ideal.map_map, ← Ideal.map_map]
       rw [← α.toRingHom_apply]
       apply Ideal.mem_map_of_mem
-      convert Ideal.mem_map_of_mem ?_ hi
+      -- Idea: commute mk and dp + use dpow_ι
+
+      /- convert Ideal.mem_map_of_mem ?_ hi
       have : (algebraMap B (DividedPowerAlgebra B ↥(J' I J) ⧸ J12 hI (J' I J) (sub_ideal_J' I J))) =
         (Ideal.Quotient.mk (J12 hI (J' I J) (sub_ideal_J' I J))).comp
           (algebraMap B (DividedPowerAlgebra B ↥(J' I J))) := by
@@ -766,7 +768,7 @@ private noncomputable def β_aux [DecidableEq B] [∀ x, Decidable (x ∈ (dpIde
       unfold dpEnvelope dpEnvelopeOfIncluded
       rw [this]
       rw [RingHom.comp_apply]
-      congr 1
+      congr 1 -/
       --apply Ideal.mem_map_of_mem
       sorry
 
@@ -894,11 +896,14 @@ theorem dpEnvelope_IsDPEnvelope [DecidableEq B] [∀ x, Decidable (x ∈ (dpIdea
   set φ := φ hI J hK hJK hI' hI'_ext hI'_int
   have hφ := hφ hI J hK hJK hI' hI'_ext hI'_int
   have hφ_unique := hφ_unique hI J hK hJK hI' hI'_ext hI'_int
+  dsimp at hφ_unique
   use ψ hI J hK hJK hI' hI'_ext hI'_int
   refine ⟨by rw [← hφ]; rfl, fun α hα ↦ ?_⟩
+  dsimp at hα
   ext x
   simp only [RingHom.toMonoidHom_eq_coe, OneHom.toFun_eq_coe, MonoidHom.toOneHom_coe,
     MonoidHom.coe_coe]
+  set foo := β hI J hK hI' hI'_ext hI'_int hα
   rw [← hφ_unique (β hI J hK hI' hI'_ext hI'_int hα) hα, β]
 
 end dpEnvelope_IsDPEnvelope
