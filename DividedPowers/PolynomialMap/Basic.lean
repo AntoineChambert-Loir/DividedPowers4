@@ -3,7 +3,7 @@
 import DividedPowers.ForMathlib.DirectLimit
 import Mathlib.LinearAlgebra.TensorProduct.RightExactness
 import Mathlib.RingTheory.FiniteType
-import Mathlib.RingTheory.Ideal.QuotientOperations
+import Mathlib.RingTheory.Ideal.Quotient.Operations
 
 
 /-! # Polynomial laws on modules
@@ -202,12 +202,11 @@ theorem exists_fg_of_baseChange_eq_zero
   use B, hB, LinearMap.rTensor M (Subalgebra.inclusion hAB).toLinearMap u
   constructor
   · rw [← rTensor_comp_baseChange_comm_apply, hu']
-    simp only [_root_.map_zero]
   · rw [← LinearMap.comp_apply, ← LinearMap.rTensor_comp, ← hu]
     congr
 
 class IsPure {R : Type u} [CommRing R]
-    {M : Type v} [AddCommGroup M] [Module R M] (N : Submodule R M) :=
+    {M : Type v} [AddCommGroup M] [Module R M] (N : Submodule R M) where
   baseChange_injective' (S : Type u) [CommRing S] [Algebra R S] :
     Injective (N.subtype.baseChange S)
 
@@ -307,6 +306,7 @@ namespace PolynomialMap
 
 variable (f : PolynomialMap R M N)
 
+variable {R M N f} in
 theorem isCompat_apply' {S : Type u} [CommRing S] [Algebra R S] {S' : Type u} [CommRing S']
     [Algebra R S'] (φ : S →ₐ[R] S') (x : S ⊗[R] M) :
     (φ.toLinearMap.rTensor N) ((f.toFun' S) x) = (f.toFun' S') (φ.toLinearMap.rTensor M x) := by

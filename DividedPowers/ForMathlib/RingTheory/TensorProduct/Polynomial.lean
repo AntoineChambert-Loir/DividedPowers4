@@ -7,7 +7,7 @@ Authors: Antoine Chambert-Loir
 import Mathlib.Algebra.Polynomial.AlgebraMap
 import Mathlib.LinearAlgebra.DirectSum.Finsupp
 import Mathlib.RingTheory.TensorProduct.Basic
-import Mathlib.Algebra.Polynomial.Eval
+import Mathlib.Algebra.Polynomial.Eval.Defs
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.LinearEquiv
 
 /-! # Tensor products of a polynomial ring

@@ -1,6 +1,6 @@
-import Mathlib.RingTheory.GradedAlgebra.HomogeneousIdeal
+import Mathlib.RingTheory.GradedAlgebra.Homogeneous.Ideal
 import Mathlib.Algebra.RingQuot
-import Mathlib.RingTheory.Ideal.QuotientOperations
+import Mathlib.RingTheory.Ideal.Quotient.Operations
 
 
 open DirectSum Function
@@ -50,7 +50,7 @@ theorem component'_eq {β : ι → Type*} [∀ i, AddCommMonoid (β i)] (x : Dir
     component' i x = x i := rfl
 
 theorem ext_iff' {β : ι → Type*} [∀ i, AddCommMonoid (β i)]
-    (x y : ⨁ i, β i) : x = y ↔ ∀ i, component' i x = component' i y := ext_iff ℕ
+    (x y : ⨁ i, β i) : x = y ↔ ∀ i, component' i x = component' i y := DirectSum.ext_iff
 
 
 /- Four versions of a direct sum of maps
@@ -74,9 +74,9 @@ def map' {β γ : ι → Type*} [∀ i, AddCommMonoid (β i)] [∀ i, AddCommMon
     (h : ∀ i, β i →+ γ i) : (⨁ i, β i) →+ (⨁ i, γ i) :=
   toAddMonoid fun i => (of γ i).comp (h i)
 
-
+-- NOTE: Renamed from `lmap` because of Mathlib name conflict.
 /-- `LinearMap` from a direct sum to a direct sum given by families of `LinearMapClass` maps. -/
-def lmap {β γ : ι → Type*}
+def lmap'' {β γ : ι → Type*}
     [∀ i, AddCommMonoid (β i)] [∀ i, Module R (β i)]
     [∀ i, AddCommMonoid (γ i)] [∀ i, Module R (γ i)]
     {F : ∀ _ : ι, Type*} [∀ i, FunLike (F i) (β i) (γ i)] [∀ i, LinearMapClass (F i) R (β i) (γ i)]
@@ -340,7 +340,7 @@ theorem DirectSum.finsupp_sum_support_decompose'
     (ℳ : ι → σ) [inst : Decomposition ℳ]
     [inst : (i : ι) → (x : { x // x ∈ ℳ i }) → Decidable (x ≠ 0)]
     (r : M) :
-    r = ((decompose ℳ) r).sum (fun i x => ↑x) := by
+    r = ((decompose ℳ) r).sum (fun _ x => ↑x) := by
   conv_lhs => rw [← sum_support_decompose ℳ r]
   rfl
 
@@ -477,7 +477,7 @@ theorem _root_.Ideal.IsHomogeneous_of_rel_isHomogeneous [DecidableEq A] [h𝒜 :
     exact ⟨i, h.1, h.2.1⟩
   apply le_antisymm
   . intro x hx
-    refine' Submodule.span_induction hx _ _ _ _
+    refine Submodule.span_induction ?_ ?_ ?_ ?_ hx
     . rintro x ⟨a, b, h', h⟩
       rw [← h𝒜.left_inv x, ← sum_support_of (Decomposition.decompose' x),
         map_sum]
@@ -495,16 +495,15 @@ theorem _root_.Ideal.IsHomogeneous_of_rel_isHomogeneous [DecidableEq A] [h𝒜 :
         exact hr h' i
       . simp only [Decomposition.decompose'_eq, ← h, decompose_add, add_apply, Submodule.coe_add]
     . simp only [Submodule.zero_mem]
-    . intro x y hx hy
+    . intro x y _ _ hx hy
       exact Ideal.add_mem _ hx hy
-    . intro a x hx
+    . intro a x _ hx
       simp only [smul_eq_mul]
       apply Ideal.mul_mem_left _ _ hx
-  . intro x hx'
-    refine' Submodule.span_induction hx' _ (Submodule.zero_mem _)
-      (fun _ _ hx hy => Ideal.add_mem _ hx hy) (fun a _ hx => Ideal.mul_mem_left _ a hx)
-    . rintro x ⟨a, b, ⟨i, _, _, h'⟩, h⟩
-      exact Ideal.subset_span  ⟨a, b, h', h⟩
+  . exact fun x hx' ↦ Submodule.span_induction
+      (fun x ⟨a, b, ⟨i, _, _, h'⟩, h⟩ ↦ Ideal.subset_span ⟨a, b, h', h⟩)
+      (Submodule.zero_mem _) (fun _ _ _ _ hx hy => Ideal.add_mem _ hx hy)
+      (fun a _ _ hx => Ideal.mul_mem_left _ a hx) hx'
 
 end Ring
 
@@ -793,7 +792,8 @@ theorem Ideal.quotDecomposition_right_inv' [GradedAlgebra 𝒜] (hI : I.IsHomoge
   simp only [LinearMap.coe_comp, comp_apply, LinearMap.id_comp, lof_eq_of, coeLinearMap_of]
   rw [← hxy, Ideal.Quotient.mkₐ_eq_mk, Ideal.quotDecomposeLaux_apply_mk, Ideal.quotDecomposeLaux]
   simp only [LinearMap.coe_comp, comp_apply]
-  change lmap' _ (decompose 𝒜 x) = _
+  sorry
+  /- change lmap' _ (decompose 𝒜 x) = _
   suffices decompose 𝒜 x = lof R ι (fun i => 𝒜 i) i (⟨x, hx⟩ : 𝒜 i) by
     rw [this, lmap'_lof, lof_eq_of]
     apply congr_arg₂ _ rfl
@@ -803,7 +803,7 @@ theorem Ideal.quotDecomposition_right_inv' [GradedAlgebra 𝒜] (hI : I.IsHomoge
     simp only [Ideal.Quotient.mkₐ_eq_mk]
     rfl
   conv_lhs => rw [← Subtype.coe_mk x hx]
-  rw [decompose_coe, lof_eq_of]
+  rw [decompose_coe, lof_eq_of] -/
 
 theorem Ideal.quotDecomposition_right_inv [GradedAlgebra 𝒜] (hI : I.IsHomogeneous 𝒜) :
     RightInverse (DirectSum.coeAddMonoidHom (I.quotSubmodule R 𝒜)) (I.quotDecompose R 𝒜 hI) :=

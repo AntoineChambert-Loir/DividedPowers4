@@ -3,7 +3,7 @@ Copyright (c) 2024 Antoine Chambert-Loir, María Inés de Frutos-Fernández. All
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
-import DividedPowers.Basic
+import Mathlib.RingTheory.DividedPowers.Basic
 import DividedPowers.DPAlgebra.Misc
 
 noncomputable section
@@ -116,7 +116,8 @@ theorem dp_add (n : ℕ) (x y : M) :
 theorem dp_sum {ι : Type*} [DecidableEq ι] (s : Finset ι) (q : ℕ) (x : ι → M) :
     dp R q (s.sum x) =
       (Finset.sym s q).sum fun k => s.prod fun i => dp R (Multiset.count i k) (x i) :=
-  DividedPowers.dpow_sum_aux' (dp_zero R) (dp_add R) (dp_null_of_ne_zero R) _
+  DividedPowers.dpow_sum' (I := ⊤) _ (fun {m} _ ↦ dp_zero R m)
+    (fun n x y _ _ ↦ dp_add R n x y) (dp_null_of_ne_zero R) (fun _ _ ↦ trivial) _
 
 theorem dp_sum_smul {ι : Type*} [DecidableEq ι] (s : Finset ι) (q : ℕ) (a : ι → R) (x : ι → M) :
     dp R q (s.sum fun i => a i • x i) =
@@ -216,9 +217,9 @@ def lift : DividedPowerAlgebra R M →ₐ[R] A :=
     (fun n r m => by
       dsimp
       rw [LinearMap.map_smulₛₗ, RingHom.id_apply, ← algebraMap_smul A r (φ m), smul_eq_mul,
-        hI.dpow_smul _ (hφ m), ← smul_eq_mul, ← map_pow, algebraMap_smul])
+        hI.dpow_mul _ (hφ m), ← smul_eq_mul, ← map_pow, algebraMap_smul])
     (fun n p m => by
-      rw [hI.dpow_mul _ _ (hφ m), ← nsmul_eq_mul])
+      rw [hI.mul_dpow _ _ (hφ m), ← nsmul_eq_mul])
     (fun n u v => by
       dsimp
       rw [map_add, hI.dpow_add _ (hφ u) (hφ v)])

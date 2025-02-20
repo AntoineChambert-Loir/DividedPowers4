@@ -159,7 +159,10 @@ namespace GradedAlgebra
 section CommSemiring
 
 variable {R : Type*} [CommSemiring R] {A : Type*} [CommSemiring A] [Algebra R A]
-  {ι : Type*} [CanonicallyOrderedAddCommMonoid ι] (𝒜 : ι → Submodule R A)
+
+section AddCommMonoid
+
+variable {ι : Type*} [AddCommMonoid ι] (𝒜 : ι → Submodule R A)
 
 namespace GradeZero
 
@@ -225,6 +228,12 @@ def proj' (i : ι) : A →ₗ[R] 𝒜 i where
   map_add' a b  := by simp only [decompose_add, add_apply]
   map_smul' r a := by simp only [decompose_smul, RingHom.id_apply]; rfl
 
+end AddCommMonoid
+
+variable {ι : Type*} [OrderedAddCommMonoid ι] [CanonicallyOrderedAdd ι]
+   (𝒜 : ι → Submodule R A)
+variable [DecidableEq ι] [GradedAlgebra 𝒜]
+
 /-- The projection from `A` to `𝒜 0`, as a `RingHom`. -/
 @[simps]
 def proj'_zeroRingHom : A →+* 𝒜 0 where
@@ -245,7 +254,7 @@ end CommSemiring
 section CommRing
 
 variable {R : Type*} [CommRing R] {A : Type*} [CommRing A] [Algebra R A] {ι : Type*}
-  [CanonicallyOrderedAddCommMonoid ι] (𝒜 : ι → Submodule R A) [DecidableEq ι] [GradedAlgebra 𝒜]
+  [OrderedAddCommMonoid ι] [CanonicallyOrderedAdd ι] (𝒜 : ι → Submodule R A) [DecidableEq ι] [GradedAlgebra 𝒜]
 
 namespace GradeZero
 
@@ -302,7 +311,7 @@ theorem GAlgHom.IsHomogeneous_aeval {σ : Type*} {ι κ : Type*} [AddCommMonoid 
   apply Submodule.smul_mem
   convert Finsupp.prod_mem_grade fun s _ => h s
   rw [← hp (mem_support_iff.mp hc), Finsupp.weight_apply,
-    Finsupp.sum, map_sum, Finsupp.sum_of_support_subset _ le_rfl]
+    Finsupp.sum, map_sum, Finsupp.sum_of_support_subset _ subset_rfl]
   exact Finset.sum_congr rfl (fun _ _ ↦ map_nsmul _ _ _ )
   . exact fun _ _ ↦ zero_smul _ _
 

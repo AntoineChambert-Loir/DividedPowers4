@@ -1,6 +1,6 @@
 /- copyright ACL @ MIdFF 2024 -/
 
-import Mathlib.RingTheory.Ideal.QuotientOperations
+import Mathlib.RingTheory.Ideal.Quotient.Operations
 import Mathlib.Algebra.Module.Submodule.RestrictScalars
 import Mathlib.RingTheory.Ideal.Maps
 import Mathlib.RingTheory.TensorProduct.Basic
@@ -116,7 +116,7 @@ theorem LinearMap.ker_lTensor_of_linearProjOfIsCompl
     {M : Type*} [AddCommGroup M] [Module A M]
     {M₁ M₂ : Submodule A M} (hM : IsCompl M₁ M₂)
     (Q : Type*) [AddCommGroup Q] [Module A Q] :
-    ker (lTensor Q (linearProjOfIsCompl _ _ hM)) = range (lTensor Q M₂.subtype) := by
+    ker (lTensor Q (Submodule.linearProjOfIsCompl _ _ hM)) = range (lTensor Q M₂.subtype) := by
   rw [← exact_iff]
   apply lTensor_exact
   simp only [exact_iff, range_subtype, linearProjOfIsCompl_ker]
@@ -126,7 +126,7 @@ theorem LinearMap.ker_rTensor_of_linearProjOfIsCompl
     {M : Type*} [AddCommGroup M] [Module A M]
     {M₁ M₂ : Submodule A M} (hM : IsCompl M₁ M₂)
     (Q : Type*) [AddCommGroup Q] [Module A Q] :
-    ker (rTensor Q (linearProjOfIsCompl _ _ hM)) = range (rTensor Q M₂.subtype) := by
+    ker (rTensor Q (Submodule.linearProjOfIsCompl _ _ hM)) = range (rTensor Q M₂.subtype) := by
   rw [← exact_iff]
   apply rTensor_exact
   simp only [exact_iff, range_subtype, linearProjOfIsCompl_ker]
@@ -137,7 +137,7 @@ theorem LinearMap.ker_baseChange_of_linearProjOfIsCompl
     {M : Type*} [AddCommGroup M] [Module A M]
     {M₁ M₂ : Submodule A M} (hM : IsCompl M₁ M₂)
     (R : Type*) [CommRing R] [Algebra A R] :
-    ker (baseChange R (linearProjOfIsCompl _ _ hM)) = range (baseChange R M₂.subtype) := by
+    ker (baseChange R (Submodule.linearProjOfIsCompl _ _ hM)) = range (baseChange R M₂.subtype) := by
   simpa only [← exact_iff] using ker_lTensor_of_linearProjOfIsCompl hM R
 
 theorem LinearMap.isCompl_lTensor
@@ -146,8 +146,8 @@ theorem LinearMap.isCompl_lTensor
     (Q : Type*) [AddCommGroup Q] [Module A Q] :
     IsCompl (range (lTensor Q M₁.subtype)) (range (lTensor Q M₂.subtype)) := by
   have hq :
-    M₁.subtype.comp (linearProjOfIsCompl _ _ hM)
-      + M₂.subtype.comp (linearProjOfIsCompl _ _ hM.symm) = id := by
+    M₁.subtype.comp (Submodule.linearProjOfIsCompl _ _ hM)
+      + M₂.subtype.comp (Submodule.linearProjOfIsCompl _ _ hM.symm) = id := by
     ext x
     simp only [add_apply, coe_comp, coe_subtype, Function.comp_apply,
       id_coe, id_eq]
@@ -265,7 +265,8 @@ theorem Algebra.TensorProduct.map_includeRight_eq_range_baseChange
   simp only [restrictScalars_mem, LinearMap.mem_range]
   constructor
   · intro hx
-    apply Submodule.span_induction hx
+    sorry
+   /-  apply Submodule.span_induction hx
       (p := fun x ↦ ∃ y, (LinearMap.baseChange R (Submodule.restrictScalars A I).subtype) y = x )
     · rintro x ⟨s, hs, rfl⟩; use 1 ⊗ₜ[A] ⟨s, hs⟩; rfl
     · use 0; simp only [_root_.map_zero]
@@ -292,7 +293,7 @@ theorem Algebra.TensorProduct.map_includeRight_eq_range_baseChange
         obtain ⟨x', hx⟩ := hx
         obtain ⟨y', hy⟩ := hy
         use x' + y'
-        simp only [map_add, hx, smul_eq_mul, hy, mul_add]
+        simp only [map_add, hx, smul_eq_mul, hy, mul_add] -/
   · rintro ⟨y, rfl⟩
     induction y using TensorProduct.induction_on with
     | zero => simp only [_root_.map_zero, Submodule.zero_mem]

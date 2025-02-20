@@ -47,10 +47,11 @@ instance : PartialOrder (Submodules_fg R M) := by
   unfold Submodules_fg
   infer_instance
 
-instance : Sup (Submodules_fg R M) where
-  sup := fun P Q ↦ ⟨P.val ⊔ Q.val, Submodule.FG.sup P.property Q.property⟩
+/- instance : Max (Submodules_fg R M) where
+  max := fun P Q ↦ ⟨P.val ⊔ Q.val, Submodule.FG.sup P.property Q.property⟩ -/
 
 instance : SemilatticeSup (Submodules_fg R M) where
+  sup := fun P Q ↦ ⟨P.val ⊔ Q.val, Submodule.FG.sup P.property Q.property⟩
   le_sup_left := fun P Q ↦ by rw [← Subtype.coe_le_coe]; exact le_sup_left
   le_sup_right := fun P Q ↦ by rw [← Subtype.coe_le_coe]; exact le_sup_right
   sup_le := fun P Q R hPR hQR ↦ by
@@ -75,8 +76,8 @@ def Submodules_fg_inclusion :
 theorem Submodules_fg.directedSystem :
     DirectedSystem (ι := Submodules_fg R M)
       (fun P ↦ P.val) (fun _ _ hPQ ↦ (Submodule.inclusion (Subtype.coe_le_coe.mpr hPQ))) where
-  map_self' := fun _ _ _ ↦ rfl
-  map_map' := fun _ _ _ ↦ rfl
+  map_self := fun _ _ ↦ rfl
+  map_map  := fun _ _ _ _ _ _ ↦ rfl
 
 open scoped Classical
 
@@ -152,12 +153,12 @@ theorem rTensor_fgEquiv_of' (P : Submodule R M) (hP : Submodule.FG P) (u : P ⊗
 theorem rTensor_fg_directedSystem :
     DirectedSystem (ι := Submodules_fg R M) (fun P ↦ P.val ⊗[R] N)
       (fun P Q hPQ ↦ LinearMap.rTensor N (Submodules_fg_inclusion R M P Q hPQ)) := {
-  map_self' := fun P p hP ↦ by
+  map_self := fun P p ↦ by
     rw [← LinearMap.id_apply (R := R) p]
     apply DFunLike.congr_fun
     ext p n
     rfl -- needs some rw lemmas
-  map_map' := fun {P Q R} hPQ hRQ p ↦ by
+  map_map := fun {P Q R} hPQ hRQ p ↦ by
     rw [← LinearMap.comp_apply, ← LinearMap.rTensor_comp]
     apply DFunLike.congr_fun
     ext p n
@@ -310,7 +311,8 @@ theorem TensorProduct.Algebra.eq_of_fg_of_subtype_eq'
   let ⟨B, hB_le, hB, h⟩ := TensorProduct.Algebra.eq_of_fg_of_subtype_eq
     (Subalgebra.FG.sup hA hA') _ _ h
   use B, le_trans hA_le hB_le, le_trans hA'_le hB_le, hB
-  simp only [← LinearMap.rTensor_comp, ← LinearMap.comp_apply] at h
+  simp only [Subalgebra.inclusion_inclusion, A'',
+    ← LinearMap.rTensor_comp, ← LinearMap.comp_apply] at h
   exact h
 
 end Algebra

@@ -226,8 +226,8 @@ lemma isHomogeneousOfDegree_coeff {f : PolynomialMap R M N} {p : ℕ} (hf : IsHo
   have he : ∀ b k, (X none ^ k * (Finset.prod Finset.univ
       fun x => X (some x) ^ b x) : MvPolynomial (Option ι) R) = monomial (e b k) 1 := fun b k ↦ by
     simp only [Finsupp.mapDomainEmbedding_apply, Function.Embedding.some_apply, monomial_eq,
-      map_one, Finsupp.prod_pow, Finsupp.coe_update, Fintype.prod_option, Function.update_same,
-      ne_eq, reduceCtorEq, not_false_eq_true, Function.update_noteq, one_mul, e]
+      map_one, Finsupp.prod_pow, Finsupp.coe_update, Fintype.prod_option, Function.update_self,
+      ne_eq, reduceCtorEq, not_false_eq_true, Function.update_of_ne, one_mul, e]
     exact congr_arg₂ _ rfl (Finset.prod_congr rfl (fun _ _ => by
       rw [Finsupp.mapDomain_apply (Option.some_injective ι)]))
   have he_some : ∀ b k i, e b k (some i) = b i := fun b k i ↦ by

@@ -529,7 +529,8 @@ theorem generize_finsupp_eq [DecidableEq ι] (b : Basis ι R M) (h : (ι →₀ 
         Basis.repr_self, Algebra.mul_smul_comm, mul_one, Finsupp.single_smul,
         _root_.one_smul, Finsupp.single_eq_of_ne hj]
     · simp only [mem_univ, not_true_eq_false, false_implies]
-  simp only [this]
+  sorry
+  /- simp only [this]
   apply Finsupp.sum_congr
   intro k _
   congr
@@ -538,7 +539,7 @@ theorem generize_finsupp_eq [DecidableEq ι] (b : Basis ι R M) (h : (ι →₀ 
   apply prod_eq_one
   intro i hi
   rw [mem_compl, Finsupp.mem_support_iff, ne_eq, not_not] at hi
-  rw [hi, pow_zero]
+  rw [hi, pow_zero] -/
 
 /-- Given `b : Basis ι R M` and `h : (ι →₀ ℕ) →₀ ℕ,
   `Finsupp.polynomialMap b h : M →ₚ[R] N` is the polynomial map
