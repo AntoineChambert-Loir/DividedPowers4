@@ -3,7 +3,7 @@ Copyright (c) 2024 Antoine Chambert-Loir, María Inés de Frutos-Fernández. All
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
-import DividedPowers.Basic
+import Mathlib.RingTheory.DividedPowers.Basic
 import DividedPowers.ExponentialModule.Basic
 
 /-! # Divided powers and exponential power series -/

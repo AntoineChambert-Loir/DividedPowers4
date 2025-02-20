@@ -332,9 +332,8 @@ theorem dpow_comp_aux (hIJ : ∀ (n : ℕ), ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.
       apply sum_congr rfl
       intro k hk
       rw [mem_filter] at hk
-      sorry
-      /- rw [prod_congr rfl (L1 k), prod_mul_distrib, prod_mul_distrib,
-        hI.prod_dpow_self ha, hJ.prod_dpow_self _ hb]
+      rw [prod_congr rfl (L1 k), prod_mul_distrib, prod_mul_distrib,
+        hI.prod_dpow _ ha, hJ.prod_dpow _ hb]
       simp only [mul_assoc]; apply congr_arg₂ _ rfl
       apply congr_arg₂ _ rfl
       rw [sum_range_sym_mul_compl hk.1]
@@ -342,7 +341,7 @@ theorem dpow_comp_aux (hIJ : ∀ (n : ℕ), ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.
       simp only [mem_sym_iff, mem_range, hφ_def] at hk
       rw [hk.2]
       apply congr_arg₂ _ _ rfl
-      rw [mul_comm] -/
+      rw [mul_comm]
     -- hφ
     intro k hk
     simp only [φ, Sym.mem_coe, mem_range, Nat.lt_succ_iff, range_sym_weighted_sum_le hk]

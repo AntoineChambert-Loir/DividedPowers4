@@ -30,7 +30,7 @@ import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Basic -- it uses 
 import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Topology
 --import DividedPowers.ForMathlib.MvPowerSeries.Sandbox -- Test file, do not import here.
 import DividedPowers.ForMathlib.MvPowerSeries.Substitution
-import DividedPowers.ForMathlib.MvPowerSeries.Trunc
+--import DividedPowers.ForMathlib.MvPowerSeries.Trunc -- In PR 20958
 import DividedPowers.ForMathlib.PowerSeries.Topology
 import DividedPowers.ForMathlib.RingTheory.AugmentationIdeal -- uses sorry.
 import DividedPowers.ForMathlib.RingTheory.SubmoduleMem
