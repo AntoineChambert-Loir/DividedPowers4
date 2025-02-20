@@ -28,6 +28,8 @@ compute `Nat.uniformBell` when one of the parameters is `0` or `1`
 
 -/
 
+-- In PR #15644
+
 open Multiset Nat
 
 theorem Nat.choose_mul_add (m) {n : ℕ} (hn : n ≠ 0) :

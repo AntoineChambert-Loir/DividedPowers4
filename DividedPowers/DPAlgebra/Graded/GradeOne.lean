@@ -16,7 +16,6 @@ section CommRing
 
 variable (R : Type*) [CommRing R] {M : Type*} [AddCommGroup M] [Module R M]
 
-
 section GradeOne
 
 theorem ι_mem_grade_one (m : M) : ι R M m ∈ grade R M 1 :=

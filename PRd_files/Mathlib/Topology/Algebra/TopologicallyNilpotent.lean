@@ -6,7 +6,7 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 
 import DividedPowers.ForMathlib.Topology.Algebra.LinearTopology
 
--- In #15019
+-- In PR #20971
 
 /-! # Topologicall nilpotent elements -/
 

@@ -16,7 +16,7 @@ import DividedPowers.DPMorphism
 import DividedPowers.ExponentialModule.Basic
 import DividedPowers.Exponential
 import DividedPowers.ForMathlib.AlgebraLemmas
-import DividedPowers.ForMathlib.Bell
+--import DividedPowers.ForMathlib.Bell -- -- In PR #15644
 import DividedPowers.ForMathlib.DirectLimit
 import DividedPowers.ForMathlib.GradedRingQuot
 --import DividedPowers.ForMathlib.InfiniteSum.Basic -- In mathlib
@@ -38,6 +38,7 @@ import DividedPowers.ForMathlib.RingTheory.TensorProduct.LinearEquiv
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.MvPolynomial
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.Polynomial
 import DividedPowers.ForMathlib.Topology.Algebra.LinearTopology
+--import DividedPowers.ForMathlib.Topology.Algebra.TopologicallyNilpotent -- In PR #20971
 import DividedPowers.IdealAdd
 import DividedPowers.PolynomialMap.Basic
 import DividedPowers.PolynomialMap.Coeff

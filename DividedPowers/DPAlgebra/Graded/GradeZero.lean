@@ -266,7 +266,7 @@ theorem lift_augIdeal_le {A : Type*} [CommRing A] [Algebra R A] {I : Ideal A}
   simp only [augIdeal_eq_span, Ideal.map_span, Ideal.span_le, SetLike.mem_coe]
   rintro y ⟨x, ⟨n, hn, m, _, rfl⟩, rfl⟩
   simp only [lift_apply_dp]
-  refine hI.dpow_mem _ (ne_of_gt hn) (hφ m)
+  refine hI.dpow_mem (ne_of_gt hn) (hφ m)
 
 theorem lift_mem_of_mem_augIdeal {A : Type*} [CommRing A] [Algebra R A] {I : Ideal A}
     (hI : DividedPowers I) (φ : M →ₗ[R] A) (hφ : ∀ m, φ m ∈ I) (x : DividedPowerAlgebra R M)
