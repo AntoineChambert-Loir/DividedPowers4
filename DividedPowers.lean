@@ -22,16 +22,16 @@ import DividedPowers.ForMathlib.GradedRingQuot
 --import DividedPowers.ForMathlib.InfiniteSum.Basic -- In mathlib
 --import DividedPowers.ForMathlib.InfiniteSum.Order -- In mathlib
 import DividedPowers.ForMathlib.Lcoeff
-import DividedPowers.ForMathlib.MvPowerSeries.Evaluation -- In PR 15019
-import DividedPowers.ForMathlib.MvPowerSeries.LinearTopology
-import DividedPowers.ForMathlib.MvPowerSeries.Order -- -- In PR 14983
-import DividedPowers.ForMathlib.MvPowerSeries.PiTopology -- In PR 14866 and 14989
-import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Basic -- it uses sorry
-import DividedPowers.ForMathlib.MvPowerSeries.StronglySummable.Topology
+import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Evaluation -- In PR 15019
+import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.LinearTopology
+--import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Order -- In PR #14983
+--import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.PiTopology -- In PR #14866 and PR #14989
+import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.StronglySummable.Basic -- it uses sorry
+import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.StronglySummable.Topology
 --import DividedPowers.ForMathlib.MvPowerSeries.Sandbox -- Test file, do not import here.
-import DividedPowers.ForMathlib.MvPowerSeries.Substitution
+import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Substitution
 --import DividedPowers.ForMathlib.MvPowerSeries.Trunc -- In PR 20958
-import DividedPowers.ForMathlib.PowerSeries.Topology
+import DividedPowers.ForMathlib.RingTheory.PowerSeries.Topology
 import DividedPowers.ForMathlib.RingTheory.AugmentationIdeal -- uses sorry.
 import DividedPowers.ForMathlib.RingTheory.SubmoduleMem
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.LinearEquiv

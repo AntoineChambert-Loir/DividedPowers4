@@ -5,13 +5,15 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 
 import Mathlib.Algebra.MvPolynomial.CommRing
+import Mathlib.RingTheory.Ideal.BigOperators
 import Mathlib.RingTheory.MvPowerSeries.PiTopology
 import Mathlib.RingTheory.MvPowerSeries.Trunc
 import Mathlib.Topology.Algebra.Algebra
 import Mathlib.Topology.Algebra.TopologicallyNilpotent
+import Mathlib.Topology.Algebra.LinearTopology
 import Mathlib.Topology.Algebra.UniformRing
 
-/-! # Evaluation of (multivariate) power series
+/-! # Evaluation of multivariate power series
 
 Let `σ`, `R` `S` be types, with `CommRing R`, `CommRing S`.
 One assumes that `TopologicalRing R` and `UniformAddGroup R`,
@@ -64,7 +66,8 @@ structure EvalDomain (a : σ → S) : Prop where
   tendsto_zero : Tendsto a cofinite (nhds 0)
 
 /-- The domain of evaluation of `MvPowerSeries`, as an ideal -/
-def EvalDomain_ideal [LinearTopology S] : Ideal (σ → S) where
+def EvalDomain_ideal [IsTopologicalRing S] [IsLinearTopology S S] :
+    Ideal (σ → S) where
   carrier := setOf EvalDomain
   add_mem' {a} {b} ha hb := {
     hpow := fun s ↦ IsTopologicallyNilpotent.add (ha.hpow s) (hb.hpow s)
@@ -81,8 +84,8 @@ def EvalDomain_ideal [LinearTopology S] : Ideal (σ → S) where
   smul_mem' c {x} hx := {
     hpow := fun s ↦ by
       simp only [IsTopologicallyNilpotent, Pi.smul_apply', smul_eq_mul, mul_pow]
-      exact LinearTopology.tendsto_zero_mul _ _ _ (hx.hpow s)
-    tendsto_zero := LinearTopology.tendsto_zero_mul _ _ _ hx.tendsto_zero }
+      exact IsLinearTopology.tendsto_mul_zero_of_right _ _ (hx.hpow s)
+    tendsto_zero := IsLinearTopology.tendsto_mul_zero_of_right _ _ hx.tendsto_zero }
 
 theorem EvalDomain.comp {a : σ → R} (ha : EvalDomain a) {ε : R →+* S} (hε : Continuous ε) :
     EvalDomain (ε ∘ a) := by
@@ -106,10 +109,8 @@ theorem EvalDomain.evalDomain_X :
     classical
     exact variables_tendsto_zero
 
-theorem Continuous.on_scalars [TopologicalRing R]
-    {ε : MvPowerSeries σ R →+* S} (hε : Continuous ε) :
+theorem Continuous.on_scalars {ε : MvPowerSeries σ R →+* S} (hε : Continuous ε) :
     Continuous (ε.comp (C σ R)) := by
-  classical
   rw [coe_comp]
   exact Continuous.comp hε MvPowerSeries.WithPiTopology.continuous_C
 
@@ -129,6 +130,7 @@ theorem _root_.MvPolynomial.coeToMvPowerSeries_denseRange :
     apply mem_of_mem_nhds
     convert hp d using 2
     change MvPolynomial.coeff d (truncFun' n f)  = MvPowerSeries.coeff R d f
+    have := hn hd
     rw [coeff_truncFun', if_pos (hn hd)]
   · simp only [Set.mem_range, coeToMvPowerSeries.ringHom_apply, MvPolynomial.coe_inj, exists_eq]
 
@@ -140,10 +142,10 @@ section Evaluation
 
 open WithPiTopology
 
-variable {σ : Type*}
+variable {σ : Type*} -- [DecidableEq σ]
 variable {R : Type*} [CommRing R] [UniformSpace R]
 variable {S : Type*} [CommRing S] [UniformSpace S]
-variable {φ : R →+* S}
+variable {φ : R →+* S} -- (hφ : Continuous φ)
 
 -- We endow MvPowerSeries σ R with the product uniform structure
 private instance : UniformSpace (MvPolynomial σ R) :=
@@ -154,27 +156,26 @@ private instance [UniformAddGroup R] : UniformAddGroup (MvPolynomial σ R) :=
   UniformAddGroup.comap coeToMvPowerSeries.ringHom
 
 theorem _root_.MvPolynomial.coeToMvPowerSeries_uniformInducing :
-    UniformInducing (coeToMvPowerSeries.ringHom (σ := σ) (R := R)) :=
-  ((uniformInducing_iff coeToMvPowerSeries.ringHom).mpr rfl)
+    IsUniformInducing (coeToMvPowerSeries.ringHom (σ := σ) (R := R)) :=
+  (isUniformInducing_iff ⇑coeToMvPowerSeries.ringHom).mpr rfl
 
 theorem _root_.MvPolynomial.coeToMvPowerSeries_denseInducing :
-    DenseInducing (coeToMvPowerSeries.ringHom (σ := σ) (R := R)) :=
-  coeToMvPowerSeries_uniformInducing.denseInducing
-    coeToMvPowerSeries_denseRange
+    IsDenseInducing (coeToMvPowerSeries.ringHom (σ := σ) (R := R)) :=
+  coeToMvPowerSeries_uniformInducing.isDenseInducing coeToMvPowerSeries_denseRange
 
 variable {a : σ → S}
 
 /- The coercion of polynomials into power series is uniformly continuous. -/
 theorem _root_.MvPolynomial.coeToMvPowerSeries_uniformContinuous
-    [UniformAddGroup R] [UniformAddGroup S] [hS : LinearTopology S]
-    (hφ : Continuous φ) (ha : EvalDomain a):
+    [UniformAddGroup R] [UniformAddGroup S] [IsLinearTopology S S]
+    (hφ : Continuous φ) (ha : EvalDomain a) :
     UniformContinuous (MvPolynomial.eval₂Hom φ a) := by
   classical
   apply uniformContinuous_of_continuousAt_zero
   intro u hu
   simp only [coe_eval₂Hom, (induced_iff_nhds_eq _).mp rfl, coe_zero, mem_map, mem_comap]
-  rw [map_zero, hS.mem_nhds_zero_iff] at hu
-  rcases hu with ⟨I, _, hI, hI'⟩
+  rw [map_zero, IsLinearTopology.hasBasis_ideal.mem_iff] at hu
+  rcases hu with ⟨I, hI, hI'⟩
   let tendsto_zero := ha.tendsto_zero
   let hpow := ha.hpow
   simp only [tendsto_def] at tendsto_zero hpow
@@ -240,7 +241,7 @@ noncomputable def eval₂ (f : MvPowerSeries σ R) : S := by
   let hp := fun (p : MvPolynomial σ R) ↦ p = f
   classical
   exact if (Classical.epsilon hp = f) then (MvPolynomial.eval₂ φ a (Classical.epsilon hp))
-    else DenseInducing.extend coeToMvPowerSeries_denseInducing (MvPolynomial.eval₂ φ a) f
+    else IsDenseInducing.extend coeToMvPowerSeries_denseInducing (MvPolynomial.eval₂ φ a) f
 
 theorem eval₂_coe (f : MvPolynomial σ R) :
     MvPowerSeries.eval₂ φ a f = MvPolynomial.eval₂ φ a f := by
@@ -258,15 +259,16 @@ theorem eval₂_X (s : σ) :
     eval₂ φ a (X s) = a s := by
   rw [← coe_X, eval₂_coe, MvPolynomial.eval₂_X]
 
-variable [TopologicalSemiring R] [UniformAddGroup R]
-    [UniformAddGroup S] [LinearTopology S] [TopologicalSemiring S] [T2Space S] [CompleteSpace S]
+variable [IsTopologicalSemiring R] [UniformAddGroup R]
+    [UniformAddGroup S] [CompleteSpace S] [T2Space S]
+    [IsTopologicalRing S] [IsLinearTopology S S]
 
 variable {φ a}
 
 /-- Evaluation of power series at adequate elements, as a `RingHom` -/
 noncomputable def eval₂Hom (hφ : Continuous φ) (ha : EvalDomain a) :
     MvPowerSeries σ R →+* S :=
-  DenseInducing.extendRingHom
+  IsDenseInducing.extendRingHom
     coeToMvPowerSeries_uniformInducing
     coeToMvPowerSeries_denseRange
     (coeToMvPowerSeries_uniformContinuous hφ ha)
@@ -284,7 +286,7 @@ theorem coe_eval₂Hom (hφ : Continuous φ) (ha : EvalDomain a) :
   split_ifs with h
   · conv_lhs => rw [← h]
     simpa only [MvPolynomial.coe_eval₂Hom, coeToMvPowerSeries.ringHom_apply]
-      using DenseInducing.extend_eq coeToMvPowerSeries_denseInducing
+      using IsDenseInducing.extend_eq coeToMvPowerSeries_denseInducing
         (coeToMvPowerSeries_uniformContinuous hφ ha).continuous (Classical.epsilon hf)
   · rfl
 
@@ -323,8 +325,9 @@ theorem eval₂_unique (hφ : Continuous φ) (ha : EvalDomain a)
   exact (MvPolynomial.coeToMvPowerSeries_denseInducing.extend_unique h hε).symm
 
 theorem comp_eval₂ (hφ : Continuous φ) (ha : EvalDomain a)
-    {T : Type*} [CommRing T] [UniformSpace T] [LinearTopology T] [CompleteSpace T]
-    [T2Space T] [UniformAddGroup T] [TopologicalRing T] {ε : S →+* T} (hε : Continuous ε) :
+    {T : Type*} [UniformSpace T] [CompleteSpace T] [T2Space T]
+    [CommRing T] [IsTopologicalRing T] [IsLinearTopology T T] [UniformAddGroup T]
+    {ε : S →+* T} (hε : Continuous ε) :
     ε ∘ eval₂ φ a = eval₂ (ε.comp φ) (ε ∘ a) := by
   rw [← coe_eval₂Hom hφ ha, ← coe_comp]
   apply eval₂_unique _ (ha.comp hε)
@@ -389,16 +392,17 @@ theorem aeval_eq_sum (ha : EvalDomain a) (f : MvPowerSeries σ R) :
   (hasSum_aeval ha f).tsum_eq.symm
 
 theorem comp_aeval (ha : EvalDomain a)
-    {T : Type*} [CommRing T] [UniformSpace T] [UniformAddGroup T] [LinearTopology T]
-    [T2Space T] [TopologicalRing T] [Algebra R T] [ContinuousSMul R T] [CompleteSpace T]
+    {T : Type*} [CommRing T] [UniformSpace T] [UniformAddGroup T]
+    [IsTopologicalRing T] [IsLinearTopology T T]
+    [T2Space T] [Algebra R T] [ContinuousSMul R T] [CompleteSpace T]
     {ε : S →ₐ[R] T} (hε : Continuous ε) :
     ε.comp (aeval ha) = aeval (ha.map hε)  := by
   apply DFunLike.coe_injective
   simp only [AlgHom.coe_comp, coe_aeval ha]
   erw [comp_eval₂ (continuous_algebraMap R S) ha hε, coe_aeval]
   apply congr_arg₂
-  simp only [AlgHom.toRingHom_eq_coe, AlgHom.comp_algebraMap_of_tower, RingHom.coe_coe]
-  rfl
+  · simp only [AlgHom.toRingHom_eq_coe, AlgHom.comp_algebraMap_of_tower, RingHom.coe_coe]
+  · rfl
 
 end Evaluation
 
