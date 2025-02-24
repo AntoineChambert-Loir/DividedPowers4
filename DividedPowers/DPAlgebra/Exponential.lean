@@ -72,8 +72,10 @@ noncomputable def exp_LinearMap :
     ext n
     simp only [coeff_exp, RingHom.id_apply]
     rw [← algebraMap_smul (DividedPowerAlgebra R M) r (exp R m),
-      coe_smul, coeff_scale, coeff_exp, ← map_pow,
-      IsScalarTower.algebraMap_smul, dp_smul]
+      coe_smul, coeff_rescale, coeff_exp, ← map_pow, dp_smul]
+    rw [Algebra.id.map_eq_id, RingHom.id_apply]
+    rw [Algebra.smul_def, map_pow]
+
 
 theorem coe_exp_LinearMap :
     ⇑(exp_LinearMap R M) = exp R := rfl
@@ -100,10 +102,11 @@ def dividedPowerAlgebra_exponentialModule_equiv :
       simp only [coeff_zero_eq_constantCoeff]
       exact constantCoeff_coe (β m)
     · intro n r m
-      simp only [LinearMapClass.map_smul, coe_smul, coeff_scale]
+      simp only [LinearMapClass.map_smul, coe_smul, coeff_rescale]
+      rw [Algebra.smul_def, map_pow]
     · intro n p m
       simp only [nsmul_eq_mul]
-      rw [((isExponential_iff _).mp (isExponential_coe _)).1]
+      rw [(isExponential_iff.mp (isExponential_coe _)).1]
       -- TODO: add lemmas for product of coeff and constant coeff
     · intro n x y
       simp only [map_add, coe_add, coeff_mul]

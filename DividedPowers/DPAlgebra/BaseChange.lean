@@ -245,8 +245,10 @@ theorem dpScalarExtensionInv_apply_dp (n : ℕ) (s : S) (m : M) :
   simp only [dpScalarExtensionExp, LinearMap.baseChangeEquiv, LinearEquiv.coe_symm_mk,
     AlgebraTensorModule.lift_apply, lift.tmul, LinearMap.coe_restrictScalars, LinearMap.flip_apply,
     LinearMap.lsmul_apply, LinearMap.smul_apply, LinearMap.coe_comp, Function.comp_apply]
-  rw [ExponentialModule.coe_smul, PowerSeries.coeff_scale, ExponentialModule.coeff_linearMap,
-    includeRight_apply, smul_tmul', smul_eq_mul, mul_one, coeff_exp_LinearMap]
+  rw [ExponentialModule.coe_smul, PowerSeries.coeff_rescale]
+  sorry
+  -- rw [ExponentialModule.coeff_linearMap,
+  --includeRight_apply, smul_tmul', smul_eq_mul, mul_one, coeff_exp_LinearMap]
 
 
 /-- Uniqueness claim of Roby1963, theorem III.2 -/

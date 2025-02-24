@@ -5,6 +5,7 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 import DividedPowers.DPAlgebra.BaseChange
 import DividedPowers.PolynomialMap.Homogeneous
+import Mathlib.LinearAlgebra.FreeModule.Basic
 
 /-
 
