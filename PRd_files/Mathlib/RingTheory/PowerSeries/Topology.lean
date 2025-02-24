@@ -1,4 +1,4 @@
-import DividedPowers.ForMathlib.MvPowerSeries.PiTopology
+import Mathlib.RingTheory.MvPowerSeries.PiTopology
 import Mathlib.RingTheory.PowerSeries.Basic
 
 /-! # Topology on power series
@@ -7,6 +7,8 @@ In this file we define the possible topologies on power series.
 
 
 -/
+
+-- In PR #14866
 
 namespace PowerSeries
 

@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 
-import Mathlib.RingTheory.MvPowerSeries.Evaluation
+import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Evaluation
 import Mathlib.RingTheory.PowerSeries.PiTopology
 
 /-! # Evaluation of power series
@@ -26,7 +26,7 @@ structure EvalDomain [TopologicalSpace S] (a : S) : Prop where
   hpow : IsTopologicallyNilpotent a
 
 /-- The domain of evaluation of `PowerSeries`, as an ideal. -/
-def EvalDomain.ideal [TopologicalSpace S] [LinearTopology S] : Ideal S where
+def EvalDomain.ideal [TopologicalSpace S] [IsLinearTopology S S] : Ideal S where
   carrier   := setOf IsTopologicallyNilpotent
   add_mem'  := IsTopologicallyNilpotent.add
   zero_mem' := IsTopologicallyNilpotent.zero
@@ -47,8 +47,9 @@ theorem EvalDomain.const (ha : EvalDomain a) :
   hpow := fun _ ↦ ha.hpow
   tendsto_zero := by simp only [Filter.cofinite_eq_bot, Filter.tendsto_bot]
 
-variable [TopologicalSemiring R] [UniformAddGroup R]
-    [UniformAddGroup S] [LinearTopology S] [T2Space S] [CompleteSpace S]
+variable [IsTopologicalSemiring R] [UniformAddGroup R]
+    [UniformAddGroup S] [T2Space S] [CompleteSpace S]
+    [IsTopologicalRing S] [IsLinearTopology S S]
 
 /-- For `EvalDomain a`, the evaluation homomorphism at `a` on `PowerSeries`. -/
 noncomputable def eval₂Hom (hφ : Continuous φ) (ha : EvalDomain a) :

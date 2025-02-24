@@ -5,8 +5,8 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos Fernández
 -/
 
 import Mathlib.Algebra.MvPolynomial.CommRing
-import Mathlib.Data.Set.Finite
-import Mathlib.RingTheory.MvPowerSeries.Evaluation
+import Mathlib.Data.Set.Finite.Basic
+import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Evaluation
 import Mathlib.RingTheory.MvPowerSeries.LinearTopology
 import Mathlib.RingTheory.MvPowerSeries.Trunc
 import Mathlib.RingTheory.PowerSeries.Basic

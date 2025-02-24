@@ -47,16 +47,13 @@ ext x
 constructor
 · simp only [Submodule.baseChange]
   intro hx
-  apply Submodule.span_induction (p := fun x ↦ (x ∈ LinearMap.range (LinearMap.baseChange A p.subtype))) hx
-  · rintro _ ⟨x, hx, rfl⟩
-    simp only [mk_apply, LinearMap.mem_range]
-    use 1 ⊗ₜ[R] (⟨x, hx⟩ : p)
-    simp only [LinearMap.baseChange_tmul, Submodule.coe_subtype]
-  · exact zero_mem _
-  · intro x y hx hy
-    exact add_mem hx hy
-  · intro a x hx
-    exact Submodule.smul_mem _ a hx
+  apply Submodule.span_induction
+    (p := fun x _ ↦ (x ∈ LinearMap.range (LinearMap.baseChange A p.subtype))) _ (zero_mem _)
+    (fun _ _ _ _ hx hy ↦ add_mem hx hy) (fun a _ _ hx ↦ Submodule.smul_mem _ a hx) hx
+  rintro _ ⟨x, hx, rfl⟩
+  simp only [mk_apply, LinearMap.mem_range]
+  use 1 ⊗ₜ[R] (⟨x, hx⟩ : p)
+  simp only [LinearMap.baseChange_tmul, Submodule.coe_subtype]
 · rintro ⟨x, rfl⟩
   induction x using TensorProduct.induction_on with
   | zero => simp
@@ -115,7 +112,8 @@ theorem Decompose.baseChange.decompose_of_mem {m : S ⊗[R] M} {i : ι}
     (Decompose.baseChange.decompose ℳ) m =
       (of (fun i ↦ ↥(Submodule.baseChange S (ℳ i))) i) ⟨m, hm⟩ := by
   simp only [Submodule.baseChange] at hm
-  apply Submodule.span_induction' (p := fun m hm ↦ Decompose.baseChange.decompose ℳ m = of (fun i ↦ Submodule.baseChange S (ℳ i)) i ⟨m, hm⟩)
+  apply Submodule.span_induction (p := fun m hm ↦ Decompose.baseChange.decompose ℳ m =
+    of (fun i ↦ Submodule.baseChange S (ℳ i)) i ⟨m, hm⟩)
   · rintro _ ⟨x, hx : x ∈ ℳ i, rfl⟩
     simp only [mk_apply]
     -- why doesn't `rw [← Submodule.coe_mk x hx]` work?
@@ -175,26 +173,26 @@ noncomputable def GradedAlgebra.baseChange :
     one_mem := Submodule.tmul_mem_baseChange_of_mem (1 : S) SetLike.GradedOne.one_mem
     mul_mem := fun i j gi gj hi hj ↦ by
       simp only [Submodule.baseChange] at hi hj
-      apply Submodule.span_induction hj (p := fun gj ↦ gi * gj ∈ Submodule.baseChange S _)
+      apply Submodule.span_induction (p := fun gj _ ↦ gi * gj ∈ Submodule.baseChange S _) _ _ _ _ hj
       · rintro _ ⟨y, hy, rfl⟩
         simp only [mk_apply]
-        apply Submodule.span_induction hi (p := fun gi ↦ gi * _ ∈ _)
+        apply Submodule.span_induction (p := fun gi _ ↦ gi * _ ∈ _) _ _ _ _ hi
         rintro _ ⟨x, hx, rfl⟩
         · simp only [mk_apply, Algebra.TensorProduct.tmul_mul_tmul, mul_one]
           exact Submodule.tmul_mem_baseChange_of_mem 1 (SetLike.GradedMul.mul_mem hx hy)
         · simp
-        · intro a b ha hb
+        · intro a b _ _ ha hb
           rw [add_mul]
           exact add_mem ha hb
-        · intro s a ha
+        · intro s a _ ha
           rw [← smul_eq_mul, smul_assoc]
           apply Submodule.smul_mem
           simp only [smul_eq_mul, ha]
       · simp
-      · intro a b ha hb
+      · intro a b _ _ ha hb
         rw [mul_add]
         exact add_mem ha hb
-      · intro s a ha
+      · intro s a _ ha
         rw [← smul_eq_mul, smul_comm]
         apply Submodule.smul_mem
         simp only [smul_eq_mul, ha]

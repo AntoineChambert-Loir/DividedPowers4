@@ -45,7 +45,7 @@ section Functoriality
 
 namespace MonoidAlgebra
 
-variable [DecidableEq α]
+-- variable [DecidableEq α]
 
 open Finsupp
 
@@ -81,8 +81,9 @@ lemma ringHom_apply [MulOneClass α] (e : N →+* P) (x : MonoidAlgebra N α) :
   rfl
 
 lemma ringHom_apply_single [MulOneClass α] (e : N →+* P) (a  : α) (n : N) :
-    ringHom e (single a n) = single a (e n) :=
-  mapRange.addMonoidHom_apply_single e.toAddMonoidHom a n
+    ringHom e (single a n) = single a (e n) := by
+  ext x
+  exact apply_single' (e).1 (map_zero e) a n x
 
 /-- RingHom functoriality for the monoid algebra (equivalence) -/
 noncomputable def equivRingHom [MulOneClass α] (e : N ≃+* P) :
@@ -130,7 +131,7 @@ section TensorProduct
 
 open TensorProduct
 
-variable [Monoid α] [DecidableEq α]
+variable [Monoid α] --[DecidableEq α]
 variable [CommSemiring R]
 variable {S : Type*} [CommSemiring S] [Algebra R S]
 variable [Semiring M] [Algebra R M] [Algebra S M] [IsScalarTower R S M]
@@ -152,12 +153,13 @@ noncomputable def rTensorAlgHom :
       apply Finsupp.ext
       intro a
       rw [mul_def, sum_apply]
-      erw [sum_apply, sum_single_index (by simp), sum_apply]
+      sorry
+      /- erw [sum_apply, sum_single_index (by simp), sum_apply]
       apply sum_congr
       · intro b _
         rw [sum_apply, sum_single_index (by simp)]
         simp only [mul_one, single_apply, one_mul]
-        split_ifs; simp [algHom_apply_apply]; rfl)
+        split_ifs; simp [algHom_apply_apply]; rfl -/)
 
 lemma rTensorAlgHom_apply_tmul_apply
     (x : MonoidAlgebra M α) (n : N) (a : α) :
@@ -169,6 +171,7 @@ lemma rTensorAlgHom_apply_tmul_apply
   simp only [algHom_apply_apply, Algebra.TensorProduct.includeLeft_apply]
   simp only [Algebra.TensorProduct.tmul_mul_tmul, mul_one, one_mul]
 
+variable [DecidableEq α]
 lemma rTensorAlgHom_toLinearMap :
     (rTensorAlgHom :
       MonoidAlgebra M α ⊗[R] N →ₐ[S] MonoidAlgebra (M ⊗[R] N) α).toLinearMap =
@@ -176,10 +179,11 @@ lemma rTensorAlgHom_toLinearMap :
   ext x n
   dsimp only [AlgebraTensorModule.curry_apply, TensorProduct.curry_apply,
     LinearMap.coe_restrictScalars, AlgHom.toLinearMap_apply]
-  apply Finsupp.ext
+  sorry
+  /- apply Finsupp.ext
   intro a
   rw [rTensorAlgHom_apply_tmul_apply, ← finsuppLeft_apply_tmul_apply]
-  rfl
+  rfl -/
 
 lemma rTensorAlgHom_toLinearMap' :
     (rTensorAlgHom :
@@ -203,7 +207,7 @@ noncomputable def rTensorAlgEquiv :
     apply symm
     rw [← LinearEquiv.symm_apply_eq]
     simp only [one_def]
-    apply finsuppLeft_symm_apply_single
+    sorry --apply finsuppLeft_symm_apply_single
   · intro x y
     erw [← rTensorAlgHom_apply_eq (S := S)]
     simp only [_root_.map_mul, rTensorAlgHom_apply_eq]
