@@ -134,7 +134,7 @@ theorem mul_dpow {n : ℕ} (hn_fac : IsUnit ((n - 1).factorial : A)) (hnI : I ^ 
     dpow I m x * dpow I k x = ↑((m + k).choose m) * dpow I (m + k) x := by
   by_cases hkm : m + k < n
   · exact dpow_mul_of_add_lt hn_fac hkm hx
-  · have hxmk : x ^ (m + k) = 0 := Ideal.mem_pow_eq_zero hnI (not_lt.mp hkm) hx
+  · have hxmk : x ^ (m + k) = 0 := Ideal.pow_eq_zero_of_mem hnI (not_lt.mp hkm) hx
     rw [dpow_eq_of_mem hx, dpow_eq_of_mem hx, dpow_eq_of_mem hx,
       mul_assoc, ← mul_assoc (x ^ m), mul_comm (x ^ m), mul_assoc _ (x ^ m), ← pow_add, hxmk,
       mul_zero, mul_zero, mul_zero, mul_zero]
@@ -161,7 +161,7 @@ theorem dpow_comp {n : ℕ} (hn_fac : IsUnit ((n - 1).factorial : A)) (hnI : I ^
     dpow I m (dpow I k x) = ↑(uniformBell m k) * dpow I (m * k) x := by
   by_cases hmk : m * k < n
   · exact dpow_comp_of_mul_lt hn_fac hk hmk hx
-  · have hxmk : x ^ (m * k) = 0 := Ideal.mem_pow_eq_zero hnI (not_lt.mp hmk) hx
+  · have hxmk : x ^ (m * k) = 0 := Ideal.pow_eq_zero_of_mem hnI (not_lt.mp hmk) hx
     rw [dpow_eq_of_mem (dpow_mem hk hx), dpow_eq_of_mem hx, dpow_eq_of_mem hx,
       mul_pow, ← pow_mul, ← mul_assoc, mul_comm k, hxmk, mul_zero, mul_zero, mul_zero]
 
@@ -199,7 +199,7 @@ theorem dpow_of_two_le {n : ℕ} (hn : 2 ≤ n) (a : A) :
     (dividedPowers hI2) n a = 0 := by
   simp only [dividedPowers, OfInvertibleFactorial.dpow_apply, ite_eq_right_iff]
   intro ha
-  rw [Ideal.mem_pow_eq_zero hI2 hn ha, mul_zero]
+  rw [Ideal.pow_eq_zero_of_mem hI2 hn ha, mul_zero]
 
 end OfSquareZero
 
@@ -218,7 +218,7 @@ noncomputable def dividedPowers : DividedPowers I :=
 theorem dpow_of_prime_le {n : ℕ} (hn : p ≤ n) (a : A) : (dividedPowers hIp) n a = 0 := by
   simp only [dividedPowers, OfInvertibleFactorial.dpow_apply, ite_eq_right_iff]
   intro ha
-  rw [Ideal.mem_pow_eq_zero hIp hn ha, mul_zero]
+  rw [Ideal.pow_eq_zero_of_mem hIp hn ha, mul_zero]
 
 end CharP
 
