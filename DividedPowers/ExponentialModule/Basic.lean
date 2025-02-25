@@ -491,8 +491,8 @@ noncomputable instance : AddCommGroup (ExponentialModule R) where
     rw [← Subtype.coe_inj]
     apply Additive.toMul.injective
     simp only [toPowerSeries, AddSubmonoid.coe_add, toMul_add]
-    convert isExponential_neg_mul_self_eq_one f.2 using 1
-    sorry
+    convert isExponential_neg_mul_self_eq_one f.2 using 2
+    simp [coe_smul]
   add_comm f g := add_comm f g
 
 instance inst_exponentialModule_tower
