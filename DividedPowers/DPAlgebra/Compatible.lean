@@ -249,7 +249,7 @@ lemma IsCompatibleWith_tfae {A : Type u} [CommRing A] {I : Ideal A} (hI : Divide
     rintro ⟨hI', hII', hI'J⟩
     exact ⟨IdealAdd.dividedPowers hI' hJ hI'J,
       IsDPMorphism.comp (IdealAdd.dividedPowers hI' hJ hI'J) (f := f)
-        (g := RingHom.id B) rfl (IdealAdd.isDPMorphism_left hI' hJ hI'J) hII',
+        (g := RingHom.id B) (IdealAdd.isDPMorphism_left hI' hJ hI'J) hII',
       IdealAdd.isDPMorphism_right hI' hJ hI'J⟩
   tfae_have 2 → 3 := by
     rintro ⟨hK, hIK, hJK⟩

@@ -638,7 +638,7 @@ private noncomputable abbrev φ [DecidableEq B] :
     (algebraMap_J'_le_K1 J hJK) (SemilatticeSup.le_sup_left _ _)
     (isCompatibleWith_hI_h1 hI hK hI' hI'_int hI'_ext)).choose
 
-private lemma hφ [DecidableEq B] : (φ hI J hK hJK hI' hI'_ext hI'_int).comp
+private lemma hφ [DecidableEq B] : (φ hI J hK hJK hI' hI'_ext hI'_int).toRingHom.comp
     (algebraMap B (dpEnvelopeOfIncluded hI (J' I J) (sub_ideal_J' I J))) = algebraMap B C :=
   (dpEnvelopeOfIncluded_IsWeakDPEnvelope hI (J' I J) (sub_ideal_J' I J) C _ (h1 hK hI' hI'_int)
     (algebraMap_J'_le_K1 J hJK) (SemilatticeSup.le_sup_left _ _)
@@ -647,7 +647,7 @@ private lemma hφ [DecidableEq B] : (φ hI J hK hJK hI' hI'_ext hI'_int).comp
 private lemma hφ_unique  [DecidableEq B] :
     ∀ (y : (Quotient.dividedPowers (DividedPowerAlgebra.dividedPowers' B ↥(J' I J))
       (J12_IsSubDPIdeal hI _ (sub_ideal_J' I J))).DPMorphism (h1 hK hI' hI'_int)),
-      (fun φ ↦ φ.comp (algebraMap B (dpEnvelopeOfIncluded hI (J' I J) (sub_ideal_J' I J))) =
+      (fun φ ↦ φ.toRingHom.comp (algebraMap B (dpEnvelopeOfIncluded hI (J' I J) (sub_ideal_J' I J))) =
         algebraMap B C) y → y = φ hI J hK hJK hI' hI'_ext hI'_int :=
   (dpEnvelopeOfIncluded_IsWeakDPEnvelope hI (J' I J) (sub_ideal_J' I J) C _ (h1 hK hI' hI'_int)
     (algebraMap_J'_le_K1 J hJK) (SemilatticeSup.le_sup_left _ _)
@@ -709,11 +709,11 @@ private noncomputable abbrev ψ [DecidableEq B] [∀ x, Decidable (x ∈ (dpIdea
 
 private noncomputable def foo [DecidableEq B] :
     (DividedPowerAlgebra.dividedPowers' B ↥(J' I J)).DPMorphism (dividedPowers' hI J)  :=
-  DPMorphism.mk' _ _ (Quotient.isDPMorphism (DividedPowerAlgebra.dividedPowers' B ↥(J' I J)) _)
+  DPMorphism.mk' (Quotient.isDPMorphism (DividedPowerAlgebra.dividedPowers' B ↥(J' I J)) _)
 
 private noncomputable def bar [DecidableEq B] [∀ x, Decidable (x ∈ (dpIdeal hI J).carrier)] :
     (dividedPowers hI J).DPMorphism (dividedPowers' hI J) :=
-  DPMorphism.mk' _ _ (IsSubDPIdeal.isDPMorphism (dividedPowers' hI J) (dpIdeal hI J).toIsSubDPIdeal)
+  DPMorphism.mk' (IsSubDPIdeal.isDPMorphism (dividedPowers' hI J) (dpIdeal hI J).toIsSubDPIdeal)
 
 private noncomputable def foo' [DecidableEq B] [∀ x, Decidable (x ∈ (dpIdeal hI J).carrier)] :
     (DividedPowerAlgebra.dividedPowers' B ↥(J' I J)).DPMorphism (dividedPowers hI J)  := by
@@ -724,7 +724,7 @@ private noncomputable def foo' [DecidableEq B] [∀ x, Decidable (x ∈ (dpIdeal
 
 private noncomputable def β_aux [DecidableEq B] [∀ x, Decidable (x ∈ (dpIdeal hI J).carrier)]
     {α : (dividedPowers hI J).DPMorphism hK}
-    (hα : α.comp (algebraMap B (dpEnvelope hI J)) = algebraMap B C) :
+    (hα : α.toRingHom.comp (algebraMap B (dpEnvelope hI J)) = algebraMap B C) :
     (DividedPowerAlgebra.dividedPowers' B ↥(J' I J)).DPMorphism (h1 hK hI' hI'_int) where
   toRingHom  := ((α.toRingHom).comp (Ideal.Quotient.mk (J12 hI (J' I J) (sub_ideal_J' I J))))
   ideal_comp := by
@@ -790,7 +790,7 @@ private noncomputable def β_aux [DecidableEq B] [∀ x, Decidable (x ∈ (dpIde
 set_option pp.proofs true
 private noncomputable def β [DecidableEq B] [∀ x, Decidable (x ∈ (dpIdeal hI J).carrier)]
     {α : (dividedPowers hI J).DPMorphism hK}
-    (hα : α.comp (algebraMap B (dpEnvelope hI J)) = algebraMap B C) :
+    (hα : α.toRingHom.comp (algebraMap B (dpEnvelope hI J)) = algebraMap B C) :
     (Quotient.dividedPowers (DividedPowerAlgebra.dividedPowers' B ↥(J' I J))
       (J12_IsSubDPIdeal hI _ (sub_ideal_J' I J))).DPMorphism (h1 hK hI' hI'_int) where
   toRingHom  := α.toRingHom

@@ -106,7 +106,7 @@ lemma dpow_eq_of_mem {n : ℕ} {a : A} (ha : a ∈ J) :
 
 theorem isDPMorphism (hJ : IsSubDPIdeal hI J) :
     (IsSubDPIdeal.dividedPowers hI hJ).IsDPMorphism hI (RingHom.id A) := by
-  simp only [IsDPMorphism_iff, Ideal.map_id, RingHom.id_apply]
+  simp only [isDPMorphism_iff, Ideal.map_id, RingHom.id_apply]
   exact ⟨hJ.1, fun _ _ _ ha ↦ by rw [dpow_eq_of_mem _ _ ha]⟩
 
 
@@ -251,20 +251,21 @@ def prod (J : Ideal A) : SubDPIdeal hI where
   isSubideal := mul_le_right
   dpow_mem _ hm x hx := by
     have haux : ∀ (n : ℕ) (_ : n ≠ 0), hI.dpow n x ∈ I • J := by
-      sorry/- apply @Submodule.smul_induction_on' A _ A _ _ I J _ hx
-      · -- mul
+      apply Submodule.smul_induction_on'
+        (p := fun (x : A) (hxI : x ∈ I • J) ↦ ∀ (n : ℕ) (_ : n ≠ 0), hI.dpow n x ∈ I • J) hx
+      · -- smul
         intro a ha b hb n hn
-        rw [Algebra.id.smul_eq_mul, smul_eq_mul, mul_comm a b, hI.dpow_smul _ ha, mul_comm]
+        rw [Algebra.id.smul_eq_mul, smul_eq_mul, mul_comm a b, hI.dpow_mul _ ha, mul_comm]
         exact Submodule.mul_mem_mul (J.pow_mem_of_mem hb n (zero_lt_iff.mpr hn))
-          (hI.dpow_mem _ hn ha)
+          (hI.dpow_mem hn ha)
       · -- add
         intro x hx y hy hx' hy' n hn
-        rw [hI.dpow_add' (mul_le_right hx) (mul_le_right hy)]
+        rw [hI.dpow_add' _ (mul_le_right hx) (mul_le_right hy)]
         apply Submodule.sum_mem (I • J)
         intro k _
         by_cases hk0 : k = 0
         · exact hk0 ▸ mul_mem_left (I • J) _ (hy' _ hn)
-        · exact mul_mem_right _ (I • J) (hx' k hk0)  -/
+        · exact mul_mem_right _ (I • J) (hx' k hk0)
     exact @haux _ hm
 
 section CompleteLattice

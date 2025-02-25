@@ -15,14 +15,13 @@ def IsDPMorphism {A B : Type*} [CommSemiring A] [CommSemiring B] {I : Ideal A} {
     (hI : DividedPowers I) (hJ : DividedPowers J) (f : A →+* B) : Prop :=
   I.map f ≤ J ∧ ∀ {n : ℕ}, ∀ a ∈ I, hJ.dpow n (f a) = f (hI.dpow n a)
 
-lemma IsDPMorphism_iff {A B : Type*} [CommSemiring A] [CommSemiring B] {I : Ideal A} {J : Ideal B}
+lemma isDPMorphism_iff {A B : Type*} [CommSemiring A] [CommSemiring B] {I : Ideal A} {J : Ideal B}
     (hI : DividedPowers I) (hJ : DividedPowers J) (f : A →+* B) :
     IsDPMorphism hI hJ f ↔ I.map f ≤ J ∧ ∀ n ≠ 0, ∀ a ∈ I, hJ.dpow n (f a) = f (hI.dpow n a) := by
   rw [IsDPMorphism, and_congr_right_iff]
-  intro hIJ
-  refine ⟨fun H n _ ↦ H, fun H n ↦ ?_⟩
+  refine fun hIJ ↦ ⟨fun H n _ ↦ H, fun H n ↦ ?_⟩
   by_cases hn : n = 0
-  · intro a ha
+  · intro _ ha
     rw [hn, hI.dpow_zero ha, hJ.dpow_zero (hIJ (mem_map_of_mem f ha)), map_one]
   · exact H n hn
 
@@ -34,7 +33,7 @@ variable {A B C : Type*} [CommSemiring A] [CommSemiring B] [CommSemiring C] {I :
 theorem map_dpow {f : A →+* B} (hf : IsDPMorphism hI hJ f) {n : ℕ} {a : A} (ha : a ∈ I) :
     f (hI.dpow n a) = hJ.dpow n (f a) := (hf.2 a ha).symm
 
-theorem comp {f : A →+* B} {g : B →+* C} {h : A →+* C} (hcomp : g.comp f = h)
+/- theorem comp' {f : A →+* B} {g : B →+* C} {h : A →+* C} (hcomp : g.comp f = h)
     (hg : IsDPMorphism hJ hK g) (hf : IsDPMorphism hI hJ f) : IsDPMorphism hI hK h := by
   rw [← hcomp]
   constructor
@@ -44,7 +43,14 @@ theorem comp {f : A →+* B} {g : B →+* C} {h : A →+* C} (hcomp : g.comp f =
   · intro n a ha
     simp only [RingHom.coe_comp, Function.comp_apply]
     rw [← hf.2 a ha, hg.2]
-    exact hf.1 (mem_map_of_mem f ha)
+    exact hf.1 (mem_map_of_mem f ha) -/
+
+theorem comp {f : A →+* B} {g : B →+* C} (hg : IsDPMorphism hJ hK g) (hf : IsDPMorphism hI hJ f) :
+    IsDPMorphism hI hK (g.comp f) := by
+  refine ⟨le_trans (map_map f g ▸ map_mono hf.1) hg.1, fun a ha ↦ ?_⟩
+  simp only [RingHom.coe_comp, Function.comp_apply]
+  rw [← hf.2 a ha, hg.2]
+  exact hf.1 (mem_map_of_mem f ha)
 
 end IsDPMorphism
 
@@ -78,16 +84,19 @@ theorem coe_toRingHom {f : DPMorphism hI hJ} : ⇑(f : A →+* B) = f :=
 lemma toRingHom_apply {f : DPMorphism hI hJ} {a : A} :
   f.toRingHom a = f a := rfl
 
-@[simp]
+/- @[simp]
 lemma toRingHom_eq_coe {f : DPMorphism hI hJ} :
-  f.toRingHom = f := rfl
+  f.toRingHom = f := rfl -/
 
-variable {hI} {hJ} in
+variable {hI hJ}
+
 lemma isDPMorphism (f : DPMorphism hI hJ) : IsDPMorphism hI hJ f.toRingHom :=
   ⟨f.ideal_comp, f.dpow_comp⟩
 
 def mk' {f : A →+* B} (hf : IsDPMorphism hI hJ f) : DPMorphism hI hJ :=
   ⟨f, hf.1, hf.2⟩
+
+variable (hI hJ)
 
 -- Roby65, Proposition 2.
 /-- Given a ring homomorphism `A → B` and ideals `I ⊆ A` and `J ⊆ B` such that `I.map f ≤ J`,
@@ -96,8 +105,7 @@ def ideal {f : A →+* B} (hf : I.map f ≤ J) : Ideal A where
   carrier  := {x ∈ I | ∀ n : ℕ, f (hI.dpow n (x : A)) = hJ.dpow n (f (x : A))}
   add_mem' := fun hx hy ↦ by
     simp only [Set.mem_setOf_eq, map_add] at hx hy ⊢
-    refine ⟨I.add_mem hx.1 hy.1, ?_⟩
-    intro n
+    refine ⟨I.add_mem hx.1 hy.1, fun n ↦ ?_⟩
     rw [hI.dpow_add _ hx.1 hy.1, map_sum,
       hJ.dpow_add _ (hf (mem_map_of_mem f hx.1)) (hf (mem_map_of_mem f hy.1))]
     apply congr_arg
@@ -119,8 +127,8 @@ def ideal {f : A →+* B} (hf : I.map f ≤ J) : Ideal A where
 /-- The dp morphism induced by a ring morphism, provided divided powers match on a generating set -/
 def fromGens {f : A →+* B} {S : Set A} (hS : I = span S) (hf : I.map f ≤ J)
     (h : ∀ {n : ℕ}, ∀ x ∈ S, f (hI.dpow n x) = hJ.dpow n (f x)) : DPMorphism hI hJ where
-  toRingHom        := f
-  ideal_comp       := hf
+  toRingHom          := f
+  ideal_comp         := hf
   dpow_comp {n} x hx := by
     have hS' : S ⊆ ideal hI hJ hf := fun y hy ↦ by
       simp only [SetLike.mem_coe, ideal, Submodule.mem_mk, Set.mem_sep_iff, SetLike.mem_coe]
@@ -150,7 +158,7 @@ variable {A B C : Type*} [CommSemiring A] [CommSemiring B] [CommSemiring C] {I :
 open DPMorphism
 
 -- Generalization
-theorem on_span  {f : A →+* B} {S : Set A} (hS : I = span S) (hS' : ∀ s ∈ S, f s ∈ J)
+theorem on_span {f : A →+* B} {S : Set A} (hS : I = span S) (hS' : ∀ s ∈ S, f s ∈ J)
     (hdp : ∀ {n : ℕ}, ∀ a ∈ S, f (hI.dpow n a) = hJ.dpow n (f a)) : IsDPMorphism hI hJ f := by
   suffices h : I.map f ≤ J by
     exact ⟨h, fun a ha ↦ by
@@ -159,7 +167,8 @@ theorem on_span  {f : A →+* B} {S : Set A} (hS : I = span S) (hS' : ∀ s ∈ 
   rintro b ⟨a, has, rfl⟩
   exact hS' a has
 
-theorem of_comp (f : A →+* B) (g : B →+* C) (h : A →+* C) (hcomp : g.comp f = h)
+/-
+theorem of_comp' (f : A →+* B) (g : B →+* C) (h : A →+* C) (hcomp : g.comp f = h)
     (heq : J = I.map f) (hf : IsDPMorphism hI hJ f) (hh : IsDPMorphism hI hK h) :
     IsDPMorphism hJ hK g := by
   apply on_span _ _ heq
@@ -167,7 +176,17 @@ theorem of_comp (f : A →+* B) (g : B →+* C) (h : A →+* C) (hcomp : g.comp 
     rw [← RingHom.comp_apply, hcomp]
     exact hh.1 (mem_map_of_mem _ ha)
   · rintro n b ⟨a, ha, rfl⟩
-    rw [← RingHom.comp_apply, hcomp, hh.2 a ha, ← hcomp, RingHom.comp_apply, hf.2 a ha]
+    rw [← RingHom.comp_apply, hcomp, hh.2 a ha, ← hcomp, RingHom.comp_apply, hf.2 a ha]-/
+
+theorem of_comp (f : A →+* B) (g : B →+* C) -- (h : A →+* C) (hcomp : g.comp f = h)
+    (heq : J = I.map f) (hf : IsDPMorphism hI hJ f) (hh : IsDPMorphism hI hK (g.comp f)) :
+    IsDPMorphism hJ hK g := by
+  apply on_span _ _ heq
+  · rintro b ⟨a, ha, rfl⟩
+    rw [← RingHom.comp_apply]
+    exact hh.1 (mem_map_of_mem _ ha)
+  · rintro n b ⟨a, ha, rfl⟩
+    rw [← RingHom.comp_apply, hh.2 a ha, RingHom.comp_apply, hf.2 a ha]
 
 end IsDPMorphism
 
@@ -176,15 +195,13 @@ namespace DPMorphism
 variable {A B C : Type*} [CommSemiring A] [CommSemiring B] [CommSemiring C] {I : Ideal A}
   {J : Ideal B} {K : Ideal C} {hI : DividedPowers I} {hJ : DividedPowers J} {hK : DividedPowers K}
 
---TODO: think about name
-def comp' (g : DPMorphism hJ hK) (f : DPMorphism hI hJ) :
+protected def comp (g : DPMorphism hJ hK) (f : DPMorphism hI hJ) :
     DPMorphism hI hK :=
-  mk' _ _ (f := g.toRingHom.comp f.toRingHom)
-    (IsDPMorphism.comp hK rfl g.isDPMorphism f.isDPMorphism)
+  mk' (IsDPMorphism.comp hK g.isDPMorphism f.isDPMorphism)
 
 @[simp]
-lemma comp'_toRingHom (g : DPMorphism hJ hK) (f : DPMorphism hI hJ) :
-  (comp' g f).toRingHom = g.toRingHom.comp f.toRingHom := rfl
+lemma comp_toRingHom (g : DPMorphism hJ hK) (f : DPMorphism hI hJ) :
+  (g.comp f).toRingHom = g.toRingHom.comp f.toRingHom := rfl
 
 
 end DPMorphism
@@ -194,18 +211,18 @@ section Uniqueness
 variable {A B : Type*} [CommSemiring A] [CommSemiring B] {I : Ideal A} {J : Ideal B}
     (hI hI' : DividedPowers I) (hJ : DividedPowers J) {f : A →+* B}
 
-theorem unique_from_gens {S : Set A} (hS : I = span S) (hS' : ∀ s ∈ S, f s ∈ J)
+theorem dpow_comp_from_gens {S : Set A} (hS : I = span S) (hS' : ∀ s ∈ S, f s ∈ J)
     (hdp : ∀ {n : ℕ}, ∀ a ∈ S, f (hI.dpow n a) = hJ.dpow n (f a)) :
     ∀ {n}, ∀ a ∈ I, hJ.dpow n (f a) = f (hI.dpow n a) :=
   (IsDPMorphism.on_span hI hJ hS hS' hdp).2
 
 -- Roby65, corollary after proposition 3
 /-- Uniqueness of a divided powers given its values on a generating set -/
-theorem unique_from_gens_self {S : Set A} (hS : I = span S)
+theorem dpow_eq_from_gens {S : Set A} (hS : I = span S)
     (hdp : ∀ {n : ℕ}, ∀ a ∈ S, hI.dpow n a = hI'.dpow n a) : hI' = hI := by
   ext n a
   by_cases ha : a ∈ I
-  . refine hI.unique_from_gens hI' (f := RingHom.id A) hS ?_ ?_ a ha
+  . refine hI.dpow_comp_from_gens hI' (f := RingHom.id A) hS ?_ ?_ a ha
     . intro s hs
       simp only [RingHom.id_apply, hS]
       exact subset_span hs

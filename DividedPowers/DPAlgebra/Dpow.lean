@@ -90,7 +90,7 @@ open DividedPowers Finset Ideal Ideal.Quotient MvPolynomial RingQuot
 theorem onDPAlgebra_unique [DecidableEq R] (h h' : DividedPowers (augIdeal R M))
     (h1 : ∀ (n : ℕ) (x : M), h.dpow n (ι R M x) = dp R n x)
     (h1' : ∀ (n : ℕ) (x : M), h'.dpow n (ι R M x) = dp R n x) : h = h' := by
-  apply DividedPowers.unique_from_gens_self h' h (augIdeal_eq_span R M)
+  apply DividedPowers.dpow_eq_from_gens h' h (augIdeal_eq_span R M)
   rintro n f ⟨q, hq : 0 < q, m, _, rfl⟩
   nth_rw 1 [← h1' q m]
   rw [← h1 q m, h.dpow_comp _ (ne_of_gt hq) (ι_mem_augIdeal R M m),
@@ -222,7 +222,7 @@ theorem cond_D_uniqueness [DecidableEq R] {M : Type uM} [AddCommGroup M] [Module
     rw [AlgHom.coe_toRingHom, SetLike.mem_coe, lift_apply_dp]
     exact hJ.dpow_mem (ne_of_gt hn) (hf m)
   · intro n a ha
-    rw [(unique_from_gens h hJ (augIdeal_eq_span R M) _ _) a ha]
+    rw [(dpow_comp_from_gens h hJ (augIdeal_eq_span R M) _ _) a ha]
     · rintro a ⟨q, hq : 0 < q, m, _, rfl⟩
       rw [AlgHom.coe_toRingHom, lift_apply_dp]
       exact hJ.dpow_mem (ne_of_gt hq) (hf m)
