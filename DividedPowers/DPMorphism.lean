@@ -5,6 +5,8 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 import Mathlib.RingTheory.DividedPowers.Basic
 
+--In PR #22318
+
 open Ideal
 
 namespace DividedPowers

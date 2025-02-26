@@ -6,6 +6,8 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 import Mathlib.RingTheory.DividedPowers.Basic
 import DividedPowers.ForMathlib.AlgebraLemmas
 
+-- In PR #22322
+
 open Nat
 
 section NatLemmas

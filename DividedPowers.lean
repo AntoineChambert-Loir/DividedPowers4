@@ -12,7 +12,7 @@ import DividedPowers.DPAlgebra.Init
 import DividedPowers.DPAlgebra.Misc
 import DividedPowers.DPAlgebra.PolynomialMap -- It uses sorry
 import DividedPowers.DPAlgebra.RobyLemma9
-import DividedPowers.DPMorphism
+import DividedPowers.DPMorphism --In PR #22318
 import DividedPowers.ExponentialModule.Basic
 import DividedPowers.Exponential
 import DividedPowers.ForMathlib.AlgebraLemmas -- In PR #22237, #22239 and #22240.
@@ -49,5 +49,5 @@ import DividedPowers.IdealAdd
 import DividedPowers.PolynomialMap.Basic
 import DividedPowers.PolynomialMap.Coeff
 import DividedPowers.PolynomialMap.Homogeneous -- It has a sorry
-import DividedPowers.RatAlgebra
+import DividedPowers.RatAlgebra -- In PR #22322
 import DividedPowers.SubDPIdeal
