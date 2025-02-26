@@ -3,15 +3,11 @@ Copyright (c) 2024 Antoine Chambert-Loir, María Inés de Frutos Fernández. All
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir, María Inés de Frutos Fernández
 -/
-
-import Mathlib.Algebra.MvPolynomial.CommRing
-import Mathlib.Data.Set.Finite.Basic
 import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Evaluation
+import Mathlib.LinearAlgebra.Finsupp.Pi
 import Mathlib.RingTheory.MvPowerSeries.LinearTopology
-import Mathlib.RingTheory.MvPowerSeries.Trunc
-import Mathlib.RingTheory.PowerSeries.Basic
 import Mathlib.RingTheory.Nilpotent.Basic
-import Mathlib.Topology.Algebra.Algebra
+import Mathlib.RingTheory.PowerSeries.Basic
 
 /-! # Substitutions in power series
 
@@ -253,7 +249,7 @@ theorem substDomain_mul (b : σ → MvPowerSeries τ S)
   { const_coeff := fun s ↦ by
       simp only [Pi.mul_apply, map_mul]
       exact Commute.isNilpotent_mul_right (Commute.all _ _) (ha.const_coeff _)
-    tendsto_zero := LinearTopology.tendsto_zero_mul _ b a ha.tendsto_zero }
+    tendsto_zero := IsLinearTopology.tendsto_smul_zero _ b a ha.tendsto_zero }
 
 theorem substDomain_smul (r : MvPowerSeries τ S) {a : σ → MvPowerSeries τ S} (ha : SubstDomain a) :
     SubstDomain (r • a) := by convert substDomain_mul _ ha
@@ -302,6 +298,7 @@ noncomputable def substAlgHom (ha : SubstDomain a) :
   letI : UniformSpace R := ⊥
   letI : UniformSpace S := ⊥
   haveI : ContinuousSMul R S := DiscreteTopology.instContinuousSMul R S
+  haveI : ContinuousSMul S (MvPowerSeries τ S) := DiscreteTopology.instContinuousSMul _ _
   haveI : ContinuousSMul R (MvPowerSeries τ S) := IsScalarTower.continuousSMul S
   exact MvPowerSeries.aeval ha.evalDomain
 
@@ -311,6 +308,7 @@ theorem coe_substAlgHom (ha : SubstDomain a) :
   letI : UniformSpace R := ⊥
   letI : UniformSpace S := ⊥
   haveI : ContinuousSMul R S := DiscreteTopology.instContinuousSMul R S
+  haveI : ContinuousSMul S (MvPowerSeries τ S) := DiscreteTopology.instContinuousSMul _ _
   haveI : ContinuousSMul R (MvPowerSeries τ S) := IsScalarTower.continuousSMul S
   coe_aeval (SubstDomain.evalDomain ha)
 
@@ -335,6 +333,7 @@ theorem substAlgHom_coe (ha : SubstDomain a) (p : MvPolynomial σ R) :
   letI : UniformSpace R := ⊥
   letI : UniformSpace S := ⊥
   haveI : ContinuousSMul R S := DiscreteTopology.instContinuousSMul R S
+  haveI : ContinuousSMul S (MvPowerSeries τ S) := DiscreteTopology.instContinuousSMul _ _
   haveI : ContinuousSMul R (MvPowerSeries τ S) := IsScalarTower.continuousSMul S
   aeval_coe ha.evalDomain p
 
@@ -367,6 +366,7 @@ theorem continuous_subst (ha : SubstDomain a) :
   letI : UniformSpace R := ⊥
   letI : UniformSpace S := ⊥
   haveI : ContinuousSMul R S := DiscreteTopology.instContinuousSMul R S
+  haveI : ContinuousSMul S (MvPowerSeries τ S) := DiscreteTopology.instContinuousSMul _ _
   haveI : ContinuousSMul R (MvPowerSeries τ S) := IsScalarTower.continuousSMul S
   continuous_eval₂ (continuous_algebraMap _ _) ha.evalDomain
 
@@ -375,6 +375,7 @@ theorem coeff_subst_finite (ha : SubstDomain a) (f : MvPowerSeries σ R) (e : τ
   letI : UniformSpace S := ⊥
   letI : UniformSpace R := ⊥
   haveI : ContinuousSMul R S := DiscreteTopology.instContinuousSMul R S
+  haveI : ContinuousSMul S (MvPowerSeries τ S) := DiscreteTopology.instContinuousSMul _ _
   haveI : ContinuousSMul R (MvPowerSeries τ S) := IsScalarTower.continuousSMul S
   Set.Finite.support_of_summable _
     ((hasSum_aeval ha.evalDomain f).map (coeff S e) (continuous_coeff S e)).summable
@@ -385,6 +386,7 @@ theorem coeff_subst (ha : SubstDomain a) (f : MvPowerSeries σ R) (e : τ →₀
   letI : UniformSpace S := ⊥
   letI : UniformSpace R := ⊥
   haveI : ContinuousSMul R S := DiscreteTopology.instContinuousSMul R S
+  haveI : ContinuousSMul S (MvPowerSeries τ S) := DiscreteTopology.instContinuousSMul _ _
   haveI : ContinuousSMul R (MvPowerSeries τ S) := IsScalarTower.continuousSMul S
   have := ((hasSum_aeval ha.evalDomain f).map (coeff S e) (continuous_coeff S e))
   erw [← coe_substAlgHom ha, ← this.tsum_eq, tsum_def]
@@ -406,10 +408,8 @@ theorem map_algebraMap_eq_subst_X (f : MvPowerSeries σ R) :
     rw [← MvPowerSeries.monomial_one_eq, coeff_monomial_ne hd.symm, smul_zero]
 
 variable
-    {T : Type*} [CommRing T]
-    [UniformSpace T] [T2Space T] [CompleteSpace T]
-    [UniformAddGroup T] [TopologicalRing T] [LinearTopology T]
-    [Algebra R T] -- [Algebra S T] [IsScalarTower R S T]
+    {T : Type*} [CommRing T] [UniformSpace T] [T2Space T] [CompleteSpace T]
+    [UniformAddGroup T] [IsTopologicalRing T] [IsLinearTopology T T] [Algebra R T]
     {ε : MvPowerSeries τ S →ₐ[R] T}
 
 theorem comp_substAlgHom (ha : SubstDomain a) :
@@ -422,6 +422,7 @@ theorem comp_substAlgHom (ha : SubstDomain a) :
   letI : UniformSpace S := ⊥
   haveI : ContinuousSMul R T := DiscreteTopology.instContinuousSMul R T
   haveI : ContinuousSMul R S := DiscreteTopology.instContinuousSMul R S
+  haveI : ContinuousSMul S (MvPowerSeries τ S) := DiscreteTopology.instContinuousSMul _ _
   haveI : ContinuousSMul R (MvPowerSeries τ S) := IsScalarTower.continuousSMul S
   fun hε ↦ comp_aeval ha.evalDomain hε
 
@@ -512,8 +513,10 @@ theorem substAlgHom_comp_substAlgHom (ha : SubstDomain a) (hb : SubstDomain b) :
   letI : UniformSpace S := ⊥
   letI : UniformSpace T := ⊥
   haveI : ContinuousSMul R S := DiscreteTopology.instContinuousSMul R S
+  haveI : ContinuousSMul S (MvPowerSeries τ S) := DiscreteTopology.instContinuousSMul _ _
   haveI : ContinuousSMul R (MvPowerSeries τ S) := IsScalarTower.continuousSMul S
   haveI : ContinuousSMul R T := DiscreteTopology.instContinuousSMul R T
+  haveI : ContinuousSMul T (MvPowerSeries υ T) := DiscreteTopology.instContinuousSMul _ _
   haveI : ContinuousSMul R (MvPowerSeries υ T) := IsScalarTower.continuousSMul T
   apply comp_aeval (R := R) (ε := (substAlgHom hb).restrictScalars R)
     ha.evalDomain
@@ -527,9 +530,8 @@ theorem substAlgHom_comp_substAlgHom_apply (ha : SubstDomain a) (hb : SubstDomai
 
 theorem subst_comp_subst (ha : SubstDomain a) (hb : SubstDomain b) :
     (subst b) ∘ (subst a) = subst (R := R) (fun s ↦ subst b (a s)) := by
-  simpa only [Function.funext_iff, coe_substAlgHom, DFunLike.ext_iff,
-    AlgHom.coe_comp, AlgHom.coe_restrictScalars', Function.comp_apply]
-    using substAlgHom_comp_substAlgHom (R := R) ha hb
+  simpa only [funext_iff, coe_substAlgHom, DFunLike.ext_iff, AlgHom.coe_comp,
+    AlgHom.coe_restrictScalars', Function.comp_apply] using substAlgHom_comp_substAlgHom  ha hb
 
 theorem subst_comp_subst_apply (ha : SubstDomain a) (hb : SubstDomain b) (f : MvPowerSeries σ R) :
     subst b (subst a f) = subst (fun s ↦ subst b (a s)) f :=
@@ -558,7 +560,7 @@ theorem substDomain_rescale (a : σ → R) :
     SubstDomain ((a • X) : σ → MvPowerSeries σ R) := by
   convert substDomain_mul (fun s ↦ algebraMap R (MvPowerSeries σ R) (a s))
     substDomain_X using 1
-  rw [Function.funext_iff]
+  rw [funext_iff]
   intro s
   simp only [Pi.smul_apply', Pi.mul_apply]
   rw [algebra_compatible_smul (MvPowerSeries σ R), smul_eq_mul]
@@ -580,7 +582,7 @@ theorem rescale_algHom_comp (a b : σ → R) :
   simp only [AlgHom.coe_comp, Function.comp_apply, rescale_algHom]
   rw [substAlgHom_comp_substAlgHom_apply]
   congr
-  rw [Function.funext_iff]
+  rw [funext_iff]
   intro s
   simp only [Pi.smul_apply', Pi.mul_apply]
   rw [AlgHom.map_smul_of_tower]
@@ -1020,9 +1022,8 @@ theorem substAlgHom_comp_substAlgHom_apply [Algebra R S] [Algebra S T] [IsScalar
 theorem subst_comp_subst [Algebra R S] [Algebra S T] [IsScalarTower R S T]
     (ha : SubstDomain a) (hb : SubstDomain b) :
     (subst b) ∘ (subst a) = subst (R := R) (subst b a) := by
-  simpa only [Function.funext_iff, DFunLike.ext_iff, AlgHom.coe_comp, AlgHom.coe_restrictScalars',
-    Function.comp_apply, coe_substAlgHom]
-    using substAlgHom_comp_substAlgHom (R := R) ha hb
+  simpa only [funext_iff, DFunLike.ext_iff, AlgHom.coe_comp, AlgHom.coe_restrictScalars',
+    Function.comp_apply, coe_substAlgHom] using substAlgHom_comp_substAlgHom ha hb
 
 theorem subst_comp_subst_apply [Algebra R S] [Algebra S T] [IsScalarTower R S T]
     (ha : SubstDomain a) (hb : SubstDomain b) (f : PowerSeries R) :

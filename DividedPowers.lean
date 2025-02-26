@@ -36,7 +36,7 @@ import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Substitution
 --import DividedPowers.ForMathlib.RingTheory.PowerSeries.Topology -- In PR #14866
 import DividedPowers.ForMathlib.RingTheory.SubmoduleMem
 import DividedPowers.ForMathlib.RingTheory.PowerSeries.Evaluation
---import DividedPowers.ForMathlib.RingTheory.PowerSeries.Substitution -- Does not compile. Is it PR'd?
+--import DividedPowers.ForMathlib.RingTheory.PowerSeries.Substitution -- This seems to duplicate `MvPowerSeries.Substitution` (?)
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.LinearEquiv
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.MonoidAlgebra
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.MvPolynomial
