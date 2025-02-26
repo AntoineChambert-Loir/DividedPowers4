@@ -117,7 +117,8 @@ theorem dp_sum {ι : Type*} [DecidableEq ι] (s : Finset ι) (q : ℕ) (x : ι �
     dp R q (s.sum x) =
       (Finset.sym s q).sum fun k => s.prod fun i => dp R (Multiset.count i k) (x i) :=
   DividedPowers.dpow_sum' (I := ⊤) _ (fun {m} _ ↦ dp_zero R m)
-    (fun n x y _ _ ↦ dp_add R n x y) (dp_null_of_ne_zero R) (fun _ _ ↦ trivial) _
+    (fun {n x y} _ _ ↦ dp_add R n x y) (dp_null_of_ne_zero R) (fun _ _ ↦ trivial)
+
 
 theorem dp_sum_smul {ι : Type*} [DecidableEq ι] (s : Finset ι) (q : ℕ) (a : ι → R) (x : ι → M) :
     dp R q (s.sum fun i => a i • x i) =
@@ -217,12 +218,12 @@ def lift : DividedPowerAlgebra R M →ₐ[R] A :=
     (fun n r m => by
       dsimp
       rw [LinearMap.map_smulₛₗ, RingHom.id_apply, ← algebraMap_smul A r (φ m), smul_eq_mul,
-        hI.dpow_mul _ (hφ m), ← smul_eq_mul, ← map_pow, algebraMap_smul])
+        hI.dpow_mul (hφ m), ← smul_eq_mul, ← map_pow, algebraMap_smul])
     (fun n p m => by
-      rw [hI.mul_dpow _ _ (hφ m), ← nsmul_eq_mul])
+      rw [hI.mul_dpow (hφ m), ← nsmul_eq_mul])
     (fun n u v => by
       dsimp
-      rw [map_add, hI.dpow_add _ (hφ u) (hφ v)])
+      rw [map_add, hI.dpow_add (hφ u) (hφ v)])
 
 variable {φ}
 

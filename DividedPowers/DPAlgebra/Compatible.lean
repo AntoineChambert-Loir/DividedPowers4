@@ -54,11 +54,11 @@ lemma extends_to_unique {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPow
       · rw [hK.dpow_eval_zero hn0, hI'.dpow_eval_zero hn0]
     · intros x y hxmem hymem hx hy n
       rw [submodule_span_eq, ← map] at hxmem hymem
-      rw [hK.dpow_add _ hxmem hymem, hI'.dpow_add _ hxmem hymem]
+      rw [hK.dpow_add hxmem hymem, hI'.dpow_add hxmem hymem]
       exact Finset.sum_congr rfl (fun nm _ ↦ by rw [hx nm.1, hy nm.2])
     · intro c x hxmem hx n
       rw [submodule_span_eq, ← map] at hxmem
-      rw [dpow_smul _ _ hxmem, dpow_smul _ _ hxmem, hx n]
+      rw [dpow_smul _ hxmem, dpow_smul _ hxmem, hx n]
   · rw [dpow_null _ hb, dpow_null _ hb]
 
 -- Note (2) after 3.14
@@ -137,11 +137,11 @@ noncomputable def extension (hIt : I = span {t}) (hI : DividedPowers I) :
     dsimp only
     rw [(factorsThrough hI hIt f 1).extend_apply, pow_one,
       hI.dpow_one (hIt ▸ mem_span_singleton_self t)]
-  dpow_mem n x hn hx := by
-    sorry/- obtain ⟨cx, rfl⟩ := (mem_map_span_singleton hIt).mp hx
+  dpow_mem {n x} hn hx := by
+    obtain ⟨cx, rfl⟩ := (mem_map_span_singleton hIt).mp hx
     simp only [(factorsThrough hI hIt f _).extend_apply]
     exact Submodule.smul_mem _ _ (mem_map_of_mem _
-      (hI.dpow_mem _ hn (hIt ▸ mem_span_singleton_self t))) -/
+      (hI.dpow_mem hn (hIt ▸ mem_span_singleton_self t)))
   dpow_add {n x y} hx hy := by
     obtain ⟨cx, rfl⟩ := (mem_map_span_singleton hIt).mp hx
     obtain ⟨cy, rfl⟩ := (mem_map_span_singleton hIt).mp hy
@@ -154,7 +154,7 @@ noncomputable def extension (hIt : I = span {t}) (hI : DividedPowers I) :
         cx ^ r * cy ^ s * (f ((hI.dpow r t) * (hI.dpow s t))) := by
       rw [_root_.map_mul]
       ring
-    rw [this, hI.mul_dpow _ _ (hIt ▸ mem_span_singleton_self t),
+    rw [this, hI.mul_dpow (hIt ▸ mem_span_singleton_self t),
       Finset.mem_antidiagonal.mp hrs, _root_.map_mul, map_natCast]
     ring
   dpow_mul {n a x} hx := by
@@ -162,11 +162,11 @@ noncomputable def extension (hIt : I = span {t}) (hI : DividedPowers I) :
     dsimp only
     rw [← mul_assoc, (factorsThrough hI hIt f n).extend_apply,
       (factorsThrough hI hIt f n).extend_apply, mul_pow, mul_assoc]
-  mul_dpow _ _ _ hx := by
+  mul_dpow hx := by
     obtain ⟨cx, rfl⟩ := (mem_map_span_singleton hIt).mp hx
     simp only [(factorsThrough hI hIt f _).extend_apply]
     rw [mul_assoc, mul_comm _ (f _), ← mul_assoc (f _), ← _root_.map_mul,
-      hI.mul_dpow _ _ (hIt ▸ mem_span_singleton_self t), _root_.map_mul, map_natCast]
+      hI.mul_dpow (hIt ▸ mem_span_singleton_self t), _root_.map_mul, map_natCast]
     ring
   dpow_comp {m n x} hn hx := by
     obtain ⟨cx, rfl⟩ := (mem_map_span_singleton hIt).mp hx
@@ -177,8 +177,8 @@ noncomputable def extension (hIt : I = span {t}) (hI : DividedPowers I) :
     rw [(factorsThrough hI hIt f _).extend_apply, ← hcnt, _root_.map_mul, ← mul_assoc]
     simp only [(factorsThrough hI hIt f _).extend_apply]
     rw [← mul_assoc, mul_comm _ (cx^_), ← map_natCast f, mul_assoc, ← _root_.map_mul,
-      ← hI.dpow_comp _ hn (hIt ▸ mem_span_singleton_self t), ← hcnt,
-      hI.dpow_mul _ (hIt ▸ mem_span_singleton_self t), _root_.map_mul, map_pow]
+      ← hI.dpow_comp hn (hIt ▸ mem_span_singleton_self t), ← hcnt,
+      hI.dpow_mul (hIt ▸ mem_span_singleton_self t), _root_.map_mul, map_pow]
     ring
 
 -- B-O Prop. 3.15
@@ -191,7 +191,7 @@ lemma extends_to_of_principal {J : Ideal A} (hJ : DividedPowers J) (hJp : Submod
   obtain ⟨a, rfl⟩ := haJ
   simp only [extension]
   rw [smul_eq_mul, _root_.map_mul f, (factorsThrough hJ ht f _).extend_apply,
-    dpow_mul _ _ (ht ▸ mem_span_singleton_self t), _root_.map_mul, map_pow]
+    dpow_mul _ (ht ▸ mem_span_singleton_self t), _root_.map_mul, map_pow]
 
 end IsPrincipal
 
@@ -219,7 +219,7 @@ lemma IsDPMorphism.IsSubDPIdeal_map {A : Type u} [CommRing A] {I : Ideal A} (hI 
           exact Submodule.zero_mem (map f I)
         · intro x y hxmem hymem hx hy n hn
           suffices Submodule.span B (f '' I) ≤ K by
-            rw [hK.dpow_add _ (this hxmem) (this hymem)]
+            rw [hK.dpow_add (this hxmem) (this hymem)]
             apply Ideal.sum_mem
             intro nm hnm
             by_cases hnm1 : nm.1 = 0
@@ -231,7 +231,7 @@ lemma IsDPMorphism.IsSubDPIdeal_map {A : Type u} [CommRing A] {I : Ideal A} (hI 
           exact hsub
         · intro c x hxmem hx n hn
           suffices Submodule.span B (f '' I) ≤ K by
-            rw [hK.dpow_smul _ (this hxmem)]
+            rw [hK.dpow_smul (this hxmem)]
             exact Submodule.smul_mem  _ _ (hx n hn)
           exact hsub }
 

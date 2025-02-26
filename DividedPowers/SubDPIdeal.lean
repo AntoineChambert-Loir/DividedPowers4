@@ -83,18 +83,18 @@ theorem self : IsSubDPIdeal hI I where
 /-- The divided power structure on a sub-dp-ideal. -/
 def dividedPowers {J : Ideal A} (hJ : IsSubDPIdeal hI J) [∀ x, Decidable (x ∈ J)] :
     DividedPowers J where
-  dpow n x         := if x ∈ J then hI.dpow n x else 0
-  dpow_null hx := by simp only [if_neg hx]
-  dpow_zero hx     := by simp only [if_pos hx, hI.dpow_zero (hJ.isSubideal hx)]
-  dpow_one hx      := by simp only [if_pos hx, hI.dpow_one (hJ.isSubideal hx)]
-  dpow_mem hn hx    := by simp only [if_pos hx, hJ.dpow_mem _ hn hx]
-  dpow_add _ _ _ hx hy  := by simp_rw [if_pos hx, if_pos hy, if_pos (Ideal.add_mem J hx hy),
-    hI.dpow_add _ (hJ.isSubideal hx) (hJ.isSubideal hy)]
-  dpow_mul _ _ _ hx    := by
-    simp only [if_pos hx, if_pos (mul_mem_left J _ hx), hI.dpow_mul _ (hJ.isSubideal hx)]
-  mul_dpow _ _ _ hx     := by simp only [if_pos hx, hI.mul_dpow _ _ (hJ.isSubideal hx)]
-  dpow_comp _ _ _ hn hx := by
-    simp only [if_pos hx, if_pos (hJ.dpow_mem _ hn hx), hI.dpow_comp _ hn (hJ.isSubideal hx)]
+  dpow n x        := if x ∈ J then hI.dpow n x else 0
+  dpow_null hx    := by simp only [if_neg hx]
+  dpow_zero hx    := by simp only [if_pos hx, hI.dpow_zero (hJ.isSubideal hx)]
+  dpow_one hx     := by simp only [if_pos hx, hI.dpow_one (hJ.isSubideal hx)]
+  dpow_mem hn hx  := by simp only [if_pos hx, hJ.dpow_mem _ hn hx]
+  dpow_add hx hy  := by simp_rw [if_pos hx, if_pos hy, if_pos (Ideal.add_mem J hx hy),
+    hI.dpow_add (hJ.isSubideal hx) (hJ.isSubideal hy)]
+  dpow_mul hx     := by
+    simp only [if_pos hx, if_pos (mul_mem_left J _ hx), hI.dpow_mul (hJ.isSubideal hx)]
+  mul_dpow hx     := by simp only [if_pos hx, hI.mul_dpow (hJ.isSubideal hx)]
+  dpow_comp hn hx := by
+    simp only [if_pos hx, if_pos (hJ.dpow_mem _ hn hx), hI.dpow_comp hn (hJ.isSubideal hx)]
 
 variable {J : Ideal A} (hJ : IsSubDPIdeal hI J) [∀ x, Decidable (x ∈ J)]
 
@@ -121,7 +121,7 @@ theorem IsSubDPIdeal_inf_iff {A : Type*} [CommRing A] {I : Ideal A} (hI : Divide
     ∀ {n : ℕ} {a b : A} (_ : a ∈ I) (_ : b ∈ I) (_ : a - b ∈ J), hI.dpow n a - hI.dpow n b ∈ J := by
   refine ⟨fun hIJ n a b ha hb hab ↦ ?_, fun hIJ ↦ ?_⟩
   · have hab' : a - b ∈ I := I.sub_mem ha hb
-    rw [← add_sub_cancel b a, hI.dpow_add' _ hb hab', range_succ, sum_insert not_mem_range_self,
+    rw [← add_sub_cancel b a, hI.dpow_add' hb hab', range_succ, sum_insert not_mem_range_self,
       tsub_self, hI.dpow_zero hab', mul_one,add_sub_cancel_left]
     exact J.sum_mem (fun i hi ↦  SemilatticeInf.inf_le_left J I ((J ⊓ I).smul_mem _
       (hIJ.dpow_mem _ (ne_of_gt (Nat.sub_pos_of_lt (mem_range.mp hi))) ⟨hab, hab'⟩)))
@@ -152,7 +152,7 @@ theorem span_IsSubDPIdeal_iff {S : Set A} (hS : S ⊆ I) :
         exact (span S).zero_mem
       · -- case of sum
         intro x y hxI hyI hx hy n hn
-        rw [hI.dpow_add' _ (hSI hxI) (hSI hyI)]
+        rw [hI.dpow_add' (hSI hxI) (hSI hyI)]
         apply Submodule.sum_mem (span S)
         intro m _
         by_cases hm0 : m = 0
@@ -160,7 +160,7 @@ theorem span_IsSubDPIdeal_iff {S : Set A} (hS : S ⊆ I) :
         · exact mul_mem_right _ (span S) (hx _ hm0)
       · -- case : product,
         intro a x hxI hx n hn
-        rw [Algebra.id.smul_eq_mul, hI.dpow_mul _ (hSI hxI)]
+        rw [Algebra.id.smul_eq_mul, hI.dpow_mul (hSI hxI)]
         exact mul_mem_left (span S) (a ^ n) (hx n hn)
     exact @haux m hm
 
@@ -255,12 +255,12 @@ def prod (J : Ideal A) : SubDPIdeal hI where
         (p := fun (x : A) (hxI : x ∈ I • J) ↦ ∀ (n : ℕ) (_ : n ≠ 0), hI.dpow n x ∈ I • J) hx
       · -- smul
         intro a ha b hb n hn
-        rw [Algebra.id.smul_eq_mul, smul_eq_mul, mul_comm a b, hI.dpow_mul _ ha, mul_comm]
+        rw [Algebra.id.smul_eq_mul, smul_eq_mul, mul_comm a b, hI.dpow_mul ha, mul_comm]
         exact Submodule.mul_mem_mul (J.pow_mem_of_mem hb n (zero_lt_iff.mpr hn))
           (hI.dpow_mem hn ha)
       · -- add
         intro x hx y hy hx' hy' n hn
-        rw [hI.dpow_add' _ (mul_le_right hx) (mul_le_right hy)]
+        rw [hI.dpow_add' (mul_le_right hx) (mul_le_right hy)]
         apply Submodule.sum_mem (I • J)
         intro k _
         by_cases hk0 : k = 0
@@ -394,19 +394,19 @@ def generatedDpow {S : Set A} (hS : S ⊆ I) : SubDPIdeal hI where
       refine Submodule.span_induction ?_ ?_ ?_ ?_ hz
       · -- Elements of S
         rintro y ⟨m, hm, x, hxS, hxy⟩ n hn
-        rw [hxy, hI.dpow_comp _ hm (hS hxS)]
+        rw [hxy, hI.dpow_comp hm (hS hxS)]
         exact mul_mem_left _ _ (subset_span ⟨n * m, mul_ne_zero hn hm, x, hxS, rfl⟩)
       · -- Zero
         exact fun _ hn ↦ by simp only [hI.dpow_eval_zero hn, zero_mem]
       · intro x y hx hy hx_pow hy_pow n hn
-        rw [hI.dpow_add' _ (hSI hx) (hSI hy)]
+        rw [hI.dpow_add' (hSI hx) (hSI hy)]
         apply Submodule.sum_mem (span _)
         intro m _
         by_cases hm0 : m = 0
         · rw [hm0]; exact (span _).mul_mem_left _ (hy_pow n hn)
         · exact (span _).mul_mem_right _ (hx_pow m hm0)
       · intro a x hx hx_pow n hn
-        rw [smul_eq_mul, hI.dpow_mul _ (hSI hx)]
+        rw [smul_eq_mul, hI.dpow_mul (hSI hx)]
         exact mul_mem_left (span _) (a ^ n) (hx_pow n hn)
     exact haux _ hk
 
@@ -485,7 +485,7 @@ def dpEqualizer {A : Type*} [CommSemiring A] {I : Ideal A} (hI hI' : DividedPowe
   carrier := {a ∈ I | ∀ n : ℕ, hI.dpow n a = hI'.dpow n a}
   add_mem' {a b} ha hb := by
     apply And.intro (I.add_mem ha.1 hb.1) (fun n ↦ ?_)
-    rw [hI.dpow_add _ ha.1 hb.1, hI'.dpow_add _ ha.1 hb.1]
+    rw [hI.dpow_add ha.1 hb.1, hI'.dpow_add ha.1 hb.1]
     exact Finset.sum_congr rfl (fun k _ ↦ by rw [ha.2, hb.2])
   zero_mem' := by
     apply And.intro I.zero_mem (fun n ↦ ?_)
@@ -495,7 +495,7 @@ def dpEqualizer {A : Type*} [CommSemiring A] {I : Ideal A} (hI hI' : DividedPowe
   smul_mem' a x hx := by
     rw [Algebra.id.smul_eq_mul]
     exact ⟨I.mul_mem_left a hx.1,
-      (fun n ↦ by rw [hI.dpow_mul _ hx.1, hI'.dpow_mul _ hx.1, hx.2])⟩
+      (fun n ↦ by rw [hI.dpow_mul hx.1, hI'.dpow_mul hx.1, hx.2])⟩
 
 theorem mem_dpEqualizer_iff {A : Type*} [CommSemiring A] {I : Ideal A} (hI hI' : DividedPowers I)
     {x : A} : x ∈ dpEqualizer hI hI' ↔ x ∈ I ∧ ∀ n : ℕ, hI.dpow n x = hI'.dpow n x := by
@@ -505,12 +505,12 @@ theorem mem_dpEqualizer_iff {A : Type*} [CommSemiring A] {I : Ideal A} (hI hI' :
 theorem dpEqualizer_is_dp_ideal_left {A : Type*} [CommSemiring A] {I : Ideal A}
     (hI hI' : DividedPowers I) : DividedPowers.IsSubDPIdeal hI (dpEqualizer hI hI') :=
   IsSubDPIdeal.mk (fun _ hx ↦ hx.1) (fun _ hn x hx ↦ ⟨hI.dpow_mem hn hx.1,
-    fun m ↦ by rw [hI.dpow_comp _ hn hx.1, hx.2, hx.2, hI'.dpow_comp _ hn hx.1]⟩)
+    fun m ↦ by rw [hI.dpow_comp hn hx.1, hx.2, hx.2, hI'.dpow_comp hn hx.1]⟩)
 
 theorem dpEqualizer_is_dp_ideal_right {A : Type*} [CommSemiring A] {I : Ideal A}
     (hI hI' : DividedPowers I) : DividedPowers.IsSubDPIdeal hI' (dpEqualizer hI hI') :=
   IsSubDPIdeal.mk (fun _ hx ↦ hx.1) (fun _ hn x hx ↦ ⟨hI'.dpow_mem hn hx.1, fun m ↦ by
-    rw [← hx.2, hI.dpow_comp _ hn hx.1, hx.2, hx.2, hI'.dpow_comp _ hn hx.1]⟩)
+    rw [← hx.2, hI.dpow_comp hn hx.1, hx.2, hx.2, hI'.dpow_comp hn hx.1]⟩)
 
 open Ideal
 
@@ -602,25 +602,25 @@ noncomputable def dividedPowers : DividedPowers (I.map f) where
     obtain ⟨a, ha, rfl⟩ := (mem_map_iff_of_surjective f hf).mp hx
     rw [dpow_apply' hI hIf ha]
     exact mem_map_of_mem _ (hI.dpow_mem hn ha)
-  dpow_add _ _ _ hx hy := by
+  dpow_add hx hy := by
     obtain ⟨a, ha, rfl⟩ := (mem_map_iff_of_surjective f hf).mp hx
     obtain ⟨b, hb, rfl⟩ := (mem_map_iff_of_surjective f hf).mp hy
-    rw [← map_add, dpow_apply' hI hIf (I.add_mem ha hb), hI.dpow_add _ ha hb, map_sum,
+    rw [← map_add, dpow_apply' hI hIf (I.add_mem ha hb), hI.dpow_add ha hb, map_sum,
       Finset.sum_congr rfl]
     · exact fun k _ ↦ by rw [dpow_apply' hI hIf ha, dpow_apply' hI hIf hb, ← _root_.map_mul]
   dpow_mul {n x y} hy := by
     obtain ⟨a, rfl⟩ := hf x
     obtain ⟨b, hb, rfl⟩ := (mem_map_iff_of_surjective f hf).mp hy
     rw [dpow_apply' hI hIf hb, ← _root_.map_mul, ← map_pow,
-      dpow_apply' hI hIf (mul_mem_left I a hb), hI.dpow_mul _ hb, _root_.map_mul]
-  mul_dpow _ _ _ hx := by
+      dpow_apply' hI hIf (mul_mem_left I a hb), hI.dpow_mul hb, _root_.map_mul]
+  mul_dpow hx := by
     obtain ⟨a, ha, rfl⟩ := (mem_map_iff_of_surjective f hf).mp hx
     simp only [dpow_apply' hI hIf ha]
-    rw [← _root_.map_mul, hI.mul_dpow _ _ ha, _root_.map_mul, map_natCast]
-  dpow_comp _ _ _ hn hx := by
+    rw [← _root_.map_mul, hI.mul_dpow ha, _root_.map_mul, map_natCast]
+  dpow_comp hn hx := by
     obtain ⟨a, ha, rfl⟩ := (mem_map_iff_of_surjective f hf).mp hx
     simp only [dpow_apply' hI hIf, ha, hI.dpow_mem hn ha]
-    rw [hI.dpow_comp _ hn ha, _root_.map_mul, map_natCast]
+    rw [hI.dpow_comp hn ha, _root_.map_mul, map_natCast]
 
 theorem dpow_def {n : ℕ} {x : B} : (dividedPowers hI hf hIf).dpow n x = dpow hI f n x := rfl
 

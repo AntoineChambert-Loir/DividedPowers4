@@ -16,13 +16,13 @@ variable {R : Type*} [CommRing R] {I : Ideal R}
 
 theorem exp_isExponential (hI : DividedPowers I) {a : R} (ha : a ∈ I) :
     PowerSeries.IsExponential (hI.exp a) := by
-  exact isExponential_iff.mpr ⟨fun p q ↦ by simp only [exp, coeff_mk, hI.mul_dpow _ _ ha],
+  exact isExponential_iff.mpr ⟨fun p q ↦ by simp only [exp, coeff_mk, hI.mul_dpow ha],
     by simp only [exp, ← coeff_zero_eq_constantCoeff_apply, coeff_mk, dpow_zero _ ha]⟩
 
 lemma exp_smul (hI : DividedPowers I) {r a : R} (ha : a ∈ I) :
     hI.exp (r * a) = rescale r (hI.exp a) := by
   ext n
-  simp only [exp, coeff_mk, coeff_rescale, hI.dpow_mul _ ha]
+  simp only [exp, coeff_mk, coeff_rescale, hI.dpow_mul ha]
 
 /-- The power series `hI.exp a`, as an element of `ExponentialModule R`. -/
 def exp' (hI : DividedPowers I) (a : I) : ExponentialModule R :=
@@ -67,8 +67,7 @@ noncomputable def ofExp  [DecidablePred (fun x ↦ x ∈ I)] (e : I →ₗ[R] Ex
     simp only [dif_pos ha, dif_pos (I.mul_mem_left r ha)]
     have : (⟨r * a, I.mul_mem_left r ha⟩ : I) = r • ⟨a, ha⟩ := rfl
     rw [this, map_smul, coe_smul, coeff_rescale, Algebra.id.map_eq_id, RingHom.id_apply]
-  mul_dpow _ _ _ ha := by simp only [dif_pos ha, add_mul_coe']
-  dpow_comp _ _ _ hn ha := by simp only [dif_pos ha, dif_pos (coeff_mem _ hn)]; exact coeff_comp _ _ hn
-
+  mul_dpow ha := by simp only [dif_pos ha, add_mul_coe']
+  dpow_comp hn ha := by simp only [dif_pos ha, dif_pos (coeff_mem _ hn)]; exact coeff_comp _ _ hn
 
 end DividedPowers

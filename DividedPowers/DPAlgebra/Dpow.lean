@@ -93,8 +93,8 @@ theorem onDPAlgebra_unique [DecidableEq R] (h h' : DividedPowers (augIdeal R M))
   apply DividedPowers.dpow_eq_from_gens h' h (augIdeal_eq_span R M)
   rintro n f ⟨q, hq : 0 < q, m, _, rfl⟩
   nth_rw 1 [← h1' q m]
-  rw [← h1 q m, h.dpow_comp _ (ne_of_gt hq) (ι_mem_augIdeal R M m),
-    h'.dpow_comp _ (ne_of_gt hq) (ι_mem_augIdeal R M m), h1 _ m, h1' _ m]
+  rw [← h1 q m, h.dpow_comp (ne_of_gt hq) (ι_mem_augIdeal R M m),
+    h'.dpow_comp (ne_of_gt hq) (ι_mem_augIdeal R M m), h1 _ m, h1' _ m]
 
 /-- Existence of divided powers on the augmentation ideal of an `R`-module `M`. -/
 def Condδ (R : Type u) [CommRing R] [DecidableEq R]
@@ -227,8 +227,8 @@ theorem cond_D_uniqueness [DecidableEq R] {M : Type uM} [AddCommGroup M] [Module
       rw [AlgHom.coe_toRingHom, lift_apply_dp]
       exact hJ.dpow_mem (ne_of_gt hq) (hf m)
     · rintro n a ⟨q, hq : 0 < q, m, _, rfl⟩
-      rw [AlgHom.coe_toRingHom, lift_apply_dp, hJ.dpow_comp _ (ne_of_gt hq) (hf m), ← hh q m,
-        h.dpow_comp _ (ne_of_gt hq) (ι_mem_augIdeal R M m), _root_.map_mul, map_natCast]
+      rw [AlgHom.coe_toRingHom, lift_apply_dp, hJ.dpow_comp (ne_of_gt hq) (hf m), ← hh q m,
+        h.dpow_comp (ne_of_gt hq) (ι_mem_augIdeal R M m), _root_.map_mul, map_natCast]
       apply congr_arg₂ _ rfl
       rw [hh, lift_apply_dp]
 
@@ -303,8 +303,8 @@ def dpΦ : DPMorphism hM hI := by
     exact hI.dpow_mem (ne_of_gt hn) (f_mem_I A I b)
   · rintro n x ⟨m, hm, b, _, rfl⟩
     rw [Φ, AlgHom.toRingHom_eq_coe, RingHom.coe_coe, lift_apply_dp, ← hM_eq,
-      hM.dpow_comp _ (ne_of_gt hm) (ι_mem_augIdeal _ _ _),
-      hI.dpow_comp _ (ne_of_gt hm) (f_mem_I A I b), _root_.map_mul, map_natCast]
+      hM.dpow_comp (ne_of_gt hm) (ι_mem_augIdeal _ _ _),
+      hI.dpow_comp (ne_of_gt hm) (f_mem_I A I b), _root_.map_mul, map_natCast]
     apply congr_arg₂ _ rfl
     rw [hM_eq, lift_apply_dp]
 
@@ -915,7 +915,7 @@ theorem roby_prop_4 {A : Type*} [CommRing A] {R : Type*} [CommRing R] [Algebra A
       | zero => exact fun n hn ↦ by simp only [hI.dpow_eval_zero hn, zero_mem]
       | add a b ha hb ha' hb' =>
         intro n hn
-        rw [hI.dpow_add _ (inf_le_right (a := J) (hT_le ha)) (inf_le_right (a := J) (hT_le hb))]
+        rw [hI.dpow_add (inf_le_right (a := J) (hT_le ha)) (inf_le_right (a := J) (hT_le hb))]
         apply Ideal.sum_mem
         rintro ⟨u, v⟩ h
         rcases ne_zero_of_mem_antidiagonal_ne_zero h hn with (hu | hv)
@@ -923,7 +923,7 @@ theorem roby_prop_4 {A : Type*} [CommRing A] {R : Type*} [CommRing R] [Algebra A
         · exact J.mul_mem_left _ (hb' v hv)
       | smul a x hx hx' =>
         intro n hn
-        rw [smul_eq_mul, hI.dpow_mul _ (inf_le_right (a := J) (hT_le hx))]
+        rw [smul_eq_mul, hI.dpow_mul (inf_le_right (a := J) (hT_le hx))]
         exact Ideal.mul_mem_left _ _ (hx' n hn)
     suffices T = J ⊓ I by exact {
       isSubideal := inf_le_right
@@ -978,7 +978,7 @@ theorem roby_prop_4 {A : Type*} [CommRing A] {R : Type*} [CommRing R] [Algebra A
           suffices c * y ∈ T by rwa [hT', SetLike.mem_coe] at this
           simp only [hT, Ideal.mem_inf, Set.mem_setOf_eq]
           refine ⟨⟨Ideal.mul_mem_left _ _ hy, Ideal.mul_mem_right _ _ hc⟩, fun _ hn ↦ ?_⟩
-          rw [hI.dpow_mul_right _ hc]
+          rw [hI.dpow_mul_right hc]
           apply Ideal.mul_mem_left
           rw [← Nat.succ_pred_eq_of_ne_zero hn, pow_succ]
           exact Ideal.mul_mem_left _ _ hy
@@ -1163,7 +1163,7 @@ lemma augIdeal_eq_generatedDpow_ι_range (A : Type u) [CommRing A] [DecidableEq 
 theorem dp_comp (A : Type u) [CommRing A] [DecidableEq A] (M : Type u) [AddCommGroup M] [Module A M]
     (x : M) {n : ℕ} (m : ℕ) (hn : n ≠ 0) :
     dpow (dividedPowers' A M) m (dp A n x) = ↑(Nat.uniformBell m n) * dp A (m * n) x := by
-  erw [← (condD_holds A M).choose_spec, dpow_comp _ _ hn (ι_mem_augIdeal A M x), dpow_ι]
+  erw [← (condD_holds A M).choose_spec, dpow_comp _ hn (ι_mem_augIdeal A M x), dpow_ι]
 
 theorem roby_theorem_2 (R : Type u) [CommRing R]  [DecidableEq R] (M : Type u) [AddCommGroup M]
     [Module R M] {A : Type u} [CommRing A] [Algebra R A] {I : Ideal A} (hI : DividedPowers I)

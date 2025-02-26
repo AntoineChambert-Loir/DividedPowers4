@@ -108,8 +108,8 @@ def ideal {f : A →+* B} (hf : I.map f ≤ J) : Ideal A where
   add_mem' := fun hx hy ↦ by
     simp only [Set.mem_setOf_eq, map_add] at hx hy ⊢
     refine ⟨I.add_mem hx.1 hy.1, fun n ↦ ?_⟩
-    rw [hI.dpow_add _ hx.1 hy.1, map_sum,
-      hJ.dpow_add _ (hf (mem_map_of_mem f hx.1)) (hf (mem_map_of_mem f hy.1))]
+    rw [hI.dpow_add hx.1 hy.1, map_sum,
+      hJ.dpow_add (hf (mem_map_of_mem f hx.1)) (hf (mem_map_of_mem f hy.1))]
     apply congr_arg
     ext k
     rw [_root_.map_mul, hx.2, hy.2]
@@ -122,8 +122,8 @@ def ideal {f : A →+* B} (hf : I.map f ≤ J) : Ideal A where
   smul_mem' := fun r x hx ↦ by
     simp only [Set.mem_sep_iff, SetLike.mem_coe] at hx ⊢
     refine ⟨I.smul_mem r hx.1, (fun n ↦ ?_)⟩
-    rw [smul_eq_mul, hI.dpow_mul _ hx.1, _root_.map_mul, _root_.map_mul, map_pow,
-      hJ.dpow_mul _ (hf (mem_map_of_mem f hx.1)), hx.2 n]
+    rw [smul_eq_mul, hI.dpow_mul hx.1, _root_.map_mul, _root_.map_mul, map_pow,
+      hJ.dpow_mul (hf (mem_map_of_mem f hx.1)), hx.2 n]
 
 -- Roby65, Proposition 3.  (TODO: rename?)
 /-- The dp morphism induced by a ring morphism, provided divided powers match on a generating set -/
