@@ -259,7 +259,7 @@ theorem Algebra.baseChange_bot {R S : Type*} [CommRing R] [Algebra A R] [CommRin
 theorem Algebra.TensorProduct.map_includeRight_eq_range_baseChange
     {S : Type*} [CommRing S] [Algebra A S] {I : Ideal S}
     (R : Type*) [CommRing R] [Algebra A R]  :
-    Submodule.restrictScalars R (I.map Algebra.TensorProduct.includeRight)
+    (I.map Algebra.TensorProduct.includeRight).restrictScalars R
       = LinearMap.range ((Submodule.restrictScalars A I).subtype.baseChange R) := by
   ext x
   simp only [restrictScalars_mem, LinearMap.mem_range]
