@@ -787,13 +787,12 @@ theorem Ideal.quotDecomposition_right_inv' [GradedAlgebra 𝒜] (hI : I.IsHomoge
   apply congr_arg
   apply linearMap_ext
   intro i
-  ext y
+  ext1 y
   obtain ⟨x, hx, hxy⟩ := y.prop
   simp only [LinearMap.coe_comp, comp_apply, LinearMap.id_comp, lof_eq_of, coeLinearMap_of]
   rw [← hxy, Ideal.Quotient.mkₐ_eq_mk, Ideal.quotDecomposeLaux_apply_mk, Ideal.quotDecomposeLaux]
   simp only [LinearMap.coe_comp, comp_apply]
-  sorry
-  /- change lmap' _ (decompose 𝒜 x) = _
+  change lmap' _ (decompose 𝒜 x) = _
   suffices decompose 𝒜 x = lof R ι (fun i => 𝒜 i) i (⟨x, hx⟩ : 𝒜 i) by
     rw [this, lmap'_lof, lof_eq_of]
     apply congr_arg₂ _ rfl
@@ -803,7 +802,7 @@ theorem Ideal.quotDecomposition_right_inv' [GradedAlgebra 𝒜] (hI : I.IsHomoge
     simp only [Ideal.Quotient.mkₐ_eq_mk]
     rfl
   conv_lhs => rw [← Subtype.coe_mk x hx]
-  rw [decompose_coe, lof_eq_of] -/
+  rw [decompose_coe, lof_eq_of]
 
 theorem Ideal.quotDecomposition_right_inv [GradedAlgebra 𝒜] (hI : I.IsHomogeneous 𝒜) :
     RightInverse (DirectSum.coeAddMonoidHom (I.quotSubmodule R 𝒜)) (I.quotDecompose R 𝒜 hI) :=
