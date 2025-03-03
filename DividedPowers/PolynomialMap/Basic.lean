@@ -5,6 +5,7 @@ import Mathlib.LinearAlgebra.TensorProduct.RightExactness
 import Mathlib.RingTheory.FiniteType
 import Mathlib.RingTheory.Ideal.Quotient.Operations
 
+import Mathlib.Logic.Small.Set
 
 /-! # Polynomial laws on modules
 
@@ -100,7 +101,7 @@ theorem Ideal.kerLiftAlg_eq_val_comp_Equiv {R : Type*} [CommRing R] {S : Type*} 
 
 theorem MvPolynomial.aeval_range (R : Type*) [CommSemiring R] (S : Type*) [CommSemiring S]
     [Algebra R S] {σ : Type*} (s : σ → S) :
-    (aeval (R := R) s).range = Algebra.adjoin R (Set.range s) := by
+    (aeval s).range = Algebra.adjoin R (Set.range s) := by
   apply le_antisymm
   · rintro x ⟨p, rfl⟩
     simp only [AlgHom.toRingHom_eq_coe, RingHom.coe_coe]
@@ -131,11 +132,8 @@ lemma TensorProduct.includeRight_lid {R : Type*} [CommSemiring R] {S : Type*} [C
     (1 : S) ⊗ₜ[R] (TensorProduct.lid R M) m = (rTensor M (Algebra.toAlgHom R S).toLinearMap) m := by
   suffices ∀ m, (rTensor M (Algebra.toAlgHom R S).toLinearMap).comp
     (TensorProduct.lid R M).symm.toLinearMap m = 1 ⊗ₜ[R] m by
-    simp only [← this, LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply,
-      LinearEquiv.symm_apply_apply]
-  intro z
-  simp only [LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply, lid_symm_apply,
-    rTensor_tmul, toLinearMap_apply, _root_.map_one]
+    simp [← this]
+  intros; simp
 
 theorem rTensor_comp_baseChange_comm_apply
     {R : Type*} [CommRing R] {M N : Type*} [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
@@ -144,9 +142,7 @@ theorem rTensor_comp_baseChange_comm_apply
     (φ : S →ₐ[R] S') (t : S ⊗[R] M) (f : M →ₗ[R] N) :
     (φ.toLinearMap.rTensor N) (f.baseChange S t)  =
       (f.baseChange S') (φ.toLinearMap.rTensor M t) := by
-  simp only [LinearMap.baseChange_eq_ltensor, LinearMap.rTensor, lTensor, ← LinearMap.comp_apply, ← TensorProduct.map_comp]
-  rfl
-
+  simp [LinearMap.baseChange_eq_ltensor, ← LinearMap.comp_apply, ← TensorProduct.map_comp]
 
 end Lemmas
 
@@ -154,20 +150,46 @@ section PureSubmodule
 
 open Function Submodule MvPolynomial
 
-theorem Algebra.FiniteType.exists_down
-    (R : Type u) [CommRing R] (S : Type*) [CommRing S] [Algebra R S] [Algebra.FiniteType R S] :
-    ∃ (S' : Type u) (_ : CommRing S') (_ : Algebra R S') (_ : S' ≃ₐ[R] S), True := by
+theorem Algebra.FiniteType.small
+    (R : Type u) [CommSemiring R] (S : Type*) [CommSemiring S] [Algebra R S] [Algebra.FiniteType R S] :
+    Small.{u} S := by
   obtain ⟨s : Finset S, hs⟩ := (Algebra.FiniteType.out : (⊤ : Subalgebra R S).FG)
   set h : MvPolynomial (Fin s.card) R →ₐ[R] S := aeval (fun i ↦ s.equivFin.symm i)
-  have hrange : h.range = ⊤ := by
-    rw [_root_.eq_top_iff, ← hs]
-    apply Algebra.adjoin_le
+  apply small_of_surjective (f := h)
+  rw [← AlgHom.range_eq_top, _root_.eq_top_iff, ← hs]
+  apply Algebra.adjoin_le
+  intro x hx
+  use X (s.equivFin ⟨x, hx⟩)
+  simp only [toRingHom_eq_coe, RingHom.coe_coe, aeval_X, Equiv.symm_apply_apply, h]
+
+theorem Subalgebra.FG.small
+    (R : Type u) [CommSemiring R] (A : Type*) [CommSemiring A] [Algebra R A]
+    {S : Subalgebra R A} (fgS : S.FG) :
+    Small.{u} S := by
+  unfold FG at fgS
+  obtain ⟨t, ht⟩ := fgS
+  set h : MvPolynomial (Fin t.card) R →ₐ[R] A := aeval (fun i ↦ t.equivFin.symm i)
+  suffices h.range = S by
+    rw [← this]; exact small_range h
+  rw [← ht]
+  apply le_antisymm
+  · intro a ha
+    obtain ⟨p, rfl⟩ := ha
+    simp only [toRingHom_eq_coe, RingHom.coe_coe, h]
+    induction p using MvPolynomial.induction_on' with
+    | h1 n r =>
+      simp only [aeval_monomial, Finsupp.prod_pow, h]
+      refine mul_mem (Subalgebra.algebraMap_mem (Algebra.adjoin R (t : Set A)) r) ?_
+      apply prod_mem (fun i _ ↦ by
+        apply Subalgebra.pow_mem
+        apply Algebra.adjoin_mono (s := {↑(t.equivFin.symm i)})
+        simp only [Set.singleton_subset_iff, Subtype.coe_prop, h]
+        apply Algebra.self_mem_adjoin_singleton)
+    | h2 p q hp hq => simp only [map_add]; exact add_mem hp hq
+  · apply Algebra.adjoin_le
     intro x hx
-    use X (s.equivFin ⟨x, hx⟩)
+    use X (t.equivFin ⟨x, hx⟩)
     simp only [toRingHom_eq_coe, RingHom.coe_coe, aeval_X, Equiv.symm_apply_apply, h]
-  use (MvPolynomial (Fin s.card) R) ⧸ RingHom.ker h,
-    inferInstance, inferInstance,
-    (Ideal.quotientKerEquivRange h).trans ((h.range.equivOfEq ⊤ hrange).trans Subalgebra.topEquiv)
 
 theorem AlgEquiv.self_trans_symm_eq_refl
   {R S S' : Type*} [CommSemiring R] [Semiring S] [Semiring S']
@@ -212,7 +234,7 @@ class IsPure {R : Type u} [CommRing R]
 
 variable {R : Type u} [CommRing R] {M : Type*} [AddCommGroup M] [Module R M]
 
-variable (N : Submodule R M) [pureN : N.IsPure]
+variable (N : Submodule R M) [N.IsPure]
 
 namespace IsPure
 
@@ -223,11 +245,11 @@ theorem baseChange_injective (S : Type*) [CommRing S] [Algebra R S] :
   simp only [mem_ker, Submodule.mem_bot]
   intro ht
   obtain ⟨A, hA, u, hu0, hut⟩ := exists_fg_of_baseChange_eq_zero N.subtype t ht
-  have : Algebra.FiniteType R A := by
-    exact (Subalgebra.fg_iff_finiteType A).mp hA
-  obtain ⟨A', _, _, e, _⟩ := Algebra.FiniteType.exists_down R A
+  have : Small.{u} A := hA.small
+  set A' := Shrink.{u} A with hA'
+  let e : A' ≃ₐ[R] A := Shrink.algEquiv A R
   set u' := LinearMap.rTensor N e.symm.toLinearMap u with hu'
-  have hN := pureN.baseChange_injective' A'
+  have hN := IsPure.baseChange_injective' A' (N := N)
   rw [← ker_eq_bot, eq_bot_iff] at hN
   have hu : u = LinearMap.rTensor N e.toLinearMap u' := by
     rw [← LinearMap.rTensor_id_apply N A u]
@@ -304,7 +326,7 @@ notation:25 M " →ₚ[" R:25 "] " N:0 => PolynomialMap R M N
 
 namespace PolynomialMap
 
-variable (f : PolynomialMap R M N)
+variable (f : M →ₚ[R] N)
 
 variable {R M N f} in
 theorem isCompat_apply' {S : Type u} [CommRing S] [Algebra R S] {S' : Type u} [CommRing S']
@@ -316,7 +338,7 @@ section Lift
 
 open LinearMap
 
-variable (f : M →ₚ[R] N) (S : Type v) [CommRing S] [Algebra R S]
+variable (S : Type v) [CommRing S] [Algebra R S]
 
 /-- The type of lifts of  `S ⊗[R] M` to a polynomial ring. -/
 def lifts : Type _ := Σ (s : Finset S), (MvPolynomial (Fin s.card) R) ⊗[R] M
@@ -340,7 +362,8 @@ private def π : lifts R M S → S ⊗[R] M := fun ⟨s, p⟩ ↦ rTensor M (φ 
 
 variable {R M N S}
 
-/- private  -/def toFunLifted : lifts R M S → S ⊗[R] N :=
+-- private
+def toFunLifted : lifts R M S → S ⊗[R] N :=
   fun ⟨s,p⟩ ↦ rTensor N (φ R s).toLinearMap (f.toFun' (MvPolynomial (Fin s.card) R) p)
 
 variable (S)
@@ -393,13 +416,10 @@ theorem toFun'_eq_of_diagram {A : Type u} [CommRing A] [Algebra R A] {φ : A →
   simp only [quotientKerEquivRange_mk, comp_toLinearMap, rTensor_comp, LinearMap.comp_apply]
   simp only [comp_toLinearMap, rTensor_comp, LinearMap.comp_apply] at hpq
   simp only [hpq, ← LinearMap.comp_apply, ← rTensor_comp, ← comp_toLinearMap, AlgHom.comp_assoc]
-  apply LinearMap.congr_fun
-  apply congr_arg
-  apply congr_arg
+  congr
   ext n
   simp only [AlgEquiv.toAlgHom_eq_coe, AlgHom.coe_comp, AlgHom.coe_coe, Function.comp_apply,
-    Ideal.Quotient.mkₐ_eq_mk]
-  erw [Equiv.symm_apply_eq]
+    Ideal.Quotient.mkₐ_eq_mk, AlgEquiv.symm_apply_eq]
   rfl
 
 /-- Compare the values of `PolynomialMap.toFun' in a square diagram,
