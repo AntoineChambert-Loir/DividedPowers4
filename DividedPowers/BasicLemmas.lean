@@ -195,6 +195,7 @@ theorem sum_antidiagonalFourth_eq {β : Type*} [AddCommMonoid β] (f : α × α 
   simp only [antidiagonalTriple, sum_disjiUnion]
   simp only [sum_map, Function.Embedding.sectR_apply]
 
+--Mathlib.Algebra.Order.Antidiag.Prod
 def antidiagonalFourth' (n : α) : Finset ((α × α) × (α × α)) :=
   (antidiagonal n).disjiUnion (fun k ↦ (antidiagonal k.1) ×ˢ (antidiagonal k.2))
   (fun k _ l _ hkl ↦ by
@@ -208,31 +209,15 @@ def antidiagonalFourth' (n : α) : Finset ((α × α) × (α × α)) :=
 
 theorem mem_antidiagonalFourth' {n : α} {x : (α × α) × (α × α)} :
     x ∈ antidiagonalFourth' n ↔ x.1.1 + x.1.2 + x.2.1 + x.2.2 = n := by
-  constructor
-  · intro hx
-    simp only [antidiagonalFourth', mem_disjiUnion] at hx
-    obtain ⟨u, hu, hx⟩ := hx
-    simp only [mem_product, mem_antidiagonal] at hx hu
-    rw [add_assoc, hx.2, hx.1, hu]
-  · intro hx
-    simp only [antidiagonalFourth', mem_disjiUnion]
-    use (x.1.1 + x.1.2, x.2.1 + x.2.2)
-    constructor
-    · simp only [mem_antidiagonal, ← add_assoc, hx]
-    · simp only [mem_antidiagonal, mem_product, and_self]
+  simp only [antidiagonalFourth', mem_disjiUnion, mem_antidiagonal, mem_product]
+  exact ⟨fun ⟨u, hu, hx⟩ ↦ by rw [add_assoc, hx.2, hx.1, hu], fun hx ↦
+    ⟨(x.1.1 + x.1.2, x.2.1 + x.2.2), by simp only [← add_assoc, hx],
+     Prod.mk.inj_iff.mp rfl⟩⟩
 
 theorem sum_antidiagonalFourth'_eq {β : Type*} [AddCommMonoid β] (f : (α × α) × (α × α) → β) (n : α) :
     ∑ x ∈ antidiagonalFourth' n, f x =
       ∑ m ∈ antidiagonal n, ∑ x ∈ antidiagonal m.1, ∑ y ∈ antidiagonal m.2, f (x, y) := by
   simp_rw [antidiagonalFourth', sum_disjiUnion, Finset.sum_product]
-
-/- example {β : Type*} [AddCommMonoid β] (f : α × α × α × α → β) (n : α) :
-    ∑ x ∈ antidiagonalFourth n, f x =
-      ∑ m ∈ antidiagonal n, ∑ u ∈ antidiagonal m.1, ∑ v ∈ antidiagonal m.2, f (u.1, u.2, v.1, v.2) := by
- sorry
-
-theorem newsum_4_rw {α : Type*} [AddCommMonoid α] (f : ℕ × ℕ × ℕ × ℕ → α) (n : ℕ) :
- False := sorry -/
 
  /-- Rewrites a 4-fold sum from variables (12)(34) to (13)(24) -/
 theorem sum_4_rw {α : Type*} [AddCommMonoid α] (f : ℕ × ℕ × ℕ × ℕ → α) (n : ℕ) :
@@ -290,12 +275,14 @@ theorem range_sym_prop {m n : ℕ} {k : Sym ℕ m} (hk : k ∈ (Finset.range (n 
     simp only [count_eq_zero, Sym.mem_coe]
     exact hx.2
 
+
 theorem range_sym_weighted_sum_le {m n : ℕ} {k : Sym ℕ m} (hk : k ∈ (Finset.range (n + 1)).sym m) :
     ((Finset.range (n + 1)).sum fun i => count i k * i) ≤ m * n := by
   suffices h : ∀ i ∈ Finset.range (n + 1), count i k * i ≤ count i k * n by
     exact le_trans (sum_le_sum h) (by rw [← sum_mul, range_sym_prop hk])
   exact fun _ hi ↦ Nat.mul_le_mul_left _ (Nat.lt_succ_iff.mp (Finset.mem_range.mp hi))
 
+-- Mathlib.Data.Multiset.Count ??
 theorem sum_range_sym_mul_compl {m n : ℕ} {k : Sym ℕ m} (hk : k ∈ (Finset.range (n + 1)).sym m) :
     (Finset.sum (range (n + 1)) fun i => count i k * (n - i)) =
       m * n - Finset.sum (range (n + 1)) fun i => count i k * i := by

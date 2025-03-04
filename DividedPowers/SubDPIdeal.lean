@@ -527,7 +527,7 @@ theorem le_equalizer_of_dp_morphism {A : Type*} [CommSemiring A] {I : Ideal A}
 def interQuot {A : Type*} [CommRing A] {I : Ideal A} {hI : DividedPowers I} {J : Ideal A}
     {hJ : DividedPowers (I.map (Ideal.Quotient.mk J))} {φ : DPMorphism hI hJ}
     (hφ : φ.toRingHom = Ideal.Quotient.mk J) :
-  SubDPIdeal hI where
+    SubDPIdeal hI where
   carrier    := J ⊓ I
   isSubideal := by simp only [ge_iff_le, inf_le_right]
   dpow_mem   := fun _ hn a ⟨haJ, haI⟩ ↦ by
