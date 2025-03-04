@@ -67,7 +67,7 @@ lemma extends_to_iff_exists_dpIdeal {A : Type u} [CommRing A] {I : Ideal A} (hI 
     extends_to hI f ↔ ∃ (J : Ideal B) (hJ : DividedPowers J), IsDPMorphism hI hJ f := by
   classical
   refine ⟨fun ⟨hJ, hmap⟩ ↦ ⟨I.map f, hJ, hmap⟩, fun ⟨J, hJ, hmap⟩ ↦  ?_⟩
-  use (IsSubDPIdeal_map hmap).dividedPowers
+  use (isSubDPIdeal_map hmap).dividedPowers
   rw [IsDPMorphism] at hmap ⊢
   refine ⟨le_refl _, ?_⟩
   intros n a ha
