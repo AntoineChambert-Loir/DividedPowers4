@@ -259,41 +259,33 @@ theorem Algebra.baseChange_bot {R S : Type*} [CommRing R] [Algebra A R] [CommRin
 theorem Algebra.TensorProduct.map_includeRight_eq_range_baseChange
     {S : Type*} [CommRing S] [Algebra A S] {I : Ideal S}
     (R : Type*) [CommRing R] [Algebra A R]  :
-    Submodule.restrictScalars R (I.map Algebra.TensorProduct.includeRight)
-    = LinearMap.range (LinearMap.baseChange R (Submodule.restrictScalars A I).subtype) := by
+    (I.map Algebra.TensorProduct.includeRight).restrictScalars R
+      = LinearMap.range ((Submodule.restrictScalars A I).subtype.baseChange R) := by
   ext x
   simp only [restrictScalars_mem, LinearMap.mem_range]
   constructor
   · intro hx
-    sorry
-   /-  apply Submodule.span_induction hx
-      (p := fun x ↦ ∃ y, (LinearMap.baseChange R (Submodule.restrictScalars A I).subtype) y = x )
-    · rintro x ⟨s, hs, rfl⟩; use 1 ⊗ₜ[A] ⟨s, hs⟩; rfl
-    · use 0; simp only [_root_.map_zero]
-    · rintro _ _ ⟨x, rfl⟩ ⟨y, rfl⟩; use x + y; simp only [map_add]
-    · rintro a _ ⟨x, rfl⟩
-      induction x using TensorProduct.induction_on with
-      | zero => use 0; simp only [_root_.map_zero, smul_eq_mul, mul_zero]
+    induction hx using Submodule.closure_induction with
+    | zero => use 0; simp
+    | add _ _ _ _ hx hy =>
+      obtain ⟨x, rfl⟩ := hx
+      obtain ⟨y, rfl⟩ := hy
+      use x + y; simp
+    | smul_mem a x hx =>
+      revert hx
+      induction a using TensorProduct.induction_on with
+      | add u' v' hu hv =>
+        intro hx
+        obtain ⟨u, hu⟩ := hu hx
+        obtain ⟨v, hv⟩ := hv hx
+        use u + v; simp [hu, hv, right_distrib]
+      | zero =>
+        intro hx
+        use 0; simp
       | tmul r s =>
-        induction a using TensorProduct.induction_on with
-        | zero =>
-          use 0
-          simp only [_root_.map_zero, baseChange_tmul, coe_subtype, smul_eq_mul, zero_mul]
-        | tmul u v =>
-          use (u * r) ⊗ₜ[A] (v • s)
-          simp only [baseChange_tmul, coe_subtype, smul_eq_mul,
-            Algebra.TensorProduct.tmul_mul_tmul]
-          rw [Submodule.coe_smul, smul_eq_mul]
-        | add u v hu hv =>
-          obtain ⟨x, hx⟩ := hu
-          obtain ⟨y, hy⟩ := hv
-          use x + y
-          rw [LinearMap.map_add, add_smul, hx, hy]
-      | add x y hx hy =>
-        obtain ⟨x', hx⟩ := hx
-        obtain ⟨y', hy⟩ := hy
-        use x' + y'
-        simp only [map_add, hx, smul_eq_mul, hy, mul_add] -/
+        rintro ⟨i, hi, rfl⟩
+        use r ⊗ₜ[A] (⟨s • i, smul_mem I s hi⟩)
+        simp
   · rintro ⟨y, rfl⟩
     induction y using TensorProduct.induction_on with
     | zero => simp only [_root_.map_zero, Submodule.zero_mem]

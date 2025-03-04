@@ -791,8 +791,7 @@ theorem Ideal.quotDecomposition_right_inv' [GradedAlgebra 𝒜] (hI : I.IsHomoge
   obtain ⟨x, hx, hxy⟩ := y.prop
   simp only [LinearMap.coe_comp, comp_apply, LinearMap.id_comp, lof_eq_of, coeLinearMap_of]
   rw [← hxy, Ideal.Quotient.mkₐ_eq_mk, Ideal.quotDecomposeLaux_apply_mk, Ideal.quotDecomposeLaux]
-  simp only [LinearMap.coe_comp, comp_apply,
-    AlgEquiv.toLinearMap_apply, decomposeAlgEquiv_apply, SetLike.coe_eq_coe]
+  simp only [LinearMap.coe_comp, comp_apply]
   change lmap' _ (decompose 𝒜 x) = _
   suffices decompose 𝒜 x = lof R ι (fun i => 𝒜 i) i (⟨x, hx⟩ : 𝒜 i) by
     rw [this, lmap'_lof, lof_eq_of]
