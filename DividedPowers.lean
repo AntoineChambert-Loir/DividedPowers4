@@ -36,7 +36,6 @@ import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Substitution
 --import DividedPowers.ForMathlib.RingTheory.PowerSeries.Topology -- In PR #14866
 import DividedPowers.ForMathlib.RingTheory.SubmoduleMem
 import DividedPowers.ForMathlib.RingTheory.PowerSeries.Evaluation
---import DividedPowers.ForMathlib.RingTheory.PowerSeries.Substitution -- This seems to duplicate `MvPowerSeries.Substitution` (?)
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.LinearEquiv
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.MonoidAlgebra
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.MvPolynomial
@@ -46,6 +45,7 @@ import DividedPowers.ForMathlib.Topology.Algebra.LinearTopology
 import DividedPowers.IdealAdd
 --import DividedPowers.IdealAdd2 --NOTE: we cannot import this because it
 -- duplicates lemmas from IdealAdd. We should pick a version.
+import DividedPowers.Padic
 import DividedPowers.PolynomialMap.Basic
 import DividedPowers.PolynomialMap.Coeff
 import DividedPowers.PolynomialMap.Homogeneous -- It has a sorry
