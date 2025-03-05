@@ -229,23 +229,23 @@ namespace RatAlgebra
 
 variable {R : Type*} [CommSemiring R] (I : Ideal R) [DecidablePred (fun x ↦ x ∈ I)]
 
-/-- The family `ℕ → R → R` given by `dpow n x = x ^ n / n!`. -/
+/- /-- The family `ℕ → R → R` given by `dpow n x = x ^ n / n!`. -/
 noncomputable def dpow : ℕ → R → R := OfInvertibleFactorial.dpow I
 
 variable {I}
 
 theorem dpow_eq_of_mem (n : ℕ) {x : R} (hx : x ∈ I) :
     dpow I n x = (inverse n.factorial : R) * x ^ n := by
-  rw [dpow, OfInvertibleFactorial.dpow_eq_of_mem hx]
+  rw [dpow, OfInvertibleFactorial.dpow_eq_of_mem hx] -/
 
 variable [Algebra ℚ R]
 
-variable (I)
+--variable (I)
 
 /-- If `I` is an ideal in a `ℚ`-algebra `A`, then `I` admits a unique divided power structure,
   given by `dpow n x = x ^ n / n!`. -/
 noncomputable def dividedPowers : DividedPowers I where
-  dpow           := dpow I
+  dpow           := OfInvertibleFactorial.dpow I
   dpow_null hx   := OfInvertibleFactorial.dpow_null hx
   dpow_zero hx   := OfInvertibleFactorial.dpow_zero hx
   dpow_one hx    := OfInvertibleFactorial.dpow_one hx

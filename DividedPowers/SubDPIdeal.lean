@@ -109,7 +109,6 @@ theorem isDPMorphism (hJ : IsSubDPIdeal hI J) :
   simp only [isDPMorphism_iff, Ideal.map_id, RingHom.id_apply]
   exact ⟨hJ.1, fun _ _ _ ha ↦ by rw [dpow_eq_of_mem _ _ ha]⟩
 
-
 end IsSubDPIdeal
 
 open Finset Ideal
@@ -164,7 +163,7 @@ theorem span_isSubDPIdeal_iff {S : Set A} (hS : S ⊆ I) :
         exact mul_mem_left (span S) (a ^ n) (hx n hn)
     exact @haux m hm
 
-theorem generated_dpow_isSubideal {S : Set A} (hS : S ⊆ I) :
+theorem generatedDpow_isSubideal {S : Set A} (hS : S ⊆ I) :
     span {y : A | ∃ (n : ℕ) (_ : n ≠ 0) (x : A) (_ : x ∈ S), y = hI.dpow n x} ≤ I := by
   rw [span_le]
   rintro y ⟨n, hn, x, hx, hxy⟩
@@ -185,6 +184,20 @@ theorem isSubDPIdeal_iSup {ι : Type*} {J : ι → Ideal A} (hJ : ∀ i, IsSubDP
   simp_rw [Set.mem_iUnion]
   rintro n hn a ⟨i, ha⟩
   exact span_mono (Set.subset_iUnion _ i) (subset_span ((hJ i).2 n hn ha))
+
+theorem isSubDPIdeal_iInf {ι : Type*} {J : ι → Ideal A} (hJ : ∀ i, IsSubDPIdeal hI (J i)) :
+    IsSubDPIdeal hI (I ⊓ iInf (fun i ↦ J i)) := by
+  by_cases hι : Nonempty ι
+  · constructor
+    · intro x hx
+      exact hx.1
+    · intro n hn x hx
+      simp only [Ideal.mem_inf, mem_iInf] at hx ⊢
+      exact ⟨hI.dpow_mem hn hx.1, fun i ↦  IsSubDPIdeal.dpow_mem (hJ i) n hn (hx.2 i)⟩
+  · simp only [not_nonempty_iff] at hι
+    rw [iInf_of_empty]
+    simp only [le_top, inf_of_le_left]
+    exact IsSubDPIdeal.self hI
 
 theorem isSubDPIdeal_map_of_isSubDPIdeal {f : A →+* B} (hf : IsDPMorphism hI hJ f) {K : Ideal A}
     (hK : IsSubDPIdeal hI K) : IsSubDPIdeal hJ (map f K) := by
@@ -316,6 +329,7 @@ instance : InfSet (SubDPIdeal hI) :=
         simp only [mem_iInf] at hx ⊢
         exact fun s hs ↦ s.dpow_mem _ hn x (hx s hs) }⟩
 
+
 theorem sInf_carrier_def (S : Set (SubDPIdeal hI)) :
     (sInf S).carrier = ⨅ s ∈ Insert.insert ⊤ S, (s : hI.SubDPIdeal).carrier := rfl
 
@@ -388,9 +402,9 @@ def generated (S : Set A) : SubDPIdeal hI := sInf {J : SubDPIdeal hI | S ⊆ J.c
   where `n ≠ 0` and `x ∈ S`. -/
 def generatedDpow {S : Set A} (hS : S ⊆ I) : SubDPIdeal hI where
   carrier := span {y : A | ∃ (n : ℕ) (_ : n ≠ 0) (x : A) (_ : x ∈ S), y = hI.dpow n x}
-  isSubideal := hI.generated_dpow_isSubideal hS
+  isSubideal := hI.generatedDpow_isSubideal hS
   dpow_mem _ hk z hz := by
-    have hSI := hI.generated_dpow_isSubideal hS
+    have hSI := hI.generatedDpow_isSubideal hS
     have haux : ∀ (n : ℕ) (_ : n ≠ 0),
         hI.dpow n z ∈ span {y | ∃ n, ∃ (_ : n ≠ 0), ∃ x, ∃ (_ : x ∈ S), y = hI.dpow n x} := by
       refine Submodule.span_induction ?_ ?_ ?_ ?_ hz
@@ -419,7 +433,7 @@ theorem generatedDpow_carrier {S : Set A} (hS : S ⊆ I) :
 theorem le_generatedDpow {S : Set A} (hS : S ⊆ I) : S ⊆ (generatedDpow hI hS).carrier := fun x hx ↦
   subset_span ⟨1, one_ne_zero, x, hx, by rw [hI.dpow_one (hS hx)]⟩
 
-theorem generated_dpow_le (S : Set A) (J : SubDPIdeal hI) (hSJ : S ⊆ J.carrier) :
+theorem generatedDpow_le (S : Set A) (J : SubDPIdeal hI) (hSJ : S ⊆ J.carrier) :
     span {y : A | ∃ (n : ℕ) (_ : n ≠ 0) (x : A) (_ : x ∈ S), y = hI.dpow n x} ≤ J.carrier := by
   rw [span_le]
   rintro y ⟨n, hn, x, hx, hxy⟩
@@ -437,7 +451,7 @@ theorem generated_carrier_eq {S : Set A} (hS : S ⊆ I) :
     rfl
   · rw [le_iInf₂_iff]
     intro J hJ
-    apply generated_dpow_le hI S J
+    apply generatedDpow_le hI S J
     rcases hJ with hJI | hJS
     exacts [hJI ▸ hS, hJS]
 
