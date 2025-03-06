@@ -66,19 +66,6 @@ end Factorial
 
 section Injective
 
-
-/- /-- The family `ℕ → Ideal.span {(p : ℤ_[p])} → ℤ_[p]` given by `dpow n x = x ^ n / n!`. -/
-noncomputable def dpow : ℕ → ℤ_[p] → ℤ_[p] :=
-  fun n x ↦ if hx : x ∈ Ideal.span {(p : ℤ_[p])} then ⟨dpow' p n x, dpow'_int p n hx⟩ else 0
-
-private theorem dpow_mem {m : ℕ} {x : ℤ_[p]} (hm : m ≠ 0) (hx : x ∈ Ideal.span {↑p}) :
-    dpow p m x ∈ Ideal.span {↑p} := by
-  have hiff := PadicInt.norm_le_pow_iff_mem_span_pow (dpow p m x) 1
-  rw [pow_one] at hiff
-  rw [← hiff]
-  simp only [dpow, dif_pos hx, cast_one, zpow_neg_one]
-  exact dpow'_norm_le_of_ne_zero p hm hx -/
-
 open Function
 
 variable {A B : Type*} [CommSemiring A] [CommSemiring B]
@@ -86,29 +73,95 @@ variable {A B : Type*} [CommSemiring A] [CommSemiring B]
 
 noncomputable def dividedPowers_of_injective (f : A →+* B) (hf : Injective f)
     (hJ : DividedPowers J) (hIJ : I.map f = J)
-    (dpow_mem : ∀ {n : ℕ} {x : A} (hm : n ≠ 0) (hx : x ∈ I), f.toFun.invFun (hJ.dpow n (f x)) ∈ I) :
+    (hmem : ∀ (n : ℕ) {x : A} (_ : x ∈ I), ∃ (y : A) (_ : n ≠ 0 → y ∈ I), f y = hJ.dpow n (f x)) :
     DividedPowers I where
-      dpow n x := if hx : x ∈ I then f.toFun.invFun (hJ.dpow n (f x)) else 0
-      dpow_null hx := by
-        simp only [RingHom.toMonoidHom_eq_coe, OneHom.toFun_eq_coe, MonoidHom.toOneHom_coe,
-          MonoidHom.coe_coe, dif_neg hx]
-      dpow_zero hx := by
-        simp only [RingHom.toMonoidHom_eq_coe, OneHom.toFun_eq_coe, MonoidHom.toOneHom_coe,
-          MonoidHom.coe_coe, dif_pos hx]
-        sorry
-      dpow_one := sorry
-      dpow_mem hn hx := by simp only [dif_pos hx]; exact dpow_mem hn hx
-      dpow_add := sorry
-      dpow_mul := sorry
-      mul_dpow := sorry
-      dpow_comp := sorry
+  dpow n x := if hx : x ∈ I then f.toFun.invFun (hJ.dpow n (f x)) else 0
+  dpow_null hx := by
+    simp only [RingHom.toMonoidHom_eq_coe, OneHom.toFun_eq_coe, MonoidHom.toOneHom_coe,
+      MonoidHom.coe_coe, dif_neg hx]
+  dpow_zero {x} hx := by
+    simp only [RingHom.toMonoidHom_eq_coe, OneHom.toFun_eq_coe, MonoidHom.toOneHom_coe,
+      MonoidHom.coe_coe, dif_pos hx]
+    have h1 : f.toFun.invFun 1 = 1 := by
+      simp only [RingHom.toMonoidHom_eq_coe, OneHom.toFun_eq_coe, MonoidHom.toOneHom_coe,
+        MonoidHom.coe_coe, ← hf.eq_iff, map_one]
+      rw [invFun_eq ⟨1, map_one f⟩]
+    rw [← h1, hJ.dpow_zero (hIJ ▸ Ideal.mem_map_of_mem f hx)]
+    rfl
+  dpow_one hx := by
+    simp only [dif_pos hx]
+    obtain ⟨y, hy, h⟩ := hmem 1 hx
+    rw [hJ.dpow_one (hIJ ▸ Ideal.mem_map_of_mem f hx)] at h ⊢
+    simp [← h, Function.leftInverse_invFun hf y, hy]
+    exact hf h
+  dpow_mem {n x} hn hx := by
+    obtain ⟨y, hy, h⟩ := hmem n hx
+    simp only [dif_pos hx]
+    simp [← h, Function.leftInverse_invFun hf y, hy hn]
+  dpow_add {n x y} hx hy := by
+    have hxy : x + y ∈ I := Ideal.add_mem _ hx hy
+    simp only [RingHom.toMonoidHom_eq_coe, OneHom.toFun_eq_coe, MonoidHom.toOneHom_coe,
+      MonoidHom.coe_coe, dif_pos hxy, dif_pos hx, dif_pos hy]
+    rw [← hf.eq_iff, map_sum]
+    obtain ⟨a, ha, h⟩ := hmem n hxy
+    by_cases hn0 : n = 0
+    · simp only [hn0, Finset.antidiagonal_zero, Prod.mk_zero_zero, map_mul, Prod.snd_zero,
+      Finset.sum_singleton, Prod.fst_zero, hJ.dpow_zero (hIJ ▸ Ideal.mem_map_of_mem f hx),
+      invFun_eq ⟨1, map_one f⟩,  hJ.dpow_zero (hIJ ▸ Ideal.mem_map_of_mem f hy),
+      hJ.dpow_zero (hIJ ▸ Ideal.mem_map_of_mem f hxy), mul_one]
+    · rw [invFun_eq ⟨a, h⟩, map_add]
+      rw [hJ.dpow_add (hIJ ▸ Ideal.mem_map_of_mem f hx) (hIJ ▸ Ideal.mem_map_of_mem f hy)]
+      apply Finset.sum_congr rfl
+      intros m hm
+      rw [map_mul]
+      congr
+      · obtain ⟨ax, _, hax⟩ := hmem m.1 hx
+        rw [invFun_eq ⟨ax, hax⟩]
+      · obtain ⟨ay, _, hay⟩ := hmem m.2 hy
+        rw [invFun_eq ⟨ay, hay⟩]
+  dpow_mul {n a x} hx := by
+    have hax : a * x ∈ I := Ideal.mul_mem_left _ _ hx
+    obtain ⟨b, _, hb⟩ := hmem n hx
+    obtain ⟨c, _, hc⟩ := hmem n hax
+    simp only [RingHom.toMonoidHom_eq_coe, OneHom.toFun_eq_coe, MonoidHom.toOneHom_coe,
+      MonoidHom.coe_coe, dif_pos hax, dif_pos hx]
+    rw [← hf.eq_iff, map_mul f (a^n), invFun_eq ⟨b, hb⟩, invFun_eq ⟨c, hc⟩, map_mul,
+      hJ.dpow_mul (hIJ ▸ Ideal.mem_map_of_mem f hx), map_pow]
+  mul_dpow {m n x} hx := by
+    obtain ⟨a, _, ha⟩ := hmem m hx
+    obtain ⟨b, _, hb⟩ := hmem n hx
+    obtain ⟨c, _, hc⟩ := hmem (m + n) hx
+    simp only [RingHom.toMonoidHom_eq_coe, OneHom.toFun_eq_coe, MonoidHom.toOneHom_coe,
+      MonoidHom.coe_coe, dif_pos hx, ← hf.eq_iff, map_mul]
+    rw [invFun_eq ⟨a, ha⟩, invFun_eq ⟨b, hb⟩,  invFun_eq ⟨c, hc⟩,
+      hJ.mul_dpow (hIJ ▸ Ideal.mem_map_of_mem f hx), map_natCast]
+  dpow_comp {n m x} hm hx := by
+    obtain ⟨a, _, ha⟩ := hmem m hx
+    obtain ⟨b, _, hb⟩ := hmem (n * m) hx
+    have hc : f ((n.uniformBell m) * b) = (n.uniformBell m) * hJ.dpow (n * m) (f x) := by
+      simp [hb]
+    have hinv : invFun f.toFun (hJ.dpow m (f x)) ∈ I := by
+      obtain ⟨y, hy, h⟩ := hmem m hx
+      simp [← h, Function.leftInverse_invFun hf y, hy hm]
+    simp only [dif_pos hx, dif_pos hinv]
+    simp only [RingHom.toMonoidHom_eq_coe, OneHom.toFun_eq_coe, MonoidHom.toOneHom_coe,
+      MonoidHom.coe_coe]
+    rw [← hf.eq_iff, invFun_eq ⟨a, ha⟩, map_mul, invFun_eq ⟨b, hb⟩,
+      hJ.dpow_comp hm (hIJ ▸ Ideal.mem_map_of_mem f hx), map_natCast,
+      invFun_eq ⟨(n.uniformBell m) * b, hc⟩]
 
 end Injective
+
+#exit
 
 section Test
 
 variable [DecidablePred fun x ↦ x ∈ Ideal.span {(p : ℤ_[p])}]
   [DecidablePred fun x ↦ x ∈ Ideal.span {(p : ℚ_[p])}]
+
+/-- The family `ℕ → ℚ_[p] → ℚ_[p]` given by `dpow n x = x ^ n / n!`. -/
+private noncomputable def dpow' : ℕ → ℚ_[p] → ℚ_[p] := fun m x => inverse (m ! : ℚ_[p]) * x ^ m
+
 
 noncomputable def dividedPowers' : DividedPowers (Ideal.span {(p : ℤ_[p])}) := by
   apply dividedPowers_of_injective (Ideal.span {(p : ℤ_[p])}) (Ideal.span {(p : ℚ_[p])})
@@ -116,18 +169,21 @@ noncomputable def dividedPowers' : DividedPowers (Ideal.span {(p : ℤ_[p])}) :=
     (RatAlgebra.dividedPowers (Ideal.span {(p : ℚ_[p])}))
   · rw [Ideal.map_span, Set.image_singleton, map_natCast]
   · intro n x hn hx
-    have hx' : (Coe.ringHom x) ∈ Ideal.span {↑p} := sorry
+    have hx' : (Coe.ringHom x) ∈ Ideal.span {(p : ℚ_[p])} := sorry
+    refine ⟨⟨dpow' p n x, by sorry⟩, ?_, ?_⟩
+    sorry -- use dpow_mem below
 
-    sorry
+    simp only [RatAlgebra.dpow_apply, inverse_eq_inv', if_pos hx', dpow']
+    rfl
 
 end Test
 
 lemma foo : (Ideal.span {(p : ℤ_[p])}).map PadicInt.Coe.ringHom  = Ideal.span {(p : ℚ_[p])} := by
   rw [Ideal.map_span, Set.image_singleton, map_natCast]
 
-/-- The family `ℕ → ℚ_[p] → ℚ_[p]` given by `dpow n x = x ^ n / n!`. -/
+/- /-- The family `ℕ → ℚ_[p] → ℚ_[p]` given by `dpow n x = x ^ n / n!`. -/
 private noncomputable def dpow' : ℕ → ℚ_[p] → ℚ_[p] := fun m x => inverse (m ! : ℚ_[p]) * x ^ m
-
+ -/
 lemma dpow'_norm_le_of_ne_zero {n : ℕ} (hn : n ≠ 0) {x : ℤ_[p]}
     (hx : x ∈ Ideal.span {(p : ℤ_[p])}) : ‖dpow' p n x‖ ≤ (p : ℝ)⁻¹ := by
   unfold dpow'
