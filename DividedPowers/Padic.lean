@@ -30,13 +30,6 @@ open DividedPowers DividedPowers.OfInvertibleFactorial Nat Ring
 
 variable (p : ℕ) [hp : Fact p.Prime]
 
-/- Remarks :
-
-
-2/ What you do is taking the DP structure on `ℚ_p` and inducing it on `ℤ_p`
-because you know that `dpow_mem` will hold.
-This could be a general instance (for an injective ring morphism).
- -/
 section Factorial
 
 theorem sub_one_mul_padicValNat_factorial_lt_of_ne_zero {n : ℕ} (hn : n ≠ 0) :
@@ -152,31 +145,110 @@ noncomputable def dividedPowers_of_injective (f : A →+* B) (hf : Injective f)
 
 end Injective
 
-#exit
-
-section Test
-
-variable [DecidablePred fun x ↦ x ∈ Ideal.span {(p : ℤ_[p])}]
-  [DecidablePred fun x ↦ x ∈ Ideal.span {(p : ℚ_[p])}]
+section Padic
 
 /-- The family `ℕ → ℚ_[p] → ℚ_[p]` given by `dpow n x = x ^ n / n!`. -/
 private noncomputable def dpow' : ℕ → ℚ_[p] → ℚ_[p] := fun m x => inverse (m ! : ℚ_[p]) * x ^ m
 
+lemma dpow'_norm_le_of_ne_zero {n : ℕ} (hn : n ≠ 0) {x : ℤ_[p]}
+    (hx : x ∈ Ideal.span {(p : ℤ_[p])}) : ‖dpow' p n x‖ ≤ (p : ℝ)⁻¹ := by
+  unfold dpow'
+  by_cases hx0 : x = 0
+  · rw [hx0]
+    simp only [inverse_eq_inv', coe_zero, ne_eq, hn, not_false_eq_true, zero_pow, mul_zero,
+      norm_zero, inv_nonneg, cast_nonneg]
+  · have hlt : (padicValNat p n.factorial : ℤ) < n := by
+      exact_mod_cast padicValNat_factorial_lt_of_ne_zero p hn
+    have hnorm : 0 < ‖(n ! : ℚ_[p])‖ := by
+      simp only [norm_pos_iff, ne_eq, cast_eq_zero]
+      exact factorial_ne_zero n
+    rw [← zpow_neg_one, ← Nat.cast_one (R := ℤ)]
+    rw [Padic.norm_le_pow_iff_norm_lt_pow_add_one]
+    simp only [inverse_eq_inv', padicNormE.mul, norm_inv, _root_.norm_pow, padic_norm_e_of_padicInt,
+      cast_one, Int.reduceNeg, neg_add_cancel, zpow_zero]
+    rw [norm_eq_zpow_neg_valuation hx0, inv_mul_lt_one₀ hnorm, Padic.norm_eq_zpow_neg_valuation
+      (cast_ne_zero.mpr n.factorial_ne_zero), ← zpow_natCast, ← zpow_mul]
+    gcongr
+    · exact_mod_cast Nat.Prime.one_lt hp.elim
+    · simp only [neg_mul, Padic.valuation_natCast, neg_lt_neg_iff]
+      apply lt_of_lt_of_le hlt
+      conv_lhs => rw [← one_mul (n : ℤ)]
+      gcongr
+      norm_cast
+      rwa [← PadicInt.mem_span_pow_iff_le_valuation x hx0, pow_one]
 
-noncomputable def dividedPowers' : DividedPowers (Ideal.span {(p : ℤ_[p])}) := by
-  apply dividedPowers_of_injective (Ideal.span {(p : ℤ_[p])}) (Ideal.span {(p : ℚ_[p])})
+lemma dpow'_int (n : ℕ) {x : ℤ_[p]} (hx : x ∈ Ideal.span {(p : ℤ_[p])}) :
+    ‖dpow' p n x‖ ≤ 1 := by
+  unfold dpow'
+  by_cases hn : n = 0
+  · simp only [hn, factorial_zero, cast_one, inverse_one, pow_zero, mul_one, norm_one, le_refl]
+  · apply le_trans (dpow'_norm_le_of_ne_zero p hn hx)
+    rw [← zpow_neg_one, ← zpow_zero ↑p]
+    gcongr
+    · exact_mod_cast Nat.Prime.one_le hp.elim
+    · norm_num
+
+lemma Coe.ringHom_apply (x : ℤ_[p]) : Coe.ringHom x = (x : ℚ_[p]) := rfl
+
+lemma coe_sum {α : Type*} (s : Finset α) (f : α → ℤ_[p]) :
+    (((∑ z ∈ s, f z) : ℤ_[p]) : ℚ_[p]) = ∑ z ∈ s, (f z : ℚ_[p]) := by
+  simp only [← Coe.ringHom_apply, map_sum PadicInt.Coe.ringHom f s]
+
+lemma coe_mem_ideal_span {x y : ℤ_[p]} (h : x ∈ Ideal.span {y}) :
+    (x : ℚ_[p]) ∈ Ideal.span {↑y} := by
+  simp only [Ideal.mem_span_singleton, dvd_iff_exists_eq_mul_left] at h ⊢
+  obtain ⟨c, hc⟩ := h
+  use c
+  rw [hc, coe_mul]
+
+private theorem dpow_mem {n : ℕ} {x : ℤ_[p]} (hm : n ≠ 0) (hx : x ∈ Ideal.span {↑p}) :
+    ⟨dpow' p n x, dpow'_int p n hx⟩ ∈ Ideal.span {(p : ℤ_[p])} := by
+  have hiff := PadicInt.norm_le_pow_iff_mem_span_pow ⟨dpow' p n x, dpow'_int p n hx⟩ 1
+  rw [pow_one] at hiff
+  rw [← hiff]
+  simp only [dif_pos hx, cast_one, zpow_neg_one]
+  exact dpow'_norm_le_of_ne_zero p hm hx
+
+variable [DecidablePred fun x ↦ x ∈ Ideal.span {(p : ℤ_[p])}]
+  [DecidablePred fun x ↦ x ∈ Ideal.span {(p : ℚ_[p])}]
+
+/-- The family `ℕ → Ideal.span {(p : ℤ_[p])} → ℤ_[p]` given by `dpow n x = x ^ n / n!` is a
+  divided power structure on the `ℤ_[p]`-ideal `(p)`. -/
+noncomputable def dividedPowers : DividedPowers (Ideal.span {(p : ℤ_[p])}) := by
+  refine dividedPowers_of_injective (Ideal.span {(p : ℤ_[p])}) (Ideal.span {(p : ℚ_[p])})
     PadicInt.Coe.ringHom ((Set.injective_codRestrict Subtype.property).mp fun ⦃a₁ a₂⦄ a ↦ a)
-    (RatAlgebra.dividedPowers (Ideal.span {(p : ℚ_[p])}))
+    (RatAlgebra.dividedPowers (Ideal.span {(p : ℚ_[p])})) ?_ ?_
   · rw [Ideal.map_span, Set.image_singleton, map_natCast]
-  · intro n x hn hx
-    have hx' : (Coe.ringHom x) ∈ Ideal.span {(p : ℚ_[p])} := sorry
-    refine ⟨⟨dpow' p n x, by sorry⟩, ?_, ?_⟩
-    sorry -- use dpow_mem below
+  · intro n x hx
+    have hx' : (x : ℚ_[p]) ∈ Ideal.span {(p : ℚ_[p])} := by
+     exact_mod_cast coe_mem_ideal_span p hx
+    exact ⟨⟨dpow' p n x, dpow'_int p n hx⟩, fun hn ↦ dpow_mem p hn hx, by
+      simp only [RatAlgebra.dpow_apply, inverse_eq_inv', if_pos hx', dpow', Coe.ringHom_apply]⟩
 
-    simp only [RatAlgebra.dpow_apply, inverse_eq_inv', if_pos hx', dpow']
-    rfl
+open Function
 
-end Test
+lemma dividedPowers_eq (n : ℕ) (x : ℤ_[p]) :
+    (dividedPowers p).dpow n x =
+      if hx : x ∈ Ideal.span {(p : ℤ_[p])} then ⟨dpow' p n x, dpow'_int p n hx⟩ else 0 := by
+  simp only [dividedPowers, dividedPowers_of_injective]
+  split_ifs with hx
+  · have hinj : Injective (PadicInt.Coe.ringHom (p := p)) :=
+      (Set.injective_codRestrict Subtype.property).mp fun ⦃a₁ a₂⦄ a ↦ a
+    have hx' : (Coe.ringHom x) ∈ Ideal.span {(p : ℚ_[p])} := by
+     exact_mod_cast coe_mem_ideal_span p hx
+    have heq : Coe.ringHom ⟨dpow' p n x, dpow'_int p n hx⟩ =
+        inverse (n ! : ℚ_[p]) * Coe.ringHom x ^ n := by
+      simp [dpow', inverse_eq_inv', Coe.ringHom_apply]
+    rw [← hinj.eq_iff, RatAlgebra.dpow_apply, if_pos hx', ← heq]
+    simp only [RingHom.toMonoidHom_eq_coe, OneHom.toFun_eq_coe, MonoidHom.toOneHom_coe,
+      MonoidHom.coe_coe]
+    rw [apply_invFun_apply (f := Coe.ringHom)]
+  · rfl
+
+
+end Padic
+
+#exit
 
 lemma foo : (Ideal.span {(p : ℤ_[p])}).map PadicInt.Coe.ringHom  = Ideal.span {(p : ℚ_[p])} := by
   rw [Ideal.map_span, Set.image_singleton, map_natCast]
@@ -235,9 +307,7 @@ variable {p}
 lemma coeRingHom_apply (x : ℤ_[p]) :
   PadicInt.Coe.ringHom x = ↑x := rfl
 
-lemma coe_sum {α : Type*} (s : Finset α) (f : α → ℤ_[p]) :
-    (((∑ z ∈ s, f z) : ℤ_[p]) : ℚ_[p]) = ∑ z ∈ s, (f z : ℚ_[p]) := by
-  simp only [← coeRingHom_apply, map_sum PadicInt.Coe.ringHom f s]
+
 
 variable (p) [DecidablePred fun x ↦ x ∈ Ideal.span {(p : ℤ_[p])}]
 
