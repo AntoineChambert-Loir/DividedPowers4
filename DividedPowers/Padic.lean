@@ -219,20 +219,22 @@ private theorem dpow_mem {n : ℕ} {x : ℤ_[p]} (hm : n ≠ 0) (hx : x ∈ Idea
   exact dpow'_norm_le_of_ne_zero p hm hx
 
 variable [DecidablePred fun x ↦ x ∈ Ideal.span {(p : ℤ_[p])}]
-  [DecidablePred fun x ↦ x ∈ Ideal.span {(p : ℚ_[p])}]
+  [DecidablePred fun x ↦ x ∈ (⊤ : Ideal ℚ_[p])]
 
 /-- The family `ℕ → Ideal.span {(p : ℤ_[p])} → ℤ_[p]` given by `dpow n x = x ^ n / n!` is a
   divided power structure on the `ℤ_[p]`-ideal `(p)`. -/
 noncomputable def dividedPowers : DividedPowers (Ideal.span {(p : ℤ_[p])}) := by
-  refine dividedPowers_of_injective (Ideal.span {(p : ℤ_[p])}) (Ideal.span {(p : ℚ_[p])})
+  refine dividedPowers_of_injective (Ideal.span {(p : ℤ_[p])}) (⊤)
     PadicInt.Coe.ringHom ((Set.injective_codRestrict Subtype.property).mp fun ⦃a₁ a₂⦄ a ↦ a)
-    (RatAlgebra.dividedPowers (Ideal.span {(p : ℚ_[p])})) ?_ ?_
+    (RatAlgebra.dividedPowers (⊤ : Ideal ℚ_[p])) ?_ ?_
   · rw [Ideal.map_span, Set.image_singleton, map_natCast]
+    simp only [Ideal.span_singleton_eq_top, isUnit_iff_ne_zero, ne_eq, cast_eq_zero]
+    exact Nat.Prime.ne_zero hp.elim
   · intro n x hx
-    have hx' : (x : ℚ_[p]) ∈ Ideal.span {(p : ℚ_[p])} := by
-     exact_mod_cast coe_mem_ideal_span p hx
+    have hx' : (x : ℚ_[p]) ∈ (⊤ : Ideal ℚ_[p]) := trivial
     exact ⟨⟨dpow' p n x, dpow'_int p n hx⟩, fun hn ↦ dpow_mem p hn hx, by
-      simp only [RatAlgebra.dpow_apply, inverse_eq_inv', if_pos hx', dpow', Coe.ringHom_apply]⟩
+      simp only [dpow', inverse_eq_inv', Coe.ringHom_apply, RatAlgebra.dpow_apply,
+        Submodule.mem_top, ↓reduceIte]⟩
 
 open Function
 
@@ -248,10 +250,11 @@ lemma dividedPowers_eq (n : ℕ) (x : ℤ_[p]) :
     have heq : Coe.ringHom ⟨dpow' p n x, dpow'_int p n hx⟩ =
         inverse (n ! : ℚ_[p]) * Coe.ringHom x ^ n := by
       simp [dpow', inverse_eq_inv', Coe.ringHom_apply]
-    rw [← hinj.eq_iff, RatAlgebra.dpow_apply, if_pos hx', ← heq]
+    rw [← hinj.eq_iff, RatAlgebra.dpow_apply, if_pos (by trivial), ← heq]
     simp only [RingHom.toMonoidHom_eq_coe, OneHom.toFun_eq_coe, MonoidHom.toOneHom_coe,
       MonoidHom.coe_coe]
     rw [apply_invFun_apply (f := Coe.ringHom)]
   · rfl
+
 
 end Padic
