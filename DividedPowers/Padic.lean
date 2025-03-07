@@ -203,13 +203,6 @@ lemma coe_sum {α : Type*} (s : Finset α) (f : α → ℤ_[p]) :
     (((∑ z ∈ s, f z) : ℤ_[p]) : ℚ_[p]) = ∑ z ∈ s, (f z : ℚ_[p]) := by
   simp only [← Coe.ringHom_apply, map_sum PadicInt.Coe.ringHom f s]
 
-lemma coe_mem_ideal_span {x y : ℤ_[p]} (h : x ∈ Ideal.span {y}) :
-    (x : ℚ_[p]) ∈ Ideal.span {↑y} := by
-  simp only [Ideal.mem_span_singleton, dvd_iff_exists_eq_mul_left] at h ⊢
-  obtain ⟨c, hc⟩ := h
-  use c
-  rw [hc, coe_mul]
-
 private theorem dpow_mem {n : ℕ} {x : ℤ_[p]} (hm : n ≠ 0) (hx : x ∈ Ideal.span {↑p}) :
     ⟨dpow' p n x, dpow'_int p n hx⟩ ∈ Ideal.span {(p : ℤ_[p])} := by
   have hiff := PadicInt.norm_le_pow_iff_mem_span_pow ⟨dpow' p n x, dpow'_int p n hx⟩ 1
@@ -245,8 +238,6 @@ lemma dividedPowers_eq (n : ℕ) (x : ℤ_[p]) :
   split_ifs with hx
   · have hinj : Injective (PadicInt.Coe.ringHom (p := p)) :=
       (Set.injective_codRestrict Subtype.property).mp fun ⦃a₁ a₂⦄ a ↦ a
-    have hx' : (Coe.ringHom x) ∈ Ideal.span {(p : ℚ_[p])} := by
-     exact_mod_cast coe_mem_ideal_span p hx
     have heq : Coe.ringHom ⟨dpow' p n x, dpow'_int p n hx⟩ =
         inverse (n ! : ℚ_[p]) * Coe.ringHom x ^ n := by
       simp [dpow', inverse_eq_inv', Coe.ringHom_apply]
