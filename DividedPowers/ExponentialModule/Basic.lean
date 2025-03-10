@@ -23,10 +23,13 @@ indeterminates. It is an abelian group under multiplication, and an `R`-module u
 * `PowerSeries.ExponentialModule.linearMap`: for an `A`-algebra map `f : R →ₐ[A] S`, we define
   the induced `linearMap f : ExponentialModule R →ₗ[A] ExponentialModule S`.
 
-## TODO - DONE
+## Main Results
 
-* Prove that the inverse of a power series of exponential type is exponential,
-the inverse being given by `f (-X)`.
+* `PowerSeries.IsExponential.neg` : if `f : R⟦X⟧` is an exponential power series, then the power
+  series `f(-X)` is exponential.
+
+* `PowerSeries.IsExponential.invOfUnit_eq_rescale_neg_one` : if `f : R⟦X⟧`, then the inverse of `f`
+  is equal to the power series `f(-X)`.
 
 -/
 
@@ -417,37 +420,29 @@ noncomputable instance instModule : Module A (ExponentialModule R) where
     simp only [toAdditive_smul_coe', map_zero, rescale_zero, toMul_val_eq_coe, RingHom.coe_comp,
       Function.comp_apply, hf, map_one, toMul_zero]
 
--- TODO: continue from here.
-
 lemma coe_add (f g : ExponentialModule R) : (↑(f + g) : R⟦X⟧) = ↑f * ↑g := by
   simp only [toPowerSeries, AddSubmonoid.coe_add, toMul_add]
 
 lemma coe_smul (r : A) (f : ExponentialModule R) :
-    ((r • f) : ExponentialModule R) = rescale (algebraMap A R r) (f : R⟦X⟧) :=
-  rfl
+    ((r • f) : ExponentialModule R) = rescale (algebraMap A R r) (f : R⟦X⟧) := rfl
 
-noncomputable instance : AddCommGroup (ExponentialModule R) where
+noncomputable instance instAddCommGroup : AddCommGroup (ExponentialModule R) where
   neg f := (-1 : ℤ) • f
   zsmul n f := n • f
   zsmul_zero' f := by simp [← Subtype.coe_inj]
   zsmul_succ' n f := by
     simp only [succ_eq_add_one, Int.ofNat_eq_coe, cast_add, cast_one, ← Subtype.coe_inj,
       AddSubmonoid.coe_add, add_smul, one_smul, AddSubmonoid.coe_add]
-  zsmul_neg' n f := by
-    dsimp only
-    rw [Int.negSucc_eq]
-    rw [← smul_assoc]
-    simp
+  zsmul_neg' n f := by simp [Int.negSucc_eq, ← smul_assoc]
   neg_add_cancel f := by
     rw [← Subtype.coe_inj]
     apply Additive.toMul.injective
     simp only [toPowerSeries, AddSubmonoid.coe_add, toMul_add]
-    convert isExponential_neg_mul_self_eq_one f.2 using 2
+    rw [ZeroMemClass.coe_zero, toMul_zero, ← f.2.neg_mul_self_eq_one]
     simp [coe_smul]
   add_comm f g := add_comm f g
 
-instance instIsScalarTower
-    (R : Type*) [CommRing R] (S : Type*) [CommRing S] [Algebra R S]
+instance instIsScalarTower (R : Type*) [CommRing R] (S : Type*) [CommRing S] [Algebra R S]
     (A : Type*) [CommRing A] [Algebra R A] [Algebra S A] [IsScalarTower R S A] :
     IsScalarTower R S (ExponentialModule A) where
   smul_assoc r s f := by
@@ -456,26 +451,23 @@ instance instIsScalarTower
     rw [← algebraMap_smul S, smul_eq_mul, map_mul, ← rescale_rescale_apply]
     apply congr_fun
     ext f n
-    simp only [coeff_rescale, ← map_pow, algebraMap_smul, map_pow]
-    simp only [IsScalarTower.algebraMap_eq R S A, RingHom.coe_comp, Function.comp_apply]
-
+    simp [IsScalarTower.algebraMap_eq R S A, RingHom.coe_comp, Function.comp_apply]
 
 lemma coe_ofMul (f : R⟦X⟧) (hf : IsExponential f) :
     ↑(⟨ofMul f, hf⟩ : ExponentialModule R) = f := rfl
 
-lemma isExponential_coe (f : ExponentialModule R) :
-    IsExponential (f : R⟦X⟧) := f.prop
+lemma isExponential_coe (f : ExponentialModule R) : IsExponential (f : R⟦X⟧) := f.prop
 
-lemma constantCoeff_coe (f : ExponentialModule R) :
-    constantCoeff R (f : R⟦X⟧) = 1 := f.prop.constantCoeff
+lemma constantCoeff_coe (f : ExponentialModule R) : constantCoeff R (f : R⟦X⟧) = 1 :=
+  f.prop.constantCoeff
 
-lemma add_mul_coe (f : ExponentialModule R) :
+lemma subst_add_coe_eq_mul (f : ExponentialModule R) :
     subst (S := R) (X₀ + X₁) (f : R⟦X⟧) = (subst X₀ (f : R⟦X⟧)) * (subst X₁ (f : R⟦X⟧)) :=
   f.prop.add_mul
 
-lemma add_mul_coe' (f : ExponentialModule R) (p q : ℕ) :
+lemma choose_mul_coeff_add_eq (f : ExponentialModule R) (p q : ℕ) :
     (p + q).choose p * (coeff R (p + q) (f : R⟦X⟧)) = coeff R p f * coeff R q f :=
-  (subst_add_eq_mul_iff (R := R) f).mp (add_mul_coe f) p q
+  (subst_add_eq_mul_iff (R := R) f).mp (subst_add_coe_eq_mul f) p q
 
 variable {S : Type*} [CommRing S] [Algebra A S] (φ : R →ₐ[A] S)
 
@@ -485,98 +477,16 @@ def linearMap : ExponentialModule R →ₗ[A] ExponentialModule S where
   toFun := fun f ↦
     ⟨ofMul (PowerSeries.map φ (f : R⟦X⟧)), by
       simp [mem_exponentialModule_iff]
-      exact isExponential_map (φ  : R →+* S) f.prop⟩
+      exact f.prop.map (φ  : R →+* S)⟩
   map_add' := fun f g ↦ by
     apply coe_injective
-    simp only [coe_add, map_mul, ofMul_mul]
-    rfl
+    simp [coe_add, map_mul, ofMul_mul, AddSubmonoid.mk_add_mk]
   map_smul' := fun a f ↦ by
     apply coe_injective
-    simp only [coe_smul, RingHom.id_apply, coe_ofMul]
-    rw [rescale_map_eq_map_rescale]
+    simp only [coe_smul, RingHom.id_apply, coe_ofMul, rescale_map_eq_map_rescale]
 
 theorem coeff_linearMap (n : ℕ) (f : ExponentialModule R) :
     coeff S n (linearMap φ f) = φ (coeff R n f) := rfl
-
-theorem coeff_neg_X_pow (n d : ℕ) :
-    (coeff R n) ((-X) ^ d) = if n = d then (if Even n then 1 else -1) else 0 := by
-  have : -X = (C R (-(1 : R))) * X := by simp only [map_neg, map_one, neg_mul, one_mul]
-  have heq : ∑ p ∈ antidiagonal n, (coeff R p.1) ((C R) (-1) ^ d) * (coeff R p.2) (X ^ d) =
-      (coeff R 0) ((C R) (-1) ^ d) * (coeff R n) (X ^ d) := by
-    rw [Finset.sum_eq_single (0, n)]
-    · intro p hpin hpne
-      have hp1 : p.1 ≠ 0 := by
-        intro h
-        rw [mem_antidiagonal, h, zero_add] at hpin
-        apply hpne
-        ext
-        exacts [h, hpin]
-      have hC : ((C R) (-1) ^ d) = (C R ((-1) ^d)) := by simp only [map_neg, map_one, map_pow]
-      rw [hC, coeff_C, if_neg hp1, zero_mul]
-    · intro hnin
-      have hin : (0, n) ∈ antidiagonal n  :=  by simp only [mem_antidiagonal, zero_add]
-      exact absurd hin hnin
-  rw [this, mul_pow, coeff_mul, heq]
-  simp only [map_neg, map_one, coeff_zero_eq_constantCoeff, map_pow, constantCoeff_one]
-  rw [coeff_X_pow]
-  split_ifs with hd hn
-  · rw [← hd, mul_one, neg_one_pow_eq_pow_mod_two, even_iff.mp hn, pow_zero]
-  · rw [← hd, mul_one, neg_one_pow_eq_pow_mod_two, not_even_iff.mp hn, pow_one]
-  · rw [mul_zero]
-
-lemma substDomain_neg_X : SubstDomain (S := R) (-X) := by
-  have hcoeff' : (MvPowerSeries.constantCoeff Unit R) (-X) =
-      (PowerSeries.constantCoeff R) (-X) := by rw [constantCoeff]
-  exact substDomain_of_constantCoeff_zero (by simp [hcoeff', constantCoeff_X])
-
-open MvPowerSeries.WithPiTopology in
-lemma coeff_subst_neg_X (f : R⟦X⟧) (n : ℕ) :
-    (coeff R n) (subst (-X) f) = if Even n then (coeff R n) f else - ((coeff R n) f ) := by
-  letI : UniformSpace R := ⊥
-  erw [subst, coeff_subst substDomain_neg_X]
-  have hcoeff : ∀ (d : ℕ), (MvPowerSeries.coeff R (single () n)) ((-X) ^ d) =
-    (PowerSeries.coeff R n) ((-X) ^ d) := fun d ↦ by rw [coeff]
-  have hn : ∀ (d : ℕ), d ≠ n →
-      (coeff R d) f • (MvPowerSeries.coeff R (single () n)) ((-X) ^ d) = 0 := by
-    intro d hd
-    rw [hcoeff, coeff_neg_X_pow, if_neg hd.symm, smul_zero]
-  erw [finsum_eq_single _ _ hn, coeff_neg_X_pow n n, smul_eq_mul]
-  split_ifs with hn
-  · rw [mul_one]
-  · ring
-  · exact absurd rfl hn
-  · exact absurd rfl hn
-
-lemma isExponential_inv {f : R⟦X⟧} (hf : IsExponential f) :
-    IsExponential (f.subst (-PowerSeries.X (R := R))) := by
-  simp only [isExponential_iff] at hf ⊢
-  have hf1 := hf.1
-  have hf2 := hf.2
-  constructor
-  · intros m n
-    specialize hf1 m n
-    simp [coeff_subst_neg_X]
-    split_ifs with h
-    · exact hf1
-    · exfalso; rw [even_add] at h;  tauto
-    · exfalso; rw [even_add] at h;  tauto
-    · rw [neg_neg, hf1]
-    · exfalso; rw [even_add] at h;  tauto
-    · rw [hf1]
-    · rw [hf1]
-    · exfalso; rw [even_add] at h;  tauto
-  · rw [constantCoeff, constantCoeff_subst substDomain_neg_X]
-    have hC : (MvPowerSeries.constantCoeff Unit R) X =
-      PowerSeries.constantCoeff R PowerSeries.X := by rw [constantCoeff]
-    have h0 : ∀ (d : ℕ), d ≠ 0 →
-        (coeff R d) f • (MvPowerSeries.constantCoeff Unit R) ((-X) ^ d) = 0 := by
-      intros d hd
-      rw [map_pow, map_neg, hC, PowerSeries.constantCoeff_X]
-      simp [neg_zero, zero_pow hd, smul_eq_mul, mul_zero]
-    rw [finsum_eq_single _ _ h0]
-    simp only [coeff_zero_eq_constantCoeff, hf2, pow_zero, MvPowerSeries.constantCoeff_one,
-      smul_eq_mul, mul_one]
-
 
 end ExponentialModule
 
