@@ -10,14 +10,13 @@ import DividedPowers.DPAlgebra.Graded.GradeOne
 import DividedPowers.DPAlgebra.Graded.GradeZero
 import DividedPowers.DPAlgebra.Init
 import DividedPowers.DPAlgebra.Misc
-import DividedPowers.DPAlgebra.PolynomialMap -- It uses sorry
+import DividedPowers.DPAlgebra.PolynomialLaw -- It uses sorry
 import DividedPowers.DPAlgebra.RobyLemma9
 import DividedPowers.DPMorphism --In PR #22318
 import DividedPowers.ExponentialModule.Basic
 import DividedPowers.Exponential
 import DividedPowers.ForMathlib.AlgebraLemmas -- In PR #22237, #22239 and #22240.
 --import DividedPowers.ForMathlib.Bell -- -- In PR #15644
-import DividedPowers.ForMathlib.DirectLimit
 import DividedPowers.ForMathlib.GradedBaseChange
 import DividedPowers.ForMathlib.GradedRingQuot
 --import DividedPowers.ForMathlib.InfiniteSum.Basic -- In mathlib
@@ -46,8 +45,8 @@ import DividedPowers.IdealAdd
 --import DividedPowers.IdealAdd2 --NOTE: we cannot import this because it
 -- duplicates lemmas from IdealAdd. We should pick a version.
 import DividedPowers.Padic
-import DividedPowers.PolynomialMap.Basic
-import DividedPowers.PolynomialMap.Coeff
-import DividedPowers.PolynomialMap.Homogeneous -- It has a sorry
+import DividedPowers.PolynomialLaw.Basic
+import DividedPowers.PolynomialLaw.Coeff
+import DividedPowers.PolynomialLaw.Homogeneous -- It has a sorry
 import DividedPowers.RatAlgebra -- In PR #22322
 import DividedPowers.SubDPIdeal

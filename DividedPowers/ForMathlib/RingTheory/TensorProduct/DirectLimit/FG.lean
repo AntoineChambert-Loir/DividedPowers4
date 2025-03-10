@@ -2,6 +2,9 @@ import Mathlib.LinearAlgebra.TensorProduct.DirectLimit
 import Mathlib.LinearAlgebra.TensorProduct.Tower
 import Mathlib.RingTheory.Adjoin.FG
 import Mathlib.Algebra.Equiv.TransferInstance
+import Mathlib.LinearAlgebra.TensorProduct.RightExactness
+import Mathlib.RingTheory.FiniteType
+import Mathlib.RingTheory.Ideal.Quotient.Operations
 
 import Mathlib.Algebra.DirectSum.Internal
 
@@ -52,22 +55,6 @@ theorem Fintype.linearCombination'_range {α : Type*} [Fintype α] [DecidableEq 
     rw [Pi.single]
     simp [Function.update]
 
--- [Mathlib.RingTheory.Finiteness.Defs]
-theorem Submodule.FG.small [Small.{v} R] (P : Submodule R M) (hP : P.FG) : Small.{v} P := by
-  rw [Submodule.fg_iff_exists_fin_generating_family] at hP
-  obtain ⟨n, s, rfl⟩ := hP
-  rw [← Fintype.linearCombination'_range s]
-  apply small_range
-
-theorem Submodule.bot_small : Small.{v} (⊥ : Submodule R M) := by
-  let f : Unit → (⊥ : Submodule R M) := fun _ ↦ 0
-  have : Small.{v} Unit := small_lift Unit
-  apply small_of_surjective (f := f)
-  rintro ⟨x, hx⟩
-  simp only [mem_bot] at hx
-  use default
-  simp [← Subtype.coe_inj, f, hx]
-
 -- [Mathlib.RingTheory.Adjoin.FG]
 theorem Subalgebra.FG.sup {R S : Type*} [CommSemiring R] [Semiring S] [Algebra R S]
     {A A' : Subalgebra R S} (hA : Subalgebra.FG A) (hA' : Subalgebra.FG A') :
@@ -108,84 +95,6 @@ noncomputable def Submodules_fg_equiv [DecidableEq {P : Submodule R M // P.FG}] 
           ⟨Submodule.span R {x}, Submodule.fg_span_singleton x⟩
           ⟨x, Submodule.mem_span_singleton_self x⟩,
          by simp⟩⟩
-
--- The directed system of small submodules of `M`
-def DirectedSystem.Submodules_small :
-    DirectedSystem (ι := {P : Submodule R M // Small.{v} P}) (F := fun P ↦ P.val)
-    (f := fun ⦃P Q⦄ (h : P ≤ Q) ↦ Submodule.inclusion h) where
-  map_self := fun _ _ ↦ rfl
-  map_map  := fun _ _ _ _ _ _ ↦ rfl
-
---[Mathlib.RingTheory.Finiteness.Basic, Mathlib.LinearAlgebra.Quotient.Basic]
-theorem Submodule.small_sup {P Q : Submodule R M} (_ : Small.{v} P) (_ : Small.{v} Q) :
-    Small.{v} (P ⊔ Q : Submodule R M) := by
-  rw [Submodule.sup_eq_range]
-  exact small_range _
-
-theorem small_finset {ι : Type*} [Small.{v} ι] : Small.{v} (Finset ι) :=
-  small_of_injective (f := Finset.toSet) Finset.coe_injective
-
-theorem Submodule.small_directSum
-    {ι : Type*} {P : ι → Submodule R M} [Small.{v} ι] [∀ i, Small.{v} (P i)] :
-    Small.{v} (Π₀ (i : ι), ↥(P i)) := by
-  classical
-  have : Small.{v} (Finset ι) := small_finset
-  have (s : Finset ι) : Small.{v} (Π (i : s), P i) := small_Pi _
-  let h : (Σ (s : Finset ι), (Π i : s, P i)) → Π₀ i, P i := fun sf ↦ by
-    exact {
-      toFun (i : ι) := if h : i ∈ sf.1.val then sf.2 ⟨i, h⟩ else 0
-      support' := Trunc.mk ⟨sf.1.val, fun i ↦ by
-        simp only [Finset.mem_val, dite_eq_right_iff]
-        by_cases hi : i ∈ sf.1
-        · exact Or.inl hi
-        · apply Or.inr fun h ↦ False.elim (hi h)⟩}
-  apply small_of_surjective (f := h)
-  intro m
-  use ⟨m.support, fun i ↦ m i⟩
-  ext i
-  simp only [Finset.mem_val, DFinsupp.mem_support_toFun, ne_eq, dite_eq_ite, DFinsupp.coe_mk',
-    ite_not, SetLike.coe_eq_coe, ite_eq_right_iff, h]
-  simp only [eq_comm, imp_self, h]
-
-theorem Submodule.small_iSup
-    {ι : Type*} {P : ι → Submodule R M} (_ : Small.{v} ι) (_ : ∀ i, Small.{v} (P i)) :
-    Small.{v} (iSup P : Submodule R M) := by
-  classical
-  rw [Submodule.iSup_eq_range_dfinsupp_lsum]
-  have : Small.{v} (Π₀ (i : ι), ↥(P i)) := Submodule.small_directSum
-  apply small_range
-
-instance : SemilatticeSup {P : Submodule R M // Small.{v} P} where
-  sup := fun P Q ↦ ⟨P.val ⊔ Q.val, Submodule.small_sup P.property Q.property⟩
-  le_sup_left := fun P Q ↦ by rw [← Subtype.coe_le_coe]; exact le_sup_left
-  le_sup_right := fun P Q ↦ by rw [← Subtype.coe_le_coe]; exact le_sup_right
-  sup_le := fun _ _ _ hPR hQR ↦ by
-    rw [← Subtype.coe_le_coe] at hPR hQR ⊢
-    exact sup_le hPR hQR
-
-instance : Inhabited {P : Submodule R M // Small.{v} P} where
-  default := ⟨⊥, by
-    let f : Unit → (⊥ : Submodule R M) := fun _ ↦ 0
-    have : Small.{v} Unit := small_lift Unit
-    apply small_of_surjective (f := f)
-    rintro ⟨x, hx⟩
-    simp only [mem_bot] at hx
-    use default
-    simp [← Subtype.coe_inj, f, hx]⟩
-
-variable (R M) in
-/-- Any module is the direct limit of its finitely generated submodules -/
-noncomputable def Submodules_small_equiv
-    [Small.{v} R] [DecidableEq {P : Submodule R M // Small.{v} P}] :
-    Module.DirectLimit (ι := {P : Submodule R M // Small.{v} P})
-      (G := fun P ↦ P.val)
-      (fun ⦃P Q⦄ (h : P ≤ Q) ↦ Submodule.inclusion h) ≃ₗ[R] M :=
-  LinearEquiv.ofBijective
-    (Module.DirectLimit.lift _ _ _ _ (fun P ↦ P.val.subtype) (fun _ _ _ _ ↦ rfl))
-    ⟨Module.DirectLimit.lift_injective _ _ (fun P ↦ Submodule.injective_subtype P.val),
-      fun x ↦ ⟨Module.DirectLimit.of _ {P : Submodule R M // Small.{v} P} _ _
-          ⟨Submodule.span R {x}, Submodule.FG.small _ (fg_span_singleton x)⟩
-          ⟨x, Submodule.mem_span_singleton_self x⟩, by simp⟩⟩
 
 end Semiring
 
@@ -351,14 +260,6 @@ theorem TensorProduct.eq_of_fg_of_subtype_eq'
   use Q, le_trans le_sup_left hQ_le, le_trans le_sup_right hQ_le, hQ
   simpa [← LinearMap.comp_apply, ← LinearMap.rTensor_comp] using h
 
-/-- A tensor product `M ⊗[R] N` is the direct limit of the modules `P ⊗[R] N`,
-where `P` ranges over all small submodules of `M`. -/
-noncomputable def rTensor_small_equiv
-    [Small.{v} R]  [DecidableEq {P : Submodule R M // Small.{v} P}] :
-    Module.DirectLimit (R := R) (ι := {P : Submodule R M // Small.{v} P}) (fun P ↦ P.val ⊗[R] N)
-      (fun ⦃P Q⦄ (h : P ≤ Q)  ↦ (Submodule.inclusion h).rTensor N) ≃ₗ[R] M ⊗[R] N :=
-  (TensorProduct.directLimitLeft _ N).symm.trans ((Submodules_small_equiv R M).rTensor N)
-
 end TensorProducts
 
 section Algebra
@@ -455,6 +356,36 @@ theorem TensorProduct.Algebra.eq_of_fg_of_subtype_eq'
     (Subalgebra.FG.sup hA hA') _ _ h
   use B, le_trans le_sup_left hB_le, le_trans le_sup_right hB_le, hB
   simpa only [← LinearMap.rTensor_comp, ← LinearMap.comp_apply] using h
+
+-- [Mathlib.RingTheory.TensorProduct.Basic]
+theorem LinearMap.rTensor_comp_baseChange_comm_apply
+    {R : Type*} [CommRing R] {M N : Type*} [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
+    {S : Type*} [CommRing S] [Algebra R S]
+    {S' : Type*} [CommRing S'] [Algebra R S']
+    (φ : S →ₐ[R] S') (t : S ⊗[R] M) (f : M →ₗ[R] N) :
+    (φ.toLinearMap.rTensor N) (f.baseChange S t)  =
+      (f.baseChange S') (φ.toLinearMap.rTensor M t) := by
+  simp [LinearMap.baseChange_eq_ltensor, ← LinearMap.comp_apply, ← TensorProduct.map_comp]
+
+/-- Lift an element that maps to 0 -/
+theorem Submodule.exists_fg_of_baseChange_eq_zero
+    {R S M N : Type*} [CommRing R] [CommRing S] [Algebra R S] [AddCommGroup M] [AddCommGroup N] [Module R M] [Module R N]
+    (f : M →ₗ[R] N) (t : S ⊗[R] M) (ht : f.baseChange S t = 0) :
+    ∃ (A : Subalgebra R S) (_ : A.FG) (u : A ⊗[R] M),
+      f.baseChange A u = 0 ∧ A.val.toLinearMap.rTensor M u = t := by
+  classical
+  obtain ⟨A, hA, ht_memA⟩ := TensorProduct.Algebra.exists_of_fg t
+  obtain ⟨u, hu⟩ := _root_.id ht_memA
+  have := TensorProduct.Algebra.eq_of_fg_of_subtype_eq hA (f.baseChange _ u) 0
+  simp only [map_zero, exists_and_left] at this
+  have hu' : (A.val.toLinearMap.rTensor N) (f.baseChange (↥A) u) = 0 := by
+    rw [← ht, ← hu, rTensor_comp_baseChange_comm_apply]
+  obtain ⟨B, hB, hAB, hu'⟩ := this hu'
+  use B, hB, LinearMap.rTensor M (Subalgebra.inclusion hAB).toLinearMap u
+  constructor
+  · rw [← rTensor_comp_baseChange_comm_apply, hu']
+  · rw [← LinearMap.comp_apply, ← LinearMap.rTensor_comp, ← hu]
+    congr
 
 universe u
 
