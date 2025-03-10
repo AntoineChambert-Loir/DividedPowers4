@@ -10,7 +10,7 @@ import DividedPowers.ExponentialModule.Basic
 
 namespace DividedPowers
 
-open PowerSeries ExponentialModule
+open PowerSeries
 
 variable {R : Type*} [CommRing R] {I : Ideal R}
 
@@ -29,6 +29,8 @@ def exp' (hI : DividedPowers I) (a : I) : ExponentialModule R :=
   ⟨hI.exp a, hI.exp_isExponential a.prop⟩
 
 lemma coe_exp' (hI : DividedPowers I) (a : I) : (hI.exp' a : R⟦X⟧) = hI.exp ↑a := rfl
+
+open ExponentialModule
 
 /-- The linear map `hI.exp` from `I` to `ExponentialModule R`. -/
 def exp_LinearMap (hI : DividedPowers I) : I →ₗ[R] ExponentialModule R where
@@ -67,7 +69,7 @@ noncomputable def ofExp  [DecidablePred (fun x ↦ x ∈ I)] (e : I →ₗ[R] Ex
     simp only [dif_pos ha, dif_pos (I.mul_mem_left r ha)]
     have : (⟨r * a, I.mul_mem_left r ha⟩ : I) = r • ⟨a, ha⟩ := rfl
     rw [this, map_smul, coe_smul, coeff_rescale, Algebra.id.map_eq_id, RingHom.id_apply]
-  mul_dpow ha := by simp only [dif_pos ha, add_mul_coe']
+  mul_dpow ha := by simp only [dif_pos ha, choose_mul_coeff_add_eq]
   dpow_comp hn ha := by simp only [dif_pos ha, dif_pos (coeff_mem _ hn)]; exact coeff_comp _ _ hn
 
 end DividedPowers

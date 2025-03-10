@@ -228,6 +228,8 @@ end dpScalarExtension
 variable (R : Type*) [CommRing R] (S : Type*) [CommRing S] [Algebra R S]
   (M : Type*) [AddCommMonoid M] [Module R M]
 
+open PowerSeries
+
 noncomputable def dpScalarExtensionExp :
     S ⊗[R] M →ₗ[S] ExponentialModule (S ⊗[R] DividedPowerAlgebra R M) :=
   (LinearMap.baseChangeEquiv R S M (ExponentialModule (S ⊗[R] DividedPowerAlgebra R M))).symm
@@ -362,7 +364,7 @@ theorem dpScalarExtension_mem_grade {a : DividedPowerAlgebra R M} {n : ℕ} (ha 
   constructor
   · simp only [SetLike.mem_coe, mem_weightedHomogeneousSubmodule, IsWeightedHomogeneous] at hpn ⊢
     intro d' hd'
-    simp only [coeff_smul, smul_eq_mul] at hd'
+    simp only [MvPolynomial.coeff_smul, smul_eq_mul] at hd'
     obtain ⟨d, hdd', hd0⟩ := coeff_rename_ne_zero _ _ _ (right_ne_zero_of_mul hd')
     rw [← hdd']
     simp only [hp', hf, coeff_baseChange_apply, coe_mk] at hd0
@@ -393,7 +395,8 @@ theorem dpScalarExtension_mem_grade {a : DividedPowerAlgebra R M} {n : ℕ} (ha 
       classical
       intro d
       conv_lhs => rw [MvPolynomial.as_sum (p := p)]
-      simp only [coeff_sum, coeff_C_mul, _root_.map_sum, coeff_monomial, mul_ite, mul_one, mul_zero]
+      simp only [coeff_sum, MvPolynomial.coeff_C_mul, _root_.map_sum,
+        MvPolynomial.coeff_monomial, mul_ite, mul_one, mul_zero]
       refine Finset.sum_congr rfl (fun x _hx => ?_)
       split_ifs
       · rfl
@@ -401,20 +404,22 @@ theorem dpScalarExtension_mem_grade {a : DividedPowerAlgebra R M} {n : ℕ} (ha 
     classical
     rw [Finset.sum_subset_zero_on_sdiff]
     · intro x
-      simp only [coeff_sum, coeff_C_mul, coeff_monomial, mul_ite, mul_one, mul_zero, ne_eq, ite_not,
+      simp only [coeff_sum, MvPolynomial.coeff_C_mul, MvPolynomial.coeff_monomial, mul_ite, mul_one, mul_zero, ne_eq, ite_not,
         Finset.sum_ite_eq',mem_support_iff, ite_eq_left_iff, Classical.not_imp, and_imp]
       exact fun h _ ↦ h
     · intro x hx
-      simp only [Finset.mem_sdiff, mem_support_iff, ne_eq, coeff_sum, coeff_C_mul, coeff_monomial,
+      simp only [Finset.mem_sdiff, mem_support_iff, ne_eq, coeff_sum, MvPolynomial.coeff_C_mul,
+        MvPolynomial.coeff_monomial,
         mul_ite, mul_one, mul_zero, Finset.sum_ite_eq', ite_not, ite_eq_left_iff, Classical.not_imp,
         not_and, Decidable.not_not] at hx
       rw [IsScalarTower.algebraMap_apply R S (DividedPowerAlgebra S (S ⊗[R] M)),
         hx.2 hx.1, map_zero, zero_mul]
     · intro d _hd
       rw [← algebraMap_eq, coeff_sum]
-      simp only [MvPolynomial.algebraMap_apply, coeff_C_mul, map_sum, dp_def]
+      simp only [MvPolynomial.algebraMap_apply, MvPolynomial.coeff_C_mul, map_sum, dp_def]
       rw [← h_eq', RingHom.coe_comp, Function.comp_apply, h_sum d, coeff_sum, map_sum]
-      simp only [Algebra.id.map_eq_id, RingHomCompTriple.comp_apply, _root_.map_mul, coeff_C_mul]
+      simp only [Algebra.id.map_eq_id, RingHomCompTriple.comp_apply, _root_.map_mul,
+        MvPolynomial.coeff_C_mul]
       congr 1
 
 -- TODO: add IsHomogeneous for maps of graded algebras/modules (?)
