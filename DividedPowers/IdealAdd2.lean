@@ -5,7 +5,6 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 
 import DividedPowers.BasicLemmas
-import DividedPowers.DPMorphism
 import DividedPowers.Exponential
 import DividedPowers.RatAlgebra
 import DividedPowers.SubDPIdeal
@@ -164,7 +163,7 @@ noncomputable def exp'_linearMap (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpo
   rw [← Subtype.coe_inj]
   apply Additive.toMul.injective
   ext n
-  sorry --exact hIJ n x ⟨hxI, hxJ⟩
+  exact hIJ x ⟨hxI, hxJ⟩
 
 theorem exp'_linearMap_apply (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
     {x y : A} (hx : x ∈ I) (hy : y ∈ J) :
@@ -591,15 +590,7 @@ theorem dividedPowers_dpow_eq_algebraMap'
   rw [← hI'_ext.2 _ ha]
   exact IdealAdd.dpow_eq_of_mem_left h_int (mem_map_of_mem (algebraMap A B) ha)
 
-def subDPIdeal_right {K : Ideal A} (hK : DividedPowers K)
-    (hIK : ∀ {n : ℕ}, ∀ a ∈ I ⊓ K, hI.dpow n a = hK.dpow n a) :
-    SubDPIdeal (IdealAdd.dividedPowers hIK) where
-  carrier           := K
-  isSubideal c hc   := Ideal.mem_sup_right hc
-  dpow_mem _ hn _ hj  := by
-    rw [IdealAdd.dpow_eq_of_mem_right hIK hj]
-    exact hK.dpow_mem hn hj
-
+/-- `I` as a `SubDPIdeal` of `I + K`. -/
 def subDPIdeal_left {K : Ideal A} (hK : DividedPowers K)
     (hIK : ∀ {n : ℕ}, ∀ a ∈ I ⊓ K, hI.dpow n a = hK.dpow n a) :
     SubDPIdeal (IdealAdd.dividedPowers hIK) where
@@ -609,8 +600,16 @@ def subDPIdeal_left {K : Ideal A} (hK : DividedPowers K)
     rw [IdealAdd.dpow_eq_of_mem_left hIK hj]
     exact hI.dpow_mem hn hj
 
+/-- `K` as a `SubDPIdeal` of `I + K`. -/
+def subDPIdeal_right {K : Ideal A} (hK : DividedPowers K)
+    (hIK : ∀ {n : ℕ}, ∀ a ∈ I ⊓ K, hI.dpow n a = hK.dpow n a) :
+    SubDPIdeal (IdealAdd.dividedPowers hIK) where
+  carrier           := K
+  isSubideal c hc   := Ideal.mem_sup_right hc
+  dpow_mem _ hn _ hj  := by
+    rw [IdealAdd.dpow_eq_of_mem_right hIK hj]
+    exact hK.dpow_mem hn hj
+
 end IdealAdd
 
 end DividedPowers
-
-#lint
