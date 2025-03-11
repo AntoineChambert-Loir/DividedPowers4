@@ -61,9 +61,11 @@ theorem ext_iff' {β : ι → Type*} [∀ i, AddCommMonoid (β i)]
 
 variable [DecidableEq ι]
 
+-- NOTE: renamed because a different `DirectSum.map` has been PRd to Mathlib
+
 /-- `AddMonoidHom` from a direct sum to a direct sum given by families of
   `AddMonoidHomClass` maps. -/
-def map {β γ : ι → Type*} [∀ i, AddCommMonoid (β i)] [∀ i, AddCommMonoid (γ i)]
+def map'' {β γ : ι → Type*} [∀ i, AddCommMonoid (β i)] [∀ i, AddCommMonoid (γ i)]
     {F : ∀ _ : ι, Type*} [∀ i, FunLike (F i) (β i) (γ i)]
     [∀ i, AddMonoidHomClass (F i) (β i) (γ i)] (h : ∀ i, F i) :
     (⨁ i, β i) →+ ⨁ i, γ i :=
@@ -101,17 +103,17 @@ theorem lmap'_toAddMonoidHom_eq_map' {β γ : ι → Type*} [∀ i, AddCommMonoi
   rfl
 
 -- Lemmas to help computation
-theorem map_of {β γ : ι → Type*} [∀ i, AddCommMonoid (β i)] [∀ i, AddCommMonoid (γ i)]
+theorem map''_of {β γ : ι → Type*} [∀ i, AddCommMonoid (β i)] [∀ i, AddCommMonoid (γ i)]
     {F : ι → Type*} [∀ i, FunLike (F i) (β i) (γ i)] [∀ i, AddMonoidHomClass (F i) (β i) (γ i)]
-    (h : ∀ i, F i) (i : ι) (x : β i) : map h (of β i x) = of γ i (h i x) := by
-  simp only [map, toAddMonoid_of, AddMonoidHom.coe_comp, AddMonoidHom.coe_coe]
+    (h : ∀ i, F i) (i : ι) (x : β i) : map'' h (of β i x) = of γ i (h i x) := by
+  simp only [map'', toAddMonoid_of, AddMonoidHom.coe_comp, AddMonoidHom.coe_coe]
   rfl
 
-theorem map_apply {β γ : ι → Type*} [Π i, AddCommMonoid (β i)] [Π i, AddCommMonoid (γ i)]
+theorem map''_apply {β γ : ι → Type*} [Π i, AddCommMonoid (β i)] [Π i, AddCommMonoid (γ i)]
     {F : Π _i, Type*} [∀ i, FunLike (F i) (β i) (γ i)] [Π i, AddMonoidHomClass (F i) (β i) (γ i)]
-    (h : Π i, F i) (x : DirectSum ι β) (i : ι) : map h x i = h i (x i) := by
+    (h : Π i, F i) (x : DirectSum ι β) (i : ι) : map'' h x i = h i (x i) := by
   let f : DirectSum ι β →+ γ i :=
-  { toFun := fun x => map h x i
+  { toFun := fun x => map'' h x i
     map_zero' := by simp only [map_zero, zero_apply]
     map_add' := by simp only [map_add, add_apply, forall_const] }
   let g : DirectSum ι β →+ γ i :=
@@ -123,7 +125,7 @@ theorem map_apply {β γ : ι → Type*} [Π i, AddCommMonoid (β i)] [Π i, Add
     rw [this]
   apply addHom_ext
   intros j y
-  simp only [AddMonoidHom.coe_mk, ZeroHom.coe_mk, map_of, f, g]
+  simp only [AddMonoidHom.coe_mk, ZeroHom.coe_mk, map''_of, f, g]
   by_cases hj : j = i
   · rw [← hj]; simp only [of_eq_same]
   · simp only [of_eq_of_ne j i _ hj, map_zero]
@@ -239,9 +241,9 @@ theorem toAddMonoid_mk {β : ι → Type*} [∀ i, AddCommMonoid (β i)] {γ : T
 theorem map_apply' {β γ : ι → Type*} [∀ i, AddCommMonoid (β i)] [∀ i, AddCommMonoid (γ i)]
     [∀ (i : ι) (x : β i), Decidable (x ≠ 0)]  {F : ∀ _, Type*} [∀ i, FunLike (F i) (β i) (γ i)]
     [∀ i, AddMonoidHomClass (F i) (β i) (γ i)] (h : ∀ i, F i) (x : ⨁ i, β i) :
-    map h x = mk γ x.support (fun i => (h i) (x i)) := by
+    map'' h x = mk γ x.support (fun i => (h i) (x i)) := by
   conv_lhs => rw [← sum_support_of x]
-  simp_rw [map_sum, map_of]
+  simp_rw [map_sum, map''_of]
   rw [eq_comm]
   convert mk_eq_sum x.support fun i => (h i) (x i)
   rwa [dif_pos]

@@ -50,7 +50,7 @@ theorem rewriting_4_fold_sums {α : Type*} [AddCommMonoid α] {m n u v : ℕ} (h
       · rintro ⟨⟨x, y⟩, ⟨z, t⟩⟩ hb hb'; rw [if_neg]; intro hb''
         simp only [mem_product, mem_antidiagonal] at hb
         simp only [ne_eq, Prod.mk.injEq, not_and, and_imp] at hb'
-        simp only [Prod.mk.inj_iff] at hb''
+        simp only [Prod.mk_inj] at hb''
         specialize hb' hb''.2.1 hb''.2.2
         rw [hb''.2.1, hb''.2.2] at hb
         apply hb'
@@ -100,9 +100,9 @@ theorem sum_4_rw' {α : Type*} [AddCommMonoid α] (f : ℕ × ℕ × ℕ × ℕ 
     simp only [Sigma.mk.inj_iff, Prod.mk.injEq, heq_eq_eq, and_true, φ, H.2.1, H.2.2]
   rintro ⟨⟨k, l⟩, ⟨⟨a, b⟩, ⟨c, d⟩⟩⟩ H
   simp only [mem_sigma, mem_antidiagonal, and_self, and_true] at H ⊢
-  rw [← H.1, ← H.2.1, ← H.2.2]; abel_nf
-  simp
-
+  rw [← H.1, ← H.2.1, ← H.2.2]
+  simp [φ]
+  abel_nf
 
 variable {α : Type*} [AddMonoid α] [Finset.HasAntidiagonal α]
 
@@ -212,7 +212,7 @@ theorem mem_antidiagonalFourth' {n : α} {x : (α × α) × (α × α)} :
   simp only [antidiagonalFourth', mem_disjiUnion, mem_antidiagonal, mem_product]
   exact ⟨fun ⟨u, hu, hx⟩ ↦ by rw [add_assoc, hx.2, hx.1, hu], fun hx ↦
     ⟨(x.1.1 + x.1.2, x.2.1 + x.2.2), by simp only [← add_assoc, hx],
-     Prod.mk.inj_iff.mp rfl⟩⟩
+     Prod.mk.inj rfl⟩⟩
 
 theorem sum_antidiagonalFourth'_eq {β : Type*} [AddCommMonoid β] (f : (α × α) × (α × α) → β) (n : α) :
     ∑ x ∈ antidiagonalFourth' n, f x =

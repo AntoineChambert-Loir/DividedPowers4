@@ -188,7 +188,7 @@ theorem dpow_mul (hIJ : ∀ (n : ℕ), ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow 
     hI.dpow i a * hJ.dpow j b, mul_sum]
   apply sum_congr rfl
   rintro ⟨u, v⟩ h
-  simp only [Prod.mk.inj_iff]
+  simp only [Prod.mk_inj]
   rw [← mul_assoc]
   apply congr_arg₂ _ _ rfl
   apply congr_arg₂ _ _ rfl

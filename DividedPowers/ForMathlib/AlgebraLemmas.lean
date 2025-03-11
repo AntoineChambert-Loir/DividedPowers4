@@ -46,25 +46,25 @@ theorem natCast_factorial_isUnit_of_charP {A : Type*} [CommRing A] (p : ℕ) [Fa
 
 end Factorial
 
-section Inverse
+/- section Inverse
 
 namespace Ring
 
  -- In PR #22240
-theorem inverse_pow_mul_eq_iff_eq_mul {M₀ : Type*} [CommMonoidWithZero M₀] {a : M₀} (b c : M₀)
+ theorem inverse_pow_mul_eq_iff_eq_mul {M₀ : Type*} [CommMonoidWithZero M₀] {a : M₀} (b c : M₀)
     (ha : IsUnit a) {k : ℕ} :
     Ring.inverse a ^ k * b = c ↔ b = a ^ k * c := by
   rw [Ring.inverse_pow, Ring.inverse_mul_eq_iff_eq_mul _ _ _ (IsUnit.pow _ ha)]
 
 end Ring
 
-end Inverse
+end Inverse -/
 
  -- In PR #22239
-theorem Ideal.pow_eq_zero_of_mem {A : Type*} [CommSemiring A] {I : Ideal A} {n m : ℕ}
+/- theorem Ideal.pow_eq_zero_of_mem {A : Type*} [CommSemiring A] {I : Ideal A} {n m : ℕ}
     (hnI : I ^ n = 0) (hmn : n ≤ m) {x : A} (hx : x ∈ I) : x ^ m = 0 := by
   have hxn : x ^ n = 0 := by
     rw [← Ideal.mem_bot, ← Ideal.zero_eq_bot, ← hnI]
     exact Ideal.pow_mem_pow hx n
   obtain ⟨c, hc⟩ := Nat.exists_eq_add_of_le hmn
-  rw [hc, pow_add, hxn, MulZeroClass.zero_mul]
+  rw [hc, pow_add, hxn, MulZeroClass.zero_mul] -/

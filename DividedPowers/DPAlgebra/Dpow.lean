@@ -1151,7 +1151,7 @@ lemma augIdeal_eq_generatedDpow_ι_range' (A : Type u) [CommRing A] [DecidableEq
   simp only [SetLike.mem_coe, LinearMap.mem_range, exists_prop', nonempty_prop,
     exists_exists_eq_and, ne_eq, Nat.exists_ne_zero, Set.mem_setOf_eq]
   use n - 1, y
-  rw [dpow_ι, Nat.sub_one_add_one (Nat.not_eq_zero_of_lt hn)]
+  rw [dpow_ι, Nat.sub_one_add_one (Nat.ne_zero_of_lt hn)]
 
 lemma augIdeal_eq_generatedDpow_ι_range (A : Type u) [CommRing A] [DecidableEq A] (M : Type u)
     [AddCommGroup M] [Module A M] :
