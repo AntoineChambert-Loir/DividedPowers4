@@ -3,23 +3,25 @@ Copyright (c) 2024 Antoine Chambert-Loir, María Inés de Frutos-Fernández. All
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
-import DividedPowers.Exponential
-import Mathlib.LinearAlgebra.Isomorphisms
+
 import DividedPowers.BasicLemmas
 import DividedPowers.DPMorphism
+import DividedPowers.Exponential
 import DividedPowers.RatAlgebra
+import DividedPowers.SubDPIdeal
 import Mathlib.Data.Nat.Choose.Vandermonde
+import Mathlib.LinearAlgebra.Isomorphisms
 
-section Polynomial
+namespace Polynomial
 
 open Ring
 
-theorem Polynomial.C_eq_smul_one {R : Type*} [Semiring R] {a : R} :
-    (C a : Polynomial R) = a • (1 : Polynomial R) := by
+variable {R : Type*} [Semiring R]
+
+theorem C_eq_smul_one  {a : R} : (C a : Polynomial R) = a • (1 : Polynomial R) := by
   rw [← C_mul', mul_one]
 
-theorem Polynomial.inv_C_eq_C_inv {R : Type*} [CommSemiring R] {a : R} :
-    inverse (C a) = C (inverse a) := by
+theorem inv_C_eq_C_inv {a : R} : inverse (C a) = C (inverse a) := by
   simp only [inverse]
   by_cases ha : IsUnit a
   · have hCa : IsUnit (C a) := by
@@ -32,25 +34,24 @@ theorem Polynomial.inv_C_eq_C_inv {R : Type*} [CommSemiring R] {a : R} :
     rw [dif_neg]
     intro hCa
     apply ha
-    rw [isUnit_iff_exists_inv] at hCa ⊢
-    obtain ⟨b, hb⟩ := hCa
-    use b.coeff 0
-    rw [← Polynomial.coeff_C_mul, hb, coeff_one_zero]
+    rw [isUnit_iff_exists_and_exists] at hCa ⊢
+    obtain ⟨⟨b, hb⟩, ⟨c, hc⟩⟩ := hCa
+    exact ⟨⟨b.coeff 0, by rw [← coeff_C_mul, hb, coeff_one_zero]⟩,
+      ⟨c.coeff 0, by rw [← coeff_mul_C, hc, coeff_one_zero]⟩⟩
 
 end Polynomial
 
 section onSup
 
-namespace LinearMap
+open Function LinearMap Submodule
 
-open Submodule
+variable {A X : Type*} [Ring A] [AddCommGroup X] [Module A X] {M N : Submodule A X}
 
-variable {A : Type*} [Ring A] {X Y : Type*}
-    [AddCommGroup X] [Module A X] [AddCommGroup Y] [Module A Y]
-    {M N : Submodule A X} {f : M →ₗ[A] Y} {g : N →ₗ[A] Y}
-
-noncomputable def _root_.Submodule.quotientCoprodAddEquiv :
-    ((M × N) ⧸ (ker ((inclusion (le_sup_left (b := N))).coprod (inclusion (le_sup_right (a := M)))))) ≃ₗ[A] (M + N) := by
+/-- If `M` and `N` are two `A`-submodules of `X`, then the quotient
+  `(M × N) / ker (fun ((m, n) : M × N) ↦ m + n)` is isomorphic to `M + N` as an `A`-module.-/
+noncomputable def Submodule.quotientCoprodAddEquiv :
+    ((M × N) ⧸ (ker ((inclusion (le_sup_left (b := N))).coprod
+      (inclusion (le_sup_right (a := M)))))) ≃ₗ[A] (M + N) := by
   apply quotKerEquivOfSurjective
   rw [← range_eq_top, eq_top_iff]
   rintro ⟨x, hx⟩ _
@@ -58,6 +59,12 @@ noncomputable def _root_.Submodule.quotientCoprodAddEquiv :
   use ⟨⟨y, hy⟩, ⟨z, hz⟩⟩
   simp only [coprod_apply, ← Subtype.coe_inj, coe_add, coe_inclusion]
 
+namespace LinearMap
+
+variable {Y : Type*} [AddCommGroup Y] [Module A Y] {f : M →ₗ[A] Y} {g : N →ₗ[A] Y}
+
+/-- Given two linear maps `f : M →ₗ[A] Y` and `g : N →ₗ[A] Y` that agree on `M ∩ N`, this is
+the linear map `M + N →ₗ[A] Y` that simultaneously extends `f` and `g`. -/
 noncomputable def onSup (h : ∀ x (hM : x ∈ M) (hN : x ∈ N), f ⟨x, hM⟩ = g ⟨x, hN⟩) :
     M + N →ₗ[A] Y := by
   apply comp ?_ quotientCoprodAddEquiv.symm.toLinearMap
@@ -66,34 +73,31 @@ noncomputable def onSup (h : ∀ x (hM : x ∈ M) (hN : x ∈ N), f ⟨x, hM⟩ 
   simp only [Submodule.add_eq_sup, mem_ker, coprod_apply,
     add_eq_zero_iff_eq_neg, ← Subtype.coe_inj, coe_inclusion, NegMemClass.coe_neg] at hxy
   simp only [mem_ker, coprod_apply, add_eq_zero_iff_eq_neg, ← map_neg]
-  have : - (⟨y, hy⟩ : N) = ⟨-y, N.neg_mem hy⟩ := by simp [← Subtype.coe_inj]
-  rw [this]
-  simp_rw [hxy]
-  apply h
+  have hneg : - (⟨y, hy⟩ : N) = ⟨-y, N.neg_mem hy⟩ := by simp [← Subtype.coe_inj]
+  simp_rw [hneg, hxy]
+  apply h (-y)
 
 theorem onSup_apply_left (h : ∀ x (hM : x ∈ M) (hN : x ∈ N), f ⟨x, hM⟩ = g ⟨x, hN⟩)
-    {x} (hx : x ∈ M) : onSup h ⟨x, le_sup_left (b := N) hx⟩ = f ⟨x, hx⟩ := by
-  simp only [Submodule.add_eq_sup, onSup, coe_comp, LinearEquiv.coe_coe, Function.comp_apply]
-  suffices (quotientCoprodAddEquiv (M := M) (N := N)).symm ⟨x, le_sup_left (b := N) hx⟩ =
-    Submodule.Quotient.mk ⟨⟨x, hx⟩, (0 : N)⟩ by
-    erw [this]
-    simp [liftQ_apply]
-  rw [LinearEquiv.symm_apply_eq]
-  simp only [Submodule.add_eq_sup, quotientCoprodAddEquiv, quotKerEquivOfSurjective,
-    LinearEquiv.trans_apply, LinearEquiv.ofTop_apply, quotKerEquivRange_apply_mk, coprod_apply,
-    _root_.map_zero, add_zero, inclusion_apply]
+    {x : X} (hx : x ∈ M) : onSup h ⟨x, le_sup_left (b := N) hx⟩ = f ⟨x, hx⟩ := by
+  have h : (quotientCoprodAddEquiv (M := M) (N := N)).symm ⟨x, le_sup_left (b := N) hx⟩ =
+      Submodule.Quotient.mk ⟨⟨x, hx⟩, (0 : N)⟩ := by
+    rw [LinearEquiv.symm_apply_eq]
+    simp only [Submodule.add_eq_sup, quotientCoprodAddEquiv, quotKerEquivOfSurjective,
+      LinearEquiv.trans_apply, LinearEquiv.ofTop_apply, quotKerEquivRange_apply_mk, coprod_apply,
+      _root_.map_zero, add_zero, inclusion_apply]
+  simp only [Submodule.add_eq_sup, onSup, coe_comp, LinearEquiv.coe_coe, comp_apply] at h ⊢
+  simp [h, liftQ_apply]
 
 theorem onSup_apply_right (h : ∀ x (hM : x ∈ M) (hN : x ∈ N), f ⟨x, hM⟩ = g ⟨x, hN⟩)
     {x} (hx : x ∈ N) : onSup h ⟨x, le_sup_right (a := M) hx⟩ = g ⟨x, hx⟩ := by
-  simp only [Submodule.add_eq_sup, onSup, coe_comp, coe_coe, Function.comp_apply]
-  suffices (quotientCoprodAddEquiv (M := M) (N := N)).symm ⟨x, le_sup_right (a := M) hx⟩ =
-    Submodule.Quotient.mk ⟨(0 : M), ⟨x, hx⟩⟩ by
-    erw [this]
-    simp [liftQ_apply]
-  rw [LinearEquiv.symm_apply_eq]
-  simp only [Submodule.add_eq_sup, quotientCoprodAddEquiv, quotKerEquivOfSurjective,
-    LinearEquiv.trans_apply, LinearEquiv.ofTop_apply, quotKerEquivRange_apply_mk, coprod_apply,
-    _root_.map_zero, zero_add, inclusion_apply]
+  have h : (quotientCoprodAddEquiv (M := M) (N := N)).symm ⟨x, le_sup_right (a := M) hx⟩ =
+      Submodule.Quotient.mk ⟨(0 : M), ⟨x, hx⟩⟩ := by
+    rw [LinearEquiv.symm_apply_eq]
+    simp only [Submodule.add_eq_sup, quotientCoprodAddEquiv, quotKerEquivOfSurjective,
+      LinearEquiv.trans_apply, LinearEquiv.ofTop_apply, quotKerEquivRange_apply_mk, coprod_apply,
+      _root_.map_zero, zero_add, inclusion_apply]
+  simp only [Submodule.add_eq_sup, onSup, coe_comp, coe_coe, comp_apply] at h ⊢
+  simp [h, liftQ_apply]
 
 theorem onSup_apply (h : ∀ x (hM : x ∈ M) (hN : x ∈ N), f ⟨x, hM⟩ = g ⟨x, hN⟩)
     {x y} (hx : x ∈ M) (hy : y ∈ N) :
@@ -115,14 +119,12 @@ theorem onSup_unique (h : ∀ x (hM : x ∈ M) (hN : x ∈ N), f ⟨x, hM⟩ = g
     u = LinearMap.onSup h := by
   ext ⟨x, hx⟩
   obtain ⟨y, hy, z, hz, heq⟩ := mem_sup.mp hx
-  suffices (⟨x, hx⟩ : M + N) = ⟨y, le_sup_left (b := N) hy⟩ + ⟨z, le_sup_right (a := M) hz⟩ by
-    rw [this, map_add, map_add, onSup_apply_left h, onSup_apply_right h]
-    rw [LinearMap.ext_iff] at huf hug
-    specialize huf ⟨y, hy⟩
-    specialize hug ⟨z, hz⟩
-    simp only [Submodule.add_eq_sup, coe_comp, Function.comp_apply, inclusion_apply] at huf hug
-    erw [huf, hug]
-  simp [← Subtype.coe_inj, heq]
+  have heq : (⟨x, hx⟩ : M + N) = ⟨y, le_sup_left (b := N) hy⟩ + ⟨z, le_sup_right (a := M) hz⟩ := by
+     simp [← Subtype.coe_inj, heq]
+  rw [heq, map_add, map_add, onSup_apply_left h, onSup_apply_right h]
+  simp only [Submodule.add_eq_sup, LinearMap.ext_iff, coe_comp, comp_apply, inclusion_apply,
+  Subtype.forall] at huf hug ⊢
+  rw [huf y hy, hug z hz]
 
 end LinearMap
 
@@ -130,162 +132,92 @@ end onSup
 
 namespace DividedPowers
 
-/- We need `A` to be a ring, until we can prove `dpow_factorsThrough` with semiring
- The better proof using the exponential module should work in the general case -/
+open Nat PowerSeries
 
-variable {A : Type*} [CommRing A]
-variable {I : Ideal A} {hI : DividedPowers I} {J : Ideal A} {hJ : DividedPowers J}
+/- We need `A` to be a ring, until we can prove `dpow_factorsThrough` for semirings.
+ The better proof using the exponential module should work in the general case. -/
 
--- move to DividedPowers.Basic (after mathlib is updated)
+variable {A : Type*} [CommRing A] {I J : Ideal A} {hI : DividedPowers I} {hJ : DividedPowers J}
 
-theorem coeff_exp (n : ℕ) (a : A) :
-    PowerSeries.coeff A n (hI.exp a) = hI.dpow n a := by
-  simp only [exp, PowerSeries.coeff_mk]
+-- TODO: PR the next two lemmas to `Mathlib.RingTheory.DividedPowers.Basic`.
+theorem coeff_exp (n : ℕ) (a : A) : coeff A n (hI.exp a) = hI.dpow n a := by
+  simp only [exp, coeff_mk]
 
-theorem constantCoeff_exp {a : A} (ha : a ∈ I) :
-    PowerSeries.constantCoeff A (hI.exp a) = 1 := by
-  simp only [exp, PowerSeries.constantCoeff_mk, hI.dpow_zero ha]
+theorem constantCoeff_exp {a : A} (ha : a ∈ I) : constantCoeff A (hI.exp a) = 1 := by
+  simp only [exp, constantCoeff_mk, hI.dpow_zero ha]
 
 namespace IdealAdd
 
 open Finset BigOperators Polynomial
 
-/-- Some complicated numerical coefficients for the proof of ideal_add.dpow_comp -/
+/-- Some complicated numerical coefficients for the proof of `IdealAdd.dpow_comp`. -/
 private def cnik (n i : ℕ) (k : Multiset ℕ) : ℕ :=
   if i = 0 then (k.count i).uniformBell n
-  else if i = n then  (k.count i).uniformBell n
-  else (k.count i).factorial * (k.count i).uniformBell i * (k.count i).uniformBell (n - i)
+    else if i = n then  (k.count i).uniformBell n
+      else (k.count i).factorial * (k.count i).uniformBell i * (k.count i).uniformBell (n - i)
 
-/-- The exponential map on the sup of two compatible divided power ideals -/
-noncomputable def exp_LinearMap (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) :
+/-- The exponential map on the sup of two compatible divided power ideals. -/
+noncomputable def exp'_linearMap (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) :
     (I + J) →ₗ[A] (ExponentialModule A) := by
-  apply LinearMap.onSup (f := hI.exp_LinearMap) (g := hJ.exp_LinearMap)
+  apply LinearMap.onSup (f := hI.exp'_linearMap) (g := hJ.exp'_linearMap)
   intro x hxI hxJ
   rw [← Subtype.coe_inj]
   apply Additive.toMul.injective
   ext n
-  exact hIJ x ⟨hxI, hxJ⟩
+  sorry --exact hIJ n x ⟨hxI, hxJ⟩
 
-theorem exp_LinearMap_apply (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
+theorem exp'_linearMap_apply (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
     {x y : A} (hx : x ∈ I) (hy : y ∈ J) :
-    exp_LinearMap hIJ ⟨x + y, Submodule.add_mem_sup hx hy⟩ =
-      hI.exp_LinearMap ⟨x, hx⟩ + hJ.exp_LinearMap ⟨y, hy⟩ := by
-  rw [exp_LinearMap, LinearMap.onSup_apply]
+    exp'_linearMap hIJ ⟨x + y, Submodule.add_mem_sup hx hy⟩ =
+      hI.exp'_linearMap ⟨x, hx⟩ + hJ.exp'_linearMap ⟨y, hy⟩ := by
+  rw [exp'_linearMap, LinearMap.onSup_apply]
 
-theorem exp_LinearMap_apply_left (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
-    {x : A} (hx : x ∈ I) :
-    exp_LinearMap hIJ ⟨x, Ideal.mem_sup_left hx⟩ = hI.exp_LinearMap ⟨x, hx⟩ := by
-  rw [exp_LinearMap, LinearMap.onSup_apply_left _ hx]
+theorem exp'_linearMap_apply_left (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) {x : A}
+    (hx : x ∈ I) : exp'_linearMap hIJ ⟨x, Ideal.mem_sup_left hx⟩ = hI.exp'_linearMap ⟨x, hx⟩ := by
+  rw [exp'_linearMap, LinearMap.onSup_apply_left _ hx]
 
-theorem exp_LinearMap_apply_right (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
+theorem exp'_linearMap_apply_right (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
     {y : A} (hy : y ∈ J) :
-    exp_LinearMap hIJ ⟨y, Ideal.mem_sup_right hy⟩ = hJ.exp_LinearMap ⟨y, hy⟩ := by
-  rw [exp_LinearMap, LinearMap.onSup_apply_right _ hy]
+    exp'_linearMap hIJ ⟨y, Ideal.mem_sup_right hy⟩ = hJ.exp'_linearMap ⟨y, hy⟩ := by
+  rw [exp'_linearMap, LinearMap.onSup_apply_right _ hy]
 
-/-- The divided power function on the sup of two ideals. -/
+/-- The divided power function on the sup of two ideals `I` and `J` extending divided power
+  structures `hI` and `hJ` that agree on `I ∩ J`. -/
 noncomputable def dpow (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) (n : ℕ) :=
-  Function.extend (fun a ↦ ↑a : (I + J) → A) (fun a ↦ PowerSeries.coeff A n (exp_LinearMap hIJ a)) 0
+  Function.extend (fun a ↦ ↑a : (I + J) → A) (fun a ↦ coeff A n (exp'_linearMap hIJ a)) 0
 
-theorem dpow_def (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) (n : ℕ) {a : A} (ha : a ∈ I + J) :
-    dpow hIJ n a = PowerSeries.coeff A n (exp_LinearMap hIJ ⟨a, ha⟩) :=
+theorem dpow_def (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) (n : ℕ) {a : A}
+    (ha : a ∈ I + J) : dpow hIJ n a = coeff A n (exp'_linearMap hIJ ⟨a, ha⟩) :=
   Subtype.val_injective.extend_apply _ _ ⟨a, ha⟩
-
-/-
-noncomputable def dpow : ℕ → A → A := fun n =>
-  Function.extend (fun ⟨a, b⟩ => (a : A) + (b : A) : I × J → A)
-    (fun ⟨a, b⟩ =>
-      Finset.sum (range (n + 1)) fun k => hI.dpow k (a : A) * hJ.dpow (n - k) (b : A))
-    (Function.const A 0)
-
-/-- Independence on choices for `dpow` -/
-theorem dpow_factorsThrough (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) (n : ℕ) :
-    (fun (a, b) => Finset.sum (range (n + 1)) fun k => hI.dpow k (a : A) *
-      hJ.dpow (n - k) (b : A)).FactorsThrough (fun ⟨a, b⟩ => (a : A) + (b : A) : I × J → A) := by
-  rintro ⟨⟨a, ha⟩, ⟨b, hb⟩⟩ ⟨⟨a', ha'⟩, ⟨b', hb'⟩⟩ H
-  dsimp only at H ⊢
-  -- Needs A to be a ring
-  set c := a - a' with hc
-  have haa' : a = a' + c := by simp only [hc, add_sub_cancel]
-  have hbb' : b' = b + c := by rw [← sub_eq_iff_eq_add'.mpr H, haa']; ring
-  have hcI : c ∈ I := sub_mem ha ha'
-  have hcJ : c ∈ J := by rw [← sub_eq_iff_eq_add'.mpr hbb']; exact sub_mem hb' hb
-  rw [haa', hbb']
-  have Ha'c : ((range (n + 1)).sum fun k : ℕ => hI.dpow k (a' + c) * hJ.dpow (n - k) b) =
-      (range (n + 1)).sum fun k : ℕ => (range (k + 1)).sum fun l : ℕ =>
-        hI.dpow l a' * hJ.dpow (n - k) b * hI.dpow (k - l) c := by
-    refine sum_congr rfl (fun k _ ↦ ?_)
-    rw [hI.dpow_add' ha' hcI, sum_mul]
-    exact sum_congr rfl (fun l _ ↦ by ring)
-  have Hbc : ((range (n + 1)).sum fun k : ℕ => hI.dpow k a' * hJ.dpow (n - k) (b + c)) =
-      (range (n + 1)).sum fun k : ℕ => (range (n - k + 1)).sum
-        fun l : ℕ => hI.dpow k a' * hJ.dpow l b * hJ.dpow (n - k - l) c := by
-    refine sum_congr rfl (fun k _ ↦ ?_)
-    rw [hJ.dpow_add' hb hcJ, mul_sum]; ring_nf
-  rw [Ha'c, sum_sigma', Hbc, sum_sigma']
-  set s := (range (n + 1)).sigma fun a : ℕ => range (a + 1) with hs_def
-  set i : ∀ x : Σ _ : ℕ, ℕ, x ∈ s → Σ _ : ℕ, ℕ := fun ⟨k, m⟩ _ => ⟨m, n - k⟩ with hi_def
-  set t := (range (n + 1)).sigma fun a : ℕ => range (n - a + 1) with ht_def
-  set j : ∀ y : Σ _ : ℕ, ℕ, y ∈ t → Σ _ : ℕ, ℕ := fun ⟨k, m⟩ _ => ⟨n - m, k⟩ with hj_def
-  rw [sum_bij' i j _ _ _ _]
-  · rintro ⟨k, m⟩ h
-    apply congr_arg₂ _ rfl
-    suffices h : n - m - (n - k) = k - m by
-      rw [h]
-      apply hIJ
-      exact ⟨hcI, hcJ⟩
-    rw [Nat.sub_sub, add_comm, ← Nat.sub_sub, Nat.sub_sub_self ?_]
-    simp only [hs_def, mem_sigma, mem_range] at h
-    exact Nat.le_of_lt_succ h.1
-  · rintro ⟨k, m⟩ h
-    simp only [hs_def, ht_def, mem_sigma, mem_range, Nat.lt_succ_iff] at h ⊢
-    exact ⟨le_trans h.2 h.1, tsub_le_tsub_left h.2 _⟩
-  · rintro ⟨k, m⟩ h
-    simp only [hs_def, ht_def, mem_sigma, mem_range, Nat.lt_succ_iff] at h ⊢
-    apply And.intro (Nat.sub_le _ _)
-    rw [Nat.le_sub_iff_add_le] at h ⊢
-    rw [add_comm]; exact h.2
-    exact le_trans (Nat.le_add_right _ _) h.2
-    exact h.1
-  · rintro ⟨k, m⟩ h
-    simp only [hs_def, mem_sigma, mem_range, Nat.lt_succ_iff] at h
-    simp only [hj_def, Sigma.mk.inj_iff, heq_eq_eq, and_true]
-    exact Nat.sub_sub_self h.1
-  · rintro ⟨u, v⟩ h
-    simp only [ht_def, mem_sigma, mem_range, Nat.lt_succ_iff] at h
-    simp only [hi_def, Sigma.mk.inj_iff, heq_eq_eq, true_and]
-    exact Nat.sub_sub_self (le_trans h.2 (Nat.sub_le n u)) -/
 
 theorem dpow_eq (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
     {n : ℕ} {a b : A} (ha : a ∈ I) (hb : b ∈ J) :
     dpow hIJ n (a + b) = ∑ k ∈ (antidiagonal n), hI.dpow k.1 a * hJ.dpow k.2 b := by
-  rw [dpow_def, exp_LinearMap_apply hIJ ha hb, ExponentialModule.coe_add]
-  rw [PowerSeries.coeff_mul]
+  rw [dpow_def, exp'_linearMap_apply hIJ ha hb, ExponentialModule.coe_add, PowerSeries.coeff_mul]
   apply congr_arg₂ _ rfl
   ext ⟨u, v⟩
-  simp only [DividedPowers.exp_LinearMap_apply, coe_exp', coeff_exp]
+  simp only [DividedPowers.exp'_linearMap_apply, coe_exp', coeff_exp]
 
 private theorem dpow_eq_of_mem_left' (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
     {n : ℕ} {x : A} (hx : x ∈ I) :
     dpow hIJ n x = hI.dpow n x := by
-  rw [dpow_def, exp_LinearMap_apply_left hIJ hx]
-  simp only [DividedPowers.exp_LinearMap_apply, coe_exp', coeff_exp]
+  rw [dpow_def, exp'_linearMap_apply_left hIJ hx]
+  simp only [DividedPowers.exp'_linearMap_apply, coe_exp', coeff_exp]
 
 private theorem dpow_eq_of_mem_right' (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
     {n : ℕ} {x : A} (hx : x ∈ J) :
     dpow hIJ n x = hJ.dpow n x := by
-  rw [dpow_def, exp_LinearMap_apply_right hIJ hx]
-  simp only [DividedPowers.exp_LinearMap_apply, coe_exp', coeff_exp]
+  rw [dpow_def, exp'_linearMap_apply_right hIJ hx]
+  simp only [DividedPowers.exp'_linearMap_apply, coe_exp', coeff_exp]
 
 theorem dpow_zero (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
-    {x : A} (hx : x ∈ I + J) :
-    dpow hIJ 0 x = 1 := by
+    {x : A} (hx : x ∈ I + J) : dpow hIJ 0 x = 1 := by
   rw [Ideal.add_eq_sup, Submodule.mem_sup] at hx
   obtain ⟨a, ha, b, hb, rfl⟩ := hx
-  rw [dpow_eq hIJ ha hb]
-  simp only [antidiagonal_zero, Prod.mk_zero_zero, sum_singleton, Prod.fst_zero, Prod.snd_zero]
-  rw [hI.dpow_zero ha, hJ.dpow_zero hb, mul_one]
+  simp [dpow_eq hIJ ha hb, antidiagonal_zero, Prod.mk_zero_zero, sum_singleton, Prod.fst_zero,
+    Prod.snd_zero, hI.dpow_zero ha, hJ.dpow_zero hb, mul_one]
 
-theorem dpow_mul (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
+theorem mul_dpow (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
     {m n : ℕ} {x : A} (hx : x ∈ I + J) :
     dpow hIJ m x * dpow hIJ n x = ((m + n).choose m) * dpow hIJ (m + n) x := by
   rw [Ideal.add_eq_sup, Submodule.mem_sup] at hx
@@ -315,8 +247,8 @@ theorem dpow_mul (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow 
           ((y.fst.choose x.1.1) * (y.snd.choose x.1.2))) * hI.dpow y.fst a * hJ.dpow y.snd b := by
     apply sum_congr rfl
     rintro ⟨u, v⟩ _
-    simp only [Prod.mk.injEq, mem_product, mem_antidiagonal, and_imp, Prod.forall, Nat.cast_sum,
-    Nat.cast_mul, sum_mul]
+    simp only [Prod.mk.injEq, mem_product, mem_antidiagonal, and_imp, Prod.forall, cast_sum,
+      cast_mul, sum_mul]
     apply sum_congr rfl
     rintro ⟨⟨i, j⟩, ⟨k, l⟩⟩ hx
     simp only [hs_def, mem_product, mem_antidiagonal, and_imp, Prod.forall, mem_filter,
@@ -330,9 +262,7 @@ theorem dpow_mul (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow 
   rw [← mul_assoc]
   congr
   simp only [hs_def, Prod.mk.injEq]
-  --
-  rw [Finset.sum_filter, Finset.sum_product]
-  rw [← h, Nat.add_choose_eq]
+  rw [Finset.sum_filter, Finset.sum_product, ← h, add_choose_eq]
   apply Finset.sum_congr rfl
   intro x hx
   -- x1 + x2 = m, y1 + y2 = n, x1 + y1 = u,  x2 + y2 = v
@@ -341,27 +271,25 @@ theorem dpow_mul (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow 
   · simp only [ite_eq_left_iff, not_and_or, zero_eq_mul]
     apply Or.imp
     all_goals {
-      rw [Nat.choose_eq_zero_iff, ← not_le, not_imp_not]
-      exact Nat.add_sub_of_le }
+      rw [choose_eq_zero_iff, ← not_le, not_imp_not]
+      exact add_sub_of_le }
   · intro y _ hy'
     simp only [ite_eq_right_iff] --TODO: simp? + golf proof
     intro hy''
     apply False.elim (hy' _)
     ext
-    · rw [← Nat.add_right_inj (n := x.1), hy''.1, Nat.add_sub_of_le (hy''.1.symm ▸ Nat.le_add_right _ _)]
-    · rw [← Nat.add_right_inj (n := x.2), hy''.2, Nat.add_sub_of_le (hy''.2.symm ▸ Nat.le_add_right _ _)]
+    · rw [← Nat.add_right_inj (n := x.1), hy''.1, add_sub_of_le (hy''.1.symm ▸ le_add_right _ _)]
+    · rw [← Nat.add_right_inj (n := x.2), hy''.2, add_sub_of_le (hy''.2.symm ▸ le_add_right _ _)]
   · intro hx'
     simp only [ite_eq_right_iff] --TODO: simp? + golf proof
     intro hx''
     apply False.elim (hx' _)
     simp only [mem_antidiagonal] at hx ⊢
-    rw [← Nat.add_right_inj (n := x.1), ← add_assoc, hx''.1]
-    rw [← Nat.add_left_inj (n := x.2), add_assoc, add_comm _ x.2, hx''.2]
-    rw [h, add_assoc, add_comm n, ← add_assoc, hx]
+    rw [← Nat.add_right_inj (n := x.1), ← add_assoc, hx''.1, ← Nat.add_left_inj (n := x.2),
+      add_assoc, add_comm _ x.2, hx''.2, h, add_assoc, add_comm n, ← add_assoc, hx]
 
 theorem dpow_mem (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
-    {n : ℕ} (hn : n ≠ 0) {x : A} (hx : x ∈ I + J) :
-    dpow hIJ n x ∈ I + J := by
+    {n : ℕ} (hn : n ≠ 0) {x : A} (hx : x ∈ I + J) : dpow hIJ n x ∈ I + J := by
   rw [Ideal.add_eq_sup, Submodule.mem_sup] at hx
   obtain ⟨a, ha, b, hb, rfl⟩ := hx
   rw [dpow_eq hIJ ha hb]
@@ -372,9 +300,8 @@ theorem dpow_mem (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow 
     exact hk ▸ Submodule.mem_sup_right (J.mul_mem_left _ (hJ.dpow_mem hn hb))
   · exact Submodule.mem_sup_left (I.mul_mem_right _ (hI.dpow_mem h ha))
 
-theorem dpow_smul (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
-    {n : ℕ} {c x : A} (hx : x ∈ I + J) :
-    dpow hIJ n (c * x) = c ^ n * dpow hIJ n x := by
+theorem dpow_mul (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
+    {n : ℕ} {c x : A} (hx : x ∈ I + J) : dpow hIJ n (c * x) = c ^ n * dpow hIJ n x := by
   rw [Ideal.add_eq_sup, Submodule.mem_sup] at hx
   obtain ⟨a, ha, b, hb, rfl⟩ := hx
   simp_rw [dpow_eq hIJ ha hb]
@@ -391,8 +318,7 @@ theorem dpow_add (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow 
   rw [Ideal.add_eq_sup, Submodule.mem_sup] at hx hy
   obtain ⟨a, ha, b, hb, rfl⟩ := hx
   obtain ⟨a', ha', b', hb', rfl⟩ := hy
-  rw [add_add_add_comm a b a' b']
-  rw [dpow_eq hIJ (I.add_mem ha ha') (J.add_mem hb hb')]
+  rw [add_add_add_comm a b a' b', dpow_eq hIJ (I.add_mem ha ha') (J.add_mem hb hb')]
   have hf1 (k : ℕ × ℕ) : hI.dpow k.1 (a + a') * hJ.dpow k.2 (b + b') =
       ∑ i ∈ (antidiagonal k.1), ∑ l ∈ (antidiagonal k.2),
         hI.dpow i.1 a * hI.dpow i.2 a' * hJ.dpow l.1 b * hJ.dpow l.2 b' := by
@@ -409,37 +335,34 @@ theorem dpow_add (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow 
     exact sum_congr rfl (fun _ _ ↦ by ring)
   rw [sum_congr rfl (fun k _ ↦ hf1 k), sum_congr rfl (fun k _ ↦ hf2 k)]
   -- One needs to swap the inner terms in the four-order sum
-  simp_rw [← sum_antidiagonalFourth'_eq (f := fun (i, l) ↦ hI.dpow i.1 a * hI.dpow l.1 a' * hJ.dpow i.2 b * hJ.dpow l.2 b')]
-  simp_rw [← sum_antidiagonalFourth'_eq (f := fun (i, l) ↦ hI.dpow i.1 a * hI.dpow i.2 a' * hJ.dpow l.1 b * hJ.dpow l.2 b')]
+  simp_rw [← sum_antidiagonalFourth'_eq (f := fun (i, l) ↦
+    hI.dpow i.1 a * hI.dpow l.1 a' * hJ.dpow i.2 b * hJ.dpow l.2 b'), ← sum_antidiagonalFourth'_eq
+      (f := fun (i, l) ↦ hI.dpow i.1 a * hI.dpow i.2 a' * hJ.dpow l.1 b * hJ.dpow l.2 b')]
   let i : (ℕ × ℕ) × (ℕ × ℕ) → (ℕ × ℕ) × (ℕ × ℕ) := fun (u, v) ↦ ((u.1, v.1), (u.2, v.2))
   have hi (a) (ha : a ∈ antidiagonalFourth' n) : i a ∈ antidiagonalFourth' n := by
     simp only [mem_antidiagonalFourth'] at ha ⊢
-    rw [← ha]
-    rw [add_assoc, add_add_add_comm, ← add_assoc]
-  have hi' (a) : i (i a) = a := rfl
-  apply Finset.sum_nbij' i i hi hi (fun a _ ↦ hi' a) (fun a _ ↦ hi' a)
-  intro a _
-  rw [mul_assoc, mul_mul_mul_comm, ← mul_assoc]
+    rw [← ha, add_assoc, add_add_add_comm, ← add_assoc]
+  exact Finset.sum_nbij' i i hi hi (fun a _ ↦ rfl) (fun a _ ↦ rfl)
+    (fun a _ ↦ by rw [mul_assoc, mul_mul_mul_comm, ← mul_assoc])
 
 theorem dpow_add' (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
     {n : ℕ} {x y : A} (hx : x ∈ I + J) (hy : y ∈ I + J) :
-    dpow hIJ n (x + y) =
-      ∑ k ∈ range (n + 1), dpow hIJ k x * dpow hIJ (n - k) y := by
-  rw [dpow_add hIJ hx hy]
-  simp only [Nat.sum_antidiagonal_eq_sum_range_succ_mk]
+    dpow hIJ n (x + y) = ∑ k ∈ range (n + 1), dpow hIJ k x * dpow hIJ (n - k) y := by
+  simp [dpow_add hIJ hx hy, Nat.sum_antidiagonal_eq_sum_range_succ_mk]
 
-/-- Prove the `dpow_comp` axiom for the ideal `I ⊔ J`, assuming agreement on `I ⊓ J` , -/
-theorem dpow_comp_aux (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
-    {m n : ℕ} (hn : n ≠ 0) {a b : A} (ha : a ∈ I) (hb : b ∈ J) :
-    dpow hIJ m (dpow hIJ n (a + b)) =
-      ∑ p ∈ range (m * n + 1),
-        (∑ x ∈ ((range (n + 1)).sym m).filter (fun l : Sym ℕ m ↦ ∑ i ∈ range (n + 1), Multiset.count i ↑l * i = p),
+/-- The `dpow_comp` axiom for elements of the ideal `I ⊔ J` of the form `a + b` with `a ∈ I` and
+  `b ∈ J`. -/
+private theorem dpow_comp_aux (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) {m n : ℕ}
+    (hn : n ≠ 0) {a b : A} (ha : a ∈ I) (hb : b ∈ J) :
+    dpow hIJ m (dpow hIJ n (a + b)) = ∑ p ∈ range (m * n + 1),
+        (∑ x ∈ ((range (n + 1)).sym m).filter
+          (fun l : Sym ℕ m ↦ ∑ i ∈ range (n + 1), Multiset.count i ↑l * i = p),
           ((∏ i ∈ range (n + 1), cnik n i ↑x) *
-            Nat.multinomial (range (n + 1)) fun i ↦ Multiset.count i ↑x * i) *
-            Nat.multinomial (range (n + 1)) fun i ↦ Multiset.count i ↑x * (n - i)) *
-        hI.dpow p a * hJ.dpow (m * n - p) b := by
-  rw [dpow_eq hIJ ha hb]
-  rw [Nat.sum_antidiagonal_eq_sum_range_succ (f := fun k l ↦ hI.dpow k a * hJ.dpow l b)]
+            multinomial (range (n + 1)) fun i ↦ Multiset.count i ↑x * i) *
+            multinomial (range (n + 1)) fun i ↦ Multiset.count i ↑x * (n - i)) *
+          hI.dpow p a * hJ.dpow (m * n - p) b := by
+  rw [dpow_eq hIJ ha hb, Nat.sum_antidiagonal_eq_sum_range_succ
+    (f := fun k l ↦ hI.dpow k a * hJ.dpow l b)]
   have L1 (k : Sym ℕ m) (i : ℕ) (hi : i ∈ range (n + 1)) :
       dpow hIJ (Multiset.count i ↑k) (hI.dpow i a * hJ.dpow (n - i) b) = cnik n i ↑k *
         hI.dpow (Multiset.count i ↑k * i) a * hJ.dpow (Multiset.count i ↑k * (n - i)) b := by
@@ -457,7 +380,7 @@ theorem dpow_comp_aux (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.
           dpow_eq_of_mem_right' hIJ (hJ.dpow_mem hn hb), hJ.dpow_comp hn hb, mul_zero,
           hI.dpow_zero ha, mul_one]
       -- i ≠ 0  and i ≠ n
-      · rw [if_neg hi1, if_neg hi2, mul_comm, dpow_smul hIJ
+      · rw [if_neg hi1, if_neg hi2, mul_comm, dpow_mul hIJ
           (Submodule.mem_sup_left (hI.dpow_mem hi1 ha)), mul_comm, dpow_eq_of_mem_left' hIJ
           (hI.dpow_mem hi1 ha), ← hJ.factorial_mul_dpow_eq_pow (hJ.dpow_mem hi2' hb),
           hI.dpow_comp hi1 ha, hJ.dpow_comp hi2' hb]
@@ -467,10 +390,9 @@ theorem dpow_comp_aux (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.
         rw [mul_comm (hI.dpow _ a)]
         simp only [← mul_assoc]
         apply congr_arg₂ _ _ rfl
-        simp only [Sym.mem_coe, ge_iff_le, Nat.cast_mul]
+        simp only [Sym.mem_coe, ge_iff_le, cast_mul]
         apply congr_arg₂ _ _ rfl
         rw [mul_comm]
-
   rw [dpow_sum' (dpow := dpow hIJ)]
   · set φ := fun (k : Sym ℕ m) ↦ ∑ i ∈ (range (n + 1)), Multiset.count i ↑k * i with hφ_def
     suffices hφ : ∀ k ∈ (range (n + 1)).sym m, φ k ∈ range (m * n + 1) by
@@ -481,11 +403,10 @@ theorem dpow_comp_aux (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.
                 dpow hIJ (Multiset.count i ↑x) (hI.dpow i a * hJ.dpow (n - i) b)) =
             ∑ k ∈ ((range (n + 1)).sym m).filter (fun x ↦ φ x = p),
               (∏ i ∈ (range (n + 1)), ↑(cnik n i ↑k)) *
-                  ↑(Nat.multinomial (range (n + 1)) fun i : ℕ => Multiset.count i ↑k * i) *
-                  ↑(Nat.multinomial (range (n + 1)) fun i : ℕ => Multiset.count i ↑k * (n - i)) *
+                  ↑(multinomial (range (n + 1)) fun i : ℕ => Multiset.count i ↑k * i) *
+                  ↑(multinomial (range (n + 1)) fun i : ℕ => Multiset.count i ↑k * (n - i)) *
               hI.dpow p a * hJ.dpow (m * n - p) b by
-          simp only [Nat.succ_eq_add_one, sum_congr rfl L4, Nat.cast_sum, Nat.cast_mul,
-            Nat.cast_prod, sum_mul]
+          simp only [succ_eq_add_one, sum_congr rfl L4, cast_sum, cast_mul, cast_prod, sum_mul]
           congr
       intro p _
       apply sum_congr rfl
@@ -519,53 +440,53 @@ theorem dpow_comp_aux (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.
       rw [hi0, tsub_zero]; exact hn
     · exact Submodule.mem_sup_left (I.mul_mem_right _ (hI.dpow_mem hi0 ha))
 
-theorem dpow_comp_coeffs {m n p : ℕ} (hn : n ≠ 0) (hp : p ≤ m * n) :
-  Nat.uniformBell m n =
-    ∑ x ∈ ((range (n + 1)).sym m).filter (fun l : Sym ℕ m ↦ ∑ i ∈ range (n + 1), Multiset.count i ↑l * i = p),
+private theorem dpow_comp_coeffs {m n p : ℕ} (hn : n ≠ 0) (hp : p ≤ m * n) :
+    uniformBell m n = ∑ x ∈ ((range (n + 1)).sym m).filter
+      (fun l : Sym ℕ m ↦ ∑ i ∈ range (n + 1), Multiset.count i ↑l * i = p),
         (∏ i ∈ (range (n + 1)), cnik n i ↑x) *
-          ((Nat.multinomial (range (n + 1)) fun i ↦ Multiset.count i ↑x * i) *
-            Nat.multinomial (range (n + 1)) fun i ↦ Multiset.count i ↑x * (n - i)) := by
+          ((multinomial (range (n + 1)) fun i ↦ Multiset.count i ↑x * i) *
+            multinomial (range (n + 1)) fun i ↦ Multiset.count i ↑x * (n - i)) := by
   classical
-  rw [← mul_left_inj' (pos_iff_ne_zero.mp (Nat.choose_pos hp))]
-  apply @Nat.cast_injective ℚ
-  simp only [Sym.mem_coe, mem_sym_iff, mem_range, ge_iff_le,
-    Nat.cast_sum, Nat.cast_mul, Nat.cast_prod, Nat.cast_eq_zero]
+  rw [← mul_left_inj' (pos_iff_ne_zero.mp (choose_pos hp))]
+  apply @cast_injective ℚ
+  simp only [Sym.mem_coe, mem_sym_iff, mem_range, ge_iff_le, cast_sum, cast_mul, cast_prod,
+    cast_eq_zero]
   conv_lhs => rw [← Polynomial.coeff_X_add_one_pow ℚ (m * n) p]
   let A := ℚ[X]
   let I : Ideal A := ⊤
   let hI : DividedPowers I := RatAlgebra.dividedPowers ⊤
   let hII : ∀ {n : ℕ}, ∀ a ∈ I ⊓ I, hI.dpow n a = hI.dpow n a := fun _ _ => rfl
   let h1 : (1 : A) ∈ I := Submodule.mem_top
-  let hX : X ∈ I := Submodule.mem_top
+  let hX : Polynomial.X ∈ I := Submodule.mem_top
   rw [← hI.factorial_mul_dpow_eq_pow Submodule.mem_top, ← Polynomial.coeff_C_mul,
-    ← mul_assoc, mul_comm (C ((Nat.uniformBell m n) : ℚ)), mul_assoc, C_eq_natCast,
+    ← mul_assoc, mul_comm (C (uniformBell m n : ℚ)), mul_assoc, C_eq_natCast,
     ← hI.dpow_comp hn Submodule.mem_top, ← dpow_eq_of_mem_left' hII Submodule.mem_top,
     ← dpow_eq_of_mem_left' hII Submodule.mem_top, dpow_comp_aux hII hn hX h1,
     ← C_eq_natCast, mul_sum, finset_sum_coeff]
   simp only [hI, RatAlgebra.dpow_eq_inv_fact_smul _ _ Submodule.mem_top, map_natCast,
-    Nat.cast_sum, Nat.cast_mul, Nat.cast_prod, Ring.inverse_eq_inv', Algebra.mul_smul_comm, one_pow,
-    mul_one, coeff_smul, coeff_natCast_mul, smul_eq_mul]
-  simp only [← Nat.cast_prod, ← Nat.cast_mul, ← Nat.cast_sum]
+    cast_sum, cast_mul, cast_prod, Ring.inverse_eq_inv', Algebra.mul_smul_comm, one_pow,
+    mul_one, Polynomial.coeff_smul, coeff_natCast_mul, smul_eq_mul]
+  simp only [← cast_prod, ← cast_mul, ← cast_sum]
   rw [sum_eq_single p]
   · conv_lhs =>
-      rw [coeff_natCast_mul, coeff_X_pow, if_pos, mul_one, ← mul_assoc, mul_comm]
+      rw [coeff_natCast_mul, Polynomial.coeff_X_pow, if_pos, mul_one, ← mul_assoc, mul_comm]
       simp only [mul_assoc]
       rw [mul_comm]
-    simp only [Nat.cast_sum, Nat.cast_mul, Nat.cast_prod, sum_mul]
+    simp only [cast_sum, cast_mul, cast_prod, sum_mul]
     apply sum_congr rfl
     intro x _
     simp only [mul_assoc]
     congr
     ring_nf
     simp only [mul_assoc]
-    rw [inv_mul_eq_iff_eq_mul₀, inv_mul_eq_iff_eq_mul₀, ← Nat.choose_mul_factorial_mul_factorial hp]
-    simp only [Nat.cast_mul]
+    rw [inv_mul_eq_iff_eq_mul₀, inv_mul_eq_iff_eq_mul₀, ← choose_mul_factorial_mul_factorial hp]
+    simp only [cast_mul]
     ring
     all_goals
-      simp only [ne_eq, Nat.cast_eq_zero]
-      exact Nat.factorial_ne_zero _
+      simp only [ne_eq, cast_eq_zero]
+      exact factorial_ne_zero _
   · intro b _ hb
-    rw [coeff_natCast_mul, coeff_X_pow, if_neg hb.symm]
+    rw [coeff_natCast_mul, Polynomial.coeff_X_pow, if_neg hb.symm]
     simp only [mul_zero]
   · intro hp'
     simp only [mem_range, Nat.lt_succ_iff] at hp'
@@ -573,7 +494,7 @@ theorem dpow_comp_coeffs {m n p : ℕ} (hn : n ≠ 0) (hp : p ≤ m * n) :
 
 theorem dpow_comp (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) {m n : ℕ} {x : A}
     (hn : n ≠ 0) (hx : x ∈ I + J) :
-    dpow hIJ m (dpow hIJ n x) = ↑(Nat.uniformBell m n) * dpow hIJ (m * n) x := by
+    dpow hIJ m (dpow hIJ n x) = ↑(uniformBell m n) * dpow hIJ (m * n) x := by
   rw [Ideal.add_eq_sup, Submodule.mem_sup] at hx
   obtain ⟨a, ha, b, hb, rfl⟩ := hx
   rw [dpow_comp_aux hIJ hn ha hb,
@@ -590,23 +511,20 @@ theorem dpow_null (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow
     {n : ℕ} {x : A} (hx : x ∉ I + J) :
     dpow hIJ n x = 0 := by
   simp only [dpow]
-  -- simp only [dpow, Function.const_zero]
   rw [Function.extend_apply', Pi.zero_apply]
   rintro ⟨a, rfl⟩
   exact hx a.prop
 
-theorem dpow_one (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
-    {x : A} (hx : x ∈ I + J) :
-    dpow hIJ 1 x = x := by
+theorem dpow_one (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) {x : A}
+   (hx : x ∈ I + J) : dpow hIJ 1 x = x := by
   rw [Ideal.add_eq_sup, Submodule.mem_sup] at hx
   obtain ⟨a, ha, b, hb, rfl⟩ := hx
   rw [dpow_eq hIJ ha hb]
-  have : antidiagonal 1 = {⟨0, 1⟩, ⟨1, 0⟩} := rfl
-  simp [this, hI.dpow_one ha, hJ.dpow_one hb, hI.dpow_zero ha, hJ.dpow_zero hb, add_comm]
+  have h1 : antidiagonal 1 = {⟨0, 1⟩, ⟨1, 0⟩} := rfl
+  simp [h1, hI.dpow_one ha, hJ.dpow_one hb, hI.dpow_zero ha, hJ.dpow_zero hb, add_comm]
 
 /-- The divided power structure on the ideal `I + J`, given that `hI` and `hJ` agree on `I ⊓ J`. -/
-noncomputable def dividedPowers
-    (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) :
+noncomputable def dividedPowers (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) :
     DividedPowers (I + J) where
   dpow           := dpow hIJ
   dpow_null      := dpow_null hIJ
@@ -614,15 +532,15 @@ noncomputable def dividedPowers
   dpow_one       := dpow_one hIJ
   dpow_mem hn hx := dpow_mem hIJ hn hx
   dpow_add       := dpow_add hIJ
-  dpow_mul       := dpow_smul hIJ
-  mul_dpow       := dpow_mul hIJ
+  dpow_mul       := dpow_mul hIJ
+  mul_dpow       := mul_dpow hIJ
   dpow_comp      := dpow_comp hIJ
 
 theorem dpow_unique (hsup : DividedPowers (I + J))
     (hI' : ∀ {n : ℕ}, ∀ a ∈ I, hI.dpow n a = hsup.dpow n a)
     (hJ' : ∀ {n : ℕ}, ∀ b ∈ J, hJ.dpow n b = hsup.dpow n b) :
     let hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a := fun n ha => by
-      rw [Submodule.mem_inf] at ha; rw [hI' _ ha.1, hJ' _ ha.2]
+      rw [hI' _ ha.1, hJ' _ ha.2]
     hsup = dividedPowers hIJ := by
   intro hIJ
   refine hsup.ext _ (fun n x hx ↦ ?_)
@@ -650,6 +568,49 @@ theorem dpow_eq_of_mem_right (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n 
     (IdealAdd.dividedPowers hIJ).dpow n x = hJ.dpow n x :=
   dpow_eq_of_mem_right' hIJ hx
 
+open Ideal
+
+variable {B : Type*} [CommRing B] [Algebra A B] {J : Ideal B} {hJ : DividedPowers J}
+    {hI' : DividedPowers (map (algebraMap A B) I)}
+
+theorem dividedPowers_dpow_eq_algebraMap
+    (hI'_ext : ∀ {n : ℕ} (a : A), hI'.dpow n ((algebraMap A B) a) = (algebraMap A B) (hI.dpow n a))
+    (hI'_int : ∀ {n : ℕ}, ∀ b ∈ J ⊓ map (algebraMap A B) I, hJ.dpow n b = hI'.dpow n b)
+    (n : ℕ) (a : A) (ha : a ∈ I) :
+     (IdealAdd.dividedPowers hI'_int).dpow n ((algebraMap A B) a) =
+      (algebraMap A B) (hI.dpow n a) := by
+  rw [← hI'_ext]
+  exact IdealAdd.dpow_eq_of_mem_right hI'_int (mem_map_of_mem (algebraMap A B) ha)
+
+theorem dividedPowers_dpow_eq_algebraMap'
+    (hI'_ext : hI.IsDPMorphism hI' (algebraMap A B))
+    (h_int : ∀ {n : ℕ}, ∀ b ∈ map (algebraMap A B) I ⊓ J, hI'.dpow n b = hJ.dpow n b)
+    (n : ℕ) (a : A) (ha : a ∈ I) :
+     (IdealAdd.dividedPowers h_int).dpow n ((algebraMap A B) a) =
+      (algebraMap A B) (hI.dpow n a) := by
+  rw [← hI'_ext.2 _ ha]
+  exact IdealAdd.dpow_eq_of_mem_left h_int (mem_map_of_mem (algebraMap A B) ha)
+
+def subDPIdeal_right {K : Ideal A} (hK : DividedPowers K)
+    (hIK : ∀ {n : ℕ}, ∀ a ∈ I ⊓ K, hI.dpow n a = hK.dpow n a) :
+    SubDPIdeal (IdealAdd.dividedPowers hIK) where
+  carrier           := K
+  isSubideal c hc   := Ideal.mem_sup_right hc
+  dpow_mem _ hn _ hj  := by
+    rw [IdealAdd.dpow_eq_of_mem_right hIK hj]
+    exact hK.dpow_mem hn hj
+
+def subDPIdeal_left {K : Ideal A} (hK : DividedPowers K)
+    (hIK : ∀ {n : ℕ}, ∀ a ∈ I ⊓ K, hI.dpow n a = hK.dpow n a) :
+    SubDPIdeal (IdealAdd.dividedPowers hIK) where
+  carrier           := I
+  isSubideal c hc   := Ideal.mem_sup_left hc
+  dpow_mem _ hn _ hj  := by
+    rw [IdealAdd.dpow_eq_of_mem_left hIK hj]
+    exact hI.dpow_mem hn hj
+
 end IdealAdd
 
 end DividedPowers
+
+#lint
