@@ -42,8 +42,7 @@ import DividedPowers.ForMathlib.RingTheory.TensorProduct.Polynomial
 import DividedPowers.ForMathlib.Topology.Algebra.LinearTopology
 --import DividedPowers.ForMathlib.Topology.Algebra.TopologicallyNilpotent -- In PR #20971
 import DividedPowers.IdealAdd
---import DividedPowers.IdealAdd2 --NOTE: we cannot import this because it
--- duplicates lemmas from IdealAdd. We should pick a version.
+import DividedPowers.IdealAdd_v1 -- For comparison of definitions
 import DividedPowers.Padic
 import DividedPowers.PolynomialLaw.Basic
 import DividedPowers.PolynomialLaw.Coeff

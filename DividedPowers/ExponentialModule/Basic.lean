@@ -395,6 +395,9 @@ lemma coe_ext {f g : ExponentialModule R} (h : (f : R⟦X⟧) = ↑g) : f = g :=
 @[simp]
 theorem toMul_val_eq_coe {f : ExponentialModule R} : toMul (↑f : Additive R⟦X⟧) = ↑f := rfl
 
+@[simp]
+theorem coe_mk {f : R⟦X⟧} (hf : IsExponential f) : ↑(⟨f, hf⟩ : ExponentialModule R) = f := rfl
+
 noncomputable instance instSMul : SMul A (ExponentialModule R) where
   smul r f := ⟨r • (f : Additive R⟦X⟧), by
     simp only [mem_exponentialModule_iff', toAdditive_smul_coe',f.prop.rescale (algebraMap A R r)]

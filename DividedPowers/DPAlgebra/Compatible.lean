@@ -240,17 +240,17 @@ set_option linter.unusedVariables false in
 lemma IsCompatibleWith_tfae {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers I)
     {B : Type v} [CommRing B] {J : Ideal B} (hJ : DividedPowers J) (f : A →+* B) :
     List.TFAE  [∃ hI' : DividedPowers (I.map f), IsDPMorphism hI hI' f ∧
-      ∀ (n : ℕ) (b : B) (_ : b ∈ I.map f ⊓ J), hI'.dpow n b = hJ.dpow n b,
+      ∀ {n : ℕ} (b : B) (_ : b ∈ I.map f ⊓ J), hI'.dpow n b = hJ.dpow n b,
       ∃ hK : DividedPowers (I.map f + J), IsDPMorphism hI hK f ∧ IsDPMorphism hJ hK (RingHom.id _),
       ∃ (K' : Ideal B) (hIJK : I.map f + J ≤ K') (hK' : DividedPowers K'),
       IsDPMorphism hI hK' f ∧ IsDPMorphism hJ hK' (RingHom.id _)] := by
   classical
   tfae_have 1 → 2 := by
     rintro ⟨hI', hII', hI'J⟩
-    exact ⟨IdealAdd.dividedPowers hI' hJ hI'J,
-      IsDPMorphism.comp (IdealAdd.dividedPowers hI' hJ hI'J) (f := f)
-        (g := RingHom.id B) (IdealAdd.isDPMorphism_left hI' hJ hI'J) hII',
-      IdealAdd.isDPMorphism_right hI' hJ hI'J⟩
+    exact ⟨IdealAdd.dividedPowers hI'J,
+      IsDPMorphism.comp (IdealAdd.dividedPowers hI'J) (f := f)
+        (g := RingHom.id B) (IdealAdd.isDPMorphism_left hI'J) hII',
+      IdealAdd.isDPMorphism_right hI'J⟩
   tfae_have 2 → 3 := by
     rintro ⟨hK, hIK, hJK⟩
     use I.map f + J, le_refl _, hK
@@ -280,7 +280,7 @@ def IsCompatibleWith {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPowers
     [CommRing B] {J : Ideal B} (hJ : DividedPowers J) (f : A →+* B) : Prop :=
   ∃ hI' : DividedPowers (I.map f), IsDPMorphism hI hI' f
     /- (∀ (n : ℕ) (a : A), hI'.dpow n (f a) = f (hI.dpow n a)) -/ ∧
-      ∀ (n : ℕ) (b : B) (_ : b ∈ I.map f ⊓ J), hI'.dpow n b = hJ.dpow n b
+      ∀ {n : ℕ} (b : B) (_ : b ∈ I.map f ⊓ J), hI'.dpow n b = hJ.dpow n b
 
 -- TODO: formalize B-O 3.18
 -- TODO: add API relating SubDPIdeal and IsCompatibleWith.

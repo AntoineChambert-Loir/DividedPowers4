@@ -8,36 +8,6 @@ import DividedPowers.DPMorphism
 import DividedPowers.RatAlgebra
 import Mathlib.Data.Nat.Choose.Vandermonde
 
-
-section Polynomial
-
-open Ring
-
-theorem Polynomial.C_eq_smul_one {R : Type*} [Semiring R] {a : R} :
-    (C a : Polynomial R) = a • (1 : Polynomial R) := by
-  rw [← C_mul', mul_one]
-
-theorem Polynomial.inv_C_eq_C_inv {R : Type*} [CommSemiring R] {a : R} :
-    inverse (C a) = C (inverse a) := by
-  simp only [inverse]
-  by_cases ha : IsUnit a
-  · have hCa : IsUnit (C a) := by
-      rw [← IsUnit.unit_spec ha]
-      exact RingHom.isUnit_map C ha
-    rw [dif_pos ha, dif_pos hCa]
-    apply IsUnit.mul_right_cancel hCa
-    simp only [← map_mul, IsUnit.val_inv_mul, map_one]
-  · simp only [inverse, dif_neg ha, map_zero]
-    rw [dif_neg]
-    intro hCa
-    apply ha
-    rw [isUnit_iff_exists_inv] at hCa ⊢
-    obtain ⟨b, hb⟩ := hCa
-    use b.coeff 0
-    rw [← Polynomial.coeff_C_mul, hb, coeff_one_zero]
-
-end Polynomial
-
 open Finset
 
 namespace DividedPowers

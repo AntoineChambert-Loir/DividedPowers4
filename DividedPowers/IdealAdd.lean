@@ -601,7 +601,7 @@ def subDPIdeal_left {K : Ideal A} (hK : DividedPowers K)
     exact hI.dpow_mem hn hj
 
 /-- `K` as a `SubDPIdeal` of `I + K`. -/
-def subDPIdeal_right {K : Ideal A} (hK : DividedPowers K)
+def subDPIdeal_right {K : Ideal A} {hK : DividedPowers K}
     (hIK : ∀ {n : ℕ}, ∀ a ∈ I ⊓ K, hI.dpow n a = hK.dpow n a) :
     SubDPIdeal (IdealAdd.dividedPowers hIK) where
   carrier           := K
