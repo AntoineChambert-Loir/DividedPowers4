@@ -11,7 +11,36 @@ import DividedPowers.SubDPIdeal
 import Mathlib.Data.Nat.Choose.Vandermonde
 import Mathlib.LinearAlgebra.Isomorphisms
 
+/-! # Divided powers on sums of ideals
+Let `A` be a commutative ring and let `(I, hI)` and `(J, hJ)` be two divided power ideals in `A`
+such that `hI` and `hJ` agree on the intersection `hI ∩ hJ`. In this file, we construct the unique
+divided power structure on `I + J` that extends both `hI` and `hJ`.
 
+## Main definitions
+* `DividedPowers.IdealAdd.dividedPowers`: the divided power structure on the ideal `I + J`, given
+  that `hI` and `hJ` agree on `I ⊓ J`.
+* `DividedPowers.IdealAdd.subDPIdeal_left`: `I` as a `SubDPIdeal` of `I + J`.
+* `DividedPowers.IdealAdd.subDPIdeal_right`: `J` as a `SubDPIdeal` of `I + J`.
+
+## Main results
+* `DividedPowers.IdealAdd.dividedPowers_unique`: `IdealAdd.dividedPowers` is the unique divided
+  power structure on `I + J` that simultaneously extends `hI` and `hJ`.
+* `DividedPowers.IdealAdd.isDPMorphism_left`: `id A` is a `DPMorphism` from `I` to `I + J`.
+* `DividedPowers.IdealAdd.isDPMorphism_right`: `id A` is a `DPMorphism` from `J` to `I + J`.
+
+## References
+* [P. Berthelot, *Cohomologie cristalline des schémas de
+caractéristique $p$ > 0*][Berthelot-1974]
+* [P. Berthelot and A. Ogus, *Notes on crystalline
+cohomology*][BerthelotOgus-1978]
+* [N. Roby, *Lois polynomes et lois formelles en théorie des
+modules*][Roby-1963]
+* [N. Roby, *Les algèbres à puissances dividées*][Roby-1965]
+
+## Implementation Remarks
+See the file `IdealAdd_v1.lean` for a mathematically equivalent definition of the divided power
+structure on `I + J` that does not rely on exponential power series.
+-/
 
 section onSup
 
@@ -508,7 +537,7 @@ noncomputable def dividedPowers (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow
   mul_dpow       := mul_dpow hIJ
   dpow_comp      := dpow_comp hIJ
 
-theorem dpow_unique (hsup : DividedPowers (I + J))
+theorem dividedPowers_unique (hsup : DividedPowers (I + J))
     (hI' : ∀ {n : ℕ}, ∀ a ∈ I, hI.dpow n a = hsup.dpow n a)
     (hJ' : ∀ {n : ℕ}, ∀ b ∈ J, hJ.dpow n b = hsup.dpow n b) :
     let hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a := fun n ha => by
@@ -540,31 +569,8 @@ theorem dpow_eq_of_mem_right (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n 
     (IdealAdd.dividedPowers hIJ).dpow n x = hJ.dpow n x :=
   dpow_eq_of_mem_right' hIJ hx
 
-open Ideal
-
-variable {B : Type*} [CommRing B] [Algebra A B] {J : Ideal B} {hJ : DividedPowers J}
-    {hI' : DividedPowers (map (algebraMap A B) I)}
-
-theorem dividedPowers_dpow_eq_algebraMap
-    (hI'_ext : ∀ {n : ℕ} (a : A), hI'.dpow n ((algebraMap A B) a) = (algebraMap A B) (hI.dpow n a))
-    (hI'_int : ∀ {n : ℕ}, ∀ b ∈ J ⊓ map (algebraMap A B) I, hJ.dpow n b = hI'.dpow n b)
-    (n : ℕ) (a : A) (ha : a ∈ I) :
-     (IdealAdd.dividedPowers hI'_int).dpow n ((algebraMap A B) a) =
-      (algebraMap A B) (hI.dpow n a) := by
-  rw [← hI'_ext]
-  exact IdealAdd.dpow_eq_of_mem_right hI'_int (mem_map_of_mem (algebraMap A B) ha)
-
-theorem dividedPowers_dpow_eq_algebraMap'
-    (hI'_ext : hI.IsDPMorphism hI' (algebraMap A B))
-    (h_int : ∀ {n : ℕ}, ∀ b ∈ map (algebraMap A B) I ⊓ J, hI'.dpow n b = hJ.dpow n b)
-    (n : ℕ) (a : A) (ha : a ∈ I) :
-     (IdealAdd.dividedPowers h_int).dpow n ((algebraMap A B) a) =
-      (algebraMap A B) (hI.dpow n a) := by
-  rw [← hI'_ext.2 _ ha]
-  exact IdealAdd.dpow_eq_of_mem_left h_int (mem_map_of_mem (algebraMap A B) ha)
-
 /-- `I` as a `SubDPIdeal` of `I + K`. -/
-def subDPIdeal_left {K : Ideal A} (hK : DividedPowers K)
+def subDPIdeal_left {K : Ideal A} {hK : DividedPowers K}
     (hIK : ∀ {n : ℕ}, ∀ a ∈ I ⊓ K, hI.dpow n a = hK.dpow n a) :
     SubDPIdeal (IdealAdd.dividedPowers hIK) where
   carrier           := I
@@ -582,6 +588,30 @@ def subDPIdeal_right {K : Ideal A} {hK : DividedPowers K}
   dpow_mem _ hn _ hj  := by
     rw [IdealAdd.dpow_eq_of_mem_right hIK hj]
     exact hK.dpow_mem hn hj
+
+open Ideal
+
+variable {B : Type*} [CommRing B] [Algebra A B] {K : Ideal B} {hK : DividedPowers K}
+    {hI' : DividedPowers (map (algebraMap A B) I)}
+
+theorem dividedPowers_dpow_eq_algebraMap
+    (hI'_ext : ∀ {n : ℕ} (a : A), hI'.dpow n ((algebraMap A B) a) = (algebraMap A B) (hI.dpow n a))
+    (hI'_int : ∀ {n : ℕ}, ∀ b ∈ K ⊓ map (algebraMap A B) I, hK.dpow n b = hI'.dpow n b)
+    (n : ℕ) (a : A) (ha : a ∈ I) :
+     (IdealAdd.dividedPowers hI'_int).dpow n ((algebraMap A B) a) =
+      (algebraMap A B) (hI.dpow n a) := by
+  rw [← hI'_ext]
+  exact IdealAdd.dpow_eq_of_mem_right hI'_int (mem_map_of_mem (algebraMap A B) ha)
+
+theorem dividedPowers_dpow_eq_algebraMap'
+    (hI'_ext : hI.IsDPMorphism hI' (algebraMap A B))
+    (h_int : ∀ {n : ℕ}, ∀ b ∈ map (algebraMap A B) I ⊓ K, hI'.dpow n b = hK.dpow n b)
+    (n : ℕ) (a : A) (ha : a ∈ I) :
+     (IdealAdd.dividedPowers h_int).dpow n ((algebraMap A B) a) =
+      (algebraMap A B) (hI.dpow n a) := by
+  rw [← hI'_ext.2 _ ha]
+  exact IdealAdd.dpow_eq_of_mem_left h_int (mem_map_of_mem (algebraMap A B) ha)
+
 
 end IdealAdd
 

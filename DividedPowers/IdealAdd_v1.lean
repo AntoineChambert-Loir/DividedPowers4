@@ -3,10 +3,27 @@ Copyright (c) 2024 Antoine Chambert-Loir, María Inés de Frutos-Fernández. All
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
+
 import DividedPowers.BasicLemmas
 import DividedPowers.DPMorphism
 import DividedPowers.RatAlgebra
 import Mathlib.Data.Nat.Choose.Vandermonde
+
+/-! # Alternative definition of divided powers on sums of ideals
+This file is provided for comparison with `IdealAdd.lean`. Here we formalize the definition of the
+divided power structure on `I + J` without relying on the theory of exponential power series.
+
+To do that, we define `dpow : ℕ → A → A` as the function sending `n : ℕ` to
+  `Function.extend (fun ⟨a, b⟩ => (a : A) + (b : A) : I × J → A)
+    (fun ⟨a, b⟩ => Finset.sum (range (n + 1)) fun k => hI.dpow k (a : A) * hJ.dpow (n - k) (b : A))
+    (Function.const A 0)`.
+
+This requires us to show that this definition is independing of any choices, which we do in the
+theorem `dpow_factorsThrough`. That is, if an element `c : A` can be expressed as a sum
+`c = a + b = a' + b'` with `a, a' ∈ I`, `b, b' ∈ J` in multiples way, we need to show that
+`dpow n c` does not depend on this choice of decomposition.
+
+-/
 
 open Finset
 

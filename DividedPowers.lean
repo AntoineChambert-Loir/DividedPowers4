@@ -31,10 +31,11 @@ import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.StronglySummable.Basic 
 import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.StronglySummable.Topology
 --import DividedPowers.ForMathlib.MvPowerSeries.Sandbox -- Test file, do not import here.
 import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Substitution
+import DividedPowers.ForMathlib.RingTheory.Polynomial.Coeff
 --import DividedPowers.ForMathlib.MvPowerSeries.Trunc -- In PR 20958
 --import DividedPowers.ForMathlib.RingTheory.PowerSeries.Topology -- In PR #14866
-import DividedPowers.ForMathlib.RingTheory.SubmoduleMem
 import DividedPowers.ForMathlib.RingTheory.PowerSeries.Evaluation
+import DividedPowers.ForMathlib.RingTheory.SubmoduleMem
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.LinearEquiv
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.MonoidAlgebra
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.MvPolynomial
