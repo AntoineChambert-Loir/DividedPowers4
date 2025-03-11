@@ -4,12 +4,12 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 import DividedPowers.DPAlgebra.BaseChange
-import DividedPowers.PolynomialMap.Homogeneous
+import DividedPowers.PolynomialLaw.Homogeneous
 import Mathlib.LinearAlgebra.FreeModule.Basic
 
 /-
 
-The universal homogeneous PolynomialMap from a module to the degree n
+The universal homogeneous PolynomialLaw from a module to the degree n
 part of its DividedPowerAlgebra
 
 Application : If M is free as a R-module with basis (e i),
@@ -33,7 +33,7 @@ open TensorProduct AlgEquiv LinearMap
   is compatible with the graded structure and induces equivs componentwise -/
 /-- The universal polynomial map (homogeneous of degree n) on a module -/
 noncomputable
-def gamma (n : ℕ) : PolynomialMap R M (DividedPowerAlgebra R M) where
+def gamma (n : ℕ) : PolynomialLaw R M (DividedPowerAlgebra R M) where
   toFun' S _ _ := fun m ↦
     (DividedPowerAlgebra.dpScalarExtensionEquiv R S M).symm
       (DividedPowerAlgebra.dp S n m)
@@ -43,12 +43,12 @@ def gamma (n : ℕ) : PolynomialMap R M (DividedPowerAlgebra R M) where
 
 theorem gamma_toFun (n : ℕ) {S : Type*} [CommRing S] [Algebra R S] (m : S ⊗[R] M) :
     (gamma R M n).toFun S m = (dpScalarExtensionEquiv R S M).symm (dp S n m) := by
-  obtain ⟨k, ψ, p, rfl⟩ := PolynomialMap.exists_lift m
-  rw [← (gamma R M n).isCompat_apply, PolynomialMap.toFun_eq_toFun']
+  obtain ⟨k, ψ, p, rfl⟩ := PolynomialLaw.exists_lift m
+  rw [← (gamma R M n).isCompat_apply, PolynomialLaw.toFun_eq_toFun']
   simp only [gamma, rTensor_comp_dpScalarExtensionEquiv_symm_eq]
 
 theorem isHomogeneousOfDegree_gamma (n : ℕ) :
-    PolynomialMap.IsHomogeneousOfDegree n (DividedPowerAlgebra.gamma R M n) := by
+    PolynomialLaw.IsHomogeneousOfDegree n (DividedPowerAlgebra.gamma R M n) := by
   intro S _ _ r sm
   simp only [gamma]
   apply (dpScalarExtensionEquiv R S M).injective
@@ -100,12 +100,12 @@ are injective) would work as well -/
 /-- The universal polynomial map (homogeneous of degree n) on a module,
   valued in the graded part of degree n -/
 noncomputable
-def gamma' (n : ℕ) : PolynomialMap R M (DividedPowerAlgebra.grade n (R := R) (M := M)) where
+def gamma' (n : ℕ) : PolynomialLaw R M (DividedPowerAlgebra.grade n (R := R) (M := M)) where
   toFun' S _ _ := sorry
   isCompat' {S _ _ S' _ _} φ := sorry
 
 example {N : Type*} [AddCommGroup N] [Module R N] (n : ℕ) :
-  PolynomialMap.grade (R := R) (M := M) (N := N) n ≃ₗ[R]
+  PolynomialLaw.grade (R := R) (M := M) (N := N) n ≃ₗ[R]
     ((DividedPowerAlgebra.grade R M n) →ₗ[R] N) where
   toFun p := sorry
   map_add' := sorry
@@ -123,7 +123,7 @@ def grade_basis (n : ℕ) {ι : Type*} (b : Basis ι R M) :
   set v' : { h : ι →₀ ℕ // (h.sum fun i n ↦ n) = n} → grade R M n :=
     fun ⟨h, hh⟩ ↦ ⟨v h, by rw [← hh]; apply hv⟩ with hv'
   apply Basis.mk (v := v')
-  · /- Linear independence is the difficult part, it relies on the PolynomialMap interpretation -/
+  · /- Linear independence is the difficult part, it relies on the PolynomialLaw interpretation -/
     sorry
   · /- It should be easy to prove that the `dp R n (b i)` generate -/
     sorry

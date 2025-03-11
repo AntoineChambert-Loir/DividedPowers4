@@ -1,6 +1,6 @@
 
 import DividedPowers.DPAlgebra.Graded.GradeZero
-import DividedPowers.DPAlgebra.PolynomialMap
+import DividedPowers.DPAlgebra.PolynomialLaw
 import DividedPowers.SubDPIdeal
 import Mathlib.RingTheory.MvPolynomial.Basic
 
