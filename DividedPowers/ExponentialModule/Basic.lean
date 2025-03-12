@@ -49,11 +49,11 @@ lemma Polynomial.coe_smul (φ : Polynomial R) (r : R) :
 
 end SMul
 
-
-
 open Finset Finsupp MvPowerSeries Nat
 
-variable {A R S : Type*} [CommRing A] [CommRing R] [Algebra A R] [CommRing S] [Algebra A S]
+section CommSemiring
+
+variable {R : Type*} [CommSemiring R]
 
 -- MI : why make this private?
 open MvPolynomial in
@@ -89,7 +89,12 @@ private lemma MvPolynomial.coeff_add_pow (d : Fin 2 →₀ ℕ) (n : ℕ) :
     apply hd
     simpa [← hed, mem_antidiagonal] using he
 
+end CommSemiring
+
 namespace PowerSeries
+
+variable {A R S : Type*} [CommSemiring A] [CommRing R] [Algebra A R] [CommRing S] [Algebra A S]
+
 
 section Bivariate
 

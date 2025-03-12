@@ -163,13 +163,10 @@ end DiscreteUniformity
 
 namespace MvPowerSeries
 
-variable {σ : Type*} -- [DecidableEq σ]
-  {A : Type*} [CommSemiring A]
+variable {σ : Type*} {A : Type*} [CommSemiring A]
   {R : Type*} [CommRing R] [Algebra A R]
-  -- [TopologicalSpace α] [TopologicalRing α]
-  {τ : Type*} -- [DecidableEq τ]
+  {τ : Type*}
   {S : Type*} [CommRing S] [Algebra A S] [Algebra R S] [IsScalarTower A R S]
-  -- [TopologicalSpace R] [TopologicalRing R][TopologicalAlgebra α R]
 
 open WithPiTopology
 

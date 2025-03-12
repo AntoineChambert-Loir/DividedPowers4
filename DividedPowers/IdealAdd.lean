@@ -76,7 +76,7 @@ noncomputable def onSup (h : ∀ x (hM : x ∈ M) (hN : x ∈ N), f ⟨x, hM⟩ 
   simp only [mem_ker, coprod_apply, add_eq_zero_iff_eq_neg, ← map_neg]
   have hneg : - (⟨y, hy⟩ : N) = ⟨-y, N.neg_mem hy⟩ := by simp [← Subtype.coe_inj]
   simp_rw [hneg, hxy]
-  apply h (-y)
+  exact h (-y) (hxy ▸ hx) (N.neg_mem hy)
 
 theorem onSup_apply_left (h : ∀ x (hM : x ∈ M) (hN : x ∈ N), f ⟨x, hM⟩ = g ⟨x, hN⟩)
     {x : X} (hx : x ∈ M) : onSup h ⟨x, le_sup_left (b := N) hx⟩ = f ⟨x, hx⟩ := by
@@ -130,13 +130,11 @@ theorem onSup_unique (h : ∀ x (hM : x ∈ M) (hN : x ∈ N), f ⟨x, hM⟩ = g
 end LinearMap
 
 end onSup
-
 namespace DividedPowers
 
 open Nat PowerSeries
 
-/- We need `A` to be a ring, until we can prove `dpow_factorsThrough` for semirings.
- The better proof using the exponential module should work in the general case. -/
+/- We need `A` to be a ring, until `ExponentialModule` is generalized to `CommSemiring`. -/
 
 variable {A : Type*} [CommRing A] {I J : Ideal A} {hI : DividedPowers I} {hJ : DividedPowers J}
 
@@ -159,13 +157,10 @@ private def cnik (n i : ℕ) (k : Multiset ℕ) : ℕ :=
 
 /-- The exponential map on the sup of two compatible divided power ideals. -/
 noncomputable def exp'_linearMap (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) :
-    (I + J) →ₗ[A] (ExponentialModule A) := by
-  apply LinearMap.onSup (f := hI.exp'_linearMap) (g := hJ.exp'_linearMap)
-  intro x hxI hxJ
-  rw [← Subtype.coe_inj]
-  apply Additive.toMul.injective
-  ext n
-  exact hIJ x ⟨hxI, hxJ⟩
+    (I + J) →ₗ[A] (ExponentialModule A) :=
+  LinearMap.onSup (f := hI.exp'_linearMap) (g := hJ.exp'_linearMap)
+    (fun x hxI hxJ ↦ Subtype.coe_inj.mp
+      (Additive.toMul.injective (PowerSeries.ext (fun _ ↦ hIJ x ⟨hxI, hxJ⟩))))
 
 theorem exp'_linearMap_apply (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
     {x y : A} (hx : x ∈ I) (hy : y ∈ J) :
@@ -259,7 +254,7 @@ theorem mul_dpow (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow 
   apply sum_congr rfl
   rintro ⟨u, v⟩ h
   simp only [mem_antidiagonal] at h
-  simp only [Prod.mk.inj_iff]
+  simp only [Prod.mk_inj]
   rw [← mul_assoc]
   congr
   simp only [hs_def, Prod.mk.injEq]
