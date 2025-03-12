@@ -55,7 +55,7 @@ section CommSemiring
 
 variable {R : Type*} [CommSemiring R]
 
--- MI : why make this private?
+-- TODO : generalize to `d : ι →₀ ℕ` for `Fintype ι`.
 open MvPolynomial in
 /-- The formula for the `d`th coefficient of `(X 0 + X 1) ^ n`. -/
 private lemma MvPolynomial.coeff_add_pow (d : Fin 2 →₀ ℕ) (n : ℕ) :

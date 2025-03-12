@@ -44,6 +44,8 @@ structure on `I + J` that does not rely on exponential power series.
 
 section onSup
 
+--TODO: move everything about general submodules to another files
+
 open Function LinearMap Submodule
 
 variable {A X : Type*} [Ring A] [AddCommGroup X] [Module A X] {M N : Submodule A X}
@@ -127,7 +129,44 @@ theorem onSup_unique (h : ∀ x (hM : x ∈ M) (hN : x ∈ N), f ⟨x, hM⟩ = g
   Subtype.forall] at huf hug ⊢
   rw [huf y hy, hug z hz]
 
+def onSup_equiv : (M + N →ₗ[A] Y) ≃
+  {(fg : (M →ₗ[A] Y) × (N →ₗ[A] Y)) | fg.1.comp (Submodule.inclusion inf_le_left) =
+    fg.2.comp (Submodule.inclusion inf_le_right)} := by sorry
+
 end LinearMap
+
+section Comm
+
+variable {A X Y : Type*} [CommSemiring A] [AddCommMonoid X] [Module A X]
+  [AddCommMonoid Y] [Module A Y] (M N : Submodule A X)
+
+noncomputable def onSup_lequiv : (M + N →ₗ[A] Y) ≃ₗ[A] LinearMap.eqLocus
+    ((lcomp A Y (inclusion (inf_le_left (a := M) (b := N)))).comp (LinearMap.fst A _ _))
+    ((lcomp A Y (inclusion (inf_le_right (a := M) (b := N)))).comp (LinearMap.snd A _ _)) := by
+  apply LinearEquiv.ofBijective
+  · sorry
+  · apply LinearMap.codRestrict _ (LinearMap.prod (lcomp A Y (inclusion le_sup_left))
+         (lcomp A Y (inclusion le_sup_right)))
+    · intro c
+      ext
+      simp [inclusion_apply]
+
+end Comm
+
+section
+
+variable {A X Y Z : Type*} [CommSemiring A] [AddCommMonoid X] [Module A X]
+  [AddCommMonoid Y] [Module A Y] [AddCommMonoid Z] [Module A Z] (g : Y →ₗ[A] Z)
+
+example : (X →ₗ[A] Y) →ₗ[A] (X →ₗ[A] Z) := by exact g.compRight
+
+variable (M N : Submodule A X)
+
+example : (M + N →ₗ[A] Y) →ₗ[A] (M →ₗ[A] Y) := lcomp A Y (inclusion le_sup_left)
+
+
+
+end
 
 end onSup
 namespace DividedPowers
