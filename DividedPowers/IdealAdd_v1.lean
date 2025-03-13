@@ -5,8 +5,8 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 
 import DividedPowers.BasicLemmas
-import DividedPowers.DPMorphism
 import DividedPowers.RatAlgebra
+import Mathlib.RingTheory.DividedPowers.DPMorphism
 import Mathlib.Data.Nat.Choose.Vandermonde
 
 /-! # Alternative definition of divided powers on sums of ideals

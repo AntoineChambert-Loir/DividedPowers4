@@ -37,7 +37,7 @@ lemma extends_to_unique {A : Type u} [CommRing A] {I : Ideal A} (hI : DividedPow
   set hI' := hext.choose with hI'_def
   let hI'map := hext.choose_spec
   rw [← hI'_def] at hI'map
-  simp only [IsDPMorphism, le_refl, true_and] at hmap hI'map
+  simp only [isDPMorphism_def, le_refl, true_and] at hmap hI'map
   ext n b
   by_cases hb : b ∈ I.map f
   · rw [map, ← submodule_span_eq] at hb
@@ -68,7 +68,7 @@ lemma extends_to_iff_exists_dpIdeal {A : Type u} [CommRing A] {I : Ideal A} (hI 
   classical
   refine ⟨fun ⟨hJ, hmap⟩ ↦ ⟨I.map f, hJ, hmap⟩, fun ⟨J, hJ, hmap⟩ ↦  ?_⟩
   use (isSubDPIdeal_map hmap).dividedPowers
-  rw [IsDPMorphism] at hmap ⊢
+  rw [isDPMorphism_def] at hmap ⊢
   refine ⟨le_refl _, ?_⟩
   intros n a ha
   rw [IsSubDPIdeal.dpow_eq_of_mem _ _ (I.mem_map_of_mem f ha), hmap.2 a ha]
@@ -260,7 +260,7 @@ lemma IsCompatibleWith_tfae {A : Type u} [CommRing A] {I : Ideal A} (hI : Divide
     set hK' : DividedPowers (map f I) := IsSubDPIdeal.dividedPowers hK hsub
     use hK'
     constructor
-    · simp only [IsDPMorphism, le_refl, true_and]
+    · simp only [isDPMorphism_def, le_refl, true_and]
       intro n a ha
       -- we need some API to use IsSubDPIdeal.dividedPowers
       simp only [hK', IsSubDPIdeal.dividedPowers]

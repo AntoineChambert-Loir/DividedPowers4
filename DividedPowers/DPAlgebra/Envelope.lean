@@ -309,7 +309,7 @@ lemma isCompatibleWith_of_included [DecidableEq B]
     use dpIdealOfIncluded hI J hIJ
     use (Quotient.dividedPowers (DividedPowerAlgebra.dividedPowers' B J)
       (J12_IsSubDPIdeal hI J hIJ))
-    rw [IsDPMorphism]
+    rw [isDPMorphism_def]
     constructor
     · apply le_trans _ (sub_ideal_dpIdealOfIncluded _ _ _)
       have hmap : (algebraMap A (dpEnvelopeOfIncluded hI J hIJ)) =
@@ -329,7 +329,7 @@ lemma isCompatibleWith_of_included [DecidableEq B]
   use hI', h
   rintro n b ⟨hb, hb'⟩
   simp only [SetLike.mem_coe] at hb hb'
-  rw [IsDPMorphism] at h
+  rw [isDPMorphism_def] at h
   refine Submodule.span_induction ?_ ?_ ?_ ?_ hb'
   · rintro x ⟨a, haI, rfl⟩
     --erw [h.2 a haI]
@@ -380,8 +380,8 @@ theorem dpEnvelopeOfIncluded_IsWeakDPEnvelope [DecidableEq B] :
   intro C _ _ _ _ K hK hJK hIK hcomp
   simp only [IsCompatibleWith, mem_inf, and_imp] at hcomp
   have hAC : hI.IsDPMorphism hK (algebraMap A C) := {
-    left  := hIK
-    right := by
+    ideal_comp  := hIK
+    dpow_comp := by
       obtain ⟨hI', h, hh⟩ := hcomp
       intro n a haI
       rw [← hh ((algebraMap A C) a) (mem_map_of_mem (algebraMap A C) haI), h.2 a haI]
