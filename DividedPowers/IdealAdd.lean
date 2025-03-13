@@ -129,27 +129,50 @@ theorem onSup_unique (h : ∀ x (hM : x ∈ M) (hN : x ∈ N), f ⟨x, hM⟩ = g
   Subtype.forall] at huf hug ⊢
   rw [huf y hy, hug z hz]
 
-def onSup_equiv : (M + N →ₗ[A] Y) ≃
+variable (M N Y)
+
+noncomputable def onSup_equiv : (M + N →ₗ[A] Y) ≃
   {(fg : (M →ₗ[A] Y) × (N →ₗ[A] Y)) | fg.1.comp (Submodule.inclusion inf_le_left) =
-    fg.2.comp (Submodule.inclusion inf_le_right)} := by sorry
+    fg.2.comp (Submodule.inclusion inf_le_right)} := by
+  apply Equiv.ofBijective (fun fg ↦ ⟨⟨fg.comp (inclusion (le_sup_left (a := M) (b := N))),
+      fg.comp (inclusion (le_sup_right (a := M) (b := N)))⟩, by ext; simp [inclusion_apply]⟩)
+  · constructor
+    · intros f g hfg
+      simp only [Set.coe_setOf, Set.mem_setOf_eq, Submodule.add_eq_sup, Subtype.mk.injEq,
+        Prod.mk.injEq, LinearMap.ext_iff, coe_comp, Function.comp_apply,
+        Submodule.inclusion_apply] at hfg
+      ext ⟨mn, hmn⟩
+      simp only [Submodule.add_eq_sup, Submodule.sup_eq_range, LinearMap.mem_range] at hmn
+      obtain ⟨mn, rfl⟩ := hmn
+      have heq : (⟨(mn.1 : X) + (mn.2 : X), hmn⟩ : M + N) =
+        ⟨mn.1, le_sup_left (a := M) mn.1.2⟩ + ⟨mn.2, le_sup_right (a := M) mn.2.2⟩ := rfl
+      simp only [Submodule.add_eq_sup, coprod_apply, subtype_apply]
+      rw [heq, map_add, map_add, hfg.1 mn.1, hfg.2 mn.2]
+    · rintro ⟨fg, hfg⟩
+      have h : ∀ x (hM : x ∈ M) (hN : x ∈ N), fg.1 ⟨x, hM⟩ = fg.2 ⟨x, hN⟩ := by
+        simp only [Set.mem_setOf_eq] at hfg
+        intro x hxM hxN
+        have hf1 : fg.1 (⟨x, hxM⟩ : M) = (fg.1 ∘ₗ (inclusion inf_le_left)) ⟨x, ⟨hxM, hxN⟩⟩ := rfl
+        rw [hf1, hfg]
+        rfl
+      use onSup h
+      simp only [Set.coe_setOf, Set.mem_setOf_eq, Submodule.add_eq_sup, Subtype.mk.injEq]
+      rw [onSup_comp_left, onSup_comp_right]
 
 end LinearMap
 
 section Comm
 
-variable {A X Y : Type*} [CommSemiring A] [AddCommMonoid X] [Module A X]
-  [AddCommMonoid Y] [Module A Y] (M N : Submodule A X)
+variable {A X Y : Type*} [CommRing A] [AddCommGroup X] [Module A X]
+  [AddCommGroup Y] [Module A Y] (M N : Submodule A X)
 
 noncomputable def onSup_lequiv : (M + N →ₗ[A] Y) ≃ₗ[A] LinearMap.eqLocus
     ((lcomp A Y (inclusion (inf_le_left (a := M) (b := N)))).comp (LinearMap.fst A _ _))
-    ((lcomp A Y (inclusion (inf_le_right (a := M) (b := N)))).comp (LinearMap.snd A _ _)) := by
-  apply LinearEquiv.ofBijective
-  · sorry
-  · apply LinearMap.codRestrict _ (LinearMap.prod (lcomp A Y (inclusion le_sup_left))
-         (lcomp A Y (inclusion le_sup_right)))
-    · intro c
-      ext
-      simp [inclusion_apply]
+    ((lcomp A Y (inclusion (inf_le_right (a := M) (b := N)))).comp (LinearMap.snd A _ _)) :=
+  LinearEquiv.ofBijective (LinearMap.codRestrict _
+      ((lcomp A Y (inclusion le_sup_left)).prod (lcomp A Y (inclusion le_sup_right)))
+      (fun _ ↦ by ext; simp [inclusion_apply]))
+    (onSup_equiv M N Y).bijective
 
 end Comm
 
