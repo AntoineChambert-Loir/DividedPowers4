@@ -3,7 +3,7 @@ Copyright (c) 2022 Antoine Chambert-Loir, María Inés de Frutos-Fernández. All
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
-import DividedPowers.DPMorphism
+import Mathlib.RingTheory.DividedPowers.DPMorphism
 import Mathlib.RingTheory.Ideal.Quotient.Operations
 
 open Subtype
@@ -469,7 +469,7 @@ variable {A : Type*} [CommRing A] {I : Ideal A} (hI : DividedPowers I)
 theorem IsSubDPIdeal_ker {f : A →+* B} (hf : IsDPMorphism hI hJ f) :
     IsSubDPIdeal hI (RingHom.ker f ⊓ I) := by
   rw [isSubDPIdeal_inf_iff]
-  simp only [IsDPMorphism] at hf
+  simp only [isDPMorphism_def] at hf
   intro n a b ha hb
   simp only [RingHom.sub_mem_ker_iff, ← hf.2 a ha, ← hf.2 b hb]
   exact congr_arg _

@@ -12,7 +12,7 @@ import DividedPowers.DPAlgebra.Init
 import DividedPowers.DPAlgebra.Misc
 import DividedPowers.DPAlgebra.PolynomialLaw -- It uses sorry
 import DividedPowers.DPAlgebra.RobyLemma9
-import DividedPowers.DPMorphism --In PR #22318
+--import DividedPowers.DPMorphism --In PR #22318
 import DividedPowers.ExponentialModule.Basic
 import DividedPowers.Exponential
 import DividedPowers.ForMathlib.AlgebraLemmas -- In PR #22237, #22239 and #22240.
