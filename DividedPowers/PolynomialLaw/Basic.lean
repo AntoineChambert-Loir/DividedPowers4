@@ -649,5 +649,3 @@ theorem comp_assoc :
   ext; simp only [comp_toFun'] ; rfl
 
 end Composition
-
-#lint
