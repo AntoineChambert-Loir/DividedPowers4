@@ -241,5 +241,4 @@ lemma dividedPowers_eq (n : ℕ) (x : ℤ_[p]) :
     rw [apply_invFun_apply (f := Coe.ringHom)]
   · rfl
 
-
 end Padic
