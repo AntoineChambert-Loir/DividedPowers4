@@ -407,13 +407,13 @@ theorem aeval_unique {ε : MvPowerSeries σ R →ₐ[R] S} (hε : Continuous ε)
   apply eval₂_unique (continuous_algebraMap R S) _ hε
   · intro p
     induction p using MvPolynomial.induction_on with
-    | h_C r =>
+    | C r =>
       simp only [AlgHom.toRingHom_eq_coe, coe_C, coe_coe, MvPolynomial.eval₂_C]
       rw [c_eq_algebraMap, AlgHom.commutes]
-    | h_add p q hp hq =>
+    | add p q hp hq =>
       simp only [AlgHom.toRingHom_eq_coe, coe_coe] at hp hq
       simp only [AlgHom.toRingHom_eq_coe, coe_add, map_add, coe_coe, eval₂_add, hp, hq]
-    | h_X p s h =>
+    | mul_X p s h =>
       simp only [AlgHom.toRingHom_eq_coe, coe_coe] at h
       simp only [AlgHom.toRingHom_eq_coe, MvPolynomial.coe_mul, coe_X, map_mul, coe_coe, eval₂_mul,
         MvPolynomial.eval₂_X, h]

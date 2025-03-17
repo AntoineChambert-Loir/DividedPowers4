@@ -540,7 +540,7 @@ theorem le_equalizer_of_dp_morphism {A : Type*} [CommSemiring A] {I : Ideal A}
 
 /-- If there is a dp-structure on I(A/J) such that the quotient map is
    a dp-morphism, then J ⊓ I is a sub-dp-ideal of I -/
-def interQuot {A : Type*} [CommRing A] {I : Ideal A} {hI : DividedPowers I} {J : Ideal A}
+def subDPIdeal_inf_of_quot {A : Type*} [CommRing A] {I : Ideal A} {hI : DividedPowers I} {J : Ideal A}
     {hJ : DividedPowers (I.map (Ideal.Quotient.mk J))} {φ : DPMorphism hI hJ}
     (hφ : φ.toRingHom = Ideal.Quotient.mk J) :
     SubDPIdeal hI where
@@ -647,7 +647,7 @@ theorem dpow_apply {n : ℕ} {a : A} (ha : a ∈ I) :
 theorem isDPMorphism : IsDPMorphism hI (dividedPowers hI hf hIf) f :=
   ⟨le_refl (Ideal.map f I), fun a ha ↦ by rw [dpow_apply hI hf hIf ha]⟩
 
-theorem unique (hquot : DividedPowers (I.map f)) (hm : DividedPowers.IsDPMorphism hI hquot f) :
+theorem dividedPowers_unique (hquot : DividedPowers (I.map f)) (hm : DividedPowers.IsDPMorphism hI hquot f) :
     hquot = dividedPowers hI hf hIf :=
   ext _ _ fun n x hx ↦ by
     obtain ⟨a, ha, rfl⟩ := (mem_map_iff_of_surjective f hf).mp hx
@@ -687,10 +687,10 @@ theorem isDPMorphism : hI.IsDPMorphism (dividedPowers hI hIJ) (Ideal.Quotient.mk
   DividedPowers.Quotient.OfSurjective.isDPMorphism hI Ideal.Quotient.mk_surjective
     (isSubDPIdeal_aux hI hIJ)
 
-theorem unique (hquot : DividedPowers (I.map (Ideal.Quotient.mk J)))
+theorem dividedPowers_unique (hquot : DividedPowers (I.map (Ideal.Quotient.mk J)))
     (hm : DividedPowers.IsDPMorphism hI hquot (Ideal.Quotient.mk J)) :
     hquot = dividedPowers hI hIJ :=
-  DividedPowers.Quotient.OfSurjective.unique hI Ideal.Quotient.mk_surjective
+  DividedPowers.Quotient.OfSurjective.dividedPowers_unique hI Ideal.Quotient.mk_surjective
     (isSubDPIdeal_aux hI hIJ) hquot hm
 
 end Quotient
