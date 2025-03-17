@@ -165,7 +165,7 @@ theorem MvPolynomial.aeval_range (R : Type*) [CommSemiring R] (S : Type*) [CommS
   · rintro x ⟨p, rfl⟩
     simp only [AlgHom.toRingHom_eq_coe, RingHom.coe_coe]
     induction p using induction_on' with
-    | h1 d r =>
+    | monomial d r =>
       simp only [aeval_monomial]
       apply mul_mem
       · exact Subalgebra.algebraMap_mem (Algebra.adjoin R (Set.range s)) r
@@ -174,7 +174,7 @@ theorem MvPolynomial.aeval_range (R : Type*) [CommSemiring R] (S : Type*) [CommS
         refine pow_mem (Algebra.adjoin_mono (s := {s c}) ?_ ?_) _
         · simp only [Set.singleton_subset_iff, Set.mem_range, exists_apply_eq_apply]
         · exact Algebra.self_mem_adjoin_singleton R (s c)
-    | h2 p q hp hq => rw [map_add]; exact Subalgebra.add_mem _ hp hq
+    | add p q hp hq => rw [map_add]; exact Subalgebra.add_mem _ hp hq
   · rw [Algebra.adjoin_le_iff]
     rintro x ⟨i, rfl⟩
     use X i
@@ -240,4 +240,3 @@ theorem Subalgebra.FG.small [Small.{u} R] {A : Subalgebra R S} (fgS : A.FG) :
   apply Algebra.FiniteType.small (R := R) (S := A)
 
 end Algebra
-

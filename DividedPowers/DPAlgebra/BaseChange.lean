@@ -103,13 +103,13 @@ lemma coeff_baseChange_apply (m : σ →₀ ℕ) (φ : S →ₐ[R] S') (f : MvPo
   classical
   rw [baseChange, AlgHom.coe_mk, coe_eval₂RingHom]
   induction f using MvPolynomial.induction_on generalizing m with
-  | h_C r =>
+  | C r =>
     simp only [eval₂_C, RingHom.coe_comp, RingHom.coe_coe, Function.comp_apply, coeff_C]
     split_ifs
     · rfl
     · rw [map_zero]
-  | h_add f g hf hg => simp only [eval₂_add, coeff_add, hf, hg, map_add]
-  | h_X p s h =>
+  | add f g hf hg => simp only [eval₂_add, coeff_add, hf, hg, map_add]
+  | mul_X p s h =>
       simp only [eval₂_mul, eval₂_X, coeff_mul, map_sum, _root_.map_mul]
       apply Finset.sum_congr rfl
       intro x _

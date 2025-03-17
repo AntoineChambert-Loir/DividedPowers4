@@ -273,8 +273,6 @@ lemma MvPolynomial.coeff_add_pow (d : Fin 2 →₀ ℕ) (n : ℕ) :
     simp [hd]
   · rfl
 
--- MI : why make this private?
-=======
 open MvPolynomial in
 /-- The formula for the `d`th coefficient of `(X 0 + X 1) ^ n`. -/
 private lemma MvPolynomial.coeff_add_pow' (d : Fin 2 →₀ ℕ) (n : ℕ) :

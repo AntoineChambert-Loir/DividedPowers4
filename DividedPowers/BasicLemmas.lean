@@ -4,11 +4,19 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 import Mathlib.Algebra.BigOperators.Ring.Finset
+import Mathlib.Algebra.BigOperators.Sym
 import Mathlib.Algebra.Module.BigOperators
-import Mathlib.Algebra.Order.BigOperators.Group.Finset
 import Mathlib.Data.Finset.NatAntidiagonal
-import Mathlib.Tactic.Abel
-import Mathlib.Data.Finset.Sym
+
+/-! # Auxiliary lemmas
+
+This file contains auxiliary lemmas used in the formalization of divided powers on sums of ideals.
+These lemmas are of two kinds:
+
+- Lemmas to rewrite 4-fold sums with a different ordering of the variables.
+- Lemmas to operate with the sum `Finset.sum (range (n + 1)) fun i => count i k * i`.
+
+-/
 
 open BigOperators Finset
 
@@ -80,7 +88,7 @@ theorem rewriting_4_fold_sums {α : Type*} [AddCommMonoid α] {m n u v : ℕ} (h
 
 open BigOperators
 
-/-- Rewrites a 4-fold sum from variables `(12)(34)` to `(13)(24)`. -/
+/- /-- Rewrites a 4-fold sum from variables `(12)(34)` to `(13)(24)`. -/
 theorem sum_4_rw' {α : Type*} [AddCommMonoid α] (f : ℕ × ℕ × ℕ × ℕ → α) (n : ℕ) :
   (Finset.sum (antidiagonal n) fun (k, l) => Finset.sum (antidiagonal k) fun (a, b) =>
       Finset.sum (antidiagonal l) fun (c, d) => f (a, b, c, d)) =
@@ -102,10 +110,10 @@ theorem sum_4_rw' {α : Type*} [AddCommMonoid α] (f : ℕ × ℕ × ℕ × ℕ 
   simp only [mem_sigma, mem_antidiagonal, and_self, and_true] at H ⊢
   rw [← H.1, ← H.2.1, ← H.2.2]
   simp [φ]
-  abel_nf
+  abel_nf -/
 
 variable {α : Type*} [AddMonoid α] [Finset.HasAntidiagonal α]
-
+/-
 def antidiagonalTriple (n : α) : Finset (α × α × α) :=
   (antidiagonal n).disjiUnion (fun k ↦ (antidiagonal k.2).map (Function.Embedding.sectR k.1 _))
   (fun k _ l _ hkl ↦ by
@@ -193,9 +201,8 @@ theorem sum_antidiagonalFourth_eq {β : Type*} [AddCommMonoid β] (f : α × α 
   simp only [antidiagonalFourth, sum_disjiUnion]
   simp only [Prod.mk.eta, sum_map, Function.Embedding.sectR_apply]
   simp only [antidiagonalTriple, sum_disjiUnion]
-  simp only [sum_map, Function.Embedding.sectR_apply]
+  simp only [sum_map, Function.Embedding.sectR_apply] -/
 
---Mathlib.Algebra.Order.Antidiag.Prod
 def antidiagonalFourth' (n : α) : Finset ((α × α) × (α × α)) :=
   (antidiagonal n).disjiUnion (fun k ↦ (antidiagonal k.1) ×ˢ (antidiagonal k.2))
   (fun k _ l _ hkl ↦ by
@@ -263,26 +270,12 @@ end FourFoldSums
 
 open Multiset
 
-theorem range_sym_prop {m n : ℕ} {k : Sym ℕ m} (hk : k ∈ (Finset.range (n + 1)).sym m) :
-    (Finset.sum (range (n + 1)) fun i => count i k) = m := by
-  simp_rw [← k.prop, ← toFinset_sum_count_eq, eq_comm]
-  apply sum_subset_zero_on_sdiff _ _ (fun _ _ ↦ rfl)
-  · intro i hi
-    simp only [Sym.val_eq_coe, mem_toFinset, Sym.mem_coe] at hi
-    exact mem_sym_iff.mp hk i hi
-  · intro _ hx
-    simp only [Sym.val_eq_coe, mem_sdiff, Finset.mem_range, mem_toFinset, Sym.mem_coe] at hx
-    simp only [count_eq_zero, Sym.mem_coe]
-    exact hx.2
-
-
 theorem range_sym_weighted_sum_le {m n : ℕ} {k : Sym ℕ m} (hk : k ∈ (Finset.range (n + 1)).sym m) :
     ((Finset.range (n + 1)).sum fun i => count i k * i) ≤ m * n := by
   suffices h : ∀ i ∈ Finset.range (n + 1), count i k * i ≤ count i k * n by
-    exact le_trans (sum_le_sum h) (by rw [← sum_mul, range_sym_prop hk])
+    exact le_trans (sum_le_sum h) (by rw [← sum_mul, Finset.sum_count_of_mem_sym hk])
   exact fun _ hi ↦ Nat.mul_le_mul_left _ (Nat.lt_succ_iff.mp (Finset.mem_range.mp hi))
 
--- Mathlib.Data.Multiset.Count ??
 theorem sum_range_sym_mul_compl {m n : ℕ} {k : Sym ℕ m} (hk : k ∈ (Finset.range (n + 1)).sym m) :
     (Finset.sum (range (n + 1)) fun i => count i k * (n - i)) =
       m * n - Finset.sum (range (n + 1)) fun i => count i k * i := by
@@ -292,4 +285,4 @@ theorem sum_range_sym_mul_compl {m n : ℕ} {k : Sym ℕ m} (hk : k ∈ (Finset.
   simp_rw [← sum_add_distrib, ← mul_add]
   have hn : ∀ x ∈ Finset.range (n + 1), count x ↑k * (n - x + x) = count x ↑k * n := fun _ hx ↦ by
     rw [Nat.sub_add_cancel (Nat.lt_succ_iff.mp (Finset.mem_range.mp hx))]
-  rw [sum_congr rfl hn, ← sum_mul, range_sym_prop hk]
+  rw [sum_congr rfl hn, ← sum_mul, Finset.sum_count_of_mem_sym hk]
