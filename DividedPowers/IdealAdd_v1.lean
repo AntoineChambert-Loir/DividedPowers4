@@ -6,8 +6,8 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 
 import DividedPowers.BasicLemmas
 import DividedPowers.RatAlgebra
-import Mathlib.RingTheory.DividedPowers.DPMorphism
 import Mathlib.Data.Nat.Choose.Vandermonde
+import Mathlib.RingTheory.DividedPowers.DPMorphism
 
 /-! # Alternative definition of divided powers on sums of ideals
 This file is provided for comparison with `IdealAdd.lean`. Here we formalize the definition of the
@@ -346,53 +346,6 @@ theorem dpow_comp_aux (hIJ : ∀ (n : ℕ), ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.
     · exact hi0 ▸ Submodule.mem_sup_right (J.mul_mem_left _ (hJ.dpow_mem hn hb))
     · apply Submodule.mem_sup_left (I.mul_mem_right _ (hI.dpow_mem hi0 ha))
 
-
-    /- set φ : Sym ℕ m → ℕ := fun k => (range (n + 1)).sum fun i => Multiset.count i ↑k * i with hφ_def
-    suffices hφ : ∀ k : Sym ℕ m, k ∈ (range (n + 1)).sym m → φ k ∈ range (m * n + 1) by
-      rw [← sum_fiberwise_of_maps_to hφ _]
-      suffices L4 : ∀ (p : ℕ) (_ : p ∈ range (m * n + 1)),
-          ((filter (fun x : Sym ℕ m => (fun k : Sym ℕ m => φ k) x = p) ((range (n + 1)).sym m)).sum
-              fun x : Sym ℕ m => (range (n + 1)).prod fun i : ℕ =>
-                dpow hI hJ (Multiset.count i ↑x) (hI.dpow i a * hJ.dpow (n - i) b)) =
-            (filter (fun x : Sym ℕ m => (fun k : Sym ℕ m => φ k) x = p) ((range (n + 1)).sym m)).sum
-              fun k : Sym ℕ m => ((range (n + 1)).prod fun i : ℕ => ↑(cnik n i ↑k)) *
-                      ↑(Nat.multinomial (range (n + 1)) fun i : ℕ => Multiset.count i ↑k * i) *
-                    ↑(Nat.multinomial (range (n + 1)) fun i : ℕ => Multiset.count i ↑k * (n - i)) *
-              hI.dpow p a * hJ.dpow (m * n - p) b by
-          simp only [sum_congr rfl L4, Sym.mem_coe, mem_sym_iff, mem_range, ge_iff_le, Nat.cast_sum,
-            Nat.cast_mul, Nat.cast_prod, sum_mul]
-      intro p _
-      apply sum_congr rfl
-      intro k hk
-      rw [mem_filter] at hk
-      sorry
-      /- rw [prod_congr rfl (L1 k), prod_mul_distrib, prod_mul_distrib,
-        hI.prod_dpow_self ha, hJ.prod_dpow_self _ hb]
-      simp only [mul_assoc]; apply congr_arg₂ _ rfl
-      apply congr_arg₂ _ rfl
-      rw [sum_range_sym_mul_compl hk.1]
-      simp only [← mul_assoc]
-      simp only [mem_sym_iff, mem_range, hφ_def] at hk
-      rw [hk.2]
-      apply congr_arg₂ _ _ rfl
-      rw [mul_comm] -/
-    -- hφ
-    intro k hk
-    simp only [Sym.mem_coe, mem_range, Nat.lt_succ_iff, range_sym_weighted_sum_le hk]
-  . -- dpow_zero
-    intro x hx
-    rw [dpow_zero hI hJ hIJ hx]
-  . -- dpow_add
-    intro n x y hx hy
-    rw [Nat.sum_antidiagonal_eq_sum_range_succ_mk, dpow_add' hI hJ hIJ hx hy]
-  · -- dpow_eval_zero
-    intro n hn
-    rw [dpow_eq_of_mem_left' hI hJ hIJ I.zero_mem, dpow_eval_zero hI hn]
-  · intro i _
-    by_cases hi0 : i = 0
-    · exact hi0 ▸ Submodule.mem_sup_right (J.mul_mem_left _ (hJ.dpow_mem hn hb))
-    · apply Submodule.mem_sup_left (I.mul_mem_right _ (hI.dpow_mem hi0 ha)) -/
-
 open BigOperators Polynomial
 
 theorem dpow_comp_coeffs {m n p : ℕ} (hn : n ≠ 0) (hp : p ≤ m * n) :
@@ -529,3 +482,5 @@ theorem dpow_eq_of_mem_right (hIJ : ∀ (n : ℕ), ∀ a ∈ I ⊓ J, hI.dpow n 
 end IdealAdd_v1
 
 end DividedPowers
+
+#min_imports

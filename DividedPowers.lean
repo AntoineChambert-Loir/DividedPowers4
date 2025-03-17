@@ -1,9 +1,9 @@
 --import DividedPowers.Basic -- In PR #15657
 import DividedPowers.BasicLemmas
 import DividedPowers.DPAlgebra.BaseChange -- It uses sorry
-import DividedPowers.DPAlgebra.Compatible -- It uses sorry (depended on AlgebraComp)
-import DividedPowers.DPAlgebra.Dpow -- It uses sorry (depended on RobyLemma5)
-import DividedPowers.DPAlgebra.Envelope -- It uses sorry (depended on AlgebraComp)
+-- import DividedPowers.DPAlgebra.Compatible -- TODO: uncomment  -- It uses sorry (depended on AlgebraComp)
+-- import DividedPowers.DPAlgebra.Dpow -- TODO: uncomment It uses sorry (depended on RobyLemma5)
+-- import DividedPowers.DPAlgebra.Envelope -- TODO: uncomment -- It uses sorry (depended on AlgebraComp)
 import DividedPowers.DPAlgebra.Exponential
 import DividedPowers.DPAlgebra.Graded.Basic
 import DividedPowers.DPAlgebra.Graded.GradeOne
@@ -15,13 +15,15 @@ import DividedPowers.DPAlgebra.RobyLemma9
 --import DividedPowers.DPMorphism --In PR #22318
 import DividedPowers.ExponentialModule.Basic
 import DividedPowers.Exponential
-import DividedPowers.ForMathlib.AlgebraLemmas -- In PR #22237, #22239 and #22240.
+--import DividedPowers.ForMathlib.AlgebraLemmas -- In PR #22237, #22239 and #22240.
+import DividedPowers.ForMathlib.Data.Nat.Factorial.NatCast
 --import DividedPowers.ForMathlib.Bell -- -- In PR #15644
 import DividedPowers.ForMathlib.GradedBaseChange
 import DividedPowers.ForMathlib.GradedRingQuot
 --import DividedPowers.ForMathlib.InfiniteSum.Basic -- In mathlib
 --import DividedPowers.ForMathlib.InfiniteSum.Order -- In mathlib
 import DividedPowers.ForMathlib.Lcoeff
+import DividedPowers.ForMathlib.LinearAlgebra.OnSup
 import DividedPowers.ForMathlib.RingTheory.AugmentationIdeal -- uses sorry.
 import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Evaluation -- In PR 15019
 --import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.LinearTopology -- In PR #15007

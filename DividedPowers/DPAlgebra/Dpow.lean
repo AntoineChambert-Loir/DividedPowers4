@@ -559,8 +559,8 @@ example (A : Type u) [CommRing A] {R S R' S' : Type u} [CommRing R] [CommRing S]
   have hK'_pd : IsSubDPIdeal hK (RingHom.ker fg ⊓ K A I J) := by
     rw [roby]
     exact isSubDPIdeal_sup
-      (isSubDPIdeal_map_of_isSubDPIdeal hK_pd.1 (IsSubDPIdeal_ker hI hI' hf'))
-      (isSubDPIdeal_map_of_isSubDPIdeal hK_pd.2 (IsSubDPIdeal_ker hJ hJ' hg'))
+      (isSubDPIdeal_map_of_isSubDPIdeal hK_pd.1 (isSubDPIdeal_ker hI hI' hf'))
+      (isSubDPIdeal_map_of_isSubDPIdeal hK_pd.2 (isSubDPIdeal_ker hJ hJ' hg'))
   rw [hK_map]
   use DividedPowers.Quotient.OfSurjective.dividedPowers hK s_fg hK'_pd
   constructor
@@ -725,10 +725,10 @@ theorem condτ_rel (A : Type u) [CommRing A]
       apply isSubDPIdeal_sup
       · have : span (↑(RingHom.ker f) ∩ ↑I) = RingHom.ker f ⊓ I := sorry
         rw [this]
-        exact isSubDPIdeal_map_of_isSubDPIdeal hK_pd.1 (IsSubDPIdeal_ker hI hI' hfDP)
+        exact isSubDPIdeal_map_of_isSubDPIdeal hK_pd.1 (isSubDPIdeal_ker hI hI' hfDP)
       · have : span (↑(RingHom.ker g) ∩ ↑J) = RingHom.ker g ⊓ J := sorry
         rw [this]
-        exact isSubDPIdeal_map_of_isSubDPIdeal hK_pd.2 (IsSubDPIdeal_ker hJ hJ' hgDP)
+        exact isSubDPIdeal_map_of_isSubDPIdeal hK_pd.2 (isSubDPIdeal_ker hJ hJ' hgDP)
     sorry
   rw [hK_map]
   use DividedPowers.Quotient.OfSurjective.dividedPowers hK s_fg hK'_pd

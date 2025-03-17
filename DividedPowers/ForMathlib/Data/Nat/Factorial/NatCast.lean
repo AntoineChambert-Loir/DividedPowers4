@@ -14,8 +14,6 @@ which a prime number `p` is nilpotent to be a unit.
 
 section Factorial
 
--- In PR #22237
-
 open Nat
 
 variable {A : Type*} [CommRing A]
