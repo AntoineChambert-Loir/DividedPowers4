@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 
-import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Substitution
+import DividedPowers.ForMathlib.RingTheory.PowerSeries.Substitution
 import Mathlib.RingTheory.PowerSeries.Inverse
 import Mathlib.Data.Nat.Choose.Multinomial
 
@@ -324,7 +324,7 @@ noncomputable abbrev X₁ {R : Type*} [Semiring R] := MvPowerSeries.X (σ := Fin
 lemma coeff_subst_single {σ : Type*} [DecidableEq σ] (s : σ) (f : R⟦X⟧) (e : σ →₀ ℕ) :
     MvPowerSeries.coeff R e (subst (MvPowerSeries.X s) f) =
       if e = single s (e s) then PowerSeries.coeff R (e s) f else 0 := by
-  rw [PowerSeries.coeff_subst (PowerSeries.substDomain_of_constantCoeff_zero (by simp)),
+  rw [PowerSeries.coeff_subst (PowerSeries.hasSubst_of_constantCoeff_zero (by simp)),
     finsum_eq_single _ (e s)]
   · rw [MvPowerSeries.coeff_X_pow]
     simp only [Fin.isValue, ↓reduceIte, smul_eq_mul, mul_one]
@@ -353,7 +353,7 @@ lemma coeff_subst_add_X₀_X₁ (f : R⟦X⟧) (e : Fin 2 →₀ ℕ) :
     (MvPowerSeries.coeff R e) (subst (X₀ + X₁) f) =
       (e 0 + e 1).choose (e 0) * coeff R (e 0 + e 1) f := by
   rw [PowerSeries.subst, MvPowerSeries.coeff_subst
-    (MvPowerSeries.substDomain_of_constantCoeff_zero (fun _ ↦ by simp))]
+    (MvPowerSeries.hasSubst_of_constantCoeff_zero (fun _ ↦ by simp))]
   simp only [Fin.isValue, Finsupp.prod_pow, univ_unique, PUnit.default_eq_unit, prod_singleton,
     smul_eq_mul]
   simp only [← MvPolynomial.coe_X, ← MvPolynomial.coe_add, ← MvPolynomial.coe_pow,
@@ -423,9 +423,9 @@ namespace IsExponential
 /-- The unit power series is exponential -/
 protected theorem one : IsExponential (1 : R⟦X⟧) where
   add_mul := by
-    rw [← Polynomial.coe_one, subst_coe (substDomain_of_constantCoeff_zero (by simp)),
-      subst_coe (substDomain_of_constantCoeff_zero (by simp)),
-      subst_coe (substDomain_of_constantCoeff_zero (by simp))]
+    rw [← Polynomial.coe_one, subst_coe (hasSubst_of_constantCoeff_zero (by simp)),
+      subst_coe (hasSubst_of_constantCoeff_zero (by simp)),
+      subst_coe (hasSubst_of_constantCoeff_zero (by simp))]
     simp only [map_one, mul_one]
   constantCoeff := by simp only [map_one]
 
@@ -433,7 +433,7 @@ protected theorem one : IsExponential (1 : R⟦X⟧) where
 protected theorem mul {f g : PowerSeries R} (hf : IsExponential f) (hg : IsExponential g) :
     IsExponential (f * g) where
   add_mul := by
-    repeat rw [← coe_substAlgHom (substDomain_of_constantCoeff_zero (by simp))]
+    repeat rw [← coe_substAlgHom (hasSubst_of_constantCoeff_zero (by simp))]
     simp only [map_mul, coe_substAlgHom, hf.add_mul, hg.add_mul]
     ring
   constantCoeff := by simp only [map_mul, hf.constantCoeff, hg.constantCoeff, mul_one]
@@ -454,7 +454,7 @@ protected theorem rescale (a : A) {f : PowerSeries R} (hf : IsExponential f) :
     simp only [mul_one]
   add_mul := by
     repeat rw [subst_linear_subst_scalar_comm]
-    simp only [← MvPowerSeries.coe_rescale_algHom, ← map_mul, hf.add_mul]
+    simp only [← MvPowerSeries.coe_rescaleAlgHom, ← map_mul, hf.add_mul]
     -- We prove the hypothesis of the last two applications of `subst_linear_subst_scalar_comm`.
     repeat
       intro d hd
@@ -482,8 +482,8 @@ protected theorem rescale_add (r s : A) {f : R⟦X⟧} (hf : IsExponential f) :
   let a : Fin 2 → PowerSeries R
   | 0 => (algebraMap A R r) • X
   | 1 => (algebraMap A R s) • X
-  have ha : MvPowerSeries.SubstDomain a := by
-    apply MvPowerSeries.substDomain_of_constantCoeff_zero
+  have ha : MvPowerSeries.HasSubst a := by
+    apply MvPowerSeries.hasSubst_of_constantCoeff_zero
     intro i
     simp only [X, a]
     match i with
@@ -493,7 +493,7 @@ protected theorem rescale_add (r s : A) {f : R⟦X⟧} (hf : IsExponential f) :
       rw [MvPowerSeries.constantCoeff_smul, MvPowerSeries.constantCoeff_X, smul_zero]
   have hf' := congr_arg (MvPowerSeries.subst a) hf.add_mul
   simp only [PowerSeries.subst, ← MvPowerSeries.coe_substAlgHom ha] at hf'
-  repeat rw [← MvPowerSeries.coe_substAlgHom (MvPowerSeries.substDomain_of_constantCoeff_zero
+  repeat rw [← MvPowerSeries.coe_substAlgHom (MvPowerSeries.hasSubst_of_constantCoeff_zero
     (by simp))] at hf'
   simp only [MvPowerSeries.substAlgHom_comp_substAlgHom_apply, map_mul] at hf'
   simp only [MvPowerSeries.coe_substAlgHom] at hf'
@@ -567,10 +567,10 @@ noncomputable instance : DistribMulAction A (Additive R⟦X⟧) where
   mul_smul := by
     simp only [Additive.forall, toAdditive_smul_coe, map_mul, ← rescale_rescale_apply, implies_true]
   smul_zero a := by
-    rw [← ofMul_one, toAdditive_smul_coe, ← coe_rescale_algHom, map_one]
+    rw [← ofMul_one, toAdditive_smul_coe, ← coe_rescaleAlgHom, map_one]
   smul_add := by
     simp only [Additive.forall, toAdditive_smul_coe, ← ofMul_mul,
-      ← coe_rescale_algHom, map_mul, forall_const]
+      ← coe_rescaleAlgHom, map_mul, forall_const]
 
 end Instances
 
