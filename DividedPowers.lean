@@ -16,7 +16,7 @@ import DividedPowers.DPAlgebra.RobyLemma9
 import DividedPowers.ExponentialModule.Basic
 import DividedPowers.Exponential
 --import DividedPowers.ForMathlib.AlgebraLemmas -- In PR #22237, #22239 and #22240.
-import DividedPowers.ForMathlib.Algebra.MvPolynomial.Equiv
+--import DividedPowers.ForMathlib.Algebra.MvPolynomial.Equiv -- In PR #15019
 import DividedPowers.ForMathlib.Data.Nat.Factorial.NatCast
 --import DividedPowers.ForMathlib.Bell -- -- In PR #15644
 import DividedPowers.ForMathlib.GradedBaseChange
@@ -26,7 +26,7 @@ import DividedPowers.ForMathlib.GradedRingQuot
 import DividedPowers.ForMathlib.Lcoeff
 import DividedPowers.ForMathlib.LinearAlgebra.OnSup
 import DividedPowers.ForMathlib.RingTheory.AugmentationIdeal -- uses sorry.
-import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Evaluation -- In PR 15019
+--import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Evaluation -- In PR 15019
 --import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.LinearTopology -- In PR #15007
 --import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Order -- In PR #14983
 --import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.PiTopology -- In PR #14866 and PR #14989
@@ -37,7 +37,7 @@ import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Substitution
 import DividedPowers.ForMathlib.RingTheory.Polynomial.Coeff
 --import DividedPowers.ForMathlib.MvPowerSeries.Trunc -- In PR 20958
 --import DividedPowers.ForMathlib.RingTheory.PowerSeries.Topology -- In PR #14866
-import DividedPowers.ForMathlib.RingTheory.PowerSeries.Evaluation
+--import DividedPowers.ForMathlib.RingTheory.PowerSeries.Evaluation -- In PR #15019
 import DividedPowers.ForMathlib.RingTheory.PowerSeries.Substitution
 import DividedPowers.ForMathlib.RingTheory.SubmoduleMem
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.LinearEquiv
