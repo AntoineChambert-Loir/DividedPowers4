@@ -296,6 +296,13 @@ theorem isHomogeneousOfDegree_of_coeff_iff (f : PolynomialLaw R M N) (p : ℕ) :
   rw [not_imp_comm, Finsupp.sum_of_support_subset _ (Finset.subset_univ _) _ (fun _ _ ↦ rfl)] at H
   exact H (Finsupp.mem_support_iff.mp hd)
 
+theorem IsHomogeneousOfDegree.comp {P : Type*} [AddCommGroup P] [Module R P]
+    {f : M →ₚ[R] N} {g : N →ₚ[R] P} {p q : ℕ}
+    (hf : f.IsHomogeneousOfDegree p) (hg : g.IsHomogeneousOfDegree q) :
+    (g.comp f).IsHomogeneousOfDegree (p * q) := by
+  intro S _ _ r m
+  simp [comp_toFun', hf S, hg S, ← pow_mul]
+
 end Homogeneous
 
 section ConstantMap
@@ -433,6 +440,20 @@ lemma ofLinearMap_mem_grade_one (v : M →ₗ[R] N) :
     IsHomogeneousOfDegree 1 (ofLinearMap v) :=
   fun S _ _ r m => by simp only [ofLinearMap, LinearMapClass.map_smul, pow_one]
 
+theorem IsHomogeneousOfDegree.comp_ofLinearMap
+    {P : Type*} [AddCommGroup P] [Module R P]
+    {f : M →ₗ[R] N} {g : N →ₚ[R] P} {q : ℕ}
+    (hg : g.IsHomogeneousOfDegree q) :
+    (g.comp (PolynomialLaw.ofLinearMap f)).IsHomogeneousOfDegree q := by
+  simpa using IsHomogeneousOfDegree.comp (ofLinearMap_mem_grade_one f) hg
+
+theorem IsHomogeneousOfDegree.ofLinearMap_comp
+    {P : Type*} [AddCommGroup P] [Module R P]
+    {f : M →ₚ[R] N} {g : N →ₗ[R] P} {p : ℕ}
+    (hf : f.IsHomogeneousOfDegree p) :
+    ((PolynomialLaw.ofLinearMap g).comp f).IsHomogeneousOfDegree p := by
+  simpa using IsHomogeneousOfDegree.comp hf (ofLinearMap_mem_grade_one g)
+
 theorem ofLinearMap_toFun' (u : M →ₗ[R] N)
     (S : Type u) [CommRing S] [Algebra R S] :
     (ofLinearMap u).toFun' S = LinearMap.baseChange S u := rfl
@@ -541,6 +562,10 @@ noncomputable def ofLinearMapEquiv :
       forall_exists_index, implies_true, forall_const] }
 
 end Linear
+
+section Quadratic
+
+end Quadratic
 
 section Components
 

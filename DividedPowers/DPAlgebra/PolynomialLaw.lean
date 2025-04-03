@@ -27,7 +27,8 @@ variable (M : Type*) [AddCommGroup M] [Module R M]
 
 namespace DividedPowerAlgebra
 
-open TensorProduct AlgEquiv LinearMap
+open TensorProduct AlgEquiv LinearMap MvPolynomial DividedPowerAlgebra
+
 
 /- TODO :  we need to prove that DividedPowerAlgebra.dpScalarExtensionEquiv
   is compatible with the graded structure and induces equivs componentwise -/
@@ -88,6 +89,7 @@ theorem gamma_mem_grade (n : ℕ) (S : Type*) [CommRing S] [Algebra R S] (m : S 
     simp only [LinearMap.mem_range]
     -- we need the graded structure on the base change of a graded algebra
     rw [← hx', ← hy']
+    have := (LinearMap.lTensor S (grade R M k).subtype) x' * (LinearMap.lTensor S (grade R M l).subtype) y'
     sorry
 
 /- to do this, it seems that we have to understand polynomial maps
@@ -95,21 +97,46 @@ valued into a submodule (in this case, it is a direct factor,
 so it will exactly correspond to polynomial maps all of which evaluations
 are valued into the submodule)
 a “pure” submodule N (for which all base changes S ⊗[R] N → S⊗[R] M
-are injective) would work as well -/
+are injective) might work as well -/
 
+open Classical in
 /-- The universal polynomial map (homogeneous of degree n) on a module,
   valued in the graded part of degree n -/
 noncomputable
-def gamma' (n : ℕ) : PolynomialLaw R M (DividedPowerAlgebra.grade n (R := R) (M := M)) where
-  toFun' S _ _ := sorry
-  isCompat' {S _ _ S' _ _} φ := sorry
+def gamma' (n : ℕ) : PolynomialLaw R M (grade R M n) :=
+  PolynomialLaw.comp (PolynomialLaw.ofLinearMap (proj' R M n)) (gamma R M n)
+
+theorem gamma'_mem_grade (n : ℕ) : gamma' R M n ∈ PolynomialLaw.grade n := by
+  classical
+  simp only [gamma']
+  let u := (proj' R M n)
+  have Hu := PolynomialLaw.ofLinearMap_mem_grade_one
+    (M := DividedPowerAlgebra R M) (R := R) (N := grade R M n) u
+  have Hγ := isHomogeneousOfDegree_gamma R M n
+  rw [PolynomialLaw.mem_grade]
+  simpa using PolynomialLaw.IsHomogeneousOfDegree.comp
+    (M := M) (N := DividedPowerAlgebra R M) (R := R) (P := grade R M n)
+    Hγ Hu
 
 example {N : Type*} [AddCommGroup N] [Module R N] (n : ℕ) :
-  PolynomialLaw.grade (R := R) (M := M) (N := N) n ≃ₗ[R]
-    ((DividedPowerAlgebra.grade R M n) →ₗ[R] N) where
-  toFun p := sorry
-  map_add' := sorry
-  map_smul' := sorry
+    ((DividedPowerAlgebra.grade R M n) →ₗ[R] N) ≃ₗ[R]
+  PolynomialLaw.grade (R := R) (M := M) (N := N) n where
+  toFun u := by
+    let f : M →ₚ[R] N := PolynomialLaw.comp (PolynomialLaw.ofLinearMap u) (gamma' R M n)
+    use f
+    rw [PolynomialLaw.mem_grade]
+    simp only [f]
+    apply PolynomialLaw.IsHomogeneousOfDegree.ofLinearMap_comp
+    rw [← (PolynomialLaw.mem_grade (gamma' R M n) n)]
+    apply gamma'_mem_grade
+  map_add' u v := by
+    ext S _ _ m
+    simp [PolynomialLaw.add_def_apply, PolynomialLaw.comp_toFun',
+      PolynomialLaw.ofLinearMap_toFun']
+  map_smul' r u := by
+    ext S _ _ m
+    simp
+    simp [PolynomialLaw.comp_toFun', PolynomialLaw.ofLinearMap_toFun']
   invFun f := sorry
   left_inv := sorry
   right_inv := sorry

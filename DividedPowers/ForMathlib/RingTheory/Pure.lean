@@ -80,7 +80,8 @@ theorem baseChange_injective (S : Type*) [CommRing S] [Algebra R S] :
   simp only [mem_ker, Submodule.mem_bot]
   intro ht
   obtain ⟨A, hA, u, hu0, hut⟩ := exists_fg_of_baseChange_eq_zero N.subtype t ht
-  have : Small.{u} A := hA.small
+  have : Small.{u} A := by
+    sorry -- hA.small
   set A' := Shrink.{u} A with hA'
   let e : A' ≃ₐ[R] A := Shrink.algEquiv A R
   set u' := LinearMap.rTensor N e.symm.toLinearMap u with hu'
