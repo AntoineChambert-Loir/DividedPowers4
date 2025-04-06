@@ -106,6 +106,24 @@ theorem dpow_eq (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n
   ext ⟨u, v⟩
   simp only [DividedPowers.exp'_linearMap_apply, coe_exp', coeff_exp]
 
+lemma _root_.antidiagonal_eq_filter {A : Type*} [OrderedAddCommMonoid A] [CanonicallyOrderedAdd A]
+    [LocallyFiniteOrder A] [DecidableEq A] [HasAntidiagonal A] (n : A) :
+    antidiagonal n = (Iic n ×ˢ Iic n).filter (fun x : A × A ↦ x.1 + x.2 = n) := by
+  ext ⟨i, j⟩
+  simp only [mem_antidiagonal, mem_filter, mem_product, mem_Iic, iff_and_self]
+  rintro rfl
+  simp
+
+nonrec lemma _root_.Nat.antidiagonal_eq_filter (n : ℕ) :
+    antidiagonal n = (Icc 0 n ×ˢ Icc 0 n).filter (fun x : ℕ × ℕ ↦ x.1 + x.2 = n) := by
+  rw [antidiagonal_eq_filter, Iic_eq_Icc, bot_eq_zero]
+
+theorem dpow_eq' (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
+    {n : ℕ} {a b : A} (ha : a ∈ I) (hb : b ∈ J) :
+    dpow hIJ n (a + b) =
+      ∑ k ∈ Icc 0 n, ∑ l ∈ Icc 0 n, if k + l = n then hI.dpow k a * hJ.dpow l b else 0 := by
+  rw [dpow_eq hIJ ha hb, antidiagonal_eq_filter, sum_filter, sum_product]
+
 private theorem dpow_eq_of_mem_left' (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
     {n : ℕ} {x : A} (hx : x ∈ I) :
     dpow hIJ n x = hI.dpow n x := by
@@ -220,38 +238,59 @@ theorem dpow_mul (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow 
   simp only [mem_range, Nat.lt_succ_iff, mem_antidiagonal] at hk
   rw [hI.dpow_mul ha, hJ.dpow_mul hb, mul_mul_mul_comm, ← pow_add, hk]
 
+lemma sum_sum_antidiagonal {β : Type*} [AddCommMonoid β] (f : ℕ → ℕ × ℕ → β) {n : ℕ} :
+    ∑ p ∈ Icc 0 n, ∑ k ∈ antidiagonal p, f p k =
+      ∑ i ∈ Icc 0 n, ∑ j ∈ Icc 0 n, if i + j ≤ n then f (i + j) (i, j) else 0 := by calc
+  _ = ∑ p ∈ Icc 0 n, ∑ a ∈ Icc 0 p ×ˢ Icc 0 p, if a.1 + a.2 = p then f p a else 0 := by
+      simp_rw [antidiagonal_eq_filter, sum_filter]
+  _ = ∑ p ∈ Icc 0 n, ∑ a ∈ Icc 0 n ×ˢ Icc 0 n, if a.1 + a.2 = p then f p a else 0 := by
+      refine sum_congr rfl fun p hp ↦ ?_
+      simp only [mem_Icc, _root_.zero_le, true_and] at hp
+      exact sum_subset (by gcongr) (by simp; omega)
+  _ = ∑ i ∈ Icc 0 n, ∑ j ∈ Icc 0 n, if i + j ≤ n then f (i + j) (i, j) else 0 := by
+      simp_rw [sum_product]
+      rw [sum_comm]
+      refine sum_congr rfl fun i hi ↦ ?_
+      rw [sum_comm]
+      refine sum_congr rfl fun j hj ↦ ?_
+      simp [sum_ite_eq]
+
 theorem dpow_add (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
     {n : ℕ} {x y : A} (hx : x ∈ I + J) (hy : y ∈ I + J) :
-    dpow hIJ n (x + y) = ∑ k ∈ (antidiagonal n), dpow hIJ k.1 x * dpow hIJ k.2 y := by
+    dpow hIJ n (x + y) = ∑ k ∈ antidiagonal n, dpow hIJ k.1 x * dpow hIJ k.2 y := by
   rw [Ideal.add_eq_sup, Submodule.mem_sup] at hx hy
   obtain ⟨a, ha, b, hb, rfl⟩ := hx
   obtain ⟨a', ha', b', hb', rfl⟩ := hy
-  rw [add_add_add_comm a b a' b', dpow_eq hIJ (I.add_mem ha ha') (J.add_mem hb hb')]
-  have hf1 (k : ℕ × ℕ) : hI.dpow k.1 (a + a') * hJ.dpow k.2 (b + b') =
-      ∑ i ∈ (antidiagonal k.1), ∑ l ∈ (antidiagonal k.2),
-        hI.dpow i.1 a * hI.dpow i.2 a' * hJ.dpow l.1 b * hJ.dpow l.2 b' := by
-    rw [hI.dpow_add ha ha', hJ.dpow_add hb hb', sum_mul]
-    refine sum_congr rfl (fun _ _ ↦ ?_)
-    rw [mul_sum]
-    exact sum_congr rfl (fun _ _ ↦ by ring)
-  have hf2 (k : ℕ × ℕ) : dpow hIJ k.1 (a + b) * dpow hIJ k.2 (a' + b') =
-      ∑ i ∈ (antidiagonal k.1), ∑ l ∈ (antidiagonal k.2),
-        hI.dpow i.1 a * hI.dpow l.1 a' * hJ.dpow i.2 b * hJ.dpow l.2 b' := by
-    rw [dpow_eq hIJ ha hb, dpow_eq hIJ ha' hb', sum_mul]
-    refine sum_congr rfl (fun _ _ ↦ ?_)
-    rw [mul_sum]
-    exact sum_congr rfl (fun _ _ ↦ by ring)
-  rw [sum_congr rfl (fun k _ ↦ hf1 k), sum_congr rfl (fun k _ ↦ hf2 k)]
-  -- One needs to swap the inner terms in the four-order sum
-  simp_rw [← sum_antidiagonalFourth'_eq (f := fun (i, l) ↦
-    hI.dpow i.1 a * hI.dpow l.1 a' * hJ.dpow i.2 b * hJ.dpow l.2 b'), ← sum_antidiagonalFourth'_eq
-      (f := fun (i, l) ↦ hI.dpow i.1 a * hI.dpow i.2 a' * hJ.dpow l.1 b * hJ.dpow l.2 b')]
-  let i : (ℕ × ℕ) × (ℕ × ℕ) → (ℕ × ℕ) × (ℕ × ℕ) := fun (u, v) ↦ ((u.1, v.1), (u.2, v.2))
-  have hi (a) (ha : a ∈ antidiagonalFourth' n) : i a ∈ antidiagonalFourth' n := by
-    simp only [mem_antidiagonalFourth'] at ha ⊢
-    rw [← ha, add_assoc, add_add_add_comm, ← add_assoc]
-  exact Finset.sum_nbij' i i hi hi (fun a _ ↦ rfl) (fun a _ ↦ rfl)
-    (fun a _ ↦ by rw [mul_assoc, mul_mul_mul_comm, ← mul_assoc])
+  rw [add_add_add_comm a b a' b', dpow_eq' hIJ (I.add_mem ha ha') (J.add_mem hb hb')]
+  calc
+    _ = ∑ p ∈ Icc 0 n, ∑ q ∈ Icc 0 n, ∑ l ∈ Icc 0 n, if p + q + l = n
+        then hI.dpow p a * hI.dpow q a' * hJ.dpow l (b + b') else 0 := by
+      simp_rw [hI.dpow_add ha ha', sum_mul, ite_sum_zero, sum_comm (t := antidiagonal _),
+        sum_sum_antidiagonal, ite_sum_zero, ← ite_and]
+      congr! 4
+      omega
+    _ = ∑ p ∈ Icc 0 n, ∑ q ∈ Icc 0 n, ∑ r ∈ Icc 0 n, ∑ s ∈ Icc 0 n, if p + q + (r + s) = n
+        then hI.dpow p a * hI.dpow q a' * (hJ.dpow r b * hJ.dpow s b') else 0 := by
+      simp_rw [hJ.dpow_add hb hb', mul_sum, ite_sum_zero, sum_sum_antidiagonal, ← ite_and]
+      congr! 5
+      omega
+    _ = ∑ p ∈ Icc 0 n, ∑ q ∈ Icc 0 n, ∑ r ∈ Icc 0 n, ∑ s ∈ Icc 0 n, if p + q + (r + s) = n
+        then hI.dpow p a * hJ.dpow q b * (hI.dpow r a' * hJ.dpow s b') else 0 := by
+      refine Finset.sum_congr rfl fun p hp ↦ ?_
+      rw [sum_comm]
+      congr! 4 with q hq r hq s hs
+      · omega
+      · ring
+    _ = ∑ p ∈ Icc 0 n, ∑ q ∈ Icc 0 n, ∑ l ∈ Icc 0 n, if p + q + l = n
+        then hI.dpow p a * hJ.dpow q b * dpow hIJ l (a' + b') else 0 := by
+      simp_rw [dpow_eq hIJ ha' hb', mul_sum, ite_sum_zero, sum_sum_antidiagonal, ← ite_and]
+      congr! 5
+      omega
+    _ = ∑ k ∈ antidiagonal n, dpow hIJ k.1 (a + b) * dpow hIJ k.2 (a' + b') := by
+      simp_rw [antidiagonal_eq_filter, sum_filter, sum_product, dpow_eq hIJ ha hb, sum_mul,
+        ite_sum_zero, sum_comm (t := antidiagonal _), sum_sum_antidiagonal, ite_sum_zero, ← ite_and]
+      congr! 4
+      omega
 
 theorem dpow_add' (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
     {n : ℕ} {x y : A} (hx : x ∈ I + J) (hy : y ∈ I + J) :
