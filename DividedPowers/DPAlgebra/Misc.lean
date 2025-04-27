@@ -409,7 +409,7 @@ theorem eq_finsupp_single_of_degree_one [DecidableEq M] {d : ℕ × M →₀ ℕ
     have hne0 : d ab * ab.fst ≠ 0 :=
       mul_ne_zero hab' (ne_of_gt (hsupp ab (Finsupp.mem_support_iff.mpr hab')))
     have hnm_mem : nm ∈ d.support := by rw [Finsupp.mem_support_iff, hnm.1]; exact one_ne_zero
-    simp only [Finset.sum_eq_sum_diff_singleton_add hnm_mem, add_left_eq_self,
+    simp only [Finset.sum_eq_sum_diff_singleton_add hnm_mem, add_eq_right,
       Algebra.id.smul_eq_mul, sum_eq_zero_iff, mem_sdiff,
       Finsupp.mem_support_iff, mem_singleton] at hd
     exact hne0 (hd ab ⟨hab', hab⟩)

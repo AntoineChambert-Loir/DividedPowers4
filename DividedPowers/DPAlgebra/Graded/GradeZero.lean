@@ -60,6 +60,14 @@ theorem algebraMapInv_mk (f : MvPolynomial (ℕ × M) R) :
     simp only [hn, lift_apply, LinearMap.zero_apply, aeval_X,
       DividedPowers.dpow_zero _ (mem_bot.mpr rfl)]
 
+theorem algebraMapInv_dp (n : ℕ) (m : M) :
+    algebraMapInv R M (dp R n m) = if n = 0 then 1 else 0 := by
+  rw [show dp R n m = mk (X (n, m)) by rfl, algebraMapInv_mk]
+  simp only [aeval_X]
+  by_cases hn : n = 0
+  · rw [if_pos hn, if_neg (Eq.not_gt hn)]
+  · rw [if_neg hn, if_pos (Nat.zero_lt_of_ne_zero hn)]
+
 theorem proj'_zero_comp_algebraMap [DecidableEq M] (x : R) :
   ((proj' R M 0 ∘ algebraMap R (DividedPowerAlgebra R M)) x).val =
     (algebraMap R (DividedPowerAlgebra R M)) x := by

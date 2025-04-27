@@ -504,7 +504,7 @@ private lemma zero_pow_add_zero_pow (a b : ℕ) (h : a + b = 1) :
   by_cases ha : a = 0
   · exact Or.inr ⟨ha, by simpa [ha, zero_add] using h⟩
   · have ha : a = 1 := le_antisymm (h ▸  Nat.le_add_right a b) (Nat.pos_of_ne_zero ha)
-    exact Or.inl ⟨ha, by simpa [ha, add_right_eq_self] using h⟩
+    exact Or.inl ⟨ha, by simpa [ha, add_eq_left] using h⟩
 
 noncomputable def toLinearMap (f : (grade 1 : Submodule R (PolynomialLaw R M N))) :
     M →ₗ[R] N := {

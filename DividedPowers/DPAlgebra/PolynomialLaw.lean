@@ -118,7 +118,7 @@ theorem gamma'_mem_grade (n : ℕ) : gamma' R M n ∈ PolynomialLaw.grade n := b
     (M := M) (N := DividedPowerAlgebra R M) (R := R) (P := grade R M n)
     Hγ Hu
 
-example {N : Type*} [AddCommGroup N] [Module R N] (n : ℕ) :
+noncomputable example {N : Type*} [AddCommGroup N] [Module R N] (n : ℕ) :
     ((DividedPowerAlgebra.grade R M n) →ₗ[R] N) ≃ₗ[R]
   PolynomialLaw.grade (R := R) (M := M) (N := N) n where
   toFun u := by

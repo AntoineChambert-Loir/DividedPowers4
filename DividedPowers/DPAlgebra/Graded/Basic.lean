@@ -78,6 +78,10 @@ def gradedAlgebra [DecidableEq R] [DecidableEq M] : GradedAlgebra (DividedPowerA
   DirectSum.Decomposition_RingQuot R (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ))
     (DividedPowerAlgebra.Rel R M) (Rel_isHomogeneous R M)
 
+open Classical in
+instance : GradedAlgebra (grade R M) :=
+  gradedAlgebra R M
+
 open MvPolynomial
 
 theorem dp_mem_grade (n : ℕ) (m : M) : dp R n m ∈ grade R M n :=
