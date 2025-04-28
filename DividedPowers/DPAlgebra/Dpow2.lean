@@ -395,6 +395,10 @@ theorem foo [DecidableEq ι] (x : DividedPowerAlgebra R M) (n : ℕ)
       basis R M b k.val.sum := by
   rw [basis_prod, k.sum_eq_val_sum hk]
 
+/- I would like a better formula where `basis R M b ` is only applied
+  to k.val.sum.
+  That requires inserting `foo`, and distributing.
+  I should write the formula on paper first. -/
 theorem dpow_eq (H : DividedPowers (augIdeal R M))
     (hH : ∀ (n : ℕ) (x : M), H.dpow n (DividedPowerAlgebra.ι R M x) = dp R n x)
     {ι : Type*} [DecidableEq ι] (b : Basis ι R M) (n : ℕ) (x : DividedPowerAlgebra R M)
