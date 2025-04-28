@@ -286,10 +286,25 @@ theorem basis_mul (m n : ι →₀ ℕ) :
     · intros; simp [dp_zero]
   · intros; simp [dp_zero]
 
-/- The coefficient in the formula below might be incorrect. -/
+/-
+basis R M b f = ∏ i, (b i) ^[f i]
+
+∏ a ∈ s, basis R M b (f a) = ∏ i, ∏ a, (b i)^[f a i]
+
+Now, ∏ a, (b i)^[f a i] = ?? • (b i)^[∑ f a i]
+where ?? is some integer to be determined.
+From the formal expressions (valid in a ℚ-algebra)
+∏ a, (b i)^[f a i] = ∏ a, (b i) ^ (f a i) / (f a i)!
+and
+(b i)^[∑ a, f a i] = (b i)^(∑ f a i) / (∑ f a i)!,
+we infer that
+?? = Nat.multinomial s (fun a ↦ f a i)
+-/
+
+omit [DecidableEq R] in
 theorem basis_prod (α : Type*) (f : α → (ι →₀ ℕ)) (s : Finset α) :
     ∏ a ∈ s, basis R M b (f a) =
-      ((∑ a ∈ s, f a).prod fun i r ↦ Nat.multinomial s (fun a ↦ f a i)) •
+      ((∑ a ∈ s, f a).prod fun i _ ↦ Nat.multinomial s (fun a ↦ f a i)) •
         basis R M b (∑ a ∈ s, f a) := by
   classical
   induction s using Finset.induction with
@@ -309,22 +324,76 @@ theorem basis_prod (α : Type*) (f : α → (ι →₀ ℕ)) (s : Finset α) :
     apply congr_arg₂
     · apply Finset.prod_congr rfl
       intro i hi
-      sorry
-
-
+      simp only [mem_sdiff, Finsupp.mem_support_iff, Finsupp.coe_finset_sum, sum_apply, ne_eq,
+        sum_eq_zero_iff, mem_insert, forall_eq_or_imp, not_and, not_forall, Classical.not_imp,
+        not_exists, Decidable.not_not] at hi
+      rw [Nat.multinomial_insert has]
+      simp only [Finset.sum_insert has, Finsupp.coe_add, Finsupp.coe_finset_sum, Pi.add_apply,
+        sum_apply]
+      symm
+      convert mul_one _
+      rw [← Nat.mul_right_inj Nat.one_ne_zero, mul_one]
+      convert Nat.multinomial_spec _ _
+      · symm
+        apply Finset.prod_eq_one
+        intro x hx
+        simp [hi.2 x hx]
+      · symm
+        convert Nat.factorial_zero
+        apply Finset.sum_eq_zero
+        intro x hx
+        simp [hi.2 x hx]
     · rw [← Finset.prod_mul_distrib]
       apply Finset.prod_congr rfl
       intro i hi
+      simp [Finset.sum_insert has, Nat.multinomial_insert has, mul_comm]
 
-      sorry
+      /-
+(∑ d ∈ ((basis R M b).repr x).support, Multiset.count d ↑k • d) =  ??
+
+k = k_1, ... , k_n : unordered n-tuple of (ι →₀ ℕ)
+((basis R M b).repr x).support : Finset (ι →₀ ℕ)
+∀ a, k_a ∈ ((basis R M b).repr x
+
+Multiset.count d ↑k : how many a are there such that k_a = d
+Multiset.count d ↑k • d : ι →₀ ℕ
 
 
-
-/- (m + n + k).choose (m + n) * (m + n).choose n
-  = (m + n + k)! / (m + n)! k! * (m + n)!/n! m!
-  = (m + n + k)! / m! n! k!
-  = multinomial (m
 -/
+
+theorem _root_.Sym.sum_eq_val_sum {ι : Type*} [DecidableEq ι] {n : ℕ}
+    (k : Sym (ι →₀ ℕ) n) {s : Finset (ι →₀ ℕ)} (hk : k ∈ s.sym n) :
+    ∑ d ∈ s, Multiset.count d k • d = k.val.sum := by
+  induction n with
+  | zero =>
+    simp only [sym_zero, mem_singleton] at hk
+    have : ↑k = 0 := by
+      simp [hk]; rfl
+    simp [this]
+  | succ n hrec =>
+    simp only [sym_succ, Nat.succ_eq_add_one, mem_sup, mem_image, mem_sym_iff] at hk
+    obtain ⟨a, hat, k, hk, rfl⟩ := hk
+    simp [Sym.val_eq_coe, Nat.succ_eq_add_one, Sym.coe_cons, Multiset.count_cons, add_smul]
+    rw [Finset.sum_add_distrib]
+    nth_rewrite 2 [Finset.sum_eq_single a]
+    · rw [if_pos rfl, add_comm]
+      apply congr_arg₂ _ rfl
+      apply hrec
+      rwa [mem_sym_iff]
+    · intro b hb hab
+      rw [if_neg hab]
+    · intro has
+      exact (has hat).elim
+
+omit [DecidableEq R] in
+theorem foo [DecidableEq ι] (x : DividedPowerAlgebra R M) (n : ℕ)
+      (k : Sym (ι →₀ ℕ) n) (hk : k ∈ ((basis R M b).repr x).support.sym n) :
+      (∏ d ∈ ((basis R M b).repr x).support,
+        basis R M b ((Multiset.count d k) • d)) =
+      ((∑ a ∈ ((basis R M b).repr x).support, Multiset.count a ↑k • a).prod fun i _ ↦
+      Nat.multinomial ((basis R M b).repr x).support fun a ↦ (Multiset.count a ↑k • a) i) •
+      basis R M b k.val.sum := by
+  rw [basis_prod, k.sum_eq_val_sum hk]
 
 theorem dpow_eq (H : DividedPowers (augIdeal R M))
     (hH : ∀ (n : ℕ) (x : M), H.dpow n (DividedPowerAlgebra.ι R M x) = dp R n x)
@@ -357,6 +426,17 @@ theorem dpow_eq (H : DividedPowers (augIdeal R M))
     rintro ⟨rfl⟩
     rw [Finsupp.mem_support_iff] at hd
     exact hd hx
+
+theorem dpow_eq' (H : DividedPowers (augIdeal R M))
+    (hH : ∀ (n : ℕ) (x : M), H.dpow n (DividedPowerAlgebra.ι R M x) = dp R n x)
+    {ι : Type*} [DecidableEq ι] (b : Basis ι R M) (n : ℕ) (x : DividedPowerAlgebra R M)
+    (hx : x ∈ augIdeal R M) (y : DividedPowerAlgebra R M) :
+    H.dpow n x =  y := by
+  rw [dpow_eq H hH b]
+  have := foo b x n
+  simp only [← Finset.prod_smul']
+
+
 
 open scoped Classical in
 def dpow {ι : Type*} (b : Basis ι R M) (n : ℕ) (x : DividedPowerAlgebra R M) :
