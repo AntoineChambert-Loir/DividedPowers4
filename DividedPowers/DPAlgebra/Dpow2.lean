@@ -615,7 +615,8 @@ def dpowExp (x : DividedPowerAlgebra R M) : PowerSeries (DividedPowerAlgebra R M
 
 open scoped PowerSeries.WithPiTopology
 
-/- In the next formula, replace `1` on the right side by the correct value ! -/
+/- Would it be easier to prove `dpow_add` by means of `dpowExp`?
+In the next formula, replace `1` on the right side by the correct value ! -/
 open scoped Classical in
 theorem dpowExp_eq_of_support_subset
     {x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M)
