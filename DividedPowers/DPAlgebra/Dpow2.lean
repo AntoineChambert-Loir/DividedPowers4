@@ -362,7 +362,6 @@ k = k_1, ... , k_n : unordered n-tuple of (ι →₀ ℕ)
 Multiset.count d ↑k : how many a are there such that k_a = d
 Multiset.count d ↑k • d : ι →₀ ℕ
 
-
 -/
 
 theorem _root_.Sym.sum_eq_val_sum {ι : Type*} [DecidableEq ι] {n : ℕ}
@@ -527,10 +526,14 @@ theorem dpow_null {n : ℕ} {x : DividedPowerAlgebra R M} (hx : x ∉ augIdeal R
     dpow b n x = 0 := by
   simp only [dpow, if_neg hx]
 
+theorem cK_zero [DecidableEq ι] {k : Sym (ι →₀ ℕ) 0} {s : Finset (ι →₀ ℕ)} :
+    cK k s = 1 := by
+  simp [cK, Subsingleton.eq_zero k, Nat.uniformBell_zero_left]
+
 theorem dpow_zero {x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) :
     dpow b 0 x = 1 := by
   have : ↑(∅ : Sym (ι →₀ ℕ) 0) = 0 := rfl
-  simp [dpow, if_pos hx, sym_zero, this, Nat.uniformBell_zero_left, basis_eq]
+  simp [dpow, if_pos hx, this, Nat.uniformBell_zero_left, basis_eq, cK_zero]
 
 theorem _root_.Nat.multinomial_single {α : Type*} [DecidableEq α]
     (s : Finset α) (a : α) (n : ℕ) :
@@ -552,37 +555,41 @@ theorem _root_.Nat.multinomial_single {α : Type*} [DecidableEq α]
     intro x hx
     apply Nat.factorial_ne_zero
 
+theorem cK_one [DecidableEq ι] {s : Finset (ι →₀ ℕ)} {k : Sym (ι →₀ ℕ) 1} :
+    cK k s = 1 := by
+  let d := Sym.oneEquiv.symm k
+  have : k = Sym.oneEquiv d := by simp [d]
+  have kval : (k : Multiset (ι →₀ ℕ)) = {d} := by simp [this]
+  unfold cK
+  rw [kval, Finset.prod_eq_single d]
+  · simp
+    constructor
+    · apply Finset.prod_eq_one
+      intro i hi
+      have : Pi.single d (d i) = fun a ↦ if a = d then a i else 0 := by
+        ext a
+        split_ifs with h <;> simp [Pi.single_apply, h]
+      simp [Multiset.nodup_singleton, Multiset.count_singleton, ← this, Nat.multinomial_single]
+    · simp [kval, Nat.uniformBell_one_left]
+  · intro c hc hcd
+    simp [Multiset.count_singleton, if_neg hcd, Nat.uniformBell_zero_left, kval]
+  · intros
+    simp [Multiset.count_singleton, Nat.uniformBell_one_left]
+
 theorem dpow_one {x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) :
     dpow b 1 x = x := by
   classical
   have : ↑(∅ : Sym (ι →₀ ℕ) 0) = 0 := rfl
-  have cK_one (d : ι →₀ ℕ) (hd : d ∈ ((basis R M b).repr x).support) :
-      cK (d ::ₛ (0 : Sym (ι →₀ ℕ) 0)) ((basis R M b).repr x).support = 1 := by
-    unfold cK
-    simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Sym.val_eq_coe, Sym.coe_cons,
-      Sym.toMultiset_zero, Multiset.cons_zero, Multiset.sum_singleton, Multiset.nodup_singleton,
-      Finsupp.coe_smul, Pi.smul_apply, smul_eq_mul, mul_eq_one]
-    rw [Finset.prod_eq_single d]
-    · simp only [Multiset.nodup_singleton, Multiset.mem_singleton, Multiset.count_eq_one_of_mem,
-      Nat.factorial_one, one_pow, one_mul]
-      constructor
-      · apply Finset.prod_eq_one
-        intro i hi
-        have : Pi.single d (d i) = fun a ↦ if a = d then a i else 0 := by
-          ext a
-          split_ifs with h <;> simp [Pi.single_apply, h]
-        simp [Multiset.nodup_singleton, Multiset.count_singleton, ← this, Nat.multinomial_single]
-      · simp [Nat.uniformBell_one_left]
-    · intro c hc hcd
-      simp [Multiset.count_singleton, if_neg hcd, Nat.uniformBell_zero_left]
-    · intros
-      simp [Multiset.count_singleton, Nat.uniformBell_one_left]
   simp only [dpow, if_pos hx]
   conv_rhs => rw [eq_of_basis b x]
-  simp [Sym.coe_cons, Multiset.count_cons, this, Multiset.count_singleton]
+  simp only [sym_succ, Nat.succ_eq_add_one, Nat.reduceAdd, sym_zero, this, image_singleton,
+    sup_singleton'', Sym.val_eq_coe, nsmul_eq_mul, Algebra.mul_smul_comm, Finsupp.mem_support_iff,
+    ne_eq, Sym.cons_inj_left, imp_self, implies_true, sum_image, Sym.coe_cons, Sym.toMultiset_zero,
+    Multiset.cons_zero, Multiset.nodup_singleton, Multiset.count_singleton, pow_ite, pow_one,
+    pow_zero, prod_ite_eq', ite_not, Multiset.sum_singleton, ite_smul, one_smul]
   apply Finset.sum_congr rfl
   intro d hd
-  simp [cK_one d hd]
+  simp only [cK_one, Nat.cast_one, one_mul, ite_eq_right_iff]
   intro h
   simp only [Finsupp.mem_support_iff] at hd
   exact (hd h).elim
@@ -590,49 +597,30 @@ theorem dpow_one {x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) :
 theorem dpow_mem {n : ℕ} {x : DividedPowerAlgebra R M}
     (hn : n ≠ 0) (hx : x ∈ augIdeal R M) :
     dpow b n x ∈ augIdeal R M := by
+  have hn' : n = n.pred.succ := (Nat.succ_pred_eq_of_ne_zero hn).symm
   classical
   simp only [dpow, if_pos hx]
+  rw [hn']
   apply Ideal.sum_mem
   intro k hk
   apply Submodule.smul_of_tower_mem
-  have : ∃ d ∈ ((basis R M b).repr x).support, Multiset.count d ↑k ≠ 0 := by
-    simp only [mem_sym_iff, Finsupp.mem_support_iff, ne_eq] at hk
-    by_contra! hd
-    suffices (k : Multiset (ι →₀ ℕ)) = 0 by
-      apply hn
-      rw [← k.prop]
-      convert Multiset.card_zero
-    ext d
-    simp only [Multiset.not_mem_zero, not_false_eq_true, Multiset.count_eq_zero_of_not_mem,
-      Multiset.count_eq_zero, Sym.mem_coe]
-    intro hd'
-    apply hk d hd'
-    by_contra! hd''
-    rw [← Finsupp.mem_support_iff] at hd''
-    have := hd d hd''
-    simp only [Multiset.count_eq_zero, Sym.mem_coe] at this
-    exact this hd'
-  obtain ⟨d, hd, hd'⟩ := this
-  rw [Finset.prod_eq_prod_diff_singleton_mul hd]
-  apply Ideal.mul_mem_left
+  obtain ⟨d, s', rfl⟩ := k.exists_eq_cons_of_succ
+  simp only [Sym.mem_cons, mem_sym_iff, forall_eq_or_imp] at hk
   apply Submodule.smul_of_tower_mem
   apply basis_mem_augIdeal
-  simp only [ne_eq, smul_eq_zero, hd', false_or]
-  rw [mem_augIdeal_iff_of_repr b] at hx
-  rintro ⟨rfl⟩
-  simp only [Finsupp.mem_support_iff] at hd
-  exact hd hx
+  simp [Sym.coe_cons, ne_zero_of_mem_support_of_mem_augIdeal b hx hk.1]
 
 def dpowExp (x : DividedPowerAlgebra R M) : PowerSeries (DividedPowerAlgebra R M) :=
   PowerSeries.mk (fun n ↦ dpow b n x)
 
 open scoped PowerSeries.WithPiTopology
 
+/- In the next formula, replace `1` on the right side by the correct value ! -/
 open scoped Classical in
 theorem dpowExp_eq_of_support_subset
     {x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M)
     {s : Finset (ι →₀ ℕ)} (hs : ((basis R M b).repr x).support ⊆ s) :
-    dpowExp b x = 0 := by
+    dpowExp b x = 1 := by
   letI : UniformSpace (DividedPowerAlgebra R M) := ⊥
   haveI : DiscreteTopology (DividedPowerAlgebra R M) := by
     exact forall_open_iff_discrete.mp fun s ↦ trivial
@@ -654,13 +642,19 @@ theorem dpow_add {n : ℕ} {x y : DividedPowerAlgebra R M}
         ne_eq, hs, mem_union, ← not_and_or, not_imp_not]
       rintro ⟨hx', hy'⟩
       rw [hx', hy', add_zero])]
-  simp only [← Finset.prod_smul']
   rw [Finset.sum_congr rfl (fun k hk ↦ congr_arg₂ HMul.hMul
     (dpow_eq_of_support_subset (s := s) b k.1 hx subset_union_left)
     (dpow_eq_of_support_subset (s := s) b k.2 hy subset_union_right))]
   simp only [Finset.mul_sum, Finset.sum_mul]
   simp only [← Finset.sum_product']
   simp only [Finset.sum_sigma']
+  /- What is needed:
+    * expand `(basis R M b).repr (x + y) d ^ Multiset.count d ↑k`
+    using the multinomial formula
+    * distribute in the product, here, one needs a formula of the type
+     `Finset.prod_add_distrib`, this gives a sum of a mul of two products
+    * the two products naturally decompose `k` as a sum `k1 + k2`
+-/
   sorry
 
 example (α : Type*) [DecidableEq α] (n : ℕ) (s : Finset α) :
