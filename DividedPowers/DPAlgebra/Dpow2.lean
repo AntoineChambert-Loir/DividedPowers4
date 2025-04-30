@@ -605,6 +605,7 @@ local instance : DiscreteTopology (DividedPowerAlgebra R M) := by
     exact forall_open_iff_discrete.mp fun s ↦ trivial
 
 /- Could we simplify the RHS further? -/
+/-  Would it be easier to prove `dpow_add` by means of `dpowExp`? -/
 open scoped Classical in
 theorem dpowExp_eq_of_support_subset {x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M)
     {s : Finset (ι →₀ ℕ)} (hs : ((basis R M b).repr x).support ⊆ s) :
