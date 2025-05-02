@@ -101,6 +101,20 @@ lemma basis_eq (d : ι →₀ ℕ) :
   simp [basis, Basis.coe_mk]
 
 omit [DecidableEq R] in
+open Classical in
+lemma basis_eq' {m : M} {n : ℕ} {x : Sym ι n} (hx : x ∈ (b.repr m).support.sym n) :
+    ∏ i ∈ (b.repr m).support, dp R (Multiset.count i ↑x) (b i) =
+      basis R M b (Multiset.toFinsupp ↑x):= by
+  rw [basis_eq, Finsupp.prod_of_support_subset (s := (b.repr m).support)]
+  · apply Finset.prod_congr rfl
+    simp
+  · intro i
+    simp only [mem_sym_iff, Finsupp.mem_support_iff, ne_eq] at hx
+    simpa using hx i
+  · intro i hi
+    exact dp_zero R (b i)
+
+omit [DecidableEq R] in
 lemma basis_zero_eq_one : basis R M b 0 = 1 := by
   simp [basis_eq]
 
@@ -508,6 +522,11 @@ theorem dpow_eq_of_support_subset {ι : Type*} (b : Basis ι R M) (n : ℕ)
       rw [H0 k hk d hd.2, pow_zero]
     · intros; rfl
 
+theorem dpow_ι (n : ℕ) (x : M) : dpow b n (DividedPowerAlgebra.ι R M x) = dp R n x := by
+  simp only [dpow, if_pos ?_]
+  sorry
+
+
 theorem dpow_null {n : ℕ} {x : DividedPowerAlgebra R M} (hx : x ∉ augIdeal R M) :
     dpow b n x = 0 := by
   simp [dpow, if_neg hx]
@@ -579,6 +598,14 @@ theorem dpow_one {x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) :
   intro h
   simp only [Finsupp.mem_support_iff] at hd
   exact (hd h).elim
+
+theorem dpow_eval_zero {n : ℕ} (hn : n ≠ 0) : dpow b n 0 = 0 := by
+  simp only [dpow, if_pos (Ideal.zero_mem _)]
+  simp only [map_zero, Finsupp.support_zero, Finsupp.coe_zero, Pi.zero_apply, prod_empty,
+    Sym.val_eq_coe, one_smul, nsmul_eq_mul]
+  classical
+  rw [(Finset.sym_eq_empty (s := ∅) (n := n)).mpr ?_]
+  simp [hn]
 
 theorem dpow_mem {n : ℕ} {x : DividedPowerAlgebra R M} (hn : n ≠ 0) (hx : x ∈ augIdeal R M) :
     dpow b n x ∈ augIdeal R M := by
@@ -713,6 +740,18 @@ theorem dpow_add' {n : ℕ} {x y : DividedPowerAlgebra R M}
 
   sorry
 
+open Classical in
+theorem dpow_sum {α : Type*} (x : α → DividedPowerAlgebra R M) {s : Finset α}
+  (hx : ∀ a ∈ s, x a ∈ augIdeal R M) (n : ℕ) :
+    dpow b n (∑ a in s, x a) =
+      ∑ k ∈ s.sym n, ∏ d ∈ s, dpow b (Multiset.count d ↑k) (x d) := by
+  apply DividedPowers.dpow_sum' (dpow b)
+  · exact fun {x} a ↦ dpow_zero b a
+  · exact fun {n} {x y} a a_1 ↦ dpow_add'' b a a_1
+  · exact fun {n} a ↦ dpow_eval_zero b a
+  · exact hx
+
+
 example (α : Type*) [DecidableEq α] (n : ℕ) (s : Finset α) :
     (antidiagonal n).sigma (fun k ↦ s.sym k.2 ×ˢ s.sym k.1) ≃ s.sym n := sorry
  -- ∑ x_1 ∈ (antidiagonal n).sigma fun a ↦ s.sym a.2 ×ˢ s.sym a.1,
@@ -749,7 +788,7 @@ theorem mul_dpow {m n : ℕ} {x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal 
 
 theorem dpow_mul' {n : ℕ} {a x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) :
     dpow b n (a * x) = a ^ n * dpow b n x := by
-  induction a using DividedPowerAlgebra.induction_on generalizing n with
+  induction a using DividedPowerAlgebra.induction_on generalizing n x with
   | h_C r =>
     rw [dpow_eq_of_support_subset b n ?_ (s := ((basis R M b).repr x).support)]
     · simp only [dpow, if_pos hx, Finset.mul_sum]
@@ -790,11 +829,54 @@ theorem dpow_mul' {n : ℕ} {a x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal
       zero_mul, mul_zero, sum_ite_irrel, sum_const_zero] -/
     --rw [mem_augIdeal_iff_of_repr] at hx
   | h_dp f p m hf =>
-    rw [mul_pow, mul_mul_comm]
+    classical
+    rw [mul_assoc, hf, mul_pow, mul_assoc]
+    apply congr_arg₂ _ rfl
+    have : m = ((b.repr m).sum fun i c ↦ c • b i) := by
+      have := (Basis.linearCombination_repr b m).symm
+      simpa only [Finsupp.linearCombination, Finsupp.lsum] using this
+    simp only [Finsupp.sum] at this
+    rw [this, dp_sum, Finset.sum_mul, dpow_sum]
+    rw [dpow_eq_of_support_subset b n ?_ (s := ((basis R M b).repr x).support)]
+    simp only [dpow, if_pos hx, Finset.mul_sum]
+    apply Finset.sum_congr rfl
+    intro k hk
+    conv_rhs => rw [mul_comm]
+    simp only [smul_mul_assoc]
+    apply congr_arg₂ _ rfl
+
+    suffices dpow b n (f * dp R p m * x) = (dp R p m * f) ^ n * dpow b n x by
+      rw [this]; ring
+    rw [mul_assoc, hf]
     sorry
 
-example (a b c : R) : a * b * c = b * a * c := by
-  exact?
+example (p : ℕ) (m : M) (x : DividedPowerAlgebra R M) (d : ι →₀ ℕ) :
+    ((basis R M b).repr (dp R p m * x)) d = 0 := by
+  classical
+  have hm : m = ((b.repr m).sum fun i c ↦ c • b i) := by
+    have := (Basis.linearCombination_repr b m).symm
+    simpa only [Finsupp.linearCombination, Finsupp.lsum] using this
+  have (x) (hx : x ∈ (b.repr m).support.sym p) := basis_eq' b hx
+  have hx := eq_of_basis b x
+  have : dp R p m = dpow b p (DividedPowerAlgebra.ι R M m) := sorry
+  simp only [Finsupp.sum] at hm hx
+  rw [hm]
+  rw [dp_sum]
+  simp_rw [dp_smul, Finset.prod_smul']
+
+  rw [hx, Finset.mul_sum]
+  simp_rw [Finset.sum_mul]
+  rw [Finset.sum_comm]
+  -- simp_rw [Finset.sum_mul, Finset.sum_mul, Finset.sum_comm]
+  simp [dp_smul]
+  simp only [Finset.prod_smul']
+  simp [Finset.sum_congr (s₁ := (b.repr m).support.sym p) rfl
+    (fun x hx ↦ by
+      sorry)]
+  simp_rw [← this]
+  sorry
+
+
 theorem dpow_mul'' {n : ℕ} {a x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) :
     dpow b n (a * x) = a ^ n * dpow b n x := by
   classical
