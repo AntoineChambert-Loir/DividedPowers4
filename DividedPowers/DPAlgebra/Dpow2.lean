@@ -90,7 +90,7 @@ def basis {ι : Type*} (b : Basis ι R M) :
 theorem isFree [Module.Free R M] : Module.Free R (DividedPowerAlgebra R M) :=
   Module.Free.of_basis (basis R M (Module.Free.chooseBasis R M))
 
-variable {R M} {ι : Type*} (b : Basis ι R M)
+variable {R M} {ι : Type*} (b : Basis ι R M) (n : ℕ)
 
 lemma basis_eq (d : ι →₀ ℕ) :
     basis R M b d = d.prod (fun i k ↦ dp R k (b i)) := by
@@ -510,20 +510,20 @@ theorem dpow_eq [DecidableEq R] (H : DividedPowers (augIdeal R M))
   apply congr_arg₂ _ rfl
   rw [Finset.prod_mul_distrib]
 
-/-- The `dpow` function on the divided power algebra of a free module -/
-def dpow {ι : Type*} (b : Basis ι R M) (n : ℕ) (x : DividedPowerAlgebra R M) :
-    DividedPowerAlgebra R M := by
-  classical
-  exact
-    if x ∈ augIdeal R M then
-      ∑ k ∈ ((basis R M b).repr x).support.sym n,
-        cK k ((basis R M b).repr x).support •
-          (∏ d ∈ ((basis R M b).repr x).support, ((basis R M b).repr x) d ^ Multiset.count d ↑k) •
-              (basis R M b) k.val.sum
-    else 0
+-- Decidability variables needed to define `dpow`
+variable [DecidableEq R] [DecidableEq ι] [DecidablePred (fun x ↦ x ∈ augIdeal R M)]
 
-open scoped Classical in
-theorem dpow_eq_of_support_subset {ι : Type*} (b : Basis ι R M) (n : ℕ)
+/-- The `dpow` function on the divided power algebra of a free module -/
+def dpow (n : ℕ) (x : DividedPowerAlgebra R M) :
+    DividedPowerAlgebra R M :=
+  if x ∈ augIdeal R M then
+    ∑ k ∈ ((basis R M b).repr x).support.sym n,
+      cK k ((basis R M b).repr x).support •
+        (∏ d ∈ ((basis R M b).repr x).support, ((basis R M b).repr x) d ^ Multiset.count d ↑k) •
+            (basis R M b) k.val.sum
+  else 0
+
+theorem dpow_eq_of_support_subset
     {x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M)
     {s : Finset (ι →₀ ℕ)} (hs : ((basis R M b).repr x).support ⊆ s) :
     dpow b n x = ∑ k ∈ s.sym n, cK k s •
@@ -560,7 +560,9 @@ theorem dpow_eq_of_support_subset {ι : Type*} (b : Basis ι R M) (n : ℕ)
       rw [H0 k hk d hd.2, pow_zero]
     · intros; rfl
 
-theorem dpow_ι (n : ℕ) (m : M) :
+
+theorem dpow_ι [DecidableEq R] [DecidableEq ι] [DecidablePred (fun x ↦ x ∈ augIdeal R M)]
+    (n : ℕ) (m : M) :
     dpow b n (DividedPowerAlgebra.ι R M m) = dp R n m := by
   classical
   simp only [dpow, if_pos (ι_mem_augIdeal R M m)]
@@ -622,8 +624,8 @@ theorem dpow_ι (n : ℕ) (m : M) :
     · simp -/
 
 -- TODO: golf and speed up
-open Classical in
-lemma repr_dp_one /- [ DecidableEq ι] -/ (m : M) : (basis R M b).repr (dp R 1 m) =
+omit [DecidableEq R] [DecidablePred (fun x ↦ x ∈ augIdeal R M)] in
+lemma repr_dp_one (m : M) : (basis R M b).repr (dp R 1 m) =
     ∑ x ∈ (b.repr m).support, (((b.repr m) x) • (basis R M b).repr
           ((basis R M b) (Multiset.toFinsupp (Sym.oneEquiv x)))) := by
   classical
@@ -670,9 +672,14 @@ lemma repr_dp_one /- [ DecidableEq ι] -/ (m : M) : (basis R M b).repr (dp R 1 m
 
 theorem dpow_null {n : ℕ} {x : DividedPowerAlgebra R M} (hx : x ∉ augIdeal R M) :
     dpow b n x = 0 := by
-  simp [dpow, if_neg hx]
+  simp only [dpow, Sym.val_eq_coe, nsmul_eq_mul, Algebra.mul_smul_comm, ite_eq_right_iff]
+  intro hx'
+  exfalso
+  apply hx
+  exact hx'
 
-theorem cK_zero [DecidableEq ι] {k : Sym (ι →₀ ℕ) 0} {s : Finset (ι →₀ ℕ)} :
+
+theorem cK_zero {k : Sym (ι →₀ ℕ) 0} {s : Finset (ι →₀ ℕ)} :
     cK k s = 1 := by
   simp [cK, Subsingleton.eq_zero k, Nat.uniformBell_zero_left]
 
@@ -701,7 +708,7 @@ theorem _root_.Nat.multinomial_single {α : Type*} [DecidableEq α]
     intro x hx
     apply Nat.factorial_ne_zero
 
-theorem cK_one [DecidableEq ι] {s : Finset (ι →₀ ℕ)} {k : Sym (ι →₀ ℕ) 1} :
+theorem cK_one {s : Finset (ι →₀ ℕ)} {k : Sym (ι →₀ ℕ) 1} :
     cK k s = 1 := by
   let d := Sym.oneEquiv.symm k
   have : k = Sym.oneEquiv d := by simp [d]
@@ -744,7 +751,7 @@ theorem dpow_eval_zero {n : ℕ} (hn : n ≠ 0) : dpow b n 0 = 0 := by
   simp only [dpow, if_pos (Ideal.zero_mem _)]
   simp [(Finset.sym_eq_empty (s := ∅) (n := n)).mpr ?_, hn]
 
-theorem dpow_mem [DecidableEq R] {n : ℕ} {x : DividedPowerAlgebra R M} (hn : n ≠ 0) (hx : x ∈ augIdeal R M) :
+theorem dpow_mem {n : ℕ} {x : DividedPowerAlgebra R M} (hn : n ≠ 0) (hx : x ∈ augIdeal R M) :
     dpow b n x ∈ augIdeal R M := by
   have hn' : n = n.pred.succ := (Nat.succ_pred_eq_of_ne_zero hn).symm
   simp only [dpow]
@@ -877,8 +884,7 @@ theorem dpow_add' {n : ℕ} {x y : DividedPowerAlgebra R M}
 
   sorry
 
-open Classical in
-theorem dpow_sum {α : Type*} (x : α → DividedPowerAlgebra R M) {s : Finset α}
+theorem dpow_sum {α : Type*} [DecidableEq α] (x : α → DividedPowerAlgebra R M) {s : Finset α}
   (hx : ∀ a ∈ s, x a ∈ augIdeal R M) (n : ℕ) :
     dpow b n (∑ a in s, x a) =
       ∑ k ∈ s.sym n, ∏ d ∈ s, dpow b (Multiset.count d ↑k) (x d) := by
