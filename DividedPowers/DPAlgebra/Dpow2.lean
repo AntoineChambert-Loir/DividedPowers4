@@ -478,38 +478,6 @@ theorem cK_eq_of_subset [DecidableEq ι] {n : ℕ} {k : Sym (ι →₀ ℕ) n}
       simp [H0 d hd.2, Nat.uniformBell_zero_left]
     · simp
 
-/- Is there a better formula ? -/
-theorem dpow_eq [DecidableEq R] (H : DividedPowers (augIdeal R M))
-    (hH : ∀ (n : ℕ) (x : M), H.dpow n (DividedPowerAlgebra.ι R M x) = dp R n x)
-    {ι : Type*} [DecidableEq ι] (b : Basis ι R M) {n : ℕ} {x : DividedPowerAlgebra R M}
-    (hx : x ∈ augIdeal R M) :
-    H.dpow n x =
-      ∑ k ∈ ((basis R M b).repr x).support.sym n,
-        cK k ((basis R M b).repr x).support •
-          (∏ d ∈ ((basis R M b).repr x).support, ((basis R M b).repr x) d ^ Multiset.count d ↑k) •
-            (basis R M b) k.val.sum := by
-  nth_rewrite 1 [eq_of_basis b x]
-  classical
-  rw [H.dpow_linearCombination
-    (fun _ hd ↦ basis_mem_augIdeal b (ne_zero_of_mem_support_of_mem_augIdeal b hx hd))]
-  apply Finset.sum_congr rfl (fun k hk ↦ ?_)
-  simp only [Finsupp.prod, Finset.prod_smul']
-  set A := (∏ i ∈ ((basis R M b).repr x).support, ((basis R M b).repr x) i ^ Multiset.count i k)
-  set B := ∏ i ∈ ((basis R M b).repr x).support, H.dpow (Multiset.count i k) ((basis R M b) i)
-    with hB
-  set C := (basis R M b k.val.sum) with hC
-  suffices B = cK k ((basis R M b).repr x).support • C by simp [this]
-  have (i) (hi : i ∈ ((basis R M b).repr x).support) :=
-    dpow_basis_eq H hH b (Multiset.count i ↑k) i (ne_zero_of_mem_support_of_mem_augIdeal b hx hi)
-  simp only [Finset.prod_congr rfl this, Finset.prod_smul', basis_prod,
-    k.sum_eq_val_sum hk, ← hC] at hB
-  simp only [hB, ← smul_assoc]
-  apply congr_arg₂ _ _ rfl
-  simp only [smul_eq_mul, Sym.val_eq_coe, Finsupp.coe_smul, Pi.smul_apply, cK]
-  rw [mul_comm]
-  apply congr_arg₂ _ rfl
-  rw [Finset.prod_mul_distrib]
-
 -- Decidability variables needed to define `dpow`
 variable [DecidableEq R] [DecidableEq ι] [DecidablePred (fun x ↦ x ∈ augIdeal R M)]
 
@@ -522,6 +490,36 @@ def dpow (n : ℕ) (x : DividedPowerAlgebra R M) :
         (∏ d ∈ ((basis R M b).repr x).support, ((basis R M b).repr x) d ^ Multiset.count d ↑k) •
             (basis R M b) k.val.sum
   else 0
+
+/- Is there a better formula ? -/
+theorem dpow_eq (H : DividedPowers (augIdeal R M))
+    (hH : ∀ (n : ℕ) (x : M), H.dpow n (DividedPowerAlgebra.ι R M x) = dp R n x)
+    {ι : Type*} [DecidableEq ι] (b : Basis ι R M) {n : ℕ} {x : DividedPowerAlgebra R M} :
+    H.dpow n x = dpow b n x := by
+  simp only [dpow]
+  split_ifs with hx
+  · nth_rewrite 1 [eq_of_basis b x]
+    classical
+    rw [H.dpow_linearCombination
+      (fun _ hd ↦ basis_mem_augIdeal b (ne_zero_of_mem_support_of_mem_augIdeal b hx hd))]
+    apply Finset.sum_congr rfl (fun k hk ↦ ?_)
+    simp only [Finsupp.prod, Finset.prod_smul']
+    set A := (∏ i ∈ ((basis R M b).repr x).support, ((basis R M b).repr x) i ^ Multiset.count i k)
+    set B := ∏ i ∈ ((basis R M b).repr x).support, H.dpow (Multiset.count i k) ((basis R M b) i)
+      with hB
+    set C := (basis R M b k.val.sum) with hC
+    suffices B = cK k ((basis R M b).repr x).support • C by simp [this]
+    have (i) (hi : i ∈ ((basis R M b).repr x).support) :=
+      dpow_basis_eq H hH b (Multiset.count i ↑k) i (ne_zero_of_mem_support_of_mem_augIdeal b hx hi)
+    simp only [Finset.prod_congr rfl this, Finset.prod_smul', basis_prod,
+      k.sum_eq_val_sum hk, ← hC] at hB
+    simp only [hB, ← smul_assoc]
+    apply congr_arg₂ _ _ rfl
+    simp only [smul_eq_mul, Sym.val_eq_coe, Finsupp.coe_smul, Pi.smul_apply, cK]
+    rw [mul_comm]
+    apply congr_arg₂ _ rfl
+    rw [Finset.prod_mul_distrib]
+  · exact H.dpow_null hx
 
 theorem dpow_eq_of_support_subset
     {x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M)
@@ -561,10 +559,8 @@ theorem dpow_eq_of_support_subset
     · intros; rfl
 
 
-theorem dpow_ι [DecidableEq R] [DecidableEq ι] [DecidablePred (fun x ↦ x ∈ augIdeal R M)]
-    (n : ℕ) (m : M) :
+theorem dpow_ι (m : M) :
     dpow b n (DividedPowerAlgebra.ι R M m) = dp R n m := by
-  classical
   simp only [dpow, if_pos (ι_mem_augIdeal R M m)]
   have hm : m = ((b.repr m).sum fun i c ↦ c • b i) := by
     have := (Basis.linearCombination_repr b m).symm
@@ -579,49 +575,179 @@ theorem dpow_ι [DecidableEq R] [DecidableEq ι] [DecidablePred (fun x ↦ x ∈
     rw [hm]
     simp only [Finsupp.sum]
     rw [dp_sum _ (b.repr m).support n]
-  rw [← Finset.sum_fiberwise_of_maps_to (g := g n)]
+  set s := (b.repr m).support with hs
+  set t := ((basis R M b).repr ((DividedPowerAlgebra.ι R M) m)).support with ht
+  have hst := ι_repr_support_eq b m
+  simp only [← hs, ← ht] at hst
+  have hst' : t.sym n = Finset.map (g n) (s.sym n) := by
+    rw [hst]
+    ext d
+    simp only [mem_sym_iff, mem_map, Function.Embedding.coeFn_mk]
+    constructor
+    · intro hd
+      have := Sym.attach d
+      let g' : {x // x ∈ d} → ι := fun ⟨x, hx⟩ ↦ (hd x hx).choose
+      let h : Sym {x // x ∈ d} n → Sym ι n := fun p ↦ Sym.map g' p
+      use h d.attach
+      constructor
+      · simp [h, g']
+        intro i e he hi
+        rw [← hi]
+        exact (hd e he).choose_spec.1
+      · simp only [g, h, g']
+        simp only [Function.Embedding.coeFn_mk, Sym.map_map, Function.comp_apply, h, g, g']
+        convert Sym.attach_map_coe d with ⟨x, hx⟩ hx'
+        simp only [h, g, g']
+        exact (hd x hx).choose_spec.2
+    · rintro ⟨b, hb, rfl⟩ d hd
+      simp only [Function.Embedding.coeFn_mk, Sym.mem_map, g] at hd
+      obtain ⟨a, ha, rfl⟩ := hd
+      refine ⟨a, hb a ha, rfl⟩
+  rw [hst']
+  rw [Finset.sum_map]
   apply Finset.sum_congr rfl
-  · intro k hk
-    set s := (b.repr m).support with hs
-    simp only [ι_repr_support_eq, ← hs] at hk ⊢
-    simp only [mem_sym_iff, mem_map, Finsupp.mem_support_iff, ne_eq,
-      Function.Embedding.coeFn_mk] at hk
-    sorry
-  · intro k hk
-    simp only [g]
-    rw [mem_sym_iff]
-    intro d
-    simp only [Function.Embedding.coeFn_mk, Sym.mem_map, Finsupp.mem_support_iff, basis_repr_ι,
-      ne_eq, dite_eq_right_iff, forall_exists_index, not_forall, and_imp, g]
-    intro i hi hd
-    use i
-    use hd.symm
-    intro H
-    simp only [mem_sym_iff, Finsupp.mem_support_iff] at hk
-    apply hk i hi
-    rw [← H]
-    apply congr_arg
-    have : ∃ i, d = Finsupp.single i 1 := ⟨i, hd.symm⟩
-    rw [← Finsupp.single_left_inj Nat.one_ne_zero, ← this.choose_spec, hd]
-/-    simp only [Function.Embedding.coeFn_mk, Sym.mem_map, Finsupp.mem_support_iff, ne_eq,
-      forall_exists_index, and_imp, g]
-    simp only [Sym.mem_map, g]
-    rintro ⟨i, hi, rfl⟩
-    simp only [Finsupp.mem_support_iff, ne_eq, g]
-    rw [hm, map_finsupp_sum, map_finsupp_sum]
-    intro h
-    simp only [map_smul, Finsupp.sum_apply, Finsupp.coe_smul, Pi.smul_apply, smul_eq_mul, g] at h
-    simp only [mem_sym_iff, Finsupp.mem_support_iff, ne_eq, g] at hk
-    apply hk i hi
-    rw [Finsupp.sum_eq_single i] at h
-    · rw [← h, eq_comm]
+  intro k hk
+  simp only [hst, prod_map, Function.Embedding.coeFn_mk, Sym.val_eq_coe, nsmul_eq_mul,
+    Algebra.mul_smul_comm, g]
+  have (x) (hx : x ∈ s) :
+    ((basis R M b).repr ((DividedPowerAlgebra.ι R M) m)) (Finsupp.single x 1) ^
+      Multiset.count (Finsupp.single x 1) ↑(Sym.map (fun i ↦ Finsupp.single i 1) k) = (b.repr m) x ^ Multiset.count x ↑k := by
+    conv_lhs => rw [hm, map_finsupp_sum, map_finsupp_sum]
+    simp only [map_smul, Finsupp.sum_apply, Finsupp.coe_smul, Pi.smul_apply, smul_eq_mul,
+      Sym.coe_map, g]
+    simp_rw [← basis_single_one_eq]
+    simp only [Basis.repr_self, g]
+    rw [Finsupp.sum_eq_single x]
+    · simp only [Finsupp.single_eq_same, mul_one, g]
+
+      suffices Multiset.count (Finsupp.single x 1) (Multiset.map (fun i ↦ Finsupp.single i 1) ↑k) = Multiset.count x ↑k by
+        rw [this]
+
+      apply Multiset.count_map_eq_count'
+      intro i j h
+      rwa [Finsupp.single_left_inj Nat.one_ne_zero] at h
+
+    · intro i hi hix
+      convert mul_zero _
+      rw [Finsupp.single_eq_of_ne]
+      simp only [ne_eq, Finsupp.single_left_inj Nat.one_ne_zero]
+      exact hix
+    · simp
+  rw [Finset.prod_congr rfl this]
+  clear this
+  have hk':  ((Sym.map (fun i ↦ Finsupp.single i 1) k) : Multiset (ι →₀ ℕ)).sum =
+    Multiset.toFinsupp ↑k := by
+    symm
+    rw [Multiset.toFinsupp_eq_iff]
+    simp only [Sym.coe_map, g]
+    ext i
+    simp only [Finsupp.count_toMultiset, g]
+    set p : Multiset ι := ↑k with hp
+    induction p using Multiset.induction_on with
+    | empty => simp
+    | cons j q H =>
+      simp only [Multiset.count_cons, H, add_comm, Multiset.map_cons, Multiset.sum_cons,
+        Finsupp.coe_add, Pi.add_apply, add_left_inj, g]
+      split_ifs with h
+      · simp [h]
+      · rw [Finsupp.single_eq_of_ne (Ne.symm h)]
+  rw [hk']
+  simp only [dp_smul, Finset.prod_smul']
+  apply congr_arg₂ _ rfl
+  simp [basis_eq, Finsupp.prod]
+  have : (k : Multiset ι).toFinset ⊆ s := by
+    intro i hi
+    simp only [Multiset.mem_toFinset, Sym.mem_coe, g] at hi
+    rw [mem_sym_iff] at hk
+    exact hk i hi
+  rw [← Finset.prod_sdiff this]
+  apply congr_arg₂ _ _ rfl
+  rw [Finset.prod_eq_one]
+  · rw [← hst]
+    simp only [cK]
+    simp only [Sym.val_eq_coe, Sym.coe_map, Finsupp.coe_smul, Pi.smul_apply, smul_eq_mul,
+      Nat.cast_mul, Nat.cast_finsupp_prod, Nat.cast_prod, Nat.cast_pow, g]
+    convert mul_one _
+    · apply Finset.prod_eq_one
+      intro d hd
+      rw [hst] at hd
+      simp only [mem_map, Function.Embedding.coeFn_mk, g] at hd
+      obtain ⟨j, hj, rfl⟩ := hd
       convert mul_one _
-      rw [← basis_single_one_eq, Basis.repr_self, Finsupp.single_eq_same]
-    · intro j hj hji
-      rw [← basis_single_one_eq, Basis.repr_self, Finsupp.single_eq_of_ne, mul_zero]
-      rw [ne_eq, Finsupp.single_left_inj Nat.one_ne_zero]
-      exact hji
-    · simp -/
+      · apply Finset.prod_eq_one
+        intro i hi
+        have : j = i := by
+          by_contra! h
+          simp [Finsupp.single_eq_of_ne h] at hi
+        rw [this]
+        erw [Multiset.count_map_eq_count']
+        · simp [Finsupp.single_eq_same, Nat.uniformBell_one_right]
+        · intro i j h
+          rwa [Finsupp.single_left_inj Nat.one_ne_zero] at h
+      · suffices (Finsupp.single j 1).support = {j} by
+          rw [this]
+          simp only [card_singleton, tsub_self, pow_zero, g]
+        ext i
+        simp only [Finsupp.mem_support_iff, ne_eq, mem_singleton, g]
+        by_cases h : j = i
+        · simp [h]
+        · simp [Finsupp.single_eq_of_ne h, Ne.symm h]
+
+    · rw [eq_comm]
+      simp only [Finsupp.prod]
+      apply Finset.prod_eq_one
+      intro i hi
+      convert Nat.cast_one
+      rw [← Nat.mul_right_inj, mul_one]
+      convert Nat.multinomial_spec _ _
+
+
+      · simp only [Sym.coe_map, g] at hk'
+        simp only [hk', Multiset.toFinsupp_support, Multiset.mem_toFinset, Sym.mem_coe, g] at hi
+        rw [hst]
+        simp only [prod_map, Function.Embedding.coeFn_mk, sum_map, g]
+        have (x) (hx : x ∈ s) :
+          (Multiset.count (Finsupp.single x 1) (Multiset.map (fun i ↦ Finsupp.single i 1) ↑k) * (Finsupp.single x 1) i)! =
+          (Multiset.count x ↑k * Finsupp.single x 1 i)! := by
+          apply congr_arg
+          by_cases hi : x = i
+          · simp [hi]
+            apply Multiset.count_map_eq_count'
+            intro i j h
+            rwa [Finsupp.single_left_inj Nat.one_ne_zero] at h
+          · simp [Finsupp.single_eq_of_ne hi]
+        rw [Finset.prod_congr rfl this]
+        clear this
+        rw [Finset.prod_eq_single i]
+        · simp only [Finsupp.single_eq_same, mul_one, g]
+          rw [Finset.sum_eq_single i]
+          · simp
+            apply congr_arg
+            symm
+            apply Multiset.count_map_eq_count'
+            intro i j h
+            rwa [Finsupp.single_left_inj Nat.one_ne_zero] at h
+          · intro j hj hji
+            simp [Finsupp.single_eq_of_ne hji]
+          · intro hi
+            exfalso
+            apply hi
+            apply this
+            simpa only [Multiset.mem_toFinset, Sym.mem_coe, g]
+        · intro j hj hji
+          simp [Finsupp.single_eq_of_ne hji]
+        · exact fun hi' ↦ (hi' (this (by simpa using hi))).elim
+      · intro H
+        rw [Finset.prod_eq_zero_iff] at H
+        obtain ⟨j, hj, h⟩ := H
+        apply Nat.factorial_ne_zero _ h
+
+
+  · intro i hi
+    simp only [mem_sdiff, Multiset.mem_toFinset, Sym.mem_coe, g] at hi
+    rw [← Sym.mem_coe, ← Multiset.count_eq_zero] at hi
+    rw [hi.2]
+    exact dp_zero R (b i)
 
 -- TODO: golf and speed up
 omit [DecidableEq R] [DecidablePred (fun x ↦ x ∈ augIdeal R M)] in
