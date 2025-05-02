@@ -733,21 +733,56 @@ theorem dpow_mul {n : ℕ} {a x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal 
   rw [← Algebra.mul_smul_comm]
   sorry
 
+theorem mul_dpow {m n : ℕ} {x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) :
+    dpow b m x * dpow b n x = ↑((m + n).choose m) * dpow b (m + n) x := by
+  classical
+  simp only [dpow, if_pos hx]
+  rw [Finset.sum_mul_sum, ← Finset.sum_product', mul_sum]
+  simp only [Sym.val_eq_coe, nsmul_eq_mul, Algebra.mul_smul_comm, Algebra.smul_mul_assoc]
+  simp only [← smul_assoc]
+  simp only [← Finset.prod_smul']
+  simp only [smul_eq_mul, ← pow_add]
+
+
+  sorry
+
+
 theorem dpow_mul' {n : ℕ} {a x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) :
     dpow b n (a * x) = a ^ n * dpow b n x := by
-  induction x using DividedPowerAlgebra.induction_on with
-  | h_C r => sorry
+  induction a using DividedPowerAlgebra.induction_on generalizing n with
+  | h_C r =>
+    rw [dpow_eq_of_support_subset b n ?_ (s := ((basis R M b).repr x).support)]
+    · simp only [dpow, if_pos hx, Finset.mul_sum]
+      apply Finset.sum_congr rfl
+      intro k hk
+      simp only [← smul_assoc]
+      simp only [algHom_C, ← Algebra.smul_def, map_smul]
+
+      classical
+      calc
+        _ = mk (C r) ^ n * (cK k ((basis R M b).repr x).support •
+        ∏ d ∈ ((basis R M b).repr x).support, ((basis R M b).repr x) d ^ Multiset.count d ↑k) • (basis R M b) (↑k).sum  := by sorry
+
+    · intro d
+      simp only [Finsupp.mem_support_iff, ne_eq, not_imp_not]
+      intro hd
+      simp [algHom_C, ← Algebra.smul_def, hd]
+    · exact mul_mem_left (augIdeal R M) (mk (C r)) hx
   | h_add f g hf hg =>
-    rw [mul_add, dpow_add, dpow_add]
+    rw [add_mul, dpow_add, (Commute.all f g).add_pow', Finset.sum_mul]
+    · apply Finset.sum_congr rfl
+      intro k hk
+      simp only [hf, hg]
+      simp only [mem_antidiagonal] at hk
+      rw [mul_mul_mul_comm, mul_dpow, hk]
+      ring
+      exact hx
+    · exact mul_mem_left (augIdeal R M) f hx
+    · exact mul_mem_left (augIdeal R M) g hx
     --simp_rw [dpow_eq]
     /- simp only [dpow, Sym.val_eq_coe, nsmul_eq_mul, Algebra.mul_smul_comm, mul_ite, ite_mul,
       zero_mul, mul_zero, sum_ite_irrel, sum_const_zero] -/
     --rw [mem_augIdeal_iff_of_repr] at hx
-    sorry
-    sorry
-    sorry
-    sorry
-    sorry
   | h_dp f n m hf => sorry
 
 theorem dpow_mul'' {n : ℕ} {a x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) :
@@ -784,19 +819,6 @@ theorem dpow_mul'' {n : ℕ} {a x : DividedPowerAlgebra R M} (hx : x ∈ augIdea
       obtain ⟨c, hc, rfl⟩ := hc
       sorry -/
     sorry
-
-theorem mul_dpow {m n : ℕ} {x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) :
-    dpow b m x * dpow b n x = ↑((m + n).choose m) * dpow b (m + n) x := by
-  classical
-  simp only [dpow, if_pos hx]
-  rw [Finset.sum_mul_sum, ← Finset.sum_product', mul_sum]
-  simp only [Sym.val_eq_coe, nsmul_eq_mul, Algebra.mul_smul_comm, Algebra.smul_mul_assoc]
-  simp only [← smul_assoc]
-  simp only [← Finset.prod_smul']
-  simp only [smul_eq_mul, ← pow_add]
-
-
-  sorry
 
 theorem dpow_comp {m n : ℕ} {x : DividedPowerAlgebra R M} (hn : n ≠ 0)
     (hx : x ∈ augIdeal R M) :
