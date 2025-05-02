@@ -756,13 +756,19 @@ theorem dpow_mul' {n : ℕ} {a x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal
       apply Finset.sum_congr rfl
       intro k hk
       simp only [← smul_assoc]
-      simp only [algHom_C, ← Algebra.smul_def, map_smul]
-
+      simp only [algHom_C, ← Algebra.smul_def, map_smul, ← map_pow]
       classical
-      calc
-        _ = mk (C r) ^ n * (cK k ((basis R M b).repr x).support •
-        ∏ d ∈ ((basis R M b).repr x).support, ((basis R M b).repr x) d ^ Multiset.count d ↑k) • (basis R M b) (↑k).sum  := by sorry
-
+      simp only [Finsupp.coe_smul, Pi.smul_apply, smul_eq_mul, nsmul_eq_mul, Sym.val_eq_coe]
+      simp only [mul_pow, Finset.prod_mul_distrib]
+      rw [Finset.prod_pow_eq_pow_sum]
+      suffices ∑ i in  ((basis R M b).repr x).support,
+        Multiset.count i ↑k = n by
+        rw [this, ← mul_assoc, mul_comm _ (r ^ n), mul_assoc]
+        simp [Algebra.smul_def]
+        ring
+      conv_rhs => rw [← Sym.card_coe (s := k)]
+      rw [Multiset.sum_count_eq_card]
+      simpa only [mem_sym_iff] using hk
     · intro d
       simp only [Finsupp.mem_support_iff, ne_eq, not_imp_not]
       intro hd
@@ -783,8 +789,12 @@ theorem dpow_mul' {n : ℕ} {a x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal
     /- simp only [dpow, Sym.val_eq_coe, nsmul_eq_mul, Algebra.mul_smul_comm, mul_ite, ite_mul,
       zero_mul, mul_zero, sum_ite_irrel, sum_const_zero] -/
     --rw [mem_augIdeal_iff_of_repr] at hx
-  | h_dp f n m hf => sorry
+  | h_dp f p m hf =>
+    rw [mul_pow, mul_mul_comm]
+    sorry
 
+example (a b c : R) : a * b * c = b * a * c := by
+  exact?
 theorem dpow_mul'' {n : ℕ} {a x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) :
     dpow b n (a * x) = a ^ n * dpow b n x := by
   classical
