@@ -90,7 +90,6 @@ def basis {ι : Type*} (b : Basis ι R M) :
 theorem isFree [Module.Free R M] : Module.Free R (DividedPowerAlgebra R M) :=
   Module.Free.of_basis (basis R M (Module.Free.chooseBasis R M))
 
-
 variable {R M} {ι : Type*} (b : Basis ι R M)
 
 lemma basis_eq (d : ι →₀ ℕ) :
@@ -602,9 +601,7 @@ theorem dpow_ι (n : ℕ) (m : M) :
     apply congr_arg
     have : ∃ i, d = Finsupp.single i 1 := ⟨i, hd.symm⟩
     rw [← Finsupp.single_left_inj Nat.one_ne_zero, ← this.choose_spec, hd]
-/-
-
-    simp only [Function.Embedding.coeFn_mk, Sym.mem_map, Finsupp.mem_support_iff, ne_eq,
+/-    simp only [Function.Embedding.coeFn_mk, Sym.mem_map, Finsupp.mem_support_iff, ne_eq,
       forall_exists_index, and_imp, g]
     simp only [Sym.mem_map, g]
     rintro ⟨i, hi, rfl⟩
@@ -622,10 +619,54 @@ theorem dpow_ι (n : ℕ) (m : M) :
       rw [← basis_single_one_eq, Basis.repr_self, Finsupp.single_eq_of_ne, mul_zero]
       rw [ne_eq, Finsupp.single_left_inj Nat.one_ne_zero]
       exact hji
-    · simp
+    · simp -/
 
--/
-#exit
+-- TODO: golf and speed up
+open Classical in
+lemma repr_dp_one /- [ DecidableEq ι] -/ (m : M) : (basis R M b).repr (dp R 1 m) =
+    ∑ x ∈ (b.repr m).support, (((b.repr m) x) • (basis R M b).repr
+          ((basis R M b) (Multiset.toFinsupp (Sym.oneEquiv x)))) := by
+  classical
+  have hm : m = ((b.repr m).sum fun i c ↦ c • b i) := by
+      have := (Basis.linearCombination_repr b m).symm
+      simpa only [Finsupp.linearCombination, Finsupp.lsum] using this
+  simp only [Finsupp.sum] at hm
+  conv_lhs =>
+    rw [hm, dp_sum]
+    simp only [sym_succ, Nat.succ_eq_add_one, Nat.reduceAdd, sym_zero, image_singleton,
+      sup_singleton'', Finsupp.mem_support_iff, ne_eq, Sym.cons_inj_left, imp_self, implies_true,
+      sum_image, map_sum]
+    simp only [dp_smul, Finset.prod_smul', map_smul]
+  have hx' (x : ι) : x ::ₛ (∅ : Sym ι 0) = Sym.oneEquiv x := rfl
+  calc
+    ∑ x ∈ (b.repr m).support,
+  (∏ i ∈ (b.repr m).support, (b.repr m) i ^ Multiset.count i ↑(x ::ₛ ∅)) •
+    (basis R M b).repr (∏ i ∈ (b.repr m).support, dp R (Multiset.count i ↑(x ::ₛ ∅)) (b i)) =
+    ∑ x ∈ (b.repr m).support,
+    ((∏ i ∈ (b.repr m).support, (b.repr m) i ^ Multiset.count i ↑(x ::ₛ (∅ : Sym ι 0))) • (basis R M b).repr
+    ((basis R M b) (Multiset.toFinsupp ↑(x ::ₛ (∅ : Sym ι 0))))) := by
+      apply Finset.sum_congr rfl
+      intro x hx
+      rw [basis_eq']
+      simp only [Nat.succ_eq_add_one, Nat.reduceAdd, sym_succ, sym_zero, image_singleton,
+        sup_singleton'', hx' x, Sym.oneEquiv_apply, mem_image, Finsupp.mem_support_iff, ne_eq]
+      simp only [Finsupp.mem_support_iff, ne_eq] at hx
+      use x, hx
+      simp only [hx' x, Sym.oneEquiv_apply]
+    _ = ∑ x ∈ (b.repr m).support,
+        ((∏ i ∈ (b.repr m).support, (b.repr m) i ^ Multiset.count i {x}) • (basis R M b).repr
+        ((basis R M b) (Multiset.toFinsupp ↑(x ::ₛ (∅ : Sym ι 0))))) := by congr
+    _ = ∑ x ∈ (b.repr m).support, (((b.repr m) x) • (basis R M b).repr
+          ((basis R M b) (Multiset.toFinsupp (Sym.oneEquiv x)))) := by
+      apply Finset.sum_congr rfl
+      intro x hx
+      congr
+      conv_rhs => rw [← pow_one (b.repr m x), ← Multiset.count_singleton_self x]
+      apply Finset.prod_eq_single_of_mem _ hx
+      intro y hy hyx
+      have hyx' : Multiset.count y {x} = 0 := by rw [Multiset.count_singleton, if_neg hyx]
+      simp [hyx']
+
 
 theorem dpow_null {n : ℕ} {x : DividedPowerAlgebra R M} (hx : x ∉ augIdeal R M) :
     dpow b n x = 0 := by
