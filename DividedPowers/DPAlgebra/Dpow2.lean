@@ -9,19 +9,111 @@ import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 
 section
 
-open DividedPowers
+namespace Nat
+
+open Finset
+
+theorem multinomial_congr_of_sdiff
+    {α : Type*} [DecidableEq α] {f g : α → ℕ} {s t : Finset α}
+    (hst : s ⊆ t) (H1 : ∀ a ∈ t \ s, g a = 0) (H2 : ∀ a ∈ s, f a = g a) :
+    multinomial s f = multinomial t g := by
+  rw [← Nat.mul_right_inj (a := ∏ a ∈ t, (g a)!), multinomial_spec,
+    ← sum_subset_zero_on_sdiff hst H1 H2, ← multinomial_spec s f]
+  · apply congr_arg₂ _ _ rfl
+    symm
+    apply prod_subset_one_on_sdiff hst
+    · intro x hx
+      rw [H1 x hx, factorial_zero]
+    · intro x hx
+      rw [H2 x hx]
+  · simp only [ne_eq, prod_eq_zero_iff, not_exists, not_and]
+    intro x hx
+    exact factorial_ne_zero (g x)
+
+end Nat
+
+namespace Finset
+
+open Sym
+
+theorem prod_smul' {α β ι : Type*}
+    [CommMonoid β] [CommMonoid α] [MulAction α β] [IsScalarTower α β β] [SMulCommClass α β β]
+    (s : Finset ι) (b : ι → α) (f : ι → β) :
+    ∏ i ∈ s, b i • f i = (∏ i ∈ s, b i) • ∏ i ∈ s, f i := by
+  induction s using cons_induction_on with
+  | empty =>  simp
+  | cons _ _ hj ih => rw [prod_cons, ih, smul_mul_smul_comm, ← prod_cons hj, ← prod_cons hj]
+
+lemma sym_map {α β : Type*} [DecidableEq α] [DecidableEq β] {n : ℕ}
+  (g : α ↪ β) (s : Finset α) :
+    (s.map g).sym n = (s.sym n).map ⟨Sym.map g, Sym.map_injective g.injective _⟩ := by
+  ext d
+  simp only [mem_sym_iff, mem_map, Function.Embedding.coeFn_mk]
+  constructor
+  · intro hd
+    let g' : {x // x ∈ d} → α := fun ⟨x, hx⟩ ↦ (hd x hx).choose
+    let h : Sym {x // x ∈ d} n → Sym α n := fun p ↦ Sym.map g' p
+    use h d.attach
+    constructor
+    · simp only [Sym.mem_map, Sym.mem_attach, true_and, Subtype.exists, forall_exists_index, h, g']
+      intro i e he hi
+      rw [← hi]
+      exact (hd e he).choose_spec.1
+    · simp only [Sym.map_map, Function.comp_apply, h, g']
+      convert Sym.attach_map_coe d with ⟨x, hx⟩ hx'
+      exact (hd x hx).choose_spec.2
+  · rintro ⟨b, hb, rfl⟩ d hd
+    simp only [Sym.mem_map] at hd
+    obtain ⟨a, ha, rfl⟩ := hd
+    refine ⟨a, hb a ha, rfl⟩
+
+end Finset
+
+namespace Sym
+
+open Finset
+
+theorem sum_eq_val_sum {ι : Type*} [DecidableEq ι] {n : ℕ}
+    (k : Sym (ι →₀ ℕ) n) {s : Finset (ι →₀ ℕ)} (hk : k ∈ s.sym n) :
+    ∑ d ∈ s, Multiset.count d k • d = k.val.sum := by
+  induction n with
+  | zero =>
+    simp only [sym_zero, mem_singleton] at hk
+    have : ↑k = 0 := by
+      simp [hk]; rfl
+    simp [this]
+  | succ n hrec =>
+    simp only [sym_succ, Nat.succ_eq_add_one, mem_sup, mem_image, mem_sym_iff] at hk
+    obtain ⟨a, hat, k, hk, rfl⟩ := hk
+    simp [Sym.val_eq_coe, Nat.succ_eq_add_one, Sym.coe_cons, Multiset.count_cons, add_smul]
+    rw [Finset.sum_add_distrib]
+    nth_rewrite 2 [Finset.sum_eq_single a]
+    · rw [if_pos rfl, add_comm]
+      apply congr_arg₂ _ rfl
+      apply hrec
+      rwa [mem_sym_iff]
+    · intro b hb hab
+      rw [if_neg hab]
+    · intro has
+      exact (has hat).elim
+
+end Sym
+
+namespace DividedPowers
+
+open Finset
 
 variable {R : Type*} [CommSemiring R] {I : Ideal R} (hI : DividedPowers I)
 
 /-- A “multinomial” theorem for divided powers — without multinomial coefficients -/
-theorem DividedPowers.dpow_finsupp_sum {ι : Type*} [DecidableEq ι] {x : ι →₀ R} (hx : ∀ i, x i ∈ I)
+theorem dpow_finsupp_sum {ι : Type*} [DecidableEq ι] {x : ι →₀ R} (hx : ∀ i, x i ∈ I)
     {n : ℕ} :
     hI.dpow n (x.sum fun _ r ↦ r) =
       ∑ k ∈ (x.support.sym n), x.prod fun i r ↦ hI.dpow (Multiset.count i k) r := by
   simp [Finsupp.sum, hI.dpow_sum (fun i _ ↦ hx i), Finsupp.prod]
 
 /-- A “multinomial” theorem for divided powers — without multinomial coefficients -/
-theorem DividedPowers.dpow_linearCombination {A : Type*} [CommSemiring A] [Algebra R A]
+theorem dpow_linearCombination {A : Type*} [CommSemiring A] [Algebra R A]
     {I : Ideal A} (hI : DividedPowers I) {ι : Type*} [DecidableEq ι] {b : ι → A} {x : ι →₀ R}
     (hx : ∀ i ∈ x.support, b i ∈ I) {n : ℕ} :
     hI.dpow n (x.sum fun i r ↦ r • (b i)) =
@@ -35,9 +127,39 @@ theorem DividedPowers.dpow_linearCombination {A : Type*} [CommSemiring A] [Algeb
   intro i hi
   rw [Algebra.smul_def, hI.dpow_mul (hx i hi), ← map_pow, ← Algebra.smul_def]
 
-end
+theorem dpow_prod {I : Ideal R} (hI : DividedPowers I)
+  {ι : Type*} [DecidableEq ι] {r : ι → R} {s : Finset ι}
+  (hs : s.Nonempty) (hs' : ∀ i ∈ s, r i ∈ I) {n : ℕ} :
+    hI.dpow n (∏ i ∈ s, r i) = n.factorial ^ (s.card - 1) • (∏ i ∈ s, hI.dpow n (r i)) := by
+  induction s using Finset.induction with
+  | empty => simp_all
+  | @insert a s has hrec =>
+    rw [Finset.prod_insert has]
+    by_cases h : s.Nonempty
+    · rw [dpow_mul]
+      · simp only [Finset.card_insert_of_not_mem has, add_tsub_cancel_right,
+          nsmul_eq_mul, Nat.cast_pow, Finset.prod_insert has]
+        rw [hrec h]
+        · simp only [nsmul_eq_mul, Nat.cast_pow, ← mul_assoc]
+          apply congr_arg₂ _ _ rfl
+          have : #s = #s - 1 + 1 := by
+            refine (Nat.sub_eq_iff_eq_add ?_).mp rfl
+            exact one_le_card.mpr h
+          nth_rewrite 2 [this]
+          rw [mul_comm, pow_succ, mul_assoc, hI.factorial_mul_dpow_eq_pow]
+          exact hs' a (mem_insert_self a s)
+        · intro i hi
+          apply hs' i (mem_insert_of_mem hi)
+      obtain ⟨j, hj⟩ := h
+      rw [Finset.prod_eq_prod_diff_singleton_mul hj]
+      apply Ideal.mul_mem_left
+      apply hs' j (mem_insert_of_mem hj)
+    · simp only [not_nonempty_iff_eq_empty] at h
+      simp [h]
 
-noncomputable section
+end DividedPowers
+
+section
 
 open DividedPowers Finset Ideal Ideal.Quotient MvPolynomial RingQuot
 
@@ -65,7 +187,7 @@ theorem onDPAlgebra_unique [DecidableEq R] (h h' : DividedPowers (augIdeal R M))
 section Free
 
 /-- The basis of the graded part of `DividedPowerAlgebra R M` associated with a basis of `M`. -/
-def basis_grade {ι : Type*} (b : Basis ι R M) (n : ℕ) :
+noncomputable def basis_grade {ι : Type*} (b : Basis ι R M) (n : ℕ) :
     Basis {d : ι →₀ ℕ // d.degree = n} R (grade R M n) := by
   apply Basis.mk (v := fun ⟨d, hd⟩ ↦
     ⟨d.prod (fun i k ↦ dp R k (b i)), by
@@ -82,7 +204,7 @@ theorem isFree_grade [Module.Free R M] (n : ℕ) :
   Module.Free.of_basis (basis_grade R M (Module.Free.chooseBasis R M) n)
 
 /-- The basis of the graded part of `DividedPowerAlgebra R M` associated with a basis of `M`. -/
-def basis {ι : Type*} (b : Basis ι R M) :
+noncomputable def basis {ι : Type*} (b : Basis ι R M) :
     Basis (ι →₀ ℕ) R (DividedPowerAlgebra R M) := by
   apply Basis.mk (v := fun d ↦ d.prod (fun i k ↦ dp R k (b i)))
   sorry
@@ -131,7 +253,7 @@ theorem basis_repr_ι (m : M) (d) [Decidable (∃ i, d = Finsupp.single i 1)] :
     have := (Basis.linearCombination_repr b m).symm
     simpa only [Finsupp.linearCombination, Finsupp.lsum] using this
   conv_lhs => rw [hm]
-  simp [map_finsupp_sum]
+  simp [map_finsuppSum]
   simp only [← basis_single_one_eq, Basis.repr_self, Finsupp.single_apply]
   split_ifs with H
   · obtain ⟨i, rfl⟩ := id H
@@ -168,157 +290,6 @@ theorem ι_repr_support_eq (m : M) :
   · simp only [ne_eq, not_true_eq_false, mem_map, Finsupp.mem_support_iff,
     Function.Embedding.coeFn_mk, false_iff, not_exists, not_and]
     exact fun i hi hd ↦ H ⟨i, hd.symm⟩
-
-lemma basis_mem_augIdeal [DecidableEq R] {d : ι →₀ ℕ} (hd : d ≠ 0) :
-    basis R M b d ∈ augIdeal R M := by
-  simp only [mem_augIdeal_iff, basis_eq, map_finsupp_prod, algebraMapInv_dp]
-  simp only [Finsupp.prod]
-  simp only [← Finsupp.support_nonempty_iff] at hd
-  obtain ⟨i, hi⟩ := hd
-  apply Finset.prod_eq_zero hi
-  rw [Finsupp.mem_support_iff] at hi
-  rw [if_neg hi]
-
-lemma basis_mem_augIdeal_iff [DecidableEq R] [Nontrivial R] (d : ι →₀ ℕ) :
-    basis R M b d ∈ augIdeal R M ↔ d ≠ 0 := by
-  refine ⟨?_, basis_mem_augIdeal b⟩
-  rw [imp_not_comm]
-  rintro ⟨rfl⟩
-  rw [basis_zero_eq_one, mem_augIdeal_iff, map_one]
-  exact one_ne_zero
-
-lemma eq_of_basis (x : DividedPowerAlgebra R M)  :
-    x = ((basis R M b).repr x).sum fun i c ↦ c • (basis R M b) i := by
-  conv_lhs => rw [← Basis.linearCombination_repr (basis R M b) x]
-  simp [Finsupp.linearCombination, Finsupp.lsum]
-
-lemma mem_augIdeal_iff_of_repr [DecidableEq R] {x : DividedPowerAlgebra R M} :
-    x ∈ augIdeal R M ↔ (basis R M b).repr x 0 = 0 := by
-  classical
-  have H : x = (((basis R M b).repr x).update 0 0).sum (fun i c ↦ c • (basis R M b) i) +
-      (fun i c ↦ c • (basis R M b) i) 0 ((basis R M b).repr x 0) := by
-    rw [Finsupp.sum_update_add _ _ _ (fun i c ↦ c • (basis R M b) i) (fun _ ↦ zero_smul R _)
-      (fun _ _ _ ↦ add_smul _ _ _), zero_smul, add_zero]
-    exact eq_of_basis b x
-  have hx' : (((basis R M b).repr x).update 0 0).sum (fun i c ↦ c • (basis R M b) i) ∈ augIdeal R M := by
-    apply Ideal.sum_mem
-    intro c hc
-    simp only [Finsupp.support_update_zero, mem_erase, ne_eq, Finsupp.mem_support_iff] at hc
-    exact Submodule.smul_of_tower_mem (augIdeal R M) _ (basis_mem_augIdeal b hc.1)
-  nth_rewrite 1 [H]
-  rw [Submodule.add_mem_iff_right _ hx']
-  simp only [basis_zero_eq_one, Finsupp.mem_support_iff, ne_eq, gt_iff_lt,
-    mem_augIdeal_iff, map_smul, map_one]
-  simp [smul_eq_mul, mul_one]
-
-theorem ne_zero_of_mem_support_of_mem_augIdeal [DecidableEq R]
-    {x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) {d : ι →₀ ℕ}
-    (hd : d ∈ ((basis R M b).repr x).support) : d ≠ 0 := by
-  rintro ⟨rfl⟩
-  rw [mem_augIdeal_iff_of_repr b] at hx
-  rw [Finsupp.mem_support_iff] at hd
-  exact hd hx
-
-/- When `M` is free with basis `b` (it would suffice that `b` generates `M`,
-then any `x : DividedPowerAlgebra R M` can be written as
- `x = (B.repr x).sum fun d c ↦ c • B d)` :
- `x = ∑ d ∈ (B.repr x).support, B.repr x d • B d`
-If `x ∈ augIdeal R M`, then `B.repr x 0 = 0`, and all terms in this
-representation belong to `augIdeal R M`.
-By the multinomial formula for divided powers, one has
-  `dpow n x
-    = ∑ d ∈ (B.repr x).support.sym n,
-        ∏ i ∈ (B.repr x).support, dpow (d.count i) ((B.repr x i) • B i)
-    = ∑ d ∈ (B.repr x).support.sym n,
-        ∏ i ∈ (B.repr x).support, (B.repr x i) ^ (d.count i) • dpow (d.count i d) (B i) `
-Now, `B i = i.prod (fun j k ↦ dp R k (b j)) = ∏ j ∈ i.support, dp R (i j) (b j)`.
-Here, `i ≠ 0`, because `i ∈ (B.repr x).support`.
-Consequently, there exists `j` such that `j ∈ i.support`.
-dpow m (∏ j ∈ i.support, dp R (i j) (b j))
- = dpow m (dp R (i j) (b j) * ∏ k ≠ j, dp R (i j) (b j))
- = m.uniformBell (i j) * dp (m + i j) (b j) * ∏ k ≠ j, (dp R (i j) (b j))) ^ m
- =  .. `
-
- dpow m (∏ i ∈ s, r i) =
- * s = ∅ : dpow m 1 = 1 si m = 0, sinon = 0 si 1 ∉ I
- * s ≠ ∅ : s = insert j t
-    dpow m (r j * ∏ i ∈ t, r i) = dpow m (r j) * ∏ i ∈ t, r i ^ m
-    r i ^ m = m! * dpow m (r i)
-    = (m!)^(s.card -1) * ∏ i ∈ s, dpow m (r i)
-
- -/
-
-theorem _root_.Finset.prod_smul' {α β ι : Type*}
-    [CommMonoid β] [CommMonoid α] [MulAction α β] [IsScalarTower α β β] [SMulCommClass α β β]
-    (s : Finset ι) (b : ι → α) (f : ι → β) :
-    ∏ i ∈ s, b i • f i = (∏ i ∈ s, b i) • ∏ i ∈ s, f i := by
-  induction s using Finset.cons_induction_on with
-  | h₁ =>  simp
-  | h₂ hj ih => rw [prod_cons, ih, smul_mul_smul_comm, ← prod_cons hj, ← prod_cons hj]
-
-theorem _root_.DividedPowers.dpow_prod {I : Ideal R} (hI : DividedPowers I)
-  {ι : Type*} [DecidableEq ι] {r : ι → R} {s : Finset ι}
-  (hs : s.Nonempty) (hs' : ∀ i ∈ s, r i ∈ I) {n : ℕ} :
-    hI.dpow n (∏ i ∈ s, r i) = n.factorial ^ (s.card - 1) • (∏ i ∈ s, hI.dpow n (r i)) := by
-  induction s using Finset.induction with
-  | empty => simp_all
-  | @insert a s has hrec =>
-    rw [Finset.prod_insert has]
-    by_cases h : s.Nonempty
-    · rw [dpow_mul]
-      · simp only [Finset.card_insert_of_not_mem has, add_tsub_cancel_right,
-          nsmul_eq_mul, Nat.cast_pow, Finset.prod_insert has]
-        rw [hrec h]
-        · simp only [nsmul_eq_mul, Nat.cast_pow, ← mul_assoc]
-          apply congr_arg₂ _ _ rfl
-          have : #s = #s - 1 + 1 := by
-            refine (Nat.sub_eq_iff_eq_add ?_).mp rfl
-            exact one_le_card.mpr h
-          nth_rewrite 2 [this]
-          rw [mul_comm, pow_succ, mul_assoc, hI.factorial_mul_dpow_eq_pow]
-          exact hs' a (mem_insert_self a s)
-        · intro i hi
-          apply hs' i (mem_insert_of_mem hi)
-      obtain ⟨j, hj⟩ := h
-      rw [Finset.prod_eq_prod_diff_singleton_mul hj]
-      apply Ideal.mul_mem_left
-      apply hs' j (mem_insert_of_mem hj)
-    · simp only [not_nonempty_iff_eq_empty] at h
-      simp only [h, prod_empty, mul_one, insert_emptyc_eq, card_singleton, tsub_self, pow_zero,
-        prod_singleton, one_smul]
-
-open scoped Nat
-
-/- Can one simplify the quantity
- n! ^ (#d.support - 1) * ∏ i ∈ d.support n.uniformBell (d i) ?
--/
-theorem dpow_basis_eq [DecidableEq R] (H : DividedPowers (augIdeal R M))
-    (hH : ∀ (n : ℕ) (x : M), H.dpow n (DividedPowerAlgebra.ι R M x) = dp R n x)
-    {ι : Type*} [DecidableEq ι] (b : Basis ι R M) (n : ℕ)
-    (d : ι →₀ ℕ) (hd : d ≠ 0) :
-    H.dpow n (basis R M b d) =
-      (n ! ^ (#d.support - 1) • ∏ i ∈ d.support, n.uniformBell (d i)) •
-        basis R M b (n • d) := by
-  rw [basis_eq]
-  rw [← Finsupp.support_nonempty_iff] at hd
-  classical
-  simp only [Finsupp.prod]
-  rw [DividedPowers.dpow_prod H hd]
-  · have (i) (hx : i ∈ d.support) : H.dpow n (dp R (d i) (b i))
-      = (n.uniformBell (d i)) • dp R (n * d i) (b i) := by
-      rw [← hH, dpow_comp, hH]
-      · simp
-      · exact Finsupp.mem_support_iff.mp hx
-      · exact ι_mem_augIdeal R M (b i)
-    simp only [Finset.prod_congr rfl this, Finset.prod_smul', smul_assoc]
-    congr
-    rw [basis_eq]
-    rw [Finsupp.prod_of_support_subset _ Finsupp.support_smul]
-    · simp
-    · exact fun i _ ↦ dp_zero R (b i)
-  intro i hi
-  simp only [Finsupp.mem_support_iff] at hi
-  exact dp_mem_augIdeal R M (Nat.zero_lt_of_ne_zero hi) (b i)
 
 theorem basis_mul (m n : ι →₀ ℕ) :
     basis R M b m * basis R M b n =
@@ -397,6 +368,150 @@ theorem basis_prod (α : Type*) (f : α → (ι →₀ ℕ)) (s : Finset α) :
       intro i hi
       simp [Finset.sum_insert has, Nat.multinomial_insert has, mul_comm]
 
+
+theorem basis_repr_mul [DecidableEq ι] (x y : DividedPowerAlgebra R M) (d : ι →₀ ℕ) :
+    (basis R M b).repr (x * y) d =
+      ∑ uv ∈ antidiagonal d,
+        (d.prod fun a_1 b ↦ (b.choose (uv.1 a_1))) • ((basis R M b).repr x uv.1 * (basis R M b).repr y uv.2) := by
+  have h (x : DividedPowerAlgebra R M) :
+    x =  (((basis R M b).repr x).sum fun i c ↦ c • (basis R M b) i) := by
+    simpa only using (Basis.linearCombination_repr (basis R M b) x).symm
+  conv_lhs => rw [h x, h y]
+  simp only [Finsupp.sum, Finset.sum_mul, Finset.mul_sum, map_sum]
+  rw [Finset.sum_comm]
+  simp only [Algebra.mul_smul_comm, Algebra.smul_mul_assoc, map_smul, Finsupp.coe_finset_sum,
+    Finsupp.coe_smul, sum_apply, Pi.smul_apply, smul_eq_mul]
+  simp only [basis_mul, map_nsmul]
+  rw [← Finset.sum_product']
+  apply Finset.sum_congr_of_eq_on_inter
+  · intro a ha ha'
+    convert mul_zero _
+    convert mul_zero _
+    simp only [Finsupp.prod]
+    simp only [Finsupp.coe_add, Pi.add_apply, Basis.repr_self, Finsupp.smul_single, nsmul_eq_mul,
+      Nat.cast_prod, mul_one]
+    rw [Finsupp.single_eq_of_ne]
+    simpa only [mem_antidiagonal] using ha'
+  · intro a ha' ha
+    simp only [mem_product, Finsupp.not_mem_support_iff, not_and_or] at ha
+    rcases ha with ha | ha <;> simp [ha]
+  · intro a ha ha'
+    simp [mem_antidiagonal] at ha'
+    simp only [ha', Basis.repr_self, Finsupp.smul_single, Finsupp.single_eq_same]
+    ring
+
+lemma basis_mem_augIdeal [DecidableEq R] {d : ι →₀ ℕ} (hd : d ≠ 0) :
+    basis R M b d ∈ augIdeal R M := by
+  simp only [mem_augIdeal_iff, basis_eq, map_finsuppProd, algebraMapInv_dp]
+  simp only [Finsupp.prod]
+  simp only [← Finsupp.support_nonempty_iff] at hd
+  obtain ⟨i, hi⟩ := hd
+  apply Finset.prod_eq_zero hi
+  rw [Finsupp.mem_support_iff] at hi
+  rw [if_neg hi]
+
+lemma basis_mem_augIdeal_iff [DecidableEq R] [Nontrivial R] (d : ι →₀ ℕ) :
+    basis R M b d ∈ augIdeal R M ↔ d ≠ 0 := by
+  refine ⟨?_, basis_mem_augIdeal b⟩
+  rw [imp_not_comm]
+  rintro ⟨rfl⟩
+  rw [basis_zero_eq_one, mem_augIdeal_iff, map_one]
+  exact one_ne_zero
+
+lemma eq_of_basis (x : DividedPowerAlgebra R M)  :
+    x = ((basis R M b).repr x).sum fun i c ↦ c • (basis R M b) i := by
+  conv_lhs => rw [← Basis.linearCombination_repr (basis R M b) x]
+  simp [Finsupp.linearCombination, Finsupp.lsum]
+
+lemma mem_augIdeal_iff_of_repr [DecidableEq R] {x : DividedPowerAlgebra R M} :
+    x ∈ augIdeal R M ↔ (basis R M b).repr x 0 = 0 := by
+  classical
+  have H : x = (((basis R M b).repr x).update 0 0).sum (fun i c ↦ c • (basis R M b) i) +
+      (fun i c ↦ c • (basis R M b) i) 0 ((basis R M b).repr x 0) := by
+    rw [Finsupp.sum_update_add _ _ _ (fun i c ↦ c • (basis R M b) i) (fun _ ↦ zero_smul R _)
+      (fun _ _ _ ↦ add_smul _ _ _), zero_smul, add_zero]
+    exact eq_of_basis b x
+  have hx' : (((basis R M b).repr x).update 0 0).sum (fun i c ↦ c • (basis R M b) i) ∈ augIdeal R M := by
+    apply Ideal.sum_mem
+    intro c hc
+    simp only [Finsupp.support_update_zero, mem_erase, ne_eq, Finsupp.mem_support_iff] at hc
+    exact Submodule.smul_of_tower_mem (augIdeal R M) _ (basis_mem_augIdeal b hc.1)
+  nth_rewrite 1 [H]
+  rw [Submodule.add_mem_iff_right _ hx']
+  simp only [basis_zero_eq_one, Finsupp.mem_support_iff, ne_eq, gt_iff_lt,
+    mem_augIdeal_iff, map_smul, map_one]
+  simp [smul_eq_mul, mul_one]
+
+theorem ne_zero_of_mem_support_of_mem_augIdeal [DecidableEq R]
+    {x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) {d : ι →₀ ℕ}
+    (hd : d ∈ ((basis R M b).repr x).support) : d ≠ 0 := by
+  rintro ⟨rfl⟩
+  rw [mem_augIdeal_iff_of_repr b] at hx
+  rw [Finsupp.mem_support_iff] at hd
+  exact hd hx
+
+/- When `M` is free with basis `b` (it would suffice that `b` generates `M`,
+then any `x : DividedPowerAlgebra R M` can be written as
+ `x = (B.repr x).sum fun d c ↦ c • B d)` :
+ `x = ∑ d ∈ (B.repr x).support, B.repr x d • B d`
+If `x ∈ augIdeal R M`, then `B.repr x 0 = 0`, and all terms in this
+representation belong to `augIdeal R M`.
+By the multinomial formula for divided powers, one has
+  `dpow n x
+    = ∑ d ∈ (B.repr x).support.sym n,
+        ∏ i ∈ (B.repr x).support, dpow (d.count i) ((B.repr x i) • B i)
+    = ∑ d ∈ (B.repr x).support.sym n,
+        ∏ i ∈ (B.repr x).support, (B.repr x i) ^ (d.count i) • dpow (d.count i d) (B i) `
+Now, `B i = i.prod (fun j k ↦ dp R k (b j)) = ∏ j ∈ i.support, dp R (i j) (b j)`.
+Here, `i ≠ 0`, because `i ∈ (B.repr x).support`.
+Consequently, there exists `j` such that `j ∈ i.support`.
+dpow m (∏ j ∈ i.support, dp R (i j) (b j))
+ = dpow m (dp R (i j) (b j) * ∏ k ≠ j, dp R (i j) (b j))
+ = m.uniformBell (i j) * dp (m + i j) (b j) * ∏ k ≠ j, (dp R (i j) (b j))) ^ m
+ =  .. `
+
+ dpow m (∏ i ∈ s, r i) =
+ * s = ∅ : dpow m 1 = 1 si m = 0, sinon = 0 si 1 ∉ I
+ * s ≠ ∅ : s = insert j t
+    dpow m (r j * ∏ i ∈ t, r i) = dpow m (r j) * ∏ i ∈ t, r i ^ m
+    r i ^ m = m! * dpow m (r i)
+    = (m!)^(s.card -1) * ∏ i ∈ s, dpow m (r i)
+
+ -/
+
+open scoped Nat
+
+/- Can one simplify the quantity
+ n! ^ (#d.support - 1) * ∏ i ∈ d.support n.uniformBell (d i) ?
+-/
+theorem dpow_basis_eq [DecidableEq R] (H : DividedPowers (augIdeal R M))
+    (hH : ∀ (n : ℕ) (x : M), H.dpow n (DividedPowerAlgebra.ι R M x) = dp R n x)
+    {ι : Type*} [DecidableEq ι] (b : Basis ι R M) (n : ℕ)
+    (d : ι →₀ ℕ) (hd : d ≠ 0) :
+    H.dpow n (basis R M b d) =
+      (n ! ^ (#d.support - 1) • ∏ i ∈ d.support, n.uniformBell (d i)) •
+        basis R M b (n • d) := by
+  rw [basis_eq]
+  rw [← Finsupp.support_nonempty_iff] at hd
+  classical
+  simp only [Finsupp.prod]
+  rw [DividedPowers.dpow_prod H hd]
+  · have (i) (hx : i ∈ d.support) : H.dpow n (dp R (d i) (b i))
+      = (n.uniformBell (d i)) • dp R (n * d i) (b i) := by
+      rw [← hH, dpow_comp, hH]
+      · simp
+      · exact Finsupp.mem_support_iff.mp hx
+      · exact ι_mem_augIdeal R M (b i)
+    simp only [Finset.prod_congr rfl this, Finset.prod_smul', smul_assoc]
+    congr
+    rw [basis_eq]
+    rw [Finsupp.prod_of_support_subset _ Finsupp.support_smul]
+    · simp
+    · exact fun i _ ↦ dp_zero R (b i)
+  intro i hi
+  simp only [Finsupp.mem_support_iff] at hi
+  exact dp_mem_augIdeal R M (Nat.zero_lt_of_ne_zero hi) (b i)
+
       /-
 (∑ d ∈ ((basis R M b).repr x).support, Multiset.count d ↑k • d) =  ??
 
@@ -409,52 +524,11 @@ Multiset.count d ↑k • d : ι →₀ ℕ
 
 -/
 
-theorem _root_.Sym.sum_eq_val_sum {ι : Type*} [DecidableEq ι] {n : ℕ}
-    (k : Sym (ι →₀ ℕ) n) {s : Finset (ι →₀ ℕ)} (hk : k ∈ s.sym n) :
-    ∑ d ∈ s, Multiset.count d k • d = k.val.sum := by
-  induction n with
-  | zero =>
-    simp only [sym_zero, mem_singleton] at hk
-    have : ↑k = 0 := by
-      simp [hk]; rfl
-    simp [this]
-  | succ n hrec =>
-    simp only [sym_succ, Nat.succ_eq_add_one, mem_sup, mem_image, mem_sym_iff] at hk
-    obtain ⟨a, hat, k, hk, rfl⟩ := hk
-    simp [Sym.val_eq_coe, Nat.succ_eq_add_one, Sym.coe_cons, Multiset.count_cons, add_smul]
-    rw [Finset.sum_add_distrib]
-    nth_rewrite 2 [Finset.sum_eq_single a]
-    · rw [if_pos rfl, add_comm]
-      apply congr_arg₂ _ rfl
-      apply hrec
-      rwa [mem_sym_iff]
-    · intro b hb hab
-      rw [if_neg hab]
-    · intro has
-      exact (has hat).elim
-
 /-- A combinatorial coefficient that appears in the definition of the divided power structure
 of the divided power algebra -/
-def cK [DecidableEq ι] {n : ℕ} (k : Sym (ι →₀ ℕ) n) (s : Finset (ι →₀ ℕ)) : ℕ :=
+noncomputable def cK [DecidableEq ι] {n : ℕ} (k : Sym (ι →₀ ℕ) n) (s : Finset (ι →₀ ℕ)) : ℕ :=
   (k.val.sum.prod fun i _ ↦ Nat.multinomial s fun a ↦ (Multiset.count a ↑k • a) i) *
   (∏ d ∈ s, (Multiset.count d ↑k)! ^ (#d.support - 1) • ∏ i ∈ d.support, (Multiset.count d ↑k).uniformBell (d i))
-
-theorem _root_.Nat.multinomial_congr_of_sdiff
-    {α : Type*} [DecidableEq α] {f g : α → ℕ} {s t : Finset α}
-    (hst : s ⊆ t) (H1 : ∀ a ∈ t \ s, g a = 0) (H2 : ∀ a ∈ s, f a = g a) :
-    Nat.multinomial s f = Nat.multinomial t g := by
-  rw [← Nat.mul_right_inj (a := ∏ a ∈ t, (g a)!), Nat.multinomial_spec,
-    ← Finset.sum_subset_zero_on_sdiff hst H1 H2, ← Nat.multinomial_spec s f]
-  · apply congr_arg₂ _ _ rfl
-    symm
-    apply Finset.prod_subset_one_on_sdiff hst
-    · intro x hx
-      rw [H1 x hx, Nat.factorial_zero]
-    · intro x hx
-      rw [H2 x hx]
-  · simp only [ne_eq, Finset.prod_eq_zero_iff, not_exists, not_and]
-    intro x hx
-    exact Nat.factorial_ne_zero (g x)
 
 theorem cK_eq_of_subset [DecidableEq ι] {n : ℕ} {k : Sym (ι →₀ ℕ) n}
     {s t : Finset (ι →₀ ℕ)} (hst : s ⊆ t) (hk : k ∈ s.sym n) : cK k s = cK k t := by
@@ -483,7 +557,7 @@ theorem cK_eq_of_subset [DecidableEq ι] {n : ℕ} {k : Sym (ι →₀ ℕ) n}
 variable [DecidableEq R] [DecidableEq ι] [DecidablePred (fun x ↦ x ∈ augIdeal R M)]
 
 /-- The `dpow` function on the divided power algebra of a free module -/
-def dpow (n : ℕ) (x : DividedPowerAlgebra R M) :
+noncomputable def dpow (n : ℕ) (x : DividedPowerAlgebra R M) :
     DividedPowerAlgebra R M :=
   if x ∈ augIdeal R M then
     ∑ k ∈ ((basis R M b).repr x).support.sym n,
@@ -565,7 +639,7 @@ theorem cK_map_single_eq_one {s : Finset ι} {k : Sym ι n} (hk : k  ∈ s.sym n
     cK (Sym.map g k) (s.map g) = 1 := by
   intro g
   simp only [cK, Sym.val_eq_coe, Sym.coe_map, Finsupp.coe_smul, Pi.smul_apply,
-    smul_eq_mul, Nat.cast_mul, Nat.cast_finsupp_prod, Nat.cast_prod, Nat.cast_pow]
+    smul_eq_mul, Nat.cast_mul, Nat.cast_finsuppProd, Nat.cast_prod, Nat.cast_pow]
   convert mul_one _
   · apply Finset.prod_eq_one
     intro d hd
@@ -612,30 +686,6 @@ theorem cK_map_single_eq_one {s : Finset ι} {k : Sym ι n} (hk : k  ∈ s.sym n
       obtain ⟨j, hj, h⟩ := H
       apply Nat.factorial_ne_zero _ h
 
-lemma _root_.Finset.sym_map {α β : Type*} [DecidableEq α] [DecidableEq β] {n : ℕ}
-  (g : α ↪ β) (s : Finset α) :
-    (s.map g).sym n = (s.sym n).map ⟨Sym.map g, Sym.map_injective g.injective _⟩ := by
-  ext d
-  simp only [mem_sym_iff, mem_map, Function.Embedding.coeFn_mk]
-  constructor
-  · intro hd
-    have := Sym.attach d
-    let g' : {x // x ∈ d} → α := fun ⟨x, hx⟩ ↦ (hd x hx).choose
-    let h : Sym {x // x ∈ d} n → Sym α n := fun p ↦ Sym.map g' p
-    use h d.attach
-    constructor
-    · simp only [Sym.mem_map, Sym.mem_attach, true_and, Subtype.exists, forall_exists_index, h, g']
-      intro i e he hi
-      rw [← hi]
-      exact (hd e he).choose_spec.1
-    · simp only [Sym.map_map, Function.comp_apply, h, g']
-      convert Sym.attach_map_coe d with ⟨x, hx⟩ hx'
-      exact (hd x hx).choose_spec.2
-  · rintro ⟨b, hb, rfl⟩ d hd
-    simp only [Sym.mem_map] at hd
-    obtain ⟨a, ha, rfl⟩ := hd
-    refine ⟨a, hb a ha, rfl⟩
-
  theorem dpow_ι (m : M) :
     dpow b n (DividedPowerAlgebra.ι R M m) = dp R n m := by
   simp only [dpow, if_pos (ι_mem_augIdeal R M m)]
@@ -669,7 +719,7 @@ lemma _root_.Finset.sym_map {α β : Type*} [DecidableEq α] [DecidableEq β] {n
   have (x) (_ : x ∈ s) :
     ((basis R M b).repr ((DividedPowerAlgebra.ι R M) m)) (g x) ^ Multiset.count x k =
     (b.repr m) x ^ Multiset.count x ↑k := by
-    conv_lhs => rw [hm, map_finsupp_sum, map_finsupp_sum]
+    conv_lhs => rw [hm, map_finsuppSum, map_finsuppSum]
     simp only [map_smul, Finsupp.sum_apply, Finsupp.coe_smul, Pi.smul_apply, smul_eq_mul,
       ← basis_single_one_eq, Basis.repr_self]
     rw [Finsupp.sum_eq_single x]
@@ -853,7 +903,8 @@ theorem dpow_mem {n : ℕ} {x : DividedPowerAlgebra R M} (hn : n ≠ 0) (hx : x 
   simp [Sym.coe_cons, ne_zero_of_mem_support_of_mem_augIdeal b hx hk.1]
   exact hx
 
-def dpowExp (x : DividedPowerAlgebra R M) : PowerSeries (DividedPowerAlgebra R M) :=
+/-- The exponential power series associated with `dpow` -/
+noncomputable def dpowExp (x : DividedPowerAlgebra R M) : PowerSeries (DividedPowerAlgebra R M) :=
   PowerSeries.mk (fun n ↦ dpow b n x)
 
 open scoped PowerSeries.WithPiTopology
@@ -906,7 +957,7 @@ theorem dpow_add {n : ℕ} {x y : DividedPowerAlgebra R M}
       rfl
 
 -- Copied from Bhavik's PR
-lemma _root_.antidiagonal_eq_filter {A : Type*} [OrderedAddCommMonoid A] [CanonicallyOrderedAdd A]
+lemma _root_.antidiagonal_eq_filter {A : Type*} [AddCommMonoid A] [PartialOrder A] [IsOrderedAddMonoid A] [CanonicallyOrderedAdd A]
     [LocallyFiniteOrder A] [DecidableEq A] [HasAntidiagonal A] (n : A) :
     antidiagonal n = (Iic n ×ˢ Iic n).filter (fun x : A × A ↦ x.1 + x.2 = n) := by
   ext ⟨i, j⟩
@@ -981,13 +1032,6 @@ theorem dpow_sum {α : Type*} [DecidableEq α] (x : α → DividedPowerAlgebra R
   · exact fun {n} a ↦ dpow_eval_zero b a
   · exact hx
 
-
-example (α : Type*) [DecidableEq α] (n : ℕ) (s : Finset α) :
-    (antidiagonal n).sigma (fun k ↦ s.sym k.2 ×ˢ s.sym k.1) ≃ s.sym n := sorry
- -- ∑ x_1 ∈ (antidiagonal n).sigma fun a ↦ s.sym a.2 ×ˢ s.sym a.1,
-
-example (a b c d : ℕ) (h : a = c) (k : b = d) : a + b = c + d := by
-  apply congr_arg₂ _ h k
 
 theorem dpow_mul {n : ℕ} {a x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) :
     dpow b n (a * x) = a ^ n * dpow b n x := by
@@ -1083,21 +1127,6 @@ theorem dpow_mul' {n : ℕ} {a x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal
     rw [mul_assoc, hf]
     sorry
 
-example (x y : DividedPowerAlgebra R M) (d : ι →₀ ℕ) :
-    (basis R M b).repr (x * y) d =
-      ∑ uv ∈ antidiagonal d, (basis R M b).repr x uv.1 * (basis R M b).repr y uv.2 := by
-  have h (x : DividedPowerAlgebra R M) :
-    x =  (((basis R M b).repr x).sum fun i c ↦ c • (basis R M b) i) := by
-    simpa only using (Basis.linearCombination_repr (basis R M b) x).symm
-  conv_lhs => rw [h x, h y]
-  simp only [Finsupp.sum, Finset.sum_mul, Finset.mul_sum, map_sum]
-  rw [Finset.sum_comm]
-  simp only [Algebra.mul_smul_comm, Algebra.smul_mul_assoc, map_smul, Finsupp.coe_finset_sum,
-    Finsupp.coe_smul, sum_apply, Pi.smul_apply, smul_eq_mul]
-  simp only [basis_mul, map_nsmul]
-  rw [← Finset.sum_product']
-  apply Finset.sum_congr_of_eq_on_inter
-  sorry
 
 example (p : ℕ) (m : M) (x : DividedPowerAlgebra R M) (d : ι →₀ ℕ) :
     ((basis R M b).repr (dp R p m * x)) d = sorry := by
