@@ -1,8 +1,13 @@
 import DividedPowers.DPAlgebra.Graded.GradeZero
+import Mathlib.Algebra.BigOperators.Group.Finset.Basic
+import Mathlib.LinearAlgebra.Basis.SMul
+import Mathlib.LinearAlgebra.Finsupp.VectorSpace
 import Mathlib.LinearAlgebra.FreeModule.Basic
 import Mathlib.RingTheory.DividedPowers.DPMorphism
+import Mathlib.RingTheory.Localization.FractionRing
+import Mathlib.RingTheory.MvPolynomial.Basic
+import Mathlib.RingTheory.Polynomial.Basic
 import Mathlib.RingTheory.PowerSeries.PiTopology
-import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 
 /-! # Construction of the divided power structure on the divided power algebra
 -/
@@ -815,7 +820,6 @@ theorem dpow_null {n : ℕ} {x : DividedPowerAlgebra R M} (hx : x ∉ augIdeal R
   apply hx
   exact hx'
 
-
 theorem cK_zero {k : Sym (ι →₀ ℕ) 0} {s : Finset (ι →₀ ℕ)} :
     cK k s = 1 := by
   simp [cK, Subsingleton.eq_zero k, Nat.uniformBell_zero_left]
@@ -1116,6 +1120,7 @@ theorem dpow_mul' {n : ℕ} {a x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal
     rw [this, dp_sum, Finset.sum_mul, dpow_sum]
     rw [dpow_eq_of_support_subset b n ?_ (s := ((basis R M b).repr x).support)]
     simp only [dpow, if_pos hx, Finset.mul_sum]
+
     apply Finset.sum_congr rfl
     intro k hk
     conv_rhs => rw [mul_comm]
@@ -1169,7 +1174,10 @@ theorem dpow_mul'' {n : ℕ} {a x : DividedPowerAlgebra R M} (hx : x ∈ augIdea
     simp only [dpow, if_pos (mul_mem_left _ a hx), if_pos hx, sym_succ] at hn ⊢
     simp only [Nat.succ_eq_add_one, Sym.val_eq_coe, nsmul_eq_mul, Algebra.mul_smul_comm,
     Finset.mul_sum] at hn ⊢
-    rw [@sup_eq_biUnion]
+    apply Finset.sum_congr rfl
+    intro k hk
+    simp only [basis_repr_mul ]
+
     /- rw [Finset.sum_biUnion] -- I don't think this can be applied
     rw [Finset.sum_biUnion]
     simp only [mem_sym_iff, Sym.cons_inj_right, imp_self, implies_true, sum_image]
@@ -1202,3 +1210,250 @@ theorem dpow_comp {m n : ℕ} {x : DividedPowerAlgebra R M} (hn : n ≠ 0)
     Finsupp.coe_finset_sum, Finsupp.coe_smul, sum_apply, Pi.smul_apply, smul_eq_mul]
 
   sorry
+
+section Compare
+/- The previous examples show that it is complicated to expand precisely the formulas
+  to check the divided power structure, and in any case, it will end up in verifying
+  specific combinatorial relations, which is undesireable.
+  The following is another attempt, hopefully easier.
+  The given formula for `dpow` is a prerequisite, though.
+  It consists in doing *exactly* what one says when one describes the proof orally.
+  To define a divided power structure on `DividedPowerAlgebra R M`,
+  when `M` is a free `R`-module, we compare `dpow R M b`
+  with `dpow S N c`, for a free `S`-module `N` with a basis `c` which is indexed
+  by the same type as `b`.
+  We have two possibilities
+  * We embedd `R ↪ S`, and give ourselves `N` which is free with the “same” basis
+    (`N := baseChange S N` could work) so that we know that we have a divided power
+    structure on `DividedPowerAlgebra S N`.
+    If `R` is an integral domain of characteristic `0`, one can take for `S` its fraction field
+    and then the divided power structure exists.
+    Since `R` embeds in `S`, the relations for `dpow R M b` follow from that of `dpow S N c`.
+  * We view `R` has a quotient of `S`, `S →+* R`,
+    and give ourselves `N` which is free with the “same” basis,
+    and assume that we know that we have a divided power
+    structure on `DividedPowerAlgebra S N`.
+    The relations for `dpow S N c` imply that for `dpow R M b`.
+  -/
+
+variable {S : Type*} [CommRing S] [Algebra R S]
+    {N : Type*} [AddCommGroup N] [Module R N] [Module S N] [IsScalarTower R S N]
+    (c : Basis ι S N) (f : M →ₗ[R] N) (hf : ∀ i, f (b i) = c i)
+
+include hf in
+omit [DecidableEq R] [DecidableEq ι] [DecidablePred fun x ↦ x ∈ augIdeal R M] in
+lemma compare_basis (d : ι →₀ ℕ) :
+    basis S N c d = DividedPowerAlgebra.LinearMap.lift S f (basis R M b d) := by
+  simp only [basis_eq, map_finsuppProd, LinearMap.lift_apply_dp, hf]
+
+variable [DecidableEq S] [DecidablePred (fun x ↦ x ∈ augIdeal S N)]
+
+include hf in
+theorem lift_dpow (x : DividedPowerAlgebra R M) (hx : x ∈ augIdeal R M) :
+    DividedPowerAlgebra.LinearMap.lift S f (dpow b n x) =
+      dpow c n (DividedPowerAlgebra.LinearMap.lift S f x) := by
+  have x_eq : x = (((basis R M b).repr x).sum fun i r ↦ r • basis R M b i) := by
+    have := (Basis.linearCombination_repr (basis R M b) x).symm
+    simpa only [Finsupp.linearCombination, Finsupp.lsum] using this
+  have lift_x_eq : LinearMap.lift S f x =
+      ((basis R M b).repr x).sum fun i r ↦ r • basis S N c i := by
+    rw [x_eq]
+    simp [map_finsuppSum, compare_basis b c f hf]
+  have lift_x_repr_eq (d) : (basis S N c).repr (LinearMap.lift S f x) d =
+      algebraMap R S ((basis R M b).repr x d) := by
+    rw [lift_x_eq, map_finsuppSum, Finsupp.sum_apply]
+    rw [Finsupp.sum_eq_single d]
+    · simp [algebra_compatible_smul S]
+    · intro e he hed
+      simp [algebra_compatible_smul S, Finsupp.single_eq_of_ne hed]
+    · simp
+  have lift_x_repr_support_subset : ((basis S N c).repr (LinearMap.lift S f x)).support ⊆ ((basis R M b).repr x).support := by
+    intro d
+    simp [Finsupp.mem_support_iff, lift_x_repr_eq, not_imp_not]
+    intro H
+    rw [H, map_zero]
+  have hx' : DividedPowerAlgebra.LinearMap.lift S f x ∈ augIdeal S N := by
+    rw [mem_augIdeal_iff_of_repr c]
+    rw [mem_augIdeal_iff_of_repr b] at hx
+    simp [lift_x_repr_eq, hx]
+  rw [dpow_eq_of_support_subset b n hx (subset_refl _)]
+  rw [dpow_eq_of_support_subset c n hx' lift_x_repr_support_subset]
+  simp only [nsmul_eq_mul, Algebra.mul_smul_comm]
+  simp [algebra_compatible_smul S, lift_x_repr_eq, compare_basis b c f hf]
+
+section CharZero
+
+variable [CharZero R] [IsDomain R]
+
+def dividedPowers_ofChar0 [CharZero R] [IsDomain R] :
+    DividedPowers (augIdeal R M) where
+  dpow n x := dpow b n x
+  dpow_null := sorry
+  dpow_zero := sorry
+  dpow_one := sorry
+  dpow_mem := sorry
+  dpow_add := sorry
+  dpow_mul := sorry
+  mul_dpow := sorry
+  dpow_comp := sorry
+
+theorem admissible_ofChar0 (n: ℕ) (x : M) :
+    (dividedPowers_ofChar0 b).dpow n (DividedPowerAlgebra.ι R M x) = dp R n x := by
+  simp only [dividedPowers_ofChar0, dpow_ι]
+
+end CharZero
+
+section Quotient
+
+theorem DPOW_ADD {x y : DividedPowerAlgebra R M}
+    (hx : x ∈ augIdeal R M) (hy : y ∈ augIdeal R M) :
+    dpow b n (x + y) = ∑ k ∈ Finset.antidiagonal n, dpow b k.1 x * dpow b k.2 y := by
+  classical
+  let S := MvPolynomial R ℤ
+  letI : CharZero S := inferInstance
+  letI : IsDomain S := inferInstance
+  letI : Algebra S R :=
+    RingHom.toAlgebra (MvPolynomial.eval₂Hom (Int.castRingHom R) id)
+  let N := ι →₀ S
+  letI : Module S N := inferInstance
+  letI : Module S M := Module.compHom M (MvPolynomial.eval₂Hom (Int.castRingHom R) id)
+  haveI : IsScalarTower S R M :=
+    IsScalarTower.of_algebraMap_smul fun r ↦ congrFun rfl
+  let c : Basis ι S N := Finsupp.basisSingleOne
+  -- let c' : Basis (ι →₀ ℕ) S (DividedPowerAlgebra S N) := basis S N c
+  let hS : DividedPowers (augIdeal S N) := dividedPowers_ofChar0 c
+  let f : N →ₗ[S] M := Finsupp.linearCombination S (fun i ↦ b i)
+  let F := FractionRing R
+  let hS : DividedPowers (augIdeal S N) := dividedPowers_ofChar0 c
+  have hS_ok := admissible_ofChar0 c
+  have hf (i) : f (c i) = b i := by
+    simp only [c, f]
+    rw [Finsupp.coe_basisSingleOne, Finsupp.linearCombination_single, one_smul]
+  have hf' (d) :
+    (LinearMap.lift R f) (basis S N c d) = basis R M b d := by
+    simp only [basis_eq, map_finsuppProd, LinearMap.lift_apply_dp]
+    apply Finsupp.prod_congr
+    intros; rw [hf]
+  let φ : R → S := fun r ↦ if r = 0 then 0 else MvPolynomial.X r
+  have hφ (r) : algebraMap S R (φ r) = r := by
+    simp only [RingHom.algebraMap_toAlgebra, φ]
+    split_ifs with hr
+    · simp [hr]
+    · rw [MvPolynomial.coe_eval₂Hom]; simp
+  let toN (x) : DividedPowerAlgebra S N :=
+    Finsupp.linearCombination S (basis S N c) (((basis R M b).repr x).mapRange φ (by simp [φ]))
+  have htoN (x) : x = DividedPowerAlgebra.LinearMap.lift R f (toN x) := by
+    apply Basis.ext_elem (basis R M b)
+    intro d
+    simp [toN, Finsupp.linearCombination, map_finsuppSum]
+    simp [algebra_compatible_smul R, hf']
+    rw [Finsupp.sum_eq_single d]
+    · simp only [Finsupp.mapRange_apply, Finsupp.single_eq_same, mul_one, φ, S, N, c, f]
+      split_ifs with hd
+      · simp [hd]
+      · simp [RingHom.algebraMap_toAlgebra]
+    · intro _ _ hed; simp [Finsupp.single_eq_of_ne hed]
+    · simp
+  have toN_repr (x) (d) :
+      ((basis S N c).repr (toN x) d) =  φ ((basis R M b).repr x d) := by
+    simp only [toN]
+    simp [Finsupp.linearCombination, Finsupp.lsum, map_finsuppSum]
+  -- not needed, one could use `toN_repr` to simplify the proof
+  have htoN_eq (x) : toN x =
+      ((basis R M b).repr x).sum fun d r ↦ φ r • basis S N c d := by
+    simp [toN, Finsupp.linearCombination, Finsupp.lsum]
+    rw [Finsupp.sum_of_support_subset]
+    · apply Finset.sum_congr rfl; simp
+    · intro d
+      simp only [Finsupp.mem_support_iff, Finsupp.mapRange_apply, not_imp_not]
+      intro hd; simp [hd, φ]
+    · simp
+  have toN_repr' (x) (d) :
+      algebraMap S R ((basis S N c).repr (toN x) d) =
+        ((basis R M b).repr x d) := by
+    simp only [toN_repr, hφ]
+  have htoNx (x) (hx : x ∈ augIdeal R M) : toN x ∈ augIdeal S N := by
+    rw [mem_augIdeal_iff_of_repr c]
+    rw [mem_augIdeal_iff_of_repr b] at hx
+    simp [toN_repr, hx, φ]
+  have htoN_dpow (x) (hx : x ∈ augIdeal R M) (n) :
+    LinearMap.lift R f (dpow c n (toN x)) = dpow b n x := by
+    rw [lift_dpow c n b f, ← htoN]
+    exact hf
+    exact htoNx x hx
+  conv_lhs => rw [htoN x, htoN y, ← map_add]
+  suffices LinearMap.lift R f (toN (x + y)) = LinearMap.lift R f (toN x + toN y) by
+    rw [← this]
+    rw [← lift_dpow c n b f (by exact hf)]
+    · -- here one uses that `dpow_add` works on `DividedPowerAlgebra S N`
+      rw [← dpow_eq hS hS_ok]
+      let k := toN (x + y) - toN x - toN y
+      have hk : toN (x + y) = toN x + toN y + k := by
+        simp only [k]; abel
+      have hk' : k ∈ augIdeal S N := by
+        simp only [k]
+        rw [mem_augIdeal_iff_of_repr c]
+        simp [(mem_augIdeal_iff_of_repr c).mp (htoNx x hx), (mem_augIdeal_iff_of_repr c).mp (htoNx y hy)]
+        rw [← mem_augIdeal_iff_of_repr]
+        exact htoNx _ (Ideal.add_mem _ hx hy)
+      rw [hk, hS.dpow_add, map_sum]
+      rw [Finset.sum_eq_single (n, 0), map_mul]
+      · simp only
+        rw [hS.dpow_zero hk', map_one, mul_one]
+        rw [hS.dpow_add (htoNx x hx) (htoNx y hy), map_sum]
+        apply Finset.sum_congr rfl
+        intro d hd
+        rw [map_mul]
+        simp only [dpow_eq hS hS_ok c]
+        congr
+        simp only [lift_dpow c _ b f (by exact hf) (toN x) (htoNx x hx), ← htoN]
+        simp only [lift_dpow c _ b f (by exact hf) (toN y) (htoNx y hy), ← htoN]
+      · intro d hd
+        intro hd'
+        rw [map_mul]
+        convert mul_zero _
+        rw [dpow_eq hS hS_ok c, lift_dpow c _ b f (by exact hf) _ hk']
+        simp only [k, map_add, map_sub, ← htoN]
+        simp only [add_sub_cancel_left, sub_self]
+        rw [← htoN_dpow 0 (Ideal.zero_mem _)]
+        convert map_zero (LinearMap.lift R f)
+        suffices toN 0 = 0 by
+          rw [this]
+          rw [← dpow_eq hS hS_ok c]
+          apply hS.dpow_eval_zero
+          simp only [mem_antidiagonal] at hd
+          simp only [ne_eq, Prod.ext_iff, not_and] at hd'
+          by_cases h : d.1 = n
+          · apply hd' h
+          · intro h' ; apply h; simp [← hd, h']
+        rw [htoN_eq]
+        simp
+      · simp [mem_antidiagonal]
+      · exact Ideal.add_mem _ (htoNx x hx) (htoNx y hy)
+      · rw [mem_augIdeal_iff_of_repr c]
+        simp only [map_sub, Finsupp.coe_sub, Pi.sub_apply, k]
+        convert sub_zero _
+        · rw [← mem_augIdeal_iff_of_repr]
+          exact htoNx y hy
+        symm
+        convert sub_zero _
+        · rw [← mem_augIdeal_iff_of_repr]
+          exact htoNx x hx
+        · symm
+          rw [← mem_augIdeal_iff_of_repr]
+          exact htoNx _ (Ideal.add_mem _ hx hy)
+    · exact htoNx _ (Ideal.add_mem _ hx hy)
+  set z := x + y with hz
+  simp only [← htoN, map_add, z]
+
+
+
+
+
+
+
+
+
+end Quotient
+
+
