@@ -152,11 +152,13 @@ theorem order_tendsto_top_iff [Finite σ] (f : ι → MvPowerSeries σ α) :
 
 end Order
 
+instance : LocallyFiniteOrderBot (σ →₀ ℕ) := sorry
+
 /-- The union of the supports of the functions `λ i, coeff α e (f i)`, where `e` runs over
   the coefficients bounded by `d`. -/
 noncomputable def unionOfSupportOfCoeffLe [DecidableEq ι] {f : ι → MvPowerSeries σ α}
     (hf : StronglySummable f) (d : σ →₀ ℕ) : Finset ι :=
-  Finset.biUnion (Iic d) fun e => (hf e).toFinset
+  Finset.biUnion (Finset.Iic d) fun e => (hf e).toFinset
 
 /-- A term `i : ι` does not belong to the union of the supports of the functions
   `λ i, coeff α e (f i)`, where `e` runs over the coefficients bounded by `d` if and only if

@@ -21,15 +21,17 @@ theorem Finsupp.prod_mem_grade {κ A R : Type*} [AddCommMonoid κ] [DecidableEq 
     (c.prod fun s e => f s ^ e) ∈ 𝒜 (c.sum fun s e => e • d s) := by
   classical
   rw [Finsupp.prod, Finsupp.sum]
-  let p : Finset σ → Prop := fun s =>
-    s ⊆ c.support → (s.prod fun i => f i ^ c i) ∈ 𝒜 (s.sum fun i => c i • d i)
-  apply Finset.induction_on (p := p) c.support
-  · exact imp_intro (SetLike.one_mem_graded 𝒜)
-  · intro a s ha hs hs'
+  suffices ∀ s (hs : s ⊆ c.support), ∏ a ∈ s, f a ^ c a ∈ 𝒜 (∑ a ∈ s, c a • d a) by
+    exact this c.support (subset_refl _)
+  intro s hs
+  induction s using Finset.induction_on with
+  | empty => exact (SetLike.one_mem_graded 𝒜)
+  | insert a t ha ht =>
     rw [Finset.prod_insert ha, Finset.sum_insert ha]
-    exact SetLike.mul_mem_graded (SetLike.pow_mem_graded _ (hc a (hs' (mem_insert_self a s))))
-        (hs (subset_trans (subset_insert a s) hs'))
-  · exact subset_rfl
+    apply SetLike.mul_mem_graded
+    · apply SetLike.pow_mem_graded _ (hc _ (hs (mem_insert_self a t)))
+    · apply ht (subset_trans (subset_insert a t) hs)
+
 
 end
 
@@ -230,9 +232,10 @@ def proj' (i : ι) : A →ₗ[R] 𝒜 i where
 
 end AddCommMonoid
 
-variable {ι : Type*} [OrderedAddCommMonoid ι] [CanonicallyOrderedAdd ι]
-   (𝒜 : ι → Submodule R A)
-variable [DecidableEq ι] [GradedAlgebra 𝒜]
+variable {ι : Type*} [AddCommMonoid ι] [PartialOrder ι]
+  -- is one of them automatic?
+  [IsOrderedAddMonoid ι] [CanonicallyOrderedAdd ι]
+  (𝒜 : ι → Submodule R A) [DecidableEq ι] [GradedAlgebra 𝒜]
 
 /-- The projection from `A` to `𝒜 0`, as a `RingHom`. -/
 @[simps]
@@ -253,8 +256,11 @@ end CommSemiring
 
 section CommRing
 
-variable {R : Type*} [CommRing R] {A : Type*} [CommRing A] [Algebra R A] {ι : Type*}
-  [OrderedAddCommMonoid ι] [CanonicallyOrderedAdd ι] (𝒜 : ι → Submodule R A) [DecidableEq ι] [GradedAlgebra 𝒜]
+variable {R : Type*} [CommRing R]
+  {A : Type*} [CommRing A] [Algebra R A]
+  {ι : Type*} [AddCommMonoid ι] [PartialOrder ι]
+    [IsOrderedAddMonoid ι] [CanonicallyOrderedAdd ι]
+  (𝒜 : ι → Submodule R A) [DecidableEq ι] [GradedAlgebra 𝒜]
 
 namespace GradeZero
 

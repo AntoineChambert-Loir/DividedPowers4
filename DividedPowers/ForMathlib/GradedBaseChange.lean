@@ -143,19 +143,19 @@ noncomputable def DirectSum.Decomposition.baseChange [Decomposition ℳ] :
         | zero => simp only [map_zero]
         | tmul s m =>
           induction m using DirectSum.Decomposition.inductionOn ℳ with
-          | h_zero => simp only [tmul_zero, map_zero]
-          | @h_homogeneous i m =>
+          | zero => simp only [tmul_zero, map_zero]
+          | @homogeneous i m =>
             simp [Decompose.baseChange.decompose_tmul_of]
-          | h_add m m' hm hm' => simp [TensorProduct.tmul_add, map_add, hm, hm']
+          | add m m' hm hm' => simp [TensorProduct.tmul_add, map_add, hm, hm']
         | add x y hx hy => simp [map_add, hx, hy]
       right_inv m := by
         induction m using DirectSum.induction_on with
-        | H_zero => simp only [map_zero]
-        | H_basic i m =>
+        | zero => simp only [map_zero]
+        | of i m =>
           simp only [coeAddMonoidHom_of]
           rcases m with ⟨m, hm⟩
           rw [Decompose.baseChange.decompose_of_mem ℳ hm]
-        | H_plus m m' hm hm' => simp [map_add, hm, hm']
+        | add m m' hm hm' => simp [map_add, hm, hm']
 
 end decompose
 

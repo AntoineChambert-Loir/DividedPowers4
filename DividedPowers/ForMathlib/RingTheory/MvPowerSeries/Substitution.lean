@@ -74,7 +74,7 @@ section Semiring
 
 variable {σ R S T : Type*} [CommSemiring R] [Semiring S] [Algebra R S] [Semiring T] [Algebra R T]
 
-/-- Change of coefficients in mv power series, as an `AlgHom` -/
+/- /-- Change of coefficients in mv power series, as an `AlgHom` -/
 def MvPowerSeries.mapAlgHom  (φ : S →ₐ[R] T) :
     MvPowerSeries σ S →ₐ[R] MvPowerSeries σ T where
   toRingHom   := MvPowerSeries.map σ φ
@@ -115,6 +115,7 @@ theorem MvPowerSeries.monomial_smul_const (e : σ →₀ ℕ) (r : R) :
       (Finsupp.prod e fun s e => (r • MvPowerSeries.X s) ^ e) := by
   rw [prod_smul_X_eq_smul_monomial_one, ← map_smul, smul_eq_mul, mul_one]
   simp only [Finsupp.sum, Finsupp.prod, Finset.prod_pow_eq_pow_sum]
+-/
 
 section DiscreteUniformity
 
@@ -143,7 +144,7 @@ instance (α : Type*) [UniformSpace α] [DiscreteUniformity α] :
 /-- The discrete uniformity makes a group a `UniformGroup -/
 @[to_additive "The discrete uniformity makes an additive group a `UniformAddGroup`"]
 instance {G : Type*} [Group G] [UniformSpace G] [DiscreteUniformity G] :
-    UniformGroup G where
+    IsUniformGroup G where
   uniformContinuous_div := fun s hs ↦ by
     simp only [uniformity_prod, DiscreteUniformity.eq_principal_idRel, Filter.comap_principal,
       Filter.inf_principal, Filter.map_principal, Filter.mem_principal, Set.image_subset_iff]
@@ -209,10 +210,12 @@ theorem hasSubst_add {a b : σ → MvPowerSeries τ S} (ha : HasSubst a) (hb : H
     convert Filter.Tendsto.add (ha.tendsto_zero) (hb.tendsto_zero)
     rw [add_zero]
 
+/-
 @[simp]
 theorem constantCoeff_smul (φ : MvPowerSeries σ S) (a : R) :
     constantCoeff σ S (a • φ) = a • constantCoeff σ S φ :=
   rfl
+-/
 
 theorem hasSubst_mul (b : σ → MvPowerSeries τ S) {a : σ → MvPowerSeries τ S} (ha : HasSubst a) :
     HasSubst (b * a) :=
@@ -257,7 +260,8 @@ variable {a : σ → MvPowerSeries τ S}
 theorem HasSubst.hasEval (ha : HasSubst a) :
     @HasEval σ (MvPowerSeries τ S) _ (@instTopologicalSpace τ S ⊥) a :=
   letI : UniformSpace S := ⊥
-  { hpow := fun s ↦ (tendsto_pow_of_constantCoeff_nilpotent_iff (a s)).mpr (ha.const_coeff s)
+  { hpow := fun s ↦
+      isTopologicallyNilpotent_of_constantCoeff_isNilpotent (ha.const_coeff s)
     tendsto_zero := ha.tendsto_zero }
 
 /-- Substitution of power series into a power series -/
@@ -375,7 +379,7 @@ theorem map_algebraMap_eq_subst_X (f : MvPowerSeries σ R) :
     rw [← MvPowerSeries.monomial_one_eq, coeff_monomial_ne hd.symm, smul_zero]
 
 
-variable {T : Type*} [CommRing T] [UniformSpace T] [T2Space T] [CompleteSpace T] [UniformAddGroup T]
+variable {T : Type*} [CommRing T] [UniformSpace T] [T2Space T] [CompleteSpace T] [IsUniformAddGroup T]
     [IsTopologicalRing T] [IsLinearTopology T T] [Algebra R T] {ε : MvPowerSeries τ S →ₐ[R] T}
 
 theorem comp_substAlgHom (ha : HasSubst a) :
