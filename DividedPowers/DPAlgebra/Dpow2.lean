@@ -2,6 +2,7 @@ import DividedPowers.DPAlgebra.Graded.GradeZero
 import Mathlib.LinearAlgebra.FreeModule.Basic
 import Mathlib.RingTheory.DividedPowers.DPMorphism
 import Mathlib.RingTheory.PowerSeries.PiTopology
+import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 
 /-! # Construction of the divided power structure on the divided power algebra
 -/
@@ -999,6 +1000,10 @@ theorem dpow_mul {n : ℕ} {a x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal 
   simp only [← nsmul_eq_mul, Algebra.mul_smul_comm]
   congr 1
   rw [← Algebra.mul_smul_comm]
+  simp only [Algebra.smul_def, ← mul_assoc]
+  apply congr_arg₂ _ _ rfl
+  rw [map_prod]
+
   sorry
 
 theorem mul_dpow {m n : ℕ} {x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) :
@@ -1078,8 +1083,24 @@ theorem dpow_mul' {n : ℕ} {a x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal
     rw [mul_assoc, hf]
     sorry
 
+example (x y : DividedPowerAlgebra R M) (d : ι →₀ ℕ) :
+    (basis R M b).repr (x * y) d =
+      ∑ uv ∈ antidiagonal d, (basis R M b).repr x uv.1 * (basis R M b).repr y uv.2 := by
+  have h (x : DividedPowerAlgebra R M) :
+    x =  (((basis R M b).repr x).sum fun i c ↦ c • (basis R M b) i) := by
+    simpa only using (Basis.linearCombination_repr (basis R M b) x).symm
+  conv_lhs => rw [h x, h y]
+  simp only [Finsupp.sum, Finset.sum_mul, Finset.mul_sum, map_sum]
+  rw [Finset.sum_comm]
+  simp only [Algebra.mul_smul_comm, Algebra.smul_mul_assoc, map_smul, Finsupp.coe_finset_sum,
+    Finsupp.coe_smul, sum_apply, Pi.smul_apply, smul_eq_mul]
+  simp only [basis_mul, map_nsmul]
+  rw [← Finset.sum_product']
+  apply Finset.sum_congr_of_eq_on_inter
+  sorry
+
 example (p : ℕ) (m : M) (x : DividedPowerAlgebra R M) (d : ι →₀ ℕ) :
-    ((basis R M b).repr (dp R p m * x)) d = 0 := by
+    ((basis R M b).repr (dp R p m * x)) d = sorry := by
   classical
   have hm : m = ((b.repr m).sum fun i c ↦ c • b i) := by
     have := (Basis.linearCombination_repr b m).symm
