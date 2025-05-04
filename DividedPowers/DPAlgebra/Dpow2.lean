@@ -1281,6 +1281,13 @@ theorem lift_dpow (x : DividedPowerAlgebra R M) (hx : x ∈ augIdeal R M) :
   simp only [nsmul_eq_mul, Algebra.mul_smul_comm]
   simp [algebra_compatible_smul S, lift_x_repr_eq, compare_basis b c f hf]
 
+include hf in
+theorem lift_dpow_of_lift_eq_zero
+    (x : DividedPowerAlgebra R M) (hx : x ∈ augIdeal R M)
+    (hx' : LinearMap.lift S f x = 0) (hn : n ≠ 0) :
+    DividedPowerAlgebra.LinearMap.lift S f (dpow b n x) = 0 := by
+  rw [lift_dpow b n c f hf x hx, hx', dpow_eval_zero _ hn]
+
 section CharZero
 
 variable [CharZero R] [IsDomain R]
@@ -1412,22 +1419,14 @@ theorem DPOW_ADD {x y : DividedPowerAlgebra R M}
         intro hd'
         rw [map_mul]
         convert mul_zero _
-        rw [dpow_eq hS hS_ok c, lift_dpow c _ b f (by exact hf) _ hk']
-        simp only [k, map_add, map_sub, ← htoN]
-        simp only [add_sub_cancel_left, sub_self]
-        rw [← htoN_dpow 0 (Ideal.zero_mem _)]
-        convert map_zero (LinearMap.lift R f)
-        suffices toN 0 = 0 by
-          rw [this]
-          rw [← dpow_eq hS hS_ok c]
-          apply hS.dpow_eval_zero
-          simp only [mem_antidiagonal] at hd
+        rw [dpow_eq hS hS_ok c]
+        apply lift_dpow_of_lift_eq_zero c _ b f hf k hk'
+        · simp only [k, map_add, map_sub, ← htoN]; abel
+        · simp only [mem_antidiagonal] at hd
           simp only [ne_eq, Prod.ext_iff, not_and] at hd'
           by_cases h : d.1 = n
           · apply hd' h
           · intro h' ; apply h; simp [← hd, h']
-        rw [htoN_eq]
-        simp
       · simp [mem_antidiagonal]
       · exact Ideal.add_mem _ (htoNx x hx) (htoNx y hy)
       · rw [mem_augIdeal_iff_of_repr c]
