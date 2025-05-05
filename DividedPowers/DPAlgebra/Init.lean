@@ -119,13 +119,23 @@ theorem dp_sum {ι : Type*} [DecidableEq ι] (s : Finset ι) (q : ℕ) (x : ι �
   DividedPowers.dpow_sum' (I := ⊤) _ (fun {m} _ ↦ dp_zero R m)
     (fun {n x y} _ _ ↦ dp_add R n x y) (dp_null_of_ne_zero R) (fun _ _ ↦ trivial)
 
-
 theorem dp_sum_smul {ι : Type*} [DecidableEq ι] (s : Finset ι) (q : ℕ) (a : ι → R) (x : ι → M) :
     dp R q (s.sum fun i => a i • x i) =
       (Finset.sym s q).sum fun k =>
         (s.prod fun i => a i ^ Multiset.count i k) •
           s.prod fun i => dp R (Multiset.count i k) (x i) := by
   simp_rw [dp_sum, dp_smul, Algebra.smul_def, map_prod, ← Finset.prod_mul_distrib]
+
+open scoped Nat
+
+theorem natFactorial_mul_dp_eq (n : ℕ) (x : M) :
+    n ! * dp R n x = (dp R 1 x) ^ n := by
+  induction n with
+  | zero => simp [dp_zero]
+  | succ n h  =>
+    rw [pow_succ, ← h, mul_assoc, dp_mul]
+    simp only [nsmul_eq_mul, ← mul_assoc, ← Nat.cast_mul]
+    simp only [Nat.choose_succ_self_right, mul_comm _ (n+1), Nat.factorial_succ]
 
 variable {R}
 
