@@ -1512,6 +1512,14 @@ theorem DPOW_ADD {x y : DividedPowerAlgebra R M}
     rw [← lift_dpow c n b f (by exact hf)]
     · -- here one uses that `dpow_add` works on `DividedPowerAlgebra S N`
       rw [← dpow_eq hS hS_ok]
+      -- There should be a general method here:
+      -- One has two elements u v ∈ augIdeal S N such that
+      --  LinearMap.lift f R u = LinearMap.lift f R v
+      -- One needs to prove that for all n,
+      --  LinearMap.lift f R (dpow c n u) = LinearMap.lift f R (dpow c n v)
+      -- The method consists in setting w = v - u, so that v = v + u
+      -- and using that one knows enough of dpow to conclude
+      -- here, v = toN (x + y), u = toN x + toN y, w = k
       let k := toN (x + y) - toN x - toN y
       have hk : toN (x + y) = toN x + toN y + k := by
         simp only [k]; abel
@@ -1538,6 +1546,9 @@ theorem DPOW_ADD {x y : DividedPowerAlgebra R M}
         rw [map_mul]
         convert mul_zero _
         rw [dpow_eq hS hS_ok c]
+        -- this should be a general lemma, useful for all cases
+        --  if k ∈ augIdeal S N and LinearMap.lift R f k = 0,
+        --  then LinearMap.lift R f (dpow c n k) = 0 for all n ≠ 0
         apply lift_dpow_of_lift_eq_zero c _ b f hf k hk'
         · simp only [k, map_add, map_sub, ← htoN]; abel
         · simp only [mem_antidiagonal] at hd
