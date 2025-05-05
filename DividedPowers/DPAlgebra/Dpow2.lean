@@ -1376,6 +1376,7 @@ theorem augIdeal_map_lift_eq [DecidableEq (S R)] :
     rw [hd', hx]
 
 
+-- Can one prove this?
 example [DecidableEq (S R)] : DecidablePred fun x ↦ x ∈ augIdeal (S R) (N R ι) := fun x ↦ by
   simp only [mem_augIdeal_iff_of_repr (c : Basis ι (S R) (N R ι))]
   sorry
@@ -1394,8 +1395,7 @@ theorem lift_dpow_eq_dpow_lift
   apply lift_dpow b n c (f b) (by exact hf b) x hx -- (by exact hf b) x hx
   intro n x
   rw [RatAlgebra.dpow_eq_inv_fact_smul _ _ (ι_mem_augIdeal _ _ x)]
-  simp only [Ring.inverse_eq_inv', DividedPowerAlgebra.ι, LinearMap.coe_mk, AddHom.coe_mk, Nf,
-      S, c]
+  simp only [Ring.inverse_eq_inv', DividedPowerAlgebra.ι, LinearMap.coe_mk, AddHom.coe_mk]
   have : Invertible (n ! : ℚ) := invertibleOfNonzero (by simp [Nat.factorial_ne_zero])
   rw [← invOf_eq_inv, invOf_smul_eq_iff, ← natFactorial_mul_dp_eq]
   simp [Algebra.smul_def]
@@ -1403,65 +1403,28 @@ theorem lift_dpow_eq_dpow_lift
 /-- The divided power structure on the divided power algebra of a free module
 over a characteristic zero domain -/
 noncomputable
-def dividedPowers_ofChar0 [DecidableEq (S R)] :
-    DividedPowers (augIdeal R M) := by
-/-  let N := ι →₀ FractionRing R
-  let c : Basis ι (FractionRing R) (ι →₀ FractionRing R) := Finsupp.basisSingleOne
-  let f : M →ₗ[R] N := Basis.constr b (FractionRing R) (fun i ↦ c i)
-  let hS : DividedPowers (augIdeal S N) := RatAlgebra.dividedPowers (augIdeal S N)
---   let ff : DividedPowerAlgebra R M →ₐ[R] DividedPowerAlgebra S N := LinearMap.lift S f
-  have : IsScalarTower R S N := Finsupp.isScalarTower ι S
-  have hff : Function.Injective (LinearMap.lift S f) := by
-    rw [RingHom.injective_iff_ker_eq_bot, RingHom.ker_eq_bot_iff_eq_zero]
-    intro x hx
-    rw [Basis.ext_elem_iff (basis S N c)] at hx
-    rw [Basis.ext_elem_iff (basis R M b)]
-    intro d
-    specialize hx d
-    simp only [map_zero, Finsupp.coe_zero, Pi.zero_apply] at hx ⊢
-    simpa [repr_lift_eq b c f (by simp [f, c]) x] using hx
-  have hff_aug : (augIdeal R M).map (LinearMap.lift S f) = augIdeal S N := by
-    apply le_antisymm
-    · rw [Ideal.map_le_iff_le_comap]
-      intro x hx
-      rw [Ideal.mem_comap]
-      rw [mem_augIdeal_iff_of_repr c]
-      rw [mem_augIdeal_iff_of_repr b] at hx
-      simp [repr_lift_eq b c f (by simp [f, c]), hx]
-    · intro x hx
-      rw [mem_augIdeal_iff_of_repr c] at hx
-      rw [eq_of_repr c x]
-      simp only [Finsupp.sum]
-      apply Ideal.sum_mem
-      intro d hd
-      rw [Finsupp.mem_support_iff] at hd
-      rw [Algebra.smul_def]
-      apply Ideal.mul_mem_left
-      rw [compare_basis b c _ ?_]
-      · apply Ideal.mem_map_of_mem
-        simp only [mem_augIdeal_iff_of_repr b, Basis.repr_self, S, N]
-        rw [Finsupp.single_eq_of_ne]
-        intro hd'
-        apply hd
-        rw [hd', hx]
-      · simp [f, c] -/
-  classical
-  apply PadicInt.dividedPowers_of_injective (augIdeal R M) (augIdeal (S R) (N R ι))
-    (LinearMap.lift (S R) (f b)) (lift_injective b) (hSN) (augIdeal_map_lift_eq b)
-  · intro n x hx
+def dividedPowers [DecidableEq (S R)] [DecidablePred fun x ↦ x  ∈ augIdeal (S R) (N R ι)] :
+    DividedPowers (augIdeal R M) := PadicInt.dividedPowers_of_injective
+      (augIdeal R M) (augIdeal (S R) (N R ι))
+      (LinearMap.lift (S R) (f b)) (lift_injective b) (hSN) (augIdeal_map_lift_eq b) (fun  n x hx ↦ by
     refine ⟨dpow b n x, fun hn ↦ dpow_mem b hn hx, ?_⟩
     simp only [RingHom.coe_coe]
-    apply lift_dpow_eq_dpow_lift _ _ hx
+    apply lift_dpow_eq_dpow_lift _ _ hx)
 
-theorem dpow_ofChar0_eq (x : DividedPowerAlgebra R M) :
-    (dividedPowers_ofChar0 b).dpow n x = dpow b n x := by
-  simp only [dividedPowers_ofChar0]
+theorem dpow_eq (x : DividedPowerAlgebra R M) :
+    (dividedPowers b).dpow n x = dpow b n x := by
+  simp only [CharZero.dividedPowers, PadicInt.dividedPowers_of_injective]
+  simp only [RingHom.toMonoidHom_eq_coe, AlgHom.toRingHom_toMonoidHom, OneHom.toFun_eq_coe,
+    MonoidHom.toOneHom_coe, MonoidHom.coe_coe, RingHom.coe_coe, dite_eq_ite]
+  split_ifs with hx
+  · rw [← lift_dpow_eq_dpow_lift, ← (lift_injective b).eq_iff]
+    · exact Function.apply_invFun_apply
+    · exact hx
+  · rw [dpow_null b hx]
 
-  sorry
-
-theorem admissible_ofChar0 (n: ℕ) (x : M) :
-    (dividedPowers_ofChar0 b).dpow n (DividedPowerAlgebra.ι R M x) = dp R n x := by
-  rw [dpow_ofChar0_eq, dpow_ι]
+theorem dpow_ι_eq_dp (n: ℕ) (x : M) :
+    (dividedPowers b).dpow n (DividedPowerAlgebra.ι R M x) = dp R n x := by
+  rw [dpow_eq, dpow_ι]
 
 end CharZero
 
@@ -1483,11 +1446,11 @@ theorem DPOW_ADD {x y : DividedPowerAlgebra R M}
     IsScalarTower.of_algebraMap_smul fun r ↦ congrFun rfl
   let c : Basis ι S N := Finsupp.basisSingleOne
   -- let c' : Basis (ι →₀ ℕ) S (DividedPowerAlgebra S N) := basis S N c
-  let hS : DividedPowers (augIdeal S N) := dividedPowers_ofChar0 c
+  let hS : DividedPowers (augIdeal S N) := CharZero.dividedPowers c
   let f : N →ₗ[S] M := Finsupp.linearCombination S (fun i ↦ b i)
   let F := FractionRing R
-  let hS : DividedPowers (augIdeal S N) := dividedPowers_ofChar0 c
-  have hS_ok := admissible_ofChar0 c
+  let hS : DividedPowers (augIdeal S N) := CharZero.dividedPowers c
+  have hS_ok := CharZero.dpow_ι_eq_dp c
   have hf (i) : f (c i) = b i := by
     simp only [c, f]
     rw [Finsupp.coe_basisSingleOne, Finsupp.linearCombination_single, one_smul]
@@ -1582,7 +1545,7 @@ theorem DPOW_ADD {x y : DividedPowerAlgebra R M}
           by_cases h : d.1 = n
           · apply hd' h
           · intro h' ; apply h; simp [← hd, h']
-      · simp [mem_antidiagonal]
+      · exact fun hn ↦ (hn (by simp [mem_antidiagonal])).elim
       · exact Ideal.add_mem _ (htoNx x hx) (htoNx y hy)
       · rw [mem_augIdeal_iff_of_repr c]
         simp only [map_sub, Finsupp.coe_sub, Pi.sub_apply, k]
@@ -1599,14 +1562,6 @@ theorem DPOW_ADD {x y : DividedPowerAlgebra R M}
     · exact htoNx _ (Ideal.add_mem _ hx hy)
   set z := x + y with hz
   simp only [← htoN, map_add, z]
-
-
-
-
-
-
-
-
 
 end Quotient
 

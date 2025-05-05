@@ -146,6 +146,16 @@ noncomputable def dividedPowers_of_injective (f : A →+* B) (hf : Injective f)
       hJ.dpow_comp hm (hIJ ▸ Ideal.mem_map_of_mem f hx), map_natCast,
       invFun_eq ⟨(n.uniformBell m) * b, hc⟩]
 
+-- New lemma that I do not use finally
+theorem dividedPowers_of_injective.dpow_eq (f : A →+* B) (hf : Injective f)
+    (hJ : DividedPowers J) (hIJ : I.map f = J)
+    (hmem : ∀ (n : ℕ) {x : A} (_ : x ∈ I), ∃ (y : A) (_ : n ≠ 0 → y ∈ I), f y = hJ.dpow n (f x))
+    {n : ℕ} {x y : A} (hx : x ∈ I) (hx' : hJ.dpow n (f x) = f y) :
+    dividedPowers_of_injective I J f hf hJ hIJ hmem n x = y := by
+  simp [dividedPowers_of_injective, dif_pos hx, ← hf.eq_iff]
+  rw [if_pos hx, hx']
+  exact Function.apply_invFun_apply
+
 end Injective
 
 section Padic
