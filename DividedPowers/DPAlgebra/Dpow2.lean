@@ -1,12 +1,6 @@
 import DividedPowers.DPAlgebra.Graded.GradeZero
 import DividedPowers.Padic
-import DividedPowers.RatAlgebra
-import Mathlib.Algebra.BigOperators.Group.Finset.Basic
-import Mathlib.LinearAlgebra.Basis.SMul
-import Mathlib.LinearAlgebra.Finsupp.VectorSpace
-import Mathlib.LinearAlgebra.FreeModule.Basic
 import Mathlib.RingTheory.DividedPowers.DPMorphism
-import Mathlib.RingTheory.Localization.FractionRing
 import Mathlib.RingTheory.MvPolynomial.Basic
 import Mathlib.RingTheory.Polynomial.Basic
 import Mathlib.RingTheory.PowerSeries.PiTopology
@@ -1030,7 +1024,7 @@ theorem dpow_add' {n : ℕ} {x y : DividedPowerAlgebra R M}
 
 theorem dpow_sum {α : Type*} [DecidableEq α] (x : α → DividedPowerAlgebra R M) {s : Finset α}
   (hx : ∀ a ∈ s, x a ∈ augIdeal R M) (n : ℕ) :
-    dpow b n (∑ a in s, x a) =
+    dpow b n (∑ a ∈ s, x a) =
       ∑ k ∈ s.sym n, ∏ d ∈ s, dpow b (Multiset.count d ↑k) (x d) := by
   apply DividedPowers.dpow_sum' (dpow b)
   · exact fun {x} a ↦ dpow_zero b a
@@ -1084,7 +1078,7 @@ theorem dpow_mul' {n : ℕ} {a x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal
       simp only [Finsupp.coe_smul, Pi.smul_apply, smul_eq_mul, nsmul_eq_mul, Sym.val_eq_coe]
       simp only [mul_pow, Finset.prod_mul_distrib]
       rw [Finset.prod_pow_eq_pow_sum]
-      suffices ∑ i in  ((basis R M b).repr x).support,
+      suffices ∑ i ∈ ((basis R M b).repr x).support,
         Multiset.count i ↑k = n by
         rw [this, ← mul_assoc, mul_comm _ (r ^ n), mul_assoc]
         simp [Algebra.smul_def]
@@ -1122,8 +1116,8 @@ theorem dpow_mul' {n : ℕ} {a x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal
     rw [this, dp_sum, Finset.sum_mul, dpow_sum]
     rw [dpow_eq_of_support_subset b n ?_ (s := ((basis R M b).repr x).support)]
     simp only [dpow, if_pos hx, Finset.mul_sum]
-
-    apply Finset.sum_congr rfl
+    sorry; sorry; sorry; sorry; sorry
+    /- apply Finset.sum_congr rfl
     intro k hk
     conv_rhs => rw [mul_comm]
     simp only [smul_mul_assoc]
@@ -1131,8 +1125,8 @@ theorem dpow_mul' {n : ℕ} {a x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal
 
     suffices dpow b n (f * dp R p m * x) = (dp R p m * f) ^ n * dpow b n x by
       rw [this]; ring
-    rw [mul_assoc, hf]
-    sorry
+    rw [mul_assoc, hf] -/
+
 
 
 example (p : ℕ) (m : M) (x : DividedPowerAlgebra R M) (d : ι →₀ ℕ) :
@@ -1154,11 +1148,11 @@ example (p : ℕ) (m : M) (x : DividedPowerAlgebra R M) (d : ι →₀ ℕ) :
   rw [Finset.sum_comm]
   -- simp_rw [Finset.sum_mul, Finset.sum_mul, Finset.sum_comm]
   simp [dp_smul]
-  simp only [Finset.prod_smul']
+  /- simp only [Finset.prod_smul']
   simp [Finset.sum_congr (s₁ := (b.repr m).support.sym p) rfl
     (fun x hx ↦ by
       sorry)]
-  simp_rw [← this]
+  simp_rw [← this] -/
   sorry
 
 
@@ -1231,7 +1225,7 @@ section Compare
     If `R` is an integral domain of characteristic `0`, one can take for `S` its fraction field
     and then the divided power structure exists.
     Since `R` embeds in `S`, the relations for `dpow R M b` follow from that of `dpow S N c`.
-  * We view `R` has a quotient of `S`, `S →+* R`,
+  * We view `R` as a quotient of `S`, `S →+* R`,
     and give ourselves `N` which is free with the “same” basis,
     and assume that we know that we have a divided power
     structure on `DividedPowerAlgebra S N`.
@@ -1242,21 +1236,22 @@ variable {S : Type*} [CommRing S] [Algebra R S]
     {N : Type*} [AddCommGroup N] [Module R N] [Module S N] [IsScalarTower R S N]
     (c : Basis ι S N) (f : M →ₗ[R] N) (hf : ∀ i, f (b i) = c i)
 
-include hf in
-omit [DecidableEq R] [DecidableEq ι] [DecidablePred fun x ↦ x ∈ augIdeal R M] in
-lemma compare_basis (d : ι →₀ ℕ) :
-    basis S N c d = LinearMap.lift S f (basis R M b d) := by
-  simp only [basis_eq, map_finsuppProd, LinearMap.lift_apply_dp, hf]
+section basis
 
 omit [DecidableEq R] [DecidableEq ι] [DecidablePred fun x ↦ x ∈ augIdeal R M]
-  [Algebra R S] [IsScalarTower R S N] in
+
+include hf in
+lemma compare_basis (d : ι →₀ ℕ) :
+    basis S N c d = LinearMap.lift S f (basis R M b d) := by
+  simp [basis_eq, map_finsuppProd, LinearMap.lift_apply_dp, hf]
+
+omit [Algebra R S] [IsScalarTower R S N] in
 theorem eq_of_repr (x : DividedPowerAlgebra R M) :
     x = (((basis R M b).repr x).sum fun i r ↦ r • basis R M b i) := by
   simpa only [Finsupp.linearCombination, Finsupp.lsum] using
     (Basis.linearCombination_repr (basis R M b) x).symm
 
 include hf in
-omit [DecidableEq R] [DecidableEq ι] [DecidablePred fun x ↦ x ∈ augIdeal R M] in
 theorem repr_lift_eq (x : DividedPowerAlgebra R M) (d : ι →₀ ℕ) :
     (basis S N c).repr (LinearMap.lift S f x) d = algebraMap R S ((basis R M b).repr x d) := by
   have : LinearMap.lift S f x =
@@ -1270,13 +1265,14 @@ theorem repr_lift_eq (x : DividedPowerAlgebra R M) (d : ι →₀ ℕ) :
   · simp
 
 include hf in
-omit [DecidableEq R] [DecidableEq ι] [DecidablePred fun x ↦ x ∈ augIdeal R M] in
 theorem repr_lift_support_subset (x : DividedPowerAlgebra R M) :
     ((basis S N c).repr (LinearMap.lift S f x)).support ⊆ ((basis R M b).repr x).support := by
   intro d
   simp [Finsupp.mem_support_iff, repr_lift_eq _ _ _ hf, not_imp_not]
   intro H
   rw [H, map_zero]
+
+end basis
 
 include hf in
 omit [DecidableEq ι] [DecidablePred fun x ↦ x ∈ augIdeal R M] in
@@ -1314,6 +1310,7 @@ namespace CharZero
 variable [CharZero R] [IsDomain R]
 
 variable (R) in
+
 abbrev S := FractionRing R
 
 noncomputable local instance : Algebra ℚ (S R) := RingHom.toAlgebra
@@ -1332,7 +1329,8 @@ abbrev c : Basis ι (S R) (N R ι) := Finsupp.basisSingleOne
 
 noncomputable abbrev f : M →ₗ[R] (N R ι) := Basis.constr b (S R) c
 
-omit  [DecidableEq ι] [DecidablePred fun x ↦ x ∈ augIdeal R M] [CharZero R] [IsDomain R] [DecidableEq R] in
+omit  [DecidableEq ι] [DecidablePred fun x ↦ x ∈ augIdeal R M] [CharZero R] [IsDomain R]
+  [DecidableEq R] in
 lemma hf (i : ι) : f b (b i) = c i  := by simp [c, f]
 
 local instance : IsScalarTower R (S R) (N R ι) := Finsupp.isScalarTower ι (S R)
@@ -1381,7 +1379,7 @@ example [DecidableEq (S R)] : DecidablePred fun x ↦ x ∈ augIdeal (S R) (N R 
   simp only [mem_augIdeal_iff_of_repr (c : Basis ι (S R) (N R ι))]
   sorry
 
-variable [DecidableEq (S R)] [DecidablePred fun x ↦ x ∈ augIdeal (S R) (N R ι)] :
+variable [DecidableEq (S R)] [DecidablePred fun x ↦ x ∈ augIdeal (S R) (N R ι)]
 
 noncomputable
 abbrev hSN : DividedPowers (augIdeal (S R) (N R ι)) :=
@@ -1402,18 +1400,14 @@ theorem lift_dpow_eq_dpow_lift
 
 /-- The divided power structure on the divided power algebra of a free module
 over a characteristic zero domain -/
-noncomputable
-def dividedPowers [DecidableEq (S R)] [DecidablePred fun x ↦ x  ∈ augIdeal (S R) (N R ι)] :
-    DividedPowers (augIdeal R M) := PadicInt.dividedPowers_of_injective
-      (augIdeal R M) (augIdeal (S R) (N R ι))
-      (LinearMap.lift (S R) (f b)) (lift_injective b) (hSN) (augIdeal_map_lift_eq b) (fun  n x hx ↦ by
-    refine ⟨dpow b n x, fun hn ↦ dpow_mem b hn hx, ?_⟩
-    simp only [RingHom.coe_coe]
-    apply lift_dpow_eq_dpow_lift _ _ hx)
+noncomputable def dividedPowers : DividedPowers (augIdeal R M) :=
+  ofInjective (augIdeal R M) (augIdeal (S R) (N R ι))
+    (LinearMap.lift (S R) (f b)) (lift_injective b) (hSN) (augIdeal_map_lift_eq b)
+    (fun n x hx ↦ ⟨dpow b n x, fun hn ↦ dpow_mem b hn hx, lift_dpow_eq_dpow_lift _ _ hx⟩)
 
 theorem dpow_eq (x : DividedPowerAlgebra R M) :
     (dividedPowers b).dpow n x = dpow b n x := by
-  simp only [CharZero.dividedPowers, PadicInt.dividedPowers_of_injective]
+  simp only [CharZero.dividedPowers, ofInjective]
   simp only [RingHom.toMonoidHom_eq_coe, AlgHom.toRingHom_toMonoidHom, OneHom.toFun_eq_coe,
     MonoidHom.toOneHom_coe, MonoidHom.coe_coe, RingHom.coe_coe, dite_eq_ite]
   split_ifs with hx
@@ -1446,7 +1440,6 @@ theorem DPOW_ADD {x y : DividedPowerAlgebra R M}
     IsScalarTower.of_algebraMap_smul fun r ↦ congrFun rfl
   let c : Basis ι S N := Finsupp.basisSingleOne
   -- let c' : Basis (ι →₀ ℕ) S (DividedPowerAlgebra S N) := basis S N c
-  let hS : DividedPowers (augIdeal S N) := CharZero.dividedPowers c
   let f : N →ₗ[S] M := Finsupp.linearCombination S (fun i ↦ b i)
   let F := FractionRing R
   let hS : DividedPowers (augIdeal S N) := CharZero.dividedPowers c
@@ -1480,7 +1473,7 @@ theorem DPOW_ADD {x y : DividedPowerAlgebra R M}
     · intro _ _ hed; simp [Finsupp.single_eq_of_ne hed]
     · simp
   have toN_repr (x) (d) :
-      ((basis S N c).repr (toN x) d) =  φ ((basis R M b).repr x d) := by
+      ((basis S N c).repr (toN x) d) = φ ((basis R M b).repr x d) := by
     simp only [toN]
     simp [Finsupp.linearCombination, Finsupp.lsum, map_finsuppSum]
   -- not needed, one could use `toN_repr` to simplify the proof
@@ -1574,6 +1567,191 @@ theorem DPOW_ADD {x y : DividedPowerAlgebra R M}
   set z := x + y with hz
   simp only [← htoN, map_add, z]
 
+noncomputable section
+
+variable (R) in
+private def MvPoly_dividedPowers
+    [DecidablePred fun x ↦ x ∈ augIdeal (MvPolynomial R ℤ) (ι →₀ MvPolynomial R ℤ)]
+    [DecidableEq (FractionRing (MvPolynomial R ℤ))]
+    [DecidablePred fun x ↦ x ∈ augIdeal (FractionRing (MvPolynomial R ℤ))
+      (CharZero.N (MvPolynomial R ℤ) ι)] :
+    DividedPowers (augIdeal (MvPolynomial R ℤ) (ι →₀ (MvPolynomial R ℤ))) :=
+  CharZero.dividedPowers Finsupp.basisSingleOne
+
+local instance : Module (MvPolynomial R ℤ) M :=
+  Module.compHom M (MvPolynomial.eval₂Hom (Int.castRingHom R) id)
+
+local instance : Algebra (MvPolynomial R ℤ) R :=
+  RingHom.toAlgebra (MvPolynomial.eval₂Hom (Int.castRingHom R) id)
+
+local instance : IsScalarTower (MvPolynomial R ℤ) R M :=
+  IsScalarTower.of_algebraMap_smul fun _ ↦ congrFun rfl
+
+private def φ : R → (MvPolynomial R ℤ) := fun r ↦ if r = 0 then 0 else MvPolynomial.X r
+
+lemma algebraMap_φ (r : R) : algebraMap (MvPolynomial R ℤ) R (φ r) = r := by
+    simp only [RingHom.algebraMap_toAlgebra, φ]
+    split_ifs with hr
+    · simp [hr]
+    · rw [MvPolynomial.coe_eval₂Hom]; simp
+
+private def toN (x : DividedPowerAlgebra R M) :
+    DividedPowerAlgebra (MvPolynomial R ℤ) (ι →₀ MvPolynomial R ℤ) :=
+  Finsupp.linearCombination (MvPolynomial R ℤ)
+    (basis (MvPolynomial R ℤ) (ι →₀ MvPolynomial R ℤ) Finsupp.basisSingleOne)
+    (((basis R M b).repr x).mapRange φ (by simp [φ]))
+
+omit [DecidableEq ι] [DecidablePred fun x ↦ x ∈ augIdeal R M] in
+lemma toN_repr (x : DividedPowerAlgebra R M) (d : ι →₀ ℕ) :
+      ((basis (MvPolynomial R ℤ) (ι →₀ MvPolynomial R ℤ) Finsupp.basisSingleOne).repr
+        (toN b x) d) =  φ ((basis R M b).repr x d) := by
+    simp only [toN]
+    simp [Finsupp.linearCombination, Finsupp.lsum, map_finsuppSum]
+
+omit [DecidableEq ι] [DecidablePred fun x ↦ x ∈ augIdeal R M] in
+lemma toNx (x) (hx : x ∈ augIdeal R M) :
+    toN b x ∈ augIdeal  (MvPolynomial R ℤ) (ι →₀ MvPolynomial R ℤ) := by
+  rw [mem_augIdeal_iff_of_repr Finsupp.basisSingleOne]
+  rw [mem_augIdeal_iff_of_repr b] at hx
+  simp [toN_repr, hx, φ]
+
+private def f : (ι →₀ MvPolynomial R ℤ) →ₗ[MvPolynomial R ℤ] M :=
+  Finsupp.linearCombination (MvPolynomial R ℤ) (fun i ↦ b i)
+
+omit [DecidableEq R] [DecidableEq ι] [DecidablePred fun x ↦ x ∈ augIdeal R M] in
+private lemma f_apply (i : ι) : (f b) (Finsupp.basisSingleOne i) = b i := by
+    simp only [f]
+    rw [Finsupp.coe_basisSingleOne, Finsupp.linearCombination_single, one_smul]
+
+omit [DecidableEq R] [DecidableEq ι] [DecidablePred fun x ↦ x ∈ augIdeal R M] in
+private lemma lift_f (d : ι →₀ ℕ) :
+    (LinearMap.lift R (f b))
+      (basis (MvPolynomial R ℤ) (ι →₀ MvPolynomial R ℤ) Finsupp.basisSingleOne d) =
+    basis R M b d := by
+  simp only [basis_eq, map_finsuppProd, LinearMap.lift_apply_dp]
+  apply Finsupp.prod_congr
+  intros; rw [f_apply]
+
+omit [DecidableEq ι] [DecidablePred fun x ↦ x ∈ augIdeal R M] in
+private lemma id_eq_lift_toN (x : DividedPowerAlgebra R M) :
+    x = LinearMap.lift R (f b) (toN b x) := by
+  apply Basis.ext_elem (basis R M b)
+  intro d
+  simp only [toN, Finsupp.linearCombination, Finsupp.coe_lsum, LinearMap.coe_smulRight,
+    LinearMap.id_coe, id_eq, map_finsuppSum, map_smul, Finsupp.sum_apply]
+  simp only [lift_f, algebra_compatible_smul R, Algebra.id.map_eq_id, RingHomCompTriple.comp_apply,
+    map_smul, Basis.repr_self, Finsupp.coe_smul, Pi.smul_apply, smul_eq_mul]
+  rw [Finsupp.sum_eq_single d]
+  · simp only [Finsupp.mapRange_apply, Finsupp.single_eq_same, mul_one, φ, f]
+    split_ifs with hd
+    · simp [hd]
+    · simp [RingHom.algebraMap_toAlgebra]
+  · intro _ _ hed; simp [Finsupp.single_eq_of_ne hed]
+  · simp
+
+-- TODO: golf
+lemma lift_dpow_eq_of_lift_eq
+    [DecidablePred fun x ↦ x ∈ augIdeal (MvPolynomial R ℤ) (ι →₀ MvPolynomial R ℤ)]
+    {u v : DividedPowerAlgebra (MvPolynomial R ℤ) (ι →₀ MvPolynomial R ℤ)}
+    (hu : u ∈ augIdeal (MvPolynomial R ℤ) (ι →₀ MvPolynomial R ℤ))
+    (hv : v ∈ augIdeal (MvPolynomial R ℤ) (ι →₀ MvPolynomial R ℤ))
+    (huv : LinearMap.lift R (f b) u = LinearMap.lift R (f b) v) :
+    LinearMap.lift R (f b) (dpow Finsupp.basisSingleOne n u) =
+      LinearMap.lift R (f b) (dpow Finsupp.basisSingleOne n v) := by
+  classical
+  let k := v - u
+  have hk : v = u + k := by
+    simp only [k]; abel
+  have hk' : k ∈ augIdeal (MvPolynomial R ℤ) (ι →₀ MvPolynomial R ℤ) := by
+    simp only [k]
+    rw [mem_augIdeal_iff_of_repr Finsupp.basisSingleOne]
+    simp [map_sub, Finsupp.coe_sub, Pi.sub_apply,
+      (mem_augIdeal_iff_of_repr Finsupp.basisSingleOne).mp hu, sub_zero,
+      (mem_augIdeal_iff_of_repr Finsupp.basisSingleOne).mp hv, k]
+  rw [hk, dpow_add _ hu hk', map_sum]
+  rw [Finset.sum_eq_single (n, 0), map_mul]
+  · simp only
+    rw [dpow_zero _ hk', map_one, mul_one]
+  · intro m hmn hm0
+    rw [map_mul]
+    convert mul_zero _
+    apply lift_dpow_of_lift_eq_zero _ _ b (f b) (f_apply b) k hk'
+    · simp only [k, huv, map_add, map_sub, ← id_eq_lift_toN b]; abel
+    · simp only [mem_antidiagonal] at hmn
+      simp only [ne_eq, Prod.ext_iff, not_and] at hm0
+      by_cases h : m.1 = n
+      · exact hm0 h
+      · intro h' ; apply h; simp [← hmn, h']
+  · exact fun hn ↦ (hn (by simp [mem_antidiagonal])).elim
+
+-- TODO: keep golfing
+theorem DPOW_ADD' {x y : DividedPowerAlgebra R M}
+    (hx : x ∈ augIdeal R M) (hy : y ∈ augIdeal R M) :
+    dpow b n (x + y) = ∑ k ∈ Finset.antidiagonal n, dpow b k.1 x * dpow b k.2 y := by
+  classical
+  set S := MvPolynomial R ℤ
+  let N := ι →₀ S
+  let c : Basis ι S N := Finsupp.basisSingleOne
+  let hS : DividedPowers (augIdeal S N) := MvPoly_dividedPowers R
+  let f : N →ₗ[S] M := Finsupp.linearCombination S (fun i ↦ b i)
+  have hS_ok := CharZero.dpow_ι_eq_dp c
+  have hf (i) : f (c i) = b i := f_apply b i
+  have hf' (d) :
+    (LinearMap.lift R f) (basis S N c d) = basis R M b d := lift_f b d
+  have hφ (r) : algebraMap S R (φ r) = r := algebraMap_φ r
+  let toN' (x) : DividedPowerAlgebra S N := toN b x
+  have htoN (x) : x = LinearMap.lift R f (toN' x) := id_eq_lift_toN b x
+  have toN_repr (x) (d) :
+      ((basis S N c).repr (toN' x) d) =  φ ((basis R M b).repr x d) := toN_repr b x d
+  have htoNx (x) (hx : x ∈ augIdeal R M) : toN' x ∈ augIdeal S N := toNx b x hx
+  conv_lhs => rw [htoN x, htoN y, ← map_add]
+
+  have : LinearMap.lift R f (dpow Finsupp.basisSingleOne n (toN' x + toN' y)) =
+      LinearMap.lift R f (dpow Finsupp.basisSingleOne n (toN' (x + y))) := by
+    apply lift_dpow_eq_of_lift_eq _ n (Ideal.add_mem _ (htoNx _ hx) (htoNx _ hy))
+      (htoNx _ (Ideal.add_mem _ hx hy))
+    simp only [map_add, toN', ←  id_eq_lift_toN b, S, N]
+  rw [← lift_dpow c n b f (by exact hf) _ (Ideal.add_mem _ (htoNx x hx) (htoNx y hy))]
+  convert this
+  let k := toN' (x + y) - toN' x - toN' y
+  have hk : toN' (x + y) = toN' x + toN' y + k := by
+    simp only [k]; abel
+  have hk' : k ∈ augIdeal S N := by
+    simp only [k]
+    rw [mem_augIdeal_iff_of_repr c]
+    simp [(mem_augIdeal_iff_of_repr c).mp (htoNx x hx), (mem_augIdeal_iff_of_repr c).mp (htoNx y hy)]
+    rw [← mem_augIdeal_iff_of_repr]
+    exact htoNx _ (Ideal.add_mem _ hx hy)
+  rw [hk, dpow_add _ (Ideal.add_mem _ (htoNx _ hx) (htoNx _ hy)) hk', map_sum]
+  nth_rewrite 2 [Finset.sum_eq_single (n, 0)]
+  rw [map_mul]
+  · simp only
+    rw [dpow_zero _ hk', map_one, mul_one]
+    rw [dpow_add _ (htoNx x hx) (htoNx y hy), map_sum]
+    apply Finset.sum_congr rfl
+    intro d hd
+    rw [map_mul]
+    rw [lift_dpow _ _ b f  (by exact hf) (toN' x) (htoNx x hx), ← htoN]
+    rw [lift_dpow c _ b f (by exact hf) (toN' y) (htoNx y hy), ← htoN]
+  · intro d hd
+    intro hd'
+    rw [map_mul]
+    convert mul_zero _
+    apply lift_dpow_of_lift_eq_zero c _ b f hf k hk'
+    · simp only [k, map_add, map_sub, ← htoN]; abel
+    · simp only [mem_antidiagonal] at hd
+      simp only [ne_eq, Prod.ext_iff, not_and] at hd'
+      by_cases h : d.1 = n
+      · apply hd' h
+      · intro h' ; apply h; simp [← hd, h']
+  · intro hn
+    simp only [mem_antidiagonal, add_zero, not_true_eq_false, toN', k] at hn
+
+theorem DPOW_MUL {n : ℕ} {a x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) :
+    dpow b n (a * x) = a ^ n * dpow b n x := by
+
+  sorry
+
+end
+
 end Quotient
-
-
