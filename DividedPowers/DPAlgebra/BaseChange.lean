@@ -335,7 +335,7 @@ theorem rTensor_comp_dpScalarExtensionEquiv_symm_eq {S : Type*} [CommRing S] [Al
       (dpScalarExtensionEquiv R S' M).symm (dp S' n (φ.toLinearMap.rTensor M m)) := by
   rw [← coe_map_id₂]
   induction m using TensorProduct.induction_on generalizing n with
-  | zero => simp only [Function.comp_apply, dp_null, RingHom.map_ite_one_zero, map_zero]
+  | zero => simp only [dp_null, MonoidWithZeroHom.map_ite_one_zero, map_zero]
   | tmul s m =>
     simp only [coe_dpScalarExtensionEquiv_symm, dpScalarExtensionInv_apply_dp, toLinearMap_apply,
       Algebra.TensorProduct.map_tmul, map_pow, coe_id, id_eq, LinearMap.rTensor_tmul ]

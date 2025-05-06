@@ -98,14 +98,14 @@ section StronglyMultipliable
 variable {ι : Type*} {f : ι → MvPowerSeries σ α} [CommRing α]
 namespace StronglySummable
 
-variable [UniformSpace α] [UniformAddGroup α]
+variable [UniformSpace α] [IsUniformAddGroup α]
 
 --#check MvPowerSeries.StronglyMultipliable.coeff_prod_apply_eq_finset_prod
 
 theorem hasProd_of_one_add (hf : StronglySummable f) :
     HasProd (fun i => 1 + f i) hf.toStronglyMultipliable.prod := by
   classical
-  haveI := instUniformAddGroup (σ := σ) (R := α)
+  haveI := instIsUniformAddGroup (σ := σ) (R := α)
   intro V hV
   simp only [Filter.mem_map, Filter.mem_atTop_sets, ge_iff_le, Finset.le_eq_subset,
     Set.mem_preimage]

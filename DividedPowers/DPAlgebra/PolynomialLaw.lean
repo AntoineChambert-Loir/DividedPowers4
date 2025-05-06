@@ -29,6 +29,7 @@ namespace DividedPowerAlgebra
 
 open TensorProduct AlgEquiv LinearMap MvPolynomial DividedPowerAlgebra
 
+#exit -- TODO: fix
 
 /- TODO :  we need to prove that DividedPowerAlgebra.dpScalarExtensionEquiv
   is compatible with the graded structure and induces equivs componentwise -/

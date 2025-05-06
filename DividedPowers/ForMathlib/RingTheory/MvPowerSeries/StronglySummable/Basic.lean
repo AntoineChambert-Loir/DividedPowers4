@@ -532,7 +532,7 @@ theorem prod_eq_finset_prod_add [DecidableEq ι] (hf : StronglyMultipliable f) (
 theorem coeff_prod_apply_eq_finset_prod [DecidableEq ι] [DecidableEq σ]
     (hf : StronglySummable f) {d : σ →₀ ℕ} {J : Finset ι} (hJ : hf.unionOfSupportOfCoeffLe d ⊆ J) :
     (coeff α d) hf.toStronglyMultipliable.prod = (coeff α d) (J.prod fun i => 1 + f i) := by
-  rw [hf.toStronglyMultipliable.prod_eq_finset_prod_add J, map_add, add_right_eq_self,
+  rw [hf.toStronglyMultipliable.prod_eq_finset_prod_add J, map_add, add_eq_left,
     StronglySummable.coeff_sum_def]
   apply sum_eq_zero
   intro t _

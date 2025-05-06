@@ -6,6 +6,8 @@ import Mathlib.LinearAlgebra.TensorProduct.RightExactness
 import Mathlib.RingTheory.FiniteType
 import Mathlib.RingTheory.Ideal.Quotient.Operations
 
+-- In #22912
+
 /-! # Polynomial laws on modules
 
 Let `M` and `N` be a modules over a commutative ring `R`.
@@ -105,7 +107,7 @@ theorem Subalgebra.val_comp_inclusion {R : Type*} [CommSemiring R] {S : Type*} [
     [Algebra R S] {A B : Subalgebra R S} (h : A ≤ B) :
   (Subalgebra.val B).comp (Subalgebra.inclusion h) = Subalgebra.val A := rfl
 
--- [Mathlib.Algebra.Algebra.Hom]
+/- In #22912
 /-- The algebra morphism underlying `algebraMap` -/
 def Algebra.algHom (R : Type*) [CommSemiring R] (S : Type*) [Semiring S] [Algebra R S] :
     R →ₐ[R] S where
@@ -126,7 +128,7 @@ lemma TensorProduct.includeRight_lid' {R : Type*} [CommSemiring R] {S : Type*} [
   suffices ∀ m, (rTensor M (Algebra.linearMap R S)).comp
     (TensorProduct.lid R M).symm.toLinearMap m = 1 ⊗ₜ[R] m by
     simp [← this]
-  intros; simp
+  intros; simp -/
 
 
 end Lemmas

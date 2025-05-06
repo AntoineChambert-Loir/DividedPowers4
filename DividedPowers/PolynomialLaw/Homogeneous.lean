@@ -76,11 +76,11 @@ lemma coeff_baseChange_apply (φ : S →ₐ[R] S') (f : S[X]) (p : ℕ) :
     coeff (baseChange φ f) p = φ (coeff f p) := by
   rw [baseChange, AlgHom.coe_mk, coe_eval₂RingHom]
   induction f using Polynomial.induction_on with
-  | h_C r =>
+  | C r =>
     simp only [eval₂_C, RingHom.coe_comp, RingHom.coe_coe, Function.comp_apply, coeff_C,
       apply_ite φ, map_zero]
-  | h_add f g hf hg => simp only [eval₂_add, coeff_add, hf, hg, map_add]
-  | h_monomial n r _ =>
+  | add f g hf hg => simp only [eval₂_add, coeff_add, hf, hg, map_add]
+  | monomial n r _ =>
     simp only [eval₂_mul, eval₂_C, RingHom.coe_comp, RingHom.coe_coe, Function.comp_apply,
       eval₂_X_pow, coeff_C_mul, _root_.map_mul, coeff_X_pow, apply_ite φ, _root_.map_one, map_zero]
 
@@ -203,17 +203,19 @@ lemma mem_grade (f : PolynomialLaw R M N) (p : ℕ) :
 /-- If `f` is homogeneous of degree `p`,
   then all `f.toFun S` are homogeneous of degree `p`. -/
 lemma isHomogeneousOfDegree_toFun {p : ℕ} {f : PolynomialLaw R M N} (hf : IsHomogeneousOfDegree p f)
-    (S : Type*) [CommRing S] [Algebra R S] (r : S) (m : S ⊗[R] M) :
-    f.toFun S (r • m) = r ^ p • f.toFun S m := by
-  choose n ψ  m' r' hm' hr' using PolynomialLaw.exists_lift' m r
+    (S : Type u) [CommRing S] [Algebra R S] (r : S) (m : S ⊗[R] M) :
+    f.toFun' S (r • m) = r ^ p • f.toFun' S m := by
+  sorry/- choose n ψ  m' r' hm' hr' using PolynomialLaw.exists_lift' m r
   simp only [← hm', ← hr', ← isCompat_apply, toFun_eq_toFun', TensorProduct.smul_rTensor]
-  rw [hf, ← TensorProduct.smul_rTensor, map_pow]
+  rw [hf, ← TensorProduct.smul_rTensor, map_pow] -/
 
 /-- If `f` is homogeneous of degree `p`, then `f.ground` is too.  -/
 lemma isHomogeneousOfDegree_ground {p : ℕ} {f : PolynomialLaw R M N}
     (hf : IsHomogeneousOfDegree p f) (r : R) (m : M) :
     f.ground (r • m) = r ^ p • f.ground m := by
   simp only [ground, Function.comp_apply, map_smul, TensorProduct.lid_symm_apply, hf R r]
+
+#exit -- TODO: continue.
 
 /-- The coefficients of a homogeneous polynomial map of degree `p` vanish
   outside of degree `p` -/

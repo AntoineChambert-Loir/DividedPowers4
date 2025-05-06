@@ -49,7 +49,7 @@ import DividedPowers.ForMathlib.Topology.Algebra.LinearTopology
 import DividedPowers.IdealAdd
 import DividedPowers.IdealAdd_v1 -- For comparison of definitions
 import DividedPowers.Padic
-import DividedPowers.PolynomialLaw.Basic
+--import DividedPowers.PolynomialLaw.Basic
 import DividedPowers.PolynomialLaw.Coeff
 import DividedPowers.PolynomialLaw.Homogeneous -- It has a sorry
 import DividedPowers.RatAlgebra -- In PR #22322

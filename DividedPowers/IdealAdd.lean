@@ -106,8 +106,9 @@ theorem dpow_eq (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n
   ext ⟨u, v⟩
   simp only [DividedPowers.exp'_linearMap_apply, coe_exp', coeff_exp]
 
-lemma _root_.antidiagonal_eq_filter {A : Type*} [OrderedAddCommMonoid A] [CanonicallyOrderedAdd A]
-    [LocallyFiniteOrder A] [DecidableEq A] [HasAntidiagonal A] (n : A) :
+lemma _root_.antidiagonal_eq_filter {A : Type*} [AddCommMonoid A] [PartialOrder A]
+    [IsOrderedAddMonoid A] [CanonicallyOrderedAdd A] [LocallyFiniteOrder A] [DecidableEq A]
+    [HasAntidiagonal A] (n : A) :
     antidiagonal n = (Iic n ×ˢ Iic n).filter (fun x : A × A ↦ x.1 + x.2 = n) := by
   ext ⟨i, j⟩
   simp only [mem_antidiagonal, mem_filter, mem_product, mem_Iic, iff_and_self]
@@ -516,7 +517,7 @@ theorem dpow_eq_of_mem_right (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n 
   dpow_eq_of_mem_right' hIJ hx
 
 /-- `I` as a `SubDPIdeal` of `I + K`. -/
-def subDPIdeal_left {K : Ideal A} {hK : DividedPowers K}
+noncomputable def subDPIdeal_left {K : Ideal A} {hK : DividedPowers K}
     (hIK : ∀ {n : ℕ}, ∀ a ∈ I ⊓ K, hI.dpow n a = hK.dpow n a) :
     SubDPIdeal (IdealAdd.dividedPowers hIK) where
   carrier           := I
@@ -526,7 +527,7 @@ def subDPIdeal_left {K : Ideal A} {hK : DividedPowers K}
     exact hI.dpow_mem hn hj
 
 /-- `K` as a `SubDPIdeal` of `I + K`. -/
-def subDPIdeal_right {K : Ideal A} {hK : DividedPowers K}
+noncomputable def subDPIdeal_right {K : Ideal A} {hK : DividedPowers K}
     (hIK : ∀ {n : ℕ}, ∀ a ∈ I ⊓ K, hI.dpow n a = hK.dpow n a) :
     SubDPIdeal (IdealAdd.dividedPowers hIK) where
   carrier           := K

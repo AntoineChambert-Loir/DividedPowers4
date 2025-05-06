@@ -51,7 +51,8 @@ lemma coe_exp' (hI : DividedPowers I) (a : I) : (hI.exp' a : R⟦X⟧) = hI.exp 
 open ExponentialModule
 
 /-- The `R`-linear map `hI.exp'` from `I` to `ExponentialModule R`. -/
-def exp'_linearMap (hI : DividedPowers I) : I →ₗ[R] ExponentialModule R where
+noncomputable def exp'_linearMap (hI : DividedPowers I) :
+    I →ₗ[R] ExponentialModule R where
   toFun := hI.exp'
   map_add' := fun a b ↦ by
     rw [← coe_inj, coe_exp', exp', Submodule.coe_add, coe_add, hI.exp_add a.prop b.prop,

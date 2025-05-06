@@ -698,7 +698,7 @@ variable {S : Type*} [CommRing S] [Algebra A S] (φ : R →ₐ[A] S)
 
 /-- Given `A`-algebras `R` and `S`, this is the linear map between multivariate formal
 power series induced by an `A`-algebra map on the coefficients.-/
-def linearMap : ExponentialModule R →ₗ[A] ExponentialModule S where
+noncomputable def linearMap : ExponentialModule R →ₗ[A] ExponentialModule S where
   toFun := fun f ↦
     ⟨ofMul (PowerSeries.map φ (f : R⟦X⟧)), by
       simp [mem_exponentialModule_iff]
