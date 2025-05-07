@@ -1424,149 +1424,6 @@ end CharZero
 
 section Quotient
 
-theorem DPOW_ADD {x y : DividedPowerAlgebra R M}
-    (hx : x ∈ augIdeal R M) (hy : y ∈ augIdeal R M) :
-    dpow b n (x + y) = ∑ k ∈ Finset.antidiagonal n, dpow b k.1 x * dpow b k.2 y := by
-  classical
-  let S := MvPolynomial R ℤ
-  letI : CharZero S := inferInstance
-  letI : IsDomain S := inferInstance
-  letI : Algebra S R :=
-    RingHom.toAlgebra (MvPolynomial.eval₂Hom (Int.castRingHom R) id)
-  let N := ι →₀ S
-  letI : Module S N := inferInstance
-  letI : Module S M := Module.compHom M (MvPolynomial.eval₂Hom (Int.castRingHom R) id)
-  haveI : IsScalarTower S R M :=
-    IsScalarTower.of_algebraMap_smul fun r ↦ congrFun rfl
-  let c : Basis ι S N := Finsupp.basisSingleOne
-  -- let c' : Basis (ι →₀ ℕ) S (DividedPowerAlgebra S N) := basis S N c
-  let f : N →ₗ[S] M := Finsupp.linearCombination S (fun i ↦ b i)
-  let F := FractionRing R
-  let hS : DividedPowers (augIdeal S N) := CharZero.dividedPowers c
-  have hS_ok := CharZero.dpow_ι_eq_dp c
-  have hf (i) : f (c i) = b i := by
-    simp only [c, f]
-    rw [Finsupp.coe_basisSingleOne, Finsupp.linearCombination_single, one_smul]
-  have hf' (d) :
-    (LinearMap.lift R f) (basis S N c d) = basis R M b d := by
-    simp only [basis_eq, map_finsuppProd, LinearMap.lift_apply_dp]
-    apply Finsupp.prod_congr
-    intros; rw [hf]
-  let φ : R → S := fun r ↦ if r = 0 then 0 else MvPolynomial.X r
-  have hφ (r) : algebraMap S R (φ r) = r := by
-    simp only [RingHom.algebraMap_toAlgebra, φ]
-    split_ifs with hr
-    · simp [hr]
-    · rw [MvPolynomial.coe_eval₂Hom]; simp
-  let toN (x) : DividedPowerAlgebra S N :=
-    Finsupp.linearCombination S (basis S N c) (((basis R M b).repr x).mapRange φ (by simp [φ]))
-  have htoN (x) : x = LinearMap.lift R f (toN x) := by
-    apply Basis.ext_elem (basis R M b)
-    intro d
-    simp [toN, Finsupp.linearCombination, map_finsuppSum]
-    simp [algebra_compatible_smul R, hf']
-    rw [Finsupp.sum_eq_single d]
-    · simp only [Finsupp.mapRange_apply, Finsupp.single_eq_same, mul_one, φ, S, N, c, f]
-      split_ifs with hd
-      · simp [hd]
-      · simp [RingHom.algebraMap_toAlgebra]
-    · intro _ _ hed; simp [Finsupp.single_eq_of_ne hed]
-    · simp
-  have toN_repr (x) (d) :
-      ((basis S N c).repr (toN x) d) = φ ((basis R M b).repr x d) := by
-    simp only [toN]
-    simp [Finsupp.linearCombination, Finsupp.lsum, map_finsuppSum]
-  -- not needed, one could use `toN_repr` to simplify the proof
-  have htoN_eq (x) : toN x =
-      ((basis R M b).repr x).sum fun d r ↦ φ r • basis S N c d := by
-    simp [toN, Finsupp.linearCombination, Finsupp.lsum]
-    rw [Finsupp.sum_of_support_subset]
-    · apply Finset.sum_congr rfl; simp
-    · intro d
-      simp only [Finsupp.mem_support_iff, Finsupp.mapRange_apply, not_imp_not]
-      intro hd; simp [hd, φ]
-    · simp
-  have toN_repr' (x) (d) :
-      algebraMap S R ((basis S N c).repr (toN x) d) =
-        ((basis R M b).repr x d) := by
-    simp only [toN_repr, hφ]
-  have htoNx (x) (hx : x ∈ augIdeal R M) : toN x ∈ augIdeal S N := by
-    rw [mem_augIdeal_iff_of_repr c]
-    rw [mem_augIdeal_iff_of_repr b] at hx
-    simp [toN_repr, hx, φ]
-  have htoN_dpow (x) (hx : x ∈ augIdeal R M) (n) :
-    LinearMap.lift R f (dpow c n (toN x)) = dpow b n x := by
-    rw [lift_dpow c n b f, ← htoN]
-    exact hf
-    exact htoNx x hx
-  conv_lhs => rw [htoN x, htoN y, ← map_add]
-  suffices LinearMap.lift R f (toN (x + y)) = LinearMap.lift R f (toN x + toN y) by
-    rw [← this]
-    rw [← lift_dpow c n b f (by exact hf)]
-    · -- here one uses that `dpow_add` works on `DividedPowerAlgebra S N`
-      rw [← dpow_eq hS hS_ok]
-      -- There should be a general method here:
-      -- One has two elements u v ∈ augIdeal S N such that
-      --  LinearMap.lift f R u = LinearMap.lift f R v
-      -- One needs to prove that for all n,
-      --  LinearMap.lift f R (dpow c n u) = LinearMap.lift f R (dpow c n v)
-      -- The method consists in setting w = v - u, so that v = v + u
-      -- and using that one knows enough of dpow to conclude
-      -- here, v = toN (x + y), u = toN x + toN y, w = k
-      let k := toN (x + y) - toN x - toN y
-      have hk : toN (x + y) = toN x + toN y + k := by
-        simp only [k]; abel
-      have hk' : k ∈ augIdeal S N := by
-        simp only [k]
-        rw [mem_augIdeal_iff_of_repr c]
-        simp [(mem_augIdeal_iff_of_repr c).mp (htoNx x hx), (mem_augIdeal_iff_of_repr c).mp (htoNx y hy)]
-        rw [← mem_augIdeal_iff_of_repr]
-        exact htoNx _ (Ideal.add_mem _ hx hy)
-      rw [hk, hS.dpow_add, map_sum]
-      rw [Finset.sum_eq_single (n, 0), map_mul]
-      · simp only
-        rw [hS.dpow_zero hk', map_one, mul_one]
-        rw [hS.dpow_add (htoNx x hx) (htoNx y hy), map_sum]
-        apply Finset.sum_congr rfl
-        intro d hd
-        rw [map_mul]
-        simp only [dpow_eq hS hS_ok c]
-        congr
-        simp only [lift_dpow c _ b f (by exact hf) (toN x) (htoNx x hx), ← htoN]
-        simp only [lift_dpow c _ b f (by exact hf) (toN y) (htoNx y hy), ← htoN]
-      · intro d hd
-        intro hd'
-        rw [map_mul]
-        convert mul_zero _
-        rw [dpow_eq hS hS_ok c]
-        -- this should be a general lemma, useful for all cases
-        --  if k ∈ augIdeal S N and LinearMap.lift R f k = 0,
-        --  then LinearMap.lift R f (dpow c n k) = 0 for all n ≠ 0
-        apply lift_dpow_of_lift_eq_zero c _ b f hf k hk'
-        · simp only [k, map_add, map_sub, ← htoN]; abel
-        · simp only [mem_antidiagonal] at hd
-          simp only [ne_eq, Prod.ext_iff, not_and] at hd'
-          by_cases h : d.1 = n
-          · apply hd' h
-          · intro h' ; apply h; simp [← hd, h']
-      · exact fun hn ↦ (hn (by simp [mem_antidiagonal])).elim
-      · exact Ideal.add_mem _ (htoNx x hx) (htoNx y hy)
-      · rw [mem_augIdeal_iff_of_repr c]
-        simp only [map_sub, Finsupp.coe_sub, Pi.sub_apply, k]
-        convert sub_zero _
-        · rw [← mem_augIdeal_iff_of_repr]
-          exact htoNx y hy
-        symm
-        convert sub_zero _
-        · rw [← mem_augIdeal_iff_of_repr]
-          exact htoNx x hx
-        · symm
-          rw [← mem_augIdeal_iff_of_repr]
-          exact htoNx _ (Ideal.add_mem _ hx hy)
-    · exact htoNx _ (Ideal.add_mem _ hx hy)
-  set z := x + y with hz
-  simp only [← htoN, map_add, z]
-
 noncomputable section
 
 variable (R) in
@@ -1575,8 +1432,9 @@ private def MvPoly_dividedPowers
     [DecidableEq (FractionRing (MvPolynomial R ℤ))]
     [DecidablePred fun x ↦ x ∈ augIdeal (FractionRing (MvPolynomial R ℤ))
       (CharZero.N (MvPolynomial R ℤ) ι)] :
-    DividedPowers (augIdeal (MvPolynomial R ℤ) (ι →₀ (MvPolynomial R ℤ))) :=
-  CharZero.dividedPowers Finsupp.basisSingleOne
+    DividedPowers (augIdeal (MvPolynomial R ℤ) (ι →₀ (MvPolynomial R ℤ))) := by
+  --classical
+  exact CharZero.dividedPowers Finsupp.basisSingleOne
 
 local instance : Module (MvPolynomial R ℤ) M :=
   Module.compHom M (MvPolynomial.eval₂Hom (Int.castRingHom R) id)
@@ -1684,68 +1542,30 @@ lemma lift_dpow_eq_of_lift_eq
       · intro h' ; apply h; simp [← hmn, h']
   · exact fun hn ↦ (hn (by simp [mem_antidiagonal])).elim
 
--- TODO: keep golfing
-theorem DPOW_ADD' {x y : DividedPowerAlgebra R M}
+--#count_heartbeats in
+--set_option profiler true in
+theorem DPOW_ADD {x y : DividedPowerAlgebra R M}
     (hx : x ∈ augIdeal R M) (hy : y ∈ augIdeal R M) :
     dpow b n (x + y) = ∑ k ∈ Finset.antidiagonal n, dpow b k.1 x * dpow b k.2 y := by
   classical
   set S := MvPolynomial R ℤ
   let N := ι →₀ S
   let c : Basis ι S N := Finsupp.basisSingleOne
-  let hS : DividedPowers (augIdeal S N) := MvPoly_dividedPowers R
   let f : N →ₗ[S] M := Finsupp.linearCombination S (fun i ↦ b i)
-  have hS_ok := CharZero.dpow_ι_eq_dp c
   have hf (i) : f (c i) = b i := f_apply b i
-  have hf' (d) :
-    (LinearMap.lift R f) (basis S N c d) = basis R M b d := lift_f b d
-  have hφ (r) : algebraMap S R (φ r) = r := algebraMap_φ r
-  let toN' (x) : DividedPowerAlgebra S N := toN b x
-  have htoN (x) : x = LinearMap.lift R f (toN' x) := id_eq_lift_toN b x
-  have toN_repr (x) (d) :
-      ((basis S N c).repr (toN' x) d) =  φ ((basis R M b).repr x d) := toN_repr b x d
-  have htoNx (x) (hx : x ∈ augIdeal R M) : toN' x ∈ augIdeal S N := toNx b x hx
+  have htoN (x) : x = LinearMap.lift R f (toN b x) := id_eq_lift_toN b x
+  --have htoNx (x) (hx : x ∈ augIdeal R M) : toN b x ∈ augIdeal S N := toNx b x hx
   conv_lhs => rw [htoN x, htoN y, ← map_add]
+  rw [← lift_dpow c n b f hf _ (Ideal.add_mem _ (toNx b x hx) (toNx b y hy))]
+  rw [← dpow_eq _ (CharZero.dpow_ι_eq_dp c) c, DividedPowers.dpow_add _ (toNx b x hx) (toNx b y hy)]
+  simp only [map_sum, map_mul]
+  apply Finset.sum_congr rfl
+  intro d hd
+  simp only [dpow_eq _ (CharZero.dpow_ι_eq_dp c) c]
+  rw [lift_dpow c _ b f hf _ (toNx b x hx), ← htoN x, lift_dpow c _ b f hf _ (toNx b y hy), ← htoN y]
 
-  have : LinearMap.lift R f (dpow Finsupp.basisSingleOne n (toN' x + toN' y)) =
-      LinearMap.lift R f (dpow Finsupp.basisSingleOne n (toN' (x + y))) := by
-    apply lift_dpow_eq_of_lift_eq _ n (Ideal.add_mem _ (htoNx _ hx) (htoNx _ hy))
-      (htoNx _ (Ideal.add_mem _ hx hy))
-    simp only [map_add, toN', ←  id_eq_lift_toN b, S, N]
-  rw [← lift_dpow c n b f (by exact hf) _ (Ideal.add_mem _ (htoNx x hx) (htoNx y hy))]
-  convert this
-  let k := toN' (x + y) - toN' x - toN' y
-  have hk : toN' (x + y) = toN' x + toN' y + k := by
-    simp only [k]; abel
-  have hk' : k ∈ augIdeal S N := by
-    simp only [k]
-    rw [mem_augIdeal_iff_of_repr c]
-    simp [(mem_augIdeal_iff_of_repr c).mp (htoNx x hx), (mem_augIdeal_iff_of_repr c).mp (htoNx y hy)]
-    rw [← mem_augIdeal_iff_of_repr]
-    exact htoNx _ (Ideal.add_mem _ hx hy)
-  rw [hk, dpow_add _ (Ideal.add_mem _ (htoNx _ hx) (htoNx _ hy)) hk', map_sum]
-  nth_rewrite 2 [Finset.sum_eq_single (n, 0)]
-  rw [map_mul]
-  · simp only
-    rw [dpow_zero _ hk', map_one, mul_one]
-    rw [dpow_add _ (htoNx x hx) (htoNx y hy), map_sum]
-    apply Finset.sum_congr rfl
-    intro d hd
-    rw [map_mul]
-    rw [lift_dpow _ _ b f  (by exact hf) (toN' x) (htoNx x hx), ← htoN]
-    rw [lift_dpow c _ b f (by exact hf) (toN' y) (htoNx y hy), ← htoN]
-  · intro d hd
-    intro hd'
-    rw [map_mul]
-    convert mul_zero _
-    apply lift_dpow_of_lift_eq_zero c _ b f hf k hk'
-    · simp only [k, map_add, map_sub, ← htoN]; abel
-    · simp only [mem_antidiagonal] at hd
-      simp only [ne_eq, Prod.ext_iff, not_and] at hd'
-      by_cases h : d.1 = n
-      · apply hd' h
-      · intro h' ; apply h; simp [← hd, h']
-  · intro hn
-    simp only [mem_antidiagonal, add_zero, not_true_eq_false, toN', k] at hn
+--#lint
+#count_heartbeats in
 
 theorem DPOW_MUL {n : ℕ} {a x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) :
     dpow b n (a * x) = a ^ n * dpow b n x := by
