@@ -67,7 +67,7 @@ variable {A B : Type*} [CommSemiring A] [CommSemiring B]
 /-- Given a divided power algebra `(B, J, δ)` and an injective ring morphism `f : A →+* B`, if `I` is
 an `A`-ideal such that `I.map f = J` and such that for all `n : ℕ`, `x ∈ I`, the preimage of
 `hJ.dpow n (f x)` under `f` belongs to `I`, this is the induced divided power structure on `I`. -/
-noncomputable def dividedPowers_of_injective (f : A →+* B) (hf : Injective f)
+noncomputable def _root_.DividedPowers.ofInjective (f : A →+* B) (hf : Injective f)
     (hJ : DividedPowers J) (hIJ : I.map f = J)
     (hmem : ∀ (n : ℕ) {x : A} (_ : x ∈ I), ∃ (y : A) (_ : n ≠ 0 → y ∈ I), f y = hJ.dpow n (f x)) :
     DividedPowers I where
@@ -147,12 +147,13 @@ noncomputable def dividedPowers_of_injective (f : A →+* B) (hf : Injective f)
       invFun_eq ⟨(n.uniformBell m) * b, hc⟩]
 
 -- New lemma that I do not use finally
-theorem dividedPowers_of_injective.dpow_eq (f : A →+* B) (hf : Injective f)
+theorem _root_.DividedPowers.ofInjective_dpow_eq (f : A →+* B) (hf : Injective f)
     (hJ : DividedPowers J) (hIJ : I.map f = J)
     (hmem : ∀ (n : ℕ) {x : A} (_ : x ∈ I), ∃ (y : A) (_ : n ≠ 0 → y ∈ I), f y = hJ.dpow n (f x))
     {n : ℕ} {x y : A} (hx : x ∈ I) (hx' : hJ.dpow n (f x) = f y) :
-    dividedPowers_of_injective I J f hf hJ hIJ hmem n x = y := by
-  simp [dividedPowers_of_injective, dif_pos hx, ← hf.eq_iff]
+    ofInjective I J f hf hJ hIJ hmem n x = y := by
+  simp only [ofInjective, RingHom.toMonoidHom_eq_coe, OneHom.toFun_eq_coe, MonoidHom.toOneHom_coe,
+    MonoidHom.coe_coe, dite_eq_ite, ← hf.eq_iff]
   rw [if_pos hx, hx']
   exact Function.apply_invFun_apply
 
@@ -221,7 +222,7 @@ variable [DecidablePred fun x ↦ x ∈ Ideal.span {(p : ℤ_[p])}]
 /-- The family `ℕ → Ideal.span {(p : ℤ_[p])} → ℤ_[p]` given by `dpow n x = x ^ n / n!` is a
   divided power structure on the `ℤ_[p]`-ideal `(p)`. -/
 noncomputable def dividedPowers : DividedPowers (Ideal.span {(p : ℤ_[p])}) := by
-  refine dividedPowers_of_injective (Ideal.span {(p : ℤ_[p])}) (⊤)
+  refine ofInjective (Ideal.span {(p : ℤ_[p])}) (⊤)
     PadicInt.Coe.ringHom ((Set.injective_codRestrict Subtype.property).mp fun ⦃a₁ a₂⦄ a ↦ a)
     (RatAlgebra.dividedPowers (⊤ : Ideal ℚ_[p])) ?_ ?_
   · rw [Ideal.map_span, Set.image_singleton, map_natCast]
@@ -238,7 +239,7 @@ open Function
 lemma dividedPowers_eq (n : ℕ) (x : ℤ_[p]) :
     (dividedPowers p).dpow n x =
       if hx : x ∈ Ideal.span {(p : ℤ_[p])} then ⟨dpow' p n x, dpow'_int p n hx⟩ else 0 := by
-  simp only [dividedPowers, dividedPowers_of_injective]
+  simp only [dividedPowers, ofInjective]
   split_ifs with hx
   · have hinj : Injective (PadicInt.Coe.ringHom (p := p)) :=
       (Set.injective_codRestrict Subtype.property).mp fun ⦃a₁ a₂⦄ a ↦ a
