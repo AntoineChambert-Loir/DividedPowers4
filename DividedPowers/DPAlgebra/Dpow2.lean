@@ -1286,7 +1286,8 @@ theorem lift_mem_augIdeal [DecidableEq S]
 variable [DecidableEq S] [DecidablePred (fun x ↦ x ∈ augIdeal S N)]
 
 include hf in
-theorem lift_dpow (x : DividedPowerAlgebra R M) (hx : x ∈ augIdeal R M) :
+variable {c n b f} in
+theorem lift_dpow {x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) :
     LinearMap.lift S f (dpow b n x) = dpow c n (LinearMap.lift S f x) := by
   rw [dpow_eq_of_support_subset b n hx (subset_refl _)]
   rw [dpow_eq_of_support_subset c n (lift_mem_augIdeal b c f hf x hx)
@@ -1299,7 +1300,7 @@ theorem lift_dpow_of_lift_eq_zero
     (x : DividedPowerAlgebra R M) (hx : x ∈ augIdeal R M)
     (hx' : LinearMap.lift S f x = 0) (hn : n ≠ 0) :
     LinearMap.lift S f (dpow b n x) = 0 := by
-  rw [lift_dpow b n c f hf x hx, hx', dpow_eval_zero _ hn]
+  rw [lift_dpow hf hx, hx', dpow_eval_zero _ hn]
 
 end Compare
 
@@ -1390,7 +1391,7 @@ theorem lift_dpow_eq_dpow_lift
     LinearMap.lift (S R) (f b) (dpow b n x) =
       hSN.dpow n ((LinearMap.lift (S R) (f b)) x) :=  by
   rw [dpow_eq _ ?_ c]
-  apply lift_dpow b n c (f b) (by exact hf b) x hx -- (by exact hf b) x hx
+  apply lift_dpow (hf b) hx -- (by exact hf b) x hx
   intro n x
   rw [RatAlgebra.dpow_eq_inv_fact_smul _ _ (ι_mem_augIdeal _ _ x)]
   simp only [Ring.inverse_eq_inv', DividedPowerAlgebra.ι, LinearMap.coe_mk, AddHom.coe_mk]
@@ -1548,24 +1549,21 @@ theorem DPOW_ADD {x y : DividedPowerAlgebra R M}
     (hx : x ∈ augIdeal R M) (hy : y ∈ augIdeal R M) :
     dpow b n (x + y) = ∑ k ∈ Finset.antidiagonal n, dpow b k.1 x * dpow b k.2 y := by
   classical
-  set S := MvPolynomial R ℤ
-  let N := ι →₀ S
-  let c : Basis ι S N := Finsupp.basisSingleOne
-  let f : N →ₗ[S] M := Finsupp.linearCombination S (fun i ↦ b i)
-  have hf (i) : f (c i) = b i := f_apply b i
-  have htoN (x) : x = LinearMap.lift R f (toN b x) := id_eq_lift_toN b x
-  --have htoNx (x) (hx : x ∈ augIdeal R M) : toN b x ∈ augIdeal S N := toNx b x hx
-  conv_lhs => rw [htoN x, htoN y, ← map_add]
-  rw [← lift_dpow c n b f hf _ (Ideal.add_mem _ (toNx b x hx) (toNx b y hy))]
+  -- set S := MvPolynomial R ℤ
+  -- let N := ι →₀ S
+  let c : Basis ι (MvPolynomial R ℤ) (ι →₀ _) := Finsupp.basisSingleOne
+  -- let f : N →ₗ[S] M := Finsupp.linearCombination S (fun i ↦ b i)
+  conv_lhs => rw [id_eq_lift_toN b x, id_eq_lift_toN b y, ← map_add]
+  rw [← lift_dpow (f_apply b) (Ideal.add_mem _ (toNx b x hx) (toNx b y hy))]
   rw [← dpow_eq _ (CharZero.dpow_ι_eq_dp c) c, DividedPowers.dpow_add _ (toNx b x hx) (toNx b y hy)]
   simp only [map_sum, map_mul]
   apply Finset.sum_congr rfl
   intro d hd
   simp only [dpow_eq _ (CharZero.dpow_ι_eq_dp c) c]
-  rw [lift_dpow c _ b f hf _ (toNx b x hx), ← htoN x, lift_dpow c _ b f hf _ (toNx b y hy), ← htoN y]
+  rw [lift_dpow (f_apply b) (toNx b x hx), ← id_eq_lift_toN b x,
+    lift_dpow (f_apply b) (toNx b y hy), ← id_eq_lift_toN b y]
 
 --#lint
-#count_heartbeats in
 
 theorem DPOW_MUL {n : ℕ} {a x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) :
     dpow b n (a * x) = a ^ n * dpow b n x := by
