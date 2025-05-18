@@ -1,5 +1,6 @@
 import DividedPowers.DPAlgebra.Graded.GradeZero
 import DividedPowers.Padic
+import DividedPowers.SubDPIdeal
 import Mathlib.RingTheory.DividedPowers.DPMorphism
 import Mathlib.RingTheory.MvPolynomial.Basic
 import Mathlib.RingTheory.Polynomial.Basic
@@ -1321,19 +1322,51 @@ section General
 
 noncomputable section
 
-variable {M} in
-theorem LinearMap.ker_lift_of_surjective
-    {L : Type*} [AddCommGroup L] [Module R L] [Module.Free R L]
-    {f : L →ₗ[R] M} (hf : Function.Surjective f) :
+variable {M}
+variable {L : Type*} [AddCommGroup L] [Module R L] [Module.Free R L]
+variable {f : L →ₗ[R] M}
+
+-- This is a difficult theorem, proved in [Roby-1963], Prop. IV.8
+theorem LinearMap.ker_lift_of_surjective (hf : Function.Surjective f) :
     RingHom.ker (LinearMap.lift R f) =
       Ideal.span (Set.range fun (nm : PNat × (LinearMap.ker f)) ↦ dp R nm.1 (nm.2 : L)) := by
   apply le_antisymm
   · sorry
-  · rw [span_le]
+  · -- This inclusion is easy, I prove it at once, as a safety check
+    rw [span_le]
     rintro _ ⟨⟨n, ⟨q, hq⟩⟩, rfl⟩
     simp only [LinearMap.mem_ker] at hq
     simp only [SetLike.mem_coe, RingHom.mem_ker, LinearMap.lift_apply_dp, hq, dp_null]
     simp [if_neg]
+
+variable [DecidableEq R] (hL : DividedPowers (augIdeal R L))
+
+theorem isSubDPIdeal_of_free
+    (dpow_eq_dp : ∀ (n : ℕ) (x : L), hL.dpow n (ι R L x) = dp R n x)
+    (hf : Function.Surjective f) :
+    hL.IsSubDPIdeal (RingHom.ker (LinearMap.lift R f)) := by
+  rw [LinearMap.ker_lift_of_surjective R hf]
+  rw [hL.span_isSubDPIdeal_iff]
+  · rintro n hn _ ⟨⟨⟨q, hq⟩, ⟨l, hl⟩⟩, rfl⟩
+    simp only [PNat.mk_coe]
+    rw [← dpow_eq_dp, hL.dpow_comp (Nat.ne_zero_of_lt hq) (ι_mem_augIdeal R L l)]
+    apply Ideal.mul_mem_left
+    apply Ideal.subset_span
+    rw [dpow_eq_dp]
+    exact ⟨(⟨n * q, Nat.mul_pos (Nat.zero_lt_of_ne_zero hn) hq⟩,
+      ⟨l, hl⟩), rfl⟩
+  · rintro _ ⟨⟨⟨q, hq⟩, ⟨l, hl⟩⟩, rfl⟩
+    simp only [PNat.mk_coe, SetLike.mem_coe]
+    exact dp_mem_augIdeal R L hq l
+
+/- To prove this, one needs to generalize
+  to any surjective ring morphism what is done for quotients
+  by a sub-DP-ideal, for the morphism `Ideal.Quotient.mk J`.  -/
+/-- The divided power structure on `augIdeal R M` induced by a
+presentation of `M` as a quotient of a free module -/
+def dividedPowers_of_free_quotient (hf : Function.Surjective f) :
+    DividedPowers (augIdeal R M) := by
+  sorry
 
 end
 
