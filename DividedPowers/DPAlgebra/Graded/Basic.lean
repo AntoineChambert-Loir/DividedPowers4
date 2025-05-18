@@ -139,37 +139,6 @@ theorem mem_grade_iff' {n : ℕ} (p : DividedPowerAlgebra R M) :
       IsWeightedHomogeneous Prod.fst q.1 n ∧ (@mk R M) q.1 = p :=
   ⟨fun hp ↦ Submodule.coe_mk p hp ▸ surjective_of_supported' _, fun ⟨q, hq, hpq⟩ ↦  ⟨q, hq, hpq⟩⟩
 
-variable (R M) in
-/-- The canonical linear map `M →ₗ[R] DividedPowerAlgebra R M`. -/
-def ι : M →ₗ[R] DividedPowerAlgebra R M := {
-  toFun     := fun m ↦ dp R 1 m
-  map_add'  := fun x y ↦ by
-    simp only [dp_add]
-    simp only [Nat.antidiagonal_succ, zero_add, antidiagonal_zero, map_singleton,
-      Embedding.coe_prodMap, Embedding.coeFn_mk, Prod.map_apply, Nat.reduceSucc,
-      Embedding.refl_apply, cons_eq_insert, mem_singleton, Prod.mk.injEq, and_self,
-      not_false_eq_true, sum_insert, sum_singleton]
-    simp only [mem_singleton, Prod.mk.injEq, zero_ne_one, one_ne_zero, and_self, not_false_eq_true,
-      sum_insert, dp_zero, one_mul, sum_singleton, mul_one, add_comm]
-  map_smul' := fun r x ↦ by
-    simp only [dp_smul, pow_one, RingHom.id_apply] }
-
-theorem ι_def (m : M) : ι R M m = dp R 1 m := rfl
-
-@[simp] theorem ι_comp_lift {A : Type*} [CommRing A] [Algebra R A] {I : Ideal A}
-    (hI : DividedPowers I) {φ : M →ₗ[R] A} (hφ : ∀ (m : M), φ m ∈ I) :
-    (DividedPowerAlgebra.lift hI φ hφ).toLinearMap.comp (ι R M) = φ := by
-  ext m
-  simp only [LinearMap.coe_comp, Function.comp_apply, AlgHom.toLinearMap_apply, ι_def,
-    lift_apply_dp]
-  exact hI.dpow_one (hφ m)
-
-@[simp] theorem lift_ι_apply {A : Type*} [CommRing A] [Algebra R A] {I : Ideal A}
-    (hI : DividedPowers I) {φ : M →ₗ[R] A} (hφ : ∀ m, φ m ∈ I) (x : M) :
-    lift hI φ hφ (ι R M x) = φ x := by
-  conv_rhs => rw [← ι_comp_lift hI hφ]
-  rfl
-
 /-- We say that a divided power algebra has a *graded* divided power structure if for every `n : ℕ`,
   `hI.dpow n` sends elements of `𝒜 i` to elements of `𝒜 (n • i)`.  -/
 def HasGradedDpow {A : Type*} [CommSemiring A] [Algebra R A]

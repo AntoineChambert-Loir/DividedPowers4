@@ -186,7 +186,7 @@ theorem onDPAlgebra_unique [DecidableEq R] (h h' : DividedPowers (augIdeal R M))
   rw [← h1 q m, h.dpow_comp (ne_of_gt hq) (ι_mem_augIdeal R M m),
     h'.dpow_comp (ne_of_gt hq) (ι_mem_augIdeal R M m), h1 _ m, h1' _ m]
 
-section Free
+namespace Free
 
 /-- The basis of the graded part of `DividedPowerAlgebra R M` associated with a basis of `M`. -/
 noncomputable def basis_grade {ι : Type*} (b : Basis ι R M) (n : ℕ) :
@@ -1312,6 +1312,10 @@ def dividedPowers : DividedPowers (augIdeal R M) where
   mul_dpow := mul_dpow b
   dpow_comp := dpow_comp b
 
+theorem dpow_eq_dp (n : ℕ) (x : M) :
+    (dividedPowers b).dpow n (DividedPowerAlgebra.ι R M x) = dp R n x := by
+  sorry
+
 end
 
 end Quotient
@@ -1366,7 +1370,81 @@ theorem isSubDPIdeal_of_free
 presentation of `M` as a quotient of a free module -/
 def dividedPowers_of_free_quotient (hf : Function.Surjective f) :
     DividedPowers (augIdeal R M) := by
+  choose ι hι using Module.Free.exists_set R L
+  let b := Classical.choice hι
+  have : DecidableEq ↑ι := Classical.typeDecidableEq ↑ι
+  have : DecidablePred (fun x ↦ x ∈ augIdeal R L) := by
+    sorry
+  let hL : DividedPowers (augIdeal R L) := Free.dividedPowers b
+  have hK : hL.IsSubDPIdeal (RingHom.ker (LinearMap.lift R f)) := by
+    refine isSubDPIdeal_of_free R hL ?_ hf
+    sorry
   sorry
+
+theorem dividedPowers_of_free_quotient_apply
+    (hf : Function.Surjective f)
+    (n : ℕ) {x : DividedPowerAlgebra R L} (hx : x ∈ augIdeal R L) :
+    dividedPowers_of_free_quotient R hf n (LinearMap.lift R f x) =
+      LinearMap.lift R f (hL.dpow n x) :=
+  sorry
+
+theorem dividedPowers_of_free_quotient_apply_ι
+    (hf : Function.Surjective f) (x : L) :
+    dividedPowers_of_free_quotient R hf n (LinearMap.lift R f (ι R L x)) =
+      dp R n (f x) := by
+  choose ι hι using Module.Free.exists_set R L
+  let b := Classical.choice hι
+  have : DecidableEq ↑ι := Classical.typeDecidableEq ↑ι
+  have : DecidablePred (fun x ↦ x ∈ augIdeal R L) := by
+    sorry
+  let hL : DividedPowers (augIdeal R L) := Free.dividedPowers b
+  rw [dividedPowers_of_free_quotient_apply R hL hf n (ι_mem_augIdeal R L x)]
+  sorry
+
+variable [DecidableEq M]
+
+variable (M) in
+/-- The canonical divided powers structure on a divided power algebra -/
+def dividedPowers : DividedPowers (augIdeal R M) := by
+  let L := M →₀ R
+  let b : Basis M R L := Finsupp.basisSingleOne
+  -- This is the stuff that will be an instance
+  have : DecidablePred (fun x ↦ x ∈ augIdeal R L) := by
+    (expose_names; exact fun a ↦ inst_6 ((algebraMapInv R L) a) 0)
+  let hL : DividedPowers (augIdeal R L) := Free.dividedPowers b
+  let f : L →ₗ[R] M := Finsupp.linearCombination R id
+  have hf : Function.Surjective f := fun m ↦ by
+    use Finsupp.single m 1
+    simp only [f]
+    rw [Finsupp.linearCombination_single]
+    simp
+  exact dividedPowers_of_free_quotient R hf
+
+theorem dpow_eq_dp (n : ℕ) (x : M) :
+    (dividedPowers R M).dpow n (ι R M x) = dp R n x := by
+  simp only [dividedPowers]
+  set L := M →₀ R
+  set b : Basis M R L := Finsupp.basisSingleOne
+  -- This is the stuff that will be an instance
+  have : DecidablePred (fun x ↦ x ∈ augIdeal R L) := by
+    (expose_names; exact fun a ↦ inst_3 ((algebraMapInv R L) a) 0)
+  set hL : DividedPowers (augIdeal R L) := Free.dividedPowers b
+  set f : L →ₗ[R] M := Finsupp.linearCombination R id
+  set hf : Function.Surjective f := fun m ↦ by
+    use Finsupp.single m 1
+    simp only [f]
+    rw [Finsupp.linearCombination_single]
+    simp
+  change (dividedPowers_of_free_quotient R hf).dpow n ((ι R M) x) = dp R n x
+  have hx : f (b x) = x := by
+    simp only [b, f]
+    change  Finsupp.linearCombination R id (Finsupp.single x 1) = x
+    simp
+  have hx' : ι R M x = LinearMap.lift R f (ι R L (b x)) := by
+    rw [@LinearMap.lift_ι_apply, hx]
+  rw [hx']
+  rw [dividedPowers_of_free_quotient_apply R (Free.dividedPowers b) hf n (ι_mem_augIdeal _ _ _)]
+  rw [Free.dpow_eq_dp, LinearMap.lift_apply_dp, hx]
 
 end
 

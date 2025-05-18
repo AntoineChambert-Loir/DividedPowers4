@@ -8,7 +8,7 @@ import DividedPowers.DPAlgebra.Misc
 
 noncomputable section
 
-open Finset Ideal Ideal.Quotient MvPolynomial RingQuot
+open Finset Ideal Ideal.Quotient MvPolynomial RingQuot Function
 
 /-!
 # The divided power algebra of a module.
@@ -137,6 +137,23 @@ theorem natFactorial_mul_dp_eq (n : ℕ) (x : M) :
     simp only [nsmul_eq_mul, ← mul_assoc, ← Nat.cast_mul]
     simp only [Nat.choose_succ_self_right, mul_comm _ (n+1), Nat.factorial_succ]
 
+variable (M) in
+/-- The canonical linear map `M →ₗ[R] DividedPowerAlgebra R M`. -/
+def ι : M →ₗ[R] DividedPowerAlgebra R M := {
+  toFun     := fun m ↦ dp R 1 m
+  map_add'  := fun x y ↦ by
+    simp only [dp_add]
+    simp only [Nat.antidiagonal_succ, zero_add, antidiagonal_zero, map_singleton,
+      Embedding.coe_prodMap, Embedding.coeFn_mk, Prod.map_apply, Nat.reduceSucc,
+      Embedding.refl_apply, cons_eq_insert, mem_singleton, Prod.mk.injEq, and_self,
+      not_false_eq_true, sum_insert, sum_singleton]
+    simp only [mem_singleton, Prod.mk.injEq, zero_ne_one, one_ne_zero, and_self, not_false_eq_true,
+      sum_insert, dp_zero, one_mul, sum_singleton, mul_one, add_comm]
+  map_smul' := fun r x ↦ by
+    simp only [dp_smul, pow_one, RingHom.id_apply] }
+
+theorem ι_def (m : M) : ι R M m = dp R 1 m := rfl
+
 variable {R}
 
 theorem algHom_ext_iff {A : Type*} [CommSemiring A] [Algebra R A]
@@ -250,6 +267,14 @@ theorem lift_unique {f : DividedPowerAlgebra R M →ₐ[R] A}
     (hf : ∀ n m, f (dp R n m) = hI.dpow n (φ  m)) : f = lift hI φ hφ :=
   algHom_ext (fun _ _ ↦ by rw [lift_apply_dp, hf])
 
+@[simp]
+theorem lift_ι_apply (m : M) : lift hI φ hφ (ι R M m) = φ m := by
+  simp [ι_def, hI.dpow_one (hφ m)]
+
+@[simp]
+theorem ι_comp_lift : (lift hI φ hφ).toLinearMap.comp (ι R M) = φ := by
+  ext; simp
+
 end UniversalProperty
 
 section Functoriality
@@ -296,6 +321,16 @@ theorem LinearMap.lift_apply (p : MvPolynomial (ℕ × M) R) :
 theorem LinearMap.lift_apply_dp (n : ℕ) (a : M) :
     LinearMap.lift S f (dp R n a) = dp S n (f a) := by
   rw [LinearMap.lift, lift'_apply_dp]
+
+@[simp]
+theorem LinearMap.lift_ι_apply (m : M) :
+    LinearMap.lift S f (ι R M m) = ι S N (f m) := by
+  simp [ι_def, LinearMap.lift_apply_dp]
+
+theorem LinearMap.lift_comp_ι :
+    (LinearMap.lift S f).toLinearMap.comp (ι R M) =
+      ((ι S N).restrictScalars R).comp f := by
+  ext; simp
 
 theorem LinearMap.lift_surjective_of
     {f : M →ₗ[R] N} (hf : Function.Surjective f) :
