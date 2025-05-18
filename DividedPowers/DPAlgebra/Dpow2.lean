@@ -1145,6 +1145,8 @@ theorem dpow_ι_eq_dp (n: ℕ) (x : M) :
 
 end CharZero
 
+end CharZero
+
 section Quotient
 
 noncomputable section
@@ -1312,3 +1314,30 @@ def dividedPowers : DividedPowers (augIdeal R M) where
 end
 
 end Quotient
+
+end Free
+
+section General
+
+noncomputable section
+
+variable {M} in
+theorem LinearMap.ker_lift_of_surjective
+    {L : Type*} [AddCommGroup L] [Module R L] [Module.Free R L]
+    {f : L →ₗ[R] M} (hf : Function.Surjective f) :
+    RingHom.ker (LinearMap.lift R f) =
+      Ideal.span (Set.range fun (nm : PNat × (LinearMap.ker f)) ↦ dp R nm.1 (nm.2 : L)) := by
+  apply le_antisymm
+  · sorry
+  · rw [span_le]
+    rintro _ ⟨⟨n, ⟨q, hq⟩⟩, rfl⟩
+    simp only [LinearMap.mem_ker] at hq
+    simp only [SetLike.mem_coe, RingHom.mem_ker, LinearMap.lift_apply_dp, hq, dp_null]
+    simp [if_neg]
+
+end
+
+
+end General
+
+end DividedPowerAlgebra

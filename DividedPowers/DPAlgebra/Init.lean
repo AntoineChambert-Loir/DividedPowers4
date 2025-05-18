@@ -297,6 +297,25 @@ theorem LinearMap.lift_apply_dp (n : ℕ) (a : M) :
     LinearMap.lift S f (dp R n a) = dp S n (f a) := by
   rw [LinearMap.lift, lift'_apply_dp]
 
+theorem LinearMap.lift_surjective_of
+    {f : M →ₗ[R] N} (hf : Function.Surjective f) :
+    Function.Surjective (DividedPowerAlgebra.LinearMap.lift R f) := by
+  rw [← AlgHom.range_eq_top, ← Algebra.map_top (LinearMap.lift R f)]
+  rw [eq_top_iff]
+  rw [← (AlgHom.range_eq_top mk).mpr mk_surjective, ← Algebra.map_top]
+  rw [(Subalgebra.gc_map_comap _).le_iff_le]
+  rw [← MvPolynomial.adjoin_range_X]
+  rw [Algebra.adjoin_le_iff]
+  intro _
+  simp only [Set.mem_range, Prod.exists]
+  rintro ⟨n, m, rfl⟩
+  obtain ⟨l, rfl⟩ := hf m
+  simp [Algebra.map_top, Subalgebra.coe_comap, AlgHom.coe_range, Set.mem_preimage,
+    Set.mem_range]
+  use dp R n l
+  simp [LinearMap.lift_apply_dp]
+  rfl
+
 end IsScalarTower
 
 end Functoriality
