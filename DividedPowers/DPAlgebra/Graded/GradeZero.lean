@@ -142,6 +142,11 @@ theorem mem_augIdeal_iff (f : DividedPowerAlgebra R M) :
     f ∈ augIdeal R M ↔ algebraMapInv R M f = 0 := by
   rw [augIdeal, RingHom.mem_ker]
 
+instance : DecidablePred (fun x ↦ x ∈ augIdeal R M) := by
+    intro x
+    simp only [mem_augIdeal_iff]
+    infer_instance
+
 /-- For `Nontrivial R`, `dp R n m` is contained in the augmentation ideal iff `0 < n`. -/
 theorem dp_mem_augIdeal_iff [Nontrivial R] (n : ℕ) (m : M) :
     dp R n m ∈ augIdeal R M ↔ 0 < n := by
@@ -280,6 +285,53 @@ theorem lift_mem_of_mem_augIdeal {A : Type*} [CommRing A] [Algebra R A] {I : Ide
     (hI : DividedPowers I) (φ : M →ₗ[R] A) (hφ : ∀ m, φ m ∈ I) (x : DividedPowerAlgebra R M)
     (hx : x ∈ augIdeal R M) : lift hI φ hφ x ∈ I :=
   (lift_augIdeal_le R M hI φ hφ) (mem_map_of_mem _ hx)
+
+section
+
+variable (S : Type*) [CommRing S] [Algebra R S]
+  {N : Type*} [AddCommGroup N] [Module R N] [Module S N] [IsScalarTower R S N]
+  (f : M →ₗ[R] N)
+  [DecidableEq S]
+
+theorem LinearMap.augIdeal_map_lift_le :
+    (augIdeal R M).map (LinearMap.lift S f) ≤ augIdeal S N := by
+  simp only [augIdeal_eq_span, Ideal.map_span, Ideal.span_le, SetLike.mem_coe]
+  rintro y ⟨x, ⟨n, hn, m, _, rfl⟩, rfl⟩
+  simp only [LinearMap.lift_apply_dp]
+  apply Ideal.subset_span
+  exact ⟨ n, hn, f m, Set.mem_univ _, rfl⟩
+
+variable {R M f} in
+theorem LinearMap.lift_mem_augIdeal_iff {x : DividedPowerAlgebra R M} :
+    LinearMap.lift R f x ∈ augIdeal R N ↔ x ∈ augIdeal R M := by
+  constructor
+  · intro hx
+    rw [mem_augIdeal_iff]
+    set r := algebraMapInv R M x
+    set y := x - algebraMap R _ r
+    have hy : y ∈ augIdeal R M := by
+      simp [y, mem_augIdeal_iff, r]
+    have hx' : x = y + algebraMap R _ r := by simp [y]
+    simp only [hx', map_add, AlgHom.commutes] at hx
+    suffices LinearMap.lift R f y ∈ augIdeal R N by
+      rw [mem_augIdeal_iff] at this
+      rw [mem_augIdeal_iff, map_add, this, zero_add] at hx
+      simpa only [AlgHom.commutes, Algebra.id.map_eq_id, RingHom.id_apply] using hx
+    exact LinearMap.augIdeal_map_lift_le R M R f (Ideal.mem_map_of_mem _ hy)
+  · intro hx
+    exact LinearMap.augIdeal_map_lift_le R M R f (Ideal.mem_map_of_mem _ hx)
+
+theorem LinearMap.augIdeal_map_lift
+    (hf : Function.Surjective f) :
+    (augIdeal R M).map (LinearMap.lift R f) = augIdeal R N := by
+  apply le_antisymm
+  · exact LinearMap.augIdeal_map_lift_le R M R f
+  · intro x hx
+    obtain ⟨y, rfl⟩ := LinearMap.lift_surjective_of hf x
+    apply Ideal.mem_map_of_mem
+    rwa [LinearMap.lift_mem_augIdeal_iff] at hx
+
+end
 
 /-- The restriction of `algebraMapInv R M ` to `grade R M 0`, as a ring isomorphism from
   `grade R M 0` to `R`. -/

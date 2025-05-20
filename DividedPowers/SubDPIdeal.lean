@@ -628,7 +628,7 @@ namespace OfSurjective
 
 -- Define divided powers on a quotient map via a surjective morphism
 variable {B : Type*} [CommRing B] (f : A →+* B)
-
+    (J : Ideal B)
 
 /-- The definition of divided powers on the codomain `B` of a surjective ring homomorphism
   from a ring `A` with divided powers `hI`.  This definition is tagged as noncomputable
@@ -637,7 +637,9 @@ variable {B : Type*} [CommRing B] (f : A →+* B)
 noncomputable def dpow : ℕ → B → B := fun n ↦
   Function.extend (fun a ↦ f a : I → B) (fun a ↦ f (hI.dpow n a) : I → B) 0
 
-variable (hf : Function.Surjective f) (hIf : IsSubDPIdeal hI (RingHom.ker f ⊓ I))
+variable (hf : Function.Surjective f)
+  (hIJ : J = I.map f)
+  (hIf : IsSubDPIdeal hI (RingHom.ker f ⊓ I))
 
 variable {f}
 
@@ -657,64 +659,74 @@ open Ideal
 
 /-- When `f.ker ⊓ I` is a sub-dp-ideal of `I`, this is the induced divided power structure on
   the ideal `I.map f` of the target -/
-noncomputable def dividedPowers : DividedPowers (I.map f) where
+noncomputable def dividedPowers : DividedPowers J where
   dpow := dpow hI f
   dpow_null n {x} hx' := by
     classical
     rw [dpow, Function.extend_def, dif_neg, Pi.zero_apply]
     rintro ⟨⟨a, ha⟩, rfl⟩
+    rw [hIJ] at hx'
     exact hx' (apply_coe_mem_map f I ⟨a, ha⟩)
   dpow_zero {x} hx := by
+    rw [hIJ] at hx
     obtain ⟨a, ha, rfl⟩ := (mem_map_iff_of_surjective f hf).mp hx
     rw [dpow_apply' hI hIf ha, hI.dpow_zero ha, map_one]
   dpow_one {x} hx := by
+    rw [hIJ] at hx
     obtain ⟨a, ha, hax⟩ := (mem_map_iff_of_surjective f hf).mp hx
     rw [← hax, dpow_apply' hI hIf ha, hI.dpow_one ha]
   dpow_mem {n x} hn hx := by
+    rw [hIJ] at hx ⊢
     obtain ⟨a, ha, rfl⟩ := (mem_map_iff_of_surjective f hf).mp hx
     rw [dpow_apply' hI hIf ha]
     exact mem_map_of_mem _ (hI.dpow_mem hn ha)
   dpow_add hx hy := by
+    rw [hIJ] at hx hy
     obtain ⟨a, ha, rfl⟩ := (mem_map_iff_of_surjective f hf).mp hx
     obtain ⟨b, hb, rfl⟩ := (mem_map_iff_of_surjective f hf).mp hy
     rw [← map_add, dpow_apply' hI hIf (I.add_mem ha hb), hI.dpow_add ha hb, map_sum,
       Finset.sum_congr rfl]
     · exact fun k _ ↦ by rw [dpow_apply' hI hIf ha, dpow_apply' hI hIf hb, ← _root_.map_mul]
   dpow_mul {n x y} hy := by
+    rw [hIJ] at hy
     obtain ⟨a, rfl⟩ := hf x
     obtain ⟨b, hb, rfl⟩ := (mem_map_iff_of_surjective f hf).mp hy
     rw [dpow_apply' hI hIf hb, ← _root_.map_mul, ← map_pow,
       dpow_apply' hI hIf (mul_mem_left I a hb), hI.dpow_mul hb, _root_.map_mul]
   mul_dpow hx := by
+    rw [hIJ] at hx
     obtain ⟨a, ha, rfl⟩ := (mem_map_iff_of_surjective f hf).mp hx
     simp only [dpow_apply' hI hIf ha]
     rw [← _root_.map_mul, hI.mul_dpow ha, _root_.map_mul, map_natCast]
   dpow_comp hn hx := by
+    rw [hIJ] at hx
     obtain ⟨a, ha, rfl⟩ := (mem_map_iff_of_surjective f hf).mp hx
     simp only [dpow_apply' hI hIf, ha, hI.dpow_mem hn ha]
     rw [hI.dpow_comp hn ha, _root_.map_mul, map_natCast]
 
-theorem dpow_def {n : ℕ} {x : B} : (dividedPowers hI hf hIf).dpow n x = dpow hI f n x := rfl
+theorem dpow_def {n : ℕ} {x : B} :
+    (dividedPowers hI J hf hIJ hIf).dpow n x = dpow hI f n x := rfl
 
 theorem dpow_apply {n : ℕ} {a : A} (ha : a ∈ I) :
-    (dividedPowers hI hf hIf).dpow n (f a) = f (hI.dpow n a) := by
+    (dividedPowers hI J hf hIJ hIf).dpow n (f a) = f (hI.dpow n a) := by
   rw [dpow_def, dpow_apply' hI hIf ha]
 
-theorem isDPMorphism : IsDPMorphism hI (dividedPowers hI hf hIf) f :=
-  ⟨le_refl (Ideal.map f I), fun a ha ↦ by rw [dpow_apply hI hf hIf ha]⟩
+theorem isDPMorphism :
+    IsDPMorphism hI (dividedPowers hI J hf hIJ hIf) f :=
+  ⟨le_of_eq hIJ.symm, fun a ha ↦ by rw [dpow_apply hI J hf hIJ hIf ha]⟩
 
-theorem dividedPowers_unique (hquot : DividedPowers (I.map f)) (hm : DividedPowers.IsDPMorphism hI hquot f) :
-    hquot = dividedPowers hI hf hIf :=
+theorem dividedPowers_unique (hquot : DividedPowers J) (hm : DividedPowers.IsDPMorphism hI hquot f) :
+    hquot = dividedPowers hI J hf hIJ hIf :=
   ext _ _ fun n x hx ↦ by
+    rw [hIJ] at hx
     obtain ⟨a, ha, rfl⟩ := (mem_map_iff_of_surjective f hf).mp hx
-    rw [hm.2 a ha, dpow_apply hI hf hIf ha]
+    rw [hm.2 a ha, dpow_apply hI J hf hIJ hIf ha]
 
 end OfSurjective
 
 end OfSurjective
 
 variable {J : Ideal A} (hIJ : IsSubDPIdeal hI (J ⊓ I))
-
 
 /-- The definition of divided powers on `A ⧸ J`.
   Tagged as noncomputable because it makes use of `Function.extend`, but under
@@ -731,24 +743,24 @@ private theorem isSubDPIdeal_aux (hIJ : IsSubDPIdeal hI (J ⊓ I)) :
 /-- When `I ⊓ J` is a sub-dp-ideal of `I`, this is the divided power structure on the ideal
  `I(A⧸J)` of the quotient. -/
 noncomputable def dividedPowers : DividedPowers (I.map (Ideal.Quotient.mk J)) :=
-  DividedPowers.Quotient.OfSurjective.dividedPowers hI Ideal.Quotient.mk_surjective
-    (isSubDPIdeal_aux hI hIJ)
+  DividedPowers.Quotient.OfSurjective.dividedPowers
+    hI _ Ideal.Quotient.mk_surjective (refl _) (isSubDPIdeal_aux hI hIJ)
 
 /-- Divided powers on the quotient are compatible with quotient map -/
 theorem dpow_apply {n : ℕ} {a : A} (ha : a ∈ I) :
     (dividedPowers hI hIJ).dpow n (Ideal.Quotient.mk J a) = (Ideal.Quotient.mk J) (hI.dpow n a) :=
-  DividedPowers.Quotient.OfSurjective.dpow_apply hI Ideal.Quotient.mk_surjective
-    (isSubDPIdeal_aux hI hIJ) ha
+  DividedPowers.Quotient.OfSurjective.dpow_apply
+    hI _ Ideal.Quotient.mk_surjective (refl _) (isSubDPIdeal_aux hI hIJ) ha
 
 theorem isDPMorphism : hI.IsDPMorphism (dividedPowers hI hIJ) (Ideal.Quotient.mk J) :=
-  DividedPowers.Quotient.OfSurjective.isDPMorphism hI Ideal.Quotient.mk_surjective
-    (isSubDPIdeal_aux hI hIJ)
+  DividedPowers.Quotient.OfSurjective.isDPMorphism
+    hI _ Ideal.Quotient.mk_surjective (refl _) (isSubDPIdeal_aux hI hIJ)
 
 theorem dividedPowers_unique (hquot : DividedPowers (I.map (Ideal.Quotient.mk J)))
     (hm : DividedPowers.IsDPMorphism hI hquot (Ideal.Quotient.mk J)) :
     hquot = dividedPowers hI hIJ :=
-  DividedPowers.Quotient.OfSurjective.dividedPowers_unique hI Ideal.Quotient.mk_surjective
-    (isSubDPIdeal_aux hI hIJ) hquot hm
+  DividedPowers.Quotient.OfSurjective.dividedPowers_unique
+    hI _ Ideal.Quotient.mk_surjective (refl _) (isSubDPIdeal_aux hI hIJ) hquot hm
 
 end Quotient
 
