@@ -1,7 +1,7 @@
 import DividedPowers.ForMathlib.RingTheory.SubmoduleMem
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.MvPolynomial
 import Mathlib.LinearAlgebra.Basis.Basic
-import Mathlib.RingTheory.PolynomialLaw.Basic
+import DividedPowers.PolynomialLaw.Basic2
 
 universe u v w uM uN uι
 
@@ -74,14 +74,16 @@ noncomputable section LocFinsupp
 
 open Finsupp Function
 
-variable {R : Type u} [CommSemiring R] {M : Type*} [AddCommGroup M] [Module R M]
+variable {R : Type u} [CommRing R] {M : Type*} [AddCommGroup M] [Module R M]
   {N : Type*} [AddCommGroup N] [Module R N]
 
 /- **MI** : I replaced `[CommRing S]` by `[CommSemiring S]`. -/
+/- **ACL**: apparently, that doesn't work anymore… -/
+
 /-- A family `f : ι → M →ₚₗ[R] N` of polynomial maps has locally finite support
   if, for all `S`, `fun i ↦ (f i).toFun' S` has finite support` -/
 def LocFinsupp {ι : Type*} (f : ι → PolynomialLaw R M N) :=
-  ∀ (S : Type u) [CommSemiring S] [Algebra R S] (m : S ⊗[R] M),
+  ∀ (S : Type u) [CommRing S] [Algebra R S] (m : S ⊗[R] M),
     (fun i => (f i).toFun' S m).support.Finite
 
 theorem LocFinsupp_add {ι : Type*} {f g : ι → M →ₚₗ[R] N} (hf : LocFinsupp f) (hg : LocFinsupp g) :
@@ -172,8 +174,9 @@ section Coefficients
 variable {R : Type u} [CommSemiring R] {M : Type uM} [AddCommGroup M]  [Module R M]
   {N : Type uN} [AddCommGroup N] [Module R N]
 
---variable {ι : Type uι} /- [DecidableEq ι]   -/
-variable {ι : Type u} /- **MI** : I changed this so that `generize.toFun` works.-/
+variable {ι : Type uι} /- [DecidableEq ι]   -/
+-- variable {ι : Type u}
+/- **MI** : I changed this so that `generize.toFun` works.-/
 section Fintype
 
 variable [Fintype ι]
@@ -410,21 +413,21 @@ theorem ground_image_eq_coeff_sum (m : ι → M) (f : PolynomialLaw R M N) (r : 
 theorem ground_image_eq_coeff_sum_one (m : M) (f : PolynomialLaw R M N) (r : R) :
     ground f (r • m) = (coeff (const (ULift Unit) m) f).sum (fun k n => r ^ (k 0) • n) := by
   suffices r • m = univ.sum fun i ↦ (const Unit r) i • (const Unit m i) by
-   sorry
-   /-  intros
-    rw [this, ground_image_eq_coeff_sum]
-    exact sum_congr rfl (fun i _ => by simp only [univ_unique, const_apply, prod_singleton])  -/
+    rw [this]
+    classical
+    have := f.ground_image_eq_coeff_sum (R := R) (const Unit m) (const Unit r)
+    exact sum_congr rfl (fun i _ => by simp only [univ_unique, const_apply, prod_singleton])
   simp only [univ_unique, const_apply, sum_const, card_singleton, _root_.one_smul]
 
 -- **MI**: I do not know how to solve this universe issue.
-/- theorem ground_image_eq_coeff_sum_two (r₁ r₂ : R) (m₁ m₂ : M) (f : PolynomialLaw R M N) :
+theorem ground_image_eq_coeff_sum_two (r₁ r₂ : R) (m₁ m₂ : M) (f : PolynomialLaw R M N) :
     ground f (r₁ • m₁ + r₂ • m₂) =
       (coeff (R := R) (![m₁, m₂]) f).sum fun k n =>
         (univ.prod (fun i => (![r₁, r₂]) i ^ (k i)) • n) := by
   suffices r₁ • m₁ + r₂ • m₂ = univ.sum fun i ↦ (![r₁, r₂]) i • (![m₁, m₂]) i  by
     rw [this, ground_image_eq_coeff_sum]
   simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Fin.sum_univ_two, Fin.isValue,
-    Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons] -/
+    Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons]
 
 variable {S : Type v} [CommSemiring S] [Algebra R S]
 

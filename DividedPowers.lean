@@ -1,4 +1,5 @@
 --import DividedPowers.Basic -- In PR #15657
+import DividedPowers.Basic2 -- the rest
 import DividedPowers.BasicLemmas
 import DividedPowers.DPAlgebra.BaseChange -- It uses sorry
 -- import DividedPowers.DPAlgebra.Compatible -- TODO: uncomment  -- It uses sorry (depended on AlgebraComp)
