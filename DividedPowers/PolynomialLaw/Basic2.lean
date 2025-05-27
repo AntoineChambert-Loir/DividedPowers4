@@ -7,6 +7,8 @@ import Mathlib.RingTheory.Ideal.Quotient.Operations
 
 import Mathlib.Logic.Small.Set
 
+import Mathlib.RingTheory.PolynomialLaw.Basic
+
 /-! # Polynomial laws on modules
 
 Let `M` and `N` be a modules over a commutative ring `R`.
@@ -315,7 +317,7 @@ open MvPolynomial
 variable (R : Type u) [CommRing R] (M : Type*) [AddCommGroup M] [Module R M] (N : Type*)
   [AddCommGroup N] [Module R N]
 
--- BP
+/-
  /-- A polynomial map `M →ₚ[R] N` between `R`-modules is a functorial family of maps
    `S ⊗[R] M → S ⊗[R] N`, for all `R`-algebras `S`. -/
 @[ext]
@@ -327,16 +329,18 @@ structure PolynomialLaw  where
 
 /-- `M →ₚ[R] N` is the type of `R`-polynomial maps from `M` to `N`. -/
 notation:25 M " →ₚ[" R:25 "] " N:0 => PolynomialLaw R M N
+-/
 
 namespace PolynomialLaw
 
-variable (f : M →ₚ[R] N)
+variable (f : M →ₚₗ[R] N)
 
-variable {R M N f} in
+/- variable {R M N f} in
 theorem isCompat_apply' {S : Type u} [CommRing S] [Algebra R S] {S' : Type u} [CommRing S']
     [Algebra R S'] (φ : S →ₐ[R] S') (x : S ⊗[R] M) :
     (φ.toLinearMap.rTensor N) ((f.toFun' S) x) = (f.toFun' S') (φ.toLinearMap.rTensor M x) := by
   simpa only using _root_.congr_fun (f.isCompat' φ) x
+-/
 
 section Lift
 
@@ -638,32 +642,35 @@ end Lift
 section Module
 
 variable {R : Type u} [CommRing R] {M : Type*} [AddCommGroup M] [Module R M]
-  {N : Type*} [AddCommGroup N] [Module R N] (r a b : R) (f g : M →ₚ[R] N)
+  {N : Type*} [AddCommGroup N] [Module R N] (r a b : R) (f g : M →ₚₗ[R] N)
 
-instance : Zero (M →ₚ[R] N) :=
+/-
+instance : Zero (M →ₚₗ[R] N) :=
 ⟨{ toFun'    := fun _ => 0
    isCompat' := fun _ => rfl }⟩
 
 @[simp]
 theorem zero_def (S : Type u) [CommRing S] [Algebra R S] :
     (0 : PolynomialLaw R M N).toFun' S = 0 := rfl
+-/
 
-instance : Inhabited (PolynomialLaw R M N) := ⟨Zero.zero⟩
+-- instance : Inhabited (PolynomialLaw R M N) := ⟨Zero.zero⟩
 
 /-- Extension of `MvPolynomial.zero_def` -/
 theorem zero_toFun (S : Type*) [CommRing S] [Algebra R S] :
-    (0 : M →ₚ[R] N).toFun S = 0 := by
+    (0 : M →ₚₗ[R] N).toFun S = 0 := by
   ext t
   obtain ⟨⟨s, p⟩, ha⟩ := π_surjective t
   simp only [toFun_eq_toFunLifted_apply _ ha, zero_def, Pi.zero_apply, _root_.map_zero]
 
-noncomputable def add : M →ₚ[R] N where
+/- noncomputable def add : M →ₚₗ[R] N where
   toFun' S _ _ := f.toFun' S + g.toFun' S
   isCompat' φ  := by
     ext
     simp only [Function.comp_apply, Pi.add_apply, map_add, isCompat_apply']
 
 instance : Add (PolynomialLaw R M N) := ⟨add⟩
+
 
 @[simp]
 theorem add_def (S : Type u) [CommRing S] [Algebra R S] :
@@ -672,6 +679,7 @@ theorem add_def (S : Type u) [CommRing S] [Algebra R S] :
 @[simp]
 theorem add_def_apply (S : Type u) [CommRing S] [Algebra R S] (m : S ⊗[R] M) :
     (f + g).toFun' S m = f.toFun' S m + g.toFun' S m := rfl
+-/
 
 /-- Extension of `MvPolynomial.add_def_apply` -/
 theorem add_toFun_apply {S : Type*} [CommRing S] [Algebra R S] (t : S ⊗[R] M) :
@@ -685,7 +693,7 @@ theorem add_toFun {S : Type*} [CommRing S] [Algebra R S] :
   ext t
   simp only [Pi.add_apply, add_toFun_apply]
 
-noncomputable def neg : M →ₚ[R] N where
+/- noncomputable def neg : M →ₚₗ[R] N where
   toFun' S _ _ := - f.toFun' S
   isCompat' φ  := by
     ext
@@ -697,8 +705,9 @@ instance : Neg (M →ₚ[R] N) := ⟨neg⟩
 theorem neg_def (S : Type u) [CommRing S] [Algebra R S] :
     (-f).toFun' S = - f.toFun' S := rfl
 
+
 /-- External multiplication of a `f : M →ₚ[R] N` by `r : R` -/
-def smul : M →ₚ[R] N where
+def smul : M →ₚₗ[R] N where
   toFun' S _ _ := r • f.toFun' S
   isCompat' φ  := by
     ext
@@ -713,6 +722,7 @@ theorem smul_def (S : Type u) [CommRing S] [Algebra R S] :
 @[simp]
 theorem smul_def_apply (S : Type u) [CommRing S] [Algebra R S] (m : S ⊗[R] M) :
     (r • f).toFun' S m = r • f.toFun' S m := rfl
+-/
 
 /-- Extension of `MvPolynomial.smul_def` -/
 theorem smul_toFun (S : Type*) [CommRing S] [Algebra R S] :
@@ -721,7 +731,7 @@ theorem smul_toFun (S : Type*) [CommRing S] [Algebra R S] :
   obtain ⟨⟨s, p⟩, ha⟩ := π_surjective t
   simp only [toFun_eq_toFunLifted_apply _ ha, smul_def, Pi.smul_apply, map_smul]
 
-theorem add_smul : (a + b) • f = a • f + b • f := by
+/- theorem add_smul : (a + b) • f = a • f + b • f := by
   ext; simp only [add_def, smul_def, _root_.add_smul]
 
 theorem zero_smul : (0 : R) • f = 0 := by
@@ -760,6 +770,7 @@ instance instModule : Module R (M →ₚ[R] N) where
   smul_add a f g := by ext; simp only [smul_def, add_def, smul_add]
   add_smul       := add_smul
   zero_smul      := zero_smul
+-/
 
 end Module
 
@@ -767,10 +778,12 @@ section ground
 
 variable {R : Type u} [CommRing R] {M : Type*} [AddCommGroup M] [Module R M]
   {N : Type*} [AddCommGroup N] [Module R N]
-variable (f : M →ₚ[R] N)
+variable (f : M →ₚₗ[R] N)
 
+/-
 /-- The map `M → N` associated with a `f : M →ₚ[R] N` (essentially, `f.toFun' R`) -/
 def ground : M → N := (TensorProduct.lid R N) ∘ (f.toFun' R) ∘ (TensorProduct.lid R M).symm
+-/
 
 theorem isCompat_apply'_ground {S : Type u} [CommRing S] [Algebra R S] (x : M) :
     1 ⊗ₜ (f.ground x) = (f.toFun' S) (1 ⊗ₜ x) := by
@@ -788,12 +801,14 @@ theorem isCompat_apply_ground (S : Type*) [CommRing S] [Algebra R S] (x : M) :
     congr
   · rw [rTensor_tmul, toLinearMap_apply, _root_.map_one]
 
+/-
 /-- The map ground assigning a function `M → N` to a polynomial map `f : M →ₚ[R] N` as a
   linear map. -/
-def lground : (M →ₚ[R] N) →ₗ[R] (M → N) where
+def lground : (M →ₚₗ[R] N) →ₗ[R] (M → N) where
   toFun         := ground
   map_add' x y  := by ext m; simp [ground]
   map_smul' r x := by ext m; simp [ground]
+-/
 
 end ground
 section Comp
@@ -805,6 +820,7 @@ variable {P : Type*} [AddCommGroup P] [Module R P]
 variable {Q : Type*} [AddCommGroup Q] [Module R Q]
 variable (f : PolynomialLaw R M N) (g : PolynomialLaw R N P) (h : PolynomialLaw R P Q)
 
+/-
 /-- Composition of polynomial maps. -/
 def comp (g : PolynomialLaw R N P) (f : PolynomialLaw R M N) : PolynomialLaw R M P where
   toFun' S _ _ := (g.toFun' S).comp (f.toFun' S)
@@ -812,6 +828,7 @@ def comp (g : PolynomialLaw R N P) (f : PolynomialLaw R M N) : PolynomialLaw R M
 
 theorem comp_toFun' (S : Type u) [CommRing S] [Algebra R S] :
   (g.comp f).toFun' S = (g.toFun' S).comp (f.toFun' S) := rfl
+-/
 
 /-- Extension of `MvPolynomial.comp_toFun'` -/
 theorem comp_toFun (S : Type*) [CommRing S] [Algebra R S] :
@@ -827,10 +844,11 @@ theorem comp_apply (S : Type*) [CommRing S] [Algebra R S] (m : S ⊗[R] M) :
     (g.comp f).toFun S m = (g.toFun S) (f.toFun S m) := by
   simp only [comp_toFun, Function.comp_apply]
 
+/-
 theorem comp_assoc :
   h.comp (g.comp f) = (h.comp g).comp f := by
   ext; simp only [comp_toFun'] ; rfl
-
+-/
 end Comp
 
 --#lint
