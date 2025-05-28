@@ -97,6 +97,10 @@ theorem LocFinsupp_smul {ι : Type*} (r : R) {f : ι → M →ₚₗ[R] N} (hf :
     LocFinsupp (r • f) := fun S _ _ m ↦
   Set.Finite.subset (hf S m) (Function.support_smul_subset_right _ _)
 
+-- We should probably use finite instead
+lemma locFinsupp_of_fintype {ι : Type*} [Fintype ι] (f : ι → M →ₚₗ[R] N) : LocFinsupp f := by
+  simp only [LocFinsupp]; intros; exact Set.toFinite _
+
 variable (R M N)
 /-- The submodule of families of polynomial maps which have locally finite support  -/
 def Submodule.locFinsupp (ι : Type*) : Submodule R (ι → PolynomialLaw R M N) where
@@ -181,7 +185,7 @@ section Fintype
 variable [Fintype ι]
 
 noncomputable def generize (m : ι → M) :
-  PolynomialLaw R M N →ₗ[R] MvPolynomial ι R ⊗[R] N where
+    PolynomialLaw R M N →ₗ[R] MvPolynomial ι R ⊗[R] N where
   toFun f       := f.toFun (MvPolynomial ι R) (univ.sum fun i => X i ⊗ₜ[R] m i)
   map_add' p q  := by simp only [add_toFun_apply]
   map_smul' r p := by simp only [RingHom.id_apply, smul_toFun, Pi.smul_apply]

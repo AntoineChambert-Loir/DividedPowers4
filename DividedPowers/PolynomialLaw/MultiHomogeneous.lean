@@ -1,57 +1,12 @@
 /- Copyright ACL & MIdFF 2024 -/
 
-import DividedPowers.ForMathlib.RingTheory.TensorProduct.Polynomial
-import DividedPowers.PolynomialLaw.Coeff
-import Mathlib.RingTheory.TensorProduct.Basic
+import DividedPowers.PolynomialLaw.Homogeneous
+import Mathlib.LinearAlgebra.TensorProduct.Pi
 
 universe u
 
-/- # Homogeneous components of a polynomial map
+/- # Multihomogeneous components of a polynomial map
 
-Let `R` be a commutative ring, let `M` and `N` be `R`-modules, and let `f : M →ₚₗ[R] N` be a
-polynomial law.
-
-## Main Definitions
-
-* `PolynomialLaw.IsHomogeneousOfDegree`: a polynomial law `f` is homogeneous of degree `p` if for
-  all commutative `R`-algebras `S : Type u` and  all `s : S`,
-  `f.toFun' S (s • m) = s ^ p (f.toFun' S m)` for all `m : S ⊗[R] M`. The property extends to all
-  `R`-algebras for `f.toFun`.
-
-## Main Results
-
-* `PolynomialLaw.isHomogeneousOfDegree_of_coeff_iff`: A polynomial law `f` is homogeneous of
-  degree `p` iff for all `m : ι → M`, and all `d : ι →₀ ℕ`, `f.coeff m d` vanishes unless the sum
-  of `d` equals `p`.
-
-
-
-
-* Homogeneous polynomial maps of degree 0 are constant polynomial maps.
-
-* `LinearMap.baseChange` furnishes, for every linear map `M →ₗ[R] N`,
-a polynomial map `f : M →ₚ[R] N` which is homogeneous of degree 1.
-All homogeneous polynomial maps `f` of degree 1 are of this form,
-associated with `f.ground`.
-
-* For all `p : ℕ`, `f.component p` is a homogeneous polynomial map
-of degree `p`, which we call the homogeneous components of `f`.
-It is defined so that its coefficients are exactly those of degree `p`
-of `f`.
-
-* Any polynomial map is the sum of its homogeneous components, in the
-following sense : for all `R`-algebras `S` and all `m : S ⊗[R] M`,
-the function `p ↦ (f.component p).toFun' S m` has finite support,
-and its sum is `f.toFun' S m`.
-
-## TODO
-
-* Characterize homogeneous polynomial maps of degree 2:
-one should recover quadratic maps `M → N`
-(whether this is exactly true depends on subtleties of the definition
-of quadratic maps for modules).
-
-## Construction of the homogeneous components
 
 Let `S` be an `R`-algebra and let `j : S →ₐ[S] S[X]` be the canonical algebra map.
 
@@ -63,147 +18,58 @@ The components of `f` are defined so that
 If one consider the morphism of evaluation at 1, `ε : S[X] →ₐ[R] S`,
 we have `ε ∘ j = @id S`, and the compatibility properties of `f` implies that
 `f.toFun' S[X] m = ∑ (f.component p).toFun' S m`.
-
 -/
-namespace Polynomial
 
-variable {R : Type*} [CommSemiring R] {S : Type*} [CommSemiring S] [Algebra R S]
-  {S' : Type*} [CommSemiring S'] [Algebra R S']
-
-lemma C_eq_algebraMap' (r : R) : C (algebraMap R S r) = algebraMap R S[X] r := rfl
-
-/-- baseChange φ aplies φ on the coefficients of a polynomial in S[X] -/
-noncomputable def baseChange (φ : S →ₐ[R] S') : S[X] →ₐ[R] S'[X] where
-  toRingHom := eval₂RingHom (C.comp φ) X
-  commutes' := fun r ↦ by simp [← C_eq_algebraMap']
-
-lemma coeff_baseChange_apply (φ : S →ₐ[R] S') (f : S[X]) (p : ℕ) :
-    coeff (baseChange φ f) p = φ (coeff f p) := by
-  rw [baseChange, AlgHom.coe_mk, coe_eval₂RingHom]
-  induction f using Polynomial.induction_on with
-  | C r =>
-    simp only [eval₂_C, RingHom.coe_comp, RingHom.coe_coe, Function.comp_apply, coeff_C,
-      apply_ite φ, map_zero]
-  | add f g hf hg => simp only [eval₂_add, coeff_add, hf, hg, map_add]
-  | monomial n r _ =>
-    simp only [eval₂_mul, eval₂_C, RingHom.coe_comp, RingHom.coe_coe, Function.comp_apply,
-      eval₂_X_pow, coeff_C_mul, _root_.map_mul, coeff_X_pow, apply_ite φ, _root_.map_one, map_zero]
-
-lemma lcoeff_comp_baseChange_eq (φ : S →ₐ[R] S') (p : ℕ) :
-    LinearMap.comp (AlgHom.toLinearMap φ) ((lcoeff S p).restrictScalars R) =
-      LinearMap.comp ((lcoeff S' p).restrictScalars R) (baseChange φ).toLinearMap := by
-  ext f
-  simp only [LinearMap.coe_comp, LinearMap.coe_restrictScalars, Function.comp_apply, lcoeff_apply,
-    AlgHom.toLinearMap_apply, coeff_baseChange_apply]
-
-lemma baseChange_monomial (φ : S →ₐ[R] S') (n : ℕ) (a : S) :
-    (baseChange φ) ((Polynomial.monomial n) a) = (Polynomial.monomial n) (φ a) := by
-  simp only [baseChange, AlgHom.coe_mk, coe_eval₂RingHom, eval₂_monomial, RingHom.coe_comp,
-    RingHom.coe_coe, Function.comp_apply, C_mul_X_pow_eq_monomial]
-
-end Polynomial
-
-namespace TensorProduct
-
-open scoped TensorProduct
-
-open LinearMap Finsupp
-
-variable {R : Type*} [CommSemiring R]
-variable {M : Type*} [AddCommMonoid M] [Module R M]
-
-lemma exists_Finsupp (S : Type*) [CommSemiring S] [Algebra R S] (μ : S ⊗[R] M) :
-    ∃ (m : S →₀ M), μ = m.sum (fun s x => s ⊗ₜ[R] x) := by
-  classical
-  induction μ using TensorProduct.induction_on with
-  | zero => use 0; rw [sum_zero_index]
-  | tmul s m => use single s m; simp only [tmul_zero, sum_single_index]
-  | add x y hx hy =>
-    obtain ⟨sx, rfl⟩ := hx
-    obtain ⟨sy, rfl⟩ := hy
-    use sx + sy
-    rw [sum_add_index (fun _ ↦ by simp) (fun _ _ _ _ ↦ by rw [TensorProduct.tmul_add])]
-
-theorem exists_Fin (S : Type*) [CommSemiring S] [Algebra R S] (sm : S ⊗[R] M) :
-    ∃ (n : ℕ) (s : Fin n → S) (m : Fin n → M),
-      sm = Finset.univ.sum (fun i ↦ (s i) ⊗ₜ[R] (m i)) := by
-  obtain ⟨m, rfl⟩ := TensorProduct.exists_Finsupp S sm
-  let e : m.support ≃ Fin (m.support.card) := Finset.equivFin _
-  use m.support.card, fun i ↦ e.symm i, fun i ↦ m (e.symm i)
-  rw [sum, ← Finset.sum_attach]
-  apply Finset.sum_equiv e
-  simp only [Finset.mem_attach, Finset.mem_univ, implies_true]
-  intros; simp only [Equiv.symm_apply_apply]
-
-lemma smul_rTensor {R : Type*} [CommSemiring R] {M : Type*} [AddCommMonoid M] [Module R M]
-    {S : Type*} [Semiring S] [Algebra R S] {T : Type*} [Semiring T] [Algebra R T]
-    (φ : S →ₐ[R] T) (s : S) (m : S ⊗[R] M) :
-    φ s • (φ.toLinearMap.rTensor M m) = φ.toLinearMap.rTensor M (s • m) := by
-  induction m using TensorProduct.induction_on with
-  | zero => simp only [map_zero, smul_zero]
-  | tmul s' m =>
-    simp only [rTensor_tmul, AlgHom.toLinearMap_apply, smul_tmul', smul_eq_mul, _root_.map_mul]
-  | add m m' hm hm' => simp only [map_add, smul_add, hm, hm']
-
-variable {R : Type*} [CommSemiring R]
-  {S : Type*} [Semiring S] [Algebra R S]
-  {M : Type*} [AddCommMonoid M] [Module R M] [Module S M] [IsScalarTower R S M]
-  {N : Type*} [AddCommMonoid N] [Module R N] [Module S N] [IsScalarTower R S N]
-  {P : Type*} [AddCommMonoid P] [Module R P]
-  {Q : Type*} [AddCommMonoid Q] [Module R Q]
-
-/-- If `f` is `S`-linear, then `TensorProduct.map (f.restrictScalars R) g` is `S`-linear -/
-lemma map_isLinearMap_of_left (f : M →ₗ[S] N) (g : P →ₗ[R] Q) :
-    IsLinearMap S (TensorProduct.map (f.restrictScalars R) g) where
-  map_add  x y := by rw [map_add]
-  map_smul c x := by
-    induction x using TensorProduct.induction_on with
-    | zero => simp only [smul_zero, map_zero]
-    | tmul x y => simp only [smul_tmul', map_tmul, coe_restrictScalars, map_smul]
-    | add x y hx hy => simp only [smul_add, map_add, hx, hy]
-
-lemma rTensor_smul' (f : M →ₗ[S] N) (s : S) (t : M ⊗[R] P) :
-    rTensor P (f.restrictScalars R) (s • t) = s • (rTensor P (f.restrictScalars R) t) := by
-  have : rTensor P (f.restrictScalars R) = (IsLinearMap.mk' _
-    (TensorProduct.map_isLinearMap_of_left f LinearMap.id)).restrictScalars R := rfl
-  rw [this, coe_restrictScalars, map_smul, IsLinearMap.mk'_apply]
-
-end TensorProduct
 
 open LinearMap TensorProduct
+
 namespace PolynomialLaw
-section Homogeneous
+
+open PolynomialLaw
+
+section MultiHomogeneous
 
 open Finsupp MvPolynomial
 
-variable {R : Type u} {M N : Type*} [CommRing R] [AddCommGroup M] [Module R M] [AddCommGroup N]
-  [Module R N]
+variable {ι : Type*} [Fintype ι] [DecidableEq ι] {R : Type u} [CommRing R]
 
-/-- A polynomial map `f : M →ₚ[R] N` is homogeneous of degree `p`
-  if the function `f.toFun' S` is homogeneous of degree `p` for all `S` -/
-def IsHomogeneousOfDegree (p : ℕ) (f : PolynomialLaw R M N) : Prop :=
-  ∀ (S : Type u) [CommRing S] [Algebra R S] (r : S) (m : S ⊗[R] M),
-    f.toFun' S (r • m) = r ^ p • f.toFun' S m
+variable {M : ι → Type*} [∀ i, AddCommGroup (M i)] [∀ i, Module R (M i)]
+  {N : Type*} [AddCommGroup N] [Module R N]
 
-theorem IsHomogeneousOfDegree_add (p : ℕ) {f g : PolynomialLaw R M N}
-    (hf : f.IsHomogeneousOfDegree p) (hg : g.IsHomogeneousOfDegree p) :
-    (f + g).IsHomogeneousOfDegree p := fun S _ _ s m ↦ by
+
+-- TODO: fix docstring
+/-- A polynomial map `f : Π (i : ι), M i →ₚ[R] N` is multihomogeneous of multidegree `n : ι → ℕ`
+  if for all families `{z_i : R ⊗ M i}_{i : ι}`, `{r_i : R}_{i : ι}`, one has
+  `f (r_1 • z_1, r_2 • z_2, ...) = Π i r_i^(n i) • f (z_1, z_2, ...)`. -/
+def IsMultiHomogeneousOfDegree (n : ι → ℕ) (f : PolynomialLaw R (Π i, M i) N) : Prop :=
+  ∀ (S : Type u) [CommRing S] [Algebra R S] (r : ι → S) (m : (i : ι) → S ⊗[R] M i),
+    f.toFun' S ((TensorProduct.piRight R R _ _).symm fun i ↦ r i • m i) =
+      (∏ᶠ i, (r i)^(n i)) • f.toFun' S ((TensorProduct.piRight R R _ _).symm m)
+
+
+
+theorem IsMultiHomogeneousOfDegree_add (n : ι → ℕ) {f g : PolynomialLaw R (Π i, M i) N}
+    (hf : f.IsMultiHomogeneousOfDegree n) (hg : g.IsMultiHomogeneousOfDegree n) :
+    (f + g).IsMultiHomogeneousOfDegree n := fun S _ _ s m ↦ by
   simp only [add_def_apply, smul_add, hf S s m, hg S s m]
 
-theorem IsHomogeneousOfDegree_smul (p : ℕ) (r : R) {f : PolynomialLaw R M N}
-    (hf : f.IsHomogeneousOfDegree p) : (r • f).IsHomogeneousOfDegree p := fun S _ _ s m ↦ by
+theorem IsMultiHomogeneousOfDegree_smul (n : ι → ℕ) (r : R) {f : PolynomialLaw R (Π i, M i) N}
+    (hf : f.IsMultiHomogeneousOfDegree n) :
+    (r • f).IsMultiHomogeneousOfDegree n := fun S _ _ s m ↦ by
   simp only [smul_def, Pi.smul_apply, hf S]
-  exact smul_comm r (s ^ p) (toFun' f S m)
+  exact smul_comm _ _ _
 
 /-- The submodule of homogeneous polynomial laws of degree `p`. -/
-def grade (p : ℕ) : Submodule R (PolynomialLaw R M N) where
-  carrier            := IsHomogeneousOfDegree p
-  add_mem' hf hg     := IsHomogeneousOfDegree_add p hf hg
-  smul_mem' r f hf   := IsHomogeneousOfDegree_smul p r hf
+def multiGrade (n : ι → ℕ) : Submodule R (PolynomialLaw R (Π i, M i) N) where
+  carrier            := IsMultiHomogeneousOfDegree n
+  add_mem' hf hg     := IsMultiHomogeneousOfDegree_add n hf hg
+  smul_mem' r f hf   := IsMultiHomogeneousOfDegree_smul n r hf
   zero_mem' S _ _ r _:= by simp only [zero_def, Pi.zero_apply, smul_zero]
 
-lemma mem_grade (f : PolynomialLaw R M N) (p : ℕ) :
-    f ∈ grade p ↔ IsHomogeneousOfDegree p f := by rfl
+lemma mem_multiGrade (f : PolynomialLaw R (Π i, M i) N) (n : ι → ℕ) :
+    f ∈ multiGrade n ↔ IsMultiHomogeneousOfDegree n f := by rfl
+
+#exit
 
 /-- If `f` is homogeneous of degree `p`, then all `f.toFun S` are homogeneous of degree `p`. -/
 lemma isHomogeneousOfDegree_toFun {p : ℕ} {f : PolynomialLaw R M N} (hf : IsHomogeneousOfDegree p f)
@@ -797,4 +663,4 @@ theorem recompose_component (f : PolynomialLaw R M N) :
 
 end Components
 
-end PolynomialLaw
+end PolynomialLaw'
