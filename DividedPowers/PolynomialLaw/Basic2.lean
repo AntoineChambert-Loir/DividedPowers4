@@ -4,9 +4,7 @@ import DividedPowers.ForMathlib.RingTheory.TensorProduct.DirectLimit.FG
 import Mathlib.LinearAlgebra.TensorProduct.RightExactness
 import Mathlib.RingTheory.FiniteType
 import Mathlib.RingTheory.Ideal.Quotient.Operations
-
 import Mathlib.Logic.Small.Set
-
 import Mathlib.RingTheory.PolynomialLaw.Basic
 
 /-! # Polynomial laws on modules
