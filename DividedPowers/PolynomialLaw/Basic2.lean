@@ -562,7 +562,6 @@ theorem exists_lift (t : S ⊗[R] M) : ∃ (n : ℕ) (ψ : MvPolynomial (Fin n) 
   obtain ⟨⟨s, p⟩, ha⟩ := π_surjective t
   use s.card, φ R s, p, ha
 
-
 /-- Lift an element of a tensor product and a scalar -/
 theorem exists_lift' (t : S ⊗[R] M) (s : S) : ∃ (n : ℕ) (ψ : MvPolynomial (Fin n) R →ₐ[R] S)
     (p : MvPolynomial (Fin n) R ⊗[R] M) (q : MvPolynomial (Fin n) R),

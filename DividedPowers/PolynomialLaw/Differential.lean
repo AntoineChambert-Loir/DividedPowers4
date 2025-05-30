@@ -1,10 +1,10 @@
-import DividedPowers.PolynomialLaw.Homogeneous
+import DividedPowers.PolynomialLaw.MultiHomogeneous
 
 noncomputable section
 
 universe u
 
-variable {ι : Type*} -- Should we instead assume `[Finite ι]`?
+variable {ι : Type u} -- Should we instead assume `[Finite ι]`?
 
 variable (R : Type u) [CommRing R] (M : Type*) [AddCommGroup M] [Module R M]
   {N : Type*} [AddCommGroup N] [Module R N]
@@ -39,12 +39,13 @@ def polarized : (Π (_ : ι), M) →ₚₗ[R] N := f.comp (sum_proj ι R M)
 
 lemma polarized_apply [Fintype ι] {m : ι → M} : polarized ι f m = f (∑ (i : ι), m i):= by
   simp only [polarized, ground_apply]
-  congr
-  simp only [comp, sum_proj, Function.comp_apply]
+  --congr
+  sorry
+  /- simp only [comp, sum_proj, Function.comp_apply]
   rw [lfsum_eq (locFinsupp_of_fintype _),
     Finsupp.sum_of_support_subset _ (Finset.subset_univ _) _ (fun i _ => rfl),
     TensorProduct.tmul_sum]
-  rfl
+  rfl -/
 
 variable {f p}
 
@@ -75,27 +76,37 @@ end Polarized
 -- ∀ (n : ℕ) (m : (Fin n) → M) (d : (Fin n) →₀ ℕ)
   --    (_ : d.sum (fun _ n => n) ≠ p), PolynomialLaw.coeff m f d = 0
 
+def foo (n p : ℕ) : (ULift (Fin 2)) → ℕ := (fun i ↦ match i with | 0 => p | 1 => n)
 
-
-def foo (n p : ℕ) : Fin 2 →₀ ℕ :=
-  Finsupp.ofSupportFinite (fun i ↦ match i with | 0 => p | 1 => n) (Set.toFinite _)
+/- def foo (n p : ℕ) : Fin 2 →₀ ℕ :=
+  Finsupp.ofSupportFinite (fun i ↦ match i with | 0 => p | 1 => n) (Set.toFinite _) -/
 
 variable {R M}
 
 /-- The multihomogeneous component of multidegree `n : ι →₀ ℕ` of `f.polarized ι`.
   This is denoted by `Π^{n_1, ..., n_p}f` in Roby63. -/
-@[simps]
-def multihomogeneous_component (n : ι →₀ ℕ) (f : PolynomialLaw R M N) :
-    PolynomialLaw R (Π (i : ι), M) N where
-  toFun' S _ _ := fun m ↦ sorry
-  /- rTensor R N S
-    (f.toFun' S[X] (((monomial 1).restrictScalars R).rTensor M m)) p -/
-  isCompat' {S _ _} {S' _ _} φ := by
-    sorry
+def polarized_multiComponent [Fintype ι] [DecidableEq ι] (n : ι → ℕ)
+    (f : PolynomialLaw R M N) :
+    PolynomialLaw R (Π (_ : ι), M) N := PolynomialLaw.multiComponent n (f.polarized ι)
 
 -- Ideally I would like to write M × M
-def differential : (Π (_ : Fin 2), M) →ₚₗ[R] N :=
-  PolynomialLaw.lfsum (fun (p : ℕ) ↦ multihomogeneous_component (foo n p) f)
+def differential : (Π (_ : ULift (Fin 2)), M) →ₚₗ[R] N :=
+  PolynomialLaw.lfsum (fun (p : ℕ) ↦ polarized_multiComponent (foo n p) f)
 
+lemma map_add_eq_polarized_two_apply (m m' : M) :
+    f (m + m') = (f.polarized (ULift (Fin 2))) ((fun i ↦ match i with | 0 => m | 1 => m')) := by
+  simp only [polarized_apply]
+  congr 1
+  change m + m' = m + (m' + 0)
+  simp
+
+lemma map_add_eq_sum_differential_apply (m m' : M) :
+    f (m + m') =
+      lfsum (fun n ↦ f.differential n) ((fun i ↦ match i with | 0 => m | 1 => m')) := by
+  rw [map_add_eq_polarized_two_apply]
+  simp only [differential, polarized_multiComponent]
+  rw [← recompose_multiComponent (f.polarized (ULift (Fin 2)))]
+  congr
+  sorry
 
 end PolynomialLaw
