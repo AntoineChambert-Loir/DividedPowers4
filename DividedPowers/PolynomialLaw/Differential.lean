@@ -76,7 +76,9 @@ end Polarized
 -- ∀ (n : ℕ) (m : (Fin n) → M) (d : (Fin n) →₀ ℕ)
   --    (_ : d.sum (fun _ n => n) ≠ p), PolynomialLaw.coeff m f d = 0
 
-def foo (n p : ℕ) : (ULift (Fin 2)) → ℕ := (fun i ↦ match i with | 0 => p | 1 => n)
+def map_pair (n p : ℕ) : (ULift (Fin 2)) → ℕ := (fun i ↦ match i with | 0 => p | 1 => n)
+
+lemma map_pair_def (n p : ℕ) : map_pair n p = (fun i ↦ match i with | 0 => p | 1 => n) := rfl
 
 /- def foo (n p : ℕ) : Fin 2 →₀ ℕ :=
   Finsupp.ofSupportFinite (fun i ↦ match i with | 0 => p | 1 => n) (Set.toFinite _) -/
@@ -91,7 +93,7 @@ def polarized_multiComponent [Fintype ι] [DecidableEq ι] (n : ι → ℕ)
 
 -- Ideally I would like to write M × M
 def differential : (Π (_ : ULift (Fin 2)), M) →ₚₗ[R] N :=
-  PolynomialLaw.lfsum (fun (p : ℕ) ↦ polarized_multiComponent (foo n p) f)
+  PolynomialLaw.lfsum (fun (p : ℕ) ↦ polarized_multiComponent (map_pair n p) f)
 
 lemma map_add_eq_polarized_two_apply (m m' : M) :
     f (m + m') = (f.polarized (ULift (Fin 2))) ((fun i ↦ match i with | 0 => m | 1 => m')) := by
@@ -107,6 +109,75 @@ lemma map_add_eq_sum_differential_apply (m m' : M) :
   simp only [differential, polarized_multiComponent]
   rw [← recompose_multiComponent (f.polarized (ULift (Fin 2)))]
   congr
+  ext x
+  simp only [lfsum_eq (LocFinsupp_multiComponent (polarized _ f)), multiComponent_toFun']
+  rw [lfsum_eq]
+  sorry
+  sorry
+
+lemma lground_apply (f : M →ₚₗ[R] N) : f.lground = f.ground := rfl
+
+example : M → M →ₗ[R] N := fun m ↦ {
+  toFun :=  fun (m' : M) ↦ (differential f 1)
+    (fun (i : (ULift.{u} (Fin 2))) ↦ match i with | 0 => m | 1 => m')
+  map_add' x y := by
+    simp only [differential, ground_apply, map_pair_def]
+    rw [← map_add]
+    congr
+    simp only [polarized_multiComponent, polarized]
+    simp only [lfsum]
+    rw [dif_pos]
+    rw [← Finsupp.sum_add_index (by intros; rfl) (by intros; rfl)]
+    simp only [multiComponent_toFun', LinearMap.rTensor_tmul,
+      LinearMap.coe_restrictScalars]
+    congr!
+    ext n
+    simp only [Finsupp.ofSupportFinite_coe, Finsupp.coe_add, Pi.add_apply]
+    simp only [MvPolynomial.rTensor_apply]
+    rw [← map_add]
+    congr
+    have : lfsum (fun (i : ULift.{u} (Fin 2)) ↦ proj R M i) =
+      ∑ i,  proj R M i := sorry
+    simp only [sum_proj, this]
+    simp only [comp_toFun', Function.comp_apply]
+    --simp only [proj_apply]
+    sorry
+
+    · sorry
+
+    -- simp only [differential, ground_apply,/-map_pair_def -/]
+    --rw [map_add]
+    /- rw [← lLfsum_apply]
+    congr
+
+
+    sorry
+    · simp [polarized_multiComponent]
+
+      sorry -/
+  map_smul' r x := by
+    simp only [differential, ground_apply, RingHom.id_apply]/-map_pair_def -/
+    rw [← map_smul]
+    congr
+    rw [← lLfsum_apply]
+    sorry
+    sorry
+}
+
+/- Soit /'€ ^(M, N).
+Considérons la loi polynôme sur le couple (M, N) égale à (D/*) (m, rc),
+où m est la loi linéaire définie par l'injection identique de M dans Mi
+et x la loi constante définie par l'application constante de M sur l'élé-
+ment ^€Ms. Cette loi polynôme se notera (D^/*) (m) et s'appellera la
+dérivée partielle de f par rapport à Isolément x de M. On la notera aussi ,—•-/
+
+def partial_derivative (x : M) : M →ₚₗ[R] N := by
+  set m : M → (ULift.{u, 0} (Fin 2) → M) := fun y ↦
+    (fun (i : (ULift.{u} (Fin 2))) ↦ match i with | 0 => y | 1 => 0)
+  set cx : M → (ULift.{u, 0} (Fin 2) → M) := fun y ↦
+    (fun (i : (ULift.{u} (Fin 2))) ↦ match i with | 0 => 0 | 1 => x)
+  have := (differential f 1).toFun'
+
   sorry
 
 end PolynomialLaw

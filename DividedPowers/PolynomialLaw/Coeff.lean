@@ -171,6 +171,12 @@ noncomputable def lLfsum {ι : Type*} [DecidableEq ι] :
       intro hi
       rw [hi, smul_zero]
 
+lemma lLfsum_apply' {ι : Type*} [DecidableEq ι] {f : ↥(Submodule.locFinsupp R M N ι)} :
+    lLfsum f = lfsum f.val := rfl
+
+lemma lLfsum_apply {ι : Type*} [DecidableEq ι] {f : ι → PolynomialLaw R M N}
+  (hf : LocFinsupp f) : lLfsum ⟨f, hf⟩ = lfsum f := rfl
+
 end LocFinsupp
 
 section Coefficients
