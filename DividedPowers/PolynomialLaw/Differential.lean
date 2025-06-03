@@ -17,18 +17,36 @@ section Polarized
 /-- `proj R M i` is the polynomial law `(Π (_ : ι), M) →ₚₗ[R] M` obtained by prolonging the
 `i`th canonical projection. -/
 def proj (i : ι) : (Π (_ : ι), M) →ₚₗ[R] M where
-  toFun' S _ _ := (TensorProduct.map (LinearMap.id (M := S)) (LinearMap.proj i)).toFun
+  toFun' S _ _ := (TensorProduct.map (LinearMap.id (M := S)) (LinearMap.proj i))
   isCompat' φ := by
     ext x
-    simp only [AddHom.toFun_eq_coe, LinearMap.coe_toAddHom, Function.comp_apply]
-    sorry
+    simp only [Function.comp_apply, LinearMap.rTensor_def, ← LinearMap.comp_apply,
+      ← TensorProduct.map_comp, LinearMap.comp_id, LinearMap.id_comp]
 
 lemma proj_apply (i : ι) (m : ι → M) : proj R M i m = m i := by simp [proj, ground_apply]
+
+lemma proj_toFun'_apply [Fintype ι] [DecidableEq ι] {S : Type u} [CommRing S] [Algebra R S]
+    (i : ι) {m : TensorProduct R S (ι → M)} : (proj R M i).toFun' S m =
+    (TensorProduct.piRight R R S fun i ↦ M) m i := by
+  simp only [proj, TensorProduct.piRight_apply]
+  induction m using TensorProduct.induction_on with
+  | zero => simp
+  | tmul => simp
+  | add m m' hm hm' => simp [hm, hm']
+
+-- TODO: add a lemma lfsum_eq_sum_of_fintype and use it instead of lfsum_eq below.
 
 variable (ι) in
 /-- `sum_proj R M ι` is the polynomial law `(Π (_ : ι), M) →ₚₗ[R] M` defined as the sum of all the
 coordinate laws from  `(Π (_ : ι), M)`to `M`. -/
 def sum_proj : (Π (_ : ι), M) →ₚₗ[R] M := lfsum (fun i ↦ proj R M i)
+
+lemma sum_proj_toFun'_apply [Fintype ι] [DecidableEq ι] {S : Type u} [CommRing S] [Algebra R S]
+    {m : TensorProduct R S (ι → M)} : (sum_proj ι R M).toFun' S m =
+    (∑ i, (TensorProduct.piRight R R S fun _ ↦ M) m i) := by
+  rw [sum_proj, TensorProduct.piRight_apply,
+    lfsum_eq (locFinsupp_of_fintype _), Finsupp.sum_fintype _ _ (by intro; rfl)]
+  exact Finset.sum_congr rfl (fun i _ ↦ proj_toFun'_apply R M i)
 
 variable (ι) {R M}
 
@@ -38,27 +56,42 @@ This is denoted by `Π_p` in Roby63 (where `p` corresponds to the size of `ι`).
 def polarized : (Π (_ : ι), M) →ₚₗ[R] N := f.comp (sum_proj ι R M)
 
 lemma polarized_apply [Fintype ι] {m : ι → M} : polarized ι f m = f (∑ (i : ι), m i):= by
-  simp only [polarized, ground_apply]
-  --congr
-  sorry
-  /- simp only [comp, sum_proj, Function.comp_apply]
-  rw [lfsum_eq (locFinsupp_of_fintype _),
-    Finsupp.sum_of_support_subset _ (Finset.subset_univ _) _ (fun i _ => rfl),
+  simp only [polarized, ground_apply, sum_proj, comp_toFun',
+    Function.comp_apply, EmbeddingLike.apply_eq_iff_eq]
+  congr 1
+  rw [lfsum_eq (locFinsupp_of_fintype _), Finsupp.sum_fintype _ _ (by intro; rfl),
     TensorProduct.tmul_sum]
-  rfl -/
+  rfl
+
+lemma polarized_toFun'_apply [Fintype ι] [DecidableEq ι] {S : Type u} [CommRing S] [Algebra R S]
+    {m : TensorProduct R S (ι → M)} : (polarized ι f).toFun' S m =
+      f.toFun' S (∑ i, (TensorProduct.piRight R R S fun _ ↦ M) m i) := by
+  simp [polarized, comp_toFun', sum_proj_toFun'_apply]
 
 variable {f p}
 
-lemma isHomogeneousOfDegree_polarized (hf : IsHomogeneousOfDegree p f) :
+variable (R M) in
+lemma _root_.TensorProduct.piRightHom_smul_proj [Fintype ι] {S : Type u} [CommRing S]
+    [Algebra R S] (s : S) (m : TensorProduct R S (ι → M)) (i : ι) :
+    (TensorProduct.piRightHom R R S fun _ ↦ M) (s • m) i =
+      s • (TensorProduct.piRightHom R R S fun _ ↦ M) m i := by
+  induction m using TensorProduct.induction_on with
+  | zero => simp
+  | tmul s' m => simp only [TensorProduct.piRightHom_tmul]; rfl
+  | add m m' hm hm' => simp only [smul_add, map_add, Pi.add_apply, hm, hm']
+
+lemma isHomogeneousOfDegree_polarized [Fintype ι] (hf : IsHomogeneousOfDegree p f) :
     IsHomogeneousOfDegree p (polarized ι f) := by
-  rw [isHomogeneousOfDegree_of_coeff_iff] at hf ⊢
-  intro n m d hd
-  specialize hf n
-  simp only [polarized, coeff_eq, EmbeddingLike.map_eq_zero_iff]
-  sorry
+  classical
+  rw [IsHomogeneousOfDegree] at hf ⊢
+  intro S _ _ s m
+  simp only [polarized_toFun'_apply, ← hf S s (∑ (i : ι), (TensorProduct.piRight R R _ _) m i)]
+  congr
+  rw [Finset.smul_sum]
+  exact Finset.sum_congr rfl (fun i _ ↦ TensorProduct.piRightHom_smul_proj ι R M s _ i)
 
 -- Roby63, example in pg 234
-lemma coeff_component_eq_zero_of_ne {n : ℕ} (m : (Fin n) → ι → M) (d : (Fin n) →₀ ℕ)
+lemma coeff_component_eq_zero_of_ne [Fintype ι] {n : ℕ} (m : (Fin n) → ι → M) (d : (Fin n) →₀ ℕ)
     (hd : d.sum (fun _ n => n) ≠ p) (hf : IsHomogeneousOfDegree p f) :
     coeff m (polarized ι f) d = 0 := by
   revert n
@@ -140,6 +173,7 @@ example : M → M →ₗ[R] N := fun m ↦ {
       ∑ i,  proj R M i := sorry
     simp only [sum_proj, this]
     simp only [comp_toFun', Function.comp_apply]
+
     --simp only [proj_apply]
     sorry
 
