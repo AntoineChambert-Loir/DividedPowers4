@@ -595,7 +595,6 @@ theorem Polynomial.baseChange_comp_monomial_eq {S : Type*} [CommSemiring S] [Alg
     (f.toFun' S[X] (((monomial 1).restrictScalars R).rTensor M m)) p
   isCompat' {S _ _} {S' _ _} φ := by
     ext sm
-    dsimp
     simp only [LinearEquiv.rTensor'_apply, Function.comp_apply, rTensor_apply, ← rTensor_comp_apply]
     rw [lcoeff_comp_baseChange_eq, rTensor_comp_apply, f.isCompat_apply', ← rTensor_comp_apply,
       Polynomial.baseChange_comp_monomial_eq]

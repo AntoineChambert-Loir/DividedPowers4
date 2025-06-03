@@ -118,9 +118,10 @@ lemma map_pair_def (n p : ℕ) : map_pair n p = (fun i ↦ match i with | 0 => p
 
 variable {R M}
 
+-- I am not sure whether it is useful to add this.
 /-- The multihomogeneous component of multidegree `n : ι →₀ ℕ` of `f.polarized ι`.
   This is denoted by `Π^{n_1, ..., n_p}f` in Roby63. -/
-def polarized_multiComponent [Fintype ι] [DecidableEq ι] (n : ι → ℕ)
+abbrev polarized_multiComponent [Fintype ι] [DecidableEq ι] (n : ι → ℕ)
     (f : PolynomialLaw R M N) :
     PolynomialLaw R (Π (_ : ι), M) N := PolynomialLaw.multiComponent n (f.polarized ι)
 

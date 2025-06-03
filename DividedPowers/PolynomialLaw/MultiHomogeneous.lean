@@ -23,6 +23,66 @@ we have `ε ∘ j = @id S`, and the compatibility properties of `f` implies that
 
 open LinearMap TensorProduct
 
+namespace MvPolynomial
+
+variable {R : Type*} [CommSemiring R] {S : Type*} [CommSemiring S] {σ : Type*}
+
+variable {p q : MvPolynomial σ R} (f : R →+* S) (x : σ → S)
+
+theorem eval₂_mul_eq_zero_of_left (hp : p.eval₂ f x = 0) : (p * q).eval₂ f x = 0 := by
+  rw [eval₂_mul f x]
+  exact mul_eq_zero_of_left hp (q.eval₂ f x)
+
+theorem eval₂_mul_eq_zero_of_right (hq : q.eval₂ f x = 0) : (p * q).eval₂ f x = 0 := by
+  rw [eval₂_mul f x]
+  exact mul_eq_zero_of_right (p.eval₂ f x) hq
+
+@[simp]
+theorem eval₂_X_pow {s : σ} {n : ℕ} : ((X s) ^ n).eval₂ f x = (x s) ^ n := by
+  rw [X_pow_eq_monomial]
+  convert eval₂_monomial f x
+  simp
+
+variable [Algebra R S] {S' : Type*} [CommSemiring S'] [Algebra R S']
+
+lemma C_eq_algebraMap' (r : R) :
+    C (algebraMap R S r) = algebraMap R (MvPolynomial σ S) r := rfl
+
+/-- baseChange φ aplies φ on the coefficients of a polynomial in `(MvPolynomial σ S)`. -/
+noncomputable def baseChange (φ : S →ₐ[R] S') : MvPolynomial σ S →ₐ[R] MvPolynomial σ S' where
+  toRingHom := eval₂Hom (C.comp φ) X
+  commutes' := fun r ↦ by simp [← C_eq_algebraMap']
+
+lemma coeff_baseChange_apply (φ : S →ₐ[R] S') (f : MvPolynomial σ S) (n : σ →₀ ℕ) :
+    coeff n (baseChange φ f) = φ (coeff n f) := by
+  classical
+  rw [baseChange, AlgHom.coe_mk, coe_eval₂Hom]
+  induction f using MvPolynomial.induction_on generalizing n with
+  | C r =>
+    simp only [eval₂_C, RingHom.coe_comp, RingHom.coe_coe, Function.comp_apply, coeff_C,
+      apply_ite φ, map_zero]
+  | add f g hf hg => simp only [eval₂_add, coeff_add, hf, hg, map_add]
+  | mul_X q s h =>
+    simp only [eval₂_mul, eval₂_X, coeff_mul, map_sum, map_mul]
+    apply Finset.sum_congr rfl
+    intro k hk
+    simp only [h k.1, coeff_X', MonoidWithZeroHom.map_ite_one_zero]
+
+lemma lcoeff_comp_baseChange_eq (φ : S →ₐ[R] S') (p : σ →₀ ℕ) :
+    LinearMap.comp (AlgHom.toLinearMap φ) ((lcoeff S p).restrictScalars R) =
+      LinearMap.comp ((lcoeff S' p).restrictScalars R) (baseChange φ).toLinearMap := by
+  ext f
+  simp only [LinearMap.coe_comp, LinearMap.coe_restrictScalars, Function.comp_apply, lcoeff_apply,
+    AlgHom.toLinearMap_apply, coeff_baseChange_apply]
+
+lemma baseChange_monomial (φ : S →ₐ[R] S') (n : σ →₀ ℕ) (a : S) :
+    (baseChange φ) ((MvPolynomial.monomial n) a) = (MvPolynomial.monomial n) (φ a) := by
+  simp only [baseChange, AlgHom.coe_mk, coe_eval₂Hom, eval₂_monomial, RingHom.coe_comp,
+    RingHom.coe_coe, Function.comp_apply]
+  rw [monomial_eq]
+
+end MvPolynomial
+
 namespace PolynomialLaw
 
 open PolynomialLaw
@@ -479,8 +539,11 @@ open MvPolynomial
         R).rTensor (Π i, M i) m)) ((Finsupp.ofSupportFinite n (Set.toFinite _)))
   isCompat' {S _ _} {S' _ _} φ := by
     ext sm
-    dsimp
-    simp only [rTensor_apply, ← rTensor_comp_apply]
+    --simp only [rTensor_apply, ← rTensor_comp_apply]
+    simp only [LinearEquiv.rTensor'_apply, Function.comp_apply, rTensor_apply,
+      ← rTensor_comp_apply]
+    simp only [rTensor_def]
+    rw [MvPolynomial.lcoeff_comp_baseChange_eq]
     sorry
     /- rw [lcoeff_comp_baseChange_eq, rTensor_comp_apply, f.isCompat_apply', ← rTensor_comp_apply,
       Polynomial.baseChange_comp_monomial_eq] -/
@@ -494,7 +557,7 @@ theorem multiComponent.toFun'_apply (n : ι → ℕ) (f : PolynomialLaw R (Π i,
 -- I need `S : Type u`.
 theorem multiComponent_toFun_apply (n : ι → ℕ) (f : PolynomialLaw R (Π i, M i) N)
     (S : Type u) [CommRing S] [Algebra R S] (m : S ⊗[R] (Π i, M i)) :
-    (f.multiComponent n).toFun S m = rTensor (f.toFun' (MvPolynomial ι S)
+    (f.multiComponent n).toFun S m = rTensor (f.toFun (MvPolynomial ι S)
       (((monomial (Finsupp.ofSupportFinite (fun _ ↦ 1) (Set.toFinite _))).restrictScalars
         R).rTensor (Π i, M i) m)) ((Finsupp.ofSupportFinite n (Set.toFinite _))) := by
   obtain ⟨n, ψ, q, rfl⟩ :=  exists_lift m
