@@ -109,9 +109,11 @@ end Polarized
 -- ∀ (n : ℕ) (m : (Fin n) → M) (d : (Fin n) →₀ ℕ)
   --    (_ : d.sum (fun _ n => n) ≠ p), PolynomialLaw.coeff m f d = 0
 
-def map_pair (n p : ℕ) : (ULift (Fin 2)) → ℕ := (fun i ↦ match i with | 0 => p | 1 => n)
+def map_pair (n p : ℕ) : (ULift.{u} (Fin 2)) →₀ ℕ :=
+  (Finsupp.ofSupportFinite (fun i ↦ match i with | 0 => p | 1 => n) (Set.toFinite _))
 
-lemma map_pair_def (n p : ℕ) : map_pair n p = (fun i ↦ match i with | 0 => p | 1 => n) := rfl
+lemma map_pair_def (n p : ℕ) : map_pair n p =
+  (Finsupp.ofSupportFinite (fun i ↦ match i with | 0 => p | 1 => n) (Set.toFinite _)) := rfl
 
 /- def foo (n p : ℕ) : Fin 2 →₀ ℕ :=
   Finsupp.ofSupportFinite (fun i ↦ match i with | 0 => p | 1 => n) (Set.toFinite _) -/
@@ -121,7 +123,7 @@ variable {R M}
 -- I am not sure whether it is useful to add this.
 /-- The multihomogeneous component of multidegree `n : ι →₀ ℕ` of `f.polarized ι`.
   This is denoted by `Π^{n_1, ..., n_p}f` in Roby63. -/
-abbrev polarized_multiComponent [Fintype ι] [DecidableEq ι] (n : ι → ℕ)
+abbrev polarized_multiComponent [Fintype ι] [DecidableEq ι] (n : ι →₀ ℕ)
     (f : PolynomialLaw R M N) :
     PolynomialLaw R (Π (_ : ι), M) N := PolynomialLaw.multiComponent n (f.polarized ι)
 
@@ -204,7 +206,7 @@ Considérons la loi polynôme sur le couple (M, N) égale à (D/*) (m, rc),
 où m est la loi linéaire définie par l'injection identique de M dans Mi
 et x la loi constante définie par l'application constante de M sur l'élé-
 ment ^€Ms. Cette loi polynôme se notera (D^/*) (m) et s'appellera la
-dérivée partielle de f par rapport à Isolément x de M. On la notera aussi ,—•-/
+dérivée partielle de f par rapport à Isolément x de M. On la notera  -/
 
 def partial_derivative (x : M) : M →ₚₗ[R] N := by
   set m : M → (ULift.{u, 0} (Fin 2) → M) := fun y ↦
