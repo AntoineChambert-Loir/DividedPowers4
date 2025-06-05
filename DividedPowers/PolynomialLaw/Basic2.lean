@@ -312,8 +312,8 @@ open scoped TensorProduct
 
 open MvPolynomial
 
-variable (R : Type u) [CommRing R] (M : Type*) [AddCommGroup M] [Module R M] (N : Type*)
-  [AddCommGroup N] [Module R N]
+variable (R : Type u) [CommSemiring R] (M : Type*) [AddCommMonoid M] [Module R M] (N : Type*)
+  [AddCommMonoid N] [Module R N]
 
 /-
  /-- A polynomial map `M →ₚ[R] N` between `R`-modules is a functorial family of maps
@@ -344,7 +344,7 @@ section Lift
 
 open LinearMap
 
-variable (S : Type v) [CommRing S] [Algebra R S]
+variable (S : Type v) [CommSemiring S] [Algebra R S]
 
 /-- The type of lifts of  `S ⊗[R] M` to a polynomial ring. -/
 def lifts : Type _ := Σ (s : Finset S), (MvPolynomial (Fin s.card) R) ⊗[R] M

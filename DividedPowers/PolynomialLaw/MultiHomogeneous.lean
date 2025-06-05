@@ -23,6 +23,8 @@ we have `ε ∘ j = @id S`, and the compatibility properties of `f` implies that
 
 open LinearMap TensorProduct
 
+noncomputable section
+
 namespace MvPolynomial
 
 variable {R : Type*} [CommSemiring R] {S : Type*} [CommSemiring S] {σ : Type*}
@@ -150,6 +152,7 @@ lemma isMultiHomogeneousOfDegree_toFun {n : ι → ℕ} {f : PolynomialLaw R (Π
     f.toFun S ((TensorProduct.piRight R R _ _).symm
       (fun i ↦ r i • ((TensorProduct.piRight R R _ _ ) m) i)) =
       (∏ᶠ i, (r i)^(n i)) • f.toFun S m := by
+    --choose n ψ  m' r' hm' hr' using PolynomialLaw.exists_lift' m r
     sorry
   /- choose n ψ  m' r' hm' hr' using PolynomialLaw.exists_lift' m r
   simp only [← hm', ← hr', ← isCompat_apply, toFun_eq_toFun', TensorProduct.smul_rTensor]
@@ -177,6 +180,13 @@ theorem IsMultiHomogeneousOfDegree.comp {P : Type*} [AddCommGroup P] [Module R P
     finprod_pow ( Set.toFinite _), ← pow_mul, mul_comm q]
 
 
+/-The coefficients of a homogeneous polynomial map of degree `p` vanish outside of degree `p`. -/
+/- lemma isMultiHomogeneousOfDegree_coeff {n : ι → ℕ} {f : PolynomialLaw R (Π i, M i) N}
+    (hf : IsMultiHomogeneousOfDegree n f)
+    {κ : Type*} [DecidableEq κ] [Fintype κ] (m : κ → (Π i, M i)) (d : κ →₀ ι → ℕ)
+    (hd : d.sum (fun _ m => m) ≠ n) :
+    PolynomialLaw.coeff m f d = 0 := by
+  sorry -/
 
 /- TODO
 
@@ -480,18 +490,73 @@ end
 section Components
 
 -- I need `ι : Type u` to be able to apply `f.toFun'`.
-variable {ι : Type u} [Fintype ι] [DecidableEq ι] {R : Type u} [CommRing R]
+variable {ι : Type u} [Fintype ι] [DecidableEq ι] {R : Type u} [CommSemiring R]
 
-variable {M : ι → Type*} [∀ i, AddCommGroup (M i)] [∀ i, Module R (M i)]
-  {N : Type*} [AddCommGroup N] [Module R N]
+variable {M : ι → Type*} [∀ i, AddCommMonoid (M i)] [∀ i, Module R (M i)]
+  {N : Type*} [AddCommMonoid N] [Module R N]
 
 open MvPolynomial
+
+noncomputable def el (m : Π i, M i) : MvPolynomial ι R ⊗[R] (Π i, M i) :=
+  ∑ (i : ι), (X i) ⊗ₜ Pi.single i (m i)
+
+noncomputable def el' (m : Π i, M i)  (f : PolynomialLaw R (Π i, M i) N) :
+    MvPolynomial ι R ⊗[R] N := f.toFun' (MvPolynomial ι R) (el m)
+
+noncomputable def coeff_el' (m : Π i, M i) (f : PolynomialLaw R (Π i, M i) N) (n : ι →₀ ℕ) : N :=
+  TensorProduct.lid R N (MvPolynomial.rTensor (el' m f) n)
+
+variable {S : Type u} [CommSemiring S] [Algebra R S]
+
+noncomputable def el_S (m : S ⊗[R] Π i, M i) : MvPolynomial ι R ⊗[R] (S ⊗[R] (Π i, M i)) :=
+  ∑ (i : ι), (X i) ⊗ₜ  (TensorProduct.piRight R R S _).symm
+    (Pi.single (f := fun i ↦  S ⊗[R] M i) i (TensorProduct.piRight R R S _ m i))
+
+noncomputable def el_S' (m : S ⊗[R] Π i, M i) : (MvPolynomial ι R ⊗[R] S) ⊗[R] (Π i, M i) :=
+  (TensorProduct.assoc R (MvPolynomial ι R) S (Π i, M i)).symm (el_S m)
+
+example : (MvPolynomial ι R ⊗[R] S) ≃ₐ[R] (MvPolynomial ι S) := by
+  exact scalarRTensorAlgEquiv
+
+noncomputable def el_S'' (m : S ⊗[R] Π i, M i) : (MvPolynomial ι S) ⊗[R] (Π i, M i) :=
+  LinearEquiv.rTensor (Π i, M i) scalarRTensorAlgEquiv.toLinearEquiv (el_S' m)
+
+noncomputable def el_S''' (m : S ⊗[R] Π i, M i)  (f : PolynomialLaw R (Π i, M i) N) :
+    MvPolynomial ι S ⊗[R] N := f.toFun' (MvPolynomial ι S) (el_S'' m)
+
+noncomputable def coeff_el'_S (m : S ⊗[R] Π i, M i) (f : PolynomialLaw R (Π i, M i) N)
+    (n : ι →₀ ℕ) : S ⊗[R] N := MvPolynomial.rTensor (el_S''' m f) n
+
+--#check el
+
+/- variable {M : ι → Type*} [∀ i, AddCommGroup (M i)] [∀ i, Module R (M i)]
+  {N : Type*} [AddCommGroup N] [Module R N] -/
 
 /- Here we define the multihomogeneous components of a `PolynomialLaw`
  and show how it recomposes as its locally finite sum -/
 
-/-- The homogeneous component of degree `p` of a `PolynomialLaw`. -/
+/- The homogeneous component of degree `p` of a `PolynomialLaw`. -/
 @[simps] noncomputable def multiComponent (n : ι →₀ ℕ) (f : PolynomialLaw R (Π i, M i) N) :
+    PolynomialLaw R (Π i, M i) N where
+  toFun' S _ _ := fun m ↦ by
+    let m' : (Π i, S ⊗[R] M i) := (TensorProduct.piRight R R _ _ ) m
+    let m'' := el (R := R) m'
+    --apply f.toFun
+
+    sorry
+    --
+
+  isCompat' {S _ _} {S' _ _} φ := by
+    sorry
+    /- ext sm
+    simp only [LinearEquiv.rTensor'_apply, Function.comp_apply, rTensor_apply,
+      ← rTensor_comp_apply]
+    rw [lcoeff_comp_baseChange_eq, rTensor_comp_apply, f.isCompat_apply', ← rTensor_comp_apply,
+      MvPolynomial.baseChange_comp_monomial_eq]  -/
+
+
+#exit
+/- @[simps] noncomputable def multiComponent (n : ι →₀ ℕ) (f : PolynomialLaw R (Π i, M i) N) :
     PolynomialLaw R (Π i, M i) N where
   toFun' S _ _ := fun m ↦ rTensor (f.toFun' (MvPolynomial ι S)
       (((monomial (Finsupp.ofSupportFinite (fun _ ↦ 1) (Set.toFinite _))).restrictScalars
@@ -501,7 +566,7 @@ open MvPolynomial
     simp only [LinearEquiv.rTensor'_apply, Function.comp_apply, rTensor_apply,
       ← rTensor_comp_apply]
     rw [lcoeff_comp_baseChange_eq, rTensor_comp_apply, f.isCompat_apply', ← rTensor_comp_apply,
-      MvPolynomial.baseChange_comp_monomial_eq]
+      MvPolynomial.baseChange_comp_monomial_eq] -/
 
 theorem multiComponent.toFun'_apply (n : ι →₀ ℕ) (f : PolynomialLaw R (Π i, M i) N)
   (S : Type u) [CommSemiring S] [Algebra R S] (m : S ⊗[R] (Π i, M i)) :
