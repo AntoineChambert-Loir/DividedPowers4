@@ -396,39 +396,92 @@ variable (S)
 /-- The extension of `PolynomialLaw.toFun'` to all universes. -/
 def toFun : S ⊗[R] M → S ⊗[R] N := Function.extend (π R M S) (f.toFunLifted) (fun _ ↦ 0)
 
-/- Unfinished attempt to use `Small`
+-- Unfinished attempt to use `Small`
 
 #check toFunLifted3' f (S := S)
 #check π3' R M S
 
 def toFun3' : S ⊗[R] M → S ⊗[R] N := Function.extend (π3' R M S) (toFunLifted3' f) (fun _ ↦ 0)
 
-example : FactorsThrough (π3' R M S) (toFunLifted3' f) := fun ⟨A, _, t⟩ ⟨A', _, t'⟩ h ↦ by
-  have : Small.{u} (A ⊔ A' : Subalgebra R S) := by
-    rw [Algebra.sup_def]
-    apply Algebra.small_adjoin
-  simp only [π3']
-  simp only [toFunLifted3', AlgHom.comp_toLinearMap, rTensor_comp_apply] at h
-  have := TensorProduct.Algebra.eq_of_fg_of_subtype_eq h
-  have h : A.val = (A ⊔ A' : Subalgebra R S).val.comp (Subalgebra.inclusion le_sup_left) :=
-    Subalgebra.val_comp_inclusion (le_sup_left : A ≤ A ⊔ A')
-  have h' : A'.val = (A ⊔ A' : Subalgebra R S).val.comp (Subalgebra.inclusion le_sup_right) :=
-    Subalgebra.val_comp_inclusion (le_sup_right : A' ≤ A ⊔ A')
+theorem _root_.Algebra.small_adjoin (X : Set S) [Small.{u} X] :
+    Small.{u} (Algebra.adjoin R X) := by
+  obtain ⟨Xu, ⟨hX⟩⟩ := Small.equiv_small (α := X)
+  let e : MvPolynomial Xu R →ₐ[R] Algebra.adjoin R X :=
+    aeval (fun x ↦ ⟨hX.symm x, Algebra.subset_adjoin (Subtype.coe_prop (hX.symm x))⟩)
+  apply small_of_surjective (f := e)
+  rw [← AlgHom.range_eq_top, eq_top_iff]
+  rintro ⟨s, hs⟩ _
+  induction hs using Algebra.adjoin_induction with
+  | mem s hs => use MvPolynomial.X (hX (⟨s, hs⟩ : X)); simp [e]
+  | algebraMap r => use MvPolynomial.C r; simp [← Subtype.coe_inj]
+  | add x y hx hy hx' hy' =>
+    exact Subalgebra.add_mem e.range (hx' Algebra.mem_top) (hy' Algebra.mem_top)
+  | mul x y hx hy hx' hy' =>
+    exact Subalgebra.mul_mem e.range (hx' Algebra.mem_top) (hy' Algebra.mem_top)
 
-  let jA := (Shrink.algEquiv (A ⊔ A' : Subalgebra R S) R).symm.toAlgHom.comp
-    ((Subalgebra.inclusion le_sup_left).comp (Shrink.algEquiv A R).toAlgHom)
-  let jA' := (Shrink.algEquiv (A ⊔ A' : Subalgebra R S) R).symm.toAlgHom.comp
-    ((Subalgebra.inclusion le_sup_right).comp (Shrink.algEquiv A' R).toAlgHom)
-  let j := (A ⊔ A').val.comp (Shrink.algEquiv (A ⊔ A' : Subalgebra R S) R).toAlgHom
-  have hA : A.val.comp (Shrink.algEquiv A R).toAlgHom = j.comp jA := by
-    ext; simp [jA, j]
-  have hA' : A'.val.comp (Shrink.algEquiv A' R).toAlgHom = j.comp jA' := by
-    ext; simp [jA', j]
-  simp only [hA, hA']
-  simp only [Subalgebra.val_comp_inclusion, AlgHom.comp_toLinearMap, rTensor_comp_apply]
-  apply congr_arg
+theorem exists_small_eq_of_eq
+    {A A' : Subalgebra R S} [Small.{u} A] [Small.{u} A']
+    (t : A ⊗[R] M) (t' : A' ⊗[R] M)
+    (htt' : A.val.toLinearMap.rTensor M t = A'.val.toLinearMap.rTensor M t') :
+    ∃ (B : Subalgebra R S) (hB : Small.{u} B) (hAB : A ≤ B) (hA'B : A' ≤ B), (Subalgebra.inclusion hAB).toLinearMap.rTensor M t = (Subalgebra.inclusion hA'B).toLinearMap.rTensor M t' := by
   sorry
--/
+
+theorem toFunLifted3'_factorsThrough :
+    FactorsThrough (toFunLifted3' f) (π3' R M S) := by
+  rintro ⟨A, _, t⟩ ⟨A', _, t'⟩ htt'
+  simp only [π3'] at htt'
+  simp [rTensor_comp_apply, AlgHom.comp_toLinearMap, LinearMap.comp_apply] at htt'
+
+  set sA := Shrink.algEquiv.{v, u} A R with hsA
+  set sA' := Shrink.algEquiv.{v, u} A' R with hsA'
+  set u := sA.toLinearEquiv.rTensor M t with hu
+  have ht : t = sA.symm.toLinearEquiv.rTensor M u := by
+    simp only [← LinearEquiv.coe_toLinearMap, LinearEquiv.coe_rTensor, hu, ← rTensor_comp_apply]
+    simp only [AlgEquiv.toLinearEquiv_toLinearMap]
+    erw [← AlgHom.comp_toLinearMap]
+    simp only [AlgEquiv.toAlgHom_eq_coe, AlgEquiv.symm_comp, toLinearMap_id, rTensor_id, id_coe,
+      id_eq]
+  set u' := sA'.toLinearEquiv.rTensor M t' with hu'
+  have ht' : t' = sA'.symm.toLinearEquiv.rTensor M u' := by
+    simp only [← LinearEquiv.coe_toLinearMap, LinearEquiv.coe_rTensor, hu', ← rTensor_comp_apply]
+    simp only [AlgEquiv.toLinearEquiv_toLinearMap]
+    erw [← AlgHom.comp_toLinearMap]
+    simp only [AlgEquiv.toAlgHom_eq_coe, AlgEquiv.symm_comp, toLinearMap_id, rTensor_id, id_coe,
+      id_eq]
+
+  obtain ⟨B, hB, hAB, hA'B, huu'⟩ := exists_small_eq_of_eq S u u' htt'
+
+  simp only [toFunLifted3']
+  have h : A.val = B.val.comp (Subalgebra.inclusion hAB) :=
+    Subalgebra.val_comp_inclusion (le_refl A)
+  have h' : A'.val = B.val.comp (Subalgebra.inclusion hA'B) :=
+    Subalgebra.val_comp_inclusion (le_refl A')
+
+  set sB := Shrink.algEquiv.{v, u} B R with hsB
+  rw [← hsA, ← hsA']
+
+  let jAB : Shrink.{u} A →ₐ[R] Shrink.{u} B :=
+    (AlgHom.comp sB.symm (Subalgebra.inclusion hAB)).comp sA
+  have hA : A.val.comp sA = (B.val.comp sB).comp jAB := by
+    ext; simp [jAB]
+  erw [hA]
+  let jA'B : Shrink.{u} A' →ₐ[R] Shrink.{u} B :=
+    (AlgHom.comp sB.symm (Subalgebra.inclusion hA'B)).comp sA'
+  have hA' : A'.val.comp sA' = (B.val.comp sB).comp jA'B := by
+    ext; simp [jA'B]
+  erw [hA']
+  rw [AlgHom.comp_toLinearMap, rTensor_comp_apply, isCompat_apply']
+  conv_rhs =>
+    rw [AlgHom.comp_toLinearMap, rTensor_comp_apply, isCompat_apply']
+  apply congr_arg
+  apply congr_arg
+  rw [ht, ht']
+  simp only [← LinearEquiv.coe_toLinearMap, LinearEquiv.coe_rTensor, ← rTensor_comp_apply, ← LinearEquiv.coe_toLinearMap]
+  apply (sB.toLinearEquiv.rTensor M).injective
+  simp only [← LinearEquiv.coe_toLinearMap, LinearEquiv.coe_rTensor, ← rTensor_comp_apply, ← LinearEquiv.coe_toLinearMap]
+  convert huu'
+  · ext; simp [jAB]
+  · ext; simp [jA'B]
 
 variable {S}
 

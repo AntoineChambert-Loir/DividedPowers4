@@ -1,4 +1,5 @@
 --import DividedPowers.Basic -- In PR #15657
+import DividedPowers.PolynomialLaw.Basic -- mathlib's file for CommRing and AddCommGroup rather than CommSemiring and AddCommMonoid
 import DividedPowers.PolynomialLaw.Basic2 -- the rest
 import DividedPowers.BasicLemmas
 import DividedPowers.DPAlgebra.BaseChange -- It uses sorry
