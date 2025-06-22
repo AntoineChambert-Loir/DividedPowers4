@@ -275,26 +275,6 @@ theorem _root_.Submodule.baseChange_eq {R : Type*} [CommSemiring R]
     (S : Type*) [Semiring S] [Algebra R S] :
     P.baseChange S = LinearMap.range (P.subtype.baseChange S) := by
   simp only [Submodule.baseChange, Submodule.map_coe, TensorProduct.mk_apply]
-  apply le_antisymm
-  · rw [Submodule.span_le, Set.image_subset_iff]
-    intro p hp
-    simp only [Set.mem_preimage, SetLike.mem_coe, LinearMap.mem_range]
-    use 1 ⊗ₜ[R] ⟨p, hp⟩
-    simp only [baseChange_tmul, Submodule.coe_subtype]
-  · intro t
-    simp only [LinearMap.mem_range, forall_exists_index]
-    rintro x ⟨rfl⟩
-    induction x using TensorProduct.induction_on with
-    | zero => simp only [_root_.map_zero, Submodule.zero_mem]
-    | tmul s p =>
-      simp only [baseChange_tmul, Submodule.coe_subtype]
-      rw [← mul_one s, ← smul_eq_mul, ← TensorProduct.smul_tmul']
-      apply Submodule.smul_mem
-      apply Submodule.subset_span
-      exact Set.mem_image_of_mem (TensorProduct.tmul R 1) p.coe_prop
-    | add x y hx hy =>
-      rw [map_add]
-      exact Submodule.add_mem _ hx hy
 
 theorem _root_.Submodule.exists_lift_of_mem_baseChange
     {R : Type*} [CommSemiring R]
@@ -500,8 +480,18 @@ theorem toFun'_eq_of_diagram' {A : Type u} [CommRing A] [Algebra R A] {φ : A �
     at hpq ⊢
   rw [f.isCompat_apply', hψ hpq]
 
+section CommRing
+
+variable
+    {R : Type u} [CommRing R]
+    {M : Type*} [AddCommGroup M] [Module R M]
+    {N : Type*} [AddCommGroup N] [Module R N]
+    (f : M →ₚₗ[R] N)
+    {S : Type v} [CommRing S] [Algebra R S]
+
 /-- Compare the values of `PolynomialLaw.toFun' in a square diagram -/
-theorem toFun'_eq_of_diagram {A : Type u} [CommRing A] [Algebra R A] {φ : A →ₐ[R] S} (p : A ⊗[R] M)
+theorem toFun'_eq_of_diagram
+    {A : Type u} [CommRing A] [Algebra R A] {φ : A →ₐ[R] S} (p : A ⊗[R] M)
     {T : Type w} [CommRing T] [Algebra R T] {B : Type u} [CommRing B] [Algebra R B] {ψ : B →ₐ[R] T}
     (q : B ⊗[R] M) (h : S →ₐ[R] T) (h' : φ.range →ₐ[R] ψ.range)
     (hh' : ψ.range.val.comp h' = h.comp φ.range.val)
@@ -516,6 +506,7 @@ theorem toFun'_eq_of_diagram {A : Type u} [CommRing A] [Algebra R A] {φ : A →
     apply congr_arg₂ _ _ rfl
     apply congr_arg₂ _ _ rfl
     simp only [AlgEquiv.toAlgHom_eq_coe, AlgHom.comp_assoc, AlgEquiv.comp_symm, AlgHom.comp_id]
+  -- have := AlgHom.factor φ (R := R) (S := A) (T := S)
   simp only [φ.factor, ψ.factor, ← AlgHom.comp_assoc]
   nth_rewrite 2 [AlgHom.comp_assoc]
   rw [ht, AlgHom.comp_assoc]
@@ -544,7 +535,6 @@ theorem toFun'_eq_of_inclusion {A : Type u} [CommRing A] [Algebra R A] {φ : A �
   toFun'_eq_of_diagram f p q (AlgHom.id R S) (Subalgebra.inclusion h) (by ext x; simp) hpq
 
 theorem toFunLifted_factorsThrough_π : Function.FactorsThrough f.toFunLifted (π R M S) := by
-  classical
   rintro ⟨s, p⟩ ⟨s', p'⟩ h
   simp only [toFunLifted]
   set u := rTensor M (φ R s).rangeRestrict.toLinearMap p with hu
@@ -583,8 +573,8 @@ theorem toFun_eq_toFunLifted_apply {t : S ⊗[R] M} {s : Finset S}
     f.toFun S t = (φ R s).toLinearMap.rTensor N (f.toFun' _ p) := by
   rw [PolynomialLaw.toFun, ← ha, (toFunLifted_factorsThrough_π f).extend_apply, toFunLifted]
 
-theorem exists_lift_of_le_rTensor_range {R : Type*} [CommRing R] (M : Type*) [AddCommGroup M]
-    [Module R M] {S : Type*} [CommRing S] [Algebra R S] {T : Type*} [CommRing T] [Algebra R T]
+theorem exists_lift_of_le_rTensor_range
+    {T : Type*} [CommRing T] [Algebra R T]
     (A : Subalgebra R T) {φ : S →ₐ[R] T} (hφ : A ≤ φ.range) {t : T ⊗[R] M}
     (ht : t ∈ range ((Subalgebra.val A).toLinearMap.rTensor M)) :
     ∃ s : S ⊗[R] M, φ.toLinearMap.rTensor M s = t := by
@@ -603,7 +593,7 @@ theorem π_surjective : Function.Surjective (π R M S) := by
   intro t
   obtain ⟨B, hB, ht⟩ := TensorProduct.Algebra.exists_of_fg t
   obtain ⟨s, hs⟩ := Subalgebra.FG.exists_range_eq hB
-  obtain ⟨p, hp⟩ := exists_lift_of_le_rTensor_range M B (le_of_eq hs.symm) ht
+  obtain ⟨p, hp⟩ := exists_lift_of_le_rTensor_range B (le_of_eq hs.symm) ht
   exact ⟨⟨s, p⟩, hp⟩
 
 example {A : Type*} [CommRing A] [Algebra R A] [Algebra A S] [IsScalarTower R A S] :
@@ -626,7 +616,7 @@ theorem exists_lift' (t : S ⊗[R] M) (s : S) : ∃ (n : ℕ) (ψ : MvPolynomial
   obtain ⟨gen, hgen⟩ := Subalgebra.FG.exists_range_eq hB
   have hAB : A ≤ A ⊔ Algebra.adjoin R ({s} : Finset S) := le_sup_left
   rw [← hgen] at hAB
-  obtain ⟨p, hp⟩ := exists_lift_of_le_rTensor_range M _ hAB ht
+  obtain ⟨p, hp⟩ := exists_lift_of_le_rTensor_range _ hAB ht
   have hs : s ∈ (φ R gen).range  := by
     rw [hgen]
     apply Algebra.subset_adjoin
@@ -686,6 +676,8 @@ theorem isCompat {T : Type w} [CommRing T] [Algebra R T] (h : S →ₐ[R] T) :
     h.toLinearMap.rTensor N ∘ f.toFun S = f.toFun T ∘ h.toLinearMap.rTensor M := by
   ext t
   simp only [Function.comp_apply, PolynomialLaw.isCompat_apply]
+
+end CommRing
 
 end Lift
 
@@ -901,4 +893,5 @@ theorem comp_assoc :
 -/
 end Comp
 
+#check PolynomialLaw.toFun
 --#lint

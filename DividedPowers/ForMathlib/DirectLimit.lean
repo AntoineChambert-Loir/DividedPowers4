@@ -365,8 +365,8 @@ section Algebra
 
 open TensorProduct
 
-variable {R S N : Type*} [CommRing R] [CommRing S] [Algebra R S]
-  [AddCommGroup N] [Module R N]
+variable {R S N : Type*} [CommSemiring R] [CommSemiring S] [Algebra R S]
+  [AddCommMonoid N] [Module R N]
 
 theorem TensorProduct.Algebra.exists_of_fg [DecidableEq {P : Submodule R S // P.FG}]
     (t : S ⊗[R] N) :
