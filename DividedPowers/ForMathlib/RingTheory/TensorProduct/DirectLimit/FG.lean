@@ -266,8 +266,11 @@ section Algebra
 
 open TensorProduct
 
-variable {R S N : Type*} [CommRing R] [CommRing S] [Algebra R S]
-  [AddCommGroup N] [Module R N]
+-- variable {R S N : Type*} [CommRing R] [CommRing S] [Algebra R S]
+--   [AddCommGroup N] [Module R N]
+
+variable {R S N : Type*} [CommSemiring R] [CommSemiring S] [Algebra R S]
+  [AddCommMonoid N] [Module R N]
 
 theorem TensorProduct.Algebra.exists_of_fg [DecidableEq {P : Submodule R S // P.FG}]
     (t : S ⊗[R] N) :
@@ -359,9 +362,9 @@ theorem TensorProduct.Algebra.eq_of_fg_of_subtype_eq'
 
 -- [Mathlib.RingTheory.TensorProduct.Basic]
 theorem LinearMap.rTensor_comp_baseChange_comm_apply
-    {R : Type*} [CommRing R] {M N : Type*} [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
-    {S : Type*} [CommRing S] [Algebra R S]
-    {S' : Type*} [CommRing S'] [Algebra R S']
+    {R : Type*} [CommSemiring R] {M N : Type*} [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module R N]
+    {S : Type*} [Semiring S] [Algebra R S]
+    {S' : Type*} [Semiring S'] [Algebra R S']
     (φ : S →ₐ[R] S') (t : S ⊗[R] M) (f : M →ₗ[R] N) :
     (φ.toLinearMap.rTensor N) (f.baseChange S t)  =
       (f.baseChange S') (φ.toLinearMap.rTensor M t) := by
@@ -369,7 +372,7 @@ theorem LinearMap.rTensor_comp_baseChange_comm_apply
 
 /-- Lift an element that maps to 0 -/
 theorem Submodule.exists_fg_of_baseChange_eq_zero
-    {R S M N : Type*} [CommRing R] [CommRing S] [Algebra R S] [AddCommGroup M] [AddCommGroup N] [Module R M] [Module R N]
+    {R S M N : Type*} [CommSemiring R] [CommSemiring S] [Algebra R S] [AddCommMonoid M] [AddCommMonoid N] [Module R M] [Module R N]
     (f : M →ₗ[R] N) (t : S ⊗[R] M) (ht : f.baseChange S t = 0) :
     ∃ (A : Subalgebra R S) (_ : A.FG) (u : A ⊗[R] M),
       f.baseChange A u = 0 ∧ A.val.toLinearMap.rTensor M u = t := by
