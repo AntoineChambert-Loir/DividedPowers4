@@ -73,6 +73,7 @@ theorem Subalgebra.fg_sup {R : Type*} [CommSemiring R] {S : Type*} [CommSemiring
   rw [← hA.choose_spec, ← hB.choose_spec, ← Algebra.adjoin_union, ← Finset.coe_union]
   exact ⟨hA.choose ∪ hB.choose, rfl⟩
 
+#find_home! Subalgebra.fg_sup
 end fg
 
 section range
@@ -116,6 +117,7 @@ theorem MvPolynomial.aeval_range (R : Type*) [CommSemiring R] (S : Type*) [CommS
     rintro x ⟨i, rfl⟩
     use X i, by aesop
 
+#find_home! MvPolynomial.aeval_range
 theorem Subalgebra.val_comp_inclusion {R : Type*} [CommSemiring R] {S : Type*} [Semiring S]
     [Algebra R S] {A B : Subalgebra R S} (h : A ≤ B) :
   (Subalgebra.val B).comp (Subalgebra.inclusion h) = Subalgebra.val A := rfl

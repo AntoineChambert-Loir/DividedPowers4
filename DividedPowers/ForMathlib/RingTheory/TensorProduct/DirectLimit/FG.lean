@@ -36,25 +36,6 @@ section Semiring
 universe u v
 variable {R : Type u} [Semiring R] {M : Type*} [AddCommMonoid M] [Module R M]
 
-variable (R) in
-def Fintype.linearCombination' {α : Type*} [Fintype α] (v : α → M) : (α → R) →ₗ[R] M where
-   toFun := fun f => ∑ i, f i • v i
-   map_add' := fun f g => by simp_rw [← Finset.sum_add_distrib, ← add_smul]; rfl
-   map_smul' := fun r f => by simp_rw [Finset.smul_sum, smul_smul]; rfl
-
-theorem Fintype.linearCombination'_range {α : Type*} [Fintype α] [DecidableEq α] (v : α → M) :
-    range (Fintype.linearCombination' R v) = span R (Set.range v) := by
-  simp [Fintype.linearCombination']
-  apply le_antisymm
-  · rintro x ⟨r, rfl⟩
-    exact sum_mem (fun i _ ↦ smul_mem _ _ (subset_span (Set.mem_range_self i)))
-  · rw [span_le]
-    rintro a ⟨i, rfl⟩
-    use Pi.single i 1
-    -- use Fintype.sum_pi_single ?!
-    rw [Pi.single]
-    simp [Function.update]
-
 -- [Mathlib.RingTheory.Adjoin.FG]
 theorem Subalgebra.FG.sup {R S : Type*} [CommSemiring R] [Semiring S] [Algebra R S]
     {A A' : Subalgebra R S} (hA : Subalgebra.FG A) (hA' : Subalgebra.FG A') :
@@ -127,7 +108,7 @@ theorem DirectedSystem.rTensor {ι : Type*} [Preorder ι] {F : ι → Type*}
 
 /-- When `P` ranges over finitely generated submodules of `M`,
   the modules of the form `P ⊗[R] N` form a directed system. -/
-theorem rTensor_fg_directedSystem :
+instance rTensor_fg_directedSystem :
     DirectedSystem (ι := {P : Submodule R M // P.FG}) (fun P ↦ P.val ⊗[R] N)
     (fun ⦃_ _⦄ h ↦ LinearMap.rTensor N (Submodule.inclusion h)) :=
   DirectedSystem.rTensor R N DirectedSystem.Submodule_fg
@@ -179,7 +160,7 @@ theorem DirectedSystem.lTensor {ι : Type*} [Preorder ι] {F : ι → Type*}
 
 /-- When `Q` ranges over finitely generated submodules of `N`,
   the modules of the form `M ⊗[R] Q` form a directed system. -/
-theorem lTensor_fg_directedSystem :
+instance lTensor_fg_directedSystem :
     DirectedSystem (ι := {Q : Submodule R N // Q.FG}) (fun Q ↦ M ⊗[R] Q.val)
       (fun _ _ hPQ ↦ LinearMap.lTensor M (Submodule.inclusion hPQ)) :=
   DirectedSystem.lTensor R M DirectedSystem.Submodule_fg
@@ -232,7 +213,6 @@ theorem TensorProduct.eq_of_fg_of_subtype_eq {P : Submodule R M} (hP : P.FG) (t 
     ∃ (Q : Submodule R M) (hPQ : P ≤ Q), Q.FG ∧
       LinearMap.rTensor N (Submodule.inclusion hPQ) t
         = LinearMap.rTensor N (Submodule.inclusion hPQ) t' := by
-  have := rTensor_fg_directedSystem R M N -- should this be an instance?
   classical
   simp only [← rTensor_fgEquiv_of' R M N P hP, EmbeddingLike.apply_eq_iff_eq] at h
   obtain ⟨Q, hPQ, h⟩ := Module.DirectLimit.exists_eq_of_of_eq h
@@ -269,7 +249,7 @@ open TensorProduct
 -- variable {R S N : Type*} [CommRing R] [CommRing S] [Algebra R S]
 --   [AddCommGroup N] [Module R N]
 
-variable {R S N : Type*} [CommSemiring R] [CommSemiring S] [Algebra R S]
+variable {R S N : Type*} [CommSemiring R] [Semiring S] [Algebra R S]
   [AddCommMonoid N] [Module R N]
 
 theorem TensorProduct.Algebra.exists_of_fg [DecidableEq {P : Submodule R S // P.FG}]
@@ -372,7 +352,7 @@ theorem LinearMap.rTensor_comp_baseChange_comm_apply
 
 /-- Lift an element that maps to 0 -/
 theorem Submodule.exists_fg_of_baseChange_eq_zero
-    {R S M N : Type*} [CommSemiring R] [CommSemiring S] [Algebra R S] [AddCommMonoid M] [AddCommMonoid N] [Module R M] [Module R N]
+    {R S M N : Type*} [CommSemiring R] [Semiring S] [Algebra R S] [AddCommMonoid M] [AddCommMonoid N] [Module R M] [Module R N]
     (f : M →ₗ[R] N) (t : S ⊗[R] M) (ht : f.baseChange S t = 0) :
     ∃ (A : Subalgebra R S) (_ : A.FG) (u : A ⊗[R] M),
       f.baseChange A u = 0 ∧ A.val.toLinearMap.rTensor M u = t := by
@@ -389,7 +369,5 @@ theorem Submodule.exists_fg_of_baseChange_eq_zero
   · rw [← rTensor_comp_baseChange_comm_apply, hu']
   · rw [← LinearMap.comp_apply, ← LinearMap.rTensor_comp, ← hu]
     congr
-
-universe u
 
 end Algebra
