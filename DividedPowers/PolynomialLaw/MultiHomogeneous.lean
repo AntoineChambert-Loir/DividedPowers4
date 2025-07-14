@@ -7,7 +7,6 @@ universe u
 
 /- # Multihomogeneous components of a polynomial map
 
-
 Let `S` be an `R`-algebra and let `j : S →ₐ[S] S[X]` be the canonical algebra map.
 
 For `m : S ⊗[R] M`, we consider the element `X • (j m) : S[X] ⊗[R] M`
@@ -102,17 +101,19 @@ section  -- ι : Type*
 
 open Finsupp MvPolynomial
 
-variable {ι : Type*} [Fintype ι] [DecidableEq ι] {R : Type u} [CommRing R]
+-- **MI**: I replaced  `CommRing R` by `CommSemiring R`.
+variable {ι : Type*} [Fintype ι] [DecidableEq ι] {R : Type u} [CommSemiring R]
 
 variable {M : ι → Type*} [∀ i, AddCommGroup (M i)] [∀ i, Module R (M i)]
   {N : Type*} [AddCommGroup N] [Module R N]
 
+-- **MI**: I replaced  `CommRing S` by `CommSemiring S`.
 -- TODO: fix docstring
 /-- A polynomial map `f : Π (i : ι), M i →ₚ[R] N` is multihomogeneous of multidegree `n : ι → ℕ`
   if for all families `{z_i : R ⊗ M i}_{i : ι}`, `{r_i : R}_{i : ι}`, one has
   `f (r_1 • z_1, r_2 • z_2, ...) = Π i r_i^(n i) • f (z_1, z_2, ...)`. -/
 def IsMultiHomogeneousOfDegree (n : ι → ℕ) (f : PolynomialLaw R (Π i, M i) N) : Prop :=
-  ∀ (S : Type u) [CommRing S] [Algebra R S] (r : ι → S) (m : (i : ι) → S ⊗[R] M i),
+  ∀ (S : Type u) [CommSemiring S] [Algebra R S] (r : ι → S) (m : (i : ι) → S ⊗[R] M i),
     f.toFun' S ((TensorProduct.piRight R R _ _).symm fun i ↦ r i • m i) =
       (∏ᶠ i, (r i)^(n i)) • f.toFun' S ((TensorProduct.piRight R R _ _).symm m)
 
@@ -143,11 +144,12 @@ def multiGrade (n : ι → ℕ) : Submodule R (PolynomialLaw R (Π i, M i) N) wh
 lemma mem_multiGrade (f : PolynomialLaw R (Π i, M i) N) (n : ι → ℕ) :
     f ∈ multiGrade n ↔ IsMultiHomogeneousOfDegree n f := by rfl
 
+-- **MI**: I replaced  `CommRing S` by `CommSemiring S`.
 -- TODO: generalize `PolynomialLaw.exists_lift'` to this context.
 /-- If `f` is multihomogeneous of multidegree `n`, then all `f.toFun S` are multihomogeneous of
   multidegree `n`. -/
 lemma isMultiHomogeneousOfDegree_toFun {n : ι → ℕ} {f : PolynomialLaw R (Π i, M i) N}
-    (hf : IsMultiHomogeneousOfDegree n f) (S : Type*) [CommRing S] [Algebra R S] (r : ι → S)
+    (hf : IsMultiHomogeneousOfDegree n f) (S : Type*) [CommSemiring S] [Algebra R S] (r : ι → S)
     (m : S ⊗[R] (Π i, M i)) :
     f.toFun S ((TensorProduct.piRight R R _ _).symm
       (fun i ↦ r i • ((TensorProduct.piRight R R _ _ ) m) i)) =
@@ -510,7 +512,7 @@ variable {S : Type u} [CommSemiring S] [Algebra R S]
 
 noncomputable def el_S (m : S ⊗[R] Π i, M i) : MvPolynomial ι R ⊗[R] (S ⊗[R] (Π i, M i)) :=
   ∑ (i : ι), (X i) ⊗ₜ  (TensorProduct.piRight R R S _).symm
-    (Pi.single (f := fun i ↦  S ⊗[R] M i) i (TensorProduct.piRight R R S _ m i))
+    (Pi.single (M := fun i ↦  S ⊗[R] M i) i (TensorProduct.piRight R R S _ m i))
 
 noncomputable def el_S' (m : S ⊗[R] Π i, M i) : (MvPolynomial ι R ⊗[R] S) ⊗[R] (Π i, M i) :=
   (TensorProduct.assoc R (MvPolynomial ι R) S (Π i, M i)).symm (el_S m)
@@ -527,26 +529,32 @@ noncomputable def el_S''' (m : S ⊗[R] Π i, M i)  (f : PolynomialLaw R (Π i, 
 noncomputable def coeff_el'_S (m : S ⊗[R] Π i, M i) (f : PolynomialLaw R (Π i, M i) N)
     (n : ι →₀ ℕ) : S ⊗[R] N := MvPolynomial.rTensor (el_S''' m f) n
 
---#check el
-
-/- variable {M : ι → Type*} [∀ i, AddCommGroup (M i)] [∀ i, Module R (M i)]
-  {N : Type*} [AddCommGroup N] [Module R N] -/
-
 /- Here we define the multihomogeneous components of a `PolynomialLaw`
  and show how it recomposes as its locally finite sum -/
 
-/- The homogeneous component of degree `p` of a `PolynomialLaw`. -/
+/- The multihomogeneous component of degree `n` of a `PolynomialLaw`. -/
 @[simps] noncomputable def multiComponent (n : ι →₀ ℕ) (f : PolynomialLaw R (Π i, M i) N) :
     PolynomialLaw R (Π i, M i) N where
-  toFun' S _ _ := fun m ↦ by
-    let m' : (Π i, S ⊗[R] M i) := (TensorProduct.piRight R R _ _ ) m
+  toFun' S _ _ := fun m ↦ coeff_el'_S m f n
+/-     let m' : (Π i, S ⊗[R] M i) := (TensorProduct.piRight R R _ _ ) m
     let m'' := el (R := R) m'
-    --apply f.toFun
-
-    sorry
-    --
-
+    apply f.toFun
+    sorry -/
   isCompat' {S _ _} {S' _ _} φ := by
+    ext sm
+    simp only [coeff_el'_S, el_S''', el_S'', el_S', el_S, piRight_apply, map_sum, rTensor_apply,
+      Function.comp_apply, ← rTensor_comp_apply]
+    rw [lcoeff_comp_baseChange_eq, rTensor_comp_apply, f.isCompat_apply']
+    congr
+    simp only [map_sum]
+    congr
+    ext x
+
+    /- simp only [LinearEquiv.rTensor'_apply, Function.comp_apply, rTensor_apply,
+      ← rTensor_comp_apply]
+    simp only [coeff_el'_S, el_S''', el_S'', el_S', el_S]
+    rw [lcoeff_comp_baseChange_eq, rTensor_comp_apply, f.isCompat_apply', ← rTensor_comp_apply,
+      MvPolynomial.baseChange_comp_monomial_eq] -/
     sorry
     /- ext sm
     simp only [LinearEquiv.rTensor'_apply, Function.comp_apply, rTensor_apply,
@@ -574,9 +582,9 @@ theorem multiComponent.toFun'_apply (n : ι →₀ ℕ) (f : PolynomialLaw R (Π
       (((monomial (Finsupp.ofSupportFinite (fun _ ↦ 1) (Set.toFinite _))).restrictScalars
         R).rTensor (Π i, M i) m)) n := rfl
 
--- I need `S : Type u`.
+-- **MI**: I replaced  `CommRing S` by `CommSemiring S` and `S : Type u` by `S : Type*`.
 theorem multiComponent_toFun_apply (n : ι →₀ ℕ) (f : PolynomialLaw R (Π i, M i) N)
-    (S : Type u) [CommRing S] [Algebra R S] (m : S ⊗[R] (Π i, M i)) :
+    (S : Type*) [CommSemiring S] [Algebra R S] (m : S ⊗[R] (Π i, M i)) :
     (f.multiComponent n).toFun S m = rTensor (f.toFun (MvPolynomial ι S)
       (((monomial (Finsupp.ofSupportFinite (fun _ ↦ 1) (Set.toFinite _))).restrictScalars
         R).rTensor (Π i, M i) m)) n := by
@@ -711,7 +719,8 @@ theorem multiComponent_smul (n : ι →₀ ℕ) (r : R) (f : PolynomialLaw R (Π
   simp only [multiComponent, Function.mem_support, ne_eq, Finset.mem_coe,
     Finsupp.mem_support_iff]
 
-theorem support_multiComponent (f : (Π i, M i) →ₚₗ[R] N) {S : Type*} [CommRing S] [Algebra R S]
+-- **MI**: I replaced  `CommRing S` by `CommSemiring S`.
+theorem support_multiComponent (f : (Π i, M i) →ₚₗ[R] N) {S : Type*} [CommSemiring S] [Algebra R S]
     (m : S ⊗[R] (Π i, M i)) :
     Function.support (fun i => ((fun n => multiComponent n f) i).toFun S m) =
     (rTensor (f.toFun (MvPolynomial ι S)
