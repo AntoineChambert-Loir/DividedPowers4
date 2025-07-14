@@ -1,7 +1,6 @@
 import DividedPowers.ForMathlib.RingTheory.SubmoduleMem
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.MvPolynomial
 import DividedPowers.PolynomialLaw.Basic2
-import Mathlib.LinearAlgebra.Basis.Basic
 
 universe u v w uM uN uι
 
