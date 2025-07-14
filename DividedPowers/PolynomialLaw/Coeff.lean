@@ -77,8 +77,7 @@ open Finsupp Function
 variable {R : Type u} [CommSemiring R] {M : Type*} [AddCommGroup M] [Module R M]
   {N : Type*} [AddCommGroup N] [Module R N]
 
-/- **MI** : I replaced `[CommRing S]` by `[CommSemiring S]`. -/
-/- **ACL**: apparently, that doesn't work anymore… -/
+/- **MI** : Now the file works with `[CommSemiring R]` and `[CommSemiring S]`. -/
 
 /-- A family `f : ι → M →ₚₗ[R] N` of polynomial maps has locally finite support
   if, for all `S`, `fun i ↦ (f i).toFun' S` has finite support` -/
@@ -181,11 +180,11 @@ end LocFinsupp
 
 section Coefficients
 
-variable {R : Type u} [CommRing R] {M : Type uM} [AddCommGroup M] [Module R M]
+variable {R : Type u} [CommSemiring R] {M : Type uM} [AddCommGroup M] [Module R M]
   {N : Type uN} [AddCommGroup N] [Module R N]
 
 --variable {ι : Type uι} /- [DecidableEq ι]   -/
-variable {ι : Type uι}  /- **MI** : I changed this so that `generize.toFun` works.-/
+variable {ι : Type*}
 section Fintype
 
 variable [Fintype ι]
@@ -345,7 +344,7 @@ theorem coeff_comp_equiv' [DecidableEq ι] {κ : Type*} [DecidableEq κ] [Fintyp
   simp only [Function.comp_apply, Equiv.apply_symm_apply]
 
 theorem image_eq_coeff_sum [DecidableEq ι] (m : ι → M) (f : PolynomialLaw R M N) (S : Type*)
-    [CommRing S] [Algebra R S] (r : ι → S) : f.toFun S (univ.sum fun i => r i ⊗ₜ[R] m i) =
+    [CommSemiring S] [Algebra R S] (r : ι → S) : f.toFun S (univ.sum fun i => r i ⊗ₜ[R] m i) =
       (coeff m f).sum (fun k n => (univ.prod fun i => r i ^ k i) ⊗ₜ[R] n) := by
   have this := congr_fun (f.isCompat (MvPolynomial.aeval r))
     (univ.sum fun i => MvPolynomial.X i ⊗ₜ[R] m i)
@@ -366,7 +365,7 @@ open Function
 
 /-- Variant of `image_eq_coeff_sum` over a Finset -/
 theorem image_eq_coeff_finset_sum [DecidableEq ι] (m : ι → M) (f : PolynomialLaw R M N)
-    (S : Type*) [CommRing S] [Algebra R S] (r : ι → S) (s : Finset ι) :
+    (S : Type*) [CommSemiring S] [Algebra R S] (r : ι → S) (s : Finset ι) :
     f.toFun S (s.sum fun i => r i ⊗ₜ[R] m i) = (coeff (fun i : s => m i) f).sum
       (fun k n => (s.prod fun i =>
         r i ^ ((Function.extend (fun x => x.val) k (const ι 0)) i)) ⊗ₜ[R] n) := by
@@ -386,7 +385,7 @@ theorem image_eq_coeff_finset_sum [DecidableEq ι] (m : ι → M) (f : Polynomia
 -- Useful ?
 /-- Variant of `image_eq_coeff_sum'` with a `Finsupp`-/
 theorem image_eq_coeff_sum' [DecidableEq ι] (m : ι → M) (f : PolynomialLaw R M N)
-    (S : Type*) [CommRing S] [Algebra R S] (r : ι →₀ S) :
+    (S : Type*) [CommSemiring S] [Algebra R S] (r : ι →₀ S) :
     f.toFun S (r.sum fun i a => a ⊗ₜ[R] m i) = (coeff (fun i : r.support => m i) f).sum
       (fun k n => (r.support.prod
         (fun i => r i ^ ((Function.extend (fun x => x.val) k (const ι 0)) i)) ⊗ₜ[R] n)) := by
@@ -461,11 +460,9 @@ theorem coeff_injective [DecidableEq ι] (m : ι → M) (hm : Submodule.span R (
     obtain ⟨r, rfl⟩ := hp
     rw [Finsupp.sum_of_support_subset _ (subset_univ _) _ (fun  i _ => by
       rw [smul_eq_mul, _root_.mul_one, TensorProduct.zero_tmul])]
-    --simp? [← toFun_eq_toFun'_apply, image_eq_coeff_sum, h]
-    sorry
-  sorry
-  /- rw [PolynomialLaw.span_tensorProduct_eq_top_of_span_eq_top ι m hm]
-  exact Submodule.mem_top -/
+    simp [smul_eq_mul, mul_one, ← toFun_eq_toFun'_apply,image_eq_coeff_sum, h]
+  rw [PolynomialLaw.span_tensorProduct_eq_top_of_span_eq_top ι m hm]
+  exact Submodule.mem_top
 
 /- When M is free, we can go in the other direction and construct,
   from a basis `b` of `M` and `N`-valued polynomials, a polynomial map -/
@@ -510,7 +507,7 @@ noncomputable def polynomialMap (b : Basis ι R M) (h : (ι →₀ ℕ) →₀ N
   toFun' S _ _:= polynomialMap_toFun b h S
   isCompat' φ   := polynomialMap_isCompat b h φ
 
-variable (S : Type*) [CommRing S] [Algebra R S]
+variable (S : Type*) [CommSemiring S] [Algebra R S]
 
 theorem polynomialMap_toFun_apply (b : Basis ι R M) (h : (ι →₀ ℕ) →₀ N) (m : S ⊗[R] M) :
     (Finsupp.polynomialMap b h).toFun S m = h.sum fun k n =>
@@ -585,22 +582,20 @@ noncomputable def coeffPolynomialLawEquiv [DecidableEq ι] (b : Basis ι R M) :
   toFun h      := Finsupp.polynomialMap b h
   map_add' h k := by
     ext S _ _ m
-    sorry
-    /- simp only [← toFun_eq_toFun', add_toFun, Finsupp.polynomialMap_toFun_apply, Pi.add_apply]
+    simp only [← toFun_eq_toFun', add_toFun, Finsupp.polynomialMap_toFun_apply, Pi.add_apply]
     rw [Finsupp.sum_of_support_subset h (h.support.subset_union_left),
       Finsupp.sum_of_support_subset k (h.support.subset_union_right),
       Finsupp.sum_of_support_subset (h + k) Finsupp.support_add]
     simp_rw [Finsupp.coe_add, Pi.add_apply, TensorProduct.tmul_add]
     rw [sum_add_distrib]
-    all_goals intro i _hi; rw [TensorProduct.tmul_zero] -/
+    all_goals intro i _hi; rw [TensorProduct.tmul_zero]
   map_smul' a h := by
-    sorry
-    /- ext S _ _ m
+    ext S _ _ m
     simp only [← toFun_eq_toFun', RingHom.id_apply, smul_toFun, Pi.smul_apply,
       Finsupp.polynomialMap_toFun_apply]
     rw [Finsupp.sum_of_support_subset (a • h) Finsupp.support_smul _
       (fun k _ => by rw [TensorProduct.tmul_zero]), Finsupp.sum, smul_sum]
-    exact sum_congr rfl (fun k _ => by rw [Finsupp.coe_smul, Pi.smul_apply, tmul_smul]) -/
+    exact sum_congr rfl (fun k _ => by rw [Finsupp.coe_smul, Pi.smul_apply, tmul_smul])
   invFun f    := coeff (DFunLike.coe b) f
   left_inv h  := by dsimp; rw [coeff_of_finsupp_polynomialMap]
   right_inv f := by dsimp; rw [finsupp_polynomialMap_of_coeff b]
