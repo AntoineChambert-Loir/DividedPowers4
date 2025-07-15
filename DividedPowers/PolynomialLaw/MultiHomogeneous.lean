@@ -91,20 +91,18 @@ theorem baseChange_comp_monomial_eq (φ : S →ₐ[R] S') (n : σ →₀ ℕ) :
     AlgHom.toLinearMap_apply, baseChange_monomial]
 
 
-theorem foo [DecidableEq σ] {M : σ → Type*} [ (i : σ) → AddCommMonoid (M i)] [(i : σ) → Module R (M i)]
+theorem foo [DecidableEq σ] {M : σ → Type*} [(i : σ) → AddCommMonoid (M i)] [(i : σ) → Module R (M i)]
   (φ : S →ₐ[R] S') (s : S) (m : (i : σ) → M i) (i : σ) :
   ((MvPolynomial.baseChange φ).toLinearMap ∘ₗ scalarRTensorAlgEquiv.toLinearMap) (X i ⊗ₜ[R] s) ⊗ₜ[R] Pi.single i (m i) =
     scalarRTensorAlgEquiv (X i ⊗ₜ[R] φ s) ⊗ₜ[R] Pi.single i (m i) := by
-  simp only [baseChange, eval₂Hom_eq_bind₂, coe_comp, Function.comp_apply,
-    AlgEquiv.toLinearMap_apply, AlgHom.toLinearMap_apply, AlgHom.coe_mk]
-  simp only [← bind₂_map, bind₂_C_left, RingHomCompTriple.comp_apply]
+  simp only [baseChange, eval₂Hom_eq_bind₂, coe_comp, Function.comp_apply, AlgHom.toLinearMap_apply,
+    AlgEquiv.toLinearMap_apply, AlgHom.coe_mk, ← bind₂_map, bind₂_C_left,
+    RingHomCompTriple.comp_apply]
   congr
   simp only [scalarRTensorAlgEquiv, AlgEquiv.trans_apply, mapAlgEquiv_apply, map_map]
   ext d
-  simp only [coeff_map, RingHom.coe_comp, RingHom.coe_coe, Function.comp_apply]
-  refine (LinearEquiv.symm_apply_eq (TensorProduct.lid R S')).mp ?_
-  simp only [lid_symm_apply]
-  sorry
+  simp [rTensorAlgEquiv_apply, coeff_map, coeff_rTensorAlgHom_tmul, RingHom.coe_comp,
+    RingHom.coe_coe, Function.comp_apply, Algebra.TensorProduct.lid_tmul, map_smul]
 
 end MvPolynomial
 
@@ -602,32 +600,18 @@ lemma coeff_el'_S_def (m : S ⊗[R] Π i, M i) (f : PolynomialLaw R (Π i, M i) 
   toFun' S _ _ := fun m ↦ coeff_el'_S m f n
   isCompat' {S _ _} {S' _ _} φ := by
     ext sm
-    simp only [coeff_el'_S, el_S''', el_S''_hom, LinearEquiv.coe_rTensor,
-      AlgEquiv.toLinearEquiv_toLinearMap, el_S'_hom, el_S_hom, piRight_apply, coe_comp,
-      LinearEquiv.coe_coe, coe_mk, AddHom.coe_mk, Function.comp_apply, map_sum, rTensor_apply, ←
-      rTensor_comp_apply]
-    /- rw [lcoeff_comp_baseChange_eq, rTensor_comp_apply, f.isCompat_apply',
-       ] -/
+    simp only [coeff_el'_S_def, rTensor_apply, Function.comp_apply, ← rTensor_comp_apply]
+    rw [lcoeff_comp_baseChange_eq, rTensor_comp_apply, f.isCompat_apply', map_sum]
+    congr
+    ext i
     induction sm using TensorProduct.induction_on with
-    | zero =>
-      simp only [map_zero, Pi.zero_apply, Pi.single_zero, tmul_zero, Finset.sum_const_zero,
-        lcoeff_comp_baseChange_eq, rTensor_comp_apply, f.isCompat_apply']
-
+    | zero => simp [map_zero, Pi.ofNat_apply, Pi.single_zero, tmul_zero]
     | tmul s m =>
-        rw [lcoeff_comp_baseChange_eq, rTensor_comp_apply, f.isCompat_apply', ← map_sum,
-          ← rTensor_comp_apply, map_sum]
         simp only [piRightHom_tmul, piRight_symm_single, assoc_symm_tmul, rTensor_tmul,
           AlgEquiv.toLinearMap_apply, AlgHom.toLinearMap_apply]
-        congr
-        ext i
         apply foo
     | add sm sm' hsm hsm' =>
-        sorry
-
-       /-  congr
-        ext j
-        simp [map_add, Pi.add_apply, Pi.single_add, map_add,
-          TensorProduct.tmul_add, ← hsm, ← hsm'] -/
+        simp [map_add, Pi.add_apply, Pi.single_add, tmul_add, ← hsm, ← hsm']
 
 lemma multiComponentIsMultiHomogeneous (n : ι →₀ ℕ) (f : PolynomialLaw R (Π i, M i) N) :
     IsMultiHomogeneousOfDegree n (multiComponent n f) := by
@@ -637,23 +621,6 @@ lemma multiComponentIsMultiHomogeneous (n : ι →₀ ℕ) (f : PolynomialLaw R 
   simp only [coeff_el'_S_apply, LinearEquiv.apply_symm_apply, map_sum]
   simp only [rTensor_apply]
 
-
-
-
-
-  /- have := (fun (i : ι) ↦ (monomial (R := S) (σ := ι)
-    (Finsupp.ofSupportFinite (fun _ ↦ 1) (Set.toFinite _))))
-  let ψ : MvPolynomial ι S →ₐ[R] MvPolynomial ι S :=
-    (aeval (R := S) (S₁ := MvPolynomial ι S) (fun i ↦ (monomial
-      (Finsupp.ofSupportFinite (fun _ ↦ 1) (Set.toFinite _))) (s i))).restrictScalars R
-  suffices (rTensor (Π i, M i) ((monomial (R := S) (σ := ι)
-      (Finsupp.ofSupportFinite (fun _ ↦ 1) (Set.toFinite _))).restrictScalars R))
-        ((TensorProduct.piRight R R _ _).symm (s • sm))
-      = (rTensor (Π i, M i) ψ.toLinearMap) ((rTensor (Π i, M i) ((monomial (R := S) (σ := ι)
-        (Finsupp.ofSupportFinite (fun _ ↦ 1) (Set.toFinite _))).restrictScalars R)
-          ((TensorProduct.piRight R R _ _).symm sm))) by
-    sorry -/
-  --
   sorry
 
 #exit
