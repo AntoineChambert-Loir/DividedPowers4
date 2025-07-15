@@ -176,7 +176,8 @@ section Homogeneous
 open Finsupp MvPolynomial
 
 /- **MI** : I changed `CommRing R` to `CommSemiring R`. -/
-variable {R : Type u} {M N : Type*} [CommSemiring R] [AddCommGroup M] [Module R M] [AddCommGroup N]
+variable {R : Type u} {M N : Type*} [CommSemiring R] [AddCommMonoid M] [Module R M]
+  [AddCommMonoid N]
   [Module R N]
 
 /- **MI** : I changed `CommRing S` to `CommSemiring S`. -/
@@ -299,7 +300,7 @@ theorem isHomogeneousOfDegree_of_coeff_iff (f : PolynomialLaw R M N) (p : ℕ) :
   rw [not_imp_comm, Finsupp.sum_of_support_subset _ (Finset.subset_univ _) _ (fun _ _ ↦ rfl)] at H
   exact H (Finsupp.mem_support_iff.mp hd)
 
-theorem IsHomogeneousOfDegree.comp {P : Type*} [AddCommGroup P] [Module R P]
+theorem IsHomogeneousOfDegree.comp {P : Type*} [AddCommMonoid P] [Module R P]
     {f : M →ₚₗ[R] N} {g : N →ₚₗ[R] P} {p q : ℕ}
     (hf : f.IsHomogeneousOfDegree p) (hg : g.IsHomogeneousOfDegree q) :
     (g.comp f).IsHomogeneousOfDegree (p * q) := by
@@ -310,7 +311,7 @@ end Homogeneous
 
 section ConstantMap
 
-variable {R : Type u} [CommSemiring R] {M N : Type*} [AddCommGroup M] [AddCommGroup N] [Module R M]
+variable {R : Type u} [CommSemiring R] {M N : Type*} [AddCommMonoid M] [AddCommMonoid N] [Module R M]
   [Module R N]
 
 open MvPolynomial
@@ -364,7 +365,7 @@ open scoped TensorProduct
 open Finset LinearMap
 
 variable {R : Type u} [CommSemiring R]
-  {M N : Type*} [AddCommGroup M] [AddCommGroup N] [Module R M] [Module R N]
+  {M N : Type*} [AddCommMonoid M] [AddCommMonoid N] [Module R M] [Module R N]
 
 theorem Finsupp.sum_eq_one_iff {α : Type*} [DecidableEq α] (d : α →₀ ℕ) :
     Finsupp.sum d (fun _ n ↦ n) = 1 ↔ ∃ a, Finsupp.single a 1 = d := by
@@ -445,12 +446,12 @@ lemma ofLinearMap_mem_grade_one (v : M →ₗ[R] N) :
     IsHomogeneousOfDegree 1 (ofLinearMap v) :=
   fun S _ _ r m => by simp only [ofLinearMap, LinearMapClass.map_smul, pow_one]
 
-theorem IsHomogeneousOfDegree.comp_ofLinearMap {P : Type*} [AddCommGroup P] [Module R P]
+theorem IsHomogeneousOfDegree.comp_ofLinearMap {P : Type*} [AddCommMonoid P] [Module R P]
     {f : M →ₗ[R] N} {g : N →ₚₗ[R] P} {q : ℕ} (hg : g.IsHomogeneousOfDegree q) :
     (g.comp (PolynomialLaw.ofLinearMap f)).IsHomogeneousOfDegree q := by
   simpa using IsHomogeneousOfDegree.comp (ofLinearMap_mem_grade_one f) hg
 
-theorem IsHomogeneousOfDegree.ofLinearMap_comp {P : Type*} [AddCommGroup P] [Module R P]
+theorem IsHomogeneousOfDegree.ofLinearMap_comp {P : Type*} [AddCommMonoid P] [Module R P]
     {f : M →ₚₗ[R] N} {g : N →ₗ[R] P} {p : ℕ} (hf : f.IsHomogeneousOfDegree p) :
     ((PolynomialLaw.ofLinearMap g).comp f).IsHomogeneousOfDegree p := by
   simpa using IsHomogeneousOfDegree.comp hf (ofLinearMap_mem_grade_one g)
@@ -495,7 +496,7 @@ noncomputable def ofLinearMapHom :
 theorem ofLinearMapHom_apply (v : M →ₗ[R] N) : ofLinearMapHom v = ofLinearMap v := rfl
 
 variable {R : Type u} [CommSemiring R]
-  {M N : Type*} [AddCommGroup M] [AddCommGroup N] [Module R M] [Module R N]
+  {M N : Type*} [AddCommMonoid M] [AddCommMonoid N] [Module R M] [Module R N]
 
 private lemma zero_pow_add_zero_pow (a b : ℕ) (h : a + b = 1) :
     0 ^ a + 0 ^ b = (1 : R) := by
@@ -576,8 +577,8 @@ open Polynomial
 /- Here we define the homogeneous components of a `PolynomialLaw`
  and show how it recomposes as its locally finite sum -/
 
-variable {R : Type u} [CommSemiring R] {M : Type*} [AddCommGroup M] [Module R M]
-  {N : Type*} [AddCommGroup N] [Module R N] (f : M →ₚₗ[R] N) (p : ℕ)
+variable {R : Type u} [CommSemiring R] {M : Type*} [AddCommMonoid M] [Module R M]
+  {N : Type*} [AddCommMonoid N] [Module R N] (f : M →ₚₗ[R] N) (p : ℕ)
 
 theorem Polynomial.baseChange_comp_monomial_eq {S : Type*} [CommSemiring S] [Algebra R S]
     {S' : Type*} [CommSemiring S'] [Algebra R S'] (φ : S →ₐ[R] S') (p : ℕ) :

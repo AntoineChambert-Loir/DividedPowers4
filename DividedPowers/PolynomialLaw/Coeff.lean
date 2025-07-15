@@ -73,8 +73,9 @@ noncomputable section LocFinsupp
 
 open Finsupp Function
 
-variable {R : Type u} [CommSemiring R] {M : Type*} [AddCommGroup M] [Module R M]
-  {N : Type*} [AddCommGroup N] [Module R N]
+-- **MI**: I replaced `AddCommGroup M` and `AddCommGroup N` by `AddCommMonoid M (resp. N)`.
+variable {R : Type u} [CommSemiring R] {M : Type*} [AddCommMonoid M] [Module R M]
+  {N : Type*} [AddCommMonoid N] [Module R N]
 
 /- **MI** : Now the file works with `[CommSemiring R]` and `[CommSemiring S]`. -/
 
@@ -179,8 +180,9 @@ end LocFinsupp
 
 section Coefficients
 
-variable {R : Type u} [CommSemiring R] {M : Type uM} [AddCommGroup M] [Module R M]
-  {N : Type uN} [AddCommGroup N] [Module R N]
+-- **MI**: I replaced `AddCommGroup M` and `AddCommGroup N` by `AddCommMonoid M (resp. N)`.
+variable {R : Type u} [CommSemiring R] {M : Type uM} [AddCommMonoid M] [Module R M]
+  {N : Type uN} [AddCommMonoid N] [Module R N]
 
 --variable {ι : Type uι} /- [DecidableEq ι]   -/
 variable {ι : Type*}
