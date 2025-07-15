@@ -20,7 +20,6 @@ we have `ε ∘ j = @id S`, and the compatibility properties of `f` implies that
 `f.toFun' S[X] m = ∑ (f.multiComponent n).toFun' S m`.
 -/
 
-
 open LinearMap TensorProduct
 
 noncomputable section
@@ -132,12 +131,6 @@ def IsMultiHomogeneousOfDegree (n : ι → ℕ) (f : PolynomialLaw R (Π i, M i)
     f.toFun' S ((TensorProduct.piRight R R _ _).symm fun i ↦ r i • m i) =
       (∏ᶠ i, (r i)^(n i)) • f.toFun' S ((TensorProduct.piRight R R _ _).symm m)
 
-/- def IsMultiHomogeneousOfDegree (n : ι → ℕ) (f : PolynomialLaw R (Π i, M i) N) : Prop :=
-  ∀ (S : Type u) [CommRing S] [Algebra R S] (r : ι → S) (m :  S ⊗[R] (Π i, M i)),
-    f.toFun' S ((TensorProduct.piRight R R _ _).symm
-      (fun i ↦ r i • ((TensorProduct.piRight R R _ _ ) m) i)) =
-    (∏ᶠ i, (r i)^(n i)) • f.toFun' S m -/
-
 theorem IsMultiHomogeneousOfDegree_add (n : ι → ℕ) {f g : PolynomialLaw R (Π i, M i) N}
     (hf : f.IsMultiHomogeneousOfDegree n) (hg : g.IsMultiHomogeneousOfDegree n) :
     (f + g).IsMultiHomogeneousOfDegree n := fun S _ _ s m ↦ by
@@ -195,15 +188,6 @@ theorem IsMultiHomogeneousOfDegree.comp {P : Type*} [AddCommMonoid P] [Module R 
   intro S _ _ r m
   simp only [comp_toFun', Function.comp_apply, hf S, hg S, Pi.smul_apply, smul_eq_mul,
     finprod_pow ( Set.toFinite _), ← pow_mul, mul_comm q]
-
-
-/-The coefficients of a homogeneous polynomial map of degree `p` vanish outside of degree `p`. -/
-/- lemma isMultiHomogeneousOfDegree_coeff {n : ι → ℕ} {f : PolynomialLaw R (Π i, M i) N}
-    (hf : IsMultiHomogeneousOfDegree n f)
-    {κ : Type*} [DecidableEq κ] [Fintype κ] (m : κ → (Π i, M i)) (d : κ →₀ ι → ℕ)
-    (hd : d.sum (fun _ m => m) ≠ n) :
-    PolynomialLaw.coeff m f d = 0 := by
-  sorry -/
 
 /- TODO
 
