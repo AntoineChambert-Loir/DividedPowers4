@@ -102,6 +102,63 @@ theorem foo [DecidableEq σ] {M : σ → Type*} [(i : σ) → AddCommMonoid (M i
   simp [rTensorAlgEquiv_apply, coeff_map, coeff_rTensorAlgHom_tmul, RingHom.coe_comp,
     RingHom.coe_coe, Function.comp_apply, Algebra.TensorProduct.lid_tmul, map_smul]
 
+open Finsupp
+
+theorem sum_add_index {ι R A M : Type*} [Semiring R] [CommSemiring A] [AddCommMonoid M] [Module R A]
+    [Module R M] (p q : MvPolynomial ι A) (f : (ι →₀ ℕ) → A → M) (hf : ∀ (i : ι →₀ ℕ), f i 0 = 0)
+    (h_add : ∀ (i : (ι →₀ ℕ)) (b₁ b₂ : A), f i (b₁ + b₂) = f i b₁ + f i b₂) :
+    (p + q).sum f = p.sum f + q.sum f := by
+  classical exact Finsupp.sum_add_index (fun n _ => hf n) fun n _ _ _  ↦ h_add n _ _
+
+theorem sum_eq_of_subset {ι R A M : Type*} [Semiring R] [CommSemiring A] [AddCommMonoid M]
+    [Module R A] [Module R M] {p : MvPolynomial ι A} (f : (ι →₀ ℕ) → A → M)
+    (hf : ∀ (i : ι →₀ ℕ), f i 0 = 0) {s : Finset (ι →₀ ℕ) } (hs : p.support ⊆ s) :
+    p.sum f = ∑ n ∈ s, f n (p.coeff n) :=
+  Finsupp.sum_of_support_subset _ hs f (fun i _ ↦ hf i)
+
+--@[simps]
+def lsum {ι R A M : Type*} [Semiring R] [CommSemiring A] [AddCommMonoid M] [Module R A] [Module R M]
+    (f : (ι →₀ ℕ) → A →ₗ[R] M) : MvPolynomial ι A →ₗ[R] M where
+  toFun p := p.sum (f · ·)
+  map_add' p q := MvPolynomial.sum_add_index (R := R) p q _ (fun n => (f n).map_zero)
+      (fun n _ _ => (f n).map_add _ _)
+  map_smul' c p := by
+    rw [sum_eq_of_subset (R := R) (f · ·) (fun n => (f n).map_zero) support_smul]
+    simp [sum_def, Finset.smul_sum, coeff_smul, LinearMap.map_smul, RingHom.id_apply]
+
+@[simp]
+theorem lsum_apply {ι R A M : Type*} [Semiring R] [CommSemiring A]
+    [AddCommMonoid M] [Module R A] [Module R M] (f : (ι →₀ ℕ) → A →ₗ[R] M) (p : MvPolynomial ι A) :
+    (lsum f) p = p.sum fun (x1 : ι →₀ ℕ) (x2 : A) => (f x1) x2 := rfl
+
+theorem rTensor'_sum [DecidableEq σ] {N : Type*} [AddCommMonoid N] [Module R N]
+    (φ : (σ →₀ ℕ) → S) (sXn : (MvPolynomial σ S) ⊗[R] N) :
+    (rTensor (R := R) (N := N) (S := S) sXn).sum (fun p sn ↦ (φ p) • sn) =
+      (lsum (fun n ↦ (LinearMap.lsmul S S (φ n)).restrictScalars R)).rTensor N sXn := by
+  induction sXn using TensorProduct.induction_on with
+  | zero => simp only [map_zero, Finsupp.sum_zero_index]
+  | tmul p n =>
+    induction p using MvPolynomial.induction_on' with
+    | add p q hp hq =>
+      simp only [add_tmul, LinearEquiv.map_add]
+      rw [Finsupp.sum_add_index, hp, hq, LinearMap.map_add]
+      · intro x _; apply smul_zero
+      · intro x _; apply smul_add
+    | monomial p s =>
+      rw [Finsupp.sum_eq_single p, rTensor_apply, rTensor_tmul]
+      simp only [coe_restrictScalars, lcoeff_apply, coeff_monomial, ↓reduceIte, rTensor_tmul,
+          MvPolynomial.lsum_apply, lsmul_apply, smul_eq_mul, mul_zero, sum_monomial_eq,
+          smul_tmul', smul_eq_mul]
+      · intro b _ hb
+        simp only [rTensor_apply, rTensor_tmul, coe_restrictScalars, lcoeff_apply, coeff_monomial]
+        rw [if_neg (Ne.symm hb)]
+        simp only [zero_tmul, smul_zero]
+      · exact fun _ ↦ smul_zero _
+  | add p q hp hq =>
+    simp only [add_tmul, LinearEquiv.map_add]
+    rw [Finsupp.sum_add_index (fun x _ ↦ smul_zero _) (fun x _ ↦ smul_add _), hp, hq,
+      LinearMap.map_add]
+
 end MvPolynomial
 
 namespace PolynomialLaw
@@ -110,7 +167,7 @@ open PolynomialLaw
 
 section MultiHomogeneous
 
-section  -- ι : Type*
+section
 
 open Finsupp MvPolynomial
 
@@ -703,65 +760,6 @@ theorem LocFinsupp_multiComponent (f : PolynomialLaw R (Π i, M i) N) :
   simp only [multiComponent, coeff_el'_S_apply, piRight_apply, map_sum, Finsupp.ofSupportFinite_coe]
 
 open Finsupp
-
-theorem _root_.MvPolynomial.sum_add_index {ι R A M : Type*} [Semiring R] [CommSemiring A]
-    [AddCommMonoid M] [Module R A] [Module R M] (p q : MvPolynomial ι A) (f : (ι →₀ ℕ) → A → M)
-    (hf : ∀ (i : ι →₀ ℕ), f i 0 = 0)
-    (h_add : ∀ (i : (ι →₀ ℕ)) (b₁ b₂ : A), f i (b₁ + b₂) = f i b₁ + f i b₂)
-     :
-    (p + q).sum f = p.sum f + q.sum f := by
-  classical
-  exact Finsupp.sum_add_index (fun n _ => hf n) fun n _ _ _  ↦ h_add n _ _
-
-theorem _root_.MvPolynomial.sum_eq_of_subset {ι R A M : Type*} [Semiring R] [CommSemiring A]
-    [AddCommMonoid M] [Module R A] [Module R M] {p : MvPolynomial ι A} (f : (ι →₀ ℕ) → A → M)
-    (hf : ∀ (i : ι →₀ ℕ), f i 0 = 0) {s : Finset (ι →₀ ℕ) } (hs : p.support ⊆ s) :
-    p.sum f = ∑ n ∈ s, f n (p.coeff n) :=
-  Finsupp.sum_of_support_subset _ hs f (fun i _ ↦ hf i)
-
---@[simps]
-def _root_.MvPolynomial.lsum {ι R A M : Type*} [Semiring R] [CommSemiring A] [AddCommMonoid M]
-    [Module R A] [Module R M]
-    (f : (ι →₀ ℕ) → A →ₗ[R] M) : MvPolynomial ι A →ₗ[R] M where
-  toFun p := p.sum (f · ·)
-  map_add' p q := MvPolynomial.sum_add_index (R := R) p q _ (fun n => (f n).map_zero)
-      (fun n _ _ => (f n).map_add _ _)
-  map_smul' c p := by
-    rw [sum_eq_of_subset (R := R) (f · ·) (fun n => (f n).map_zero) support_smul]
-    simp [sum_def, Finset.smul_sum, coeff_smul, LinearMap.map_smul, RingHom.id_apply]
-
-@[simp]
-theorem _root_.MvPolynomial.lsum_apply {ι R A M : Type*} [Semiring R] [CommSemiring A]
-    [AddCommMonoid M] [Module R A] [Module R M] (f : (ι →₀ ℕ) → A →ₗ[R] M) (p : MvPolynomial ι A) :
-    (lsum f) p = p.sum fun (x1 : ι →₀ ℕ) (x2 : A) => (f x1) x2 := rfl
-
-omit [Fintype ι] in
-theorem _root_.MvPolynomial.rTensor'_sum (φ : (ι →₀ ℕ) → S) (sXn : (MvPolynomial ι S) ⊗[R] N) :
-    (rTensor (R := R) (N := N) (S := S) sXn).sum (fun p sn ↦ (φ p) • sn) =
-      (lsum (fun n ↦ (LinearMap.lsmul S S (φ n)).restrictScalars R)).rTensor N sXn := by
-  induction sXn using TensorProduct.induction_on with
-  | zero => simp only [map_zero, Finsupp.sum_zero_index]
-  | tmul p n =>
-    induction p using MvPolynomial.induction_on' with
-    | add p q hp hq =>
-      simp only [add_tmul, LinearEquiv.map_add]
-      rw [Finsupp.sum_add_index, hp, hq, LinearMap.map_add]
-      · intro x _; apply smul_zero
-      · intro x _; apply smul_add
-    | monomial p s =>
-      rw [Finsupp.sum_eq_single p, rTensor_apply, rTensor_tmul]
-      simp only [coe_restrictScalars, lcoeff_apply, coeff_monomial, ↓reduceIte, rTensor_tmul,
-          MvPolynomial.lsum_apply, lsmul_apply, smul_eq_mul, mul_zero, sum_monomial_eq,
-          smul_tmul', smul_eq_mul]
-      · intro b _ hb
-        simp only [rTensor_apply, rTensor_tmul, coe_restrictScalars, lcoeff_apply, coeff_monomial]
-        rw [if_neg (Ne.symm hb)]
-        simp only [zero_tmul, smul_zero]
-      · exact fun _ ↦ smul_zero _
-  | add p q hp hq =>
-    simp only [add_tmul, LinearEquiv.map_add]
-    rw [Finsupp.sum_add_index (fun x _ ↦ smul_zero _) (fun x _ ↦ smul_add _), hp, hq,
-      LinearMap.map_add]
 
 -- TODO: golf, extract lemmas
 theorem asdf (S : Type u) [CommSemiring S] [Algebra R S] (s : S) (m : (i : ι) → M i) :
