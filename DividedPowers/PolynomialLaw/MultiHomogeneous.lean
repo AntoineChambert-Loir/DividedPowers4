@@ -617,91 +617,31 @@ theorem multiComponent_toFun_apply (n : ι →₀ ℕ) (f : PolynomialLaw R (Π 
   rw [← PolynomialLaw.isCompat_apply, toFun_eq_toFun'_apply, multiComponent.toFun'_apply]
   exact bar n f ψ q
 
- /-
-  (Finsupp.ofSupportFinite (fun _ ↦ 1) (Set.toFinite _))
-  let ψ := ((aeval (R := S) (monomial 1 s : S[X])).restrictScalars R)
-  suffices  (rTensor M ((monomial 1).restrictScalars R)) (s • sm)
-      = (rTensor M ψ.toLinearMap) (rTensor M ((monomial 1).restrictScalars R) sm) by
-
-      ((Polynomial.rTensor R N S) (f.toFun' S[X]
-      ((LinearMap.rTensor M (↑R (monomial 1))) (s • sm)))) p =
-  s ^ p • ((Polynomial.rTensor R N S) (f.toFun' S[X]
-  ((LinearMap.rTensor M (↑R (monomial 1))) sm))) p
--/
-
 lemma multiComponentIsMultiHomogeneous (n : ι →₀ ℕ) (f : PolynomialLaw R (Π i, M i) N) :
     IsMultiHomogeneousOfDegree n (multiComponent n f) := by
   classical
   intro S _ _ s sm
   simp only [multiComponent, coeff_el'_S_apply]
-  -- This is wrong.
-  have : (∏ᶠ (i : ι), s i ^ n i) •
+  have that : (∏ᶠ (i : ι), s i ^ n i) •
+    ((MvPolynomial.rTensor
+        (f.toFun (MvPolynomial ι S)
+          ((LinearEquiv.rTensor ((i : ι) → M i) scalarRTensorAlgEquiv.toLinearEquiv)
+            ((TensorProduct.assoc R (MvPolynomial ι R) S ((i : ι) → M i)).symm
+              (∑ i,
+                X i ⊗ₜ[R] (piRight R R S M).symm (Pi.single i ((piRight R R S M)
+                ((piRight R R S M).symm sm) i))))))) n) =
+    ((∏ᶠ (i : ι), s i ^ n i) •
     (MvPolynomial.rTensor
         (f.toFun (MvPolynomial ι S)
           ((LinearEquiv.rTensor ((i : ι) → M i) scalarRTensorAlgEquiv.toLinearEquiv)
             ((TensorProduct.assoc R (MvPolynomial ι R) S ((i : ι) → M i)).symm
               (∑ i,
-                X i ⊗ₜ[R] (piRight R R S M).symm (Pi.single i ((piRight R R S M) ((piRight R R S M).symm sm) i)))))))
-      n =
-    (MvPolynomial.rTensor
-        (f.toFun (MvPolynomial ι S)
-          ((∏ᶠ (i : ι), s i) • ((LinearEquiv.rTensor ((i : ι) → M i) scalarRTensorAlgEquiv.toLinearEquiv)
-            ((TensorProduct.assoc R (MvPolynomial ι R) S ((i : ι) → M i)).symm
-     (∑ i, X i ⊗ₜ[R] (piRight R R S M).symm (Pi.single i ((piRight R R S M)
-       ((piRight R R S M).symm sm) i))))))))
-      n := by
-    simp only [LinearEquiv.apply_symm_apply, map_sum]
-    sorry
+                X i ⊗ₜ[R] (piRight R R S M).symm (Pi.single i ((piRight R R S M)
+                ((piRight R R S M).symm sm) i)))))))) n := rfl -- TODO: Extract general rw lemma
 
-  rw [this]
-  congr 3
-  simp only [LinearEquiv.apply_symm_apply, map_sum]
-  rw [Finset.smul_sum]
-  congr
-  ext j
-  induction (sm j) using TensorProduct.induction_on with
-  | zero => sorry --simp only [smul_zero, Pi.single_zero, map_zero, tmul_zero]
-  | tmul t m =>
-      have : s j • t ⊗ₜ[R] m = (s j • t) ⊗ₜ[R] m := rfl
-      simp only [this, smul_eq_mul, piRight_symm_single, assoc_symm_tmul, LinearEquiv.rTensor_tmul,
-        AlgEquiv.toLinearEquiv_apply]
-      simp only [scalarRTensorAlgEquiv, AlgEquiv.trans_apply, mapAlgEquiv_apply]
-
-      congr
-      simp only [rTensorAlgEquiv_apply]
-      ext d
-      simp only [MvPolynomial.map, eval₂Hom_eq_bind₂, coeff_smul, smul_eq_mul]
-
-      simp only [rTensorAlgHom, Algebra.TensorProduct.lift_tmul, mapAlgHom_apply, eval₂_X,
-        AlgHom.coe_comp, IsScalarTower.coe_toAlgHom', algebraMap_eq, Function.comp_apply,
-        Algebra.TensorProduct.includeRight_apply, map_mul, bind₂_X_right, bind₂_C_right,
-        RingHom.coe_comp, RingHom.coe_coe, Algebra.TensorProduct.lid_tmul, _root_.one_smul, C_mul]
-
-      rw [← C_mul, mul_comm (X j), coeff_C_mul]
-      /- simp only [scalarRTensorAlgEquiv, AlgEquiv.trans_apply, rTensorAlgEquiv_apply,
-        mapAlgEquiv_apply] -/
-
-
-      /- simp? [rTensorAlgEquiv_apply, coeff_map, coeff_rTensorAlgHom_tmul, RingHom.coe_comp,
-        RingHom.coe_coe, Function.comp_apply, Algebra.TensorProduct.lid_tmul, map_smul]
- -/
-      --simp? [Algebra.TensorProduct.lid_tmul]
-      /- simp only [piRight_symm_single, assoc_symm_tmul, LinearEquiv.rTensor_tmul,
-        AlgEquiv.toLinearEquiv_apply]
-      simp only [Pi.single_smul] -/
-      sorry
-  | add sm₁ sm₂ hsm₁ hsm₂ => sorry
-      /- simp only [smul_add]
-      simp only [Pi.single_add, map_add, tmul_add, smul_add]
-      rw [hsm₁, hsm₂] -/
-
-  /- simp? [piRight_symm_single]
-  simp only [Pi.single_smul]
-   -/
-
-  /- simp only [LinearEquiv.apply_symm_apply, map_sum]
-  simp only [rTensor_apply] -/
-
+  rw [that, ← map_smul]
+  simp only [LinearEquiv.apply_symm_apply, map_sum, rTensor_apply, map_smul,
+    Finsupp.coe_smul, Pi.smul_apply]
   sorry
 
 theorem multiComponent_add (n : ι →₀ ℕ) (f g : PolynomialLaw R (Π i, M i) N) :
