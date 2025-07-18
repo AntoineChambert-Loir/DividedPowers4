@@ -73,7 +73,6 @@ theorem Subalgebra.fg_sup {R : Type*} [CommSemiring R] {S : Type*} [CommSemiring
   rw [← hA.choose_spec, ← hB.choose_spec, ← Algebra.adjoin_union, ← Finset.coe_union]
   exact ⟨hA.choose ∪ hB.choose, rfl⟩
 
-#find_home! Subalgebra.fg_sup
 end fg
 
 section range

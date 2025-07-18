@@ -31,8 +31,7 @@ variable {R : Type*} [CommSemiring R] {S : Type*} [CommSemiring S] {σ : Type*}
 variable {p q : MvPolynomial σ R} (f : R →+* S) (x : σ → S)
 
 theorem eval₂_mul_eq_zero_of_left (hp : p.eval₂ f x = 0) : (p * q).eval₂ f x = 0 := by
-  rw [eval₂_mul f x]
-  exact mul_eq_zero_of_left hp (q.eval₂ f x)
+  simp [eval₂_mul f x, hp]
 
 theorem eval₂_mul_eq_zero_of_right (hq : q.eval₂ f x = 0) : (p * q).eval₂ f x = 0 := by
   rw [eval₂_mul f x]
@@ -104,11 +103,12 @@ theorem foo [DecidableEq σ] {M : σ → Type*} [(i : σ) → AddCommMonoid (M i
 
 open Finsupp
 
-theorem sum_add_index {ι R A M : Type*} [Semiring R] [CommSemiring A] [AddCommMonoid M] [Module R A]
-    [Module R M] (p q : MvPolynomial ι A) (f : (ι →₀ ℕ) → A → M) (hf : ∀ (i : ι →₀ ℕ), f i 0 = 0)
-    (h_add : ∀ (i : (ι →₀ ℕ)) (b₁ b₂ : A), f i (b₁ + b₂) = f i b₁ + f i b₂) :
-    (p + q).sum f = p.sum f + q.sum f := by
-  classical exact Finsupp.sum_add_index (fun n _ => hf n) fun n _ _ _  ↦ h_add n _ _
+theorem sum_add_index {ι R A M : Type*} [DecidableEq ι] [Semiring R] [CommSemiring A] [AddCommMonoid M] [Module R A]
+    [Module R M] {p q : MvPolynomial ι A} {f : (ι →₀ ℕ) → A → M}
+    (hf : ∀ i ∈ p.support ∪ q.support, f i 0 = 0)
+    (h_add : ∀ i ∈ p.support ∪ q.support, ∀ (b₁ b₂ : A), f i (b₁ + b₂) = f i b₁ + f i b₂) :
+    (p + q).sum f = p.sum f + q.sum f :=
+ Finsupp.sum_add_index hf h_add
 
 theorem sum_eq_of_subset {ι R A M : Type*} [Semiring R] [CommSemiring A] [AddCommMonoid M]
     [Module R A] [Module R M] {p : MvPolynomial ι A} (f : (ι →₀ ℕ) → A → M)
@@ -120,8 +120,10 @@ theorem sum_eq_of_subset {ι R A M : Type*} [Semiring R] [CommSemiring A] [AddCo
 def lsum {ι R A M : Type*} [Semiring R] [CommSemiring A] [AddCommMonoid M] [Module R A] [Module R M]
     (f : (ι →₀ ℕ) → A →ₗ[R] M) : MvPolynomial ι A →ₗ[R] M where
   toFun p := p.sum (f · ·)
-  map_add' p q := MvPolynomial.sum_add_index (R := R) p q _ (fun n => (f n).map_zero)
-      (fun n _ _ => (f n).map_add _ _)
+  map_add' p q := by
+    classical
+    apply MvPolynomial.sum_add_index (R := R) (fun n _ => (f n).map_zero)
+      (fun n _ _ _ => (f n).map_add _ _)
   map_smul' c p := by
     rw [sum_eq_of_subset (R := R) (f · ·) (fun n => (f n).map_zero) support_smul]
     simp [sum_def, Finset.smul_sum, coeff_smul, LinearMap.map_smul, RingHom.id_apply]
@@ -674,11 +676,63 @@ theorem multiComponent_toFun_apply (n : ι →₀ ℕ) (f : PolynomialLaw R (Π 
   rw [← PolynomialLaw.isCompat_apply, toFun_eq_toFun'_apply, multiComponent.toFun'_apply]
   exact bar n f ψ q
 
-lemma multiComponentIsMultiHomogeneous (n : ι →₀ ℕ) (f : PolynomialLaw R (Π i, M i) N) :
+lemma multiComponentIsMultiHomogeneous [Fintype ι] (n : ι →₀ ℕ) (f : PolynomialLaw R (Π i, M i) N) :
     IsMultiHomogeneousOfDegree n (multiComponent n f) := by
-  classical
+  simp only [multiComponent, coeff_el'_S_apply]
+  intro S _ _ s sm
+  -- simp only [finsum_eq_sum_of_fintype, finprod_eq_prod_of_fintype]
+  have that : (∏ᶠ (i : ι), s i ^ n i) •
+    ((MvPolynomial.rTensor
+        (f.toFun (MvPolynomial ι S)
+          ((LinearEquiv.rTensor ((i : ι) → M i) scalarRTensorAlgEquiv.toLinearEquiv)
+            ((TensorProduct.assoc R (MvPolynomial ι R) S ((i : ι) → M i)).symm
+              (∑ i,
+                X i ⊗ₜ[R] (piRight R R S M).symm (Pi.single i ((piRight R R S M)
+                ((piRight R R S M).symm sm) i))))))) n) =
+    ((∏ᶠ (i : ι), s i ^ n i) •
+    (MvPolynomial.rTensor
+        (f.toFun (MvPolynomial ι S)
+          ((LinearEquiv.rTensor ((i : ι) → M i) scalarRTensorAlgEquiv.toLinearEquiv)
+            ((TensorProduct.assoc R (MvPolynomial ι R) S ((i : ι) → M i)).symm
+              (∑ i,
+                X i ⊗ₜ[R] (piRight R R S M).symm (Pi.single i ((piRight R R S M)
+                ((piRight R R S M).symm sm) i)))))))) n := rfl -- TODO: Extract general rw lemma
+
+  rw [that, ← map_smul]
+  simp only [LinearEquiv.apply_symm_apply, map_sum, rTensor_apply, map_smul,
+    Finsupp.coe_smul, Pi.smul_apply]
+  clear that
+  rw [← rTensor_smul']
+  sorry
+
+
+lemma multiComponentIsMultiHomogeneous [Fintype ι] (n : ι →₀ ℕ) (f : PolynomialLaw R (Π i, M i) N) :
+    IsMultiHomogeneousOfDegree n (multiComponent n f) := by
   intro S _ _ s sm
   simp only [multiComponent, coeff_el'_S_apply]
+  simp only [finsum_eq_sum_of_fintype, finprod_eq_prod_of_fintype]
+  simp only [map_sum]
+  have (i : ι) : (LinearEquiv.rTensor ((i : ι) → M i) scalarRTensorAlgEquiv.toLinearEquiv)
+            ((TensorProduct.assoc R (MvPolynomial ι R) S ((i : ι) → M i)).symm
+              (X i ⊗ₜ[R]
+                (piRight R R S M).symm
+                  (Pi.single i ((piRight R R S M) ((piRight R R S M).symm fun i ↦ s i • sm i) i)))) = ?_RHS := by
+    simp
+    sorry
+  have (i : ι) : (piRight R R S M).symm
+                  (Pi.single i ((piRight R R S M) ((piRight R R S M).symm fun i ↦ s i • sm i) i)) =
+      ?A := by -- (Pi.single i (sm i)) := by
+    rw [LinearEquiv.symm_apply_eq]
+    simp
+    ext j
+    by_cases hj : j = i
+    · rw [hj, Pi.single_eq_same]
+      sorry
+    · rw [Pi.single_eq_of_ne hj]
+      sorry
+
+
+
   have that : (∏ᶠ (i : ι), s i ^ n i) •
     ((MvPolynomial.rTensor
         (f.toFun (MvPolynomial ι S)
