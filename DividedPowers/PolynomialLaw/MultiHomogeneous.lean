@@ -880,7 +880,7 @@ theorem recompose_multiComponent {ι : Type u} [Fintype ι] [DecidableEq ι] {R 
   (f : PolynomialLaw R (Π i, M i) N) :
     PolynomialLaw.lfsum (fun n ↦ f.multiComponent n) = f := by
   ext S _ _ sm
-  rw [lfsum_eq (LocFinsupp_multiComponent f), LocFinsupp_multiComponent_eq]
+  rw [lfsum_eq_of_locFinsupp (LocFinsupp_multiComponent f), LocFinsupp_multiComponent_eq]
   have hsm' : sm = ((aeval 1).restrictScalars R).toLinearMap.rTensor (Π i, M i) (∑ x,
     (LinearEquiv.rTensor ((i : ι) → M i) scalarRTensorAlgEquiv.toLinearEquiv)
       ((TensorProduct.assoc R (MvPolynomial ι R) S ((i : ι) → M i)).symm
