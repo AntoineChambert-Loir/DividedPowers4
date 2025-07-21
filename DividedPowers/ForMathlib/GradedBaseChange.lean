@@ -40,12 +40,13 @@ noncomputable def Submodule.baseChange.include (N : Submodule R M) :
   map_smul' r x := by simp
 
 theorem Submodule.baseChange_eq_range
-    {R : Type u_1} {M : Type u_2} (A : Type u_3) [CommSemiring R] [Semiring A] [Algebra R A] [AddCommMonoid M] [Module R M] (p : Submodule R M):
+    {R : Type u_1} {M : Type u_2} (A : Type u_3) [CommSemiring R] [Semiring A] [Algebra R A]
+    [AddCommMonoid M] [Module R M] (p : Submodule R M):
     Submodule.baseChange A p =
       LinearMap.range (LinearMap.baseChange A p.subtype) := by
 ext x
 constructor
-· simp only [Submodule.baseChange]
+· simp only [Submodule.baseChange_eq_span]
   intro hx
   apply Submodule.span_induction
     (p := fun x _ ↦ (x ∈ LinearMap.range (LinearMap.baseChange A p.subtype))) _ (zero_mem _)
@@ -111,9 +112,9 @@ theorem Decompose.baseChange.decompose_of_mem {m : S ⊗[R] M} {i : ι}
     (hm : m ∈ Submodule.baseChange S (ℳ i)) :
     (Decompose.baseChange.decompose ℳ) m =
       (of (fun i ↦ ↥(Submodule.baseChange S (ℳ i))) i) ⟨m, hm⟩ := by
-  simp only [Submodule.baseChange] at hm
+  simp only [Submodule.baseChange_eq_span] at hm
   apply Submodule.span_induction (p := fun m hm ↦ Decompose.baseChange.decompose ℳ m =
-    of (fun i ↦ Submodule.baseChange S (ℳ i)) i ⟨m, hm⟩)
+    of (fun i ↦ Submodule.baseChange S (ℳ i)) i ⟨m, Submodule.baseChange_eq_span S (ℳ i) ▸ hm⟩)
   · rintro _ ⟨x, hx : x ∈ ℳ i, rfl⟩
     simp only [mk_apply]
     -- why doesn't `rw [← Submodule.coe_mk x hx]` work?
@@ -127,12 +128,13 @@ theorem Decompose.baseChange.decompose_of_mem {m : S ⊗[R] M} {i : ι}
     rw [LinearMap.map_add, px, py, eq_comm]
     simp only [← DirectSum.lof_eq_of S]
     convert LinearMap.map_add _ _ _
-    simp only [AddMemClass.mk_add_mk, Submodule.map_coe]
+    simp only [AddMemClass.mk_add_mk]
   · intro s x hx px
     rw [LinearMap.map_smul, px, eq_comm]
     simp only [← DirectSum.lof_eq_of S]
     convert LinearMap.map_smul _ _ _
-    simp only [SetLike.mk_smul_mk, Submodule.map_coe]
+    simp only [SetLike.mk_smul_mk]
+  · exact hm
 
 /-- Base change of a graded module -/
 noncomputable def DirectSum.Decomposition.baseChange [Decomposition ℳ] :
@@ -172,7 +174,7 @@ noncomputable def GradedAlgebra.baseChange :
     toDecomposition := DirectSum.Decomposition.baseChange 𝒜
     one_mem := Submodule.tmul_mem_baseChange_of_mem (1 : S) SetLike.GradedOne.one_mem
     mul_mem := fun i j gi gj hi hj ↦ by
-      simp only [Submodule.baseChange] at hi hj
+      simp only [Submodule.baseChange_eq_span] at hi hj
       apply Submodule.span_induction (p := fun gj _ ↦ gi * gj ∈ Submodule.baseChange S _) _ _ _ _ hj
       · rintro _ ⟨y, hy, rfl⟩
         simp only [mk_apply]

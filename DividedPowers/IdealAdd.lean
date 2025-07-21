@@ -104,10 +104,10 @@ theorem dpow_eq (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n
   rw [dpow_def, exp'_linearMap_apply hIJ ha hb, ExponentialModule.coe_add, PowerSeries.coeff_mul]
   apply congr_arg₂ _ rfl
   ext ⟨u, v⟩
-  simp only [DividedPowers.exp'_linearMap_apply, coe_exp', coeff_exp]
+  simp only [DividedPowers.exp'_linearMap_apply, coeff_exp]
 
 lemma _root_.antidiagonal_eq_filter {A : Type*} [AddCommMonoid A] [PartialOrder A]
-    [IsOrderedAddMonoid A] [CanonicallyOrderedAdd A] [LocallyFiniteOrder A] [DecidableEq A]
+    [IsOrderedAddMonoid A] [CanonicallyOrderedAdd A] [LocallyFiniteOrderBot A] [DecidableEq A]
     [HasAntidiagonal A] (n : A) :
     antidiagonal n = (Iic n ×ˢ Iic n).filter (fun x : A × A ↦ x.1 + x.2 = n) := by
   ext ⟨i, j⟩
@@ -129,13 +129,13 @@ private theorem dpow_eq_of_mem_left' (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI
     {n : ℕ} {x : A} (hx : x ∈ I) :
     dpow hIJ n x = hI.dpow n x := by
   rw [dpow_def, exp'_linearMap_apply_left hIJ hx]
-  simp only [DividedPowers.exp'_linearMap_apply, coe_exp', coeff_exp]
+  simp only [DividedPowers.exp'_linearMap_apply, coeff_exp]
 
 private theorem dpow_eq_of_mem_right' (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
     {n : ℕ} {x : A} (hx : x ∈ J) :
     dpow hIJ n x = hJ.dpow n x := by
   rw [dpow_def, exp'_linearMap_apply_right hIJ hx]
-  simp only [DividedPowers.exp'_linearMap_apply, coe_exp', coeff_exp]
+  simp only [DividedPowers.exp'_linearMap_apply, coeff_exp]
 
 theorem dpow_zero (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
     {x : A} (hx : x ∈ I + J) : dpow hIJ 0 x = 1 := by
@@ -174,18 +174,15 @@ theorem mul_dpow (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow 
           ((y.fst.choose x.1.1) * (y.snd.choose x.1.2))) * hI.dpow y.fst a * hJ.dpow y.snd b := by
     apply sum_congr rfl
     rintro ⟨u, v⟩ _
-    simp only [Prod.mk.injEq, mem_product, mem_antidiagonal, and_imp, Prod.forall, cast_sum,
-      cast_mul, sum_mul]
+    simp only [cast_sum, cast_mul, sum_mul]
     apply sum_congr rfl
     rintro ⟨⟨i, j⟩, ⟨k, l⟩⟩ hx
-    simp only [hs_def, mem_product, mem_antidiagonal, and_imp, Prod.forall, mem_filter,
-      Prod.mk.injEq] at hx
+    simp only [hs_def, mem_product, mem_antidiagonal, mem_filter, Prod.mk.injEq] at hx
     rw [hx.2.1, hx.2.2]
   rw [hs', mul_sum]
   apply sum_congr rfl
   rintro ⟨u, v⟩ h
   simp only [mem_antidiagonal] at h
-  simp only [Prod.mk_inj]
   rw [← mul_assoc]
   congr
   simp only [hs_def, Prod.mk.injEq]
@@ -236,7 +233,7 @@ theorem dpow_mul (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow 
   rw [dpow_eq hIJ (I.mul_mem_left c ha) (J.mul_mem_left c hb), mul_sum]
   apply sum_congr rfl
   intro k hk
-  simp only [mem_range, Nat.lt_succ_iff, mem_antidiagonal] at hk
+  simp only [mem_antidiagonal] at hk
   rw [hI.dpow_mul ha, hJ.dpow_mul hb, mul_mul_mul_comm, ← pow_add, hk]
 
 lemma sum_sum_antidiagonal {β : Type*} [AddCommMonoid β] (f : ℕ → ℕ × ℕ → β) {n : ℕ} :
@@ -338,7 +335,7 @@ private theorem dpow_comp_aux (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n
         rw [mul_comm (hI.dpow _ a)]
         simp only [← mul_assoc]
         apply congr_arg₂ _ _ rfl
-        simp only [Sym.mem_coe, ge_iff_le, cast_mul]
+        simp only [cast_mul]
         apply congr_arg₂ _ _ rfl
         rw [mul_comm]
   rw [dpow_sum' (dpow := dpow hIJ)]
@@ -372,7 +369,7 @@ private theorem dpow_comp_aux (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n
       rw [mul_comm]
     -- hφ
     intro k hk
-    simp only [φ, Sym.mem_coe, mem_range, Nat.lt_succ_iff, range_sym_weighted_sum_le hk]
+    simp only [φ, mem_range, Nat.lt_succ_iff, range_sym_weighted_sum_le hk]
   . -- dpow_zero
     intro x hx
     exact dpow_zero hIJ hx
@@ -397,8 +394,7 @@ private theorem dpow_comp_coeffs {m n p : ℕ} (hn : n ≠ 0) (hp : p ≤ m * n)
   classical
   rw [← mul_left_inj' (pos_iff_ne_zero.mp (choose_pos hp))]
   apply @cast_injective ℚ
-  simp only [Sym.mem_coe, mem_sym_iff, mem_range, ge_iff_le, cast_sum, cast_mul, cast_prod,
-    cast_eq_zero]
+  simp only [cast_sum, cast_mul, cast_prod]
   conv_lhs => rw [← Polynomial.coeff_X_add_one_pow ℚ (m * n) p]
   let A := ℚ[X]
   let I : Ideal A := ⊤
@@ -412,7 +408,7 @@ private theorem dpow_comp_coeffs {m n p : ℕ} (hn : n ≠ 0) (hp : p ≤ m * n)
     ← dpow_eq_of_mem_left' hII Submodule.mem_top, dpow_comp_aux hII hn hX h1,
     ← C_eq_natCast, mul_sum, finset_sum_coeff]
   simp only [hI, RatAlgebra.dpow_eq_inv_fact_smul _ _ Submodule.mem_top, map_natCast,
-    cast_sum, cast_mul, cast_prod, Ring.inverse_eq_inv', Algebra.mul_smul_comm, one_pow,
+    Ring.inverse_eq_inv', Algebra.mul_smul_comm, one_pow,
     mul_one, Polynomial.coeff_smul, coeff_natCast_mul, smul_eq_mul]
   simp only [← cast_prod, ← cast_mul, ← cast_sum]
   rw [sum_eq_single p]

@@ -12,6 +12,8 @@ which a prime number `p` is nilpotent to be a unit.
 
 -/
 
+-- In PR #24439
+
 section Factorial
 
 open Nat

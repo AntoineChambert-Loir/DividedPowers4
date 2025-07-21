@@ -192,7 +192,7 @@ theorem Submodule.codisjoint_map
   rw [codisjoint_iff, eq_top_iff]
   intro y _
   obtain ⟨x, rfl⟩ := hf y
-  obtain ⟨y, hy, z, hz, rfl⟩ := Submodule.exists_add_eq_of_codisjoint hM x
+  obtain ⟨y, z, hy, hz, rfl⟩ := Submodule.codisjoint_iff_exists_add_eq.mp hM x
   rw [LinearMap.map_add]
   exact Submodule.add_mem _
     (Submodule.mem_sup_left (mem_map_of_mem hy))
@@ -240,14 +240,14 @@ theorem Algebra.baseChange_bot {R S : Type*} [CommRing R] [Algebra A R] [CommRin
     induction y using TensorProduct.induction_on with
     | zero =>
       use 0
-      simp only [zero_tmul, LinearMap.map_zero]
+      simp only [LinearMap.map_zero]
       simp
     | tmul r s =>
       rcases s with ⟨s, hs⟩
       simp only [Subalgebra.mem_toSubmodule] at hs
       obtain ⟨a, rfl⟩ := hs
       use a • r
-      simp only [Algebra.TensorProduct.algebraMap_apply, Algebra.id.map_eq_id, RingHom.id_apply,
+      simp only [Algebra.TensorProduct.algebraMap_apply, Algebra.algebraMap_self, RingHom.id_apply,
         toRingHom_eq_coe, RingHom.coe_coe, baseChange_tmul, coe_subtype]
       simp only [smul_tmul]
       rw [Algebra.ofId_apply, Algebra.algebraMap_eq_smul_one]
@@ -255,7 +255,7 @@ theorem Algebra.baseChange_bot {R S : Type*} [CommRing R] [Algebra A R] [CommRin
       obtain ⟨x', hx⟩ := hx
       obtain ⟨y', hy⟩ := hy
       use x' + y'
-      simp only [add_tmul, hx, hy, map_add]
+      simp [hx, hy, map_add]
 
 theorem Algebra.TensorProduct.map_includeRight_eq_range_baseChange
     {S : Type*} [CommRing S] [Algebra A S] {I : Ideal S}
@@ -557,14 +557,12 @@ theorem Ideal.span_isHomogeneous {A : Type*} [CommSemiring A]
   apply IsCompl.mk
   · simp only [Submodule.disjoint_def]
     intro x hx hx'
-    simp only [SetLike.coe_sort_coe, Submodule.mem_inf, Subalgebra.mem_toSubmodule,
-      restrictScalars_mem] at hx hx'
+    simp only [Submodule.mem_inf, Subalgebra.mem_toSubmodule, restrictScalars_mem] at hx hx'
     exact disjoint_def.mp hIS.disjoint x hx.left hx'.left
   · rw [codisjoint_iff]
     rw [eq_top_iff]
     intro x hx
-    simp only [SetLike.coe_sort_coe, mem_sup, Submodule.mem_inf, Subalgebra.mem_toSubmodule,
-      restrictScalars_mem]
+    simp only [mem_sup, Submodule.mem_inf, Subalgebra.mem_toSubmodule, restrictScalars_mem]
     have hx' := eq_top_iff.mp (codisjoint_iff.mp hIS.codisjoint)
       (Submodule.mem_top (x := x))
     simp only [mem_sup, Subalgebra.mem_toSubmodule, restrictScalars_mem] at hx'

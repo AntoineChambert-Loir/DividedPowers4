@@ -42,6 +42,8 @@ Annales scientifiques de l’École Normale Supérieure 80 (3): 213‑348](Roby-
 
 -/
 
+-- In PR #22912
+
 universe u
 
 noncomputable section PolynomialLaw
@@ -141,7 +143,7 @@ instance : MulAction R (M →ₚₗ[R] N) where
   one_smul       := one_smul
   mul_smul a b f := by ext; simp only [smul_def, mul_smul]
 
-instance : AddCommGroup (M →ₚₗ[R] N) where
+instance : AddCommMonoid (M →ₚₗ[R] N) where
   add_assoc f g h := by ext; simp only [add_def, add_assoc]
   zero_add f      := by ext; simp only [add_def, zero_add, zero_def]
   add_zero f      := by ext; simp only [add_def, add_zero, zero_def]
@@ -176,8 +178,8 @@ theorem neg_def (S : Type u) [CommRing S] [Algebra R S] :
 
 instance : AddCommGroup (M →ₚₗ[R] N) where
   zsmul n f := (n : R) • f
-  zsmul_zero' f   := by simp only [Int.cast_zero, zero_smul]
-  zsmul_succ' n f := by simp only [Int.ofNat_eq_coe, Nat.cast_succ, Int.cast_add, Int.cast_natCast,
+  zsmul_zero' f   := by simp [Int.cast_zero]
+  zsmul_succ' n f := by simp [Nat.cast_succ, Int.cast_add, Int.cast_natCast,
     Int.cast_one, add_smul, _root_.one_smul]
   zsmul_neg' n f  := by
     ext S _ _ m
@@ -217,7 +219,7 @@ theorem one_tmul_ground_apply' {S : Type u} [CommRing S] [Algebra R S] (x : M) :
     1 ⊗ₜ (f.ground x) = (f.toFun' S) (1 ⊗ₜ x) := by
   rw [ground_apply]
   convert f.isCompat_apply' (Algebra.algHom R R S) (1 ⊗ₜ[R] x)
-  · simp only [Function.comp_apply, lid_symm_apply, includeRight_lid]
+  · simp only [includeRight_lid]
   · rw [rTensor_tmul, toLinearMap_apply, map_one]
 
 /-- The map ground assigning a function `M → N` to a polynomial map `f : M →ₚₗ[R] N` as a

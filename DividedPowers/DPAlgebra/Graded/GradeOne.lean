@@ -109,7 +109,7 @@ theorem deg_one_right_inv :
     LinearMap.id_coe, id_eq]
   ext
   dsimp only
-  rw [← ι_def m, toTrivSqZeroExt_ι, ← ι_def, snd_inr, decompose_of_mem_same]
+  rw [← ι_def R m, toTrivSqZeroExt_ι, ← ι_def, snd_inr, decompose_of_mem_same]
   exact ι_mem_grade_one _ _
 
 theorem deg_one_left_inv :

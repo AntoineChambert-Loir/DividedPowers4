@@ -3,7 +3,6 @@ Copyright (c) 2022 Antoine Chambert-Loir, María Inés de Frutos-Fernández. All
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
-import DividedPowers.ForMathlib.Data.Nat.Factorial.NatCast
 import Mathlib.Data.Nat.Factorial.NatCast
 import Mathlib.RingTheory.DividedPowers.Basic
 
@@ -321,7 +320,7 @@ theorem dpow_eq_inv_fact_smul (hI : DividedPowers I) {n : ℕ} {x : R} (hx : x �
     rw [this, one_smul]
   apply Rat.inv_mul_cancel
   rw [← cast_zero, ne_eq]
-  simp [cast_zero, cast_eq_zero,factorial_ne_zero, not_false]
+  simp [factorial_ne_zero]
 
 variable {I}
 

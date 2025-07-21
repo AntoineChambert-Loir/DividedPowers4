@@ -105,9 +105,7 @@ theorem MvPolynomial.aeval_range (R : Type*) [CommSemiring R] (S : Type*) [CommS
   · rintro x ⟨p, rfl⟩
     simp only [AlgHom.toRingHom_eq_coe, RingHom.coe_coe]
     induction p using induction_on with
-    | C a =>
-      simp only [aeval_C, Algebra.mem_adjoin_iff]
-      exact Subsemiring.subset_closure (Or.inl (Set.mem_range_self a))
+    | C a => exact aeval_C s a ▸ Subsemiring.subset_closure (Or.inl (Set.mem_range_self a))
     | add p q hp hq => rw [map_add]; exact Subalgebra.add_mem _ hp hq
     | mul_X p n h =>
       simp only [map_mul, aeval_X]
@@ -116,7 +114,6 @@ theorem MvPolynomial.aeval_range (R : Type*) [CommSemiring R] (S : Type*) [CommS
     rintro x ⟨i, rfl⟩
     use X i, by aesop
 
-#find_home! MvPolynomial.aeval_range
 theorem Subalgebra.val_comp_inclusion {R : Type*} [CommSemiring R] {S : Type*} [Semiring S]
     [Algebra R S] {A B : Subalgebra R S} (h : A ≤ B) :
   (Subalgebra.val B).comp (Subalgebra.inclusion h) = Subalgebra.val A := rfl
@@ -137,7 +134,7 @@ theorem rTensor_comp_baseChange_comm_apply
     (φ : S →ₐ[R] S') (t : S ⊗[R] M) (f : M →ₗ[R] N) :
     (φ.toLinearMap.rTensor N) (f.baseChange S t)  =
       (f.baseChange S') (φ.toLinearMap.rTensor M t) := by
-  simp [LinearMap.baseChange_eq_ltensor, ← LinearMap.comp_apply, ← TensorProduct.map_comp]
+  simp [LinearMap.baseChange_eq_ltensor, ← LinearMap.comp_apply]
 
 end rTensor
 
@@ -240,7 +237,7 @@ theorem toFun'_eq_of_diagram
     simp only [θ, ← AlgHom.comp_assoc, ← hh']
     simp [AlgHom.comp_assoc]
   rw [φ.factor, ψ.factor, ← AlgHom.comp_assoc, ← AlgHom.comp_assoc _, ht]
-  simp only [AlgHom.comp_toLinearMap, rTensor_comp_apply, LinearMap.comp_apply]
+  simp only [AlgHom.comp_toLinearMap, rTensor_comp_apply]
   apply congr_arg
   rw [← rTensor_comp_apply, ← AlgHom.comp_toLinearMap, isCompat_apply',
     isCompat_apply', AlgHom.comp_toLinearMap, rTensor_comp_apply,
@@ -359,7 +356,7 @@ theorem toFun_eq_toFun' (S : Type u) [CommSemiring S] [Algebra R S] :
     f.toFun S = f.toFun' S := by
   ext t
   obtain ⟨⟨s, p⟩, ha⟩ := π_surjective t
-  simp only [f.toFun_eq_toFunLifted_apply ha, toFunLifted, f.isCompat_apply']
+  simp only [f.toFun_eq_toFunLifted_apply ha, f.isCompat_apply']
   exact congr_arg _ ha
 
 /-- For semirings in the universe `u`, `PolynomialLaw.toFun` coincides with `PolynomialLaw.toFun'` -/
@@ -393,7 +390,7 @@ theorem isCompat_apply {T : Type w} [CommSemiring T] [Algebra R T] (h : S →ₐ
   rw [toFun_eq_toFunLifted_apply f ha, toFun_eq_toFunLifted_apply f ha', ← LinearMap.comp_apply,
     ← rTensor_comp, ← comp_toLinearMap]
   apply toFun'_eq_of_diagram f p p' h h'
-  · simp only [val_comp_codRestrict, AlgHom.coe_comp, Subalgebra.coe_val,Function.comp_apply, h']
+  · simp only [val_comp_codRestrict, h']
   · simp only [p', ← LinearMap.comp_apply, ← rTensor_comp, ← comp_toLinearMap]
     congr
     ext n
