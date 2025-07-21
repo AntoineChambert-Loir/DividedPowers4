@@ -1,8 +1,6 @@
 import DividedPowers.ForMathlib.RingTheory.SubmoduleMem
-import Mathlib.RingTheory.TensorProduct.MvPolynomial
 import DividedPowers.PolynomialLaw.Basic2
-
-import Mathlib.RingTheory.TensorProduct.Basic
+import Mathlib.RingTheory.TensorProduct.MvPolynomial
 
 universe u
 
@@ -539,3 +537,5 @@ noncomputable def polynomialLawEquivCoeff : ((ι →₀ ℕ) →₀ N) ≃ₗ[R]
 end Fintype
 
 end Finsupp
+
+#min_imports

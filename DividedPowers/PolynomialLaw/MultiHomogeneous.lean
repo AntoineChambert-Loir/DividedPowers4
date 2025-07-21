@@ -1,8 +1,8 @@
 /- Copyright ACL & MIdFF 2024 -/
 
 import DividedPowers.PolynomialLaw.Homogeneous
-import Mathlib.LinearAlgebra.TensorProduct.Pi
 import Mathlib.Algebra.MvPolynomial.Monad
+import Mathlib.LinearAlgebra.TensorProduct.Pi
 
 universe u uι
 
