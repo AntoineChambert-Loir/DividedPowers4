@@ -332,24 +332,31 @@ theorem exists_lift (t : S ⊗[R] M) : ∃ (n : ℕ) (ψ : MvPolynomial (Fin n) 
   obtain ⟨⟨s, p⟩, ha⟩ := π_surjective t
   use s.card, φ R s, p, ha
 
+/-- Lift an element of a tensor product and finitely many scalars -/
+theorem exists_lift'' (t : S ⊗[R] M) {ι : Type*} [Finite ι] (s : ι → S) :
+    ∃ (n : ℕ) (ψ : MvPolynomial (Fin n) R →ₐ[R] S)
+    (p : MvPolynomial (Fin n) R ⊗[R] M) (q : ι → MvPolynomial (Fin n) R),
+      ψ.toLinearMap.rTensor M p = t ∧ ∀ i, ψ (q i) = s i := by
+  classical
+  obtain ⟨A, hA, ht⟩ := TensorProduct.Algebra.exists_of_fg t
+  have hB : Subalgebra.FG (A ⊔ Algebra.adjoin R (Set.range s)) :=
+    Subalgebra.fg_sup hA (Subalgebra.fg_def.mpr ⟨Set.range s, Set.finite_range s, rfl⟩)
+  obtain ⟨gen, hgen⟩ := Subalgebra.FG.exists_range_eq hB
+  have hAB : A ≤ A ⊔ Algebra.adjoin R (Set.range s) := le_sup_left
+  rw [← hgen] at hAB
+  obtain ⟨p, hp⟩ := exists_lift_of_le_rTensor_range _ hAB ht
+  have hs (i) : s i ∈ (φ R gen).range  := by
+    rw [hgen]
+    exact Algebra.mem_sup_right (Algebra.subset_adjoin (Set.mem_range_self i))
+  use gen.card, φ R gen, p, fun i ↦ (hs i).choose, hp,
+    fun i ↦ (hs i).choose_spec
+
 /-- Lift an element of a tensor product and a scalar -/
 theorem exists_lift' (t : S ⊗[R] M) (s : S) : ∃ (n : ℕ) (ψ : MvPolynomial (Fin n) R →ₐ[R] S)
     (p : MvPolynomial (Fin n) R ⊗[R] M) (q : MvPolynomial (Fin n) R),
       ψ.toLinearMap.rTensor M p = t ∧ ψ q = s := by
-  classical
-  obtain ⟨A, hA, ht⟩ := TensorProduct.Algebra.exists_of_fg t
-  have hB : Subalgebra.FG (A ⊔ Algebra.adjoin R ({s} : Finset S)) :=
-    Subalgebra.fg_sup hA (Subalgebra.fg_adjoin_finset _)
-  obtain ⟨gen, hgen⟩ := Subalgebra.FG.exists_range_eq hB
-  have hAB : A ≤ A ⊔ Algebra.adjoin R ({s} : Finset S) := le_sup_left
-  rw [← hgen] at hAB
-  obtain ⟨p, hp⟩ := exists_lift_of_le_rTensor_range _ hAB ht
-  have hs : s ∈ (φ R gen).range  := by
-    rw [hgen]
-    apply Algebra.subset_adjoin
-    simp only [Finset.coe_singleton, Set.sup_eq_union, Set.mem_union, SetLike.mem_coe]
-    exact Or.inr (Algebra.subset_adjoin rfl)
-  use gen.card, φ R gen, p, hs.choose, hp, hs.choose_spec
+  obtain ⟨n, ψ, p, q, hq, hs⟩ := exists_lift'' t (fun (_ : Unit) ↦ s)
+  exact ⟨n, ψ, p, q default, hq, hs default⟩
 
 /-- For semirings in the universe `u`, `PolynomialLaw.toFun` coincides with `PolynomialLaw.toFun'` -/
 theorem toFun_eq_toFun' (S : Type u) [CommSemiring S] [Algebra R S] :

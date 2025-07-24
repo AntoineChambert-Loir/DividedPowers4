@@ -185,8 +185,8 @@ variable {M : ι → Type*} [∀ i, AddCommMonoid (M i)] [∀ i, Module R (M i)]
   `f (r_1 • z_1, r_2 • z_2, ...) = Π i r_i^(n i) • f (z_1, z_2, ...)`. -/
 def IsMultiHomogeneousOfDegree (n : ι → ℕ) (f : PolynomialLaw R (Π i, M i) N) : Prop :=
   ∀ (S : Type u) [CommSemiring S] [Algebra R S] (r : ι → S) (m : (i : ι) → S ⊗[R] M i),
-    f.toFun' S ((TensorProduct.piRight R R _ _).symm fun i ↦ r i • m i) =
-      (∏ᶠ i, (r i)^(n i)) • f.toFun' S ((TensorProduct.piRight R R _ _).symm m)
+    f.toFun' S ((TensorProduct.piRight R S _ _).symm fun i ↦ r i • m i) =
+      (∏ i, (r i)^(n i)) • f.toFun' S ((TensorProduct.piRight R R _ _).symm m)
 
 theorem IsMultiHomogeneousOfDegree_add (n : ι → ℕ) {f g : PolynomialLaw R (Π i, M i) N}
     (hf : f.IsMultiHomogeneousOfDegree n) (hg : g.IsMultiHomogeneousOfDegree n) :
@@ -216,14 +216,28 @@ lemma mem_multiGrade (f : PolynomialLaw R (Π i, M i) N) (n : ι → ℕ) :
 lemma isMultiHomogeneousOfDegree_toFun {n : ι → ℕ} {f : PolynomialLaw R (Π i, M i) N}
     (hf : IsMultiHomogeneousOfDegree n f) (S : Type*) [CommSemiring S] [Algebra R S] (r : ι → S)
     (m : S ⊗[R] (Π i, M i)) :
-    f.toFun S ((TensorProduct.piRight R R _ _).symm
-      (fun i ↦ r i • ((TensorProduct.piRight R R _ _ ) m) i)) =
-      (∏ᶠ i, (r i)^(n i)) • f.toFun S m := by
+    f.toFun S ((TensorProduct.piRight R S _ _).symm
+      (fun i ↦ r i • ((TensorProduct.piRight R S _ _ ) m) i)) =
+      (∏ i, (r i)^(n i)) • f.toFun S m := by
+  choose d ψ m' r' hm' hr' using PolynomialLaw.exists_lift'' m r
     --choose n ψ  m' r' hm' hr' using PolynomialLaw.exists_lift' m r
-    sorry
-  /- choose n ψ  m' r' hm' hr' using PolynomialLaw.exists_lift' m r
-  simp only [← hm', ← hr', ← isCompat_apply, toFun_eq_toFun', TensorProduct.smul_rTensor]
-  rw [hf, ← TensorProduct.smul_rTensor, map_pow] -/
+  simp only [← hm', ← hr', ← isCompat_apply, toFun_eq_toFun',
+    ← map_pow, ← map_prod, TensorProduct.smul_rTensor]
+  unfold IsMultiHomogeneousOfDegree at hf
+  specialize hf _ r' ((TensorProduct.piRight R R (MvPolynomial (Fin d) R) M) m')
+  have :
+      ((piRight R R (MvPolynomial (Fin d) R) M).symm ((piRight R R (MvPolynomial (Fin d) R) M) m')) = m' := by
+    rw [LinearEquiv.symm_apply_eq]
+  rw [this] at hf
+  rw [← hf]
+  rw [← toFun_eq_toFun', isCompat_apply]
+  apply congr_arg
+  rw [LinearEquiv.symm_apply_eq]
+  rw [hm']
+  ext i
+  rw [hr']
+  -- one needs to use the compatibility between LinearMap.rTensor and piRight
+  sorry
 
 /-- If `f` is multihomogeneous of multidegree `n`, then `f.ground` is too.  -/
 lemma isMultiHomogeneousOfDegree_ground {n : ι → ℕ} {f : PolynomialLaw R (Π i, M i) N}
