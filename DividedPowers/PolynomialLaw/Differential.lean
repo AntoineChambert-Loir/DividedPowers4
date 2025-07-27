@@ -6,7 +6,7 @@ universe u
 
 variable {ι : Type u} -- Should we instead assume `[Finite ι]`?
 
-variable (R : Type u) [CommRing R] (M : Type*) [AddCommGroup M] [Module R M]
+variable (R : Type u) [CommSemiring R] (M : Type*) [AddCommGroup M] [Module R M]
   {N : Type*} [AddCommGroup N] [Module R N]
 
 variable (f : M →ₚₗ[R] N) (n p : ℕ)
@@ -25,9 +25,9 @@ def proj (i : ι) : (Π (_ : ι), M) →ₚₗ[R] M where
 
 lemma proj_apply (i : ι) (m : ι → M) : proj R M i m = m i := by simp [proj, ground_apply]
 
-lemma proj_toFun'_apply [Fintype ι] [DecidableEq ι] {S : Type u} [CommRing S] [Algebra R S]
+lemma proj_toFun'_apply [Fintype ι] [DecidableEq ι] {S : Type u} [CommSemiring S] [Algebra R S]
     (i : ι) {m : TensorProduct R S (ι → M)} : (proj R M i).toFun' S m =
-    (TensorProduct.piRight R R S fun i ↦ M) m i := by
+    (TensorProduct.piRight R R S fun _ ↦ M) m i := by
   simp only [proj, TensorProduct.piRight_apply]
   induction m using TensorProduct.induction_on with
   | zero => simp
@@ -41,11 +41,11 @@ variable (ι) in
 coordinate laws from  `(Π (_ : ι), M)`to `M`. -/
 def sum_proj : (Π (_ : ι), M) →ₚₗ[R] M := lfsum (fun i ↦ proj R M i)
 
-lemma sum_proj_toFun'_apply [Fintype ι] [DecidableEq ι] {S : Type u} [CommRing S] [Algebra R S]
+lemma sum_proj_toFun'_apply [Fintype ι] [DecidableEq ι] {S : Type u} [CommSemiring S] [Algebra R S]
     {m : TensorProduct R S (ι → M)} : (sum_proj ι R M).toFun' S m =
     (∑ i, (TensorProduct.piRight R R S fun _ ↦ M) m i) := by
   rw [sum_proj, TensorProduct.piRight_apply,
-    lfsum_eq (locFinsupp_of_fintype _), Finsupp.sum_fintype _ _ (by intro; rfl)]
+    lfsum_eq_of_locFinsupp (locFinsupp_of_fintype _), Finsupp.sum_fintype _ _ (by intro; rfl)]
   exact Finset.sum_congr rfl (fun i _ ↦ proj_toFun'_apply R M i)
 
 variable (ι) {R M}
@@ -59,11 +59,11 @@ lemma polarized_apply [Fintype ι] {m : ι → M} : polarized ι f m = f (∑ (i
   simp only [polarized, ground_apply, sum_proj, comp_toFun',
     Function.comp_apply, EmbeddingLike.apply_eq_iff_eq]
   congr 1
-  rw [lfsum_eq (locFinsupp_of_fintype _), Finsupp.sum_fintype _ _ (by intro; rfl),
+  rw [lfsum_eq_of_locFinsupp (locFinsupp_of_fintype _), Finsupp.sum_fintype _ _ (by intro; rfl),
     TensorProduct.tmul_sum]
   rfl
 
-lemma polarized_toFun'_apply [Fintype ι] [DecidableEq ι] {S : Type u} [CommRing S] [Algebra R S]
+lemma polarized_toFun'_apply [Fintype ι] [DecidableEq ι] {S : Type u} [CommSemiring S] [Algebra R S]
     {m : TensorProduct R S (ι → M)} : (polarized ι f).toFun' S m =
       f.toFun' S (∑ i, (TensorProduct.piRight R R S fun _ ↦ M) m i) := by
   simp [polarized, comp_toFun', sum_proj_toFun'_apply]
@@ -71,7 +71,7 @@ lemma polarized_toFun'_apply [Fintype ι] [DecidableEq ι] {S : Type u} [CommRin
 variable {f p}
 
 variable (R M) in
-lemma _root_.TensorProduct.piRightHom_smul_proj [Fintype ι] {S : Type u} [CommRing S]
+lemma _root_.TensorProduct.piRightHom_smul_proj [Fintype ι] {S : Type u} [CommSemiring S]
     [Algebra R S] (s : S) (m : TensorProduct R S (ι → M)) (i : ι) :
     (TensorProduct.piRightHom R R S fun _ ↦ M) (s • m) i =
       s • (TensorProduct.piRightHom R R S fun _ ↦ M) m i := by
@@ -138,18 +138,350 @@ lemma map_add_eq_polarized_two_apply (m m' : M) :
   change m + m' = m + (m' + 0)
   simp
 
+lemma foo (n : ℕ) (m m' : M) :
+    f.differential n ((fun i ↦ match i with | 0 => m | 1 => m')) =
+      Polynomial.scalarRTensor R N
+        (f.toFun' (Polynomial R) (1 ⊗ₜ m + Polynomial.X ⊗ₜ m')) n := by
+  /- simp only [differential, ground_apply, Polynomial.scalarRTensor_apply,
+    EmbeddingLike.apply_eq_iff_eq, map_pair_def]
+  rw [lfsum_eq_of_locFinsupp] -/
+
+  simp only [ground_apply, Polynomial.scalarRTensor_apply, EmbeddingLike.apply_eq_iff_eq]
+
+  sorry
+
+
+lemma foo' (n : ℕ) (m m' : M) :
+   ((f.differential n).toFun' R
+      (1 ⊗ₜ[R] fun i ↦ match i with | { down := 0 } => m | { down := 1 } => m')) =
+      (TensorProduct.lid R N).symm
+        (Polynomial.scalarRTensor R N (f.toFun' (Polynomial R) (1 ⊗ₜ m + Polynomial.X ⊗ₜ m')) n) :=
+  sorry
+
+open TensorProduct
+/-
+
+
+-- **MI**: I replaced  `CommRing S` by `CommSemiring S`.
+theorem support_multiComponent (f : (Π i, M i) →ₚₗ[R] N) {S : Type*} [CommSemiring S] [Algebra R S]
+    (m : S ⊗[R] (Π i, M i)) :
+    Function.support (fun i => ((fun n => multiComponent n f) i).toFun S m) =
+    (MvPolynomial.rTensor
+      (f.toFun (MvPolynomial ι S) (∑ x,(LinearEquiv.rTensor ((i : ι) → M i)
+        scalarRTensorAlgEquiv.toLinearEquiv)
+          ((TensorProduct.assoc R (MvPolynomial ι R) S ((i : ι) → M i)).symm
+            (X x ⊗ₜ[R] (piRight R R S M).symm (Pi.single x ((piRightHom R R S M) m x))))))).support := by
+  ext i
+  rw [Function.mem_support, ne_eq, Finset.mem_coe, Finsupp.mem_support_iff, not_iff_not,
+    multiComponent_toFun_apply, coeff_el'_S_def] -/
+
+/- theorem support_polatized_multiComponent' (f : M →ₚₗ[R] N) {S : Type u} [CommSemiring S]
+    [Algebra R S] (m : S ⊗[R] M) :
+    Function.support (fun (p : ℕ) ↦ polarized_multiComponent (map_pair n p) f) =
+    ?_ := by
+  ext n
+  simp [multiComponent, ne_eq, Finset.mem_coe, Finsupp.mem_support_iff, coeff_el'_S_def] -/
+
+-- TODO: golf
+theorem locFinsupp_polarized_multiComponent (f : PolynomialLaw R M N) :
+    LocFinsupp (fun (p : ℕ) ↦ polarized_multiComponent (map_pair n p) f) := fun S _ _ m ↦ by
+  set g : ℕ → (ULift.{u, 0} (Fin 2) →₀ ℕ) := fun p ↦ (map_pair n p)
+  set s := (Function.support fun i ↦ (multiComponent (map_pair n i)
+    (polarized (ULift.{u, 0} (Fin 2)) f)).toFun' S m)
+  have hg : Set.InjOn g s := by
+    intro a ha b hb h
+    simp only [map_pair, Finsupp.ext_iff, ULift.forall, g] at h
+    exact h 0
+  have hss : g '' (Function.support fun i ↦ (multiComponent (map_pair n i)
+      (polarized (ULift.{u, 0} (Fin 2)) f)).toFun' S m) ⊆
+      (Function.support fun d ↦ (multiComponent (d : ULift.{u, 0} (Fin 2) →₀ ℕ)
+        (polarized (ULift.{u, 0} (Fin 2)) f)).toFun' S m) := by
+    intro d hd
+    simp only [Set.mem_image] at hd
+    obtain ⟨x, hx, rfl⟩ := hd
+    simpa only [multiComponent_toFun', Function.mem_support, ne_eq, g]
+  apply Set.Finite.of_finite_image _ hg
+  apply Set.Finite.subset _ hss
+  exact LocFinsupp_multiComponent _ _ _
+
+/- noncomputable def el_S''' (m : S ⊗[R] Π i, M i) (f : PolynomialLaw R (Π i, M i) N) :
+    MvPolynomial ι S ⊗[R] N := f.toFun (MvPolynomial ι S) (el_S''_hom ι R M S m)-/
+
+lemma locFinsupp_differential {M N : Type u} [AddCommGroup M] [Module R M]
+ [AddCommGroup N] [Module R N] (f : M →ₚₗ[R] N) (n : ℕ) : LocFinsupp fun n ↦ f.differential n := by
+  simp only [LocFinsupp]
+  intro S _ _ sm
+  simp only [differential]
+  simp_rw [lfsum_eq_of_locFinsupp (locFinsupp_polarized_multiComponent _ f)]
+  have : (Function.support fun i ↦ (Finsupp.ofSupportFinite (fun i_1 ↦
+    (polarized_multiComponent (map_pair i i_1) f).toFun' S sm) (by sorry)).sum fun x m ↦
+      m) = ?_ := by
+    let g := (polarized ((ULift.{u, 0} (Fin 2))) f)
+    let e := el_S''' (N := N) sm g
+    -- Ideal: take the RHS to be the Set.range of the total degree of `e`, and show
+    -- that LHS ⊆ RHS
+    ext x
+    simp only [multiComponent_toFun', Function.mem_support, ne_eq]
+    sorry
+  sorry
+  sorry
+
+lemma map_add_eq_sum_differential_apply''' (m m' : M) :
+    f (m + m') =
+      lfsum (fun n ↦ f.differential n) ((fun i ↦ match i with | 0 => m | 1 => m')) := by
+  simp only [ground_apply]
+  have : ((1 : R) ⊗ₜ[R] (m + m')) =
+    ∑ i : ULift.{u} Unit, 1 ⊗ₜ[R] match i with | 0 => m + m' := rfl
+  rw [this]
+  rw [← toFun_eq_toFun']
+  rw [toFun_sum_tmul_eq_coeff_sum]
+  simp only [coeff, LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply, one_pow,
+    Finset.prod_const_one]
+  simp only [generize, LinearMap.coe_mk, AddHom.coe_mk]
+  have : (TensorProduct.lid R N) ((MvPolynomial.scalarRTensor
+        (f.toFun (MvPolynomial (ULift.{u} Unit) R)
+          ( MvPolynomial.X 0 ⊗ₜ[R] (m + m')))).sum
+    fun k n ↦ 1 ⊗ₜ[R] n) =
+    (TensorProduct.lid R N) ((Polynomial.scalarRTensor _ _
+        (f.toFun (Polynomial R)
+          ( Polynomial.X ⊗ₜ[R] (m + m')))).sum
+    fun k n ↦ 1 ⊗ₜ[R] n) := sorry
+  change (TensorProduct.lid R N) ((MvPolynomial.scalarRTensor
+        (f.toFun (MvPolynomial (ULift.{u} Unit) R)
+          ( MvPolynomial.X 0 ⊗ₜ[R] (m + m')))).sum
+    fun k n ↦ 1 ⊗ₜ[R] n) = _
+  rw [this]
+  simp only [EmbeddingLike.apply_eq_iff_eq]
+  rw [lfsum_eq_of_locFinsupp]
+  · rw [toFun_eq_toFun']
+    simp only [foo', lid_symm_apply]
+    rw [Finsupp.sum, Finsupp.sum]
+    congr
+    · sorry
+    · ext a
+      simp?
+      sorry
+  · sorry
+
+/- lemma map_add_eq_sum_differential_apply'''' (m m' : M) :
+    f (m + m') =
+      ∑ᶠ n, f.differential n ((fun i ↦ match i with | 0 => m | 1 => m')) := by
+  simp only [ground_apply]
+  have : ((1 : R) ⊗ₜ[R] (m + m')) =
+    ∑ i : ULift.{u} Unit, 1 ⊗ₜ[R] match i with | 0 => m + m' := rfl
+  rw [this]
+  rw [← toFun_eq_toFun']
+  rw [toFun_sum_tmul_eq_coeff_sum]
+  simp only [coeff, LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply, one_pow,
+    Finset.prod_const_one]
+  simp only [generize, LinearMap.coe_mk, AddHom.coe_mk]
+  have : (TensorProduct.lid R N) ((MvPolynomial.scalarRTensor
+        (f.toFun (MvPolynomial (ULift.{u} Unit) R)
+          ( MvPolynomial.X 0 ⊗ₜ[R] (m + m')))).sum
+    fun k n ↦ 1 ⊗ₜ[R] n) =
+    (TensorProduct.lid R N) ((Polynomial.scalarRTensor _ _
+        (f.toFun (Polynomial R)
+          ( Polynomial.X ⊗ₜ[R] (m + m')))).sum
+    fun k n ↦ 1 ⊗ₜ[R] n) := sorry
+  change (TensorProduct.lid R N) ((MvPolynomial.scalarRTensor
+        (f.toFun (MvPolynomial (ULift.{u} Unit) R)
+          ( MvPolynomial.X 0 ⊗ₜ[R] (m + m')))).sum
+    fun k n ↦ 1 ⊗ₜ[R] n) = _
+  rw [this]
+  simp only [foo', TensorProduct.lid_symm_apply]
+  rw [Finsupp.sum]
+  simp only [map_sum, lid_tmul, _root_.one_smul]
+  rw [finsum_eq_finset_sum_of_support_subset]
+  split_ifs with h
+  · rw [toFun_eq_toFun']
+    congr
+    sorry
+  · sorry -/
+
+lemma map_add_eq_sum_differential_apply' (m m' : M) :
+    f (m + m') =
+      ∑ᶠ n, f.differential n ((fun i ↦ match i with | 0 => m | 1 => m')) := by
+  simp only [ground_apply]
+  have : ((1 : R) ⊗ₜ[R] m + (1 : R) ⊗ₜ[R] m') =
+    ∑ i : (ULift.{u} (Fin 2)), 1 ⊗ₜ[R] match i with | 0 => m | 1 => m' := rfl
+  simp_rw [TensorProduct.tmul_add, this,]
+  rw [← toFun_eq_toFun']
+  rw [toFun_sum_tmul_eq_coeff_sum]
+  simp only [coeff, LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply, one_pow,
+    Finset.prod_const_one]
+  simp only [generize, LinearMap.coe_mk, AddHom.coe_mk]
+  change (TensorProduct.lid R N) ((MvPolynomial.scalarRTensor
+        (f.toFun (MvPolynomial (ULift.{u, 0} (Fin 2)) R)
+          ( MvPolynomial.X 0 ⊗ₜ[R] m + MvPolynomial.X 1 ⊗ₜ[R] m'))).sum
+    fun k n ↦ 1 ⊗ₜ[R] n) = _
+  simp only [foo', TensorProduct.lid_symm_apply]
+  rw [Finsupp.sum]
+  simp only [map_sum, lid_tmul, _root_.one_smul]
+  simp only [finsum]
+  split_ifs with h
+  · congr!
+    sorry
+  · sorry
+
+  lemma map_add_eq_sum_differential_apply'' (m m' : M) :
+    f (m + m') =
+      lfsum (fun n ↦ f.differential n) ((fun i ↦ match i with | 0 => m | 1 => m')) := by
+  simp only [ground_apply, EmbeddingLike.apply_eq_iff_eq]
+  have : ((1 : R) ⊗ₜ[R] m + (1 : R) ⊗ₜ[R] m') =
+    ∑ i : (ULift.{u} (Fin 2)), 1 ⊗ₜ[R] match i with | 0 => m | 1 => m' := rfl
+  simp_rw [TensorProduct.tmul_add, this,]
+  rw [← toFun_eq_toFun']
+  rw [toFun_sum_tmul_eq_coeff_sum]
+  simp only [coeff, LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply, one_pow,
+    Finset.prod_const_one]
+  simp only [generize, LinearMap.coe_mk, AddHom.coe_mk]
+  change ((MvPolynomial.scalarRTensor
+        (f.toFun (MvPolynomial (ULift.{u, 0} (Fin 2)) R)
+          (MvPolynomial.X 0 ⊗ₜ[R] m + MvPolynomial.X 1 ⊗ₜ[R] m'))).sum
+    fun k n ↦ 1 ⊗ₜ[R] n) = _
+  rw [lfsum_eq_of_locFinsupp]
+  simp only [foo', TensorProduct.lid_symm_apply]
+  rw [Finsupp.sum]
+  rw [Finsupp.sum]
+  sorry
+  /- simp only [map_sum, lid_tmul, _root_.one_smul]
+  simp only [finsum]
+  split_ifs with h -/
+  sorry
+
 lemma map_add_eq_sum_differential_apply (m m' : M) :
     f (m + m') =
       lfsum (fun n ↦ f.differential n) ((fun i ↦ match i with | 0 => m | 1 => m')) := by
+  simp only [ground_apply, EmbeddingLike.apply_eq_iff_eq]
+  have : ((1 : R) ⊗ₜ[R] m + (1 : R) ⊗ₜ[R] m') =
+    ∑ i : (ULift.{u} (Fin 2)), 1 ⊗ₜ[R] match i with | 0 => m | 1 => m' := rfl
+  simp_rw [TensorProduct.tmul_add, this,]
+  rw [← toFun_eq_toFun']
+  rw [toFun_sum_tmul_eq_coeff_sum]
+  simp only [coeff, LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply, one_pow,
+    Finset.prod_const_one]
+  simp only [generize, LinearMap.coe_mk, AddHom.coe_mk]
+  change ((MvPolynomial.scalarRTensor
+        (f.toFun (MvPolynomial (ULift.{u, 0} (Fin 2)) R)
+          ( MvPolynomial.X 0 ⊗ₜ[R] m + MvPolynomial.X 1 ⊗ₜ[R] m'))).sum
+    fun k n ↦ 1 ⊗ₜ[R] n) = _
+  rw [lfsum_eq_of_locFinsupp]
+  simp only [foo', TensorProduct.lid_symm_apply]
+  rw [Finsupp.sum]
+  rw [Finsupp.sum]
+  have : (MvPolynomial.scalarRTensor
+          (f.toFun (MvPolynomial (ULift.{u, 0} (Fin 2)) R)
+            (MvPolynomial.X 0 ⊗ₜ[R] m + MvPolynomial.X 1 ⊗ₜ[R] m'))).support = ?_ := by
+    ext d
+    simp only [Finsupp.mem_support_iff, MvPolynomial.scalarRTensor_apply, ne_eq,
+      EmbeddingLike.map_eq_zero_iff]
+    simp only [LinearMap.rTensor_def]
+
+
+    sorry
+  sorry
+
+  /- rw [lfsum_eq_of_locFinsupp]
+  simp only [foo']
+
+  simp only [coeff, generize, LinearMap.coe_comp, LinearEquiv.coe_coe, LinearMap.coe_mk,
+    AddHom.coe_mk, Function.comp_apply, one_pow, Finset.prod_const_one,
+    TensorProduct.lid_symm_apply] -/
+
+
+  /- rw [lfsum_eq_of_locFinsupp]
+  --rw [Finsupp.sum]
+  simp only [foo', TensorProduct.lid_symm_apply]
+  simp only [Polynomial.scalarRTensor_apply] -/
+
+  sorry
+
+  · simp only [LocFinsupp]
+    intro S _ _ m
+    simp only [differential]
+    simp only [lfsum, multiComponent_toFun']
+    --simp only [polarized_multiComponent]
+    have hf (i : ℕ) : LocFinsupp fun p ↦ polarized_multiComponent (map_pair i p) f := by
+      exact locFinsupp_polarized_multiComponent i f
+    have : (Function.support fun i ↦
+        ((Finsupp.ofSupportFinite _ (hf i S m)).sum fun _ m ↦ m)).Finite := by
+      simp only [polarized_multiComponent, multiComponent_toFun', polarized]
+      sorry
+    convert this
+    simp only [multiComponent_toFun']
+    split_ifs with h
+    · rfl
+
+    · exfalso
+      apply h
+      exact hf _
+
+#exit
+
+lemma map_add_eq_sum_differential_apply (m m' : M) :
+    f (m + m') =
+      lfsum (fun n ↦ f.differential n) ((fun i ↦ match i with | 0 => m | 1 => m')) := by
+  simp only [ground_apply, EmbeddingLike.apply_eq_iff_eq]
+  rw [lfsum_eq_of_locFinsupp]
+  --rw [Finsupp.sum]
+  simp only [foo', TensorProduct.lid_symm_apply]
+  simp only [Polynomial.scalarRTensor_apply]
+  have : ((1 : R) ⊗ₜ[R] m + (1 : R) ⊗ₜ[R] m') =
+    ∑ i : (ULift.{u} (Fin 2)), 1 ⊗ₜ[R] match i with | 0 => m | 1 => m' := sorry
+  simp_rw [TensorProduct.tmul_add, this,]
+  rw [← toFun_eq_toFun']
+  rw [toFun_sum_tmul_eq_coeff_sum ]
+  sorry
+
+  · sorry
+
+#exit
+
+lemma map_add_eq_sum_differential_apply (m m' : M) :
+    f (m + m') =
+      lfsum (fun n ↦ f.differential n) ((fun i ↦ match i with | 0 => m | 1 => m')) := by
+  simp only [ground_apply, EmbeddingLike.apply_eq_iff_eq]
+  rw [lfsum_eq_of_locFinsupp]
+  rw [Finsupp.sum]
+  have : (Finsupp.ofSupportFinite (fun i ↦
+            (f.differential i).toFun' R
+              (1 ⊗ₜ[R] fun i ↦
+                match i with
+                | { down := 0 } => m
+                | { down := 1 } => m'))
+          (by sorry)).support = ?_ := by sorry
+  sorry
+  sorry
+  · sorry
+
+lemma map_add_eq_sum_differential_apply (m m' : M) (f : M →ₚₗ[R] N) :
+    f (m + m') =
+      lfsum (fun n ↦ f.differential n) ((fun i ↦ match i with | 0 => m | 1 => m')) := by
+
   rw [map_add_eq_polarized_two_apply]
-  simp only [differential, polarized_multiComponent]
+  simp only [ground_apply, EmbeddingLike.apply_eq_iff_eq]
+  simp only [polarized_toFun'_apply, TensorProduct.piRight_apply,
+    TensorProduct.piRightHom_tmul]
+
+  simp only [differential, polarized_multiComponent, map_pair]
+  rw [lfsum_eq_of_locFinsupp]
+  --simp? [polarized_toFun'_apply]
+
+  /- simp only [differential, polarized_multiComponent, map_pair]
+  have := (f.polarized (ULift.{u} (Fin 2)))
   rw [← recompose_multiComponent (f.polarized (ULift (Fin 2)))]
-  congr
+  simp only [ground_apply, EmbeddingLike.apply_eq_iff_eq]
+  simp? [polarized_toFun'_apply] -/
+  /- congr
   ext x
-  simp only [lfsum_eq (LocFinsupp_multiComponent (polarized _ f)), multiComponent_toFun']
-  rw [lfsum_eq]
+  simp only [lfsum_eq_of_locFinsupp (LocFinsupp_multiComponent (polarized _ f)),
+    multiComponent_toFun']
+  rw [lfsum_eq_of_locFinsupp ] -/
+
+
   sorry
-  sorry
+  ·
+    sorry
 
 lemma lground_apply (f : M →ₚₗ[R] N) : f.lground = f.ground := rfl
 
@@ -157,7 +489,7 @@ example : M → M →ₗ[R] N := fun m ↦ {
   toFun :=  fun (m' : M) ↦ (differential f 1)
     (fun (i : (ULift.{u} (Fin 2))) ↦ match i with | 0 => m | 1 => m')
   map_add' x y := by
-    simp only [differential, ground_apply, map_pair_def]
+    /- simp only [differential, ground_apply, map_pair_def]
     rw [← map_add]
     congr
     simp only [polarized_multiComponent, polarized]
@@ -175,29 +507,16 @@ example : M → M →ₗ[R] N := fun m ↦ {
     have : lfsum (fun (i : ULift.{u} (Fin 2)) ↦ proj R M i) =
       ∑ i,  proj R M i := sorry
     simp only [sum_proj, this]
-    simp only [comp_toFun', Function.comp_apply]
+    simp only [comp_toFun', Function.comp_apply] -/
 
     --simp only [proj_apply]
     sorry
-
-    · sorry
-
-    -- simp only [differential, ground_apply,/-map_pair_def -/]
-    --rw [map_add]
-    /- rw [← lLfsum_apply]
-    congr
-
-
-    sorry
-    · simp [polarized_multiComponent]
-
-      sorry -/
   map_smul' r x := by
-    simp only [differential, ground_apply, RingHom.id_apply]/-map_pair_def -/
+    /- simp only [differential, ground_apply, RingHom.id_apply]/-map_pair_def -/
     rw [← map_smul]
     congr
     rw [← lLfsum_apply]
-    sorry
+    sorry -/
     sorry
 }
 

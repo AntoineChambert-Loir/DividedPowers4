@@ -304,7 +304,7 @@ lemma isMultiHomogeneousOfDegree_toFun {n : ι → ℕ} {f : PolynomialLaw R (Π
 /-- If `f` is multihomogeneous of multidegree `n`, then `f.ground` is too.  -/
 lemma isMultiHomogeneousOfDegree_ground {n : ι → ℕ} {f : PolynomialLaw R (Π i, M i) N}
     (hf : IsMultiHomogeneousOfDegree n f) (r : ι → R) (m : (Π i, M i)) :
-    f.ground (r • m) = (∏ᶠ i, (r i)^(n i)) • f.ground m := by
+    f.ground (r • m) = (∏ i, (r i)^(n i)) • f.ground m := by
   have hfrm := hf R r  ((TensorProduct.piRight R R _ _)
     ((TensorProduct.lid R (Π i, M i)).symm m))
   simp only [lid_symm_apply, piRight_apply, piRightHom_tmul, piRight_symm_apply] at hfrm
@@ -319,8 +319,7 @@ theorem IsMultiHomogeneousOfDegree.comp {P : Type*} [AddCommMonoid P] [Module R 
     (hf : f.IsMultiHomogeneousOfDegree p) (hg : g.IsHomogeneousOfDegree q) :
     (g.comp f).IsMultiHomogeneousOfDegree (q • p) := by
   intro S _ _ r m
-  simp only [comp_toFun', Function.comp_apply, hf S, hg S, Pi.smul_apply, smul_eq_mul,
-    finprod_pow ( Set.toFinite _), ← pow_mul, mul_comm q]
+  simp [comp_toFun', Function.comp_apply, hf S, hg S, mul_comm q, pow_mul, Finset.prod_pow]
 
 /- TODO
 
@@ -756,7 +755,7 @@ lemma multiComponentIsMultiHomogeneous [Fintype ι] (n : ι →₀ ℕ) (f : Pol
   simp only [multiComponent, coeff_el'_S_apply]
   intro S _ _ s sm
   -- simp only [finsum_eq_sum_of_fintype, finprod_eq_prod_of_fintype]
-  have that : (∏ᶠ (i : ι), s i ^ n i) •
+  have that : (∏ (i : ι), s i ^ n i) •
     ((MvPolynomial.rTensor
         (f.toFun (MvPolynomial ι S)
           ((LinearEquiv.rTensor ((i : ι) → M i) scalarRTensorAlgEquiv.toLinearEquiv)
@@ -764,7 +763,7 @@ lemma multiComponentIsMultiHomogeneous [Fintype ι] (n : ι →₀ ℕ) (f : Pol
               (∑ i,
                 X i ⊗ₜ[R] (piRight R R S M).symm (Pi.single i ((piRight R R S M)
                 ((piRight R R S M).symm sm) i))))))) n) =
-    ((∏ᶠ (i : ι), s i ^ n i) •
+    ((∏ (i : ι), s i ^ n i) •
     (MvPolynomial.rTensor
         (f.toFun (MvPolynomial ι S)
           ((LinearEquiv.rTensor ((i : ι) → M i) scalarRTensorAlgEquiv.toLinearEquiv)
@@ -951,8 +950,8 @@ theorem asdf (S : Type u) [CommSemiring S] [Algebra R S] (s : S) (m : (i : ι) �
 (PolynomialLaw lies in between the direct sum and the product of its graded submodules,
 hence there is no graded module structure.) -/
 theorem recompose_multiComponent {ι : Type u} [Fintype ι] [DecidableEq ι] {R : Type u}
-  [CommSemiring R] {M : ι → Type u} [(i : ι) → AddCommMonoid (M i)] [(i : ι) → Module R (M i)]
-  {N : Type u} [AddCommMonoid N] [Module R N]
+  [CommSemiring R] {M : ι → Type*} [(i : ι) → AddCommMonoid (M i)] [(i : ι) → Module R (M i)]
+  {N : Type*} [AddCommMonoid N] [Module R N]
   (f : PolynomialLaw R (Π i, M i) N) :
     PolynomialLaw.lfsum (fun n ↦ f.multiComponent n) = f := by
   ext S _ _ sm

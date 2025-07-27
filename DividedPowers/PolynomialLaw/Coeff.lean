@@ -56,7 +56,6 @@ theorem baseChange_compat_apply (f : M →ₗ[R] R) (m : S ⊗[R] M) :
 end LinearForm
 
 variable {R}
-
 namespace MvPolynomial
 
 variable {σ M N ι : Type*} [DecidableEq σ] [AddCommMonoid M] [Module R M] [AddCommMonoid N]
@@ -537,5 +536,3 @@ noncomputable def polynomialLawEquivCoeff : ((ι →₀ ℕ) →₀ N) ≃ₗ[R]
 end Fintype
 
 end Finsupp
-
-#min_imports
