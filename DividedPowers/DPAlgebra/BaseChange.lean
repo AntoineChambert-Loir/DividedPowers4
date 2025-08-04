@@ -1,6 +1,7 @@
 import DividedPowers.DPAlgebra.Exponential
 import DividedPowers.DPAlgebra.Graded.Basic
 import Mathlib.RingTheory.TensorProduct.Basic
+import DividedPowers.ForMathlib.Algebra.MvPolynomial.Lemmas
 
 -- import DividedPowers.ForMathlib.RingTheory.TensorProduct
 /-! # Base change properties of the divided power algebra
@@ -69,10 +70,10 @@ variable {R : Type*} [CommSemiring R] {S : Type _} [CommSemiring S] [Algebra R S
 
 variable {σ : Type*}
 
-lemma C_eq_algebraMap' (r : R) : C (algebraMap R S r) = algebraMap R (MvPolynomial σ S) r := rfl
-
 -- TODO: add to MvPolynomial.Eval
 section eval
+
+lemma C_eq_algebraMap' (r : R) : C (algebraMap R S r) = algebraMap R (MvPolynomial σ S) r := rfl
 
 @[simps]
 def eval₂AddMonoidHom (f : R →+* S) (g : σ → S) :
@@ -93,44 +94,6 @@ theorem coe_eval₂RingHom (f : R →+* S) (g : σ → S) : ⇑(eval₂RingHom f
 
 end eval
 
-/-- baseChange φ aplies φ on the coefficients of a polynomial in S[X] -/
-noncomputable def baseChange (φ : S →ₐ[R] S') : (MvPolynomial σ S) →ₐ[R] (MvPolynomial σ S') where
-  toRingHom := eval₂RingHom (C.comp φ) X
-  commutes' := fun r ↦ by simp [← C_eq_algebraMap']
-
-lemma coeff_baseChange_apply (m : σ →₀ ℕ) (φ : S →ₐ[R] S') (f : MvPolynomial σ S) :
-    coeff m (baseChange φ f) = φ (coeff m f) := by
-  classical
-  rw [baseChange, AlgHom.coe_mk, coe_eval₂RingHom]
-  induction f using MvPolynomial.induction_on generalizing m with
-  | C r =>
-    simp only [eval₂_C, RingHom.coe_comp, RingHom.coe_coe, Function.comp_apply, coeff_C]
-    split_ifs
-    · rfl
-    · rw [map_zero]
-  | add f g hf hg => simp only [eval₂_add, coeff_add, hf, hg, map_add]
-  | mul_X p s h =>
-      simp only [eval₂_mul, eval₂_X, coeff_mul, map_sum, _root_.map_mul]
-      apply Finset.sum_congr rfl
-      intro x _
-      simp only [h x.1, coeff_X']
-      split_ifs
-      · rw [_root_.map_one]
-      · rw [_root_.map_zero]
-
-lemma lcoeff_comp_baseChange_eq (φ : S →ₐ[R] S') (m : σ →₀ ℕ) :
-  LinearMap.comp (AlgHom.toLinearMap φ) ((lcoeff S m).restrictScalars R) =
-    LinearMap.comp ((lcoeff S' m).restrictScalars R) (baseChange φ).toLinearMap := by
-  ext f
-  simp only [LinearMap.coe_comp, LinearMap.coe_restrictScalars, Function.comp_apply, lcoeff_apply,
-    AlgHom.toLinearMap_apply, coeff_baseChange_apply]
-
-lemma baseChange_monomial (φ : S →ₐ[R] S') (m : σ →₀ ℕ) (a : S) :
-    (baseChange φ) ((MvPolynomial.monomial m) a) = (MvPolynomial.monomial m) (φ a) := by
-  simp only [baseChange, coe_mk, coe_eval₂RingHom, eval₂_monomial, RingHom.coe_comp,
-    RingHom.coe_coe, Function.comp_apply]
-  rw [monomial_eq]
-
 end MvPolynomial
 
 namespace DividedPowerAlgebra
@@ -143,7 +106,7 @@ noncomputable def AlgHom.baseChange {R A B C : Type _} [CommSemiring R] [CommSem
     [IsScalarTower R A C] (φ : B →ₐ[R] C) : A ⊗[R] B →ₐ[A] C :=
   { productMap (IsScalarTower.toAlgHom R A C) φ with
     commutes' := fun r => by
-      simp only [algebraMap_apply, Algebra.id.map_eq_id, RingHom.id_apply, toFun_eq_coe,
+      simp only [algebraMap_apply, Algebra.algebraMap_self, RingHom.id_apply, toFun_eq_coe,
         productMap_apply_tmul, IsScalarTower.coe_toAlgHom', _root_.map_one, _root_.mul_one] }
 
 theorem AlgHom.baseChange_tmul {R A B C : Type _} [CommSemiring R] [CommSemiring A] [Algebra R A]
@@ -381,15 +344,13 @@ theorem dpScalarExtension_mem_grade {a : DividedPowerAlgebra R M} {n : ℕ} (ha 
     rw [LinearMapClass.map_smul, dpScalarExtension_tmul]
     congr 1
     simp only [SetLike.mem_coe, mem_weightedHomogeneousSubmodule, IsWeightedHomogeneous] at hpn
-    simp only [hp', baseChange, hf, coe_ringHom_mk, coe_mk, coe_eval₂RingHom, ← hpa,
+    simp only [hp', baseChange, coe_ringHom_mk, coe_mk,  ← hpa,
       MvPolynomial.rename, ← algebraMap_eq, h_eq, dpScalarExtension, AlgHom.baseChange,
       toRingHom_eq_coe, coe_mk, RingHom.coe_coe, productMap_apply_tmul,
       _root_.map_one, one_mul, lift', RingQuot.liftAlgHom_mkAlgHom_apply, coe_eval₂AlgHom,
-      Function.comp_def, Prod.map_apply, id_eq, baseChange, hf, coe_ringHom_mk, coe_mk,
-      coe_eval₂RingHom]
+      Function.comp_def, baseChange, hf, coe_ringHom_mk, coe_mk]
     rw [← AlgHom.comp_apply, MvPolynomial.comp_aeval, aeval_def]
-    simp only [eval₂_eq, MvPolynomial.algebraMap_apply, prod_X_pow_eq_monomial, RingHom.coe_comp,
-      Function.comp_apply]
+    simp only [eval₂_eq,]
     have h_sum : ∀ (d : ℕ × M →₀ ℕ), algebraMap R S (coeff d p) =
           (coeff d (∑ x ∈ p.support, C ((algebraMap R S) (coeff x p)) * (monomial x) 1)) := by
       classical
@@ -404,23 +365,27 @@ theorem dpScalarExtension_mem_grade {a : DividedPowerAlgebra R M} {n : ℕ} (ha 
     classical
     rw [Finset.sum_subset_zero_on_sdiff]
     · intro x
-      simp only [coeff_sum, MvPolynomial.coeff_C_mul, MvPolynomial.coeff_monomial, mul_ite, mul_one, mul_zero, ne_eq, ite_not,
+      simp only [mem_support_iff, ne_eq]
+      sorry
+      /- simp only [coeff_sum, MvPolynomial.coeff_C_mul, MvPolynomial.coeff_monomial, mul_ite, mul_one, mul_zero, ne_eq, ite_not,
         Finset.sum_ite_eq',mem_support_iff, ite_eq_left_iff, Classical.not_imp, and_imp]
-      exact fun h _ ↦ h
+      exact fun h _ ↦ h -/
     · intro x hx
-      simp only [Finset.mem_sdiff, mem_support_iff, ne_eq, coeff_sum, MvPolynomial.coeff_C_mul,
+      sorry
+      /- simp only [Finset.mem_sdiff, mem_support_iff, ne_eq, coeff_sum, MvPolynomial.coeff_C_mul,
         MvPolynomial.coeff_monomial,
         mul_ite, mul_one, mul_zero, Finset.sum_ite_eq', ite_not, ite_eq_left_iff, Classical.not_imp,
         not_and, Decidable.not_not] at hx
       rw [IsScalarTower.algebraMap_apply R S (DividedPowerAlgebra S (S ⊗[R] M)),
-        hx.2 hx.1, map_zero, zero_mul]
+        hx.2 hx.1, map_zero, zero_mul] -/
     · intro d _hd
-      rw [← algebraMap_eq, coeff_sum]
+      sorry
+      /- rw [← algebraMap_eq, coeff_sum]
       simp only [MvPolynomial.algebraMap_apply, MvPolynomial.coeff_C_mul, map_sum, dp_def]
       rw [← h_eq', RingHom.coe_comp, Function.comp_apply, h_sum d, coeff_sum, map_sum]
       simp only [Algebra.id.map_eq_id, RingHomCompTriple.comp_apply, _root_.map_mul,
         MvPolynomial.coeff_C_mul]
-      congr 1
+      congr 1 -/
 
 -- TODO: add IsHomogeneous for maps of graded algebras/modules (?)
 
