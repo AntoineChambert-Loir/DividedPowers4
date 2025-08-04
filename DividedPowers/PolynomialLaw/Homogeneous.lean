@@ -3,6 +3,7 @@
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.Polynomial
 import DividedPowers.PolynomialLaw.Coeff
 import DividedPowers.ForMathlib.Algebra.Polynomial.AlgebraMap
+import DividedPowers.ForMathlib.Algebra.Algebra.Bilinear
 
 universe u
 
@@ -63,85 +64,17 @@ we have `ε ∘ j = @id S`, and the compatibility properties of `f` implies that
 
 -/
 
-namespace TensorProduct
-
-open scoped TensorProduct
-
-open LinearMap Finsupp
-
-variable {R : Type*} [CommSemiring R]
-variable {M : Type*} [AddCommMonoid M] [Module R M]
-
-lemma exists_Finsupp (S : Type*) [CommSemiring S] [Algebra R S] (μ : S ⊗[R] M) :
-    ∃ (m : S →₀ M), μ = m.sum (fun s x => s ⊗ₜ[R] x) := by
-  classical
-  induction μ using TensorProduct.induction_on with
-  | zero => use 0; rw [sum_zero_index]
-  | tmul s m => use single s m; simp only [tmul_zero, sum_single_index]
-  | add x y hx hy =>
-    obtain ⟨sx, rfl⟩ := hx
-    obtain ⟨sy, rfl⟩ := hy
-    use sx + sy
-    rw [sum_add_index (fun _ ↦ by simp) (fun _ _ _ _ ↦ by rw [TensorProduct.tmul_add])]
-
-theorem exists_Fin (S : Type*) [CommSemiring S] [Algebra R S] (sm : S ⊗[R] M) :
-    ∃ (n : ℕ) (s : Fin n → S) (m : Fin n → M),
-      sm = Finset.univ.sum (fun i ↦ (s i) ⊗ₜ[R] (m i)) := by
-  obtain ⟨m, rfl⟩ := TensorProduct.exists_Finsupp S sm
-  let e : m.support ≃ Fin (m.support.card) := Finset.equivFin _
-  use m.support.card, fun i ↦ e.symm i, fun i ↦ m (e.symm i)
-  rw [sum, ← Finset.sum_attach]
-  apply Finset.sum_equiv e
-  simp only [Finset.mem_attach, Finset.mem_univ, implies_true]
-  intros; simp only [Equiv.symm_apply_apply]
-
-lemma smul_rTensor {R : Type*} [CommSemiring R] {M : Type*} [AddCommMonoid M] [Module R M]
-    {S : Type*} [Semiring S] [Algebra R S] {T : Type*} [Semiring T] [Algebra R T]
-    (φ : S →ₐ[R] T) (s : S) (m : S ⊗[R] M) :
-    φ s • (φ.toLinearMap.rTensor M m) = φ.toLinearMap.rTensor M (s • m) := by
-  induction m using TensorProduct.induction_on with
-  | zero => simp only [map_zero, smul_zero]
-  | tmul s' m =>
-    simp only [rTensor_tmul, AlgHom.toLinearMap_apply, smul_tmul', smul_eq_mul, _root_.map_mul]
-  | add m m' hm hm' => simp only [map_add, smul_add, hm, hm']
-
-variable {R : Type*} [CommSemiring R]
-  {S : Type*} [Semiring S] [Algebra R S]
-  {M : Type*} [AddCommMonoid M] [Module R M] [Module S M] [IsScalarTower R S M]
-  {N : Type*} [AddCommMonoid N] [Module R N] [Module S N] [IsScalarTower R S N]
-  {P : Type*} [AddCommMonoid P] [Module R P]
-  {Q : Type*} [AddCommMonoid Q] [Module R Q]
-
-/-- If `f` is `S`-linear, then `TensorProduct.map (f.restrictScalars R) g` is `S`-linear -/
-lemma map_isLinearMap_of_left (f : M →ₗ[S] N) (g : P →ₗ[R] Q) :
-    IsLinearMap S (TensorProduct.map (f.restrictScalars R) g) where
-  map_add  x y := by rw [map_add]
-  map_smul c x := by
-    induction x using TensorProduct.induction_on with
-    | zero => simp only [smul_zero, map_zero]
-    | tmul x y => simp only [smul_tmul', map_tmul, coe_restrictScalars, map_smul]
-    | add x y hx hy => simp only [smul_add, map_add, hx, hy]
-
-lemma rTensor_smul' (f : M →ₗ[S] N) (s : S) (t : M ⊗[R] P) :
-    rTensor P (f.restrictScalars R) (s • t) = s • (rTensor P (f.restrictScalars R) t) := by
-  have : rTensor P (f.restrictScalars R) = (IsLinearMap.mk' _
-    (TensorProduct.map_isLinearMap_of_left f LinearMap.id)).restrictScalars R := rfl
-  rw [this, coe_restrictScalars, map_smul, IsLinearMap.mk'_apply]
-
-end TensorProduct
-
 open LinearMap TensorProduct
+
 namespace PolynomialLaw
+
 section Homogeneous
 
 open Finsupp MvPolynomial
 
-/- **MI** : I changed `CommRing R` to `CommSemiring R`. -/
 variable {R : Type u} {M N : Type*} [CommSemiring R] [AddCommMonoid M] [Module R M]
-  [AddCommMonoid N]
-  [Module R N]
+  [AddCommMonoid N] [Module R N]
 
-/- **MI** : I changed `CommRing S` to `CommSemiring S`. -/
 /-- A polynomial map `f : M →ₚ[R] N` is homogeneous of degree `p`
   if the function `f.toFun' S` is homogeneous of degree `p` for all `S` -/
 def IsHomogeneousOfDegree (p : ℕ) (f : PolynomialLaw R M N) : Prop :=
@@ -151,7 +84,7 @@ def IsHomogeneousOfDegree (p : ℕ) (f : PolynomialLaw R M N) : Prop :=
 theorem IsHomogeneousOfDegree_add (p : ℕ) {f g : PolynomialLaw R M N}
     (hf : f.IsHomogeneousOfDegree p) (hg : g.IsHomogeneousOfDegree p) :
     (f + g).IsHomogeneousOfDegree p := fun S _ _ s m ↦ by
-  simp only [add_def_apply, smul_add, hf S s m, hg S s m]
+  simp [hf S s m, hg S s m]
 
 theorem IsHomogeneousOfDegree_smul (p : ℕ) (r : R) {f : PolynomialLaw R M N}
     (hf : f.IsHomogeneousOfDegree p) : (r • f).IsHomogeneousOfDegree p := fun S _ _ s m ↦ by
@@ -189,8 +122,8 @@ lemma isHomogeneousOfDegree_coeff {f : PolynomialLaw R M N} {p : ℕ} (hf : IsHo
   classical
   let e (b : ι →₀ ℕ) (k : ℕ) : Option ι →₀ ℕ :=
     Finsupp.update (Finsupp.mapDomainEmbedding (Function.Embedding.some) b) none k
-  have he : ∀ b k, (X none ^ k * (Finset.prod Finset.univ
-      fun x => X (Option.some x) ^ b x) : MvPolynomial (Option ι) R) = monomial (e b k) 1 := fun b k ↦ by
+  have he : ∀ b k, (X none ^ k * (Finset.prod Finset.univ fun x => X (Option.some x) ^ b x) :
+      MvPolynomial (Option ι) R) = monomial (e b k) 1 := fun b k ↦ by
     simp only [Finsupp.mapDomainEmbedding_apply, Function.Embedding.some_apply, monomial_eq,
       map_one, Finsupp.prod_pow, Finsupp.coe_update, Fintype.prod_option, Function.update_self,
       ne_eq, reduceCtorEq, not_false_eq_true, Function.update_of_ne, one_mul, e]
