@@ -1,120 +1,17 @@
+import DividedPowers.ForMathlib.Algebra.Algebra.Bilinear
+import DividedPowers.ForMathlib.Algebra.BigOperators.Group.Finset.Basic
 import DividedPowers.ForMathlib.RingTheory.SubmoduleMem
+import DividedPowers.ForMathlib.RingTheory.TensorProduct.Basic
+import DividedPowers.ForMathlib.RingTheory.TensorProduct.MvPolynomial
 import DividedPowers.PolynomialLaw.Basic2
-import Mathlib.RingTheory.TensorProduct.MvPolynomial
 
 universe u
 
-variable (R : Type u) [CommSemiring R]
-
-/- # Prerequisites. -/
-
-section Prerequisites
-
-section Finset
-
-open Equiv Finsupp Function Set
-
-@[to_additive]
-theorem Finset.prod_congr_equiv {α β M : Type*} [CommMonoid M] {f : α → M} {s : Finset α}
-    (e : α ≃ β) : s.prod f = (s.map e).prod (f ∘ e.symm)  := by
-  simp [comp_apply, prod_map, coe_toEmbedding, symm_apply_apply]
-
-@[to_additive]
-theorem Finset.prod_congr_equiv' {α β M : Type*} [CommMonoid M] {f : β → M} {s : Finset α}
-    (e : α ≃ β) : s.prod (f ∘ e) = (s.map e).prod f := by
-  simp [comp_apply, prod_map, coe_toEmbedding]
-
-theorem Finsupp.ofSupportFinite_support {ι α : Type*} [Zero α] {f : ι → α} (hf : f.support.Finite) :
-    (ofSupportFinite f hf).support = hf.toFinset := by
-  ext; simp [ofSupportFinite_coe, mem_support_iff, Finite.mem_toFinset, mem_support]
-
-end Finset
-
-namespace LinearForm
-
-open Algebra Algebra.TensorProduct Function LinearMap TensorProduct
-
-variable (S S' M : Type*) [CommSemiring S] [Algebra R S] [CommSemiring S'] [Algebra R S']
-  (φ : S →ₐ[R] S') [AddCommMonoid M] [Module R M]
-
-noncomputable def baseChange (f : M →ₗ[R] R) : S ⊗[R] M →ₗ[S] S :=
-  (Algebra.TensorProduct.rid R S S).toLinearMap.comp (f.baseChange S)
-
-theorem baseChange_apply_tmul (f : M →ₗ[R] R) (r : S) (m : M) :
-    baseChange R S M f (r ⊗ₜ[R] m) = r * ((f m) • (1 : S)) := by
-  simp [baseChange, coe_comp, Function.comp_apply, baseChange_tmul, AlgEquiv.toLinearMap_apply,
-    rid_tmul, Algebra.mul_smul_comm, mul_one]
-
-theorem baseChange_compat_apply (f : M →ₗ[R] R) (m : S ⊗[R] M) :
-    φ (baseChange R S M f m) = (baseChange R S' M f) ((rTensor M φ.toLinearMap) m) := by
-  induction m using TensorProduct.induction_on with
-  | zero => simp [map_zero]
-  | tmul => simp [baseChange, coe_comp, Function.comp_apply, baseChange_tmul,
-      AlgEquiv.toLinearMap_apply, rid_tmul, map_smul, rTensor_tmul, AlgHom.toLinearMap_apply]
-  | add x y hx hy => simp [map_add, hx, hy]
-
-end LinearForm
-
-variable {R}
-namespace MvPolynomial
-
-variable {σ M N ι : Type*} [DecidableEq σ] [AddCommMonoid M] [Module R M] [AddCommMonoid N]
-  [Module R N]
-
-open LinearMap TensorProduct
-
-theorem rTensor_lcoeff (sn : MvPolynomial σ R ⊗[R] N) (k : σ →₀ ℕ) :
-    (LinearMap.rTensor N (lcoeff R k)) sn = 1 ⊗ₜ[R] (scalarRTensor sn) k  := by
-  induction sn using TensorProduct.induction_on with
-  | zero => simp
-  | tmul s n =>
-    simp only [rTensor_tmul, scalarRTensor_apply_tmul, Finsupp.sum_apply]
-    rw [Finsupp.sum_eq_single k (fun b _ hb ↦ by rw [Finsupp.single_eq_of_ne hb])
-      (fun _ ↦ by rw [_root_.zero_smul, Finsupp.single_zero, Finsupp.coe_zero, Pi.zero_apply]),
-      Finsupp.single_eq_same, lcoeff_apply, ← smul_tmul, smul_eq_mul, mul_one]
-    congr
-  | add x y hx hy => simp [LinearMap.map_add, LinearEquiv.map_add, hx, hy,
-      Finsupp.add_apply, tmul_add]
-
-theorem scalarRTensor_apply (sn : MvPolynomial σ R ⊗[R] N) (k : σ →₀ ℕ) :
-    scalarRTensor sn k = TensorProduct.lid R N ((LinearMap.rTensor N (lcoeff R k)) sn) := by
-  rw [← LinearEquiv.symm_apply_eq, TensorProduct.lid_symm_apply, rTensor_lcoeff]
-
-end MvPolynomial
-
-open TensorProduct
-namespace Submodule
-
-theorem span_tensorProduct_eq_top_of_span_eq_top {σ M S : Type*} [AddCommMonoid M] [Module R M]
-    [Semiring S] [Algebra R S] (e : σ → M) (hm : span R (Set.range e) = ⊤) :
-    (span S (Set.range fun s ↦ (1 : S) ⊗ₜ[R] e s) : Submodule S (S ⊗[R] M)) = ⊤ := by
-  rw [eq_top_iff]
-  intro m h
-  induction m using TensorProduct.induction_on with
-  | zero => exact zero_mem _
-  | tmul r m =>
-      let f : M →ₗ[R] S ⊗[R] M :=
-        { toFun m       := (1 : S) ⊗ₜ[R] m
-          map_add' x y  := by simp [tmul_add]
-          map_smul' a x := by simp [tmul_smul] }
-      suffices r ⊗ₜ[R] m = r • (1 : S) ⊗ₜ[R] m by
-        have heq : (Set.range fun s ↦ 1 ⊗ₜ[R] e s) = ⇑f '' Set.range e := by
-          conv_rhs => rw [← Set.image_univ, Set.image_image, Set.image_univ]
-          simp [f]
-        exact this ▸ smul_mem _ r (span_le_restrictScalars R _ _
-          (heq ▸ apply_mem_span_image_of_mem_span f (hm ▸ mem_top)))
-      rw [smul_tmul', smul_eq_mul, mul_one]
-  | add x y hx hy => exact Submodule.add_mem _ (hx mem_top) (hy mem_top)
-
-end Submodule
-
-end Prerequisites
+variable {R : Type u} [CommSemiring R]
 
 /- # Polynomial laws. -/
 
 namespace PolynomialLaw
-
-variable {R}
 
 /- **MI** : The file now works assuming the weaker hypotheses `CommSemiring R`, `CommSemiring S`,
   `AddCommMonoid M`, `AddCommMonoid N`. -/
@@ -423,12 +320,11 @@ end Coefficients
 
 end PolynomialLaw
 
-
 namespace Finsupp
 
 open Finset MvPolynomial PolynomialLaw TensorProduct
 
-variable {R} {M N ι : Type*} [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module R N]
+variable {M N ι : Type*} [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module R N]
   (S : Type*) [CommSemiring S] [Algebra R S]
 
 /- When M is free, we can go in the other direction and construct,
