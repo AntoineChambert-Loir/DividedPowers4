@@ -456,12 +456,10 @@ theorem isMultiHomogeneousOfDegree_of_coeff_iff (p : ι →₀ ℕ) (f : Polynom
   rw [← toFun_eq_toFun',toFun_sum_tmul_eq_coeff_sum, Finsupp.smul_sum]
   sorry
 
-
 theorem isMultiHomogeneousOfMultiDegreeOne_coeff {f : PolynomialLaw R (Π i, M i) N} (i : ι)
     (hf : f.IsMultiHomogeneousOfDegree (Finsupp.single i 1)) (m : Π i, M i) {d : ι →₀ ℕ}
     (hd : d ≠ Finsupp.single i 1) : (multiCoeff m f) d = 0 :=
   isMultiHomogeneousOfDegree_multiCoeff hf m d hd
-
 
 theorem isMultiHomogeneousOfDegreeOne_coeff_support_le {f : PolynomialLaw R (Π i, M i) N} (i : ι)
     (hf : f.IsMultiHomogeneousOfDegree (Finsupp.single i 1)) (m : Π i, M i) :
@@ -474,7 +472,13 @@ theorem isMultiHomogeneousOfDegreeOne_coeff_support_le {f : PolynomialLaw R (Π 
   exact ⟨i, ((not_imp_comm.mp (isMultiHomogeneousOfMultiDegreeOne_coeff i hf m)) hd).symm⟩
 
 theorem _root_.MvPolynomial.prod_X_pow_eq_monomial' {R : Type u} {σ : Type u_1} [Fintype σ]
-    {s : σ →₀ ℕ} [CommSemiring R] : ∏ x, X (R := R) x ^ s x = (monomial s) 1 := sorry
+    {s : σ →₀ ℕ} [CommSemiring R] : ∏ x, X (R := R) x ^ s x = (monomial s) 1 := by
+  rw [← prod_X_pow_eq_monomial]
+  apply Finset.prod_congr_of_eq_on_inter _ (fun _ _ ha ↦ absurd (Finset.mem_univ _) ha)
+    (fun _ _ _ ↦ rfl )
+  intro _ _ ha
+  rw [Finsupp.mem_support_iff, not_not] at ha
+  rw [ha, pow_zero]
 
 theorem isMultiHomogeneousOfMultiDegreeOne_coeff_single {f : PolynomialLaw R (Π i, M i) N} (i : ι)
     (hf : f.IsMultiHomogeneousOfDegree (Finsupp.single i 1)) (m : Π i, M i) :
@@ -489,7 +493,9 @@ theorem isMultiHomogeneousOfMultiDegreeOne_coeff_single {f : PolynomialLaw R (Π
     lid_tmul]
   let r : ι → R := Function.const ι 1
   have : (1 : R) = (Function.const ι 1) i := rfl
-  rw [this, toFun_tmul_eq_multiCoeff_sum]
+
+  sorry
+  /- rw [this, toFun_tmul_eq_multiCoeff_sum]
   simp only [Finsupp.sum, Function.const_apply, one_pow, map_sum, lid_tmul, _root_.one_smul]
   apply Finset.sum_congr rfl
   intro d hd
@@ -498,7 +504,7 @@ theorem isMultiHomogeneousOfMultiDegreeOne_coeff_single {f : PolynomialLaw R (Π
   have hd' : d = Finsupp.single i 1 := sorry
   simp only [hd']
   rw [MvPolynomial.prod_X_pow_eq_monomial']
-  simp only [coeff_monomial, ↓reduceIte, _root_.one_smul]
+  simp only [coeff_monomial, ↓reduceIte, _root_.one_smul] -/
 
 end
 
