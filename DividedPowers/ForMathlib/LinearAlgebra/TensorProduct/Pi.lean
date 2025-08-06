@@ -1,22 +1,13 @@
 /- Copyright ACL & MIdFF 2025 -/
 
-import DividedPowers.PolynomialLaw.Homogeneous
-import DividedPowers.PolynomialLaw.MultiCoeff
-import DividedPowers.ForMathlib.Algebra.MvPolynomial.Lemmas
 import Mathlib.LinearAlgebra.TensorProduct.Pi
-
-import Mathlib.LinearAlgebra.Multilinear.Basic
-
-universe u uι
-
-open LinearMap TensorProduct
 
 noncomputable section
 
+namespace TensorProduct
+
 /- **MI** : I think that `TensorProduct.piRight_apply` should not be a simp lemma, and that we
 should stick to `piRight` as often as possible (TODO: PR this change). -/
-
-open Finsupp MvPolynomial
 
 variable {ι R S T N P : Type*} {M : ι → Type*}  /- [Fintype ι] [DecidableEq ι] -/ [CommSemiring R]
     [Π i, AddCommMonoid (M i)] [Π i, Module R (M i)] [CommSemiring S] [Algebra R S]
@@ -63,40 +54,37 @@ lemma piRight_rTensor_eq_rTensor_piRight'
     {T : Type*} [CommSemiring T] [Algebra R T]
     (ψ : T →ₐ[R] S)
     (m : T ⊗[R] ((i : ι) → M i)) (i : ι) :
-    (piRight R S S M) ((LinearMap.rTensor ((i : ι) → M i) ψ.toLinearMap) m) i = LinearMap.rTensor (M i) ψ.toLinearMap (piRight R T T M m i) := by
+    (piRight R S S M) ((LinearMap.rTensor ((i : ι) → M i) ψ.toLinearMap) m) i =
+      LinearMap.rTensor (M i) ψ.toLinearMap (piRight R T T M m i) := by
   simp [piRightHom_rTensor_eq_rTensor_piRightHom]
 
-variable [Fintype ι] [DecidableEq ι]
+variable {R S N} [Fintype ι] [DecidableEq ι]
+
+lemma piRight_symm_zero :
+    ((piRight R S N M).symm fun _ ↦ 0) = 0 := by
+  rw [← Pi.zero_def, map_zero]
 
 lemma piRight_apply_symm_zero :
     (piRight R S N M) ((piRight R S N M).symm fun _ ↦ 0) = 0 := by
-  rw [← Pi.zero_def, map_zero, map_zero]
+  rw [piRight_symm_zero, map_zero]
 
--- TODO: generalize, speed up
+lemma smul_tmul_proj_eq (r' : ι → S) (i : ι) (s : S) (m : Π i, M i) :
+    r' i • s ⊗ₜ[R] m i = (piRight R S S M)
+      (r' i • s ⊗ₜ[R] Pi.single i (m i)) i := by simp
+
 theorem smul_piRight_apply (sm : S ⊗[R] (Π i, M i)) (r' : ι → S) (i : ι) :
     r' i • (piRight R S S M) sm i =
       (piRight R S S M) ((piRight R S S M).symm fun i ↦ r' i • (piRight R S S M) sm i) i := by
   rw [← Pi.smul_apply, ← map_smul]
   induction sm using TensorProduct.induction_on with
   | zero =>
-    simp only [smul_zero, map_zero, Pi.zero_apply, piRight_apply_symm_zero]
+    simp only [smul_zero, map_zero, Pi.zero_apply, piRight_symm_zero]
   | add x y hx hy =>
-    simp only [smul_add, hx, hy, map_add, Pi.add_apply, coe_piRight_symm]
-    have : (fun i ↦
-      r' i • (piRight R S S M) x i + r' i •
-      (piRight R S S M) y i) =
-      (fun i ↦
-      r' i • (piRight R S S M) x i) + fun i ↦ r' i •
-       (piRight R S S M) y i := rfl
-    simp_rw [this]
-    simp only [map_add, Pi.add_apply]
+    simp only [smul_add, hx, hy, coe_piRight_symm,← Pi.add_def, map_add, Pi.add_apply]
   | tmul s m =>
     simp only [map_smul, piRight_apply, piRightHom_tmul, Pi.smul_apply, coe_piRight_symm,
       coe_piRightHom]
-    rw [← piRight_apply]
-    have : r' i • s ⊗ₜ[R] m i = (piRight R S S M)
-        (r' i • s ⊗ₜ[R] Pi.single i (m i)) i := by
-      simp only [map_smul, piRight_apply, piRightHom_tmul, Pi.smul_apply, Pi.single_eq_same]
-    rw [this]
-    simp only [map_smul, piRight_apply, piRightHom_tmul, Pi.smul_apply, Pi.single_eq_same,
-      LinearEquiv.apply_symm_apply]
+    rw [← piRight_apply, smul_tmul_proj_eq]
+    simp
+
+end TensorProduct
