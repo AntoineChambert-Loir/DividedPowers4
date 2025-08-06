@@ -116,127 +116,9 @@ theorem IsMultiHomogeneousOfDegree.isHomogeneousOfDegree {f : (Π i, M i) →ₚ
   rw [degree_eq_sum, ← Finset.prod_pow_eq_pow_sum, ← hf S (fun i ↦ r) m, ← Pi.smul_def,
     ← coe_piRight R S, smul_const_piRight_apply, LinearEquiv.symm_apply_apply]
 
+/- **MI** : This strategy will not work with the current definition of `MultiCoeff`, I think. -/
 /-- The coefficients of a homogeneous polynomial map of degree `p` vanish outside of degree `p`. -/
 lemma isMultiHomogeneousOfDegree_multiCoeff {n : ι →₀ ℕ} {f : (Π i, M i) →ₚₗ[R] N}
-    (hf : IsMultiHomogeneousOfDegree n f) (m : Π i, M i) (d : ι →₀ ℕ) (hd : d ≠ n) :
-    PolynomialLaw.multiCoeff m f d = 0 := by
-  classical
-  let μ : MvPolynomial ι R ⊗[R] (Π i, M i) :=
-    Finset.univ.sum (fun i => X i ⊗ₜ[R] Pi.single i (m i))
-  have hf' := isMultiHomogeneousOfDegree_toFun hf (MvPolynomial ι R) (fun i ↦ X i) μ
-
-  /- have : (fun i ↦ ∑ c, X (R := R) c ⊗ₜ[R] Pi.single c (m c) i) =
-    (∑ c, fun i ↦ X (R := R) c ⊗ₜ[R] Pi.single c (m c) i) := by rw [@Finset.sum_fn] -/
-
-  simp only [map_sum, piRight_apply, piRightHom_tmul, Finset.sum_apply,
-    coe_piRight_symm,  toFun_sum_tmul_eq_multiCoeff_sum, μ, Finset.smul_sum,
-    ← Finset.sum_fn] at hf'
-
-  --wrong
-  have (x : ι) : ((piRight R R (MvPolynomial ι R) M).symm fun a ↦
-      (X a * X x) ⊗ₜ[R] Pi.single x (m x) a) =
-      (∑ a, ((X a * X x) ⊗ₜ[R] Pi.single x (m x))) := by
-
-    have hinj : Function.Injective (piRight R R (MvPolynomial ι R) M) := sorry
-    rw [← Function.Injective.eq_iff hinj]
-    simp only [coe_piRight_symm, LinearEquiv.apply_symm_apply, map_sum, piRight_apply,
-      piRightHom_tmul]
-    rw [Finset.sum_fn]
-    ext a
-    rw [Finset.sum_eq_single a]
-    · intro b _ hb
-      rw [Pi.single_eq_of_ne]
-      sorry
-      sorry
-    · sorry
-
-  simp only [smul_tmul', smul_eq_mul] at hf'
-  /- have (i : ι) : X (R := R) i • ∑ c, X (R := R) c ⊗ₜ[R] Pi.single c (m c) i =
-      (∑ c, X (R := R) i • X (R := R) c ⊗ₜ[R] Pi.single c (m c) i) := by
-    rw [Finset.smul_sum]
-    sorry -/
-  --simp_rw [Pi.single_apply] at hf'
-
-  sorry
-  /- simp only [multiCoeff, multiGenerize, coe_comp, LinearEquiv.coe_coe, LinearMap.coe_mk,
-    AddHom.coe_mk, Function.comp_apply]
-  simp only [scalarRTensor_apply, EmbeddingLike.map_eq_zero_iff] -/
-  /- classical
-  let μ : MvPolynomial ι R ⊗[R] (Π i, M i) :=
-    Finset.univ.sum (fun i => X i ⊗ₜ[R] Pi.single i (m i))
-  have hf' := isMultiHomogeneousOfDegree_toFun hf (MvPolynomial ι R) (fun i ↦ X i) μ
-
-  /- have : (fun i ↦ ∑ c, X (R := R) c ⊗ₜ[R] Pi.single c (m c) i) =
-    (∑ c, fun i ↦ X (R := R) c ⊗ₜ[R] Pi.single c (m c) i) := by rw [@Finset.sum_fn] -/
-
-  simp only [map_sum, piRight_apply, piRightHom_tmul, Finset.sum_apply,
-    coe_piRight_symm,  toFun_sum_tmul_eq_multiCoeff_sum, μ] at hf' -/
-
-
- /-  simp only [← Finset.sum_fn, map_sum, piRight_symm_apply] at hf'
-  rw [toFun_sum_tmul_eq_multiCoeff_sum] at hf'
-   -/
-/-
-
-  let e (b : ι →₀ ℕ) (k : ℕ) : Option ι →₀ ℕ :=
-    Finsupp.update (Finsupp.mapDomainEmbedding (Function.Embedding.some) b) none k
-  have he : ∀ b k, (X none ^ k * (Finset.prod Finset.univ
-      fun x => X (Option.some x) ^ b x) : MvPolynomial (Option ι) R) = monomial (e b k) 1 := fun b k ↦ by
-    simp only [Finsupp.mapDomainEmbedding_apply, Function.Embedding.some_apply, monomial_eq,
-      map_one, Finsupp.prod_pow, Finsupp.coe_update, Fintype.prod_option, Function.update_self,
-      ne_eq, reduceCtorEq, not_false_eq_true, Function.update_of_ne, one_mul, e]
-    exact congr_arg₂ _ rfl (Finset.prod_congr rfl (fun _ _ => by
-      rw [Finsupp.mapDomain_apply (Option.some_injective ι)]))
-  have he_some : ∀ b k i, e b k (some i) = b i := fun b k i ↦ by
-    simp only [Finsupp.update, Finsupp.mapDomainEmbedding_apply, Function.Embedding.some_apply,
-      Finsupp.coe_mk, Function.update, reduceCtorEq, ↓reduceDIte,
-      Finsupp.mapDomain_apply (Option.some_injective ι), e]
-  have he_none : ∀ b k, k = e b k none := fun b k ↦ by
-    simp only [Finsupp.update, Finsupp.mapDomainEmbedding_apply, Function.Embedding.some_apply,
-      Finsupp.coe_mk, Function.update, ↓reduceDIte, e]
-   /-  On écrit l'homogénéité : f (∑ T ⬝ X_i m_i) = T ^ p ⬝ f(∑ X_i m_i)
-   ∑ coeff f e (T X) ^ e = T ^ p ⬝ ∑ coeff f e X ^ e
-   Identification : (coeff f e) T^|e| X^ e = coeff f e T ^ p X ^ e
-   On en déduit coeff f e = 0 si |e| ≠ p .    -/
-  let μ : MvPolynomial (Option ι) R ⊗[R] (Π i, M i) :=
-    Finset.univ.sum (fun i => X (some i) ⊗ₜ[R] m)
-  have hf' := isMultiHomogeneousOfDegree_toFun hf (MvPolynomial (Option ι) R) (fun i ↦ X none) μ
-  simp only [map_sum, piRight_apply, piRightHom_tmul, Finset.sum_apply, Finset.smul_sum, smul_tmul',
-    smul_eq_mul, coe_piRight_symm, μ] at hf'
-  simp only [toFun_sum_tmul_eq_coeff_sum,
-    Finsupp.smul_sum, TensorProduct.smul_tmul'] at hf'
-  let φ : MvPolynomial (Option ι) R ⊗[R] N →ₗ[R] N :=
-    (TensorProduct.lid R N).toLinearMap.comp
-      (LinearMap.rTensor N (lcoeff R (e d (d.sum fun _ n => n))))
-  let hφ := LinearMap.congr_arg (f := φ) hf'
-  simp only [Finset.prod_pow_eq_pow_sum] at hφ
-  /- simp only [map_finsuppSum, LinearMap.map_smul, smul_eq_mul, mul_pow, Finset.prod_mul_distrib,
-    Finset.prod_pow_eq_pow_sum] at hφ -/
-  sorry/- rw [Finsupp.sum_eq_single d _ (by simp only [tmul_zero, map_zero, implies_true]),
-    Finsupp.sum_eq_single d _ (by simp only [tmul_zero, map_zero, implies_true])] at hφ
-  simp only [lcoeff, coe_comp, LinearEquiv.coe_coe, Function.comp_apply, rTensor_tmul, coe_mk,
-    AddHom.coe_mk, lid_tmul, φ] at hφ
-  rw [he, coeff_monomial, if_pos, _root_.one_smul, he, coeff_monomial, if_neg, _root_.zero_smul]
-    at hφ
-  exact hφ
-  · intro hd'
-    apply hd
-    convert (DFunLike.ext_iff.mp hd'.symm) none <;> exact (he_none _ _)
-  · simp only [Finset.mem_univ, forall_true_left, implies_true,
-      Finsupp.sum_of_support_subset _ (Finset.subset_univ d.support)]
-  all_goals
-  · intro b _ hb'
-    simp only [lcoeff, coe_comp, LinearEquiv.coe_coe, Function.comp_apply, rTensor_tmul, coe_mk,
-      AddHom.coe_mk, lid_tmul, φ]
-    rw [he, coeff_monomial, if_neg, _root_.zero_smul]
-    intro h
-    apply hb'
-    ext i
-    rw [← he_some b _ i, h]
-    exact he_some d _ i  -/ -/
-
-/-- The coefficients of a homogeneous polynomial map of degree `p` vanish outside of degree `p`. -/
-lemma isMultiHomogeneousOfDegree_multiCoeff' {n : ι →₀ ℕ} {f : (Π i, M i) →ₚₗ[R] N}
     (hf : IsMultiHomogeneousOfDegree n f) (m : Π i, M i) (d : ι →₀ ℕ) (hd : d ≠ n) :
     PolynomialLaw.multiCoeff m f d = 0 := by
   classical
@@ -675,7 +557,6 @@ theorem multiComponent.toFun'_apply (n : ι →₀ ℕ) (f : (Π i, M i) →ₚ�
   (S : Type u) [CommSemiring S] [Algebra R S] (m : S ⊗[R] (Π i, M i)) :
   (f.multiComponent n).toFun' S m = multiCoeff_S m f n := rfl
 
--- **MI**: I replaced  `CommRing S` by `CommSemiring S` and `S : Type u` by `S : Type*`.
 theorem multiComponent_toFun_apply (n : ι →₀ ℕ) (f : (Π i, M i) →ₚₗ[R] N)
     (S : Type*) [CommSemiring S] [Algebra R S] (m : S ⊗[R] (Π i, M i)) :
     (f.multiComponent n).toFun S m = multiCoeff_S m f n := by
@@ -702,10 +583,6 @@ theorem multiComponent_smul (n : ι →₀ ℕ) (r : R) (f : (Π i, M i) →ₚ�
   simp [multiComponent, multiCoeff_S_apply, piRight_apply, map_sum, smul_toFun, Pi.smul_apply,
     rTensor_apply, map_smul, smul_def]
 
--- Perhaps I should just use `ι →₀ ℕ` everywhere, but since I am usually assuming `Fintype ι`,
--- this seemed redundant.
--- For now, I used it in the def. of `multiComponent` to avoid this error:
-/- ... has Finset (ι →₀ ℕ) : Type u but is expected to have type Set (ι → ℕ) : Type u-/
  theorem support_multiComponent' (f : (Π i, M i) →ₚₗ[R] N) {S : Type u} [CommSemiring S]
     [Algebra R S] (m : S ⊗[R] (Π i, M i)) :
     Function.support (fun i => ((fun n => multiComponent n f) i).toFun' S m) =
@@ -717,7 +594,6 @@ theorem multiComponent_smul (n : ι →₀ ℕ) (r : R) (f : (Π i, M i) →ₚ�
   ext n
   simp [multiComponent, ne_eq, Finset.mem_coe, Finsupp.mem_support_iff, multiCoeff_S_def]
 
--- **MI**: I replaced  `CommRing S` by `CommSemiring S`.
 theorem support_multiComponent (f : (Π i, M i) →ₚₗ[R] N) {S : Type*} [CommSemiring S] [Algebra R S]
     (m : S ⊗[R] (Π i, M i)) :
     Function.support (fun i => ((fun n => multiComponent n f) i).toFun S m) =
