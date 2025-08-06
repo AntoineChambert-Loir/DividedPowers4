@@ -60,13 +60,10 @@ lemma piRight_rTensor_eq_rTensor_piRight'
 
 variable {R S N} [Fintype ι] [DecidableEq ι]
 
+@[simp]
 lemma piRight_symm_zero :
     ((piRight R S N M).symm fun _ ↦ 0) = 0 := by
   rw [← Pi.zero_def, map_zero]
-
-lemma piRight_apply_symm_zero :
-    (piRight R S N M) ((piRight R S N M).symm fun _ ↦ 0) = 0 := by
-  rw [piRight_symm_zero, map_zero]
 
 lemma smul_tmul_proj_eq (r' : ι → S) (i : ι) (s : S) (m : Π i, M i) :
     r' i • s ⊗ₜ[R] m i = (piRight R S S M)
@@ -86,5 +83,17 @@ theorem smul_piRight_apply (sm : S ⊗[R] (Π i, M i)) (r' : ι → S) (i : ι) 
       coe_piRightHom]
     rw [← piRight_apply, smul_tmul_proj_eq]
     simp
+
+theorem smul_const_piRight_apply (sm : S ⊗[R] (Π i, M i)) (r : S) :
+    r • (piRight R S S M) sm = (piRight R S S M) (r • sm) := by
+  rw [← Pi.smul_apply]
+  induction sm using TensorProduct.induction_on with
+  | zero =>
+    simp only [coe_piRight, Pi.smul_apply, map_zero, smul_zero]
+  | add x y hx hy =>
+    simp only [coe_piRight, Pi.smul_apply, map_add, piRight_apply, coe_piRightHom, smul_add,
+      map_smul]
+  | tmul s m =>
+    simp only [coe_piRight, Pi.smul_apply, piRight_apply, piRightHom_tmul, map_smul]
 
 end TensorProduct
