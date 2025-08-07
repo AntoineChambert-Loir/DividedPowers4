@@ -83,6 +83,18 @@ theorem toFun_sum_tmul_eq_multiCoeff_sum (S : Type*) [CommSemiring S] [Algebra R
   apply congr_arg₂ _ _ rfl
   simp [aeval_monomial, _root_.map_one, Finsupp.prod_pow, one_mul]
 
+theorem toFun_tmul_eq_multiCoeff_sum (S : Type*) [CommSemiring S] [Algebra R S] (r : S) (i : ι) :
+    f.toFun S (r ⊗ₜ[R] (Pi.single i (m i))) =
+      ((multiCoeff (Pi.single i (m i)) f).sum fun k n ↦ (∏ i, r ^ k i) ⊗ₜ[R] n) := by
+  have : r ⊗ₜ[R] Pi.single i (m i) =
+      ∑ (j : ι), r ⊗ₜ[R] Pi.single j (Pi.single i (m i) j) := by
+    rw [← tmul_sum, eq_comm]
+    congr
+    rw [Finset.sum_eq_single i (fun _ _ hj ↦ by rw [Pi.single_eq_of_ne hj, Pi.single_zero])
+      (fun hi ↦ absurd (mem_univ i) hi),
+      Pi.single_eq_same]
+  rw [this, toFun_sum_tmul_eq_multiCoeff_sum]
+
 end multiCoeff
 
 open Function

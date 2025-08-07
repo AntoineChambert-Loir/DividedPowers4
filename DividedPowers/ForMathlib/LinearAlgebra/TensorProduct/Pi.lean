@@ -135,9 +135,32 @@ lemma projRight_singleRight (i : ι):
     (projRight R S N M i).comp (singleRight R S N M i) = LinearMap.id :=
   LinearMap.ext_iff.mpr fun x ↦ projRight_singleRight_apply i x
 
-lemma right_ext_iff (x y : N ⊗[R] (Π i, M i)) :
+variable (S) in
+lemma right_ext_iff {x y : N ⊗[R] (Π i, M i)} :
     x = y ↔ ∀ i, projRight R S N M i x = projRight R S N M i y := by
   simp [← (piRight R R N M).injective.eq_iff, projRight]
   exact funext_iff
+
+variable (R S N M) in
+def compRight (i : ι) : N ⊗[R] (Π i, M i) →ₗ[S] N ⊗[R] (Π i, M i) :=
+  (singleRight R S N M i).comp (projRight R S N M i)
+
+lemma sum_compRight (nm : N ⊗[R] (Π i, M i)) : ∑ i, (compRight R S N M i nm) = nm :=
+  (right_ext_iff S).mpr fun i ↦ by simp [projRight, compRight, singleRight]
+
+lemma compRight_tmul (i : ι) (n : N) (m : Π i, M i) :
+    (compRight R S N M i (n ⊗ₜ (fun i ↦ m i))) = singleRight R S N M i (n ⊗ₜ m i) := by
+  simp [compRight, singleRight, projRight]
+
+lemma compRight_piRight_tmul (i : ι) (n : ι → N) (m : Π i, M i) :
+    (compRight R S N M i ((piRight R S N M).symm fun i ↦ n i ⊗ₜ m i)) =
+      singleRight R S N M i (n i ⊗ₜ m i) := by
+  simp [compRight, singleRight, projRight]
+
+lemma projRight_compRight_piRight_tmul (i : ι) (n : ι → N) (m : Π i, M i) :
+    projRight R S N M i (compRight R S N M i ((piRight R S N M).symm fun i ↦ n i ⊗ₜ m i)) =
+      (n i ⊗ₜ m i) := by
+  simp [compRight, singleRight, projRight]
+
 
 end TensorProduct
