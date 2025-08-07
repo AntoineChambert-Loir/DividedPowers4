@@ -33,6 +33,8 @@ lemma piRight_rTensor_eq_rTensor_piRight [Fintype ι] [DecidableEq ι] (ψ : N �
 
 variable (R S N)
 
+-- **MI** : I am not sure about whether we want these `coe` lemmas to be `simp`.
+
 @[simp]
 lemma coe_piRightHom : ⇑(piRightHom R S N M) = (piRightHom R R N M) := rfl
 
@@ -95,5 +97,47 @@ theorem smul_const_piRight_apply (sm : S ⊗[R] (Π i, M i)) (r : S) :
       map_smul]
   | tmul s m =>
     simp only [coe_piRight, Pi.smul_apply, piRight_apply, piRightHom_tmul, map_smul]
+
+variable (R S N M) in
+def projRight (i : ι) : N ⊗[R] (Π i, M i) →ₗ[S] N ⊗[R] M i :=
+  (LinearMap.proj i).comp (piRight R S N M).toLinearMap
+
+lemma piRight_eq_pi_projRight :
+    (piRight R S N M).toLinearMap = LinearMap.pi (projRight R S N M) := by
+  ext n i mi j
+  simp [projRight]
+
+lemma piRight_symm_comp_pi_prodRight :
+    (piRight R S N M).symm.toLinearMap.comp (LinearMap.pi (projRight R S N M)) = LinearMap.id := by
+  rw [← piRight_eq_pi_projRight, LinearEquiv.symm_comp]
+
+lemma piRight_symm_comp_pi_prodRight_apply (x : N ⊗[R] (Π i, M i)) :
+    (piRight R S N M).symm (LinearMap.pi (projRight R S N M) x) = x := by
+  erw [← LinearMap.comp_apply, piRight_symm_comp_pi_prodRight, LinearMap.id_apply]
+
+lemma projRight_piRight_apply (i : ι) (f : Π i, N ⊗[R]  M i)  :
+    (projRight R S N M i) ((piRight R S N M).symm f) = f i := by
+  simp [projRight]
+
+lemma projRight_piRight (i : ι) :
+    (projRight R S N M i).comp (piRight R S N M).symm.toLinearMap = LinearMap.proj i :=
+  LinearMap.ext_iff.mpr fun x ↦ projRight_piRight_apply i x
+
+variable (R S N M) in
+def singleRight (i : ι) : N ⊗[R] M i →ₗ[S] N ⊗[R] (Π i, M i) :=
+  (piRight R S N M).symm.toLinearMap.comp (LinearMap.single S (fun i ↦ (N ⊗[R] M i)) i)
+
+lemma projRight_singleRight_apply (i : ι) (nm : N ⊗[R] M i) :
+    (projRight R S N M i) (singleRight R S N M i nm) = nm := by
+  simp [projRight, singleRight]
+
+lemma projRight_singleRight (i : ι):
+    (projRight R S N M i).comp (singleRight R S N M i) = LinearMap.id :=
+  LinearMap.ext_iff.mpr fun x ↦ projRight_singleRight_apply i x
+
+lemma right_ext_iff (x y : N ⊗[R] (Π i, M i)) :
+    x = y ↔ ∀ i, projRight R S N M i x = projRight R S N M i y := by
+  simp [← (piRight R R N M).injective.eq_iff, projRight]
+  exact funext_iff
 
 end TensorProduct
