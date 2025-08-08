@@ -65,12 +65,12 @@ theorem baseChange_comp_monomial_eq (φ : S →ₐ[R] S') (n : σ →₀ ℕ) :
     (MvPolynomial.baseChange φ).toLinearMap ∘ₗ ((monomial n).restrictScalars R) =
       ((monomial n).restrictScalars R) ∘ₗ φ.toLinearMap := by ext; simp [baseChange_monomial]
 
-theorem foo [DecidableEq σ] {M : σ → Type*} [(i : σ) → AddCommMonoid (M i)]
-  [(i : σ) → Module R (M i)]
-  (φ : S →ₐ[R] S') (s : S) (m : (i : σ) → M i) (i : σ) :
-  ((MvPolynomial.baseChange φ).toLinearMap ∘ₗ scalarRTensorAlgEquiv.toLinearMap)
-    (X i ⊗ₜ[R] s) ⊗ₜ[R] Pi.single i (m i) =
-    scalarRTensorAlgEquiv (X i ⊗ₜ[R] φ s) ⊗ₜ[R] Pi.single i (m i) := by
+theorem baseChange_comp_scalarRTensorAlgEquiv_tmul [DecidableEq σ] {M : σ → Type*}
+    [(i : σ) → AddCommMonoid (M i)] [(i : σ) → Module R (M i)] (φ : S →ₐ[R] S') (s : S)
+    (m : (i : σ) → M i) (i : σ) :
+    ((MvPolynomial.baseChange φ).toLinearMap ∘ₗ scalarRTensorAlgEquiv.toLinearMap)
+      (X i ⊗ₜ[R] s) ⊗ₜ[R] Pi.single i (m i) =
+      scalarRTensorAlgEquiv (X i ⊗ₜ[R] φ s) ⊗ₜ[R] Pi.single i (m i) := by
   simp only [baseChange, eval₂Hom_eq_bind₂, coe_comp, Function.comp_apply, AlgHom.toLinearMap_apply,
     AlgEquiv.toLinearMap_apply, AlgHom.coe_mk, ← bind₂_map, bind₂_C_left,
     RingHomCompTriple.comp_apply]
