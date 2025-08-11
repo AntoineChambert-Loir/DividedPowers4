@@ -173,6 +173,63 @@ lemma isMultiHomogeneousOfDegree_multiCoeff {n : ι →₀ ℕ} {f : (Π i, M i)
     simp only [coe_comp, LinearEquiv.coe_coe, Function.comp_apply, rTensor_tmul, lcoeff_apply,
       lid_tmul, φ, prod_X_pow_eq_monomial', coeff_monomial, if_neg hkd, _root_.zero_smul]
 
+theorem toFun'_zero_of_constantCoeff_zero
+    (f : ((i : ι) → M i) →ₚₗ[R] N) (hf : coeff (0 : ι → Π i, M i) f = 0)
+    (S : Type u) [CommSemiring S] [Algebra R S] :
+    f.toFun' S 0 = 0 := by
+  have : (0 : S ⊗[R] (Π i, M i)) = ∑ i, (0 : S) ⊗ₜ[R] Pi.single i (0 : M i) := by simp
+  rw [this, ← toFun_eq_toFun', toFun_sum_tmul_eq_coeff_sum]
+  simp only [sum, Pi.single_zero]
+  conv_rhs => rw [← Finset.sum_const_zero (s := ( ((coeff (0 : ι → Π i, M i)) f).support))]
+  apply Finset.sum_congr rfl
+  erw [hf]
+  simp
+
+/-- A polynomial map `f` is homogeneous of degree `p` iff all of its coefficients
+  `PolynomialLaw.coeff m f` vanish outside of degree `p`, for all `m : Fin n → M`. -/
+theorem isMultiHomogeneousOfDegree_of_coeff_iff' (p : ι →₀ ℕ) (f : (Π i, M i) →ₚₗ[R] N) :
+    IsMultiHomogeneousOfDegree p f ↔ ∀ (m : Π i, M i) (n : ι →₀ ℕ) (_ : n ≠ p),
+      PolynomialLaw.multiCoeff m f n = 0 := by
+  refine ⟨fun hf m n hn ↦ isMultiHomogeneousOfDegree_multiCoeff hf m n hn, fun H S _ _ r μ => ?_⟩
+  induction μ using TensorProduct.induction_on with
+  | zero =>
+    simp only [map_zero, smul_zero, Finset.sum_const_zero]
+    sorry
+  | tmul s m =>
+    conv_rhs => rw [← sum_compRight (S := S) (s ⊗ₜ m)]
+    simp [compRight_tmul, singleRight_tmul, ← toFun_eq_toFun', smul_tmul',
+      toFun_sum_tmul_eq_multiCoeff_sum, smul_sum]
+    apply Finsupp.sum_congr
+    intro d hd
+    have hd' : p = d := sorry
+    rw [hd']
+    congr
+    simp [mul_pow, Finset.prod_mul_distrib]
+
+  | add sm sm' hsm hsm' =>
+    simp only [map_add, smul_add]
+    sorry
+
+/-- A polynomial map `f` is homogeneous of degree `p` iff all of its coefficients
+  `PolynomialLaw.coeff m f` vanish outside of degree `p`, for all `m : Fin n → M`. -/
+theorem isMultiHomogeneousOfDegree_of_coeff_iff'' (p : ι →₀ ℕ) (f : (Π i, M i) →ₚₗ[R] N) :
+    IsMultiHomogeneousOfDegree p f ↔ ∀ (m : Π i, M i) (n : ι →₀ ℕ) (_ : n ≠ p),
+      PolynomialLaw.multiCoeff m f n = 0 := by
+  refine ⟨fun hf m n hn ↦ isMultiHomogeneousOfDegree_multiCoeff hf m n hn, fun H S _ _ r μ => ?_⟩
+  obtain ⟨n', s', m', h⟩ := TensorProduct.exists_Fin S
+    (∑ i, r i • (TensorProduct.compRight R S S M i) μ)
+  simp_rw [h]
+  obtain ⟨n, s, m, rfl⟩ := TensorProduct.exists_Fin S μ
+  rw [← toFun_eq_toFun', ← sum_compRight (S := S) (∑ i, s' i ⊗ₜ[R] m' i)]
+  simp only [map_sum, compRight_tmul]
+
+ /-    toFun_sum_tmul_eq_multiCoeff_sum, toFun_sum_tmul_eq_coeff_sum, Finsupp.smul_sum]
+  simp only [sum] -/
+
+  /- simp_rw [map_sum, compRight_tmul, singleRight_tmul]
+  simp only [Finset.smul_sum, smul_tmul'] -/
+
+  sorry
 
 /-- A polynomial map `f` is homogeneous of degree `p` iff all of its coefficients
   `PolynomialLaw.coeff m f` vanish outside of degree `p`, for all `m : Fin n → M`. -/
@@ -181,9 +238,22 @@ theorem isMultiHomogeneousOfDegree_of_coeff_iff (p : ι →₀ ℕ) (f : (Π i, 
       PolynomialLaw.multiCoeff m f n = 0 := by
   refine ⟨fun hf m n hn ↦ isMultiHomogeneousOfDegree_multiCoeff hf m n hn, fun H S _ _ r μ => ?_⟩
   obtain ⟨n, s, m, rfl⟩ := TensorProduct.exists_Fin S μ
+  simp_rw [map_sum, compRight_tmul, singleRight_tmul]
+  simp only [Finset.smul_sum, smul_tmul']
+
+
+  /- have (x : ι) :  ∑ x_1, (r x • s x_1) ⊗ₜ[R] Pi.single x (m x_1 x) =
+      (∑ x_1, (r x • s x_1)) ⊗ₜ[R] (∑ x_1, ∑ x_2, Pi.single x_1 (Pi.single x (m x_1 x)) x_2) := by
+    simp only [smul_eq_mul, Finset.sum_pi_single', Finset.mem_univ, ↓reduceIte]
+    simp only [sum_tmul]
+    sorry -/
+  --rw [Finset.sum_comm]
+  sorry
+  /- obtain ⟨n, s, m, rfl⟩ := TensorProduct.exists_Fin S μ
+  simp_rw [map_sum, compRight_tmul, singleRight_tmul]
   simp only [map_sum, Finset.smul_sum, ← map_smul, smul_tmul']
   rw [Finset.sum_comm]
-  simp_rw [compRight_tmul, singleRight_tmul]
+  simp_rw [compRight_tmul, singleRight_tmul] -/
   /- rw [← toFun_eq_toFun', toFun_sum_tmul_eq_coeff_sum, toFun_sum_tmul_eq_coeff_sum, Finsupp.smul_sum]
   apply Finsupp.sum_congr
   intro d hd
@@ -196,19 +266,6 @@ theorem isMultiHomogeneousOfDegree_of_coeff_iff (p : ι →₀ ℕ) (f : (Π i, 
   specialize H n m d
   rw [not_imp_comm, Finsupp.sum_of_support_subset _ (Finset.subset_univ _) _ (fun _ _ ↦ rfl)] at H
   exact H (Finsupp.mem_support_iff.mp hd) -/
-  sorry
-
-theorem toFun'_zero_of_constantCoeff_zero
-    (f : ((i : ι) → M i) →ₚₗ[R] N) (hf : coeff (0 : ι → Π i, M i) f = 0)
-    (S : Type u) [CommSemiring S] [Algebra R S] :
-    f.toFun' S 0 = 0 := by
-  have : (0 : S ⊗[R] (Π i, M i)) = ∑ i, (0 : S) ⊗ₜ[R] Pi.single i (0 : M i) := by simp
-  rw [this, ← toFun_eq_toFun', toFun_sum_tmul_eq_coeff_sum]
-  simp only [sum, Pi.single_zero]
-  conv_rhs => rw [← Finset.sum_const_zero (s := ( ((coeff (0 : ι → Π i, M i)) f).support))]
-  apply Finset.sum_congr rfl
-  erw [hf]
-  simp
 
 theorem isMultiHomogeneousOfMultiDegreeOne_coeff {f : (Π i, M i) →ₚₗ[R] N} (i : ι)
     (hf : f.IsMultiHomogeneousOfDegree (Finsupp.single i 1)) (m : Π i, M i) {d : ι →₀ ℕ}

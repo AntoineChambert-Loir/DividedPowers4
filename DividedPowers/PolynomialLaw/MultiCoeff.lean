@@ -95,6 +95,58 @@ theorem toFun_tmul_eq_multiCoeff_sum (S : Type*) [CommSemiring S] [Algebra R S] 
       Pi.single_eq_same]
   rw [this, toFun_sum_tmul_eq_multiCoeff_sum]
 
+private noncomputable def multiGenerize' {σ : Type*} [Fintype σ] [DecidableEq σ] (m : σ → Π i, M i) :
+    ((Π i, M i) →ₚₗ[R] N) →ₗ[R] MvPolynomial (ι × σ) R ⊗[R] N where
+  toFun f       := f.toFun (MvPolynomial (ι × σ) R)
+    (∑ i : ι × σ, X i ⊗ₜ[R] (Pi.single i.1 (m i.2 i.1)))
+  map_add' p q  := by simp [add_toFun_apply]
+  map_smul' r p := by simp [RingHom.id_apply, smul_toFun, Pi.smul_apply]
+
+/-- The multi-coefficients of a `PolynomialLaw`, as linear maps. -/
+private noncomputable def multiCoeff' {σ : Type*} [Fintype σ] [DecidableEq σ] (m : σ → Π i, M i) :
+    ((Π i, M i) →ₚₗ[R] N) →ₗ[R] ((ι × σ) →₀ ℕ) →₀ N :=
+  scalarRTensor.toLinearMap.comp (multiGenerize' m)
+
+private theorem multiGenerize_eq' {σ : Type*} [Fintype σ] [DecidableEq σ] (m : σ → Π i, M i) :
+    multiGenerize' m f =
+    (multiCoeff' m f).sum (fun k n ↦ (monomial k 1) ⊗ₜ n) := by
+  dsimp only [multiCoeff', coe_comp, LinearEquiv.coe_coe, Function.comp_apply]
+  generalize h : scalarRTensor (multiGenerize' m f) = p
+  rw [eq_comm, ← LinearEquiv.symm_apply_eq] at h
+  rw [← h, LinearEquiv.symm_apply_eq, map_finsuppSum]
+  ext d
+  rw [Finsupp.sum_apply, Finsupp.sum_eq_single d (fun _ _ hb ↦ by simp [if_neg hb,
+    scalarRTensor_apply_tmul_apply]) (by simp), scalarRTensor_apply_tmul_apply,
+    coeff_monomial, if_pos rfl, _root_.one_smul]
+
+theorem toFun_sum_tmul_eq_multiCoeff_sum' (σ : Type*) [Fintype σ] [DecidableEq σ] (S : Type*)
+    [CommSemiring S] [Algebra R S] (r : ι → S) (s : σ → S) (m : σ → Π i, M i) :
+    f.toFun S (∑ x, ∑ i, (r i • s x) ⊗ₜ[R] (Pi.single i (m x i))) =
+      (multiCoeff (∑ (x : σ), m x) f).sum (fun k n ↦ (∏ i, ∏ x, (r i) ^ k i • s x) ⊗ₜ[R] n) := by
+  --classical
+  have := f.isCompat (MvPolynomial.aeval r)
+  have this := congr_fun (f.isCompat (MvPolynomial.aeval (fun (i : ι × σ) ↦ r i.1 * s i.2)))
+    (∑ i, X i ⊗ₜ[R] (Pi.single i.1 (m i.2 i.1)))
+  simp only [Function.comp_apply, map_sum, rTensor_tmul, AlgHom.toLinearMap_apply, aeval_X] at this
+  let h : multiGenerize' m f =
+    (multiCoeff' m f).sum (fun k n ↦ (monomial k 1) ⊗ₜ n) := by apply multiGenerize_eq'
+  simp only [multiGenerize', coe_mk, AddHom.coe_mk] at h
+  have hprod : f.toFun S (∑ (x : ι × σ), (r x.1 * s x.2) ⊗ₜ[R] Pi.single x.1 (m x.2 x.1))
+     = f.toFun S ((∑ x, ∑ i, (r i • s x) ⊗ₜ[R] Pi.single i (m x i))) := by
+    congr
+    simp only [smul_eq_mul]
+    exact Fintype.sum_prod_type_right fun x ↦ (r x.1 * s x.2) ⊗ₜ[R] Pi.single x.1 (m x.2 x.1)
+  rw [hprod] at this
+  rw [← this, h, Finsupp.sum, _root_.map_sum]
+  simp only [rTensor_tmul, AlgHom.toLinearMap_apply, Finsupp.sum, smul_eq_mul]
+  --simp? [multiCoeff']
+  sorry
+  /- apply sum_congr rfl
+  intro k _
+  simp only [LinearMap.rTensor_tmul, AlgHom.toLinearMap_apply]
+  apply congr_arg₂ _ _ rfl
+  simp [aeval_monomial, _root_.map_one, Finsupp.prod_pow, one_mul] -/
+
 end multiCoeff
 
 open Function
