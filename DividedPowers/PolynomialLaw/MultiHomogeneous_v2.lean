@@ -210,63 +210,6 @@ theorem isMultiHomogeneousOfDegree_of_coeff_iff' (p : ι →₀ ℕ) (f : (Π i,
     simp only [map_add, smul_add]
     sorry
 
-/-- A polynomial map `f` is homogeneous of degree `p` iff all of its coefficients
-  `PolynomialLaw.coeff m f` vanish outside of degree `p`, for all `m : Fin n → M`. -/
-theorem isMultiHomogeneousOfDegree_of_coeff_iff'' (p : ι →₀ ℕ) (f : (Π i, M i) →ₚₗ[R] N) :
-    IsMultiHomogeneousOfDegree p f ↔ ∀ (m : Π i, M i) (n : ι →₀ ℕ) (_ : n ≠ p),
-      PolynomialLaw.multiCoeff m f n = 0 := by
-  refine ⟨fun hf m n hn ↦ isMultiHomogeneousOfDegree_multiCoeff hf m n hn, fun H S _ _ r μ => ?_⟩
-  obtain ⟨n', s', m', h⟩ := TensorProduct.exists_Fin S
-    (∑ i, r i • (TensorProduct.compRight R S S M i) μ)
-  simp_rw [h]
-  obtain ⟨n, s, m, rfl⟩ := TensorProduct.exists_Fin S μ
-  rw [← toFun_eq_toFun', ← sum_compRight (S := S) (∑ i, s' i ⊗ₜ[R] m' i)]
-  simp only [map_sum, compRight_tmul]
-
- /-    toFun_sum_tmul_eq_multiCoeff_sum, toFun_sum_tmul_eq_coeff_sum, Finsupp.smul_sum]
-  simp only [sum] -/
-
-  /- simp_rw [map_sum, compRight_tmul, singleRight_tmul]
-  simp only [Finset.smul_sum, smul_tmul'] -/
-
-  sorry
-
-/-- A polynomial map `f` is homogeneous of degree `p` iff all of its coefficients
-  `PolynomialLaw.coeff m f` vanish outside of degree `p`, for all `m : Fin n → M`. -/
-theorem isMultiHomogeneousOfDegree_of_coeff_iff (p : ι →₀ ℕ) (f : (Π i, M i) →ₚₗ[R] N) :
-    IsMultiHomogeneousOfDegree p f ↔ ∀ (m : Π i, M i) (n : ι →₀ ℕ) (_ : n ≠ p),
-      PolynomialLaw.multiCoeff m f n = 0 := by
-  refine ⟨fun hf m n hn ↦ isMultiHomogeneousOfDegree_multiCoeff hf m n hn, fun H S _ _ r μ => ?_⟩
-  obtain ⟨n, s, m, rfl⟩ := TensorProduct.exists_Fin S μ
-  simp_rw [map_sum, compRight_tmul, singleRight_tmul]
-  simp only [Finset.smul_sum, smul_tmul']
-
-
-  /- have (x : ι) :  ∑ x_1, (r x • s x_1) ⊗ₜ[R] Pi.single x (m x_1 x) =
-      (∑ x_1, (r x • s x_1)) ⊗ₜ[R] (∑ x_1, ∑ x_2, Pi.single x_1 (Pi.single x (m x_1 x)) x_2) := by
-    simp only [smul_eq_mul, Finset.sum_pi_single', Finset.mem_univ, ↓reduceIte]
-    simp only [sum_tmul]
-    sorry -/
-  --rw [Finset.sum_comm]
-  sorry
-  /- obtain ⟨n, s, m, rfl⟩ := TensorProduct.exists_Fin S μ
-  simp_rw [map_sum, compRight_tmul, singleRight_tmul]
-  simp only [map_sum, Finset.smul_sum, ← map_smul, smul_tmul']
-  rw [Finset.sum_comm]
-  simp_rw [compRight_tmul, singleRight_tmul] -/
-  /- rw [← toFun_eq_toFun', toFun_sum_tmul_eq_coeff_sum, toFun_sum_tmul_eq_coeff_sum, Finsupp.smul_sum]
-  apply Finsupp.sum_congr
-  intro d hd
-  rw [TensorProduct.smul_tmul']
-  apply congr_arg₂ _ _ rfl
-  simp only [smul_eq_mul, mul_pow, Finset.prod_mul_distrib]
-  apply congr_arg₂ _ _ rfl
-  rw [Finset.prod_pow_eq_pow_sum]
-  apply congr_arg₂ _ rfl
-  specialize H n m d
-  rw [not_imp_comm, Finsupp.sum_of_support_subset _ (Finset.subset_univ _) _ (fun _ _ ↦ rfl)] at H
-  exact H (Finsupp.mem_support_iff.mp hd) -/
-
 theorem isMultiHomogeneousOfMultiDegreeOne_coeff {f : (Π i, M i) →ₚₗ[R] N} (i : ι)
     (hf : f.IsMultiHomogeneousOfDegree (Finsupp.single i 1)) (m : Π i, M i) {d : ι →₀ ℕ}
     (hd : d ≠ Finsupp.single i 1) : (multiCoeff m f) d = 0 :=
