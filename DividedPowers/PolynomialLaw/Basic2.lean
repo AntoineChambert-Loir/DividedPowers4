@@ -351,6 +351,14 @@ theorem exists_lift'' (t : S ⊗[R] M) {ι : Type*} [Finite ι] (s : ι → S) :
   use gen.card, φ R gen, p, fun i ↦ (hs i).choose, hp,
     fun i ↦ (hs i).choose_spec
 
+/-- Lift an element of a tensor product and two scalars -/
+theorem exists_lift_pair (t : S ⊗[R] M) (s : S × S) :
+  ∃ (n : ℕ) (ψ : MvPolynomial (Fin n) R →ₐ[R] S)
+    (p : MvPolynomial (Fin n) R ⊗[R] M) (q : (MvPolynomial (Fin n) R) × (MvPolynomial (Fin n) R)),
+      ψ.toLinearMap.rTensor M p = t ∧ ψ q.1 = s.1 ∧ ψ q.2 = s.2 := by
+  obtain ⟨n, ψ, p, q, hq, hs⟩ := exists_lift'' t (![s.1, s.2])
+  exact ⟨n, ψ, p, (q 0, q 1), hq, hs 0, hs 1⟩
+
 /-- Lift an element of a tensor product and a scalar -/
 theorem exists_lift' (t : S ⊗[R] M) (s : S) : ∃ (n : ℕ) (ψ : MvPolynomial (Fin n) R →ₐ[R] S)
     (p : MvPolynomial (Fin n) R ⊗[R] M) (q : MvPolynomial (Fin n) R),

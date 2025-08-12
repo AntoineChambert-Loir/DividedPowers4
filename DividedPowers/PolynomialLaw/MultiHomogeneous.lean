@@ -123,10 +123,8 @@ theorem IsMultiHomogeneousOfDegree.comp {P : Type*} [AddCommMonoid P] [Module R 
     (hf : f.IsMultiHomogeneousOfDegree p) (hg : g.IsHomogeneousOfDegree q) :
     (g.comp f).IsMultiHomogeneousOfDegree (q • p) := by
   intro S _ _ r m
-  have hf' := hf S r m
-  have hg' := hg S
   simp [comp_toFun', Function.comp_apply, Finsupp.coe_smul, Pi.smul_apply,
-    smul_eq_mul, mul_comm q, pow_mul, Finset.prod_pow, Pi.smul_apply, hf', hg']
+    smul_eq_mul, mul_comm q, pow_mul, Finset.prod_pow, Pi.smul_apply, hf S, hg S]
 
 theorem IsMultiHomogeneousOfDegree.isHomogeneousOfDegree {f : (Π i, M i) →ₚₗ[R] N} {n : ι →₀ ℕ}
     (hf : f.IsMultiHomogeneousOfDegree n) : f.IsHomogeneousOfDegree n.degree := by
