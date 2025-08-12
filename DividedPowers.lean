@@ -34,6 +34,7 @@ import DividedPowers.ForMathlib.GradedRingQuot
 import DividedPowers.ForMathlib.Lcoeff
 import DividedPowers.ForMathlib.LinearAlgebra.OnSup
 import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Pi
+import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Prod
 import DividedPowers.ForMathlib.RingTheory.AugmentationIdeal -- uses sorry.
 --import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Evaluation -- In PR 15019
 --import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.LinearTopology -- In PR #15007
