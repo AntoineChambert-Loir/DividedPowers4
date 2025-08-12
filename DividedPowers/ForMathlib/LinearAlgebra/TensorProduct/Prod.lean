@@ -7,9 +7,6 @@ noncomputable section
 
 namespace TensorProduct
 
-/- **MI** : I think that `TensorProduct.piRight_apply` should not be a simp lemma, and that we
-should stick to `piRight` as often as possible (TODO: PR this change). -/
-
 variable {ι R S T N P M₁ M₂ : Type*} [CommSemiring R] [AddCommMonoid M₁] [Module R M₁]
     [AddCommMonoid M₂] [Module R M₂] [CommSemiring S] [Algebra R S]
     [CommSemiring T] [Algebra R T] [AddCommMonoid N] [Module R N] [Module S N]
@@ -49,13 +46,13 @@ lemma coe_prodRight_symm :
   simp [LinearEquiv.symm_apply_eq, coe_prodRight, LinearEquiv.apply_symm_apply]
 
 -- I tried to avoid the next one, but with no success (TODO)
-lemma piRight_rTensor_fst_eq_rTensor_piRight' (ψ : T →ₐ[R] S) (m : T ⊗[R] (M₁ × M₂)) :
+lemma prodRight_rTensor_fst_eq_rTensor_prodRight' (ψ : T →ₐ[R] S) (m : T ⊗[R] (M₁ × M₂)) :
     ((prodRight R S S M₁ M₂) ((LinearMap.rTensor (M₁ × M₂) ψ.toLinearMap) m)).fst =
       LinearMap.rTensor M₁ ψ.toLinearMap (prodRight R T T M₁ M₂ m).fst := by
   simp [prodRight_rTensor_fst_eq_rTensor_prodRight, coe_prodRight]
 
 -- I tried to avoid the next one, but with no success (TODO)
-lemma piRight_rTensor_snd_eq_rTensor_piRight' (ψ : T →ₐ[R] S) (m : T ⊗[R] (M₁ × M₂)) :
+lemma prodRight_rTensor_snd_eq_rTensor_prodRight' (ψ : T →ₐ[R] S) (m : T ⊗[R] (M₁ × M₂)) :
     ((prodRight R S S M₁ M₂) ((LinearMap.rTensor (M₁ × M₂) ψ.toLinearMap) m)).snd =
       LinearMap.rTensor M₂ ψ.toLinearMap (prodRight R T T M₁ M₂ m).snd := by
   simp [prodRight_rTensor_snd_eq_rTensor_prodRight, coe_prodRight]
@@ -63,7 +60,7 @@ lemma piRight_rTensor_snd_eq_rTensor_piRight' (ψ : T →ₐ[R] S) (m : T ⊗[R]
 variable {R S N}
 
 @[simp]
-lemma piRight_symm_zero : ((prodRight R S N M₁ M₂).symm (0, 0)) = 0 := by simp
+lemma prodRight_symm_zero : ((prodRight R S N M₁ M₂).symm (0, 0)) = 0 := by simp
 
 lemma smul_tmul_fst_eq (r : S × S) (s : S) (m : M₁ × M₂) :
     r.1 • s ⊗ₜ[R] m.1 = ((prodRight R S S M₁ M₂) (r.1 • s ⊗ₜ[R] (m.1, 0))).1 := by simp
