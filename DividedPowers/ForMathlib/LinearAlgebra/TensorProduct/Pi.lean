@@ -99,6 +99,7 @@ theorem smul_const_piRight_apply (sm : S ⊗[R] (Π i, M i)) (r : S) :
     simp only [coe_piRight, Pi.smul_apply, piRight_apply, piRightHom_tmul, map_smul]
 
 variable (R S N M) in
+@[irreducible]
 def projRight (i : ι) : N ⊗[R] (Π i, M i) →ₗ[S] N ⊗[R] M i :=
   (LinearMap.proj i).comp (piRight R S N M).toLinearMap
 
@@ -124,6 +125,7 @@ lemma projRight_piRight (i : ι) :
   LinearMap.ext_iff.mpr fun x ↦ projRight_piRight_apply i x
 
 variable (R S N M) in
+@[irreducible]
 def singleRight (i : ι) : N ⊗[R] M i →ₗ[S] N ⊗[R] (Π i, M i) :=
   (piRight R S N M).symm.toLinearMap.comp (LinearMap.single S (fun i ↦ (N ⊗[R] M i)) i)
 
@@ -146,6 +148,7 @@ lemma right_ext_iff {x y : N ⊗[R] (Π i, M i)} :
   exact funext_iff
 
 variable (R S N M) in
+@[irreducible]
 def compRight (i : ι) : N ⊗[R] (Π i, M i) →ₗ[S] N ⊗[R] (Π i, M i) :=
   (singleRight R S N M i).comp (projRight R S N M i)
 
@@ -188,6 +191,5 @@ lemma projRight_compRight_piRight_tmul (i : ι) (n : ι → N) (m : Π i, M i) :
     projRight R S N M i (compRight R S N M i ((piRight R S N M).symm fun i ↦ n i ⊗ₜ m i)) =
       (n i ⊗ₜ m i) := by
   simp [compRight, singleRight, projRight]
-
 
 end TensorProduct
