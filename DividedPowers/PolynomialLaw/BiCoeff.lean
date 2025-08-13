@@ -154,54 +154,49 @@ theorem toFun_tmul_snd_eq_multiCoeff_sum (S : Type*) [CommSemiring S] [Algebra R
 
 end biCoeff
 
-#exit
-
 open Function
 
-variable (r : ι → R) (r₁ r₂ : R) (m m₁ m₂ : Π i, M i) (k : ι →₀ ℕ) (f : (Π i, M i) →ₚₗ[R] N)
+variable (r : R × R) (r₁ r₂ : R) (m m₁ m₂ : M × M') (k : ℕ × ℕ) (f : (M × M') →ₚₗ[R] N)
 
-theorem ground_apply_sum_smul_eq_multiCoeff_sum :
-    ground f (∑ i, (r i) • Pi.single i (m i)) =
-      (multiCoeff m f).sum (fun k n ↦ (∏ i,  r i ^ k i) • n) := by
+theorem ground_apply_sum_smul_eq_biCoeff_sum :
+    ground f (r.1 • (m.1, 0) + r.2 • (0, m.2)) =
+      (biCoeff m f).sum (fun k n ↦ (r.1 ^ k.1 * r.2 ^ k.2) • n) := by
   apply (TensorProduct.lid R N).symm.injective
   rw [TensorProduct.lid_symm_apply, one_tmul_ground_apply', ← TensorProduct.lid_symm_apply]
-  simp only [map_sum, TensorProduct.lid_symm_apply, ← TensorProduct.smul_tmul, smul_eq_mul, mul_one]
-  rw [← toFun_eq_toFun', toFun_sum_tmul_eq_coeff_sum, ← TensorProduct.lid_symm_apply]
+  simp only [map_add, TensorProduct.lid_symm_apply, ← TensorProduct.smul_tmul, smul_eq_mul, mul_one]
+  rw [← toFun_eq_toFun', toFun_sum_tmul_eq_biCoeff_sum, ← TensorProduct.lid_symm_apply]
   simp only [map_finsuppSum, TensorProduct.lid_symm_apply]
   exact Finsupp.sum_congr (fun d _ ↦ by rw [← TensorProduct.smul_tmul, smul_eq_mul, mul_one])
 
 theorem ground_apply_smul_eq_multiCoeff_sum :
-    ground f (r₁ • m₁) = (multiCoeff m₁ f).sum (fun k n ↦ r₁ ^ (∑ i, k i) • n) := by
-  suffices r₁ • m₁ = ∑ i, r₁ • (Pi.single i (m₁ i)) by
-    rw [this, ground_apply_sum_smul_eq_multiCoeff_sum]
-    exact sum_congr rfl (fun i _ ↦ by simp [Finset.prod_pow_eq_pow_sum])
-  simp [← Finset.smul_sum]
-  congr
-  ext i
-  simp only [Finset.sum_apply, sum_pi_single, mem_univ, ↓reduceIte]
+    ground f (r₁ • m₁) = (biCoeff m₁ f).sum (fun k n ↦ r₁ ^ (k.1 + k.2) • n) := by
+  suffices r₁ • m₁ = (r₁, r₁).1 • (m₁.1, 0) + (r₁, r₁).2 • (0, m₁.2) by
+    rw [this, ground_apply_sum_smul_eq_biCoeff_sum]
+    exact sum_congr rfl (by simp [pow_add])
+  simp only [← smul_add, Prod.mk_add_mk, add_zero, zero_add]
 
 variable {S : Type*} [CommSemiring S] [Algebra R S]
 
-theorem multiCoeff_injective {m : Π i, M i}
-    (hm : Submodule.span R (Set.range fun i ↦ Pi.single i (m i)) = ⊤) :
-    Function.Injective (multiCoeff m : ((Π i, M i) →ₚₗ[R] N) →ₗ[R] (ι →₀ ℕ) →₀ N) := fun f g h ↦ by
+theorem biCoeff_injective {m : M × M'}
+    (hm : Submodule.span R (Set.range ![(m.1, (0 : M')), ((0 : M), m.2)]) = ⊤) :
+    Function.Injective (biCoeff m : ((M × M') →ₚₗ[R] N) →ₗ[R] (ℕ × ℕ) →₀ N) := fun f g h ↦ by
   ext S _ _ p
-  suffices hp : p ∈ Submodule.span S (Set.range fun i ↦ 1 ⊗ₜ[R] Pi.single i (m i)) by
+  suffices hp : p ∈ Submodule.span S
+      (Set.range fun (i : Fin 2) ↦ (1 : S) ⊗ₜ[R] (![(m.1, (0 : M')), ((0 : M), m.2)]) i) by
     simp only [Submodule.mem_span_iff_exists_sum _ p, TensorProduct.smul_tmul'] at hp
     obtain ⟨r, rfl⟩ := hp
+    set r' : S × S := finTwoArrowEquiv' S r with hr'
+    have hr0 : r 0 = r'.1 := by simp [hr', finTwoArrowEquiv']
+    have hr1 : r 1 = r'.2 := by simp [hr', finTwoArrowEquiv']
     rw [Finsupp.sum_of_support_subset _ (subset_univ _) _ (fun  i _ ↦ by
       rw [smul_eq_mul, _root_.mul_one, TensorProduct.zero_tmul])]
-    simp [smul_eq_mul, mul_one, ← toFun_eq_toFun'_apply, toFun_sum_tmul_eq_multiCoeff_sum, h]
+    simp [smul_eq_mul, mul_one, ← toFun_eq_toFun'_apply, hr0, hr1, toFun_sum_tmul_eq_biCoeff_sum, h]
   simp [Submodule.span_tensorProduct_eq_top_of_span_eq_top _ hm]
 
-theorem multiCoeff_inj {m : Π i, M i}
-    (hm : Submodule.span R (Set.range fun i ↦ Pi.single i (m i)) = ⊤)
-    {f g : (Π i, M i) →ₚₗ[R] N} :
-    (multiCoeff m f) = (multiCoeff m g ) ↔ f = g := (multiCoeff_injective hm).eq_iff
-
-end Decidable_Fintype
-
-end Fintype
+theorem biCoeff_inj {m : M × M'}
+    (hm : Submodule.span R (Set.range ![(m.1, (0 : M')), ((0 : M), m.2)]) = ⊤)
+    {f g : (M × M') →ₚₗ[R] N} :
+    (biCoeff m f) = (biCoeff m g ) ↔ f = g := (biCoeff_injective hm).eq_iff
 
 end Coefficients
 
