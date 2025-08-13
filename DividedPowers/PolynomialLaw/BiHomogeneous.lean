@@ -1,5 +1,5 @@
 /- Copyright ACL & MIdFF 2024 -/
-
+import DividedPowers.PolynomialLaw.BiCoeff
 import DividedPowers.PolynomialLaw.MultiHomogeneous
 import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Prod
 
@@ -90,77 +90,53 @@ theorem IsBiHomogeneousOfDegree.comp {P : Type*} [AddCommMonoid P] [Module R P]
   simp [comp_toFun', Function.comp_apply, hf S, hg S, nsmul_eq_mul, Prod.fst_mul,
     Prod.fst_natCast, Nat.cast_id, mul_comm q, pow_mul, Prod.snd_mul, Prod.snd_natCast, mul_pow]
 
-/-- The coefficients of a homogeneous polynomial map of degree `p` vanish outside of degree `p`. -/
-lemma isBiHomogeneousOfDegree_coeff {n : ℕ × ℕ} {f : PolynomialLaw R (M × M') N}
-    (hf : IsBiHomogeneousOfDegree n f)
-    {ι : Type*} [DecidableEq ι] [Fintype ι] (m : ι → (M × M')) (d : ι →₀ ℕ)
-    (hd : d.sum (fun _ m => m) ≠ n.1 + n.2) :
-    PolynomialLaw.coeff m f d = 0 := by
-  sorry
-  /- classical
-  let e (b : ι →₀ ℕ) (k : ℕ) : Option ι →₀ ℕ :=
-    Finsupp.update (Finsupp.mapDomainEmbedding (Function.Embedding.some) b) none k
-  have he : ∀ b k, (X none ^ k * (Finset.prod Finset.univ
-      fun x => X (some x) ^ b x) : MvPolynomial (Option ι) R) = monomial (e b k) 1 := fun b k ↦ by
-    simp only [Finsupp.mapDomainEmbedding_apply, Function.Embedding.some_apply, monomial_eq,
-      map_one, Finsupp.prod_pow, Finsupp.coe_update, Fintype.prod_option, Function.update_self,
-      ne_eq, reduceCtorEq, not_false_eq_true, Function.update_of_ne, one_mul, e]
-    exact congr_arg₂ _ rfl (Finset.prod_congr rfl (fun _ _ => by
-      rw [Finsupp.mapDomain_apply (Option.some_injective ι)]))
-  have he_some : ∀ b k i, e b k (some i) = b i := fun b k i ↦ by
-    simp only [Finsupp.update, Finsupp.mapDomainEmbedding_apply, Function.Embedding.some_apply,
-      Finsupp.coe_mk, Function.update, reduceCtorEq, ↓reduceDIte,
-      Finsupp.mapDomain_apply (Option.some_injective ι), e]
-  have he_none : ∀ b k, k = e b k none := fun b k ↦ by
-    simp only [Finsupp.update, Finsupp.mapDomainEmbedding_apply, Function.Embedding.some_apply,
-      Finsupp.coe_mk, Function.update, ↓reduceDIte, e]
-   /-  On écrit l'homogénéité : f (∑ T ⬝ X_i m_i) = T ^ p ⬝ f(∑ X_i m_i)
-   ∑ coeff f e (T X) ^ e = T ^ p ⬝ ∑ coeff f e X ^ e
-   Identification : (coeff f e) T^|e| X^ e = coeff f e T ^ p X ^ e
-   On en déduit coeff f e = 0 si |e| ≠ p .    -/
-  let μ : MvPolynomial (Option ι) R ⊗[R] (M × M') :=
-    Finset.univ.sum (fun i => X (some i) ⊗ₜ[R] m i)
-  have hf' := isBiHomogeneousOfDegree_toFun hf (MvPolynomial (Option ι) R) (X none, X none) μ
-  simp only [map_sum, prodRight_tmul, Finset.smul_sum, Prod.smul_mk, smul_tmul', smul_eq_mul,
-    prodRight_symm_tmul, Prod.mk.eta, toFun_sum_tmul_eq_coeff_sum, Finsupp.smul_sum, μ] at hf'
-  let φ : MvPolynomial (Option ι) R ⊗[R] N →ₗ[R] N :=
+/-- The bi-coefficients of a homogeneous polynomial map of bi-degree `n` vanish outside of
+bi-degree `n`. -/
+lemma isBiHomogeneousOfDegree_coeff {n d : ℕ × ℕ} {f : PolynomialLaw R (M × M') N}
+    (hf : IsBiHomogeneousOfDegree n f) (m : M × M') (hd : d ≠ n) :
+    PolynomialLaw.biCoeff m f d = 0 := by
+  have hf' := isBiHomogeneousOfDegree_toFun hf
+  specialize hf' (MvPolynomial (Fin 2) R) (X 0, X 1)
+    ((1 : MvPolynomial (Fin 2) R) ⊗ₜ[R] (m.1, 0) + (1 : MvPolynomial (Fin 2) R) ⊗ₜ[R] (0, m.2))
+  simp only [map_add, compFstRight_tmul, compSndRight_tmul, inlRight_tmul, inrRight_tmul] at hf'
+  simp only [Fin.isValue, Prod.mk_zero_zero, tmul_zero, add_zero, zero_add] at hf'
+  have : (X (0 : Fin 2) ⊗ₜ[R] (m.1, 0) + X 1 ⊗ₜ[R] (0, m.2)) =
+    ((X 0, X (R := R) (1 : Fin 2)).1 ⊗ₜ[R] (m.1, 0) +
+      (X (R := R) 0, X (R := R) 1).2 ⊗ₜ[R] (0, m.2)) := rfl
+  have h1 : ((1 : MvPolynomial (Fin 2) R) ⊗ₜ[R] (m.1, 0) + 1 ⊗ₜ[R] (0, m.2)) =
+    ((1, (1 : MvPolynomial (Fin 2) R)).1 ⊗ₜ[R] (m.1, 0) +
+      ((1 : MvPolynomial (Fin 2) R), 1).2 ⊗ₜ[R] (0, m.2)) := rfl
+  simp only [smul_tmul', smul_eq_mul, mul_one] at hf'
+  rw [this, h1, toFun_sum_tmul_eq_biCoeff_sum, toFun_sum_tmul_eq_biCoeff_sum] at hf'
+  simp only [smul_sum, smul_tmul', smul_eq_mul] at hf'
+  have h2' (e : ℕ × ℕ) : X (R := R) (0 : Fin 2) ^ e.1 * X 1 ^ e.2 =
+      ∏ (i : Fin 2), X i ^ (finTwoArrowEquiv' ℕ).symm e i := by
+    simp [Fin.isValue, Fin.prod_univ_two, finTwoArrowEquiv', ofSupportFinite_coe]
+  let φ : MvPolynomial (Fin 2) R ⊗[R] N →ₗ[R] N :=
     (TensorProduct.lid R N).toLinearMap.comp
-      (LinearMap.rTensor N (lcoeff R (e d (d.sum fun _ n => n))))
+      (LinearMap.rTensor N (lcoeff R ((finTwoArrowEquiv' ℕ).symm d)))
   let hφ := LinearMap.congr_arg (f := φ) hf'
-  simp only [map_finsuppSum, mul_pow, Finset.prod_mul_distrib,
-    Finset.prod_pow_eq_pow_sum] at hφ
-  rw [Finsupp.sum_eq_single d _ (by simp only [tmul_zero, map_zero, implies_true]),
-    Finsupp.sum_eq_single d _ (by simp only [tmul_zero, map_zero, implies_true])] at hφ
-  simp only [lcoeff, coe_comp, LinearEquiv.coe_coe, Function.comp_apply, rTensor_tmul, coe_mk,
-    AddHom.coe_mk, lid_tmul, φ] at hφ
-  rw [← pow_add] at hφ
-  rw [he, coeff_monomial, if_pos, _root_.one_smul, he, coeff_monomial, if_neg, _root_.zero_smul]
-    at hφ
-  exact hφ
-  · intro hd'
-    apply hd
-    convert (DFunLike.ext_iff.mp hd'.symm) none <;> exact (he_none _ _)
-  · simp only [Finset.mem_univ, implies_true,
-      Finsupp.sum_of_support_subset _ (Finset.subset_univ d.support)]
-  · intro b _ hb'
-    simp only [lcoeff, coe_comp, LinearEquiv.coe_coe, Function.comp_apply, rTensor_tmul, coe_mk,
-      AddHom.coe_mk, lid_tmul, φ]
-    rw [← pow_add, he, coeff_monomial, if_neg, _root_.zero_smul]
-    intro h
-    apply hb'
-    ext i
-    rw [← he_some b _ i, h]
-    exact he_some d _ i
-  · intro b _ hb'
-    simp only [lcoeff, coe_comp, LinearEquiv.coe_coe, Function.comp_apply, rTensor_tmul, coe_mk,
-      AddHom.coe_mk, lid_tmul, φ]
-    rw [he, coeff_monomial, if_neg, _root_.zero_smul]
-    intro h
-    apply hb'
-    ext i
-    rw [← he_some b _ i, h]
-    exact he_some d _ i -/
+  simp only [Fin.isValue, map_finsuppSum, one_pow, mul_one] at hφ
+  rw [Finsupp.sum_eq_single d ?_ (by simp only [tmul_zero, map_zero, implies_true]),
+    Finsupp.sum_eq_single d ?_ (by simp only [tmul_zero, map_zero, implies_true])] at hφ
+  · simp only [lcoeff, Fin.isValue, coe_comp, LinearEquiv.coe_coe, Function.comp_apply,
+      rTensor_tmul, LinearMap.coe_mk, AddHom.coe_mk, lid_tmul, φ,
+      Fin.isValue, h2', prod_X_pow_eq_monomial', coeff_monomial, _root_.one_smul,
+      ite_smul, _root_.one_smul, _root_.zero_smul,] at hφ
+    simp only [↓reduceIte, EmbeddingLike.apply_eq_iff_eq, left_eq_ite_iff] at hφ
+    exact hφ (by simp [(Ne.symm hd)])
+  · intro k hk0 hkd
+    simp only [Fin.isValue, h2', prod_X_pow_eq_monomial', coe_comp, LinearEquiv.coe_coe,
+      Function.comp_apply, rTensor_tmul, lcoeff_apply, coeff_monomial, lid_tmul, ite_smul,
+      _root_.one_smul, _root_.zero_smul, φ]
+    rw [if_neg (by simp [(Ne.symm hd)])]
+  · intro k hk0 hkd
+    simp only [Fin.isValue, h2', prod_X_pow_eq_monomial', coe_comp, LinearEquiv.coe_coe,
+      Function.comp_apply, rTensor_tmul, lcoeff_apply, coeff_monomial, lid_tmul, ite_smul,
+      _root_.one_smul, _root_.zero_smul,  φ]
+    rw [if_neg (by simp [hkd])]
 
+#exit
 theorem toFun_sum_tmul_eq_coeff_sum' (f : PolynomialLaw R (M × M') N)
     {ι : Type*} [Fintype ι] [DecidableEq ι] (m : ι → M × M') (S : Type*)
     [CommSemiring S] [Algebra R S] (r : ι → S) :

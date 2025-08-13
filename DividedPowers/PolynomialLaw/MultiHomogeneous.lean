@@ -133,8 +133,8 @@ theorem IsMultiHomogeneousOfDegree.isHomogeneousOfDegree {f : (Π i, M i) →ₚ
   simp [Pi.smul_apply, ← Finset.smul_sum, sum_compRight]
 
 /-- The coefficients of a homogeneous polynomial map of degree `p` vanish outside of degree `p`. -/
-lemma isMultiHomogeneousOfDegree_multiCoeff {n : ι →₀ ℕ} {f : (Π i, M i) →ₚₗ[R] N}
-    (hf : IsMultiHomogeneousOfDegree n f) (m : Π i, M i) (d : ι →₀ ℕ) (hd : d ≠ n) :
+lemma isMultiHomogeneousOfDegree_multiCoeff {n d : ι →₀ ℕ} {f : (Π i, M i) →ₚₗ[R] N}
+    (hf : IsMultiHomogeneousOfDegree n f) (m : Π i, M i) (hd : d ≠ n) :
     PolynomialLaw.multiCoeff m f d = 0 := by
   have hf' := isMultiHomogeneousOfDegree_toFun hf
   specialize hf' (MvPolynomial ι R) (fun i ↦ X i)
@@ -187,7 +187,7 @@ theorem toFun'_zero_of_constantCoeff_zero (hf : coeff (0 : ι → Π i, M i) f =
 theorem isMultiHomogeneousOfDegree_of_coeff_iff' (p : ι →₀ ℕ) (f : (Π i, M i) →ₚₗ[R] N) :
     IsMultiHomogeneousOfDegree p f ↔ ∀ (m : Π i, M i) (n : ι →₀ ℕ) (_ : n ≠ p),
       PolynomialLaw.multiCoeff m f n = 0 := by
-  refine ⟨fun hf m n hn ↦ isMultiHomogeneousOfDegree_multiCoeff hf m n hn, fun H S _ _ r μ => ?_⟩
+  refine ⟨fun hf m n hn ↦ isMultiHomogeneousOfDegree_multiCoeff hf m hn, fun H S _ _ r μ => ?_⟩
   induction μ using TensorProduct.induction_on with
   | zero =>
     simp only [map_zero, smul_zero, Finset.sum_const_zero]
@@ -209,7 +209,7 @@ theorem isMultiHomogeneousOfDegree_of_coeff_iff' (p : ι →₀ ℕ) (f : (Π i,
 theorem isMultiHomogeneousOfMultiDegreeOne_coeff {f : (Π i, M i) →ₚₗ[R] N} (i : ι)
     (hf : f.IsMultiHomogeneousOfDegree (Finsupp.single i 1)) (m : Π i, M i) {d : ι →₀ ℕ}
     (hd : d ≠ Finsupp.single i 1) : (multiCoeff m f) d = 0 :=
-  isMultiHomogeneousOfDegree_multiCoeff hf m d hd
+  isMultiHomogeneousOfDegree_multiCoeff hf m hd
 
 theorem isMultiHomogeneousOfDegreeOne_coeff_support_le {f : (Π i, M i) →ₚₗ[R] N} (i : ι)
     (hf : f.IsMultiHomogeneousOfDegree (Finsupp.single i 1)) (m : Π i, M i) :

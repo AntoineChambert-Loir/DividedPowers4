@@ -61,7 +61,11 @@ import DividedPowers.IdealAdd
 import DividedPowers.IdealAdd_v1 -- For comparison of definitions
 import DividedPowers.Padic
 --import DividedPowers.PolynomialLaw.Basic
+import DividedPowers.PolynomialLaw.BiCoeff
+import DividedPowers.PolynomialLaw.BiHomogeneous
 import DividedPowers.PolynomialLaw.Coeff
-import DividedPowers.PolynomialLaw.Homogeneous -- It has a sorry
+import DividedPowers.PolynomialLaw.Homogeneous
+import DividedPowers.PolynomialLaw.MultiCoeff
+import DividedPowers.PolynomialLaw.MultiHomogeneous -- It has a sorry
 import DividedPowers.RatAlgebra -- In PR #22322
 import DividedPowers.SubDPIdeal

@@ -138,14 +138,14 @@ theorem toFun_sum_tmul_eq_biCoeff_sum (S : Type*) [CommSemiring S] [Algebra R S]
   simp [aeval_monomial, _root_.map_one, Finsupp.prod_pow, one_mul, finTwoArrowEquiv',
     Finsupp.ofSupportFinite_coe ]
 
-theorem toFun_tmul_fst_eq_multiCoeff_sum (S : Type*) [CommSemiring S] [Algebra R S] (r : S) :
+theorem toFun_tmul_fst_eq_biCoeff_sum (S : Type*) [CommSemiring S] [Algebra R S] (r : S) :
     f.toFun S (r ⊗ₜ[R] (m.1, 0)) =
       ((biCoeff (m.1, 0) f).sum fun k n ↦ (r ^ k.1 * r ^ k.2) ⊗ₜ[R] n) := by
   have : r ⊗ₜ[R] (m.1, (0 : M')) = (r, r).1 ⊗ₜ[R] (m.1, 0) + (r, r).2 ⊗ₜ[R] (0, 0) := by
     simp [Prod.mk_zero_zero, tmul_zero, add_zero]
   rw [this, toFun_sum_tmul_eq_biCoeff_sum (m.1, 0)]
 
-theorem toFun_tmul_snd_eq_multiCoeff_sum (S : Type*) [CommSemiring S] [Algebra R S] (r : S) :
+theorem toFun_tmul_snd_eq_biCoeff_sum (S : Type*) [CommSemiring S] [Algebra R S] (r : S) :
     f.toFun S (r ⊗ₜ[R] (0, m.2)) =
       ((biCoeff (0, m.2) f).sum fun k n ↦ (r ^ k.1 * r ^ k.2) ⊗ₜ[R] n) := by
   have : r ⊗ₜ[R] ((0 : M), m.2) = (r, r).1 ⊗ₜ[R] (0, 0) + (r, r).2 ⊗ₜ[R] (0, m.2) := by
@@ -168,7 +168,7 @@ theorem ground_apply_sum_smul_eq_biCoeff_sum :
   simp only [map_finsuppSum, TensorProduct.lid_symm_apply]
   exact Finsupp.sum_congr (fun d _ ↦ by rw [← TensorProduct.smul_tmul, smul_eq_mul, mul_one])
 
-theorem ground_apply_smul_eq_multiCoeff_sum :
+theorem ground_apply_smul_eq_biCoeff_sum :
     ground f (r₁ • m₁) = (biCoeff m₁ f).sum (fun k n ↦ r₁ ^ (k.1 + k.2) • n) := by
   suffices r₁ • m₁ = (r₁, r₁).1 • (m₁.1, 0) + (r₁, r₁).2 • (0, m₁.2) by
     rw [this, ground_apply_sum_smul_eq_biCoeff_sum]
