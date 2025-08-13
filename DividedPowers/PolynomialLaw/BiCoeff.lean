@@ -58,20 +58,12 @@ private lemma biCoeff_aux_apply (g : (M × M') →ₚₗ[R] N) (n : ℕ × ℕ) 
 
 private lemma finite_support_biCoeff_aux (g : (M × M') →ₚₗ[R] N) :
     (Function.support (biCoeff_aux m g)).Finite := by
-  let F : ℕ × ℕ → (Fin 2 →₀ ℕ) := fun n ↦ Finsupp.ofSupportFinite ![n.1, n.2] (Set.toFinite _)
-  apply Set.Finite.of_injOn (f := F) ?_ ?_ (Finsupp.finite_support
+  apply Set.Finite.of_injOn (f := (finTwoArrowEquiv' ℕ).symm) ?_
+    (Equiv.injective (finTwoArrowEquiv' ℕ).symm).injOn (Finsupp.finite_support
     (scalarRTensor.toLinearMap.comp (biGenerize m) g))
   simp only [Set.MapsTo, coe_comp, LinearEquiv.coe_coe, Function.comp_apply, Function.mem_support,
     ne_eq, Finsupp.fun_support_eq, mem_coe, Finsupp.mem_support_iff, Prod.forall]
-  · exact fun _ _ hab ↦ by simpa [F] using hab
-  refine Function.Injective.injOn ?_
-  intro n n' hF
-  simp only [Finsupp.ext_iff, F, Finsupp.ofSupportFinite_coe] at hF
-  have h0 := hF 0
-  simp only [Fin.isValue, Matrix.cons_val_zero] at h0
-  have h1 := hF 1
-  simp only [Fin.isValue, Matrix.cons_val_one, Matrix.cons_val_fin_one] at h1
-  aesop
+  exact fun _ _ hab ↦ by simpa using hab
 
 /-- The b-coefficients of a `PolynomialLaw`, as linear maps. -/
 noncomputable def biCoeff : ((M × M') →ₚₗ[R] N) →ₗ[R] (ℕ × ℕ) →₀ N where

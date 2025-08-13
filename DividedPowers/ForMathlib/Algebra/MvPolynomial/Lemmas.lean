@@ -80,6 +80,34 @@ theorem baseChange_comp_scalarRTensorAlgEquiv_tmul [DecidableEq σ] {M : σ → 
   simp [rTensorAlgEquiv_apply, coeff_map, coeff_rTensorAlgHom_tmul, RingHom.coe_comp,
     RingHom.coe_coe, Function.comp_apply, Algebra.TensorProduct.lid_tmul, map_smul]
 
+theorem baseChange_comp_scalarRTensorAlgEquiv_tmul_fst {M M' : Type*} [AddCommMonoid M] [Module R M]
+    [AddCommMonoid M'] [Module R M'] (φ : S →ₐ[R] S') (s : S) (m : M × M') :
+    ((MvPolynomial.baseChange φ).toLinearMap ∘ₗ scalarRTensorAlgEquiv.toLinearMap)
+      (X (0 : Fin 2) ⊗ₜ[R] s) ⊗ₜ[R] (m.1, (0 : M')) =
+      scalarRTensorAlgEquiv (X (0 : Fin 2) ⊗ₜ[R] φ s) ⊗ₜ[R] (m.1, (0 : M')) := by
+  simp only [baseChange, eval₂Hom_eq_bind₂, coe_comp, Function.comp_apply, AlgHom.toLinearMap_apply,
+    AlgEquiv.toLinearMap_apply, AlgHom.coe_mk, ← bind₂_map, bind₂_C_left,
+    RingHomCompTriple.comp_apply]
+  congr
+  simp only [scalarRTensorAlgEquiv, AlgEquiv.trans_apply, mapAlgEquiv_apply, map_map]
+  ext d
+  simp [rTensorAlgEquiv_apply, coeff_map, coeff_rTensorAlgHom_tmul, RingHom.coe_comp,
+    RingHom.coe_coe, Function.comp_apply, Algebra.TensorProduct.lid_tmul, map_smul]
+
+theorem baseChange_comp_scalarRTensorAlgEquiv_tmul_snd {M M' : Type*} [AddCommMonoid M] [Module R M]
+    [AddCommMonoid M'] [Module R M'] (φ : S →ₐ[R] S') (s : S) (m : M × M') :
+    ((MvPolynomial.baseChange φ).toLinearMap ∘ₗ scalarRTensorAlgEquiv.toLinearMap)
+      (X (1 : Fin 2) ⊗ₜ[R] s) ⊗ₜ[R] ((0 : M), m.2) =
+      scalarRTensorAlgEquiv (X (1 : Fin 2) ⊗ₜ[R] φ s) ⊗ₜ[R] ((0 : M), m.2) := by
+  simp only [baseChange, eval₂Hom_eq_bind₂, coe_comp, Function.comp_apply, AlgHom.toLinearMap_apply,
+    AlgEquiv.toLinearMap_apply, AlgHom.coe_mk, ← bind₂_map, bind₂_C_left,
+    RingHomCompTriple.comp_apply]
+  congr
+  simp only [scalarRTensorAlgEquiv, AlgEquiv.trans_apply, mapAlgEquiv_apply, map_map]
+  ext d
+  simp [rTensorAlgEquiv_apply, coeff_map, coeff_rTensorAlgHom_tmul, RingHom.coe_comp,
+    RingHom.coe_coe, Function.comp_apply, Algebra.TensorProduct.lid_tmul, map_smul]
+
 end baseChange
 
 section sum
