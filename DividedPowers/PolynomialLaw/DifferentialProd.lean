@@ -166,41 +166,17 @@ lemma coeff_polarizedProd_eq_zero_of_ne {n : ℕ} (m : (Fin n) → M × M) (d : 
 
 end Polarized
 
-/- def map_pair (n p : ℕ) : (ULift.{u} (Fin 2)) →₀ ℕ :=
-  (Finsupp.ofSupportFinite (fun i ↦ match i with | 0 => p | 1 => n) (Set.toFinite _))
-
-lemma map_pair_def (n p : ℕ) : map_pair n p =
-  (Finsupp.ofSupportFinite (fun i ↦ match i with | 0 => p | 1 => n) (Set.toFinite _)) := rfl -/
-
-/- def foo (n p : ℕ) : Fin 2 →₀ ℕ :=
-  Finsupp.ofSupportFinite (fun i ↦ match i with | 0 => p | 1 => n) (Set.toFinite _) -/
-
 variable {R M}
 
--- Needs componentProd
 
 -- I am not sure whether it is useful to add this.
-/-- The multihomogeneous component of multidegree `n : ι →₀ ℕ` of `f.polarized ι`.
+/-- The bihomogeneous component of bidegree `n : ℕ × ℕ` of `f.polarized n`.
   This is denoted by `Π^{n_1, ..., n_p}f` in Roby63. -/
 abbrev polarizedProd_biComponent (n : ℕ × ℕ) (f : PolynomialLaw R M N) :
     PolynomialLaw R (M × M) N := PolynomialLaw.biComponent f.polarizedProd n
 
--- Ideally I would like to write M × M
 def differential : (M × M) →ₚₗ[R] N :=
   PolynomialLaw.lfsum (fun (p : ℕ) ↦ polarizedProd_biComponent (p, n) f)
-
--- (f.toFun' (Polynomial R) ((1 : Polynomial R) ⊗ₜ[R] m + Polynomial.X (R := R) ⊗ₜ[R] m'))
-
-lemma bar (m m' : M) :
-    (f.toFun' (Polynomial R) ((1 : Polynomial R) ⊗ₜ[R] m + Polynomial.X (R := R) ⊗ₜ[R] m')) =
-    ((f.comp (fst R M M)).toFun' (Polynomial R) ((1 : Polynomial R) ⊗ₜ[R] (m, 0)) +
-     (f.comp (snd R M M)).toFun' (Polynomial R) (Polynomial.X (R := R) ⊗ₜ[R] ((0 : M), m'))) := by
-  let g := ((1 : Polynomial R) ⊗ₜ[R] (m, (0 : M)) + Polynomial.X (R := R) ⊗ₜ[R] ((0 : M), m'))
-  simp only [← toFun_eq_toFun', comp_apply]
-  rw [toFun_add_tmul_eq_coeff_sum]
-  rw [toFun_tmul_eq_coeff_sum]
-
-  sorry
 
 -- TODO: golf
 theorem locFinsupp_polarizedProd_biComponent (f : PolynomialLaw R M N) :
@@ -260,7 +236,6 @@ lemma asdf (a n : ℕ) (m m' : M) :
   simp only [ite_tmul, Finset.sum_ite_eq', Finsupp.mem_support_iff, ne_eq, ite_eq_left_iff, not_not]
   intro h0
   rw [h0, tmul_zero]
-
 
 -- TODO: rename, golf, extract lemmas
 lemma foo (n : ℕ) (m m' : M) :
@@ -340,76 +315,111 @@ lemma foo (n : ℕ) (m m' : M) :
   rw [biComponent.toFun'_apply]
   rw [asdf]
 
-#exit
-
-lemma foo' (n : ℕ) (m m' : M) :
-   ((f.differential n).toFun' R
-      (1 ⊗ₜ[R] fun i ↦ match i with | { down := 0 } => m | { down := 1 } => m')) =
-      (TensorProduct.lid R N).symm
-        (Polynomial.scalarRTensor R N (f.toFun' (Polynomial R) (1 ⊗ₜ m + Polynomial.X ⊗ₜ m')) n) :=
-  sorry
-
 open TensorProduct
-/-
 
-
--- **MI**: I replaced  `CommRing S` by `CommSemiring S`.
-theorem support_multiComponent (f : (Π i, M i) →ₚₗ[R] N) {S : Type*} [CommSemiring S] [Algebra R S]
-    (m : S ⊗[R] (Π i, M i)) :
-    Function.support (fun i => ((fun n => multiComponent n f) i).toFun S m) =
-    (MvPolynomial.rTensor
-      (f.toFun (MvPolynomial ι S) (∑ x,(LinearEquiv.rTensor ((i : ι) → M i)
-        scalarRTensorAlgEquiv.toLinearEquiv)
-          ((TensorProduct.assoc R (MvPolynomial ι R) S ((i : ι) → M i)).symm
-            (X x ⊗ₜ[R] (piRight R R S M).symm (Pi.single x ((piRightHom R R S M) m x))))))).support := by
-  ext i
-  rw [Function.mem_support, ne_eq, Finset.mem_coe, Finsupp.mem_support_iff, not_iff_not,
-    multiComponent_toFun_apply, coeff_el'_S_def] -/
-
-/- theorem support_polatized_multiComponent' (f : M →ₚₗ[R] N) {S : Type u} [CommSemiring S]
-    [Algebra R S] (m : S ⊗[R] M) :
-    Function.support (fun (p : ℕ) ↦ polarized_multiComponent (map_pair n p) f) =
-    ?_ := by
-  ext n
-  simp [multiComponent, ne_eq, Finset.mem_coe, Finsupp.mem_support_iff, coeff_el'_S_def] -/
-
-
-/- noncomputable def el_S''' (m : S ⊗[R] Π i, M i) (f : PolynomialLaw R (Π i, M i) N) :
-    MvPolynomial ι S ⊗[R] N := f.toFun (MvPolynomial ι S) (el_S''_hom ι R M S m)-/
-
-lemma locFinsupp_differential {M N : Type u} [AddCommGroup M] [Module R M]
- [AddCommGroup N] [Module R N] (f : M →ₚₗ[R] N) (n : ℕ) : LocFinsupp fun n ↦ f.differential n := by
+lemma locFinsupp_differential (f : M →ₚₗ[R] N) : LocFinsupp fun n ↦ f.differential n := by
   simp only [LocFinsupp]
   intro S _ _ sm
   simp only [differential]
-  simp_rw [lfsum_eq_of_locFinsupp (locFinsupp_polarized_multiComponent _ f)]
+  simp_rw [lfsum_eq_of_locFinsupp (locFinsupp_polarizedProd_biComponent _ f)]
   have : (Function.support fun i ↦ (Finsupp.ofSupportFinite (fun i_1 ↦
-    (polarized_multiComponent (map_pair i i_1) f).toFun' S sm) (by sorry)).sum fun x m ↦
+    (polarizedProd_biComponent (i, i_1) f).toFun' S sm) (by sorry)).sum fun x m ↦
       m) = ?_ := by
-    let g := (polarized ((ULift.{u, 0} (Fin 2))) f)
-    let e := el_S''' (N := N) sm g
+    let g := (polarizedProd f)
+    --let e := el_S''' (N := N) sm g
     -- Ideal: take the RHS to be the Set.range of the total degree of `e`, and show
     -- that LHS ⊆ RHS
     ext x
-    simp only [multiComponent_toFun', Function.mem_support, ne_eq]
+    simp only [biComponent_toFun', Function.mem_support, ne_eq]
     sorry
   sorry
   sorry
 
-lemma map_add_eq_sum_differential_apply''' (m m' : M) :
-    f (m + m') =
-      lfsum (fun n ↦ f.differential n) ((fun i ↦ match i with | 0 => m | 1 => m')) := by
+--open Classical in
+theorem bar [DecidableEq N] (f : M →ₚₗ[R] N) (m m' : M) :
+  ∑ x ∈ ((coeff fun x ↦ m + m') f).support, ((coeff fun (x : Unit) ↦ m + m') f) x =
+    ∑ y ∈ ((coeff ![m, m']) f).support with
+      ¬∑ x ∈ ((coeff ![m, m']) f).support with y 1 = x 1, ((coeff ![m, m']) f) x = 0,
+      ((coeff ![m, m']) f) y  := sorry
+
+lemma map_add_eq_sum_differential_apply (m m' : M) :
+    f (m + m') = lfsum (fun n ↦ f.differential n) (m, m') := by
+  classical
+  rw [lfsum_ground_eq_of_locFinsupp (locFinsupp_differential f)]
+  rw [Finsupp.sum]
+  simp only [Finsupp.ofSupportFinite_coe, foo]
   simp only [ground_apply]
-  have : ((1 : R) ⊗ₜ[R] (m + m')) =
-    ∑ i : ULift.{u} Unit, 1 ⊗ₜ[R] match i with | 0 => m + m' := rfl
-  rw [this]
+  simp only [← toFun_eq_toFun']
+  simp only [toFun_tmul_eq_coeff_sum, PUnit.zero_eq, one_pow]
+  simp only [toFun_add_tmul_eq_coeff_sum, finTwoArrowEquiv_symm_apply, Fin.isValue, one_pow,
+    one_mul]
+  simp only [map_finsuppSum, lid_tmul, _root_.one_smul, Fin.isValue, Finsupp.sum_apply]
+  simp only [Finsupp.sum, Fin.isValue]
+  rw [Finset.sum_comm]
+  simp only [Fin.isValue, Polynomial.scalarRTensor_apply, LinearMap.rTensor_tmul,
+    Polynomial.lcoeff_apply, Polynomial.coeff_X_pow, lid_tmul, ite_smul, _root_.one_smul,
+    _root_.zero_smul, Finset.sum_ite_eq', Finsupp.mem_support_iff, ne_eq]
+  simp only [Fin.isValue, Finset.sum_ite, Finset.sum_const_zero, add_zero, ite_not, zero_add]
+  have h : (Finsupp.ofSupportFinite
+          (fun i ↦ ∑ x ∈ ((coeff ![m, m']) f).support, if i = x 1 then
+            ((coeff ![m, m']) f) x else 0) (by sorry)).support =
+          (Finsupp.ofSupportFinite
+          (fun i ↦ ∑ x ∈ ((coeff ![m, m']) f).support with i = x 1,
+          ((coeff ![m, m']) f) x) (by sorry)).support := by
+    congr
+    ext n
+    simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Fin.isValue, Finset.sum_ite,
+      Finset.sum_const_zero, add_zero]
+
+  have h' (y : Fin 2 →₀ ℕ) : y 1 ∈ (Finsupp.ofSupportFinite
+      (fun i ↦ ∑ x ∈ ((coeff ![m, m']) f).support with i = x 1, ((coeff ![m, m']) f) x)
+        (by sorry)).support ↔
+        ∑ x ∈ ((coeff ![m, m']) f).support with y 1 = x 1, ((coeff ![m, m']) f) x ≠ 0 := by
+    simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Fin.isValue, Finsupp.mem_support_iff,
+      Finsupp.ofSupportFinite_coe, ne_eq]
+  --classical
+  /- have h'' : ∑ x ∈ ((coeff ![m, m']) f).support with x 1 ∈ (Finsupp.ofSupportFinite
+      (fun i ↦ ∑ x ∈ ((coeff ![m, m']) f).support with i = x 1, ((coeff ![m, m']) f) x)
+        (by sorry)).support, ((coeff ![m, m']) f) x =
+      ∑ y ∈ ((coeff ![m, m']) f).support with
+        (∑ x ∈ ((coeff ![m, m']) f).support with y 1 = x 1,
+          ((coeff ![m, m']) f) x ≠ 0), ((coeff ![m, m']) f) y := by
+    congr
+    ext y
+    rw [h' y] -/
+
+  /- have h' : ∑ x ∈ ((coeff ![m, m']) f).support with x 1 ∈ (Finsupp.ofSupportFinite
+      (fun i ↦ ∑ x ∈ ((coeff ![m, m']) f).support with i = x 1, ((coeff ![m, m']) f) x)
+        (by sorry)).support, ((coeff ![m, m']) f) x =
+      ∑ x ∈ ((coeff ![m, m']) f).support, ((coeff ![m, m']) f) x := by
+    congr
+    simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Fin.isValue, Finsupp.mem_support_iff, ne_eq]
+    ext d
+    simp only [Fin.isValue, Finsupp.mem_support_iff, ne_eq, Finset.mem_filter, and_iff_left_iff_imp]
+    intro hd h
+    simp only [Fin.isValue, Finsupp.ofSupportFinite_coe] at h
+    apply hd
+
+    sorry -/
+
+
+  /- simp_rw [h, h']
+  simp only [Nat.succ_eq_add_one, Nat.reduceAdd]
+  simp only [Fin.isValue, ne_eq]
+
+  exact bar f m m' -/
+  simp only [Fin.isValue, Finsupp.ofSupportFinite_coe]
+  exact bar f m m'
+
+lemma map_add_eq_sum_differential_apply''' (m m' : M) :
+    f (m + m') = lfsum (fun n ↦ f.differential n) (m, m') := by
+  simp only [ground_apply]
   rw [← toFun_eq_toFun']
-  rw [toFun_sum_tmul_eq_coeff_sum]
-  simp only [coeff, LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply, one_pow,
-    Finset.prod_const_one]
+  rw [toFun_tmul_eq_coeff_sum]
+  simp only [coeff, LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply, one_pow]
   simp only [generize, LinearMap.coe_mk, AddHom.coe_mk]
   have : (TensorProduct.lid R N) ((MvPolynomial.scalarRTensor
-        (f.toFun (MvPolynomial (ULift.{u} Unit) R)
+        (f.toFun (MvPolynomial Unit R)
           ( MvPolynomial.X 0 ⊗ₜ[R] (m + m')))).sum
     fun k n ↦ 1 ⊗ₜ[R] n) =
     (TensorProduct.lid R N) ((Polynomial.scalarRTensor _ _
@@ -417,21 +427,26 @@ lemma map_add_eq_sum_differential_apply''' (m m' : M) :
           ( Polynomial.X ⊗ₜ[R] (m + m')))).sum
     fun k n ↦ 1 ⊗ₜ[R] n) := sorry
   change (TensorProduct.lid R N) ((MvPolynomial.scalarRTensor
-        (f.toFun (MvPolynomial (ULift.{u} Unit) R)
+        (f.toFun (MvPolynomial Unit R)
           ( MvPolynomial.X 0 ⊗ₜ[R] (m + m')))).sum
     fun k n ↦ 1 ⊗ₜ[R] n) = _
   rw [this]
   simp only [EmbeddingLike.apply_eq_iff_eq]
   rw [lfsum_eq_of_locFinsupp]
-  · rw [toFun_eq_toFun']
-    simp only [foo', lid_symm_apply]
+  · rw [toFun_tmul_eq_coeff_sum]
+
+    sorry
+    /- simp only [foo, lid_symm_apply]
     rw [Finsupp.sum, Finsupp.sum]
     congr
     · sorry
     · ext a
       simp?
-      sorry
-  · sorry
+      sorry -/
+  · exact locFinsupp_differential f
+
+
+#exit
 
 /- lemma map_add_eq_sum_differential_apply'''' (m m' : M) :
     f (m + m') =

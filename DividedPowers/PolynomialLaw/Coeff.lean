@@ -80,6 +80,24 @@ theorem lfsum_eq_of_locFinsupp (hf : LocFinsupp f) (S : Type u) [CommSemiring S]
     (m : S ⊗[R] M) : (lfsum f).toFun' S m = (ofSupportFinite _ (hf S m)).sum fun _ m ↦ m := by
   rw [lfsum, dif_pos hf]
 
+theorem support_ground_finite (hf : LocFinsupp f) (m : M) :
+    (Function.support fun i ↦ (f i).ground m).Finite := by
+  simp only [ground, Function.comp_apply, lid_symm_apply]
+  have : (Function.support fun i ↦ ((f i).toFun' R (1 ⊗ₜ[R] m))).Finite := hf R _
+  convert this
+  ext i
+  simp only [mem_support, ne_eq, EmbeddingLike.map_eq_zero_iff]
+
+theorem lfsum_ground_eq_of_locFinsupp (hf : LocFinsupp f) (m : M) :
+    (lfsum f).ground m =
+      (ofSupportFinite (fun i ↦ (f i).ground m) (support_ground_finite hf m)).sum fun _ m ↦ m := by
+  simp only [ground, Function.comp_apply, lid_symm_apply]
+  rw [lfsum_eq_of_locFinsupp hf]
+  rw [map_finsuppSum, Finsupp.sum, Finsupp.sum]
+  congr
+  ext i
+  simp only [Finsupp.mem_support_iff, ofSupportFinite_coe, ne_eq, EmbeddingLike.map_eq_zero_iff]
+
 /-- The sum of a locally finite family of polynomial maps, as a linear map -/
 noncomputable def lfsumHom :
     Submodule.locFinsupp R M N ι →ₗ[R] M →ₚₗ[R] N where
