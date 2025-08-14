@@ -111,10 +111,10 @@ theorem biCoeff_eq :
     Fin.isValue]
   exact scalarRTensor_apply _ _
 
-theorem toFun_sum_tmul_eq_biCoeff_sum (S : Type*) [CommSemiring S] [Algebra R S] (r : S × S) :
-    f.toFun S (r.1 ⊗ₜ[R] (m.1, 0) + r.2 ⊗ₜ (0, m.2)) =
-      (biCoeff m f).sum (fun k n ↦ (r.1 ^ k.1 * r.2 ^ k.2) ⊗ₜ[R] n) := by
-  have this := congr_fun (f.isCompat (MvPolynomial.aeval ((finTwoArrowEquiv' S).symm r)))
+theorem toFun_sum_tmul_eq_biCoeff_sum (S : Type*) [CommSemiring S] [Algebra R S] (r s : S) :
+    f.toFun S (r ⊗ₜ[R] (m.1, 0) + s ⊗ₜ (0, m.2)) =
+      (biCoeff m f).sum (fun k n ↦ (r ^ k.1 * s ^ k.2) ⊗ₜ[R] n) := by
+  have this := congr_fun (f.isCompat (MvPolynomial.aeval ((finTwoArrowEquiv' S).symm (r, s))))
      (X 0 ⊗ₜ[R] (m.1, 0) + X 1 ⊗ₜ[R] (0, m.2))
   simp only [Fin.isValue, Function.comp_apply, map_add, rTensor_tmul, AlgHom.toLinearMap_apply,
     aeval_X] at this

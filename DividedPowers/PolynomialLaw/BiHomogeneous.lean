@@ -110,6 +110,7 @@ lemma isBiHomogeneousOfDegree_biCoeff {d : ℕ × ℕ} (hf : IsBiHomogeneousOfDe
   simp only [smul_tmul', smul_eq_mul, mul_one] at hf'
   rw [this, h1, toFun_sum_tmul_eq_biCoeff_sum, toFun_sum_tmul_eq_biCoeff_sum] at hf'
   simp only [smul_sum, smul_tmul', smul_eq_mul] at hf'
+  -- TODO: lemma
   have h2' (e : ℕ × ℕ) : X (R := R) (0 : Fin 2) ^ e.1 * X 1 ^ e.2 =
       ∏ (i : Fin 2), X i ^ (finTwoArrowEquiv' ℕ).symm e i := by
     simp [Fin.isValue, Fin.prod_univ_two, finTwoArrowEquiv', ofSupportFinite_coe]

@@ -240,6 +240,41 @@ theorem toFun_sum_tmul_eq_coeff_sum (S : Type*) [CommSemiring S] [Algebra R S] (
   apply congr_arg₂ _ _ rfl
   simp [aeval_monomial, _root_.map_one, Finsupp.prod_pow, one_mul]
 
+theorem toFun_add_tmul_eq_coeff_sum (S : Type*) [CommSemiring S] [Algebra R S] (r s : S)
+    (m₁ m₂ : M) : f.toFun S (r ⊗ₜ[R] m₁ + s ⊗ₜ[R] m₂) =
+      (coeff ((finTwoArrowEquiv _).symm (m₁, m₂)) f).sum
+        (fun k n ↦ (r ^ k 0 * s ^ k 1) ⊗ₜ[R] n) := by
+  have this := congr_fun (f.isCompat (MvPolynomial.aeval ((finTwoArrowEquiv _).symm (r, s))))
+    (X 0 ⊗ₜ[R] m₁ + X 1 ⊗ₜ[R] m₂)
+  simp only [Function.comp_apply, map_add, LinearMap.rTensor_tmul,
+    AlgHom.toLinearMap_apply, MvPolynomial.aeval_X, finTwoArrowEquiv_symm_apply, Fin.isValue,
+    Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_fin_one] at this
+  let h := generize_eq ((finTwoArrowEquiv _).symm (m₁, m₂)) f
+  simp only [generize, coe_mk, AddHom.coe_mk, finTwoArrowEquiv_symm_apply, Fin.sum_univ_two,
+    Fin.isValue, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_fin_one] at h
+  rw [← this, h, Finsupp.sum, _root_.map_sum]
+  apply sum_congr rfl
+  intro k _
+  simp only [LinearMap.rTensor_tmul, AlgHom.toLinearMap_apply]
+  apply congr_arg₂ _ _ rfl
+  simp [aeval_monomial, _root_.map_one, Finsupp.prod_pow, one_mul]
+
+theorem toFun_tmul_eq_coeff_sum (S : Type*) [CommSemiring S] [Algebra R S] (r : S)
+    (m₁ : M) : f.toFun S (r ⊗ₜ[R] m₁) =
+      (coeff (fun (_ : Unit) ↦ m₁) f).sum (fun k n ↦ (r ^ k 0) ⊗ₜ[R] n) := by
+  have this := congr_fun (f.isCompat (MvPolynomial.aeval (fun (_ : Unit) ↦ r))) (X 0 ⊗ₜ[R] m₁)
+  simp only [PUnit.zero_eq, Function.comp_apply, rTensor_tmul, AlgHom.toLinearMap_apply,
+    aeval_X] at this
+  let h := generize_eq (fun (_ : Unit) ↦ m₁) f
+  simp only [generize, univ_unique, PUnit.default_eq_unit, sum_singleton, coe_mk,
+    AddHom.coe_mk] at h
+  rw [← this, h, Finsupp.sum, _root_.map_sum]
+  apply sum_congr rfl
+  intro k _
+  simp only [LinearMap.rTensor_tmul, AlgHom.toLinearMap_apply]
+  apply congr_arg₂ _ _ rfl
+  simp [aeval_monomial, _root_.map_one, Finsupp.prod_pow, one_mul]
+
 end coeff
 
 end Fintype
