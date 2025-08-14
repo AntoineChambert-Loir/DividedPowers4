@@ -335,12 +335,76 @@ lemma locFinsupp_differential (f : M →ₚₗ[R] N) : LocFinsupp fun n ↦ f.di
   sorry
   sorry
 
+def setprod (x : Unit →₀ ℕ) : Finset (Fin 2 →₀ ℕ) := by
+  apply Set.Finite.toFinset (s := {y : Fin 2 →₀ ℕ | y 0 + y 1 = x 0})
+  sorry
+
 --open Classical in
-theorem bar [DecidableEq N] (f : M →ₚₗ[R] N) (m m' : M) :
+theorem bar [DecidableEq N] (f : M →ₚₗ[R] N) (m m' : M) (x : Unit →₀ ℕ) :
+  ((coeff fun (x : Unit) ↦ m + m') f) x =
+    ∑ y ∈ setprod x, ((coeff ![m, m']) f) y  := sorry
+
+theorem bar' [DecidableEq N] (f : M →ₚₗ[R] N) (m m' : M) :
   ∑ x ∈ ((coeff fun x ↦ m + m') f).support, ((coeff fun (x : Unit) ↦ m + m') f) x =
     ∑ y ∈ ((coeff ![m, m']) f).support with
       ¬∑ x ∈ ((coeff ![m, m']) f).support with y 1 = x 1, ((coeff ![m, m']) f) x = 0,
-      ((coeff ![m, m']) f) y  := sorry
+      ((coeff ![m, m']) f) y  := by
+  have : ∑ x ∈ ((coeff fun x ↦ m + m') f).support, ∑ y ∈ setprod x, ((coeff ![m, m']) f) y =
+      ∑ y ∈ ((coeff ![m, m']) f).support, ((coeff ![m, m']) f) y := by
+    have (x : Unit →₀ ℕ) (y : Fin 2 →₀ ℕ) (hy : y ∈ setprod x) :
+        x ∈ ((coeff fun x ↦ m + m') f).support ↔ y ∈ ((coeff ![m, m']) f).support := by
+      simp only [Finsupp.mem_support_iff, ne_eq, Nat.succ_eq_add_one, Nat.reduceAdd]
+      simp only [coeff_eq, Finset.univ_unique, PUnit.default_eq_unit, Finset.sum_singleton,
+        EmbeddingLike.map_eq_zero_iff, ne_eq, Fin.sum_univ_two, Fin.isValue, Matrix.cons_val_zero,
+        Matrix.cons_val_one, Matrix.cons_val_fin_one]
+      set g : MvPolynomial (Fin 2) R →ₐ[R] MvPolynomial Unit R :=
+        MvPolynomial.aeval ![X 0, X 0] with hg_def
+      have hg := f.isCompat_apply g
+      have : (f.toFun (MvPolynomial Unit R) (X PUnit.unit ⊗ₜ[R] (m + m'))) =
+        f.toFun (MvPolynomial Unit R) ((LinearMap.rTensor M g.toLinearMap)
+          (X 0 ⊗ₜ[R] m + X 1 ⊗ₜ[R] m')) := by simp [hg_def, tmul_add]
+      simp_rw [this, ← hg]
+      --simp only [Fin.isValue, ← LinearMap.rTensor_comp_apply]
+      rw [not_iff_not]
+      --simp only [hg_def, PUnit.zero_eq, Fin.isValue]
+
+      simp only [setprod, Fin.isValue, PUnit.zero_eq, Set.Finite.mem_toFinset,
+          Set.mem_setOf_eq] at hy
+      refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
+      · sorry
+      · sorry
+
+    sorry
+
+  sorry
+
+      #exit
+      have h : (LinearMap.rTensor N (lcoeff R x ∘ₗ g.toLinearMap))
+          (f.toFun (MvPolynomial (Fin 2) R) (X 0 ⊗ₜ[R] m + X 1 ⊗ₜ[R] m')) =
+          (LinearMap.rTensor N (lcoeff R y)) (f.toFun (MvPolynomial (Fin 2) R)
+          (X 0 ⊗ₜ[R] m + X 1 ⊗ₜ[R] m')) := by
+        congr
+        simp only [setprod, Fin.isValue, PUnit.zero_eq, Set.Finite.mem_toFinset,
+          Set.mem_setOf_eq] at hy
+        ext d
+        simp only [LinearMap.coe_comp, Function.comp_apply, AlgHom.toLinearMap_apply, lcoeff_apply,
+          coeff_monomial]
+        simp only [hg_def, PUnit.zero_eq]
+        rw [aeval_monomial]
+        simp only [algebraMap_eq, C_1, Finsupp.prod_pow, Fin.prod_univ_two, Fin.isValue,
+          Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_fin_one, one_mul]
+        sorry
+      rw [h]
+    sorry
+  simp_rw [bar, this]
+  congr
+  ext z
+  simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Finsupp.mem_support_iff, ne_eq, Fin.isValue,
+    Finset.mem_filter, iff_self_and]
+  intro hz
+
+
+  sorry
 
 lemma map_add_eq_sum_differential_apply (m m' : M) :
     f (m + m') = lfsum (fun n ↦ f.differential n) (m, m') := by
@@ -360,313 +424,12 @@ lemma map_add_eq_sum_differential_apply (m m' : M) :
     Polynomial.lcoeff_apply, Polynomial.coeff_X_pow, lid_tmul, ite_smul, _root_.one_smul,
     _root_.zero_smul, Finset.sum_ite_eq', Finsupp.mem_support_iff, ne_eq]
   simp only [Fin.isValue, Finset.sum_ite, Finset.sum_const_zero, add_zero, ite_not, zero_add]
-  have h : (Finsupp.ofSupportFinite
-          (fun i ↦ ∑ x ∈ ((coeff ![m, m']) f).support, if i = x 1 then
-            ((coeff ![m, m']) f) x else 0) (by sorry)).support =
-          (Finsupp.ofSupportFinite
-          (fun i ↦ ∑ x ∈ ((coeff ![m, m']) f).support with i = x 1,
-          ((coeff ![m, m']) f) x) (by sorry)).support := by
-    congr
-    ext n
-    simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Fin.isValue, Finset.sum_ite,
-      Finset.sum_const_zero, add_zero]
-
-  have h' (y : Fin 2 →₀ ℕ) : y 1 ∈ (Finsupp.ofSupportFinite
-      (fun i ↦ ∑ x ∈ ((coeff ![m, m']) f).support with i = x 1, ((coeff ![m, m']) f) x)
-        (by sorry)).support ↔
-        ∑ x ∈ ((coeff ![m, m']) f).support with y 1 = x 1, ((coeff ![m, m']) f) x ≠ 0 := by
-    simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Fin.isValue, Finsupp.mem_support_iff,
-      Finsupp.ofSupportFinite_coe, ne_eq]
-  --classical
-  /- have h'' : ∑ x ∈ ((coeff ![m, m']) f).support with x 1 ∈ (Finsupp.ofSupportFinite
-      (fun i ↦ ∑ x ∈ ((coeff ![m, m']) f).support with i = x 1, ((coeff ![m, m']) f) x)
-        (by sorry)).support, ((coeff ![m, m']) f) x =
-      ∑ y ∈ ((coeff ![m, m']) f).support with
-        (∑ x ∈ ((coeff ![m, m']) f).support with y 1 = x 1,
-          ((coeff ![m, m']) f) x ≠ 0), ((coeff ![m, m']) f) y := by
-    congr
-    ext y
-    rw [h' y] -/
-
-  /- have h' : ∑ x ∈ ((coeff ![m, m']) f).support with x 1 ∈ (Finsupp.ofSupportFinite
-      (fun i ↦ ∑ x ∈ ((coeff ![m, m']) f).support with i = x 1, ((coeff ![m, m']) f) x)
-        (by sorry)).support, ((coeff ![m, m']) f) x =
-      ∑ x ∈ ((coeff ![m, m']) f).support, ((coeff ![m, m']) f) x := by
-    congr
-    simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Fin.isValue, Finsupp.mem_support_iff, ne_eq]
-    ext d
-    simp only [Fin.isValue, Finsupp.mem_support_iff, ne_eq, Finset.mem_filter, and_iff_left_iff_imp]
-    intro hd h
-    simp only [Fin.isValue, Finsupp.ofSupportFinite_coe] at h
-    apply hd
-
-    sorry -/
-
-
-  /- simp_rw [h, h']
-  simp only [Nat.succ_eq_add_one, Nat.reduceAdd]
-  simp only [Fin.isValue, ne_eq]
-
-  exact bar f m m' -/
   simp only [Fin.isValue, Finsupp.ofSupportFinite_coe]
-  exact bar f m m'
-
-lemma map_add_eq_sum_differential_apply''' (m m' : M) :
-    f (m + m') = lfsum (fun n ↦ f.differential n) (m, m') := by
-  simp only [ground_apply]
-  rw [← toFun_eq_toFun']
-  rw [toFun_tmul_eq_coeff_sum]
-  simp only [coeff, LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply, one_pow]
-  simp only [generize, LinearMap.coe_mk, AddHom.coe_mk]
-  have : (TensorProduct.lid R N) ((MvPolynomial.scalarRTensor
-        (f.toFun (MvPolynomial Unit R)
-          ( MvPolynomial.X 0 ⊗ₜ[R] (m + m')))).sum
-    fun k n ↦ 1 ⊗ₜ[R] n) =
-    (TensorProduct.lid R N) ((Polynomial.scalarRTensor _ _
-        (f.toFun (Polynomial R)
-          ( Polynomial.X ⊗ₜ[R] (m + m')))).sum
-    fun k n ↦ 1 ⊗ₜ[R] n) := sorry
-  change (TensorProduct.lid R N) ((MvPolynomial.scalarRTensor
-        (f.toFun (MvPolynomial Unit R)
-          ( MvPolynomial.X 0 ⊗ₜ[R] (m + m')))).sum
-    fun k n ↦ 1 ⊗ₜ[R] n) = _
-  rw [this]
-  simp only [EmbeddingLike.apply_eq_iff_eq]
-  rw [lfsum_eq_of_locFinsupp]
-  · rw [toFun_tmul_eq_coeff_sum]
-
-    sorry
-    /- simp only [foo, lid_symm_apply]
-    rw [Finsupp.sum, Finsupp.sum]
-    congr
-    · sorry
-    · ext a
-      simp?
-      sorry -/
-  · exact locFinsupp_differential f
+  exact bar' f m m'
 
 
 #exit
 
-/- lemma map_add_eq_sum_differential_apply'''' (m m' : M) :
-    f (m + m') =
-      ∑ᶠ n, f.differential n ((fun i ↦ match i with | 0 => m | 1 => m')) := by
-  simp only [ground_apply]
-  have : ((1 : R) ⊗ₜ[R] (m + m')) =
-    ∑ i : ULift.{u} Unit, 1 ⊗ₜ[R] match i with | 0 => m + m' := rfl
-  rw [this]
-  rw [← toFun_eq_toFun']
-  rw [toFun_sum_tmul_eq_coeff_sum]
-  simp only [coeff, LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply, one_pow,
-    Finset.prod_const_one]
-  simp only [generize, LinearMap.coe_mk, AddHom.coe_mk]
-  have : (TensorProduct.lid R N) ((MvPolynomial.scalarRTensor
-        (f.toFun (MvPolynomial (ULift.{u} Unit) R)
-          ( MvPolynomial.X 0 ⊗ₜ[R] (m + m')))).sum
-    fun k n ↦ 1 ⊗ₜ[R] n) =
-    (TensorProduct.lid R N) ((Polynomial.scalarRTensor _ _
-        (f.toFun (Polynomial R)
-          ( Polynomial.X ⊗ₜ[R] (m + m')))).sum
-    fun k n ↦ 1 ⊗ₜ[R] n) := sorry
-  change (TensorProduct.lid R N) ((MvPolynomial.scalarRTensor
-        (f.toFun (MvPolynomial (ULift.{u} Unit) R)
-          ( MvPolynomial.X 0 ⊗ₜ[R] (m + m')))).sum
-    fun k n ↦ 1 ⊗ₜ[R] n) = _
-  rw [this]
-  simp only [foo', TensorProduct.lid_symm_apply]
-  rw [Finsupp.sum]
-  simp only [map_sum, lid_tmul, _root_.one_smul]
-  rw [finsum_eq_finset_sum_of_support_subset]
-  split_ifs with h
-  · rw [toFun_eq_toFun']
-    congr
-    sorry
-  · sorry -/
-
-lemma map_add_eq_sum_differential_apply' (m m' : M) :
-    f (m + m') =
-      ∑ᶠ n, f.differential n ((fun i ↦ match i with | 0 => m | 1 => m')) := by
-  simp only [ground_apply]
-  have : ((1 : R) ⊗ₜ[R] m + (1 : R) ⊗ₜ[R] m') =
-    ∑ i : (ULift.{u} (Fin 2)), 1 ⊗ₜ[R] match i with | 0 => m | 1 => m' := rfl
-  simp_rw [TensorProduct.tmul_add, this,]
-  rw [← toFun_eq_toFun']
-  rw [toFun_sum_tmul_eq_coeff_sum]
-  simp only [coeff, LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply, one_pow,
-    Finset.prod_const_one]
-  simp only [generize, LinearMap.coe_mk, AddHom.coe_mk]
-  change (TensorProduct.lid R N) ((MvPolynomial.scalarRTensor
-        (f.toFun (MvPolynomial (ULift.{u, 0} (Fin 2)) R)
-          ( MvPolynomial.X 0 ⊗ₜ[R] m + MvPolynomial.X 1 ⊗ₜ[R] m'))).sum
-    fun k n ↦ 1 ⊗ₜ[R] n) = _
-  simp only [foo', TensorProduct.lid_symm_apply]
-  rw [Finsupp.sum]
-  simp only [map_sum, lid_tmul, _root_.one_smul]
-  simp only [finsum]
-  split_ifs with h
-  · congr!
-    sorry
-  · sorry
-
-  lemma map_add_eq_sum_differential_apply'' (m m' : M) :
-    f (m + m') =
-      lfsum (fun n ↦ f.differential n) ((fun i ↦ match i with | 0 => m | 1 => m')) := by
-  simp only [ground_apply, EmbeddingLike.apply_eq_iff_eq]
-  have : ((1 : R) ⊗ₜ[R] m + (1 : R) ⊗ₜ[R] m') =
-    ∑ i : (ULift.{u} (Fin 2)), 1 ⊗ₜ[R] match i with | 0 => m | 1 => m' := rfl
-  simp_rw [TensorProduct.tmul_add, this,]
-  rw [← toFun_eq_toFun']
-  rw [toFun_sum_tmul_eq_coeff_sum]
-  simp only [coeff, LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply, one_pow,
-    Finset.prod_const_one]
-  simp only [generize, LinearMap.coe_mk, AddHom.coe_mk]
-  change ((MvPolynomial.scalarRTensor
-        (f.toFun (MvPolynomial (ULift.{u, 0} (Fin 2)) R)
-          (MvPolynomial.X 0 ⊗ₜ[R] m + MvPolynomial.X 1 ⊗ₜ[R] m'))).sum
-    fun k n ↦ 1 ⊗ₜ[R] n) = _
-  rw [lfsum_eq_of_locFinsupp]
-  simp only [foo', TensorProduct.lid_symm_apply]
-  rw [Finsupp.sum]
-  rw [Finsupp.sum]
-  sorry
-  /- simp only [map_sum, lid_tmul, _root_.one_smul]
-  simp only [finsum]
-  split_ifs with h -/
-  sorry
-
-lemma map_add_eq_sum_differential_apply (m m' : M) :
-    f (m + m') =
-      lfsum (fun n ↦ f.differential n) ((fun i ↦ match i with | 0 => m | 1 => m')) := by
-  simp only [ground_apply, EmbeddingLike.apply_eq_iff_eq]
-  have : ((1 : R) ⊗ₜ[R] m + (1 : R) ⊗ₜ[R] m') =
-    ∑ i : (ULift.{u} (Fin 2)), 1 ⊗ₜ[R] match i with | 0 => m | 1 => m' := rfl
-  simp_rw [TensorProduct.tmul_add, this,]
-  rw [← toFun_eq_toFun']
-  rw [toFun_sum_tmul_eq_coeff_sum]
-  simp only [coeff, LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply, one_pow,
-    Finset.prod_const_one]
-  simp only [generize, LinearMap.coe_mk, AddHom.coe_mk]
-  change ((MvPolynomial.scalarRTensor
-        (f.toFun (MvPolynomial (ULift.{u, 0} (Fin 2)) R)
-          ( MvPolynomial.X 0 ⊗ₜ[R] m + MvPolynomial.X 1 ⊗ₜ[R] m'))).sum
-    fun k n ↦ 1 ⊗ₜ[R] n) = _
-  rw [lfsum_eq_of_locFinsupp]
-  simp only [foo', TensorProduct.lid_symm_apply]
-  rw [Finsupp.sum]
-  rw [Finsupp.sum]
-  have : (MvPolynomial.scalarRTensor
-          (f.toFun (MvPolynomial (ULift.{u, 0} (Fin 2)) R)
-            (MvPolynomial.X 0 ⊗ₜ[R] m + MvPolynomial.X 1 ⊗ₜ[R] m'))).support = ?_ := by
-    ext d
-    simp only [Finsupp.mem_support_iff, MvPolynomial.scalarRTensor_apply, ne_eq,
-      EmbeddingLike.map_eq_zero_iff]
-    simp only [LinearMap.rTensor_def]
-
-
-    sorry
-  sorry
-
-  /- rw [lfsum_eq_of_locFinsupp]
-  simp only [foo']
-
-  simp only [coeff, generize, LinearMap.coe_comp, LinearEquiv.coe_coe, LinearMap.coe_mk,
-    AddHom.coe_mk, Function.comp_apply, one_pow, Finset.prod_const_one,
-    TensorProduct.lid_symm_apply] -/
-
-
-  /- rw [lfsum_eq_of_locFinsupp]
-  --rw [Finsupp.sum]
-  simp only [foo', TensorProduct.lid_symm_apply]
-  simp only [Polynomial.scalarRTensor_apply] -/
-
-  sorry
-
-  · simp only [LocFinsupp]
-    intro S _ _ m
-    simp only [differential]
-    simp only [lfsum, multiComponent_toFun']
-    --simp only [polarized_multiComponent]
-    have hf (i : ℕ) : LocFinsupp fun p ↦ polarized_multiComponent (map_pair i p) f := by
-      exact locFinsupp_polarized_multiComponent i f
-    have : (Function.support fun i ↦
-        ((Finsupp.ofSupportFinite _ (hf i S m)).sum fun _ m ↦ m)).Finite := by
-      simp only [polarized_multiComponent, multiComponent_toFun', polarized]
-      sorry
-    convert this
-    simp only [multiComponent_toFun']
-    split_ifs with h
-    · rfl
-
-    · exfalso
-      apply h
-      exact hf _
-
-#exit
-
-lemma map_add_eq_sum_differential_apply (m m' : M) :
-    f (m + m') =
-      lfsum (fun n ↦ f.differential n) ((fun i ↦ match i with | 0 => m | 1 => m')) := by
-  simp only [ground_apply, EmbeddingLike.apply_eq_iff_eq]
-  rw [lfsum_eq_of_locFinsupp]
-  --rw [Finsupp.sum]
-  simp only [foo', TensorProduct.lid_symm_apply]
-  simp only [Polynomial.scalarRTensor_apply]
-  have : ((1 : R) ⊗ₜ[R] m + (1 : R) ⊗ₜ[R] m') =
-    ∑ i : (ULift.{u} (Fin 2)), 1 ⊗ₜ[R] match i with | 0 => m | 1 => m' := sorry
-  simp_rw [TensorProduct.tmul_add, this,]
-  rw [← toFun_eq_toFun']
-  rw [toFun_sum_tmul_eq_coeff_sum ]
-  sorry
-
-  · sorry
-
-#exit
-
-lemma map_add_eq_sum_differential_apply (m m' : M) :
-    f (m + m') =
-      lfsum (fun n ↦ f.differential n) ((fun i ↦ match i with | 0 => m | 1 => m')) := by
-  simp only [ground_apply, EmbeddingLike.apply_eq_iff_eq]
-  rw [lfsum_eq_of_locFinsupp]
-  rw [Finsupp.sum]
-  have : (Finsupp.ofSupportFinite (fun i ↦
-            (f.differential i).toFun' R
-              (1 ⊗ₜ[R] fun i ↦
-                match i with
-                | { down := 0 } => m
-                | { down := 1 } => m'))
-          (by sorry)).support = ?_ := by sorry
-  sorry
-  sorry
-  · sorry
-
-lemma map_add_eq_sum_differential_apply (m m' : M) (f : M →ₚₗ[R] N) :
-    f (m + m') =
-      lfsum (fun n ↦ f.differential n) ((fun i ↦ match i with | 0 => m | 1 => m')) := by
-
-  rw [map_add_eq_polarized_two_apply]
-  simp only [ground_apply, EmbeddingLike.apply_eq_iff_eq]
-  simp only [polarized_toFun'_apply, TensorProduct.piRight_apply,
-    TensorProduct.piRightHom_tmul]
-
-  simp only [differential, polarized_multiComponent, map_pair]
-  rw [lfsum_eq_of_locFinsupp]
-  --simp? [polarized_toFun'_apply]
-
-  /- simp only [differential, polarized_multiComponent, map_pair]
-  have := (f.polarized (ULift.{u} (Fin 2)))
-  rw [← recompose_multiComponent (f.polarized (ULift (Fin 2)))]
-  simp only [ground_apply, EmbeddingLike.apply_eq_iff_eq]
-  simp? [polarized_toFun'_apply] -/
-  /- congr
-  ext x
-  simp only [lfsum_eq_of_locFinsupp (LocFinsupp_multiComponent (polarized _ f)),
-    multiComponent_toFun']
-  rw [lfsum_eq_of_locFinsupp ] -/
-
-
-  sorry
-  ·
-    sorry
 
 lemma lground_apply (f : M →ₚₗ[R] N) : f.lground = f.ground := rfl
 
