@@ -178,28 +178,16 @@ abbrev polarizedProd_biComponent (n : ℕ × ℕ) (f : PolynomialLaw R M N) :
 def differential : (M × M) →ₚₗ[R] N :=
   PolynomialLaw.lfsum (fun (p : ℕ) ↦ polarizedProd_biComponent (p, n) f)
 
--- TODO: golf
 theorem locFinsupp_polarizedProd_biComponent (f : PolynomialLaw R M N) :
     LocFinsupp (fun (p : ℕ) ↦ polarizedProd_biComponent (p, n) f) := fun S _ _ m ↦ by
-  sorry
-  /- set g : ℕ → (ULift.{u, 0} (Fin 2) →₀ ℕ) := fun p ↦ (map_pair n p)
-  set s := (Function.support fun i ↦ (multiComponent (map_pair n i)
-    (polarized (ULift.{u, 0} (Fin 2)) f)).toFun' S m)
-  have hg : Set.InjOn g s := by
-    intro a ha b hb h
-    simp only [map_pair, Finsupp.ext_iff, ULift.forall, g] at h
-    exact h 0
-  have hss : g '' (Function.support fun i ↦ (multiComponent (map_pair n i)
-      (polarized (ULift.{u, 0} (Fin 2)) f)).toFun' S m) ⊆
-      (Function.support fun d ↦ (multiComponent (d : ULift.{u, 0} (Fin 2) →₀ ℕ)
-        (polarized (ULift.{u, 0} (Fin 2)) f)).toFun' S m) := by
-    intro d hd
-    simp only [Set.mem_image] at hd
+  have hss : (fun p ↦ (p, n)) ''
+      (Function.support fun i ↦ (biComponent (polarizedProd f) (i, n)).toFun' S m) ⊆
+        (Function.support fun d ↦ (biComponent (polarizedProd f) d).toFun' S m) := fun _ hd ↦ by
     obtain ⟨x, hx, rfl⟩ := hd
-    simpa only [multiComponent_toFun', Function.mem_support, ne_eq, g]
-  apply Set.Finite.of_finite_image _ hg
-  apply Set.Finite.subset _ hss
-  exact LocFinsupp_multiComponent _ _ _ -/
+    simpa [biComponent_toFun', Function.mem_support, ne_eq, finTwoArrowEquiv', Fin.isValue,
+      Equiv.coe_fn_symm_mk, Equiv.coe_fn_mk]
+  exact ((LocFinsupp_biComponent f.polarizedProd _ _ ).subset hss).of_finite_image
+    (fun _ _ _ _ h ↦ by simpa using h)
 
 -- TODO: rename, golf
 lemma asdf (a n : ℕ) (m m' : M) :
@@ -349,6 +337,7 @@ theorem bar' [DecidableEq N] (f : M →ₚₗ[R] N) (m m' : M) :
     ∑ y ∈ ((coeff ![m, m']) f).support with
       ¬∑ x ∈ ((coeff ![m, m']) f).support with y 1 = x 1, ((coeff ![m, m']) f) x = 0,
       ((coeff ![m, m']) f) y  := by
+  -- **MI**: I am not sure about this
   have : ∑ x ∈ ((coeff fun x ↦ m + m') f).support, ∑ y ∈ setprod x, ((coeff ![m, m']) f) y =
       ∑ y ∈ ((coeff ![m, m']) f).support, ((coeff ![m, m']) f) y := by
     have (x : Unit →₀ ℕ) (y : Fin 2 →₀ ℕ) (hy : y ∈ setprod x) :
@@ -364,37 +353,12 @@ theorem bar' [DecidableEq N] (f : M →ₚₗ[R] N) (m m' : M) :
         f.toFun (MvPolynomial Unit R) ((LinearMap.rTensor M g.toLinearMap)
           (X 0 ⊗ₜ[R] m + X 1 ⊗ₜ[R] m')) := by simp [hg_def, tmul_add]
       simp_rw [this, ← hg]
-      --simp only [Fin.isValue, ← LinearMap.rTensor_comp_apply]
       rw [not_iff_not]
-      --simp only [hg_def, PUnit.zero_eq, Fin.isValue]
-
       simp only [setprod, Fin.isValue, PUnit.zero_eq, Set.Finite.mem_toFinset,
           Set.mem_setOf_eq] at hy
       refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
       · sorry
       · sorry
-
-    sorry
-
-  sorry
-
-      #exit
-      have h : (LinearMap.rTensor N (lcoeff R x ∘ₗ g.toLinearMap))
-          (f.toFun (MvPolynomial (Fin 2) R) (X 0 ⊗ₜ[R] m + X 1 ⊗ₜ[R] m')) =
-          (LinearMap.rTensor N (lcoeff R y)) (f.toFun (MvPolynomial (Fin 2) R)
-          (X 0 ⊗ₜ[R] m + X 1 ⊗ₜ[R] m')) := by
-        congr
-        simp only [setprod, Fin.isValue, PUnit.zero_eq, Set.Finite.mem_toFinset,
-          Set.mem_setOf_eq] at hy
-        ext d
-        simp only [LinearMap.coe_comp, Function.comp_apply, AlgHom.toLinearMap_apply, lcoeff_apply,
-          coeff_monomial]
-        simp only [hg_def, PUnit.zero_eq]
-        rw [aeval_monomial]
-        simp only [algebraMap_eq, C_1, Finsupp.prod_pow, Fin.prod_univ_two, Fin.isValue,
-          Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_fin_one, one_mul]
-        sorry
-      rw [h]
     sorry
   simp_rw [bar, this]
   congr
@@ -402,8 +366,6 @@ theorem bar' [DecidableEq N] (f : M →ₚₗ[R] N) (m m' : M) :
   simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Finsupp.mem_support_iff, ne_eq, Fin.isValue,
     Finset.mem_filter, iff_self_and]
   intro hz
-
-
   sorry
 
 lemma map_add_eq_sum_differential_apply (m m' : M) :
@@ -427,61 +389,15 @@ lemma map_add_eq_sum_differential_apply (m m' : M) :
   simp only [Fin.isValue, Finsupp.ofSupportFinite_coe]
   exact bar' f m m'
 
+-- TODO: move
+variable (R M N) in
+/-- The constant polynomial law.-/
+def const (n : N) : M →ₚₗ[R] N where
+  toFun' S _ _ sm := 1 ⊗ₜ n
+  isCompat' φ := by ext; simp
 
-#exit
-
-
-lemma lground_apply (f : M →ₚₗ[R] N) : f.lground = f.ground := rfl
-
-example : M → M →ₗ[R] N := fun m ↦ {
-  toFun :=  fun (m' : M) ↦ (differential f 1)
-    (fun (i : (ULift.{u} (Fin 2))) ↦ match i with | 0 => m | 1 => m')
-  map_add' x y := by
-    /- simp only [differential, ground_apply, map_pair_def]
-    rw [← map_add]
-    congr
-    simp only [polarized_multiComponent, polarized]
-    simp only [lfsum]
-    rw [dif_pos]
-    rw [← Finsupp.sum_add_index (by intros; rfl) (by intros; rfl)]
-    simp only [multiComponent_toFun', LinearMap.rTensor_tmul,
-      LinearMap.coe_restrictScalars]
-    congr!
-    ext n
-    simp only [Finsupp.ofSupportFinite_coe, Finsupp.coe_add, Pi.add_apply]
-    simp only [MvPolynomial.rTensor_apply]
-    rw [← map_add]
-    congr
-    have : lfsum (fun (i : ULift.{u} (Fin 2)) ↦ proj R M i) =
-      ∑ i,  proj R M i := sorry
-    simp only [sum_proj, this]
-    simp only [comp_toFun', Function.comp_apply] -/
-
-    --simp only [proj_apply]
-    sorry
-  map_smul' r x := by
-    /- simp only [differential, ground_apply, RingHom.id_apply]/-map_pair_def -/
-    rw [← map_smul]
-    congr
-    rw [← lLfsum_apply]
-    sorry -/
-    sorry
-}
-
-/- Soit /'€ ^(M, N).
-Considérons la loi polynôme sur le couple (M, N) égale à (D/*) (m, rc),
-où m est la loi linéaire définie par l'injection identique de M dans Mi
-et x la loi constante définie par l'application constante de M sur l'élé-
-ment ^€Ms. Cette loi polynôme se notera (D^/*) (m) et s'appellera la
-dérivée partielle de f par rapport à Isolément x de M. On la notera  -/
-
-def partial_derivative (x : M) : M →ₚₗ[R] N := by
-  set m : M → (ULift.{u, 0} (Fin 2) → M) := fun y ↦
-    (fun (i : (ULift.{u} (Fin 2))) ↦ match i with | 0 => y | 1 => 0)
-  set cx : M → (ULift.{u, 0} (Fin 2) → M) := fun y ↦
-    (fun (i : (ULift.{u} (Fin 2))) ↦ match i with | 0 => 0 | 1 => x)
-  have := (differential f 1).toFun'
-
-  sorry
+/-- The partial derivative of `f` at `x`. -/
+def partial_derivative (x : M) : M →ₚₗ[R] N :=
+  (differential f 1).comp (inl R M M + (inr R M M).comp (const R M M x))
 
 end PolynomialLaw
