@@ -687,6 +687,64 @@ lemma partialDerivative_eq_coeff {S : Type*} [CommSemiring S] [Algebra R S] (x :
 
 -- Roby63, pg 240
 -- **MI**: something is off here.
+lemma differential_isHomogeneousOfDegree_of_le' [Nontrivial R]
+    (hf : IsHomogeneousOfDegree p f) (hnp : n ≤ p) (x : M) :
+    (partialDerivative n x f).IsHomogeneousOfDegree (p - n) := by
+  simp only [partialDerivative, LinearMap.coe_mk, AddHom.coe_mk]
+  intro S _ _ s m
+  simp only [← toFun_eq_toFun', comp_toFun, Function.comp_apply, add_toFun]
+  simp only [Pi.add_apply, inl_toFun_apply, Function.comp_apply, const_toFun, inr_toFun_apply,
+    inrRight_tmul]
+  rw [differential_eq_biComponent_of_le hf hnp]
+  simp only [toFun_eq_toFun', biComponent_apply_toFun']
+  simp only [polarizedProd, LinearMap.coe_mk, AddHom.coe_mk]
+  simp only [biCoeff_S_apply, Fin.isValue, map_add]
+  simp only [rTensor_apply]
+  simp only [Fin.isValue, compFstRight_tmul, tmul_zero, map_zero, add_zero, compSndRight_tmul,
+    inrRight_tmul]
+  simp only [Fin.isValue, tmul_add, map_add, assoc_symm_tmul, LinearEquiv.rTensor_tmul,
+    AlgEquiv.toLinearEquiv_apply]
+
+  simp only [Fin.isValue, compSndRight_inlRight_eq', tmul_zero, map_zero, zero_add]
+  simp only [Fin.isValue, compFstRight_inlRight_eq', map_smul]
+
+  --simp? [scalarRTensorAlgEquiv]
+  sorry
+
+#exit
+
+-- Roby63, pg 240
+-- **MI**: something is off here.
+lemma differential_isHomogeneousOfDegree_of_le'' [Nontrivial R]
+    (hf : IsHomogeneousOfDegree p f) (hnp : n ≤ p) (x : M) :
+    (partialDerivative n x f).IsHomogeneousOfDegree (p - n) := by
+  simp only [partialDerivative, LinearMap.coe_mk, AddHom.coe_mk]
+  intro S _ _ s m
+  simp only [← toFun_eq_toFun', comp_toFun, Function.comp_apply, add_toFun]
+  simp only [Pi.add_apply, inl_toFun_apply, Function.comp_apply, const_toFun, inr_toFun_apply,
+    inrRight_tmul]
+  rw [differential_eq_biComponent_of_le hf hnp]
+ -- simp only [toFun_eq_toFun', biComponent_apply_toFun']
+  --simp only [polarizedProd, LinearMap.coe_mk, AddHom.coe_mk]
+  induction m using TensorProduct.induction_on with
+  | zero => sorry
+  | tmul => sorry
+  | add m m' hm hm' =>
+    simp only [smul_add, map_add]
+    --simp only [polarizedProd, LinearMap.coe_mk, AddHom.coe_mk] at hm hm' ⊢
+    simp only [toFun_eq_toFun', biComponent_apply_toFun'] at hm hm' ⊢
+    simp only [biCoeff_S_apply, Fin.isValue, map_add] at hm hm' ⊢
+    /- simp only [Fin.isValue, rTensor_apply] at hm hm' ⊢ -/
+    simp only [Fin.isValue, toFun_eq_toFun'] at hm hm' ⊢
+    simp only [Fin.isValue, polarizedProd_toFun'_apply, map_add, Prod.fst_add,
+      Prod.snd_add] at hm hm' ⊢
+    simp only [Fin.isValue, rTensor_apply] at hm hm' ⊢
+    simp? [compFstRight_tmul]
+    simp? [← prodRight_rTensor_fst_eq_rTensor_prodRight]
+    sorry
+
+-- Roby63, pg 240
+-- **MI**: something is off here.
 lemma differential_isHomogeneousOfDegree_of_le [Nontrivial R]
     (hf : IsHomogeneousOfDegree p f) (hnp : n ≤ p) (x : M) :
     (partialDerivative n x f).IsHomogeneousOfDegree (p - n) := by

@@ -210,6 +210,11 @@ lemma compFstRight_inlRight_eq (nm : N ⊗[R] M₁):
     (compFstRight R S N M₁ M₂) (inlRight R S N M₁ M₂ nm) = (inlRight R S N M₁ M₂ nm) := by
   simp [compFstRight, inlRight, fstRight]
 
+lemma compFstRight_inlRight_eq' (nm : N ⊗[R] M₁):
+    (compFstRight R S N M₁ M₂) (inlRight R R N M₁ M₂ nm) = (inlRight R S N M₁ M₂ nm) := by
+  simp [compFstRight, inlRight, fstRight]
+  sorry
+
 lemma compSndRight_inrRight_eq (nm : N ⊗[R] M₂):
     (compSndRight R S N M₁ M₂) (inrRight R S N M₁ M₂ nm) = (inrRight R S N M₁ M₂ nm) := by
   simp [compSndRight, inrRight, sndRight]
@@ -221,6 +226,11 @@ lemma compFstRight_inrRight_eq (nm : N ⊗[R] M₂):
 lemma compSndRight_inlRight_eq (nm : N ⊗[R] M₁):
     (compSndRight R S N M₁ M₂) (inlRight R S N M₁ M₂ nm) = 0 := by
   simp [compSndRight, inlRight, sndRight]
+
+lemma compSndRight_inlRight_eq' (nm : N ⊗[R] M₁):
+    (compSndRight R S N M₁ M₂) (inlRight R R N M₁ M₂ nm) = 0 := by
+  simp [compSndRight, inlRight, sndRight]
+  sorry
 
 lemma fstRight_compFstRight_eq (nm : N ⊗[R] (M₁ × M₂)) :
     fstRight R S N M₁ M₂ (compFstRight R S N M₁ M₂ nm) = fstRight R S N M₁ M₂ nm := by
