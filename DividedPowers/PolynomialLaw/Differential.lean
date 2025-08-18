@@ -685,33 +685,50 @@ lemma partialDerivative_eq_coeff {S : Type*} [CommSemiring S] [Algebra R S] (x :
   rw [differential_toFun_eq_coeff]
   simp only [assoc_symm_tmul, map_add, LinearEquiv.rTensor_tmul, AlgEquiv.toLinearEquiv_apply, this]
 
+
 -- Roby63, pg 240
 -- **MI**: something is off here.
-lemma differential_isHomogeneousOfDegree_of_le' [Nontrivial R]
+lemma differential_isHomogeneousOfDegree_of_le''' [Nontrivial R]
     (hf : IsHomogeneousOfDegree p f) (hnp : n ≤ p) (x : M) :
     (partialDerivative n x f).IsHomogeneousOfDegree (p - n) := by
-  simp only [partialDerivative, LinearMap.coe_mk, AddHom.coe_mk]
   intro S _ _ s m
-  simp only [← toFun_eq_toFun', comp_toFun, Function.comp_apply, add_toFun]
-  simp only [Pi.add_apply, inl_toFun_apply, Function.comp_apply, const_toFun, inr_toFun_apply,
-    inrRight_tmul]
+  simp only [partialDerivative, LinearMap.coe_mk, AddHom.coe_mk]
   rw [differential_eq_biComponent_of_le hf hnp]
-  simp only [toFun_eq_toFun', biComponent_apply_toFun']
-  simp only [polarizedProd, LinearMap.coe_mk, AddHom.coe_mk]
-  simp only [biCoeff_S_apply, Fin.isValue, map_add]
-  simp only [rTensor_apply]
-  simp only [Fin.isValue, compFstRight_tmul, tmul_zero, map_zero, add_zero, compSndRight_tmul,
-    inrRight_tmul]
-  simp only [Fin.isValue, tmul_add, map_add, assoc_symm_tmul, LinearEquiv.rTensor_tmul,
-    AlgEquiv.toLinearEquiv_apply]
+  simp only [← toFun_eq_toFun']
+  simp only [comp_toFun, Function.comp_apply, add_toFun]
+  simp only [Pi.add_apply, Function.comp_apply, const_toFun]
+  induction m using TensorProduct.induction_on with
+  | zero =>
+    have h0 : (inl R M M).toFun S 0 = 0 := sorry
+    simp only [smul_zero, h0, inr_toFun_apply, inrRight_tmul, zero_add]
+    rw [toFun_tmul_snd_eq_biCoeff_sum (0, x)]
+    simp only [Finsupp.sum, one_pow, mul_one, Finset.smul_sum]
+    apply Finset.sum_congr rfl
+    intro k hk
+    simp only [Finsupp.mem_support_iff, ne_eq] at hk
+    have hk' : k = (p -n, n) := by
+      by_contra h
+      exact hk (isBiHomogeneousOfDegree_biCoeff (biComponentIsMultiHomogeneous _ _ ) (0, x) h)
+    /- simp only [toFun_tmul_eq_coeff_sum, PUnit.zero_eq, one_pow]
+    simp only [Finsupp.sum, Finset.smul_sum]
+    apply Finset.sum_congr rfl
+    intro k hk -/
+    simp? [hk']
+    sorry
+  | add => sorry
+  | tmul t m =>
+    simp only [smul_tmul', smul_eq_mul]
+    simp only [inl_toFun_apply, inr_toFun_apply, inrRight_tmul, inlRight_tmul]
+    simp only [toFun_add_tmul_eq_biCoeff_sum (m, x), one_pow, mul_one]
+    simp only [Finsupp.sum, Finset.smul_sum]
+    apply Finset.sum_congr rfl
+    intro k hk
+    simp only [Finsupp.mem_support_iff, ne_eq] at hk
+    have hk' : k = (p -n, n) := by
+      by_contra h
+      exact hk (isBiHomogeneousOfDegree_biCoeff (biComponentIsMultiHomogeneous _ _ ) (m, x) h)
+    simp only [(Prod.ext_iff.mp hk').1, mul_pow, smul_tmul', smul_eq_mul]
 
-  simp only [Fin.isValue, compSndRight_inlRight_eq', tmul_zero, map_zero, zero_add]
-  simp only [Fin.isValue, compFstRight_inlRight_eq', map_smul]
-
-  --simp? [scalarRTensorAlgEquiv]
-  sorry
-
-#exit
 
 -- Roby63, pg 240
 -- **MI**: something is off here.
@@ -740,7 +757,7 @@ lemma differential_isHomogeneousOfDegree_of_le'' [Nontrivial R]
       Prod.snd_add] at hm hm' ⊢
     simp only [Fin.isValue, rTensor_apply] at hm hm' ⊢
     simp? [compFstRight_tmul]
-    simp? [← prodRight_rTensor_fst_eq_rTensor_prodRight]
+   -- simp? [← prodRight_rTensor_fst_eq_rTensor_prodRight]
     sorry
 
 -- Roby63, pg 240
