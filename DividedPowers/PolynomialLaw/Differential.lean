@@ -425,6 +425,14 @@ lemma differential_map_smul_snd {S : Type*} [CommSemiring S] [Algebra R S] (s : 
   classical
   sorry
 
+  variable {f n p}
+
+-- Roby63, pg 239
+lemma differential_eq_biComponent_of_le (hf : IsHomogeneousOfDegree p f) (hnp : n ≤ p) :
+    (f.differential n) = (polarizedProd f).biComponent (p - n, n) := by
+  classical
+  sorry
+
 -- **MI** : TODO: add id_toFun_apply, fst_toFun_apply, snd_toFun_apply, add_toFun'
 
 lemma polarizedProd_id_eq : id.polarizedProd = fst R M M + snd R M M := by
@@ -633,7 +641,7 @@ lemma const_toFun {S : Type*} [CommSemiring S] [Algebra R S] (m : M) (sm : S ⊗
 -- Section II.5
 
 /-- The nth partial derivative of `f` at `x`. -/
-def partial_derivative (n : ℕ) (x : M) : (M →ₚₗ[R] N) →ₗ[R] (M →ₚₗ[R] N) where
+def partialDerivative (n : ℕ) (x : M) : (M →ₚₗ[R] N) →ₗ[R] (M →ₚₗ[R] N) where
   toFun f := (f.differential n).comp (inl R M M + (inr R M M).comp (const R M M x))
   map_add' f g := by
     ext S _ _ sm
@@ -655,29 +663,9 @@ lemma differential_toFun_eq_coeff {S : Type*} [CommSemiring S] [Algebra R S] (n 
   sorry
 
 -- TODO: golf
-lemma first_partial_derivative_eq_coeff {S : Type*} [CommSemiring S] [Algebra R S] (x : M)
-    (sm : S ⊗[R] M) : (partial_derivative 1 x f).toFun S sm =
-    Polynomial.rTensor _ _ _ (f.toFun _ ((LinearEquiv.rTensor M
-      (Polynomial.scalarRTensorAlgEquiv _ _).toLinearEquiv)
-        (((TensorProduct.assoc R (Polynomial R) S M).symm ((1 : Polynomial R) ⊗ₜ sm))) +
-          (Polynomial.X ⊗ₜ[R] x))) 1 := by
-  have : (Polynomial.scalarRTensorAlgEquiv R S) (Polynomial.X ⊗ₜ[R] 1) ⊗ₜ[R] x =
-      (Polynomial.X) ⊗ₜ[R] x  := by
-    simp only [Polynomial.scalarRTensorAlgEquiv, AlgEquiv.trans_apply, Polynomial.coe_mapAlgEquiv]
-    simp only [Polynomial.rTensorAlgEquiv, AlgEquiv.ofLinearEquiv_apply]
-    congr
-    ext d
-    rw [Polynomial.coeff_map]
-    rw [Polynomial.rTensorLinearEquiv_coeff_tmul]
-    simp only [RingHom.coe_coe, Algebra.TensorProduct.lid_tmul]
-    simp [Polynomial.coeff_X, ite_smul, _root_.one_smul, _root_.zero_smul]
-  simp only [partial_derivative, LinearMap.coe_mk, AddHom.coe_mk, comp_toFun, Function.comp_apply]
-  simp only [add_toFun, comp_toFun, Pi.add_apply, Function.comp_apply, const_toFun]
-  rw [differential_toFun_eq_coeff]
-  simp only [assoc_symm_tmul, map_add, LinearEquiv.rTensor_tmul, AlgEquiv.toLinearEquiv_apply, this]
-
-lemma partial_derivative_eq_coeff {S : Type*} [CommSemiring S] [Algebra R S] (x : M)
-    (sm : S ⊗[R] M) : (partial_derivative n x f).toFun S sm =
+-- pg 239
+lemma partialDerivative_eq_coeff {S : Type*} [CommSemiring S] [Algebra R S] (x : M)
+    (sm : S ⊗[R] M) : (partialDerivative n x f).toFun S sm =
     Polynomial.rTensor _ _ _ (f.toFun _ ((LinearEquiv.rTensor M
       (Polynomial.scalarRTensorAlgEquiv _ _).toLinearEquiv)
         (((TensorProduct.assoc R (Polynomial R) S M).symm ((1 : Polynomial R) ⊗ₜ sm))) +
@@ -692,18 +680,40 @@ lemma partial_derivative_eq_coeff {S : Type*} [CommSemiring S] [Algebra R S] (x 
     rw [Polynomial.rTensorLinearEquiv_coeff_tmul]
     simp only [RingHom.coe_coe, Algebra.TensorProduct.lid_tmul]
     simp [Polynomial.coeff_X, ite_smul, _root_.one_smul, _root_.zero_smul]
-  simp only [partial_derivative, LinearMap.coe_mk, AddHom.coe_mk, comp_toFun, Function.comp_apply]
+  simp only [partialDerivative, LinearMap.coe_mk, AddHom.coe_mk, comp_toFun, Function.comp_apply]
   simp only [add_toFun, comp_toFun, Pi.add_apply, Function.comp_apply, const_toFun]
   rw [differential_toFun_eq_coeff]
   simp only [assoc_symm_tmul, map_add, LinearEquiv.rTensor_tmul, AlgEquiv.toLinearEquiv_apply, this]
 
+-- Roby63, pg 240
+-- **MI**: something is off here.
+lemma differential_isHomogeneousOfDegree_of_le [Nontrivial R]
+    (hf : IsHomogeneousOfDegree p f) (hnp : n ≤ p) (x : M) :
+    (partialDerivative n x f).IsHomogeneousOfDegree (p - n) := by
+  simp only [partialDerivative, LinearMap.coe_mk, AddHom.coe_mk]
+  rw [differential_eq_biComponent_of_le hf hnp]
+
+  have hf' := biComponentIsMultiHomogeneous f.polarizedProd (p - n, n)
+  have hf'' := hf'.isHomogeneousOfDegree
+  simp only [hnp, Nat.sub_add_cancel] at hf''
+  --have := IsHomogeneousOfDegree.comp hf'.isHomogeneousOfDegree
+  · sorry
+
+  --have := IsBiHomogeneousOfDegree.isHomogeneousOfDegree hf'
+  --sorry
+
+lemma differential_eq_zero_of_gt (hf : IsHomogeneousOfDegree p f) (hnp : p < n) (x : M) :
+    partialDerivative n x f = 0 := by
+  sorry
+
+
 -- Section II.9
 
-lemma partial_derivative_prod_eq (f : (M × M') →ₚₗ[R] N) (x : M × M') :
-    f.partial_derivative 1 x =
-      f.partial_derivative 1 (x.1, 0) + f.partial_derivative 1 (0, x.2) := by
+lemma partialDerivative_prod_eq (f : (M × M') →ₚₗ[R] N) (x : M × M') :
+    f.partialDerivative 1 x =
+      f.partialDerivative 1 (x.1, 0) + f.partialDerivative 1 (0, x.2) := by
   ext S _ _ sm
-  simp only [partial_derivative, LinearMap.coe_mk, AddHom.coe_mk, add_def, Pi.add_apply]
+  simp only [partialDerivative, LinearMap.coe_mk, AddHom.coe_mk, add_def, Pi.add_apply]
   simp only [comp_toFun', add_def, Function.comp_apply, Pi.add_apply]
   simp only [const]
   simp only [← toFun_eq_toFun']

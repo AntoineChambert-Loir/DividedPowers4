@@ -92,6 +92,14 @@ theorem IsBiHomogeneousOfDegree.comp {P : Type*} [AddCommMonoid P] [Module R P]
   simp [comp_toFun', Function.comp_apply, hf S, hg S, nsmul_eq_mul, Prod.fst_mul,
     Prod.fst_natCast, Nat.cast_id, mul_comm q, pow_mul, Prod.snd_mul, Prod.snd_natCast, mul_pow]
 
+theorem IsBiHomogeneousOfDegree.isHomogeneousOfDegree
+    (hf : f.IsBiHomogeneousOfDegree n) : f.IsHomogeneousOfDegree (n.1 + n.2) := by
+  intro S _ _ r m
+  have hf' := hf S (r, r) m
+  simp only [← pow_add] at hf'
+  rw [← hf', ← smul_add]
+  simp [compFstRight_add_compSndRight]
+
 /-- The bi-coefficients of a homogeneous polynomial map of bi-degree `n` vanish outside of
 bi-degree `n`. -/
 lemma isBiHomogeneousOfDegree_biCoeff {d : ℕ × ℕ} (hf : IsBiHomogeneousOfDegree n f) (m : M × M')
