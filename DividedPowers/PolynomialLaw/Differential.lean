@@ -127,7 +127,7 @@ lemma polarizedProd_apply (m : M × M) : f.polarizedProd m = f (m.fst + m.snd):=
   rw [TensorProduct.tmul_add]
 
 -- Not needed?
-lemma map_add_eq_polarized_two_apply (m m' : M) :
+lemma map_add_eq_polarizedprod_two_apply (m m' : M) :
     f (m + m') = (f.polarizedProd) (m, m') := by
   simp only [polarizedProd_apply]
 
@@ -167,7 +167,6 @@ lemma coeff_polarizedProd_eq_zero_of_ne {n : ℕ} (m : (Fin n) → M × M) (d : 
 end Polarized
 
 variable {R M}
-
 
 -- I am not sure whether it is useful to add this.
 /-- The bihomogeneous component of bidegree `n : ℕ × ℕ` of `f.polarized n`.
