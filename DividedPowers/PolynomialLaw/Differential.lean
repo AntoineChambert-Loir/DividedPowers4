@@ -104,6 +104,9 @@ lemma inl_toFun'_apply {S : Type u} [CommSemiring S] [Algebra R S] {m : TensorPr
   | add m m' hm hm' =>
     simp [map_add, hm, LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply, hm']
 
+lemma inl_toFun_apply {S : Type*} [CommSemiring S] [Algebra R S] {m : TensorProduct R S M} :
+    (inl R M M').toFun S m = ((TensorProduct.inlRight R R S M M') m) := by sorry
+
 def inr : M' →ₚₗ[R] M × M' where
   toFun' S _ _ := (TensorProduct.map (LinearMap.id (M := S)) (LinearMap.inr R M M'))
   isCompat' φ := by
@@ -125,6 +128,9 @@ lemma inr_toFun'_apply {S : Type u} [CommSemiring S] [Algebra R S] {m : TensorPr
       TensorProduct.prodRight_symm_tmul]
   | add m m' hm hm' =>
     simp [map_add, hm, LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply, hm']
+
+lemma inr_toFun_apply {S : Type*} [CommSemiring S] [Algebra R S] {m : TensorProduct R S M'} :
+    (inr R M M').toFun S m = ((TensorProduct.inrRight R R S M M') m) := by sorry
 
 variable {R M}
 
@@ -621,18 +627,10 @@ def const (n : N) : M →ₚₗ[R] N where
   toFun' S _ _ sm := 1 ⊗ₜ n
   isCompat' φ := by ext; simp
 
--- Section II.5
+lemma const_toFun {S : Type*} [CommSemiring S] [Algebra R S] (m : M) (sm : S ⊗[R] M) :
+    (const R M M m).toFun S sm = (1 : S) ⊗ₜ[R] m := sorry
 
-/- /-- The partial derivative of `f` at `x`. -/
-def partial_derivative (x : M) : (M →ₚₗ[R] N) →ₗ[R] (M →ₚₗ[R] N) where
-  toFun f := (f.differential 1).comp (inl R M M + (inr R M M).comp (const R M M x))
-  map_add' f g := by
-    ext S _ _ sm
-    simp [map_add, comp_toFun', add_def, Function.comp_apply, Pi.add_apply]
-  map_smul' r f := by
-    ext S _ _ sm
-    simp [map_smul, comp_toFun', smul_def, add_def, Function.comp_apply, Pi.add_apply,
-      Pi.smul_apply, RingHom.id_apply] -/
+-- Section II.5
 
 /-- The nth partial derivative of `f` at `x`. -/
 def partial_derivative (n : ℕ) (x : M) : (M →ₚₗ[R] N) →ₗ[R] (M →ₚₗ[R] N) where
@@ -644,6 +642,60 @@ def partial_derivative (n : ℕ) (x : M) : (M →ₚₗ[R] N) →ₗ[R] (M →�
     ext S _ _ sm
     simp [map_smul, comp_toFun', smul_def, add_def, Function.comp_apply, Pi.add_apply,
       Pi.smul_apply, RingHom.id_apply]
+
+-- TODO: correct RHS
+lemma differential_toFun_eq_coeff {S : Type*} [CommSemiring S] [Algebra R S] (n : ℕ)
+    (m m' : S ⊗[R] M) :
+    (f.differential n).toFun S ((inl R M M).toFun S m + (inr R M M).toFun S m') =
+    Polynomial.rTensor _ _ _ (f.toFun _ ((LinearEquiv.rTensor M
+      (Polynomial.scalarRTensorAlgEquiv _ _).toLinearEquiv)
+        (((TensorProduct.assoc R (Polynomial R) S M).symm ((1 : Polynomial R) ⊗ₜ m)) +
+          ((TensorProduct.assoc R (Polynomial R) S M).symm
+            ((Polynomial.X : Polynomial R) ⊗ₜ m'))))) n := by
+  sorry
+
+-- TODO: golf
+lemma first_partial_derivative_eq_coeff {S : Type*} [CommSemiring S] [Algebra R S] (x : M)
+    (sm : S ⊗[R] M) : (partial_derivative 1 x f).toFun S sm =
+    Polynomial.rTensor _ _ _ (f.toFun _ ((LinearEquiv.rTensor M
+      (Polynomial.scalarRTensorAlgEquiv _ _).toLinearEquiv)
+        (((TensorProduct.assoc R (Polynomial R) S M).symm ((1 : Polynomial R) ⊗ₜ sm))) +
+          (Polynomial.X ⊗ₜ[R] x))) 1 := by
+  have : (Polynomial.scalarRTensorAlgEquiv R S) (Polynomial.X ⊗ₜ[R] 1) ⊗ₜ[R] x =
+      (Polynomial.X) ⊗ₜ[R] x  := by
+    simp only [Polynomial.scalarRTensorAlgEquiv, AlgEquiv.trans_apply, Polynomial.coe_mapAlgEquiv]
+    simp only [Polynomial.rTensorAlgEquiv, AlgEquiv.ofLinearEquiv_apply]
+    congr
+    ext d
+    rw [Polynomial.coeff_map]
+    rw [Polynomial.rTensorLinearEquiv_coeff_tmul]
+    simp only [RingHom.coe_coe, Algebra.TensorProduct.lid_tmul]
+    simp [Polynomial.coeff_X, ite_smul, _root_.one_smul, _root_.zero_smul]
+  simp only [partial_derivative, LinearMap.coe_mk, AddHom.coe_mk, comp_toFun, Function.comp_apply]
+  simp only [add_toFun, comp_toFun, Pi.add_apply, Function.comp_apply, const_toFun]
+  rw [differential_toFun_eq_coeff]
+  simp only [assoc_symm_tmul, map_add, LinearEquiv.rTensor_tmul, AlgEquiv.toLinearEquiv_apply, this]
+
+lemma partial_derivative_eq_coeff {S : Type*} [CommSemiring S] [Algebra R S] (x : M)
+    (sm : S ⊗[R] M) : (partial_derivative n x f).toFun S sm =
+    Polynomial.rTensor _ _ _ (f.toFun _ ((LinearEquiv.rTensor M
+      (Polynomial.scalarRTensorAlgEquiv _ _).toLinearEquiv)
+        (((TensorProduct.assoc R (Polynomial R) S M).symm ((1 : Polynomial R) ⊗ₜ sm))) +
+          (Polynomial.X ⊗ₜ[R] x))) n := by
+  have : (Polynomial.scalarRTensorAlgEquiv R S) (Polynomial.X ⊗ₜ[R] 1) ⊗ₜ[R] x =
+      (Polynomial.X) ⊗ₜ[R] x  := by
+    simp only [Polynomial.scalarRTensorAlgEquiv, AlgEquiv.trans_apply, Polynomial.coe_mapAlgEquiv]
+    simp only [Polynomial.rTensorAlgEquiv, AlgEquiv.ofLinearEquiv_apply]
+    congr
+    ext d
+    rw [Polynomial.coeff_map]
+    rw [Polynomial.rTensorLinearEquiv_coeff_tmul]
+    simp only [RingHom.coe_coe, Algebra.TensorProduct.lid_tmul]
+    simp [Polynomial.coeff_X, ite_smul, _root_.one_smul, _root_.zero_smul]
+  simp only [partial_derivative, LinearMap.coe_mk, AddHom.coe_mk, comp_toFun, Function.comp_apply]
+  simp only [add_toFun, comp_toFun, Pi.add_apply, Function.comp_apply, const_toFun]
+  rw [differential_toFun_eq_coeff]
+  simp only [assoc_symm_tmul, map_add, LinearEquiv.rTensor_tmul, AlgEquiv.toLinearEquiv_apply, this]
 
 -- Section II.9
 
