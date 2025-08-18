@@ -111,7 +111,7 @@ theorem biCoeff_eq :
     Fin.isValue]
   exact scalarRTensor_apply _ _
 
-theorem toFun_sum_tmul_eq_biCoeff_sum (S : Type*) [CommSemiring S] [Algebra R S] (r s : S) :
+theorem toFun_add_tmul_eq_biCoeff_sum (S : Type*) [CommSemiring S] [Algebra R S] (r s : S) :
     f.toFun S (r ⊗ₜ[R] (m.1, 0) + s ⊗ₜ (0, m.2)) =
       (biCoeff m f).sum (fun k n ↦ (r ^ k.1 * s ^ k.2) ⊗ₜ[R] n) := by
   have this := congr_fun (f.isCompat (MvPolynomial.aeval ((finTwoArrowEquiv' S).symm (r, s))))
@@ -135,14 +135,14 @@ theorem toFun_tmul_fst_eq_biCoeff_sum (S : Type*) [CommSemiring S] [Algebra R S]
       ((biCoeff (m.1, 0) f).sum fun k n ↦ (r ^ k.1 * r ^ k.2) ⊗ₜ[R] n) := by
   have : r ⊗ₜ[R] (m.1, (0 : M')) = (r, r).1 ⊗ₜ[R] (m.1, 0) + (r, r).2 ⊗ₜ[R] (0, 0) := by
     simp [Prod.mk_zero_zero, tmul_zero, add_zero]
-  rw [this, toFun_sum_tmul_eq_biCoeff_sum (m.1, 0)]
+  rw [this, toFun_add_tmul_eq_biCoeff_sum (m.1, 0)]
 
 theorem toFun_tmul_snd_eq_biCoeff_sum (S : Type*) [CommSemiring S] [Algebra R S] (r : S) :
     f.toFun S (r ⊗ₜ[R] (0, m.2)) =
       ((biCoeff (0, m.2) f).sum fun k n ↦ (r ^ k.1 * r ^ k.2) ⊗ₜ[R] n) := by
   have : r ⊗ₜ[R] ((0 : M), m.2) = (r, r).1 ⊗ₜ[R] (0, 0) + (r, r).2 ⊗ₜ[R] (0, m.2) := by
     simp [Prod.mk_zero_zero, tmul_zero, zero_add]
-  rw [this, toFun_sum_tmul_eq_biCoeff_sum (0, m.2)]
+  rw [this, toFun_add_tmul_eq_biCoeff_sum (0, m.2)]
 
 end biCoeff
 
@@ -156,7 +156,7 @@ theorem ground_apply_sum_smul_eq_biCoeff_sum :
   apply (TensorProduct.lid R N).symm.injective
   rw [TensorProduct.lid_symm_apply, one_tmul_ground_apply', ← TensorProduct.lid_symm_apply]
   simp only [map_add, TensorProduct.lid_symm_apply, ← TensorProduct.smul_tmul, smul_eq_mul, mul_one]
-  rw [← toFun_eq_toFun', toFun_sum_tmul_eq_biCoeff_sum, ← TensorProduct.lid_symm_apply]
+  rw [← toFun_eq_toFun', toFun_add_tmul_eq_biCoeff_sum, ← TensorProduct.lid_symm_apply]
   simp only [map_finsuppSum, TensorProduct.lid_symm_apply]
   exact Finsupp.sum_congr (fun d _ ↦ by rw [← TensorProduct.smul_tmul, smul_eq_mul, mul_one])
 
@@ -182,7 +182,7 @@ theorem biCoeff_injective {m : M × M'}
     have hr1 : r 1 = r'.2 := by simp [hr', finTwoArrowEquiv']
     rw [Finsupp.sum_of_support_subset _ (subset_univ _) _ (fun  i _ ↦ by
       rw [smul_eq_mul, _root_.mul_one, TensorProduct.zero_tmul])]
-    simp [smul_eq_mul, mul_one, ← toFun_eq_toFun'_apply, hr0, hr1, toFun_sum_tmul_eq_biCoeff_sum, h]
+    simp [smul_eq_mul, mul_one, ← toFun_eq_toFun'_apply, hr0, hr1, toFun_add_tmul_eq_biCoeff_sum, h]
   simp [Submodule.span_tensorProduct_eq_top_of_span_eq_top _ hm]
 
 theorem biCoeff_inj {m : M × M'}

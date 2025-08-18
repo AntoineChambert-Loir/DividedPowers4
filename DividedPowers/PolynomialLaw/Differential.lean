@@ -9,8 +9,8 @@ universe u
 
 variable (R : Type u) [CommSemiring R] (M M' : Type*) [AddCommGroup M] [Module R M]
   [AddCommGroup M'] [Module R M'] {N : Type*} [AddCommGroup N] [Module R N]
+  (f : M →ₚₗ[R] N) (n p : ℕ)
 
-variable (f : M →ₚₗ[R] N) (n p : ℕ)
 namespace PolynomialLaw
 
 section Polarized
@@ -190,7 +190,7 @@ theorem locFinsupp_polarizedProd_biComponent (f : PolynomialLaw R M N) :
 
 -- TODO: rename, golf
 lemma asdf (a n : ℕ) (m m' : M) :
-    biCoeff_S ((1 : R) ⊗ₜ[R] (m, m')) f.polarizedProd (a, n) =
+    biCoeff_S ((1 : R) ⊗ₜ[R] (m, m')) (a, n) f.polarizedProd =
       1 ⊗ₜ[R] ((coeff ![m, m']) f) ((finTwoArrowEquiv' ℕ).symm (a, n)) := by
   rw [biCoeff_S_apply_tmul]
   have h0 : (0 : R ⊗[R] M) = 1 ⊗ₜ 0 := sorry
@@ -225,10 +225,9 @@ lemma asdf (a n : ℕ) (m m' : M) :
   rw [h0, tmul_zero]
 
 -- TODO: rename, golf, extract lemmas
-lemma foo (n : ℕ) (m m' : M) :
+lemma differential_eq_coeff (n : ℕ) (m m' : M) :
     f.differential n (m, m') =
-      Polynomial.scalarRTensor R N
-        (f.toFun' (Polynomial R)
+      Polynomial.scalarRTensor R N (f.toFun' (Polynomial R)
           ((1 : Polynomial R) ⊗ₜ[R] m + Polynomial.X (R := R) ⊗ₜ[R] m')) n := by
   have hf : LocFinsupp fun p ↦ f.polarizedProd.biComponent (p, n) :=
     locFinsupp_polarizedProd_biComponent n f
@@ -302,6 +301,183 @@ lemma foo (n : ℕ) (m m' : M) :
   rw [biComponent.toFun'_apply]
   rw [asdf]
 
+lemma differential_map_add_snd' (m m₁ m₂ : M) :
+    f.differential 1 (m, m₁ + m₂) = f.differential 1 (m, m₁) + f.differential 1 (m, m₂) := by
+  simp only [differential]
+  rw [lfsum_ground_eq_of_locFinsupp, lfsum_ground_eq_of_locFinsupp, lfsum_ground_eq_of_locFinsupp]
+  simp only [Finsupp.sum, Finsupp.ofSupportFinite_coe]
+  sorry
+  sorry
+  sorry
+  sorry
+
+-- Roby63, pg 239
+lemma differential_map_add_snd (m m₁ m₂ : M) :
+    f.differential 1 (m, m₁ + m₂) = f.differential 1 (m, m₁) + f.differential 1 (m, m₂) := by
+  classical
+  simp only [differential_eq_coeff]
+  simp only [← toFun_eq_toFun', toFun_add_tmul_eq_coeff_sum, finTwoArrowEquiv_symm_apply,
+    Fin.isValue, one_pow, one_mul, Polynomial.scalarRTensor_apply, ← map_add,
+    EmbeddingLike.apply_eq_iff_eq]
+  simp only [Finsupp.sum, Fin.isValue, map_sum, LinearMap.rTensor_tmul, Polynomial.lcoeff_apply,
+    Polynomial.coeff_X_pow, map_add]
+  simp only [Fin.isValue, ite_tmul, Finset.sum_ite, Finset.sum_const_zero, add_zero]
+  have (x : Fin 2 →₀ ℕ) (hx : x 1 = 1) : x ∈ ((coeff ![m, m₁ + m₂]) f).support := by
+    simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Finsupp.mem_support_iff, ne_eq]
+    simp only [coeff_eq, Fin.sum_univ_two, Fin.isValue, Matrix.cons_val_zero, Matrix.cons_val_one,
+      Matrix.cons_val_fin_one, EmbeddingLike.map_eq_zero_iff, ne_eq]
+    sorry
+
+  sorry
+
+-- Roby63, pg 239
+lemma differential_map_smul_snd (r : R) (m m' : M) :
+    f.differential 1 (m, r • m') = r • f.differential 1 (m, m') := by
+  classical
+
+  sorry
+
+-- Roby63, pg 239
+lemma differential_id_eq' : id.differential 1 = snd R M M := by
+  ext S _ _ sm
+  induction sm using TensorProduct.induction_on with
+  | zero =>
+    rw [toFun'_zero_of_constantBiCoeff_zero, toFun'_zero_of_constantBiCoeff_zero]
+    · apply Finsupp.ext
+      intro a
+      simp only [biCoeff, LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply,
+        LinearMap.coe_mk, AddHom.coe_mk]
+      simp only [Finsupp.ofSupportFinite_coe, Finsupp.coe_zero, Pi.zero_apply]
+      simp only [scalarRTensor_apply, EmbeddingLike.map_eq_zero_iff]
+      simp only [biGenerize, Fin.isValue, Prod.fst_zero, Prod.mk_zero_zero, tmul_zero, Prod.snd_zero,
+        add_zero, toFun_eq_toFun', LinearMap.coe_mk, AddHom.coe_mk, snd_toFun'_apply, map_zero]
+    ·
+      sorry
+  | tmul s m =>
+    simp only [snd_toFun'_apply, differential, polarizedProd_biComponent]
+    rw [lfsum_eq_of_locFinsupp (locFinsupp_polarizedProd_biComponent 1 id)]
+    simp only [Finsupp.sum, biComponent_toFun', Finsupp.ofSupportFinite_coe]
+    set t := (Finsupp.ofSupportFinite (fun i ↦ biCoeff_S (s ⊗ₜ[R] m) (i, 1) id.polarizedProd)
+      (by sorry)).support with ht
+    simp only [biCoeff_S_apply_tmul, Fin.isValue, map_add, rTensor_apply, prodRight_tmul]
+    simp only [Fin.isValue, compFstRight_tmul, inlRight_tmul, assoc_symm_tmul,
+      LinearEquiv.rTensor_tmul, AlgEquiv.toLinearEquiv_apply, compSndRight_tmul, inrRight_tmul]
+    simp only [Fin.isValue, toFun_eq_toFun', polarizedProd_toFun'_apply, map_add, prodRight_tmul,
+      tmul_zero, Prod.mk_add_mk, add_zero, zero_add, id_apply', id_eq, LinearMap.rTensor_tmul,
+      LinearMap.coe_restrictScalars, lcoeff_apply]
+    have hx (x : ℕ) : x ∈ t ↔ MvPolynomial.coeff ((finTwoArrowEquiv' ℕ).symm (x, 1))
+      (scalarRTensorAlgEquiv (X 1 ⊗ₜ[R] s)) ⊗ₜ[R] m.2 ≠ 0 := by
+      simp only [ht, Finsupp.mem_support_iff, Finsupp.ofSupportFinite_coe, ne_eq]
+      simp only [biCoeff_S_apply_tmul, Fin.isValue, map_add]
+      simp only [Fin.isValue, rTensor_apply]
+      simp only [Fin.isValue, toFun_eq_toFun', polarizedProd_toFun'_apply, map_add, Prod.fst_add,
+        Prod.snd_add, id_apply', id_eq]
+      simp only [Fin.isValue, compFstRight_tmul, inlRight_tmul, assoc_symm_tmul,
+        LinearEquiv.rTensor_tmul, AlgEquiv.toLinearEquiv_apply, prodRight_tmul, tmul_zero,
+        LinearMap.rTensor_tmul, LinearMap.coe_restrictScalars, lcoeff_apply, compSndRight_tmul,
+        inrRight_tmul, map_zero, add_zero, zero_add]
+      have h0 : MvPolynomial.coeff ((finTwoArrowEquiv' ℕ).symm (x, 1))
+        (scalarRTensorAlgEquiv (X 0 ⊗ₜ[R] s)) = 0 := by sorry
+      simp only [Fin.isValue, h0, zero_tmul, zero_add]
+    have h0 (x : ℕ) : MvPolynomial.coeff ((finTwoArrowEquiv' ℕ).symm (x, 1))
+        (scalarRTensorAlgEquiv (X 0 ⊗ₜ[R] s)) = 0 := by
+      simp only [scalarRTensorAlgEquiv, Fin.isValue, AlgEquiv.trans_apply, rTensorAlgEquiv_apply,
+        mapAlgEquiv_apply, coeff_map, coeff_rTensorAlgHom_tmul, coeff_X', RingHom.coe_coe,
+        Algebra.TensorProduct.lid_tmul, ite_smul, _root_.one_smul, _root_.zero_smul]
+      rw [if_neg]
+      rw [Finsupp.ext_iff]
+      simp only [Fin.isValue, Fin.forall_fin_two, Finsupp.single_eq_same, ne_eq, zero_ne_one,
+        not_false_eq_true, Finsupp.single_eq_of_ne, not_and_or]
+      simp only [finTwoArrowEquiv', Fin.isValue, Equiv.coe_fn_symm_mk,
+        Finsupp.ofSupportFinite_coe]
+      cases x
+      · left
+        simp only [Fin.isValue, Matrix.cons_val_zero, one_ne_zero, not_false_eq_true]
+      · right
+        simp only [Fin.isValue, Matrix.cons_val_one, Matrix.cons_val_fin_one, zero_ne_one,
+          not_false_eq_true]
+
+    simp only [Fin.isValue, h0, zero_tmul, zero_add]
+    simp only [scalarRTensorAlgEquiv, Fin.isValue, AlgEquiv.trans_apply, rTensorAlgEquiv_apply,
+      mapAlgEquiv_apply, coeff_map, coeff_rTensorAlgHom_tmul, RingHom.coe_coe,
+      Algebra.TensorProduct.lid_tmul]
+    simp only [Fin.isValue, coeff_X', ite_smul, _root_.one_smul, _root_.zero_smul]
+    have h11 : Finsupp.single 1 1 = (finTwoArrowEquiv' ℕ).symm (0, 1) := by
+      refine Finsupp.ext ?_
+      simp [Fin.forall_fin_two]
+      simp only [finTwoArrowEquiv', Fin.isValue, Equiv.coe_fn_symm_mk,
+        Finsupp.ofSupportFinite_coe]
+      simp only [Fin.isValue, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_fin_one,
+        and_self]
+    have h11' {b : ℕ} (hb : b ≠ 0) : Finsupp.single 1 1 ≠ (finTwoArrowEquiv' ℕ).symm (b, 1) := by
+      rw [ne_eq, Finsupp.ext_iff]
+      simp only [Fin.isValue, Fin.forall_fin_two, ne_eq, one_ne_zero, not_false_eq_true,
+        Finsupp.single_eq_of_ne, Finsupp.single_eq_same, not_and]
+      simp only [finTwoArrowEquiv', Fin.isValue, Equiv.coe_fn_symm_mk,
+        Finsupp.ofSupportFinite_coe]
+      simp only [Fin.isValue, Matrix.cons_val_zero, (Ne.symm hb), Matrix.cons_val_one,
+        Matrix.cons_val_fin_one, not_true_eq_false, imp_self]
+    rw [Finset.sum_eq_single 0]
+    · rw [if_pos]
+      refine Finsupp.ext ?_
+      simp [Fin.forall_fin_two]
+      simp only [finTwoArrowEquiv', Fin.isValue, Equiv.coe_fn_symm_mk,
+        Finsupp.ofSupportFinite_coe]
+      simp only [Fin.isValue, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_fin_one,
+        and_self]
+    · intro b hbt hb0
+      rw [if_neg, zero_tmul]
+      exact h11' hb0
+    · intro h0t
+      simp only [hx, scalarRTensorAlgEquiv, Fin.isValue, AlgEquiv.trans_apply,
+        rTensorAlgEquiv_apply, mapAlgEquiv_apply, coeff_map, coeff_rTensorAlgHom_tmul, coeff_X',
+        h11, ↓reduceIte, RingHom.coe_coe, Algebra.TensorProduct.lid_tmul, _root_.one_smul, ne_eq,
+        not_not] at h0t
+      rw [if_pos h11]
+      exact h0t
+  | add sm sm' hsm hsm' =>
+    simp only [snd_toFun'_apply, map_add, Prod.snd_add]
+    rw [← snd_toFun'_apply, ← snd_toFun'_apply]
+    rw [← hsm, ← hsm']
+    simp only [differential]
+    simp only [lfsum_eq_of_locFinsupp (locFinsupp_polarizedProd_biComponent 1 id),
+      biComponent_toFun']
+    simp only [Finsupp.sum, Finsupp.ofSupportFinite_coe]
+
+    sorry
+
+
+-- Roby63, pg 239
+lemma differential_id_eq :
+    id.differential 1 = snd R M M := by
+  ext S _ _ sm
+  simp only [snd_toFun'_apply, differential, polarizedProd_biComponent]
+  rw [lfsum_eq_of_locFinsupp (locFinsupp_polarizedProd_biComponent 1 id)]
+  simp only [Finsupp.sum, biComponent_toFun', Finsupp.ofSupportFinite_coe]
+  set t := (Finsupp.ofSupportFinite (fun i ↦ biCoeff_S sm (i, 1) id.polarizedProd )
+    (by sorry)).support with ht
+  have hx (x : ℕ) : x ∈ t ↔ (LinearMap.rTensor M ((LinearMap.restrictScalars R)
+    (lcoeff S ((finTwoArrowEquiv' ℕ).symm (x, 1)))))
+      ((prodRight R R (MvPolynomial (Fin 2) S) M M)
+         ((LinearEquiv.rTensor (M × M) scalarRTensorAlgEquiv.toLinearEquiv)
+             ((TensorProduct.assoc R (MvPolynomial (Fin 2) R) S (M × M)).symm
+                (X 1 ⊗ₜ[R] (compSndRight R S S M M) sm)))).2 ≠ 0 := by
+      simp only [ht, Finsupp.mem_support_iff, Finsupp.ofSupportFinite_coe, ne_eq]
+      simp only [biCoeff_S_def, Fin.isValue, map_add]
+      simp only [Fin.isValue, rTensor_apply]
+      simp only [Fin.isValue, toFun_eq_toFun', polarizedProd_toFun'_apply, map_add, Prod.fst_add,
+        Prod.snd_add, id_apply', id_eq]
+
+      sorry
+      /- have h0 : MvPolynomial.coeff ((finTwoArrowEquiv' ℕ).symm (x, 1))
+        (scalarRTensorAlgEquiv (X 0 ⊗ₜ[R] s)) = 0 := by sorry
+      simp only [Fin.isValue, h0, zero_tmul, zero_add] -/
+  simp only [polarizedProd, biCoeff_S_def, Fin.isValue, rTensor_apply]
+  simp only [Fin.isValue, map_add, toFun_eq_toFun', comp_toFun', id_apply', Function.comp_apply,
+    sum_fst_snd_toFun'_apply, Prod.fst_add, Prod.snd_add, id_eq]
+
+  sorry
+
 open TensorProduct
 
 lemma locFinsupp_differential (f : M →ₚₗ[R] N) : LocFinsupp fun n ↦ f.differential n := by
@@ -372,7 +548,7 @@ lemma map_add_eq_sum_differential_apply (m m' : M) :
   classical
   rw [lfsum_ground_eq_of_locFinsupp (locFinsupp_differential f)]
   rw [Finsupp.sum]
-  simp only [Finsupp.ofSupportFinite_coe, foo]
+  simp only [Finsupp.ofSupportFinite_coe, differential_eq_coeff]
   simp only [ground_apply]
   simp only [← toFun_eq_toFun']
   simp only [toFun_tmul_eq_coeff_sum, PUnit.zero_eq, one_pow]

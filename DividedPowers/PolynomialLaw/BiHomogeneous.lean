@@ -108,7 +108,7 @@ lemma isBiHomogeneousOfDegree_biCoeff {d : ℕ × ℕ} (hf : IsBiHomogeneousOfDe
     ((1, (1 : MvPolynomial (Fin 2) R)).1 ⊗ₜ[R] (m.1, 0) +
       ((1 : MvPolynomial (Fin 2) R), 1).2 ⊗ₜ[R] (0, m.2)) := rfl
   simp only [smul_tmul', smul_eq_mul, mul_one] at hf'
-  rw [this, h1, toFun_sum_tmul_eq_biCoeff_sum, toFun_sum_tmul_eq_biCoeff_sum] at hf'
+  rw [this, h1, toFun_add_tmul_eq_biCoeff_sum, toFun_add_tmul_eq_biCoeff_sum] at hf'
   simp only [smul_sum, smul_tmul', smul_eq_mul] at hf'
   -- TODO: lemma
   have h2' (e : ℕ × ℕ) : X (R := R) (0 : Fin 2) ^ e.1 * X 1 ^ e.2 =
@@ -187,7 +187,7 @@ theorem isBiHomogeneousOfMultiDegreeOneZero_biCoeff_eq {a b : ℕ}
   simp only [ground, Function.comp_apply, TensorProduct.lid_symm_apply, ← toFun_eq_toFun']
   have : (1 : R) ⊗ₜ[R] m = (1, (1 : R)).1 ⊗ₜ[R] (m.1, 0) + ((1 : R), 1).2 ⊗ₜ[R] (0, m.2) := by
     simp [← tmul_add]
-  rw [this, toFun_sum_tmul_eq_biCoeff_sum, map_finsuppSum,
+  rw [this, toFun_add_tmul_eq_biCoeff_sum, map_finsuppSum,
     sum_of_support_subset _ (isBiHomogeneousOfBiDegree_biCoeff_support_le hf m) _ (by simp)]
   simp
 
@@ -256,17 +256,21 @@ lemma biGenerize_S_apply_pi_tmul (s : S × S) (m : M × M') :
   have : (C s.1 * X (0 : Fin 2)) ⊗ₜ[R] (m.1, 0) + (C s.2 * X 1) ⊗ₜ[R] (0, m.2) =
     (C s.1 * X 0, C s.2 * X (1 : Fin 2)).1 ⊗ₜ[R] (m.1, 0) +
       (C s.1 * X 0, C s.2 * X 1).2 ⊗ₜ[R] (0, m.2) := rfl
-  simp [biGenerize_S, el_S''_hom_apply_tmul, this, toFun_sum_tmul_eq_biCoeff_sum m]
+  simp [biGenerize_S, el_S''_hom_apply_tmul, this, toFun_add_tmul_eq_biCoeff_sum m]
 
 variable (sm : S ⊗[R] (M × M')) (f : (M × M') →ₚₗ[R] N) (n : ℕ × ℕ)
 
-noncomputable def biCoeff_S : S ⊗[R] N :=
-    MvPolynomial.rTensor (biGenerize_S sm f) ((finTwoArrowEquiv' ℕ).symm n)
+noncomputable def biCoeff_S : ((M × M') →ₚₗ[R] N) →ₗ[R] S ⊗[R] N where
+  toFun f := MvPolynomial.rTensor (biGenerize_S sm f) ((finTwoArrowEquiv' ℕ).symm n)
+  map_add' f g := by simp [biGenerize_S, add_toFun, Pi.add_apply, map_add, coe_add]
+  map_smul' r f := by
+    simp [biGenerize_S, smul_toFun, Pi.smul_apply, RingHom.id_apply, rTensor_apply, map_smul]
+
 
 variable {sm f n}
 
 -- **MI** : Useless (?)
-lemma biCoeff_S_apply' : biCoeff_S sm f n = MvPolynomial.rTensor (f.toFun (MvPolynomial (Fin 2) S)
+lemma biCoeff_S_apply' : biCoeff_S sm n f = MvPolynomial.rTensor (f.toFun (MvPolynomial (Fin 2) S)
     (LinearEquiv.rTensor (M × M') scalarRTensorAlgEquiv.toLinearEquiv
       ((TensorProduct.assoc R (MvPolynomial (Fin 2) R) S (M × M')).symm
         (X 0 ⊗ₜ[R] (prodRight R S S M M').symm (((prodRight R S S M M') sm).1, 0) +
@@ -279,14 +283,14 @@ lemma biCoeff_S_apply' : biCoeff_S sm f n = MvPolynomial.rTensor (f.toFun (MvPol
   rfl
 
 lemma biCoeff_S_apply :
-    biCoeff_S sm f n = MvPolynomial.rTensor (f.toFun (MvPolynomial (Fin 2) S)
+    biCoeff_S sm n f = MvPolynomial.rTensor (f.toFun (MvPolynomial (Fin 2) S)
       (LinearEquiv.rTensor (M × M') scalarRTensorAlgEquiv.toLinearEquiv
         ((TensorProduct.assoc R (MvPolynomial (Fin 2) R) S (M × M')).symm
           ((X 0) ⊗ₜ (compFstRight R S S M M' sm) + (X 1) ⊗ₜ (compSndRight R S S M M' sm)))))
             ((finTwoArrowEquiv' ℕ).symm n) := rfl
 
 lemma biCoeff_S_apply_tmul (s : S) (m : M × M') :
-    biCoeff_S (s ⊗ₜ m) f n = MvPolynomial.rTensor (f.toFun (MvPolynomial (Fin 2) S)
+    biCoeff_S (s ⊗ₜ m) n f = MvPolynomial.rTensor (f.toFun (MvPolynomial (Fin 2) S)
       (LinearEquiv.rTensor (M × M') scalarRTensorAlgEquiv.toLinearEquiv
       ((TensorProduct.assoc R (MvPolynomial (Fin 2) R) S (M × M')).symm
       (((X 0) ⊗ₜ (compFstRight R S S M M' (s ⊗ₜ (m.1, 0))) +
@@ -300,7 +304,7 @@ variable (s : S × S) (m : M × M')
 
 -- This does not look so useful.
 lemma biCoeff_S_apply_prod_tmul (n : ℕ × ℕ) :
-    biCoeff_S ((prodRight R R _ _ _).symm (s.1 ⊗ₜ m.1, s.2 ⊗ₜ m.2)) f n =
+    biCoeff_S ((prodRight R R _ _ _).symm (s.1 ⊗ₜ m.1, s.2 ⊗ₜ m.2)) n f =
       (MvPolynomial.rTensor (((biCoeff m) f).sum
         fun k n ↦ ((C s.1 * X (0 : Fin 2)) ^ k.1 * (C s.2 * X 1) ^ k.2) ⊗ₜ[R] n))
           ((finTwoArrowEquiv' ℕ).symm n) := by
@@ -310,12 +314,12 @@ lemma biCoeff_S_apply_prod_tmul (n : ℕ × ℕ) :
 -- TODO
 lemma biCoeff_S_apply_smul [Nontrivial R] :
     biCoeff_S (s.1 • TensorProduct.compFstRight R S S M M' sm +
-      s.2 • TensorProduct.compSndRight R S S M M' sm) f n =
-      (s.1 ^ n.1 * s.2 ^ n.2) • biCoeff_S sm f n := by
+      s.2 • TensorProduct.compSndRight R S S M M' sm) n f =
+      (s.1 ^ n.1 * s.2 ^ n.2) • biCoeff_S sm n f := by
   sorry
 
 lemma biCoeff_S_def (n : ℕ × ℕ) :
-    biCoeff_S sm f n = (MvPolynomial.rTensor
+    biCoeff_S sm n f = (MvPolynomial.rTensor
       (f.toFun (MvPolynomial (Fin 2) S) ((LinearEquiv.rTensor (M × M')
         scalarRTensorAlgEquiv.toLinearEquiv)
           ((TensorProduct.assoc R (MvPolynomial (Fin 2) R) S (M × M')).symm
@@ -329,8 +333,8 @@ lemma biCoeff_S_def (n : ℕ × ℕ) :
 --set_option profiler true in
 -- **MI**: this proof is also slow.
 theorem rTensor_biCoeff_S_eq {S' : Type*} [CommSemiring S'] [Algebra R S'] (φ : S →ₐ[R] S') :
-    (LinearMap.rTensor N φ.toLinearMap) (biCoeff_S sm f n) =
-      biCoeff_S ((LinearMap.rTensor (M × M') φ.toLinearMap) sm) f n := by
+    (LinearMap.rTensor N φ.toLinearMap) (biCoeff_S sm n f) =
+      biCoeff_S ((LinearMap.rTensor (M × M') φ.toLinearMap) sm) n f := by
   simp only [biCoeff_S_def, rTensor_apply, ← rTensor_comp_apply]
   rw [lcoeff_comp_baseChange_eq, rTensor_comp_apply, f.isCompat_apply, map_add]
   congr
@@ -349,16 +353,16 @@ variable (n f)
 
 /- The bihomogeneous component of degree `n` of a `PolynomialLaw`. -/
 @[simps] noncomputable def biComponent : (M × M') →ₚₗ[R] N where
-  toFun' S _ _ := fun m ↦ biCoeff_S m f n
+  toFun' S _ _ := fun m ↦ biCoeff_S m n f
   isCompat' {S _ _} {S' _ _} φ := by
     ext sm
     apply rTensor_biCoeff_S_eq
 
 theorem biComponent.toFun'_apply (S : Type u) [CommSemiring S] [Algebra R S] (m : S ⊗[R] (M × M')) :
-    (f.biComponent n).toFun' S m = biCoeff_S m f n := rfl
+    (f.biComponent n).toFun' S m = biCoeff_S m n f := rfl
 
 theorem biComponent_toFun_apply (S : Type*) [CommSemiring S] [Algebra R S] (m : S ⊗[R] (M × M')) :
-    (f.biComponent n).toFun S m = biCoeff_S m f n := by
+    (f.biComponent n).toFun S m = biCoeff_S m n f := by
   obtain ⟨n', ψ, q, rfl⟩ := exists_lift m
   rw [← PolynomialLaw.isCompat_apply, toFun_eq_toFun'_apply, biComponent.toFun'_apply]
   exact rTensor_biCoeff_S_eq ψ
@@ -369,12 +373,11 @@ lemma biComponentIsMultiHomogeneous [Nontrivial R] : IsBiHomogeneousOfDegree n (
 theorem biComponent_add {g : (M × M') →ₚₗ[R] N} :
     (f + g).biComponent n = f.biComponent n + g.biComponent n := by
   ext S _ _ sm
-  simp [biComponent, biCoeff_S_apply, map_add, add_toFun_apply, map_add, Finsupp.coe_add,
-    Pi.add_apply, add_def]
+  simp [biComponent, biCoeff_S_apply, map_add, map_add, Pi.add_apply, add_def]
 
 theorem biComponent_smul {r : R} : (r • f).biComponent n = r • f.biComponent n := by
   ext S _ _ sm
-  simp [biComponent, biCoeff_S_apply, smul_toFun, Pi.smul_apply, rTensor_apply, map_smul, smul_def]
+  simp [biComponent, biCoeff_S_apply, Pi.smul_apply, rTensor_apply, map_smul, smul_def]
 
  theorem mem_support_biComponent' {S : Type u} [CommSemiring S] [Algebra R S]
     (m : S ⊗[R] (M × M')) :
