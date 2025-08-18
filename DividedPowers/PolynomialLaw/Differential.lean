@@ -685,7 +685,6 @@ lemma partialDerivative_eq_coeff {S : Type*} [CommSemiring S] [Algebra R S] (x :
   rw [differential_toFun_eq_coeff]
   simp only [assoc_symm_tmul, map_add, LinearEquiv.rTensor_tmul, AlgEquiv.toLinearEquiv_apply, this]
 
-
 -- Roby63, pg 240
 -- **MI**: something is off here.
 lemma differential_isHomogeneousOfDegree_of_le''' [Nontrivial R]
@@ -699,9 +698,23 @@ lemma differential_isHomogeneousOfDegree_of_le''' [Nontrivial R]
   simp only [Pi.add_apply, Function.comp_apply, const_toFun]
   induction m using TensorProduct.induction_on with
   | zero =>
-    have h0 : (inl R M M).toFun S 0 = 0 := sorry
+    have h0 : (inl R M M).toFun S 0 = 0 := by
+      rw [inl_toFun_apply, map_zero]
     simp only [smul_zero, h0, inr_toFun_apply, inrRight_tmul, zero_add]
-    rw [toFun_tmul_snd_eq_biCoeff_sum (0, x)]
+    have h : ((biComponent (p - n, n)) (polarizedProd f)).toFun S (1 ⊗ₜ[R] (0, x)) = 0 := by
+      rw [toFun_tmul_snd_eq_biCoeff_sum (0, x)]
+      simp only [Finsupp.sum, one_pow, mul_one]
+      conv_rhs => rw [← Finset.sum_const_zero
+        (s := ((biCoeff (0, x)) ((biComponent (p - n, n)) (polarizedProd f))).support)]
+      apply Finset.sum_congr rfl
+      intro k hk
+      simp only [polarizedProd, LinearMap.coe_mk, AddHom.coe_mk, Finsupp.mem_support_iff,
+        biCoeff_apply, biGenerize, Fin.isValue, Prod.mk_zero_zero, tmul_zero, zero_add,
+        LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply, ne_eq] at hk
+      simp only [Fin.isValue, scalarRTensor_apply, EmbeddingLike.map_eq_zero_iff, ne_eq] at hk
+      sorry
+    simp only [h, smul_zero]
+    /- rw [toFun_tmul_snd_eq_biCoeff_sum (0, x)]
     simp only [Finsupp.sum, one_pow, mul_one, Finset.smul_sum]
     apply Finset.sum_congr rfl
     intro k hk
@@ -709,12 +722,17 @@ lemma differential_isHomogeneousOfDegree_of_le''' [Nontrivial R]
     have hk' : k = (p -n, n) := by
       by_contra h
       exact hk (isBiHomogeneousOfDegree_biCoeff (biComponentIsMultiHomogeneous _ _ ) (0, x) h)
-    /- simp only [toFun_tmul_eq_coeff_sum, PUnit.zero_eq, one_pow]
-    simp only [Finsupp.sum, Finset.smul_sum]
-    apply Finset.sum_congr rfl
-    intro k hk -/
-    simp? [hk']
-    sorry
+    simp only [hk']
+    have h : ((biCoeff (0, x)) ((biComponent (p - n, n)) (polarizedProd f))) (p - n, n) = 0 := by
+      /- simp only [biCoeff, LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply,
+        LinearMap.coe_mk, AddHom.coe_mk]
+      simp only [Finsupp.ofSupportFinite_coe]
+      simp only [scalarRTensor_apply, EmbeddingLike.map_eq_zero_iff] -/
+      simp only [biCoeff_eq, Fin.isValue, Prod.mk_zero_zero, tmul_zero, zero_add,
+        EmbeddingLike.map_eq_zero_iff]
+
+      sorry -/
+    simp only [h, tmul_zero, smul_zero]
   | add => sorry
   | tmul t m =>
     simp only [smul_tmul', smul_eq_mul]
