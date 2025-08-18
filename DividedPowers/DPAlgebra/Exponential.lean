@@ -73,7 +73,7 @@ noncomputable def exp_LinearMap :
     simp only [coeff_exp, RingHom.id_apply]
     rw [← algebraMap_smul (DividedPowerAlgebra R M) r (exp R m),
       coe_smul, coeff_rescale, coeff_exp, ← map_pow, dp_smul]
-    rw [Algebra.id.map_eq_id, RingHom.id_apply]
+    rw [Algebra.algebraMap_self, RingHom.id_apply]
     rw [Algebra.smul_def, map_pow]
 
 

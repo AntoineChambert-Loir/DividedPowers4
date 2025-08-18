@@ -352,11 +352,14 @@ theorem rTensor_biCoeff_S_eq {S' : Type*} [CommSemiring S'] [Algebra R S'] (φ :
 variable (n f)
 
 /- The bihomogeneous component of degree `n` of a `PolynomialLaw`. -/
-@[simps] noncomputable def biComponent : (M × M') →ₚₗ[R] N where
-  toFun' S _ _ := fun m ↦ biCoeff_S m n f
-  isCompat' {S _ _} {S' _ _} φ := by
-    ext sm
-    apply rTensor_biCoeff_S_eq
+@[simps] noncomputable def biComponent : ((M × M') →ₚₗ[R] N) →ₗ[R] ((M × M') →ₚₗ[R] N) where
+  toFun f := {
+    toFun' S _ _ := fun m ↦ biCoeff_S m n f
+    isCompat' {S _ _} {S' _ _} φ := by
+      ext sm
+      apply rTensor_biCoeff_S_eq }
+  map_add' f g  := by ext; simp
+  map_smul' r f := by ext; simp
 
 theorem biComponent.toFun'_apply (S : Type u) [CommSemiring S] [Algebra R S] (m : S ⊗[R] (M × M')) :
     (f.biComponent n).toFun' S m = biCoeff_S m n f := rfl
@@ -367,7 +370,7 @@ theorem biComponent_toFun_apply (S : Type*) [CommSemiring S] [Algebra R S] (m : 
   rw [← PolynomialLaw.isCompat_apply, toFun_eq_toFun'_apply, biComponent.toFun'_apply]
   exact rTensor_biCoeff_S_eq ψ
 
-lemma biComponentIsMultiHomogeneous [Nontrivial R] : IsBiHomogeneousOfDegree n (biComponent f n) :=
+lemma biComponentIsMultiHomogeneous [Nontrivial R] : IsBiHomogeneousOfDegree n (f.biComponent n) :=
   fun _ _ _ s _ ↦ biCoeff_S_apply_smul s
 
 theorem biComponent_add {g : (M × M') →ₚₗ[R] N} :
@@ -381,7 +384,7 @@ theorem biComponent_smul {r : R} : (r • f).biComponent n = r • f.biComponent
 
  theorem mem_support_biComponent' {S : Type u} [CommSemiring S] [Algebra R S]
     (m : S ⊗[R] (M × M')) :
-    n ∈ Function.support (fun i => ((fun n => biComponent f n) i).toFun' S m) ↔
+    n ∈ Function.support (fun i => ((fun n => f.biComponent n) i).toFun' S m) ↔
     ((finTwoArrowEquiv' ℕ).symm n) ∈ (MvPolynomial.rTensor
       (f.toFun (MvPolynomial (Fin 2) S) ((LinearEquiv.rTensor (M × M')
         scalarRTensorAlgEquiv.toLinearEquiv)
@@ -394,7 +397,7 @@ theorem biComponent_smul {r : R} : (r • f).biComponent n = r • f.biComponent
 
 theorem mem_support_biComponent {S : Type*} [CommSemiring S] [Algebra R S]
     (m : S ⊗[R] (M × M')) :
-    n ∈ Function.support (fun i => ((fun n => biComponent f n) i).toFun S m) ↔
+    n ∈ Function.support (fun i => ((fun n => f.biComponent n) i).toFun S m) ↔
     ((finTwoArrowEquiv' ℕ).symm n) ∈ (MvPolynomial.rTensor
       (f.toFun (MvPolynomial (Fin 2) S) ((LinearEquiv.rTensor (M × M')
         scalarRTensorAlgEquiv.toLinearEquiv)
@@ -423,12 +426,12 @@ private lemma LocFinsupp_biComponent_aux {S : Type u} [CommSemiring S] [Algebra 
       (Equiv.injective (finTwoArrowEquiv' ℕ).symm).injOn hU
   exact Finset.finite_toSet _
 
-theorem LocFinsupp_biComponent : LocFinsupp f.biComponent :=
+theorem LocFinsupp_biComponent : LocFinsupp fun n ↦ f.biComponent n :=
   fun _ _ _ m ↦ LocFinsupp_biComponent_aux f m
 
  theorem LocFinsupp_biComponent_eq {S : Type u} [CommSemiring S] [Algebra R S]
     (m : S ⊗[R] (M × M')) :
-    (Finsupp.ofSupportFinite (fun i ↦ (biComponent f i).toFun' S m)
+    (Finsupp.ofSupportFinite (fun i ↦ (f.biComponent i).toFun' S m)
       (LocFinsupp_biComponent f S m)) =
     Finsupp.ofSupportFinite (fun n ↦ MvPolynomial.rTensor
       (f.toFun (MvPolynomial (Fin 2) S) ((LinearEquiv.rTensor (M × M')

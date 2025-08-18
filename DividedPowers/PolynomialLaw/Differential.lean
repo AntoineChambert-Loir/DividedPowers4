@@ -131,11 +131,18 @@ variable {R M}
 /-- Given a polynomial law `f : M →ₚₗ[R] N` and a finite type `ι`, the `ι`-polarized of `f`
 is the polynomial law `(Π (_ : ι), M) →ₚₗ[R] N` obtained by composing `f` and `sum_proj R M ι`.
 This is denoted by `Π_p` in Roby63 (where `p` corresponds to the size of `ι`). -/
-def polarizedProd : M × M →ₚₗ[R] N := f.comp (sum_fst_snd R M)
+def polarizedProd : (M →ₚₗ[R] N) →ₗ[R] (M × M →ₚₗ[R] N) where
+  toFun f := f.comp (sum_fst_snd R M)
+  map_add' f g := by
+    ext S _ _ sm
+    simp [comp_toFun']
+  map_smul' r f := by
+    ext S _ _ sm
+    simp [comp_toFun']
 
 lemma polarizedProd_apply (m : M × M) : f.polarizedProd m = f (m.fst + m.snd):= by
-  simp only [polarizedProd, sum_fst_snd, fst, snd, ground_apply, comp_toFun', add_def,
-    Function.comp_apply, Pi.add_apply, TensorProduct.map_tmul, LinearMap.id_coe, id_eq,
+  simp only [polarizedProd, sum_fst_snd, fst, snd, LinearMap.coe_mk, AddHom.coe_mk, ground_apply,
+    comp_toFun', add_def, Function.comp_apply, Pi.add_apply, map_tmul, LinearMap.id_coe, id_eq,
     LinearMap.fst_apply, LinearMap.snd_apply, EmbeddingLike.apply_eq_iff_eq]
   congr 1
   rw [TensorProduct.tmul_add]
@@ -186,21 +193,67 @@ variable {R M}
 /-- The bihomogeneous component of bidegree `n : ℕ × ℕ` of `f.polarized n`.
   This is denoted by `Π^{n_1, ..., n_p}f` in Roby63. -/
 abbrev polarizedProd_biComponent (n : ℕ × ℕ) (f : PolynomialLaw R M N) :
-    PolynomialLaw R (M × M) N := PolynomialLaw.biComponent f.polarizedProd n
-
-def differential : (M × M) →ₚₗ[R] N :=
-  PolynomialLaw.lfsum (fun (p : ℕ) ↦ polarizedProd_biComponent (p, n) f)
+    PolynomialLaw R (M × M) N := PolynomialLaw.biComponent n f.polarizedProd
 
 theorem locFinsupp_polarizedProd_biComponent (f : PolynomialLaw R M N) :
     LocFinsupp (fun (p : ℕ) ↦ polarizedProd_biComponent (p, n) f) := fun S _ _ m ↦ by
   have hss : (fun p ↦ (p, n)) ''
-      (Function.support fun i ↦ (biComponent (polarizedProd f) (i, n)).toFun' S m) ⊆
-        (Function.support fun d ↦ (biComponent (polarizedProd f) d).toFun' S m) := fun _ hd ↦ by
+      (Function.support fun i ↦ (biComponent (i, n) (polarizedProd f)).toFun' S m) ⊆
+        (Function.support fun d ↦ (biComponent d (polarizedProd f)).toFun' S m) := fun _ hd ↦ by
     obtain ⟨x, hx, rfl⟩ := hd
-    simpa [biComponent_toFun', Function.mem_support, ne_eq, finTwoArrowEquiv', Fin.isValue,
+    simpa [biComponent_apply_toFun', finTwoArrowEquiv', Fin.isValue,
       Equiv.coe_fn_symm_mk, Equiv.coe_fn_mk]
+
   exact ((LocFinsupp_biComponent f.polarizedProd _ _ ).subset hss).of_finite_image
     (fun _ _ _ _ h ↦ by simpa using h)
+
+/- def differential : (M × M) →ₚₗ[R] N :=
+  PolynomialLaw.lfsum (fun (p : ℕ) ↦ polarizedProd_biComponent (p, n) f)
+ -/
+-- TODO: rename, avoid (?)
+lemma hf (r : R) : LocFinsupp fun p ↦ (r • polarizedProd f).biComponent (p, n) := by
+  have hf' : LocFinsupp (r • (fun p ↦ (polarizedProd f).biComponent (p, n))) := by
+    exact locFinsupp_smul r (locFinsupp_polarizedProd_biComponent n f)
+  convert hf'
+  simp
+
+-- TODO: golf
+def differential : (M →ₚₗ[R] N) →ₗ[R] ((M × M) →ₚₗ[R] N) where
+  toFun f := PolynomialLaw.lfsum (fun (p : ℕ) ↦ polarizedProd_biComponent (p, n) f)
+  map_add' f g := by
+    ext S _ _ sm
+    simp only [add_def, Pi.add_apply]
+    simp only [polarizedProd_biComponent, map_add]
+    simp only [← toFun_eq_toFun']
+    have hfg : LocFinsupp fun p ↦ (polarizedProd f).biComponent (p, n) +
+        (polarizedProd g).biComponent (p, n) :=
+      locFinsupp_add (locFinsupp_polarizedProd_biComponent n f)
+        (locFinsupp_polarizedProd_biComponent n g)
+    rw [← lfsumHom_apply hfg, ← lfsumHom_apply (locFinsupp_polarizedProd_biComponent n f),
+      ← lfsumHom_apply (locFinsupp_polarizedProd_biComponent n g), ← add_toFun_apply]
+    simp only [polarizedProd_biComponent]
+    rw [← map_add]
+    rfl -- TODO: expand API
+  map_smul' r f := by
+    ext S _ _ sm
+    simp only [RingHom.id_apply, smul_def, Pi.smul_apply]
+    simp only [polarizedProd_biComponent]
+    simp only [← toFun_eq_toFun']
+    set t : LocFinsupp fun p ↦ (polarizedProd (r • f)).biComponent (p, n) := by
+      exact hf f n r
+    set t' := (locFinsupp_polarizedProd_biComponent n f)
+    rw [← lfsumHom_apply t, ← lfsumHom_apply t']
+    simp only [toFun_eq_toFun', polarizedProd_biComponent]
+    rw [← PolynomialLaw.smul_def_apply]
+    congr -- TODO: expand API
+    rw [← map_smul]
+    have : r • (⟨fun p ↦ (polarizedProd f).biComponent (p, n), t'⟩ :
+      (Submodule.locFinsupp R (M × M) N ℕ)) =
+        ⟨r • fun p ↦ (polarizedProd f).biComponent (p, n),
+        Submodule.smul_mem (Submodule.locFinsupp R (M × M) N ℕ) r t'⟩ := rfl
+    rw [this]
+    simp only [map_smul]
+    rfl
 
 -- TODO: rename, golf
 lemma asdf (a n : ℕ) (m m' : M) :
@@ -245,7 +298,7 @@ lemma differential_eq_coeff (n : ℕ) (m m' : M) :
           ((1 : Polynomial R) ⊗ₜ[R] m + Polynomial.X (R := R) ⊗ₜ[R] m')) n := by
   have hf : LocFinsupp fun p ↦ f.polarizedProd.biComponent (p, n) :=
     locFinsupp_polarizedProd_biComponent n f
-  simp only [differential, ground_apply]
+  simp only [differential, LinearMap.coe_mk, AddHom.coe_mk, ground_apply]
   simp only [Polynomial.scalarRTensor_apply, EmbeddingLike.apply_eq_iff_eq]
   rw [lfsum_eq_of_locFinsupp hf]
   simp only [Finsupp.sum]
@@ -266,7 +319,7 @@ lemma differential_eq_coeff (n : ℕ) (m m' : M) :
     · intro ha
       simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Fin.isValue, Finset.mem_filter,
         Finsupp.mem_support_iff, ne_eq] at ha
-      simp only [hV, biComponent_toFun', Nat.succ_eq_add_one, Nat.reduceAdd, Fin.isValue,
+      simp only [hV, biComponent_apply_toFun', Nat.succ_eq_add_one, Nat.reduceAdd, Fin.isValue,
         Finsupp.mem_support_iff, Finsupp.ofSupportFinite_coe, ne_eq]
       rw [asdf, ha.2]
       simp only [Nat.succ_eq_add_one, Nat.reduceAdd, finTwoArrowEquiv', Fin.isValue,
@@ -288,7 +341,7 @@ lemma differential_eq_coeff (n : ℕ) (m m' : M) :
       refine Finsupp.ext ?_
       simp [Fin.forall_fin_two, h, ← ha.2, ← hb.2]
     · intro a ha
-      simp only [hV, biComponent_toFun', Finsupp.mem_support_iff, ne_eq,
+      simp only [hV, biComponent_apply_toFun', Finsupp.mem_support_iff, ne_eq,
         Finsupp.ofSupportFinite_coe] at ha
       use (finTwoArrowEquiv' ℕ).symm (a, n)
       constructor
@@ -315,9 +368,9 @@ lemma differential_eq_coeff (n : ℕ) (m m' : M) :
   rw [biComponent.toFun'_apply]
   rw [asdf]
 
-lemma differential_map_add_snd' (m m₁ m₂ : M) :
+lemma differential_map_add_snd'' (m m₁ m₂ : M) :
     f.differential 1 (m, m₁ + m₂) = f.differential 1 (m, m₁) + f.differential 1 (m, m₂) := by
-  simp only [differential]
+  simp only [differential, LinearMap.coe_mk, AddHom.coe_mk]
   rw [lfsum_ground_eq_of_locFinsupp, lfsum_ground_eq_of_locFinsupp, lfsum_ground_eq_of_locFinsupp]
   simp only [Finsupp.sum, Finsupp.ofSupportFinite_coe]
   sorry
@@ -326,7 +379,7 @@ lemma differential_map_add_snd' (m m₁ m₂ : M) :
   sorry
 
 -- Roby63, pg 239
-lemma differential_map_add_snd (m m₁ m₂ : M) :
+lemma differential_map_add_snd' (m m₁ m₂ : M) :
     f.differential 1 (m, m₁ + m₂) = f.differential 1 (m, m₁) + f.differential 1 (m, m₂) := by
   classical
   simp only [differential_eq_coeff]
@@ -341,14 +394,29 @@ lemma differential_map_add_snd (m m₁ m₂ : M) :
     simp only [coeff_eq, Fin.sum_univ_two, Fin.isValue, Matrix.cons_val_zero, Matrix.cons_val_one,
       Matrix.cons_val_fin_one, EmbeddingLike.map_eq_zero_iff, ne_eq]
     sorry
+  sorry
 
+-- Roby63, pg 239 (?)
+lemma differential_map_add_snd {S : Type*} [CommSemiring S] [Algebra R S] (m m₁ m₂ : S ⊗[R] M) :
+    (f.differential 1).toFun S ((inl R M M ).toFun S m + (inr R M M ).toFun S (m₁ + m₂)) =
+      (f.differential 1).toFun S ((inl R M M ).toFun S m + (inr R M M ).toFun S m₁) +
+      (f.differential 1).toFun S ((inl R M M ).toFun S m + (inr R M M ).toFun S m₂) := by
+  classical
   sorry
 
 -- Roby63, pg 239
-lemma differential_map_smul_snd (r : R) (m m' : M) :
+lemma differential_map_smul_snd' (r : R) (m m' : M) :
     f.differential 1 (m, r • m') = r • f.differential 1 (m, m') := by
   classical
+  sorry
 
+-- Roby63, pg 239 (?)
+lemma differential_map_smul_snd {S : Type*} [CommSemiring S] [Algebra R S] (s : S)
+    (m m' : S ⊗[R] M) :
+    (f.differential 1).toFun S ((inl R M M ).toFun S m + (inr R M M ).toFun S (s • m')) =
+      s • (f.differential 1).toFun S
+        ((inl R M M ).toFun S m + (inr R M M ).toFun S m') := by
+  classical
   sorry
 
 -- **MI** : TODO: add id_toFun_apply, fst_toFun_apply, snd_toFun_apply, add_toFun'
@@ -363,7 +431,8 @@ lemma fst_biComponent_eq_zero (p : ℕ) : (fst R M M).biComponent (p, 1) = 0 := 
   ext S _ _ sm
   simp only [biComponent, zero_def, Pi.zero_apply]
   simp only [biCoeff_S_apply, Fin.isValue, map_add, rTensor_apply]
-  simp only [Fin.isValue, toFun_eq_toFun', fst_toFun'_apply, map_add, Prod.fst_add]
+  simp only [Fin.isValue, toFun_eq_toFun', LinearMap.coe_mk, AddHom.coe_mk, fst_toFun'_apply,
+    map_add, Prod.fst_add]
   convert add_zero _
   · induction sm using TensorProduct.induction_on with
     | zero => simp only [Fin.isValue, map_zero, tmul_zero, Prod.fst_zero]
@@ -425,11 +494,11 @@ lemma biCoeff_S_snd_eq_zero_of_ne {S : Type*} [CommSemiring S] [Algebra R S]
 -- Roby63, pg 239
 lemma differential_id_eq : id.differential 1 = snd R M M := by
   ext S _ _ sm
-  simp only [differential, polarizedProd_biComponent, polarizedProd_id_eq, biComponent_add,
-    fst_biComponent_eq_zero, zero_add]
+  simp only [differential, polarizedProd_biComponent, LinearMap.coe_mk, AddHom.coe_mk,
+    polarizedProd_id_eq, biComponent_add, fst_biComponent_eq_zero, zero_add]
   rw [← recompose_biComponent (snd R M M)]
   rw [lfsum_eq_of_locFinsupp (LocFinsupp_biComponent (snd R M M)), lfsum_eq_of_locFinsupp]
-  simp only [Finsupp.sum, biComponent_toFun']
+  simp only [Finsupp.sum, biComponent_apply_toFun']
   simp only [Finsupp.ofSupportFinite_coe]
   apply Finset.sum_of_injOn (fun p ↦ (p, 1))
   · simp only [Prod.mk.injEq, and_true, implies_true, Set.injOn_of_eq_iff_eq]
@@ -451,9 +520,9 @@ lemma differential_id_eq : id.differential 1 = snd R M M := by
       with hU_def
     suffices hU : Finite U by
       apply Set.Finite.of_injOn (f := fun p ↦ (p, 1)) ?_ ?_ hU
-      · simp only [Set.MapsTo, biComponent_toFun', Function.mem_support, ne_eq]
+      · simp only [Set.MapsTo, biComponent_apply_toFun', Function.mem_support, ne_eq]
         intro p hp
-        simpa [hU_def, biComponent_toFun', Function.mem_support, ne_eq,
+        simpa [hU_def, biComponent_apply_toFun', Function.mem_support, ne_eq,
           recompose_biComponent] using hp
       apply Function.Injective.injOn
       exact Prod.mk_left_injective 1
@@ -464,7 +533,7 @@ open TensorProduct
 lemma locFinsupp_differential (f : M →ₚₗ[R] N) : LocFinsupp fun n ↦ f.differential n := by
   simp only [LocFinsupp]
   intro S _ _ sm
-  simp only [differential]
+  simp only [differential, LinearMap.coe_mk, AddHom.coe_mk]
   simp_rw [lfsum_eq_of_locFinsupp (locFinsupp_polarizedProd_biComponent _ f)]
   have : (Function.support fun i ↦ (Finsupp.ofSupportFinite (fun i_1 ↦
     (polarizedProd_biComponent (i, i_1) f).toFun' S sm) (by sorry)).sum fun x m ↦
@@ -474,7 +543,7 @@ lemma locFinsupp_differential (f : M →ₚₗ[R] N) : LocFinsupp fun n ↦ f.di
     -- Ideal: take the RHS to be the Set.range of the total degree of `e`, and show
     -- that LHS ⊆ RHS
     ext x
-    simp only [biComponent_toFun', Function.mem_support, ne_eq]
+    simp only [biComponent_apply_toFun', Function.mem_support, ne_eq]
     sorry
   sorry
   sorry
@@ -552,8 +621,43 @@ def const (n : N) : M →ₚₗ[R] N where
   toFun' S _ _ sm := 1 ⊗ₜ n
   isCompat' φ := by ext; simp
 
-/-- The partial derivative of `f` at `x`. -/
-def partial_derivative (x : M) : M →ₚₗ[R] N :=
-  (differential f 1).comp (inl R M M + (inr R M M).comp (const R M M x))
+-- Section II.5
+
+/- /-- The partial derivative of `f` at `x`. -/
+def partial_derivative (x : M) : (M →ₚₗ[R] N) →ₗ[R] (M →ₚₗ[R] N) where
+  toFun f := (f.differential 1).comp (inl R M M + (inr R M M).comp (const R M M x))
+  map_add' f g := by
+    ext S _ _ sm
+    simp [map_add, comp_toFun', add_def, Function.comp_apply, Pi.add_apply]
+  map_smul' r f := by
+    ext S _ _ sm
+    simp [map_smul, comp_toFun', smul_def, add_def, Function.comp_apply, Pi.add_apply,
+      Pi.smul_apply, RingHom.id_apply] -/
+
+/-- The nth partial derivative of `f` at `x`. -/
+def partial_derivative (n : ℕ) (x : M) : (M →ₚₗ[R] N) →ₗ[R] (M →ₚₗ[R] N) where
+  toFun f := (f.differential n).comp (inl R M M + (inr R M M).comp (const R M M x))
+  map_add' f g := by
+    ext S _ _ sm
+    simp [map_add, comp_toFun', add_def, Function.comp_apply, Pi.add_apply]
+  map_smul' r f := by
+    ext S _ _ sm
+    simp [map_smul, comp_toFun', smul_def, add_def, Function.comp_apply, Pi.add_apply,
+      Pi.smul_apply, RingHom.id_apply]
+
+-- Section II.9
+
+lemma partial_derivative_prod_eq (f : (M × M') →ₚₗ[R] N) (x : M × M') :
+    f.partial_derivative 1 x =
+      f.partial_derivative 1 (x.1, 0) + f.partial_derivative 1 (0, x.2) := by
+  ext S _ _ sm
+  simp only [partial_derivative, LinearMap.coe_mk, AddHom.coe_mk, add_def, Pi.add_apply]
+  simp only [comp_toFun', add_def, Function.comp_apply, Pi.add_apply]
+  simp only [const]
+  simp only [← toFun_eq_toFun']
+  have hx : (1 : S) ⊗ₜ[R] x = 1 ⊗ₜ[R] (x.1, 0) + 1 ⊗ₜ[R] (0, x.2) := by
+    simp [← tmul_add, Prod.mk_add_mk, add_zero, zero_add, Prod.mk.eta]
+  rw [hx, differential_map_add_snd]
+
 
 end PolynomialLaw
