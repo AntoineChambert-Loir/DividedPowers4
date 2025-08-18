@@ -476,6 +476,28 @@ lemma differential_id_eq :
   simp only [Fin.isValue, map_add, toFun_eq_toFun', comp_toFun', id_apply', Function.comp_apply,
     sum_fst_snd_toFun'_apply, Prod.fst_add, Prod.snd_add, id_eq]
 
+  have : (LinearMap.rTensor M ((LinearMap.restrictScalars R)
+    (lcoeff S ((finTwoArrowEquiv' ℕ).symm (0, 1)))))
+      ((prodRight R R (MvPolynomial (Fin 2) S) M M)
+         ((LinearEquiv.rTensor (M × M) scalarRTensorAlgEquiv.toLinearEquiv)
+             ((TensorProduct.assoc R (MvPolynomial (Fin 2) R) S (M × M)).symm
+                (X 1 ⊗ₜ[R] (compSndRight R S S M M) sm)))).2 =
+      ((prodRight R R S M M) sm).2 := by
+    --simp? [prodRight_symm_comp_prod_fstRight_sndRight_apply]
+    simp only [Fin.isValue, ← prodRight_rTensor_snd_eq_rTensor_prodRight]
+
+    simp only [LinearMap.rTensor_def, Fin.isValue, LinearEquiv.rTensor_apply,
+      AlgEquiv.toLinearEquiv_toLinearMap]
+
+   -- rw [← sndRight_prodRight_apply (S := R), ← sndRight_prodRight_apply (S := R)]
+    --simp only [Fin.isValue, LinearEquiv.symm_apply_apply]
+    simp only [Fin.isValue, compSndRight, LinearMap.coe_comp, Function.comp_apply]
+    simp only [Fin.isValue, inrRight, LinearMap.coe_comp, LinearEquiv.coe_coe, LinearMap.coe_inr,
+      Function.comp_apply]
+   -- simp only [Fin.isValue, LinearEquiv.rTensor_apply, AlgEquiv.toLinearEquiv_toLinearMap]
+
+    sorry
+
   sorry
 
 open TensorProduct
