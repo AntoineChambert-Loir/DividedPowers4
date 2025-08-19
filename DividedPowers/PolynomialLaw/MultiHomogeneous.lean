@@ -1,6 +1,7 @@
 /- Copyright ACL & MIdFF 2024 -/
 
 import DividedPowers.ForMathlib.Algebra.MvPolynomial.Lemmas
+import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Basic
 import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Pi
 import DividedPowers.PolynomialLaw.Homogeneous
 import DividedPowers.PolynomialLaw.MultiCoeff
@@ -336,27 +337,6 @@ lemma multiCoeff_S_apply_pi_tmul (s : ι → S) (m : Π i, M i) (f : (Π i, M i)
   simp [multiGenerize_S_apply_pi_tmul]
 
 variable (s : Π (_ : ι), S) (m : Π i, M i)
-
-/- /-- `LinearEquiv.lTensor M f : M ⊗ N ≃ₗ M ⊗ P` is the natural linear equivalence
-induced by `f : N ≃ₗ P`. -/
-def lTensor (f : N ≃ₗ[R] P) : M ⊗[R] N ≃ₗ[R] M ⊗[R] P := TensorProduct.congr (refl R M) f
-
-/-- `LinearEquiv.rTensor M f : N₁ ⊗ M ≃ₗ N₂ ⊗ M` is the natural linear equivalence
-induced by `f : N₁ ≃ₗ N₂`. -/
-def rTensor (f : N ≃ₗ[R] P) : N ⊗[R] M ≃ₗ[R] P ⊗[R] M := TensorProduct.congr f (refl R M)
-
-variable (g : P ≃ₗ[R] Q) (f : N ≃ₗ[R] P) (m : M) (n : N) (p : P) (x : M ⊗[R] N) (y : N ⊗[R] M)
-
-@[simp] theorem coe_lTensor : lTensor M f = (f : N →ₗ[R] P).lTensor M := rfl
-
-@[simp] theorem coe_lTensor_symm : (lTensor M f).symm = (f.symm : P →ₗ[R] N).lTensor M := rfl
-
-@[simp] theorem coe_rTensor : rTensor M f = (f : N →ₗ[R] P).rTensor M := rfl-/
-
-theorem _root_.LinearEquiv.rTensor_apply {R : Type*} [CommSemiring R] (M : Type*) {N P : Type*}
-    [AddCommMonoid M] [AddCommMonoid N] [AddCommMonoid P] [Module R M] [Module R N] [Module R P]
-    (f : N ≃ₗ[R] P) (nm : N ⊗[R] M) :
-    LinearEquiv.rTensor M f nm = (f : N →ₗ[R] P).rTensor M nm := rfl
 
 lemma multiCoeff_S_apply_smul [Nontrivial R] (s : Π _, S) (sm : S ⊗[R] Π i, M i)
     (f : (Π i, M i) →ₚₗ[R] N) (n : ι →₀ ℕ) :

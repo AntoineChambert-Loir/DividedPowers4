@@ -31,6 +31,19 @@ lemma piRight_rTensor_eq_rTensor_piRight [Fintype ι] [DecidableEq ι] (ψ : N �
   ext i
   simp [piRightHom_rTensor_eq_rTensor_piRightHom]
 
+lemma piRightHom_smul_proj (s : S) (m : S ⊗[R] (Π i, M i)) (i : ι) :
+    (TensorProduct.piRightHom R R S M) (s • m) i =
+      s • (TensorProduct.piRightHom R R S M) m i := by
+  induction m using TensorProduct.induction_on with
+  | zero => simp
+  | tmul s' m => simp only [TensorProduct.piRightHom_tmul]; rfl
+  | add m m' hm hm' => simp only [smul_add, map_add, Pi.add_apply, hm, hm']
+
+lemma piRight_smul_proj [Fintype ι] [DecidableEq ι] (s : S) (m : S ⊗[R] (Π i, M i)) (i : ι) :
+    (TensorProduct.piRight R R S M) (s • m) i =
+      s • (TensorProduct.piRight R R S M) m i := by
+  simp [piRight_apply, piRightHom_smul_proj]
+
 variable (R S N)
 
 -- **MI** : I am not sure about whether we want these `coe` lemmas to be `simp`.

@@ -5,6 +5,7 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.DirectLimit.FG
+import Mathlib.Algebra.Algebra.Shrink
 import Mathlib.LinearAlgebra.TensorProduct.RightExactness
 import Mathlib.Logic.Small.Set
 import Mathlib.RingTheory.FiniteType
@@ -59,7 +60,7 @@ class IsPure {R : Type u} [CommRing R]
 variable {R : Type u} [CommRing R] {M : Type*} [AddCommGroup M] [Module R M]
 
 /-- Complemented submodules are pure -/
-theorem _root_.Submodule.IsComplemented.isPure {N : Submodule R M} (hN : IsComplemented N) :
+theorem IsComplemented.isPure {N : Submodule R M} (hN : IsComplemented N) :
     N.IsPure where
   baseChange_injective' S _ _ := by
     obtain ⟨P, hNP⟩ := hN
@@ -83,7 +84,7 @@ theorem baseChange_injective (S : Type*) [CommRing S] [Algebra R S] :
   have : Small.{u} A := by
     sorry -- hA.small
   set A' := Shrink.{u} A with hA'
-  let e : A' ≃ₐ[R] A := Shrink.algEquiv A R
+  let e : A' ≃ₐ[R] A := Shrink.algEquiv R A
   set u' := LinearMap.rTensor N e.symm.toLinearMap u with hu'
   have hN := IsPure.baseChange_injective' A' (N := N)
   rw [← ker_eq_bot, eq_bot_iff] at hN
@@ -101,5 +102,3 @@ theorem baseChange_injective (S : Type*) [CommRing S] [Algebra R S] :
   rw [← AlgEquiv.toAlgHom_toLinearMap, ← rTensor_comp_baseChange_comm_apply,
     AlgEquiv.toAlgHom_toLinearMap, hu0]
   simp only [_root_.map_zero]
-
-

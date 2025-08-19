@@ -32,7 +32,7 @@ lemma polarizedProd_apply (m : M × M) : f.polarizedProd m = f (m.fst + m.snd):=
     comp_toFun', add_def, Function.comp_apply, Pi.add_apply, map_tmul, LinearMap.id_coe, id_eq,
     LinearMap.fst_apply, LinearMap.snd_apply, EmbeddingLike.apply_eq_iff_eq]
   congr 1
-  rw [TensorProduct.tmul_add]
+  rw [tmul_add]
 
 -- Not needed?
 lemma map_add_eq_polarizedprod_two_apply (m m' : M) :
@@ -41,28 +41,16 @@ lemma map_add_eq_polarizedprod_two_apply (m m' : M) :
 
 lemma polarizedProd_toFun'_apply {S : Type u} [CommSemiring S] [Algebra R S]
     {m : TensorProduct R S (M × M)} : (polarizedProd f).toFun' S m =
-      f.toFun' S (((TensorProduct.prodRight R R S M M) m).fst +
-        ((TensorProduct.prodRight R R S M  M) m).snd) := by
+      f.toFun' S (((prodRight R R S M M) m).fst + ((prodRight R R S M  M) m).snd) := by
   simp [polarizedProd, comp_toFun', sum_fst_snd_toFun'_apply]
 
 variable {f p}
 
---TODO: move
-variable (R M M') in
-lemma _root_.TensorProduct.prodRight_smul {S : Type*} [CommSemiring S]
-    [Algebra R S] (s : S) (m : TensorProduct R S (M × M'))  :
-    ((TensorProduct.prodRight R R S M M') (s • m)) =
-      (s • (TensorProduct.prodRight R R S M M') m) := by
-  induction m using TensorProduct.induction_on with
-  | zero => simp
-  | tmul s' m => simp only [TensorProduct.prodRight_tmul]; rfl
-  | add m m' hm hm' => simp only [smul_add, map_add, hm, hm']
-
 lemma isHomogeneousOfDegree_polarizedProd (hf : IsHomogeneousOfDegree p f) :
     IsHomogeneousOfDegree p (polarizedProd f) := fun S _ _ s m ↦ by
   simp [polarizedProd_toFun'_apply,
-    ← hf S s ((((TensorProduct.prodRight R R S M M) m).fst +
-      ((TensorProduct.prodRight R R S M  M) m).snd)), smul_add, TensorProduct.prodRight_smul]
+    ← hf S s ((((prodRight R R S M M) m).fst + ((prodRight R R S M  M) m).snd)),
+      smul_add, prodRight_smul]
 
 -- Roby63, example in pg 234
 lemma coeff_polarizedProd_eq_zero_of_ne {n : ℕ} (m : (Fin n) → M × M) (d : (Fin n) →₀ ℕ)
@@ -105,22 +93,37 @@ variable (R M) in
 /-- `proj R M i` is the polynomial law `(Π (_ : ι), M) →ₚₗ[R] M` obtained by prolonging the
 `i`th canonical projection. -/
 def proj (i : ι) : (Π (_ : ι), M) →ₚₗ[R] M where
-  toFun' S _ _ := (TensorProduct.map (LinearMap.id (M := S)) (LinearMap.proj i))
+  toFun' S _ _ := (map (LinearMap.id (M := S)) (LinearMap.proj i))
   isCompat' φ := by
     ext x
     simp only [Function.comp_apply, LinearMap.rTensor_def, ← LinearMap.comp_apply,
-      ← TensorProduct.map_comp, LinearMap.comp_id, LinearMap.id_comp]
+      ← map_comp, LinearMap.comp_id, LinearMap.id_comp]
 
 lemma proj_apply (i : ι) (m : ι → M) : proj R M i m = m i := by simp [proj, ground_apply]
 
-lemma proj_toFun'_apply [Fintype ι] [DecidableEq ι] {S : Type u} [CommSemiring S] [Algebra R S]
-    (i : ι) {m : TensorProduct R S (ι → M)} : (proj R M i).toFun' S m =
-    (TensorProduct.piRight R R S fun _ ↦ M) m i := by
-  simp only [proj, TensorProduct.piRight_apply]
+lemma proj_toFun'_apply {S : Type u} [CommSemiring S] [Algebra R S] (i : ι) {m : S ⊗[R] (ι → M)} :
+    (proj R M i).toFun' S m = (piRightHom R R S fun _ ↦ M) m i := by
+  simp only [proj]
   induction m using TensorProduct.induction_on with
   | zero => simp
   | tmul => simp
   | add m m' hm hm' => simp [hm, hm']
+
+lemma proj_toFun_apply {S : Type*} [CommSemiring S] [Algebra R S] (i : ι) {m : S ⊗[R] (ι → M)} :
+    (proj R M i).toFun S m = (piRightHom R R S fun _ ↦ M) m i := by
+  obtain ⟨n', ψ, q, rfl⟩ := exists_lift m
+  rw [← PolynomialLaw.isCompat_apply, toFun_eq_toFun'_apply, proj_toFun'_apply,
+    piRightHom_rTensor_eq_rTensor_piRightHom ψ.toLinearMap]
+
+lemma proj_toFun'_tmul {S : Type u} [CommSemiring S] [Algebra R S] (i : ι) {m : ι → M} :
+    (proj R M i).toFun' S (1 ⊗ₜ[R] m) = 1 ⊗ₜ[R] m i := by
+  simp [proj_toFun'_apply]
+
+lemma proj_toFun_tmul {S : Type*} [CommSemiring S] [Algebra R S] (i : ι) {m : ι → M} :
+    (proj R M i).toFun S (1 ⊗ₜ[R] m) = 1 ⊗ₜ[R] m i := by
+  obtain ⟨n', ψ, q, h⟩ := exists_lift ((1 : S) ⊗ₜ[R] m)
+  rw [← h, ← PolynomialLaw.isCompat_apply, toFun_eq_toFun'_apply, proj_toFun'_apply,
+    ← piRightHom_rTensor_eq_rTensor_piRightHom ψ.toLinearMap q, h, piRightHom_tmul]
 
 -- TODO: add a lemma lfsum_eq_sum_of_fintype and use it instead of lfsum_eq below.
 
@@ -131,9 +134,9 @@ def sum_proj : (Π (_ : ι), M) →ₚₗ[R] M := lfsum (fun i ↦ proj R M i)
 
 lemma sum_proj_toFun'_apply [Fintype ι] [DecidableEq ι] {S : Type u} [CommSemiring S] [Algebra R S]
     {m : TensorProduct R S (ι → M)} : (sum_proj ι R M).toFun' S m =
-    (∑ i, (TensorProduct.piRight R R S fun _ ↦ M) m i) := by
-  rw [sum_proj, TensorProduct.piRight_apply,
-    lfsum_eq_of_locFinsupp (locFinsupp_of_fintype _), Finsupp.sum_fintype _ _ (by intro; rfl)]
+    (∑ i, (piRight R R S fun _ ↦ M) m i) := by
+  rw [sum_proj, piRight_apply, lfsum_eq_of_locFinsupp (locFinsupp_of_fintype _),
+    Finsupp.sum_fintype _ _ (by intro; rfl)]
   exact Finset.sum_congr rfl (fun i _ ↦ proj_toFun'_apply i)
 
 variable (ι) in
@@ -143,12 +146,13 @@ This is denoted by `Π_p` in Roby63 (where `p` corresponds to the size of `ι`).
 def polarized : (Π (_ : ι), M) →ₚₗ[R] N := f.comp (sum_proj ι R M)
 
 lemma polarized_apply [Fintype ι] {m : ι → M} : polarized ι f m = f (∑ (i : ι), m i):= by
+
   simp only [polarized, ground_apply, sum_proj, comp_toFun',
     Function.comp_apply, EmbeddingLike.apply_eq_iff_eq]
   congr 1
   rw [lfsum_eq_of_locFinsupp (locFinsupp_of_fintype _), Finsupp.sum_fintype _ _ (by intro; rfl),
-    TensorProduct.tmul_sum]
-  rfl
+    tmul_sum]
+  simp [Finsupp.ofSupportFinite_coe, proj_toFun'_tmul]
 
 lemma polarized_toFun'_apply [Fintype ι] [DecidableEq ι] {S : Type u} [CommSemiring S] [Algebra R S]
     {m : TensorProduct R S (ι → M)} : (polarized ι f).toFun' S m =
@@ -156,16 +160,6 @@ lemma polarized_toFun'_apply [Fintype ι] [DecidableEq ι] {S : Type u} [CommSem
   simp [polarized, comp_toFun', sum_proj_toFun'_apply]
 
 variable {f p}
-
-variable (R M) in
-lemma _root_.TensorProduct.piRightHom_smul_proj [Fintype ι] {S : Type u} [CommSemiring S]
-    [Algebra R S] (s : S) (m : TensorProduct R S (ι → M)) (i : ι) :
-    (TensorProduct.piRightHom R R S fun _ ↦ M) (s • m) i =
-      s • (TensorProduct.piRightHom R R S fun _ ↦ M) m i := by
-  induction m using TensorProduct.induction_on with
-  | zero => simp
-  | tmul s' m => simp only [TensorProduct.piRightHom_tmul]; rfl
-  | add m m' hm hm' => simp only [smul_add, map_add, Pi.add_apply, hm, hm']
 
 lemma isHomogeneousOfDegree_polarized [Fintype ι] (hf : IsHomogeneousOfDegree p f) :
     IsHomogeneousOfDegree p (polarized ι f) := by
@@ -175,7 +169,7 @@ lemma isHomogeneousOfDegree_polarized [Fintype ι] (hf : IsHomogeneousOfDegree p
   simp only [polarized_toFun'_apply, ← hf S s (∑ (i : ι), (TensorProduct.piRight R R _ _) m i)]
   congr
   rw [Finset.smul_sum]
-  exact Finset.sum_congr rfl (fun i _ ↦ TensorProduct.piRightHom_smul_proj R M s _ i)
+  exact Finset.sum_congr rfl (fun i _ ↦ piRightHom_smul_proj s _ i)
 
 -- Roby63, example in pg 234
 lemma coeff_component_eq_zero_of_ne [Fintype ι] {n : ℕ} (m : (Fin n) → ι → M) (d : (Fin n) →₀ ℕ)

@@ -161,11 +161,11 @@ theorem _root_.Polynomial.toPowerSeries_toMvPowerSeries (p : Polynomial R) :
   rw [← AlgHom.comp_apply]
   apply AlgHom.congr_fun
   apply Polynomial.algHom_ext
-  simp only [Polynomial.coeToPowerSeries.algHom_apply, Algebra.id.map_eq_id, Polynomial.coe_X,
+  simp only [Polynomial.coeToPowerSeries.algHom_apply, Algebra.algebraMap_self, Polynomial.coe_X,
     map_X]
   erw [AlgHom.comp_apply]
   simp [Polynomial.aeval_X, MvPolynomial.coeToMvPowerSeries.algHom_apply, PowerSeries.X,
-    Algebra.id.map_eq_id, MvPowerSeries.map_id, MvPolynomial.coe_X, RingHom.id_apply]
+    Algebra.algebraMap_self, MvPowerSeries.map_id, MvPolynomial.coe_X, RingHom.id_apply]
 
 theorem substAlgHom_coe [Algebra R S] (ha : HasSubst a) (p : Polynomial R) :
     substAlgHom ha (p : PowerSeries R) = ↑(Polynomial.aeval a p) := by

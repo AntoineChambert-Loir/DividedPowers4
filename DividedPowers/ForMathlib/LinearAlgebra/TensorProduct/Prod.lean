@@ -32,6 +32,13 @@ lemma prodRight_rTensor_snd_eq_rTensor_prodRight (ψ : N →ₗ[R] P) (m : N ⊗
     rw [hx, hy]
   | tmul t m => simp
 
+lemma prodRight_smul {S : Type*} [CommSemiring S] [Algebra R S] (s : S) (m : S ⊗[R] (M₁ × M₂))  :
+    ((prodRight R R S M₁ M₂) (s • m)) = (s • (prodRight R R S M₁ M₂) m) := by
+  induction m using TensorProduct.induction_on with
+  | zero => simp
+  | tmul s' m => simp only [TensorProduct.prodRight_tmul]; rfl
+  | add m m' hm hm' => simp only [smul_add, map_add, hm, hm']
+
 variable (R S N)
 
 -- **MI** : I am not sure about whether we want these `coe` lemmas to be `simp`.
