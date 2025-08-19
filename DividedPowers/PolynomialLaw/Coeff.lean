@@ -303,7 +303,7 @@ open Function
 theorem toFun_sum_tmul_eq_coeff_finset_sum [DecidableEq ι] (m : ι → M) (f : M →ₚₗ[R] N)
     (S : Type*) [CommSemiring S] [Algebra R S] (r : ι → S) (s : Finset ι) :
     f.toFun S (∑ i ∈ s, r i ⊗ₜ[R] m i) = (coeff (fun i : s ↦ m i) f).sum
-      (fun k n ↦ (∏ i ∈ s, r i ^ ((Function.extend (fun x ↦ x.val) k (const ι 0)) i)) ⊗ₜ[R] n) := by
+      (fun k n ↦ (∏ i ∈ s, r i ^ ((Function.extend (fun x ↦ x.val) k (Function.const ι 0)) i)) ⊗ₜ[R] n) := by
   convert toFun_sum_tmul_eq_coeff_sum (fun (i : s) ↦ m i) f S fun (i : s) ↦ r i
   · rw [univ_eq_attach, ← sum_attach]
   · rw [univ_eq_attach, ← prod_attach]
@@ -315,7 +315,7 @@ theorem toFun_sum_tmul_eq_coeff_finsupp_sum [DecidableEq ι] (m : ι → M) (f :
     (S : Type*) [CommSemiring S] [Algebra R S] (r : ι →₀ S) :
     f.toFun S (r.sum fun i a ↦ a ⊗ₜ[R] m i) = (coeff (fun i : r.support ↦ m i) f).sum
       (fun k n ↦ (∏ i ∈ r.support,
-        (r i ^ ((Function.extend (fun x ↦ x.val) k (const ι 0)) i))) ⊗ₜ[R] n) := by
+        (r i ^ ((Function.extend (fun x ↦ x.val) k (Function.const ι 0)) i))) ⊗ₜ[R] n) := by
   rw [Finsupp.sum, toFun_sum_tmul_eq_coeff_finset_sum]
 
 section Fintype
@@ -336,8 +336,8 @@ theorem ground_apply_sum_smul :
   exact Finsupp.sum_congr (fun d _ ↦ by rw [← TensorProduct.smul_tmul, smul_eq_mul, mul_one])
 
 theorem ground_apply_smul :
-    ground f (r₁ • m₁) = (coeff (const Unit m₁) f).sum (fun k n ↦ r₁ ^ (k 0) • n) := by
-  suffices r₁ • m₁ = ∑ i, (const Unit r₁) i • (const Unit m₁ i) by
+    ground f (r₁ • m₁) = (coeff (Function.const Unit m₁) f).sum (fun k n ↦ r₁ ^ (k 0) • n) := by
+  suffices r₁ • m₁ = ∑ i, (Function.const Unit r₁) i • (Function.const Unit m₁ i) by
     rw [this, ground_apply_sum_smul]
     exact sum_congr rfl (fun i _ ↦ by simp)
   simp

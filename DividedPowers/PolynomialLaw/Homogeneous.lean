@@ -207,46 +207,41 @@ variable {R : Type u} [CommSemiring R] {M N : Type*} [AddCommMonoid M] [AddCommM
 
 open MvPolynomial
 
-noncomputable def ofConstant (n : N) : M →ₚₗ[R] N where
-  toFun' S _ _ _:= TensorProduct.tmul R 1 n
-  isCompat' φ   := by ext; simp
-
-@[simp]
-lemma ofConstant_apply {S : Type u} [CommSemiring S] [Algebra R S] (n : N) (sm : S ⊗[R] M) :
-  (ofConstant n).toFun' S sm = TensorProduct.tmul R 1 n := rfl
+lemma const_isHomogeneousOfDegree_zero (n : N) : IsHomogeneousOfDegree 0 (const R M N n) := by
+  intro S _ _ s m
+  simp [const_toFun']
 
 /-- Homogeneous Polynomial maps of degree 0 are constant maps -/
-noncomputable def ofConstantHom : N →ₗ[R] (grade 0 : Submodule R (M →ₚₗ[R] N)) := {
+noncomputable def constHom : N →ₗ[R] (grade 0 : Submodule R (M →ₚₗ[R] N)) := {
   toFun n := {
-    val := ofConstant n
+    val := const R M N n
     property := by
       rw [grade, Submodule.mem_mk, AddSubmonoid.mem_mk, AddSubsemigroup.mem_mk]
-      intro S _ _ r sm
-      rw [pow_zero, _root_.one_smul, ofConstant] }
+      exact const_isHomogeneousOfDegree_zero n }
   map_add' x y := by
-    simp only [ofConstant, AddMemClass.mk_add_mk, Subtype.mk.injEq]
+    simp only [const, AddMemClass.mk_add_mk, Subtype.mk.injEq]
     ext
     simp [add_def_apply, TensorProduct.tmul_add]
   map_smul' r x := by
     simp only [RingHom.id_apply, SetLike.mk_smul_mk, Subtype.mk.injEq]
     ext S _ _ sm
-    simp }
+    simp [const_toFun'] }
 
 /-- Homogeneous Polynomial maps of degree 0 are constant maps -/
-noncomputable def ofConstantEquiv :
+noncomputable def constEquiv :
     N ≃ₗ[R] (grade 0 : Submodule R (M →ₚₗ[R] N)) := {
-  ofConstantHom with
+  constHom with
   invFun f    := f.val.ground 0
-  left_inv x  := by simp [ground, ofConstantHom]
+  left_inv x  := by simp [ground, constHom, const_toFun']
   right_inv x := by
     obtain ⟨f, hf⟩ := x
     rw [mem_grade] at hf
     rw [AddHom.toFun_eq_coe, LinearMap.coe_toAddHom, Subtype.ext_iff, Subtype.coe_mk]
-    simp only [ofConstantHom, ground, Function.comp_apply, map_zero, coe_mk, AddHom.coe_mk]
+    simp only [constHom, ground, Function.comp_apply, map_zero, coe_mk, AddHom.coe_mk]
     ext S _ _ m
     conv_rhs =>
       rw [← _root_.one_smul (M := S) (f.toFun' S m), ← pow_zero 0, ← hf S _ m, _root_.zero_smul]
-    simp [ofConstant_apply, includeRight_lid, isCompat_apply'] }
+    simp [const_toFun', includeRight_lid, isCompat_apply'] }
 
 end ConstantMap
 

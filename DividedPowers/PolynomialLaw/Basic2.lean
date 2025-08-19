@@ -513,3 +513,23 @@ theorem comp_apply (S : Type*) [CommSemiring S] [Algebra R S] (m : S ⊗[R] M) :
   simp only [comp_toFun, Function.comp_apply]
 
 end Comp
+
+section const
+
+/-- The constant polynomial law.-/
+def const (n : N) : M →ₚₗ[R] N where
+  toFun' S _ _ sm := 1 ⊗ₜ n
+  isCompat' φ := by ext; simp
+
+variable {R M N}
+
+lemma const_toFun' {S : Type u} [CommSemiring S] [Algebra R S] (n : N) (sm : S ⊗[R] M) :
+    (const R M N n).toFun' S sm = (1 : S) ⊗ₜ[R] n := by simp [const]
+
+lemma const_toFun {S : Type*} [CommSemiring S] [Algebra R S] (n : N) (sm : S ⊗[R] M) :
+    (const R M N n).toFun S sm = (1 : S) ⊗ₜ[R] n := by
+  obtain ⟨k, ψ, p, rfl⟩ := PolynomialLaw.exists_lift sm
+  rw [← (const R M N n).isCompat_apply, toFun_eq_toFun', const_toFun']
+  simp only [LinearMap.rTensor_tmul, AlgHom.toLinearMap_apply, map_one]
+
+end const
