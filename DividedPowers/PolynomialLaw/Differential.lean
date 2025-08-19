@@ -645,26 +645,6 @@ lemma map_add_eq_sum_differential_apply (m m' : M) :
   simp only [Fin.isValue, Finsupp.ofSupportFinite_coe]
   exact bar' f m m'
 
-section const
-
--- TODO: move
-variable (R M N) in
-/-- The constant polynomial law.-/
-def const (n : N) : M →ₚₗ[R] N where
-  toFun' S _ _ sm := 1 ⊗ₜ n
-  isCompat' φ := by ext; simp
-
-lemma const_toFun' {S : Type u} [CommSemiring S] [Algebra R S] (n : N) (sm : S ⊗[R] M) :
-    (const R M N n).toFun' S sm = (1 : S) ⊗ₜ[R] n := sorry
-
-lemma const_toFun {S : Type*} [CommSemiring S] [Algebra R S] (n : N) (sm : S ⊗[R] M) :
-    (const R M N n).toFun S sm = (1 : S) ⊗ₜ[R] n := sorry
-
-lemma const_isHomogeneousOfDegree_zero (n : N) :
-    IsHomogeneousOfDegree 0 (const R M N n) := sorry
-
-end const
-
 -- Section II.5
 
 /-- The nth partial derivative of `f` at `x`. -/
