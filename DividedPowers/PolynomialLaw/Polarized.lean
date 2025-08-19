@@ -74,7 +74,6 @@ theorem locFinsupp_polarizedProd_biComponent (f : PolynomialLaw R M N) :
     obtain ⟨x, hx, rfl⟩ := hd
     simpa [biComponent_apply_toFun', finTwoArrowEquiv', Fin.isValue,
       Equiv.coe_fn_symm_mk, Equiv.coe_fn_mk]
-
   exact ((LocFinsupp_biComponent f.polarizedProd _ _ ).subset hss).of_finite_image
     (fun _ _ _ _ h ↦ by simpa using h)
 

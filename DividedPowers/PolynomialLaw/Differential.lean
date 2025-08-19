@@ -54,7 +54,7 @@ lemma asdf (a n : ℕ) (m m' : M) :
     biCoeff_S ((1 : R) ⊗ₜ[R] (m, m')) (a, n) f.polarizedProd =
       1 ⊗ₜ[R] ((coeff ![m, m']) f) ((finTwoArrowEquiv' ℕ).symm (a, n)) := by
   rw [biCoeff_S_apply_tmul]
-  have h0 : (0 : R ⊗[R] M) = 1 ⊗ₜ 0 := sorry
+  have h0 : (0 : R ⊗[R] M) = 1 ⊗ₜ 0 := by simp
   simp only [Fin.isValue, compFstRight, inlRight, fstRight, LinearMap.coe_comp, LinearEquiv.coe_coe,
     LinearMap.coe_inl, LinearMap.coe_fst, Function.comp_apply, prodRight_tmul, tmul_zero,
     compSndRight, inrRight, sndRight, LinearMap.coe_inr, LinearMap.coe_snd, map_add,
@@ -119,7 +119,7 @@ lemma differential_eq_coeff (n : ℕ) (m m' : M) :
       simp only [Nat.succ_eq_add_one, Nat.reduceAdd, finTwoArrowEquiv', Fin.isValue,
         Equiv.coe_fn_symm_mk]
       intro ha'
-      have h0 : (0 : R ⊗[R] N) = 1 ⊗ₜ 0 := sorry
+      have h0 : (0 : R ⊗[R] N) = 1 ⊗ₜ 0 := by simp
       rw [h0] at ha'
       rw [← (TensorProduct.lid R N).injective.eq_iff] at ha'
       simp only [Fin.isValue, lid_tmul, _root_.one_smul, tmul_zero, map_zero] at ha'
@@ -227,19 +227,31 @@ lemma differential_map_smul_snd_toFun {S : Type*} [CommSemiring S] [Algebra R S]
         ((inl R M M ).toFun S m + (inr R M M ).toFun S m') := by
   sorry
 
-  variable {f n p}
+variable {f n p}
 
 -- Roby63, pg 239
 lemma differential_eq_biComponent_of_le (hf : IsHomogeneousOfDegree p f) (hnp : n ≤ p) :
     (f.differential n) = (polarizedProd f).biComponent (p - n, n) := by
-  classical
-  sorry
+  simp only [differential, LinearMap.coe_mk, AddHom.coe_mk]
+  ext S _ _ sm
+  rw [lfsum_eq_of_locFinsupp (locFinsupp_polarizedProd_biComponent _ _)]
+  simp only [Finsupp.sum, Finsupp.ofSupportFinite_coe]
+  rw [Finset.sum_eq_single (p - n)]
+  · exact fun _ _ _ ↦ isHomogeneousOfDegree_biCoeff_S (isHomogeneousOfDegree_polarizedProd hf) _
+      (by omega)
+  · exact fun hp ↦ by simpa [Finsupp.ofSupportFinite_coe] using hp
 
 -- Roby63, pg 239
 lemma differential_eq_zero_of_gt (hf : IsHomogeneousOfDegree p f) (hnp : p < n) :
     (f.differential n) = 0 := by
-  classical
-  sorry
+  have hk (k : ℕ) : polarizedProd_biComponent (k, n) f = 0 := by
+    have hf' := isHomogeneousOfDegree_polarizedProd hf
+    ext S _ _ sm
+    exact isHomogeneousOfDegree_biCoeff_S (isHomogeneousOfDegree_polarizedProd hf) _ (by omega)
+  simp only [differential, LinearMap.coe_mk, AddHom.coe_mk]
+  ext S _ _ sm
+  rw [lfsum_eq_of_locFinsupp (locFinsupp_polarizedProd_biComponent _ _)]
+  simp [Finsupp.sum, zero_def, hk, Finsupp.ofSupportFinite_coe, Finset.sum_const_zero]
 
 -- **MI** : TODO: add id_toFun_apply, fst_toFun_apply, snd_toFun_apply, add_toFun'
 
@@ -553,7 +565,7 @@ lemma partialDerivative_isHomogeneousOfDegree_of_le [Nontrivial R]
     simp only [Finsupp.mem_support_iff, ne_eq] at hk
     have hk' : k = (p -n, n) := by
       by_contra h
-      exact hk (isBiHomogeneousOfDegree_biCoeff (biComponentIsBiHomogeneous _ _ ) (m, x) h)
+      exact hk (isBiHomogeneousOfDegree_biCoeff (biComponent_isBiHomogeneous _ _ ) (m, x) h)
     simp only [(Prod.ext_iff.mp hk').1, mul_pow, smul_tmul', smul_eq_mul]
 
 -- Roby63, pg 240
@@ -582,7 +594,7 @@ lemma taylor_sum (m x : M) : f (m + x) = lfsum (fun (n : ℕ) ↦ partialDerivat
       inl_toFun_apply, inr_toFun_apply, inlRight_tmul, inrRight_tmul, ← tmul_add]
 
 -- Roby63, pg 240 (Prop. II.2)
-lemma partialDerivative_comp  (x : M) :
+lemma partialDerivative_comp (x : M) :
     partialDerivative n x (partialDerivative p x f) =
       (n.choose p) * partialDerivative (n + p) x f := by
   sorry

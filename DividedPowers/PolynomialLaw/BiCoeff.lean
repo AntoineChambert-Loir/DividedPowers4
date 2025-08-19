@@ -5,6 +5,22 @@ universe u
 
 variable {R : Type u} [CommSemiring R]
 
+section Preliminaries
+
+open Finsupp MvPolynomial
+
+-- [Mathlib.Algebra.MvPolynomial.Equiv]
+theorem extracted_1_2 (e : Fin 2 →₀ ℕ) :
+    X (R := R) 0 ^ e 0 * X 1 ^ e 1 = ∏ i, X i ^ e i := by
+  simp [Fin.isValue, Fin.prod_univ_two]
+
+theorem extracted_1_3 (e : ℕ × ℕ) :
+    X (R := R) 0 ^ e.1 * X 1 ^ e.2 = ∏ i, X i ^ (finTwoArrowEquiv' ℕ).symm e i := by
+  simp only [Fin.isValue, finTwoArrowEquiv'_symm_apply, ofSupportFinite_coe, Fin.prod_univ_two,
+    Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_fin_one]
+
+end Preliminaries
+
 /- # Polynomial laws. -/
 
 namespace PolynomialLaw
@@ -35,12 +51,11 @@ section biCoeff
 variable (m : M × M') (f : (M × M') →ₚₗ[R] N)
 
 private noncomputable def biCoeff_aux (g : (M × M') →ₚₗ[R] N) (n : ℕ × ℕ) : N :=
-  scalarRTensor.toLinearMap.comp (biGenerize m) g
-      (Finsupp.ofSupportFinite ![n.1, n.2] (Set.toFinite _))
+  scalarRTensor.toLinearMap.comp (biGenerize m) g ((finTwoArrowEquiv' ℕ).symm n)
 
 private lemma biCoeff_aux_apply (g : (M × M') →ₚₗ[R] N) (n : ℕ × ℕ) :
   biCoeff_aux m g n = scalarRTensor.toLinearMap.comp (biGenerize m) g
-      (Finsupp.ofSupportFinite ![n.1, n.2] (Set.toFinite _)) := rfl
+      ((finTwoArrowEquiv' ℕ).symm n) := rfl
 
 private lemma finite_support_biCoeff_aux (g : (M × M') →ₚₗ[R] N) :
     (Function.support (biCoeff_aux m g)).Finite := by
@@ -54,19 +69,19 @@ private lemma finite_support_biCoeff_aux (g : (M × M') →ₚₗ[R] N) :
 /-- The b-coefficients of a `PolynomialLaw`, as linear maps. -/
 noncomputable def biCoeff : ((M × M') →ₚₗ[R] N) →ₗ[R] (ℕ × ℕ) →₀ N where
   toFun g := Finsupp.ofSupportFinite (fun n ↦ scalarRTensor.toLinearMap.comp (biGenerize m) g
-      (Finsupp.ofSupportFinite ![n.1, n.2] (Set.toFinite _))) (finite_support_biCoeff_aux m g)
+      ((finTwoArrowEquiv' ℕ).symm n)) (finite_support_biCoeff_aux m g)
   map_add' mn mn' := by simp [Finsupp.ext_iff, Finsupp.ofSupportFinite_coe]
   map_smul' r nm := by simp [Finsupp.ext_iff, Finsupp.ofSupportFinite_coe]
 
 lemma biCoeff_apply (g : (M × M') →ₚₗ[R] N) (n : ℕ × ℕ) :
-    biCoeff m g n = scalarRTensor.toLinearMap.comp (biGenerize m) g
-      (Finsupp.ofSupportFinite ![n.1, n.2] (Set.toFinite _)) := rfl
+    biCoeff m g n =
+      scalarRTensor.toLinearMap.comp (biGenerize m) g ((finTwoArrowEquiv' ℕ).symm n) := rfl
 
 theorem biGenerize_eq : biGenerize m f =
     (biCoeff m f).sum (fun k n ↦ (monomial ((finTwoArrowEquiv' ℕ).symm k) 1) ⊗ₜ n) := by
   dsimp only [biCoeff, coe_comp, LinearEquiv.coe_coe, Function.comp_apply, coe_mk, AddHom.coe_mk]
   generalize h : (Finsupp.ofSupportFinite (fun (n : ℕ × ℕ) ↦ (scalarRTensor ((biGenerize m) f))
-    (Finsupp.ofSupportFinite ![n.1, n.2] (Set.toFinite _))) (finite_support_biCoeff_aux m f)) = p
+    ((finTwoArrowEquiv' ℕ).symm n)) (finite_support_biCoeff_aux m f)) = p
   have h' : scalarRTensor.symm (Finsupp.equivMapDomain (finTwoArrowEquiv' ℕ).symm p) =
       (biGenerize m) f := by
     rw [← h]

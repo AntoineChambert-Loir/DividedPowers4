@@ -16,4 +16,12 @@ noncomputable def finTwoArrowEquiv' : (Fin 2 →₀ X) ≃ (X × X) where
     exact ⟨rfl, rfl⟩
   right_inv x := rfl
 
+theorem finTwoArrowEquiv'_sum_eq {d : ℕ × ℕ}  :
+    (((finTwoArrowEquiv' ℕ).symm d).sum fun _ n ↦ n) = d.1 + d.2 := by
+  simp [Finsupp.sum, finTwoArrowEquiv'_symm_apply, Finsupp.ofSupportFinite_coe]
+  rw [Finset.sum_subset (Finset.subset_univ _)
+    (fun _ _ h ↦ by simpa [Finsupp.ofSupportFinite_coe] using h)]
+  simp [Fin.sum_univ_two, Fin.isValue, Matrix.cons_val_zero, Matrix.cons_val_one,
+    Matrix.cons_val_fin_one]
+
 end Fin2

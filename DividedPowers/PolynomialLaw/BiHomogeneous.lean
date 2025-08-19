@@ -147,6 +147,30 @@ lemma isBiHomogeneousOfDegree_biCoeff {d : ℕ × ℕ} (hf : IsBiHomogeneousOfDe
       _root_.one_smul, _root_.zero_smul,  φ]
     rw [if_neg (by simp [-finTwoArrowEquiv'_symm_apply, hkd])]
 
+/-- The bi-coefficients of a homogeneous polynomial map of bi-degree `n` vanish outside of
+bi-degree `n`. -/
+lemma isHomogeneousOfDegree_biCoeff {n : ℕ} {d : ℕ × ℕ} (hf : IsHomogeneousOfDegree n f)
+    (m : M × M') (hd : d.1 + d.2 ≠ n) : PolynomialLaw.biCoeff m f d = 0 := by
+  simp only [biCoeff_apply, coe_comp, LinearEquiv.coe_coe, Function.comp_apply, biGenerize,
+    LinearMap.coe_mk, AddHom.coe_mk,  scalarRTensor_apply, EmbeddingLike.map_eq_zero_iff]
+  simp only [toFun_add_tmul_eq_coeff_sum, sum, map_sum, rTensor_tmul, lcoeff_apply]
+  -- TODO: lemma
+  have h2' (e :  Fin 2 →₀ ℕ) : X (R := R) (0 : Fin 2) ^ (e 0) * X 1 ^ (e 1) =
+      ∏ (i : Fin 2), X i ^ e i := by
+    simp only [Fin.isValue, Fin.prod_univ_two]
+  simp_rw [h2', prod_X_pow_eq_monomial', coeff_monomial]
+  simp only [ite_tmul, Finset.sum_ite_eq', Finsupp.mem_support_iff, ne_eq]
+  rw [if_neg]
+  simp only [Finsupp.mem_support_iff, ne_eq, not_not]
+  apply isHomogeneousOfDegree_coeff hf
+  rw [finTwoArrowEquiv'_sum_eq]
+  exact hd
+
+lemma constantBiCoeff_zero_of_isHomogeneousOfDegree {n : ℕ} (hn : n ≠ 0)
+    (hf : IsHomogeneousOfDegree n f) : biCoeff (0 : M × M') f (0, 0) = 0 :=
+  isHomogeneousOfDegree_biCoeff hf 0 (by simp [Ne.symm hn])
+
+
 theorem toFun_zero_of_constantBiCoeff_zero (hf : biCoeff (0 : M × M') f = 0) (S : Type*)
     [CommSemiring S] [Algebra R S] : f.toFun S 0 = 0 := by
   have : (0 : S ⊗[R] (M × M')) = (0 : S) ⊗ₜ[R] ((0 : M), (0 : M')) := by simp
@@ -358,6 +382,32 @@ theorem rTensor_biCoeff_S_eq {S' : Type*} [CommSemiring S'] [Algebra R S'] (φ :
     simp only [Fin.isValue, map_add, tmul_add] at hsm hsm' ⊢
     rw [add_add_add_comm, hsm, hsm', add_add_add_comm]
 
+/-- The bi-coefficients of a bihomogeneous polynomial map of bi-degree `n` vanish outside of
+bi-degree `n`. -/
+lemma isBiHomogeneousOfDegree_biCoeff_S {d : ℕ × ℕ} (hf : IsBiHomogeneousOfDegree n f)
+    (sm : S ⊗[R] (M × M')) (hd : d ≠ n) : biCoeff_S sm d f = 0 := by
+  sorry
+
+/-- The bi-coefficients of a homogeneous polynomial map of degree `n` vanish outside of
+bi-degree `n`. -/
+lemma isHomogeneousOfDegree_biCoeff_S {n : ℕ} {d : ℕ × ℕ} (hf : IsHomogeneousOfDegree n f)
+    (sm : S ⊗[R] (M × M')) (hd : d.1 + d.2 ≠ n) : biCoeff_S sm d f = 0 := by
+  --simp? [biCoeff_S_apply']
+  sorry
+
+/-- The bi-coefficients of a homogeneous polynomial map of bi-degree `n` vanish outside of
+bi-degree `n`. -/
+lemma isHomogeneousOfDegree_biCoeff_S' {n : ℕ} {d : ℕ × ℕ} (hf : IsHomogeneousOfDegree n f)
+    (sm : S ⊗[R] (M × M')) (hd : d.1 + d.2 ≠ n) : biCoeff_S sm d f = 0 := by
+  induction sm using TensorProduct.induction_on with
+  | zero =>
+    simp only [biCoeff_S_apply, Fin.isValue, map_zero, tmul_zero, add_zero,
+      finTwoArrowEquiv'_symm_apply, rTensor_apply]
+    sorry
+  | add => sorry
+  | tmul =>
+    sorry
+
 variable (n f)
 
 /- The bihomogeneous component of degree `n` of a `PolynomialLaw`. -/
@@ -379,7 +429,7 @@ theorem biComponent_toFun_apply (S : Type*) [CommSemiring S] [Algebra R S] (m : 
   rw [← PolynomialLaw.isCompat_apply, toFun_eq_toFun'_apply, biComponent.toFun'_apply]
   exact rTensor_biCoeff_S_eq ψ
 
-lemma biComponentIsBiHomogeneous [Nontrivial R] : IsBiHomogeneousOfDegree n (f.biComponent n) :=
+lemma biComponent_isBiHomogeneous [Nontrivial R] : IsBiHomogeneousOfDegree n (f.biComponent n) :=
   fun _ _ _ s _ ↦ biCoeff_S_apply_smul s
 
 theorem biComponent_add {g : (M × M') →ₚₗ[R] N} :
