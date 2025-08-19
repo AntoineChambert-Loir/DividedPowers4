@@ -461,7 +461,7 @@ def partialDerivative (n : ℕ) (x : M) : (M →ₚₗ[R] N) →ₗ[R] (M →ₚ
     simp [map_smul, comp_toFun', smul_def, add_def, Function.comp_apply, Pi.add_apply,
       Pi.smul_apply, RingHom.id_apply]
 
--- TODO: correct RHS
+-- TODO: correct RHS? (check)
 lemma differential_toFun_eq_coeff {S : Type*} [CommSemiring S] [Algebra R S] (n : ℕ)
     (m m' : S ⊗[R] M) :
     (f.differential n).toFun S ((inl R M M).toFun S m + (inr R M M).toFun S m') =
