@@ -140,12 +140,12 @@ lemma isBiHomogeneousOfDegree_biCoeff {d : ℕ × ℕ} (hf : IsBiHomogeneousOfDe
     simp only [Fin.isValue, h2', prod_X_pow_eq_monomial', coe_comp, LinearEquiv.coe_coe,
       Function.comp_apply, rTensor_tmul, lcoeff_apply, coeff_monomial, lid_tmul, ite_smul,
       _root_.one_smul, _root_.zero_smul, φ]
-    rw [if_neg (by simp [(Ne.symm hd)])]
+    rw [if_neg (by simp [-finTwoArrowEquiv'_symm_apply, (Ne.symm hd)])]
   · intro k hk0 hkd
     simp only [Fin.isValue, h2', prod_X_pow_eq_monomial', coe_comp, LinearEquiv.coe_coe,
       Function.comp_apply, rTensor_tmul, lcoeff_apply, coeff_monomial, lid_tmul, ite_smul,
       _root_.one_smul, _root_.zero_smul,  φ]
-    rw [if_neg (by simp [hkd])]
+    rw [if_neg (by simp [-finTwoArrowEquiv'_symm_apply, hkd])]
 
 theorem toFun_zero_of_constantBiCoeff_zero (hf : biCoeff (0 : M × M') f = 0) (S : Type*)
     [CommSemiring S] [Algebra R S] : f.toFun S 0 = 0 := by
@@ -507,8 +507,9 @@ theorem recompose_biComponent :
   convert rTensor'_sum (A := R) (fun _ ↦ 1) tk
   · simp only [_root_.one_smul]
     exact Finset.sum_bij (fun a _ ↦ (finTwoArrowEquiv' ℕ).symm a) (fun _ ha ↦ by simpa using ha)
-      (fun _ _ _ _ h ↦ by simpa using h) (fun a ha ↦ ⟨finTwoArrowEquiv' ℕ a,
-        by simpa [ofSupportFinite_coe] using ha, Equiv.symm_apply_apply _ _⟩)
+      (fun _ _ _ _ h ↦ by simpa [-finTwoArrowEquiv'_symm_apply] using h)
+      (fun a ha ↦ ⟨finTwoArrowEquiv' ℕ a, by simpa only [Finsupp.mem_support_iff,
+        ofSupportFinite_coe, Equiv.symm_apply_apply, ne_eq] using ha, Equiv.symm_apply_apply _ _⟩)
       (fun _ _ ↦ by rw [ofSupportFinite_coe])
   · ext p
     simp [AlgHom.toLinearMap_apply, AlgHom.coe_restrictScalars', aeval_eq_eval₂Hom, eval_eq,

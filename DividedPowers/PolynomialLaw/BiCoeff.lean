@@ -84,8 +84,11 @@ theorem biGenerize_eq : biGenerize m f =
     scalarRTensor_apply_tmul_apply, coeff_monomial, if_pos (Equiv.symm_apply_apply _ _),
     _root_.one_smul, Finsupp.equivMapDomain_apply, Equiv.symm_symm]
   · intro n hn hd
-    have hd' : (finTwoArrowEquiv' ℕ).symm n ≠ d := by simp [Equiv.symm_apply_eq, hd]
-    simp [scalarRTensor_apply_tmul_apply, if_neg hd']
+    have hd' : (finTwoArrowEquiv' ℕ).symm n ≠ d := by
+      rw [ne_eq, Equiv.symm_apply_eq]
+      exact hd
+    simp [-finTwoArrowEquiv'_symm_apply, scalarRTensor_apply_tmul_apply, coeff_monomial,
+      if_neg hd', _root_.zero_smul]
 
 variable (k : ℕ × ℕ)
 

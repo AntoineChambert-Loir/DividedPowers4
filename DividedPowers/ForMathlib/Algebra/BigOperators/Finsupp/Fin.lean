@@ -4,6 +4,10 @@ section Fin2
 
 variable (X : Type*) [Zero X]
 
+/- **MI**: I added the simp lemmas for compatibility with Mathlib's `finTwoArrowEquiv`, but
+  I am not convinced they are a good idea. -/
+
+@[simps -fullyApplied]
 noncomputable def finTwoArrowEquiv' : (Fin 2 →₀ X) ≃ (X × X) where
   toFun x     := (x 0, x 1)
   invFun x    := Finsupp.ofSupportFinite ![x.1, x.2] (Set.toFinite _)
