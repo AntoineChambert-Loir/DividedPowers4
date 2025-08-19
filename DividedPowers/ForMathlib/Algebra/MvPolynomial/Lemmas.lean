@@ -1,5 +1,6 @@
 /- Copyright ACL & MIdFF 2024 -/
 
+import DividedPowers.ForMathlib.Algebra.BigOperators.Finsupp.Fin
 import Mathlib.Algebra.MvPolynomial.Monad
 import Mathlib.RingTheory.TensorProduct.MvPolynomial
 
@@ -199,5 +200,10 @@ theorem nontrivial_iff_nontrivial (ι R : Type*) [CommSemiring R] :
   intro p q
   ext d
   apply hR
+
+theorem X_pow_mul_X_pow_eq_prod (R : Type*) [CommSemiring R] (e : ℕ × ℕ) :
+    X (R := R) 0 ^ e.1 * X 1 ^ e.2 = ∏ i, X i ^ (finTwoArrowEquiv' ℕ).symm e i := by
+  simp [Fin.isValue, finTwoArrowEquiv'_symm_apply, Finsupp.ofSupportFinite_coe,
+    Fin.prod_univ_two, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_fin_one]
 
 end MvPolynomial

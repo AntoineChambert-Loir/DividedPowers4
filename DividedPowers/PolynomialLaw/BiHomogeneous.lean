@@ -119,10 +119,6 @@ lemma isBiHomogeneousOfDegree_biCoeff {d : ℕ × ℕ} (hf : IsBiHomogeneousOfDe
   simp only [smul_tmul', smul_eq_mul, mul_one] at hf'
   rw [this, h1, toFun_add_tmul_eq_biCoeff_sum, toFun_add_tmul_eq_biCoeff_sum] at hf'
   simp only [smul_sum, smul_tmul', smul_eq_mul] at hf'
-  -- TODO: lemma
-  have h2' (e : ℕ × ℕ) : X (R := R) (0 : Fin 2) ^ e.1 * X 1 ^ e.2 =
-      ∏ (i : Fin 2), X i ^ (finTwoArrowEquiv' ℕ).symm e i := by
-    simp [Fin.isValue, Fin.prod_univ_two, finTwoArrowEquiv', ofSupportFinite_coe]
   let φ : MvPolynomial (Fin 2) R ⊗[R] N →ₗ[R] N :=
     (TensorProduct.lid R N).toLinearMap.comp
       (LinearMap.rTensor N (lcoeff R ((finTwoArrowEquiv' ℕ).symm d)))
@@ -132,17 +128,17 @@ lemma isBiHomogeneousOfDegree_biCoeff {d : ℕ × ℕ} (hf : IsBiHomogeneousOfDe
     Finsupp.sum_eq_single d ?_ (by simp only [tmul_zero, map_zero, implies_true])] at hφ
   · simp only [lcoeff, Fin.isValue, coe_comp, LinearEquiv.coe_coe, Function.comp_apply,
       rTensor_tmul, LinearMap.coe_mk, AddHom.coe_mk, lid_tmul, φ,
-      Fin.isValue, h2', prod_X_pow_eq_monomial', coeff_monomial, _root_.one_smul,
+      Fin.isValue, X_pow_mul_X_pow_eq_prod, prod_X_pow_eq_monomial', coeff_monomial, _root_.one_smul,
       ite_smul, _root_.one_smul, _root_.zero_smul,] at hφ
     simp only [↓reduceIte, EmbeddingLike.apply_eq_iff_eq, left_eq_ite_iff] at hφ
     exact hφ (by simp [(Ne.symm hd)])
   · intro k hk0 hkd
-    simp only [Fin.isValue, h2', prod_X_pow_eq_monomial', coe_comp, LinearEquiv.coe_coe,
+    simp only [Fin.isValue, X_pow_mul_X_pow_eq_prod, prod_X_pow_eq_monomial', coe_comp, LinearEquiv.coe_coe,
       Function.comp_apply, rTensor_tmul, lcoeff_apply, coeff_monomial, lid_tmul, ite_smul,
       _root_.one_smul, _root_.zero_smul, φ]
     rw [if_neg (by simp [-finTwoArrowEquiv'_symm_apply, (Ne.symm hd)])]
   · intro k hk0 hkd
-    simp only [Fin.isValue, h2', prod_X_pow_eq_monomial', coe_comp, LinearEquiv.coe_coe,
+    simp only [Fin.isValue, X_pow_mul_X_pow_eq_prod, prod_X_pow_eq_monomial', coe_comp, LinearEquiv.coe_coe,
       Function.comp_apply, rTensor_tmul, lcoeff_apply, coeff_monomial, lid_tmul, ite_smul,
       _root_.one_smul, _root_.zero_smul,  φ]
     rw [if_neg (by simp [-finTwoArrowEquiv'_symm_apply, hkd])]
@@ -154,10 +150,8 @@ lemma isHomogeneousOfDegree_biCoeff {n : ℕ} {d : ℕ × ℕ} (hf : IsHomogeneo
   simp only [biCoeff_apply, coe_comp, LinearEquiv.coe_coe, Function.comp_apply, biGenerize,
     LinearMap.coe_mk, AddHom.coe_mk,  scalarRTensor_apply, EmbeddingLike.map_eq_zero_iff]
   simp only [toFun_add_tmul_eq_coeff_sum, sum, map_sum, rTensor_tmul, lcoeff_apply]
-  -- TODO: lemma
   have h2' (e :  Fin 2 →₀ ℕ) : X (R := R) (0 : Fin 2) ^ (e 0) * X 1 ^ (e 1) =
-      ∏ (i : Fin 2), X i ^ e i := by
-    simp only [Fin.isValue, Fin.prod_univ_two]
+      ∏ (i : Fin 2), X i ^ e i := by simp [Fin.prod_univ_two]
   simp_rw [h2', prod_X_pow_eq_monomial', coeff_monomial]
   simp only [ite_tmul, Finset.sum_ite_eq', Finsupp.mem_support_iff, ne_eq]
   rw [if_neg]
@@ -166,22 +160,27 @@ lemma isHomogeneousOfDegree_biCoeff {n : ℕ} {d : ℕ × ℕ} (hf : IsHomogeneo
   rw [finTwoArrowEquiv'_sum_eq]
   exact hd
 
-lemma constantBiCoeff_zero_of_isHomogeneousOfDegree {n : ℕ} (hn : n ≠ 0)
-    (hf : IsHomogeneousOfDegree n f) : biCoeff (0 : M × M') f (0, 0) = 0 :=
-  isHomogeneousOfDegree_biCoeff hf 0 (by simp [Ne.symm hn])
+lemma biCoeff_zero_of_isHomogeneousOfDegree {n a b : ℕ} (hn : a + b ≠ n)
+    (hf : IsHomogeneousOfDegree n f) : biCoeff (0 : M × M') f (a, b) = 0 :=
+  isHomogeneousOfDegree_biCoeff hf 0 (by simp [hn])
 
-
-theorem toFun_zero_of_constantBiCoeff_zero (hf : biCoeff (0 : M × M') f = 0) (S : Type*)
+theorem toFun_zero_of_constantBiCoeff_zero (hf : biCoeff (0 : M × M') f 0 = 0) (S : Type*)
     [CommSemiring S] [Algebra R S] : f.toFun S 0 = 0 := by
   have : (0 : S ⊗[R] (M × M')) = (0 : S) ⊗ₜ[R] ((0 : M), (0 : M')) := by simp
   rw [this, toFun_tmul_fst_eq_biCoeff_sum ((0 : M), (0 : M'))]
   simp only [sum]
-  conv_rhs => rw [← Finset.sum_const_zero (s := ((biCoeff (0 : M × M') f).support))]
-  apply Finset.sum_congr rfl
-  rw [Prod.mk_zero_zero, hf]
-  simp
+  rw [Prod.mk_zero_zero, Finset.sum_eq_single 0]
+  simp [hf]
+  · intro k hk hk0
+    simp only [ne_eq, Prod.ext_iff, Prod.fst_zero, Prod.snd_zero, not_and_or] at hk0
+    rcases hk0 with (hk1 | hk2)
+    · simp [hk1]
+    · simp [hk2]
+  · intro h0
+    simp only [Finsupp.mem_support_iff, ne_eq, not_not] at h0
+    simp [h0]
 
-theorem toFun'_zero_of_constantBiCoeff_zero (hf : biCoeff (0 : M × M') f = 0) (S : Type u)
+theorem toFun'_zero_of_constantBiCoeff_zero (hf : biCoeff (0 : M × M') f 0 = 0) (S : Type u)
     [CommSemiring S] [Algebra R S] : f.toFun' S 0 = 0 := by
   rw [← toFun_eq_toFun', toFun_zero_of_constantBiCoeff_zero hf]
 
@@ -251,23 +250,23 @@ private noncomputable def el_S''_hom :
 
 variable {R M M' S}
 
-private lemma el_S_hom_apply_tmul (s : S × S) (m : M × M') :
-    el_S_hom R M M' S ((prodRight R R _ _ _).symm ((s.1 ⊗ₜ m.1, s.2 ⊗ₜ m.2))) =
-      (X (0 : Fin 2)) ⊗ₜ (s.1 ⊗ₜ (m.1, 0)) + (X (1 : Fin 2)) ⊗ₜ (s.2 ⊗ₜ (0, m.2)) := by
+private lemma el_S_hom_apply_tmul (s t : S) (m : M × M') :
+    el_S_hom R M M' S ((prodRight R R _ _ _).symm ((s ⊗ₜ m.1, t ⊗ₜ m.2))) =
+      (X (0 : Fin 2)) ⊗ₜ (s ⊗ₜ (m.1, 0)) + (X (1 : Fin 2)) ⊗ₜ (t ⊗ₜ (0, m.2)) := by
   simp only [el_S_hom, Fin.isValue, compFstRight, inlRight, fstRight, coe_comp, LinearEquiv.coe_coe,
     coe_inl, coe_fst, Function.comp_apply, compSndRight, inrRight, sndRight, coe_inr, coe_snd,
     LinearMap.coe_mk, AddHom.coe_mk, Fin.isValue, coe_prodRight, LinearEquiv.apply_symm_apply]
   simp [prodRight]
 
-private lemma el_S'_hom_apply_tmul (s : S × S) (m : M × M') :
-    el_S'_hom R M M' S ((prodRight R R _ _ _).symm ((s.1 ⊗ₜ m.1, s.2 ⊗ₜ m.2))) =
-      (X (0 : Fin 2)) ⊗ₜ s.1 ⊗ₜ (m.1, 0) + (X (1 : Fin 2)) ⊗ₜ s.2 ⊗ₜ (0, m.2) := by
+private lemma el_S'_hom_apply_tmul (s t : S) (m : M × M') :
+    el_S'_hom R M M' S ((prodRight R R _ _ _).symm ((s ⊗ₜ m.1, t ⊗ₜ m.2))) =
+      (X (0 : Fin 2)) ⊗ₜ s ⊗ₜ (m.1, 0) + (X (1 : Fin 2)) ⊗ₜ t ⊗ₜ (0, m.2) := by
   simp [el_S'_hom, coe_comp, LinearEquiv.coe_coe, Function.comp_apply, el_S_hom_apply_tmul,
     Fin.isValue, map_add, assoc_symm_tmul]
 
-private lemma el_S''_hom_apply_tmul (s : S × S) (m : M × M') :
-    el_S''_hom R M M' S ((prodRight R R _ _ _).symm ((s.1 ⊗ₜ m.1, s.2 ⊗ₜ m.2))) =
-      (C s.1 * X (0 : Fin 2)) ⊗ₜ (m.1, 0) + ( C s.2 * X (1 : Fin 2)) ⊗ₜ (0, m.2) := by
+private lemma el_S''_hom_apply_tmul (s t : S) (m : M × M') :
+    el_S''_hom R M M' S ((prodRight R R _ _ _).symm ((s ⊗ₜ m.1, t ⊗ₜ m.2))) =
+      (C s * X (0 : Fin 2)) ⊗ₜ (m.1, 0) + ( C t * X (1 : Fin 2)) ⊗ₜ (0, m.2) := by
   simp only [el_S''_hom, LinearEquiv.coe_rTensor, AlgEquiv.toLinearEquiv_toLinearMap,
     coe_prodRight_symm, coe_comp, Function.comp_apply, el_S'_hom_apply_tmul, Fin.isValue, map_add,
     rTensor_tmul, AlgEquiv.toLinearMap_apply]
@@ -276,19 +275,19 @@ private lemma el_S''_hom_apply_tmul (s : S × S) (m : M × M') :
     IsScalarTower.coe_toAlgHom', algebraMap_eq, Function.comp_apply,
     Algebra.TensorProduct.includeRight_apply, map_mul, mapAlgEquiv_apply, map_X, map_C,
     RingHom.coe_coe, Algebra.TensorProduct.lid_tmul, _root_.one_smul]
-  rw [mul_comm, mul_comm (C s.2)]
+  rw [mul_comm, mul_comm (C t)]
 
 noncomputable def biGenerize_S (sm : S ⊗[R] (M × M')) (f : (M × M') →ₚₗ[R] N) :
     MvPolynomial (Fin 2) S ⊗[R] N := f.toFun (MvPolynomial (Fin 2) S) (el_S''_hom R M M' S sm)
 
 -- This does not look so useful.
-lemma biGenerize_S_apply_pi_tmul (s : S × S) (m : M × M') :
-    biGenerize_S ((prodRight R R _ _ _).symm ((s.1 ⊗ₜ m.1, s.2 ⊗ₜ m.2))) f =
-      (((biCoeff m) f).sum fun k n ↦ ((C s.1 * X (0 : Fin 2)) ^ k.1 *
-        (C s.2 * X (1 : Fin 2)) ^ k.2) ⊗ₜ[R] n) := by
-  have : (C s.1 * X (0 : Fin 2)) ⊗ₜ[R] (m.1, 0) + (C s.2 * X 1) ⊗ₜ[R] (0, m.2) =
-    (C s.1 * X 0, C s.2 * X (1 : Fin 2)).1 ⊗ₜ[R] (m.1, 0) +
-      (C s.1 * X 0, C s.2 * X 1).2 ⊗ₜ[R] (0, m.2) := rfl
+lemma biGenerize_S_apply_prod_tmul (s t : S) (m : M × M') :
+    biGenerize_S ((prodRight R R _ _ _).symm ((s ⊗ₜ m.1, t ⊗ₜ m.2))) f =
+      (((biCoeff m) f).sum fun k n ↦ ((C s * X (0 : Fin 2)) ^ k.1 *
+        (C t * X (1 : Fin 2)) ^ k.2) ⊗ₜ[R] n) := by
+  have : (C s * X (0 : Fin 2)) ⊗ₜ[R] (m.1, 0) + (C t * X 1) ⊗ₜ[R] (0, m.2) =
+    (C s * X 0, C t * X (1 : Fin 2)).1 ⊗ₜ[R] (m.1, 0) +
+      (C s * X 0, C t * X 1).2 ⊗ₜ[R] (0, m.2) := rfl
   simp [biGenerize_S, el_S''_hom_apply_tmul, this, toFun_add_tmul_eq_biCoeff_sum m]
 
 variable (sm : S ⊗[R] (M × M')) (f : (M × M') →ₚₗ[R] N) (n : ℕ × ℕ)
@@ -298,7 +297,6 @@ noncomputable def biCoeff_S : ((M × M') →ₚₗ[R] N) →ₗ[R] S ⊗[R] N wh
   map_add' f g := by simp [biGenerize_S, add_toFun, Pi.add_apply, map_add, coe_add]
   map_smul' r f := by
     simp [biGenerize_S, smul_toFun, Pi.smul_apply, RingHom.id_apply, rTensor_apply, map_smul]
-
 
 variable {sm f n}
 
@@ -336,13 +334,13 @@ lemma biCoeff_S_apply_tmul (s : S) (m : M × M') :
 variable (s : S × S) (m : M × M')
 
 -- This does not look so useful.
-lemma biCoeff_S_apply_prod_tmul (n : ℕ × ℕ) :
-    biCoeff_S ((prodRight R R _ _ _).symm (s.1 ⊗ₜ m.1, s.2 ⊗ₜ m.2)) n f =
+lemma biCoeff_S_apply_prod_tmul (s t : S) (n : ℕ × ℕ) :
+    biCoeff_S ((prodRight R R _ _ _).symm (s ⊗ₜ m.1, t ⊗ₜ m.2)) n f =
       (MvPolynomial.rTensor (((biCoeff m) f).sum
-        fun k n ↦ ((C s.1 * X (0 : Fin 2)) ^ k.1 * (C s.2 * X 1) ^ k.2) ⊗ₜ[R] n))
+        fun k n ↦ ((C s * X (0 : Fin 2)) ^ k.1 * (C t * X 1) ^ k.2) ⊗ₜ[R] n))
           ((finTwoArrowEquiv' ℕ).symm n) := by
   unfold biCoeff_S
-  simp [biGenerize_S_apply_pi_tmul]
+  simp [biGenerize_S_apply_prod_tmul]
 
 -- TODO
 lemma biCoeff_S_apply_smul [Nontrivial R] :
@@ -392,7 +390,7 @@ lemma isBiHomogeneousOfDegree_biCoeff_S {d : ℕ × ℕ} (hf : IsBiHomogeneousOf
 bi-degree `n`. -/
 lemma isHomogeneousOfDegree_biCoeff_S {n : ℕ} {d : ℕ × ℕ} (hf : IsHomogeneousOfDegree n f)
     (sm : S ⊗[R] (M × M')) (hd : d.1 + d.2 ≠ n) : biCoeff_S sm d f = 0 := by
-  --simp? [biCoeff_S_apply']
+
   sorry
 
 /-- The bi-coefficients of a homogeneous polynomial map of bi-degree `n` vanish outside of
@@ -401,12 +399,38 @@ lemma isHomogeneousOfDegree_biCoeff_S' {n : ℕ} {d : ℕ × ℕ} (hf : IsHomoge
     (sm : S ⊗[R] (M × M')) (hd : d.1 + d.2 ≠ n) : biCoeff_S sm d f = 0 := by
   induction sm using TensorProduct.induction_on with
   | zero =>
-    simp only [biCoeff_S_apply, Fin.isValue, map_zero, tmul_zero, add_zero,
-      finTwoArrowEquiv'_symm_apply, rTensor_apply]
+    have h0 : f.toFun (MvPolynomial (Fin 2) S) 0 = 0 := by
+      apply toFun_zero_of_constantBiCoeff_zero
+      apply biCoeff_zero_of_isHomogeneousOfDegree _ hf
+      sorry -- **MI** : this seems to suggest n ≠ 0 is required (?)
+    simp only [biCoeff_S_apply, Fin.isValue, map_zero, tmul_zero, add_zero, h0,
+      finTwoArrowEquiv'_symm_apply, coe_zero, Pi.zero_apply]
+  | add sm sm' hsm hsm' =>
+    -- **MI** : unclear
     sorry
-  | add => sorry
-  | tmul =>
-    sorry
+  | tmul s m =>
+    have hsm : s ⊗ₜ m = ((prodRight R R S M M').symm (s ⊗ₜ[R] m.1, s ⊗ₜ[R] m.2)) := by simp
+    have ha (a : ℕ × ℕ) : ((C s * X (0 : Fin 2)) ^ a.1 * (C s * X 1) ^ a.2) =
+        C (s ^ (a.1 + a.2)) * (X 0 ^ a.1 * X 1 ^ a.2) := by
+      simp only [Fin.isValue, mul_pow, pow_add, C_mul, C_pow]
+      ring
+    simp_rw [hsm, biCoeff_S_apply_prod_tmul]
+    simp only [Fin.isValue, map_finsuppSum, Finsupp.sum_apply,
+      rTensor_apply, rTensor_tmul, coe_restrictScalars, lcoeff_apply]
+    rw [Finsupp.sum]
+    simp_rw [ha, coeff_C_mul, X_pow_mul_X_pow_eq_prod, prod_X_pow_eq_monomial', coeff_monomial]
+    simp only [mul_ite, mul_one, mul_zero, ite_tmul, Finset.sum_ite,
+      Finset.sum_const_zero, add_zero]
+    rw [Finset.sum_eq_single d]
+    simp [isHomogeneousOfDegree_biCoeff hf _ hd]
+    · intro b hb hb'
+      simp only [Finset.mem_filter, Finsupp.mem_support_iff, ne_eq,
+        EmbeddingLike.apply_eq_iff_eq] at hb
+      exact absurd hb.2 hb'
+    · intro hd
+      simp only [finTwoArrowEquiv'_symm_apply, Finset.mem_filter, Finsupp.mem_support_iff, ne_eq,
+        and_true, not_not] at hd
+      simp [hd]
 
 variable (n f)
 
