@@ -1,6 +1,4 @@
 --import DividedPowers.Basic -- In PR #15657
---import DividedPowers.PolynomialLaw.Basic -- In PR #22912
-import DividedPowers.PolynomialLaw.Basic2 -- the rest
 import DividedPowers.ForMathlib.RingTheory.Congruence.Hom
 import DividedPowers.BasicLemmas
 import DividedPowers.DPAlgebra.BaseChange -- It uses sorry
@@ -21,6 +19,7 @@ import DividedPowers.Exponential
 --import DividedPowers.ForMathlib.AlgebraLemmas -- In PR #22237, #22239 and #22240.
 import DividedPowers.ForMathlib.Algebra.Algebra.Bilinear
 import DividedPowers.ForMathlib.Algebra.BigOperators.Finsupp.Basic
+import DividedPowers.ForMathlib.Algebra.BigOperators.Finsupp.Fin
 import DividedPowers.ForMathlib.Algebra.BigOperators.Group.Finset.Basic
 --import DividedPowers.ForMathlib.Algebra.MvPolynomial.Equiv -- In PR #15019
 import DividedPowers.ForMathlib.Algebra.MvPolynomial.Lemmas
@@ -60,12 +59,16 @@ import DividedPowers.ForMathlib.Topology.Algebra.LinearTopology
 import DividedPowers.IdealAdd
 import DividedPowers.IdealAdd_v1 -- For comparison of definitions
 import DividedPowers.Padic
---import DividedPowers.PolynomialLaw.Basic
+--import DividedPowers.PolynomialLaw.Basic -- In PR #22912
+import DividedPowers.PolynomialLaw.Basic2 -- the rest
 import DividedPowers.PolynomialLaw.BiCoeff
 import DividedPowers.PolynomialLaw.BiHomogeneous
 import DividedPowers.PolynomialLaw.Coeff
+import DividedPowers.PolynomialLaw.Differential
 import DividedPowers.PolynomialLaw.Homogeneous
 import DividedPowers.PolynomialLaw.MultiCoeff
 import DividedPowers.PolynomialLaw.MultiHomogeneous -- It has a sorry
+import DividedPowers.PolynomialLaw.Polarized
+import DividedPowers.PolynomialLaw.Prod
 import DividedPowers.RatAlgebra -- In PR #22322
 import DividedPowers.SubDPIdeal

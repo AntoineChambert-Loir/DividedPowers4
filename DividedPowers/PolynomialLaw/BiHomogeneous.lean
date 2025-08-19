@@ -1,7 +1,8 @@
 /- Copyright ACL & MIdFF 2024 -/
-import DividedPowers.PolynomialLaw.BiCoeff
-import DividedPowers.PolynomialLaw.MultiHomogeneous
+import DividedPowers.ForMathlib.Algebra.MvPolynomial.Lemmas
 import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Prod
+import DividedPowers.PolynomialLaw.BiCoeff
+import DividedPowers.PolynomialLaw.Homogeneous
 
 universe u uι
 
@@ -378,7 +379,7 @@ theorem biComponent_toFun_apply (S : Type*) [CommSemiring S] [Algebra R S] (m : 
   rw [← PolynomialLaw.isCompat_apply, toFun_eq_toFun'_apply, biComponent.toFun'_apply]
   exact rTensor_biCoeff_S_eq ψ
 
-lemma biComponentIsMultiHomogeneous [Nontrivial R] : IsBiHomogeneousOfDegree n (f.biComponent n) :=
+lemma biComponentIsBiHomogeneous [Nontrivial R] : IsBiHomogeneousOfDegree n (f.biComponent n) :=
   fun _ _ _ s _ ↦ biCoeff_S_apply_smul s
 
 theorem biComponent_add {g : (M × M') →ₚₗ[R] N} :

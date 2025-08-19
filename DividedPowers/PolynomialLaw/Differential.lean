@@ -1,5 +1,4 @@
-import DividedPowers.PolynomialLaw.BiHomogeneous
-import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Prod
+import DividedPowers.PolynomialLaw.Polarized
 
 noncomputable section
 
@@ -7,218 +6,10 @@ open MvPolynomial TensorProduct
 
 universe u
 
-variable (R : Type u) [CommSemiring R] (M M' : Type*) [AddCommGroup M] [Module R M]
-  [AddCommGroup M'] [Module R M'] {N : Type*} [AddCommGroup N] [Module R N]
-  (f : M →ₚₗ[R] N) (n p : ℕ)
+variable {R : Type u} [CommSemiring R] {M M' N : Type*} [AddCommGroup M] [Module R M]
+  [AddCommGroup M'] [Module R M'] [AddCommGroup N] [Module R N] (f : M →ₚₗ[R] N) (n p : ℕ)
 
 namespace PolynomialLaw
-
-section Polarized
-
-/-- `fst R M M'` is the polynomial law `M × M' →ₚₗ[R] M` obtained by prolonging the
-`i`th canonical projection. -/
-def fst : M × M' →ₚₗ[R] M where
-  toFun' S _ _ := (TensorProduct.map (LinearMap.id (M := S)) (LinearMap.fst R M M'))
-  isCompat' φ := by
-    ext x
-    simp only [Function.comp_apply, LinearMap.rTensor_def, ← LinearMap.comp_apply,
-      ← TensorProduct.map_comp, LinearMap.comp_id, LinearMap.id_comp]
-
-lemma fst_apply (m : M × M') : fst R M M' m = m.1 := by simp [fst, ground_apply]
-
-lemma fst_toFun'_apply {S : Type u} [CommSemiring S] [Algebra R S]
-    {m : TensorProduct R S (M × M')} : (fst R M M').toFun' S m =
-    ((TensorProduct.prodRight R R S M  M') m).fst := by
-  simp only [fst, TensorProduct.prodRight]
-  induction m using TensorProduct.induction_on with
-  | zero => simp
-  | tmul => simp
-  | add m m' hm hm' => simp [hm, hm']
-
-lemma fst_toFun_apply {S : Type*} [CommSemiring S] [Algebra R S]
-    {m : TensorProduct R S (M × M')} : (fst R M M').toFun S m =
-    ((TensorProduct.prodRight R R S M  M') m).fst := by
-  obtain ⟨k, ψ, p, rfl⟩ := PolynomialLaw.exists_lift m
-  rw [← (fst R M M').isCompat_apply, PolynomialLaw.toFun_eq_toFun']
-  simp only [fst_toFun'_apply, prodRight_rTensor_fst_eq_rTensor_prodRight]
-
-/-- `fst R M M'` is the polynomial law `M × M' →ₚₗ[R] M` obtained by prolonging the
-`i`th canonical projection. -/
-def snd : M × M' →ₚₗ[R] M' where
-  toFun' S _ _ := (TensorProduct.map (LinearMap.id (M := S)) (LinearMap.snd R M M'))
-  isCompat' φ := by
-    ext x
-    simp only [Function.comp_apply, LinearMap.rTensor_def, ← LinearMap.comp_apply,
-      ← TensorProduct.map_comp, LinearMap.comp_id, LinearMap.id_comp]
-
-lemma snd_apply (m : M × M') : snd R M M' m = m.2 := by simp [snd, ground_apply]
-
-lemma snd_toFun'_apply {S : Type u} [CommSemiring S] [Algebra R S]
-    {m : TensorProduct R S (M × M')} : (snd R M M').toFun' S m =
-    ((TensorProduct.prodRight R R S M  M') m).snd := by
-  simp only [snd, TensorProduct.prodRight]
-  induction m using TensorProduct.induction_on with
-  | zero => simp
-  | tmul => simp
-  | add m m' hm hm' => simp [hm, hm']
-
-lemma snd_toFun_apply {S : Type*} [CommSemiring S] [Algebra R S]
-    {m : TensorProduct R S (M × M')} : (snd R M M').toFun S m =
-    ((TensorProduct.prodRight R R S M  M') m).snd := by
-  obtain ⟨k, ψ, p, rfl⟩ := PolynomialLaw.exists_lift m
-  rw [← (snd R M M').isCompat_apply, PolynomialLaw.toFun_eq_toFun']
-  simp only [snd_toFun'_apply, prodRight_rTensor_snd_eq_rTensor_prodRight]
-
-/-- `sum_proj R M ι` is the polynomial law `(Π (_ : ι), M) →ₚₗ[R] M` defined as the sum of all the
-coordinate laws from  `(Π (_ : ι), M)`to `M`. -/
-def sum_fst_snd : M × M →ₚₗ[R] M := fst R M M + snd R M M
-
-lemma sum_fst_snd_toFun'_apply {S : Type u} [CommSemiring S] [Algebra R S]
-    {m : TensorProduct R S (M × M)} : (sum_fst_snd R M).toFun' S m =
-    ((TensorProduct.prodRight R R S M M) m).fst +
-      ((TensorProduct.prodRight R R S M M) m).snd := by
-  rw [sum_fst_snd, TensorProduct.prodRight]
-  simp only [add_def, Pi.add_apply, fst_toFun'_apply, snd_toFun'_apply, LinearEquiv.ofLinear_apply,
-    TensorProduct.AlgebraTensorModule.lift_apply, LinearMap.restrictScalars_comp]
-  congr 1
-
-def inl : M →ₚₗ[R] M × M' where
-  toFun' S _ _ := (TensorProduct.map (LinearMap.id (M := S)) (LinearMap.inl R M M'))
-  isCompat' φ := by
-    ext x
-    simp only [Function.comp_apply, LinearMap.rTensor_def, ← LinearMap.comp_apply,
-      ← TensorProduct.map_comp, LinearMap.comp_id, LinearMap.id_comp]
-
-lemma inl_apply (m : M) : inl R M M' m = (m, 0) := by simp [inl, ground_apply]
-
-lemma inl_toFun'_apply {S : Type u} [CommSemiring S] [Algebra R S] {m : TensorProduct R S M} :
-    (inl R M M').toFun' S m = ((TensorProduct.inlRight R R S M M') m) := by
-  simp only [inl, TensorProduct.inlRight]
-  induction m using TensorProduct.induction_on with
-  | zero => simp
-  | tmul s m =>
-    have h0 : (0 : S ⊗[R] M') = s ⊗ₜ 0 := by simp
-    simp only [TensorProduct.map_tmul, LinearMap.id_coe, id_eq, LinearMap.coe_inl,
-      LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply, h0,
-      TensorProduct.prodRight_symm_tmul]
-  | add m m' hm hm' =>
-    simp [map_add, hm, LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply, hm']
-
-lemma inl_toFun_apply {S : Type*} [CommSemiring S] [Algebra R S] {m : TensorProduct R S M} :
-    (inl R M M').toFun S m = ((TensorProduct.inlRight R R S M M') m) := by sorry
-
-def inr : M' →ₚₗ[R] M × M' where
-  toFun' S _ _ := (TensorProduct.map (LinearMap.id (M := S)) (LinearMap.inr R M M'))
-  isCompat' φ := by
-    ext x
-    simp only [Function.comp_apply, LinearMap.rTensor_def, ← LinearMap.comp_apply,
-      ← TensorProduct.map_comp, LinearMap.comp_id, LinearMap.id_comp]
-
-lemma inr_apply (m : M') : inr R M M' m = (0, m) := by simp [inr, ground_apply]
-
-lemma inr_toFun'_apply {S : Type u} [CommSemiring S] [Algebra R S] {m : TensorProduct R S M'} :
-    (inr R M M').toFun' S m = ((TensorProduct.inrRight R R S M M') m) := by
-  simp only [inr, TensorProduct.inrRight]
-  induction m using TensorProduct.induction_on with
-  | zero => simp
-  | tmul s m =>
-    have h0 : (0 : S ⊗[R] M) = s ⊗ₜ 0 := by simp
-    simp only [TensorProduct.map_tmul, LinearMap.id_coe, id_eq, LinearMap.coe_inr,
-      LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply, h0,
-      TensorProduct.prodRight_symm_tmul]
-  | add m m' hm hm' =>
-    simp [map_add, hm, LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply, hm']
-
-lemma inr_toFun_apply {S : Type*} [CommSemiring S] [Algebra R S] {m : TensorProduct R S M'} :
-    (inr R M M').toFun S m = ((TensorProduct.inrRight R R S M M') m) := by sorry
-
-variable {R M}
-
-/-- Given a polynomial law `f : M →ₚₗ[R] N` and a finite type `ι`, the `ι`-polarized of `f`
-is the polynomial law `(Π (_ : ι), M) →ₚₗ[R] N` obtained by composing `f` and `sum_proj R M ι`.
-This is denoted by `Π_p` in Roby63 (where `p` corresponds to the size of `ι`). -/
-def polarizedProd : (M →ₚₗ[R] N) →ₗ[R] (M × M →ₚₗ[R] N) where
-  toFun f := f.comp (sum_fst_snd R M)
-  map_add' f g := by
-    ext S _ _ sm
-    simp [comp_toFun']
-  map_smul' r f := by
-    ext S _ _ sm
-    simp [comp_toFun']
-
-lemma polarizedProd_apply (m : M × M) : f.polarizedProd m = f (m.fst + m.snd):= by
-  simp only [polarizedProd, sum_fst_snd, fst, snd, LinearMap.coe_mk, AddHom.coe_mk, ground_apply,
-    comp_toFun', add_def, Function.comp_apply, Pi.add_apply, map_tmul, LinearMap.id_coe, id_eq,
-    LinearMap.fst_apply, LinearMap.snd_apply, EmbeddingLike.apply_eq_iff_eq]
-  congr 1
-  rw [TensorProduct.tmul_add]
-
--- Not needed?
-lemma map_add_eq_polarizedprod_two_apply (m m' : M) :
-    f (m + m') = (f.polarizedProd) (m, m') := by
-  simp only [polarizedProd_apply]
-
-lemma polarizedProd_toFun'_apply {S : Type u} [CommSemiring S] [Algebra R S]
-    {m : TensorProduct R S (M × M)} : (polarizedProd f).toFun' S m =
-      f.toFun' S (((TensorProduct.prodRight R R S M M) m).fst +
-        ((TensorProduct.prodRight R R S M  M) m).snd) := by
-  simp [polarizedProd, comp_toFun', sum_fst_snd_toFun'_apply]
-
-variable {f p}
-
---TODO: move
-variable (R M) in
-lemma _root_.TensorProduct.prodRight_smul {S : Type*} [CommSemiring S]
-    [Algebra R S] (s : S) (m : TensorProduct R S (M × M'))  :
-    ((TensorProduct.prodRight R R S M M') (s • m)) =
-      (s • (TensorProduct.prodRight R R S M M') m) := by
-  induction m using TensorProduct.induction_on with
-  | zero => simp
-  | tmul s' m => simp only [TensorProduct.prodRight_tmul]; rfl
-  | add m m' hm hm' => simp only [smul_add, map_add, hm, hm']
-
-lemma isHomogeneousOfDegree_polarizedProd (hf : IsHomogeneousOfDegree p f) :
-    IsHomogeneousOfDegree p (polarizedProd f) := fun S _ _ s m ↦ by
-  simp [polarizedProd_toFun'_apply,
-    ← hf S s ((((TensorProduct.prodRight R R S M M) m).fst +
-      ((TensorProduct.prodRight R R S M  M) m).snd)), smul_add, TensorProduct.prodRight_smul]
-
--- Roby63, example in pg 234
-lemma coeff_polarizedProd_eq_zero_of_ne {n : ℕ} (m : (Fin n) → M × M) (d : (Fin n) →₀ ℕ)
-    (hd : d.sum (fun _ n => n) ≠ p) (hf : IsHomogeneousOfDegree p f) :
-    coeff m (polarizedProd f) d = 0 := by
-  revert n
-  rw [← isHomogeneousOfDegree_of_coeff_iff]
-  exact isHomogeneousOfDegree_polarizedProd hf
-
-end Polarized
-
-variable {R M}
-
--- I am not sure whether it is useful to add this.
-/-- The bihomogeneous component of bidegree `n : ℕ × ℕ` of `f.polarized n`.
-  This is denoted by `Π^{n_1, ..., n_p}f` in Roby63. -/
-abbrev polarizedProd_biComponent (n : ℕ × ℕ) (f : PolynomialLaw R M N) :
-    PolynomialLaw R (M × M) N := PolynomialLaw.biComponent n f.polarizedProd
-
-theorem locFinsupp_polarizedProd_biComponent (f : PolynomialLaw R M N) :
-    LocFinsupp (fun (p : ℕ) ↦ polarizedProd_biComponent (p, n) f) := fun S _ _ m ↦ by
-  have hss : (fun p ↦ (p, n)) ''
-      (Function.support fun i ↦ (biComponent (i, n) (polarizedProd f)).toFun' S m) ⊆
-        (Function.support fun d ↦ (biComponent d (polarizedProd f)).toFun' S m) := fun _ hd ↦ by
-    obtain ⟨x, hx, rfl⟩ := hd
-    simpa [biComponent_apply_toFun', finTwoArrowEquiv', Fin.isValue,
-      Equiv.coe_fn_symm_mk, Equiv.coe_fn_mk]
-
-  exact ((LocFinsupp_biComponent f.polarizedProd _ _ ).subset hss).of_finite_image
-    (fun _ _ _ _ h ↦ by simpa using h)
-
--- TODO: rename, avoid (?)
-lemma hf (r : R) : LocFinsupp fun p ↦ (r • polarizedProd f).biComponent (p, n) := by
-  have hf' : LocFinsupp (r • (fun p ↦ (polarizedProd f).biComponent (p, n))) := by
-    exact locFinsupp_smul r (locFinsupp_polarizedProd_biComponent n f)
-  convert hf'
-  simp
 
 -- TODO: golf
 def differential : (M →ₚₗ[R] N) →ₗ[R] ((M × M) →ₚₗ[R] N) where
@@ -243,7 +34,7 @@ def differential : (M →ₚₗ[R] N) →ₗ[R] ((M × M) →ₚₗ[R] N) where
     simp only [polarizedProd_biComponent]
     simp only [← toFun_eq_toFun']
     set t : LocFinsupp fun p ↦ (polarizedProd (r • f)).biComponent (p, n) := by
-      exact hf f n r
+      exact hf n r
     set t' := (locFinsupp_polarizedProd_biComponent n f)
     rw [← lfsumHom_apply t, ← lfsumHom_apply t']
     simp only [toFun_eq_toFun', polarizedProd_biComponent]
@@ -762,7 +553,7 @@ lemma partialDerivative_isHomogeneousOfDegree_of_le [Nontrivial R]
     simp only [Finsupp.mem_support_iff, ne_eq] at hk
     have hk' : k = (p -n, n) := by
       by_contra h
-      exact hk (isBiHomogeneousOfDegree_biCoeff (biComponentIsMultiHomogeneous _ _ ) (m, x) h)
+      exact hk (isBiHomogeneousOfDegree_biCoeff (biComponentIsBiHomogeneous _ _ ) (m, x) h)
     simp only [(Prod.ext_iff.mp hk').1, mul_pow, smul_tmul', smul_eq_mul]
 
 -- Roby63, pg 240

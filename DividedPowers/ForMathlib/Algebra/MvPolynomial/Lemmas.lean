@@ -167,4 +167,37 @@ theorem rTensor'_sum [DecidableEq ι] {S N : Type*} [CommSemiring S] [Algebra A 
 
 end sum
 
+theorem prod_X_pow_eq_monomial' {R σ : Type*} [Fintype σ]
+    {s : σ →₀ ℕ} [CommSemiring R] : ∏ x, X (R := R) x ^ s x = (monomial s) 1 := by
+  rw [← prod_X_pow_eq_monomial]
+  apply Finset.prod_congr_of_eq_on_inter _ (fun _ _ ha ↦ absurd (Finset.mem_univ _) ha)
+    (fun _ _ _ ↦ rfl )
+  intro _ _ ha
+  rw [Finsupp.mem_support_iff, not_not] at ha
+  rw [ha, pow_zero]
+
+/- theorem not_nontrivial_of_not_nontrivial {ι R : Type*} [CommSemiring R]
+    (hR : ¬ Nontrivial R) :
+    ¬ Nontrivial (MvPolynomial ι R) := by
+  simp only [nontrivial_iff, ne_eq, not_exists, not_not] at *
+  intro p q
+  ext d
+  apply hR -/
+
+/- theorem support_eq_empty_of_trivial {ι : Type u_1}
+  {R : Type u} [inst_2 : CommSemiring R]
+  (hR : ∀ (x x_1 : R), x = x_1) (i : ι) :
+  (X (R := R) i).support = ∅ := by
+  classical rw [X, support_monomial, if_pos (hR 1 0)] -/
+
+theorem nontrivial_iff_nontrivial (ι R : Type*) [CommSemiring R] :
+    Nontrivial R ↔ Nontrivial (MvPolynomial ι R) := by
+  refine ⟨fun h ↦ nontrivial_of_nontrivial ι R, ?_⟩
+  contrapose
+  intro hR
+  simp only [nontrivial_iff, ne_eq, not_exists, not_not] at *
+  intro p q
+  ext d
+  apply hR
+
 end MvPolynomial

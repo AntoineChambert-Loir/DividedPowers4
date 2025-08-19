@@ -210,11 +210,6 @@ lemma compFstRight_inlRight_eq (nm : N ⊗[R] M₁):
     (compFstRight R S N M₁ M₂) (inlRight R S N M₁ M₂ nm) = (inlRight R S N M₁ M₂ nm) := by
   simp [compFstRight, inlRight, fstRight]
 
-lemma compFstRight_inlRight_eq' (nm : N ⊗[R] M₁):
-    (compFstRight R S N M₁ M₂) (inlRight R R N M₁ M₂ nm) = (inlRight R S N M₁ M₂ nm) := by
-  simp [compFstRight, inlRight, fstRight]
-  sorry
-
 lemma compSndRight_inrRight_eq (nm : N ⊗[R] M₂):
     (compSndRight R S N M₁ M₂) (inrRight R S N M₁ M₂ nm) = (inrRight R S N M₁ M₂ nm) := by
   simp [compSndRight, inrRight, sndRight]
@@ -226,11 +221,6 @@ lemma compFstRight_inrRight_eq (nm : N ⊗[R] M₂):
 lemma compSndRight_inlRight_eq (nm : N ⊗[R] M₁):
     (compSndRight R S N M₁ M₂) (inlRight R S N M₁ M₂ nm) = 0 := by
   simp [compSndRight, inlRight, sndRight]
-
-lemma compSndRight_inlRight_eq' (nm : N ⊗[R] M₁):
-    (compSndRight R S N M₁ M₂) (inlRight R R N M₁ M₂ nm) = 0 := by
-  simp [compSndRight, inlRight, sndRight]
-  sorry
 
 lemma fstRight_compFstRight_eq (nm : N ⊗[R] (M₁ × M₂)) :
     fstRight R S N M₁ M₂ (compFstRight R S N M₁ M₂ nm) = fstRight R S N M₁ M₂ nm := by
@@ -267,5 +257,37 @@ lemma sndRight_compFstRight_prodRight_tmul (n : N × N) (m : M₁ × M₂) :
     sndRight R S N M₁ M₂ (compFstRight R S N M₁ M₂ ((prodRight R S N M₁ M₂).symm
       (n.1 ⊗ₜ m.1, n.2 ⊗ₜ m.2))) = 0 := by
   simp [compFstRight, sndRight, inlRight]
+
+theorem rTensor_inlRight_eq_inlRight_rTensor (ψ : T →ₐ[R] S) (p : T ⊗[R] M₁) :
+    (LinearMap.rTensor (M₁ × M₂) ψ.toLinearMap) ((inlRight R R T M₁ M₂) p) =
+    (inlRight R R S M₁ M₂) ((LinearMap.rTensor M₁ ψ.toLinearMap) p) := by
+  simp only [inlRight, LinearMap.coe_comp, LinearEquiv.coe_coe, LinearMap.coe_inl,
+    Function.comp_apply]
+  induction p using TensorProduct.induction_on with
+  | zero => simp
+  | add p q hp hq =>
+    rw [← Prod.mk_zero_add_mk_zero]
+    simp only [map_add, hp, hq]
+    simp only [← map_add, Prod.mk_add_mk, add_zero]
+  | tmul p m =>
+    simp only [LinearMap.rTensor_tmul, AlgHom.toLinearMap_apply]
+    rw [← tmul_zero _ (ψ p), ← tmul_zero _ p]
+    simp only [prodRight_symm_tmul, LinearMap.rTensor_tmul, AlgHom.toLinearMap_apply]
+
+theorem rTensor_inrRight_eq_inrRight_rTensor (ψ : T →ₐ[R] S) (p : T ⊗[R] M₂) :
+    (LinearMap.rTensor (M₁ × M₂) ψ.toLinearMap) ((inrRight R R T M₁ M₂) p) =
+      (inrRight R R S M₁ M₂) ((LinearMap.rTensor M₂ ψ.toLinearMap) p) := by
+  simp only [inrRight, LinearMap.coe_comp, LinearEquiv.coe_coe, LinearMap.coe_inr,
+    Function.comp_apply]
+  induction p using TensorProduct.induction_on with
+  | zero => simp
+  | add p q hp hq =>
+    rw [← Prod.zero_mk_add_zero_mk]
+    simp only [map_add, hp, hq]
+    simp only [← map_add, Prod.mk_add_mk, add_zero]
+  | tmul p m =>
+    simp only [LinearMap.rTensor_tmul, AlgHom.toLinearMap_apply]
+    rw [← tmul_zero _ (ψ p), ← tmul_zero _ p]
+    simp only [prodRight_symm_tmul, LinearMap.rTensor_tmul, AlgHom.toLinearMap_apply]
 
 end TensorProduct

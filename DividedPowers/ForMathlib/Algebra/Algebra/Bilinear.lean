@@ -105,3 +105,20 @@ theorem span_tensorProduct_eq_top_of_span_eq_top {R σ M S : Type*} [CommSemirin
   | add x y hx hy => exact Submodule.add_mem _ (hx mem_top) (hy mem_top)
 
 end Submodule
+
+theorem Algebra.not_nontrivial_of_not_nontrivial (R S : Type*) [CommSemiring R] [CommSemiring S]
+    [Algebra R S] (hR : ¬ Nontrivial R) : ¬ Nontrivial S := by
+  simp only [nontrivial_iff, ne_eq, not_exists, not_not] at *
+  have hs (s : S) : s = 0 := by
+    rw [← mul_one s, ← map_one (algebraMap R S), hR 1 0, map_zero, mul_zero]
+  intro s t
+  rw [hs s, hs t]
+
+theorem  TensorProduct.not_nontrivial_of_not_nontrivial (R S M : Type*) [CommSemiring R]
+    [AddCommMonoid M] [Module R M] [CommSemiring S] [Algebra R S] (hS : ¬ Nontrivial S) :
+    ¬ Nontrivial (S ⊗[R] M) := by
+  simp only [nontrivial_iff, ne_eq, not_exists, not_not] at *
+  have h (sm : S ⊗[R] M) : sm = 0 := by
+    rw [← _root_.one_smul S sm, hS 1 0, _root_.zero_smul]
+  intro sm sm'
+  rw [h sm, h sm']
