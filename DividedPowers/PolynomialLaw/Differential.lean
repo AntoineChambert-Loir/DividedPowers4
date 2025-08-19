@@ -213,9 +213,6 @@ theorem locFinsupp_polarizedProd_biComponent (f : PolynomialLaw R M N) :
   exact ((LocFinsupp_biComponent f.polarizedProd _ _ ).subset hss).of_finite_image
     (fun _ _ _ _ h ↦ by simpa using h)
 
-/- def differential : (M × M) →ₚₗ[R] N :=
-  PolynomialLaw.lfsum (fun (p : ℕ) ↦ polarizedProd_biComponent (p, n) f)
- -/
 -- TODO: rename, avoid (?)
 lemma hf (r : R) : LocFinsupp fun p ↦ (r • polarizedProd f).biComponent (p, n) := by
   have hf' : LocFinsupp (r • (fun p ↦ (polarizedProd f).biComponent (p, n))) := by
@@ -385,7 +382,7 @@ lemma differential_map_add_snd'' (m m₁ m₂ : M) :
   sorry
 
 -- Roby63, pg 239
-lemma differential_map_add_snd' (m m₁ m₂ : M) :
+lemma differential_map_add_snd (m m₁ m₂ : M) :
     f.differential 1 (m, m₁ + m₂) = f.differential 1 (m, m₁) + f.differential 1 (m, m₂) := by
   classical
   simp only [differential_eq_coeff]
@@ -403,26 +400,40 @@ lemma differential_map_add_snd' (m m₁ m₂ : M) :
   sorry
 
 -- Roby63, pg 239 (?)
-lemma differential_map_add_snd {S : Type*} [CommSemiring S] [Algebra R S] (m m₁ m₂ : S ⊗[R] M) :
-    (f.differential 1).toFun S ((inl R M M ).toFun S m + (inr R M M ).toFun S (m₁ + m₂)) =
-      (f.differential 1).toFun S ((inl R M M ).toFun S m + (inr R M M ).toFun S m₁) +
-      (f.differential 1).toFun S ((inl R M M ).toFun S m + (inr R M M ).toFun S m₂) := by
-  classical
-  sorry
-
--- Roby63, pg 239
-lemma differential_map_smul_snd' (r : R) (m m' : M) :
-    f.differential 1 (m, r • m') = r • f.differential 1 (m, m') := by
-  classical
+lemma differential_map_add_snd_toFun' {S : Type u} [CommSemiring S] [Algebra R S]
+    (m m₁ m₂ : S ⊗[R] M) :
+    (f.differential 1).toFun' S ((inl R M M ).toFun' S m + (inr R M M ).toFun' S (m₁ + m₂)) =
+      (f.differential 1).toFun' S ((inl R M M ).toFun' S m + (inr R M M ).toFun' S m₁) +
+      (f.differential 1).toFun' S ((inl R M M ).toFun' S m + (inr R M M ).toFun' S m₂) := by
   sorry
 
 -- Roby63, pg 239 (?)
-lemma differential_map_smul_snd {S : Type*} [CommSemiring S] [Algebra R S] (s : S)
+lemma differential_map_add_snd_toFun {S : Type*} [CommSemiring S] [Algebra R S]
+    (m m₁ m₂ : S ⊗[R] M) :
+    (f.differential 1).toFun S ((inl R M M ).toFun S m + (inr R M M ).toFun S (m₁ + m₂)) =
+      (f.differential 1).toFun S ((inl R M M ).toFun S m + (inr R M M ).toFun S m₁) +
+      (f.differential 1).toFun S ((inl R M M ).toFun S m + (inr R M M ).toFun S m₂) := by
+  sorry
+
+-- Roby63, pg 239
+lemma differential_map_smul_snd (r : R) (m m' : M) :
+    f.differential 1 (m, r • m') = r • f.differential 1 (m, m') := by
+  sorry
+
+-- Roby63, pg 239 (?)
+lemma differential_map_smul_snd_toFun' {S : Type u} [CommSemiring S] [Algebra R S] (r : R)
     (m m' : S ⊗[R] M) :
-    (f.differential 1).toFun S ((inl R M M ).toFun S m + (inr R M M ).toFun S (s • m')) =
-      s • (f.differential 1).toFun S
+    (f.differential 1).toFun' S ((inl R M M ).toFun' S m + (inr R M M ).toFun' S (r • m')) =
+      r • (f.differential 1).toFun' S
+        ((inl R M M ).toFun' S m + (inr R M M ).toFun' S m') := by
+  sorry
+
+-- Roby63, pg 239 (?)
+lemma differential_map_smul_snd_toFun {S : Type*} [CommSemiring S] [Algebra R S] (r : R)
+    (m m' : S ⊗[R] M) :
+    (f.differential 1).toFun S ((inl R M M ).toFun S m + (inr R M M ).toFun S (r • m')) =
+      r • (f.differential 1).toFun S
         ((inl R M M ).toFun S m + (inr R M M ).toFun S m') := by
-  classical
   sorry
 
   variable {f n p}
@@ -430,6 +441,12 @@ lemma differential_map_smul_snd {S : Type*} [CommSemiring S] [Algebra R S] (s : 
 -- Roby63, pg 239
 lemma differential_eq_biComponent_of_le (hf : IsHomogeneousOfDegree p f) (hnp : n ≤ p) :
     (f.differential n) = (polarizedProd f).biComponent (p - n, n) := by
+  classical
+  sorry
+
+-- Roby63, pg 239
+lemma differential_eq_zero_of_gt (hf : IsHomogeneousOfDegree p f) (hnp : p < n) :
+    (f.differential n) = 0 := by
   classical
   sorry
 
@@ -628,6 +645,8 @@ lemma map_add_eq_sum_differential_apply (m m' : M) :
   simp only [Fin.isValue, Finsupp.ofSupportFinite_coe]
   exact bar' f m m'
 
+section const
+
 -- TODO: move
 variable (R M N) in
 /-- The constant polynomial law.-/
@@ -635,8 +654,16 @@ def const (n : N) : M →ₚₗ[R] N where
   toFun' S _ _ sm := 1 ⊗ₜ n
   isCompat' φ := by ext; simp
 
-lemma const_toFun {S : Type*} [CommSemiring S] [Algebra R S] (m : M) (sm : S ⊗[R] M) :
-    (const R M M m).toFun S sm = (1 : S) ⊗ₜ[R] m := sorry
+lemma const_toFun' {S : Type u} [CommSemiring S] [Algebra R S] (n : N) (sm : S ⊗[R] M) :
+    (const R M N n).toFun' S sm = (1 : S) ⊗ₜ[R] n := sorry
+
+lemma const_toFun {S : Type*} [CommSemiring S] [Algebra R S] (n : N) (sm : S ⊗[R] M) :
+    (const R M N n).toFun S sm = (1 : S) ⊗ₜ[R] n := sorry
+
+lemma const_isHomogeneousOfDegree_zero (n : N) :
+    IsHomogeneousOfDegree 0 (const R M N n) := sorry
+
+end const
 
 -- Section II.5
 
@@ -687,7 +714,7 @@ lemma partialDerivative_eq_coeff {S : Type*} [CommSemiring S] [Algebra R S] (x :
 
 -- Roby63, pg 240
 -- **MI**: something is off here.
-lemma differential_isHomogeneousOfDegree_of_le [Nontrivial R]
+lemma partialDerivative_isHomogeneousOfDegree_of_le [Nontrivial R]
     (hf : IsHomogeneousOfDegree p f) (hnp : n ≤ p) (x : M) :
     (partialDerivative n x f).IsHomogeneousOfDegree (p - n) := by
   intro S _ _ s m
@@ -758,24 +785,163 @@ lemma differential_isHomogeneousOfDegree_of_le [Nontrivial R]
       exact hk (isBiHomogeneousOfDegree_biCoeff (biComponentIsMultiHomogeneous _ _ ) (m, x) h)
     simp only [(Prod.ext_iff.mp hk').1, mul_pow, smul_tmul', smul_eq_mul]
 
-
-lemma differential_eq_zero_of_gt (hf : IsHomogeneousOfDegree p f) (hnp : p < n) (x : M) :
+-- Roby63, pg 240
+lemma partialDerivative_eq_zero_of_gt (hf : IsHomogeneousOfDegree p f) (hnp : p < n) (x : M) :
     partialDerivative n x f = 0 := by
+  ext S _ _ sm
+  simp only [partialDerivative, LinearMap.coe_mk, AddHom.coe_mk]
+  rw [differential_eq_zero_of_gt hf hnp]
+  simp [comp_toFun']
+
+-- Roby63, pg 240 (Prop. II.2)
+lemma taylor_sum (m x : M) : f (m + x) = lfsum (fun (n : ℕ) ↦ partialDerivative n x f) m := by
+  rw [map_add_eq_sum_differential_apply]
+  simp only [ground_apply, partialDerivative, LinearMap.coe_mk, AddHom.coe_mk,
+    EmbeddingLike.apply_eq_iff_eq]
+  rw [lfsum_eq_of_locFinsupp (locFinsupp_differential f), lfsum_eq_of_locFinsupp
+    (fun S _ _ sm ↦ locFinsupp_differential f S ((prodRight R S S M M).symm (sm, (1 : S) ⊗ₜ x)))]
+  simp only [Finsupp.sum, Finsupp.ofSupportFinite_coe]
+  apply Finset.sum_congr
+  · ext n
+    simp only [Finsupp.mem_support_iff, Finsupp.ofSupportFinite_coe, ne_eq]
+    simp [← toFun_eq_toFun', comp_toFun, Function.comp_apply, add_toFun, const_toFun,
+      inl_toFun_apply, inr_toFun_apply, inlRight_tmul, inrRight_tmul, ← tmul_add]
+  · intro n hn
+    simp [← toFun_eq_toFun', comp_toFun, Function.comp_apply, add_toFun, const_toFun,
+      inl_toFun_apply, inr_toFun_apply, inlRight_tmul, inrRight_tmul, ← tmul_add]
+
+-- Roby63, pg 240 (Prop. II.2)
+lemma partialDerivative_comp  (x : M) :
+    partialDerivative n x (partialDerivative p x f) =
+      (n.choose p) * partialDerivative (n + p) x f := by
   sorry
+
+-- Section II.6
+
+-- Roby63, pg 240 (Prop. II.3)
+lemma differential_toFun_eq_lfsum {S : Type*} [CommSemiring S] [Algebra R S] (sm sm' : S ⊗[R] M)
+    {k : ℕ} {s : Fin k → S} {x : Fin k → M} (hsm' : sm' = ∑ i, (s i) ⊗ₜ (x i)) :
+    (differential 1 f).toFun S ((prodRight R S S M M).symm (sm, sm')) =
+      ∑ i, (s i) • (partialDerivative 1 (x i) f).toFun S sm := by
+  sorry
+
+-- Section II.7
+
+-- Roby63, pg 241 (Prop. II.4 for n = 2)
+-- Generalized as in remark after Prop. II.5
+lemma partialDerivative_comp_eq_coeff {S : Type*} [CommSemiring S] [Algebra R S] (k₁ k₂ : ℕ)
+    (x₁ x₂ : M) (sm : S ⊗[R] M) :
+    (partialDerivative k₁ x₁ (partialDerivative k₂ x₂ f)).toFun S sm =
+      MvPolynomial.rTensor (f.toFun (MvPolynomial (Fin 2) S)
+        ((LinearEquiv.rTensor M scalarRTensorAlgEquiv.toLinearEquiv)
+          ((TensorProduct.assoc R (MvPolynomial (Fin 2) R) S M).symm
+            ((1 ⊗ₜ[R] sm) + (X (R := R) (0 : Fin 2) ⊗ₜ[R] ((1 : S) ⊗ₜ x₁)) +
+              X (1 : Fin 2) ⊗ₜ[R] ((1 : S) ⊗ₜ[R] x₂))))) ((finTwoArrowEquiv' ℕ).symm (k₁, k₂)) := by
+  sorry
+
+-- Roby63, pg 241 (Prop. II.4) **MI**: TODO (not sure how to state this. Perhaps using an inductive
+-- definition for the LHS?)
+/- lemma partialDerivative_multiComp_eq_coeff {S : Type*} [CommSemiring S] [Algebra R S]
+    {k : ℕ}  {x : Fin k → M} (sm : S ⊗[R] M) :
+    0 = 0 := by
+  sorry -/
+
+-- Roby63, pg 241 (Prop. II.5)
+-- Generalized as in remark after Prop. II.5
+lemma partialDerivative_comm {S : Type*} [CommSemiring S] [Algebra R S] (k₁ k₂ : ℕ)
+    (x₁ x₂ : M) (sm : S ⊗[R] M) :
+    (partialDerivative k₁ x₁ (partialDerivative k₂ x₂ f)).toFun S sm =
+      (partialDerivative k₂ x₂ (partialDerivative k₁ x₁ f)).toFun S sm := sorry
+
+-- Roby63, pg 242 (Partial derivative of constant polynomial law).
+lemma partialDerivative_of_isHomogeneousOfDegree_zero_eq_zero (hn : 0 < n) (x : M)
+    (hf : IsHomogeneousOfDegree 0 f) : partialDerivative n x f = 0 :=
+  partialDerivative_eq_zero_of_gt hf hn x
+
+-- Roby63, pg 242 (Partial derivative of constant polynomial law; 2nd version).
+lemma partialDerivative_of_constant_eq_zero (hn : 0 < n) (x : M) (t : N) :
+    partialDerivative n x (const R M N t) = 0 :=
+  partialDerivative_of_isHomogeneousOfDegree_zero_eq_zero hn x
+    (const_isHomogeneousOfDegree_zero t)
+
+-- Roby63, pg 242 (Partial derivative of linear polynomial law).
+lemma partialDerivative_of_linear_eq_constant (x : M) (hf : IsHomogeneousOfDegree 1 f) :
+    partialDerivative 1 x f = (const R M N (f x)) :=
+  sorry
+
+lemma partialDerivative_of_linear_apply (x m : M) (hf : IsHomogeneousOfDegree 1 f) :
+    partialDerivative 1 x f m = f x := by
+  rw [partialDerivative_of_linear_eq_constant x hf]
+  simp [ground, const_toFun']
+
+/- **MI**: TODO (maybe?) Roby63, pg 242 (Partial derivative of homogeneous polynomial law of
+  degree 2). We would first need to formalize section II.3, which we have skipped. -/
+
+-- Section II.8
+
+variable (R M N) in
+-- Roby63, pg 242 (Prop. II.6).
+def partialDerivativeHom : M →ₗ[R] ((M →ₚₗ[R] N) →ₗ[R] (M →ₚₗ[R] N)) where
+  toFun x       := partialDerivative 1 x
+  map_add' x y  := by
+    ext f S _ _ sm
+    simp only [partialDerivative, LinearMap.coe_mk, AddHom.coe_mk, comp_toFun', add_def,
+      Function.comp_apply, Pi.add_apply, LinearMap.add_apply]
+    rw [← differential_map_add_snd_toFun']
+    simp [const_toFun', tmul_add]
+  map_smul' r x := by
+    ext f S _ _ sm
+    simp only [partialDerivative, LinearMap.coe_mk, AddHom.coe_mk, comp_toFun', add_def,
+      Function.comp_apply, Pi.add_apply, RingHom.id_apply, LinearMap.smul_apply, smul_def,
+      Pi.smul_apply]
+    rw [← differential_map_smul_snd_toFun']
+    simp [const_toFun']
+
+-- Roby63, pg 243 (Prop. II.7).
+lemma partialDerivativeHom_ker_eq :
+  LinearMap.ker (partialDerivativeHom R M N) =
+    sSup {P : Submodule R M | ∀ l : M →ₗ[R] N, Submodule.map l P = 0} := sorry
 
 -- Section II.9
 
+-- Roby63, pg 243
 lemma partialDerivative_prod_eq (f : (M × M') →ₚₗ[R] N) (x : M × M') :
     f.partialDerivative 1 x =
       f.partialDerivative 1 (x.1, 0) + f.partialDerivative 1 (0, x.2) := by
   ext S _ _ sm
-  simp only [partialDerivative, LinearMap.coe_mk, AddHom.coe_mk, add_def, Pi.add_apply]
-  simp only [comp_toFun', add_def, Function.comp_apply, Pi.add_apply]
-  simp only [const]
-  simp only [← toFun_eq_toFun']
+  simp only [partialDerivative, LinearMap.coe_mk, AddHom.coe_mk, add_def, Pi.add_apply,
+    comp_toFun', add_def, Function.comp_apply, const_toFun']
   have hx : (1 : S) ⊗ₜ[R] x = 1 ⊗ₜ[R] (x.1, 0) + 1 ⊗ₜ[R] (0, x.2) := by
     simp [← tmul_add, Prod.mk_add_mk, add_zero, zero_add, Prod.mk.eta]
-  rw [hx, differential_map_add_snd]
+  rw [hx, differential_map_add_snd_toFun']
 
+-- Roby63, pg 244 (Prop II.8)
+-- TODO (maybe): generalize to n summands.
+lemma partialDerivative_add (x y : M) :
+    partialDerivative (R := R) (N := N) n (x + y) =
+      ∑ i : Fin (n + 1), (partialDerivative (R := R) (N := N) i x).comp
+        (partialDerivative (R := R) (N := N) (n - i) y) := by
+  ext f S _ _ sm
+  sorry
+
+-- Roby63, pg 244 (Prop II.9 for n = 2)
+lemma taylor_sum_prod (f : (M × M') →ₚₗ[R] N) (m x : M × M') :
+    f (m + x) = lfsum (fun (n : ℕ × ℕ) ↦
+      partialDerivative n.1 (x.1, 0) (partialDerivative n.2 (0, x.2) f)) m := by
+  sorry
+
+-- Roby63, pg 244 (Prop. II.9 for n = 2)
+lemma partialDerivative_fst_comp (f : (M × M') →ₚₗ[R] N) (x : M × M') :
+    partialDerivative n (x.1, 0) (partialDerivative p (x.1, 0) f) =
+      (n.choose p) * partialDerivative (n + p) (x.1, 0) f := by
+  sorry
+
+-- Roby63, pg 244 (Prop. II.9 for n = 2)
+lemma partialDerivative_snd_comp (f : (M × M') →ₚₗ[R] N) (x : M × M') :
+    partialDerivative n (0, x.2) (partialDerivative p (0, x.2) f) =
+      (n.choose p) * partialDerivative (n + p) (0, x.2) f := by
+  sorry
+
+-- Section II.10 : TODO
 
 end PolynomialLaw
