@@ -17,7 +17,7 @@ section PolarizedProd
 
 /-- Given a polynomial law `f : M →ₚₗ[R] N` and a finite type `ι`, the `ι`-polarized of `f`
 is the polynomial law `(Π (_ : ι), M) →ₚₗ[R] N` obtained by composing `f` and `sum_proj R M ι`.
-This is denoted by `Π_p` in Roby63 (where `p` corresponds to the size of `ι`). -/
+This is denoted by `Π_p` in Roby63 II.1 (where `p` corresponds to the size of `ι`). -/
 def polarizedProd : (M →ₚₗ[R] N) →ₗ[R] (M × M →ₚₗ[R] N) where
   toFun f := f.comp (sum_fst_snd R M)
   map_add' f g := by

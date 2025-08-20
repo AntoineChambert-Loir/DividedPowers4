@@ -33,6 +33,8 @@ def IsBiHomogeneousOfDegree (n : ℕ × ℕ) (f : PolynomialLaw R (M × M') N) :
     f.toFun' S (s.1 • TensorProduct.compFstRight R S S M M' m +
       s.2 • TensorProduct.compSndRight R S S M M' m) = (s.1 ^ n.1 * s.2 ^ n.2) • f.toFun' S m
 
+-- TODO: prove equivalence to IsMultiHomogeneous with Fin 2 and use this in proofs.
+
 theorem IsBiHomogeneousOfDegree_add (n : ℕ × ℕ) {f g : PolynomialLaw R (M × M') N}
     (hf : f.IsBiHomogeneousOfDegree n) (hg : g.IsBiHomogeneousOfDegree n) :
     (f + g).IsBiHomogeneousOfDegree n := fun S _ _ s m ↦ by
@@ -183,23 +185,6 @@ theorem toFun_zero_of_constantBiCoeff_zero (hf : biCoeff (0 : M × M') f 0 = 0) 
 theorem toFun'_zero_of_constantBiCoeff_zero (hf : biCoeff (0 : M × M') f 0 = 0) (S : Type u)
     [CommSemiring S] [Algebra R S] : f.toFun' S 0 = 0 := by
   rw [← toFun_eq_toFun', toFun_zero_of_constantBiCoeff_zero hf]
-
-theorem isBiHomogeneousOfDegree_of_coeff_iff' :
-    IsBiHomogeneousOfDegree n f ↔ ∀ (m : M × M') (k : ℕ × ℕ) (_ : k ≠ n),
-      PolynomialLaw.biCoeff m f k = 0 := by
-  refine ⟨fun hf m n hn ↦ isBiHomogeneousOfDegree_biCoeff hf m hn, fun H S _ _ r μ => ?_⟩
-  obtain ⟨p, s, m, rfl⟩ := exists_Fin S μ
-  have h1 : r.1 • (compFstRight R S S M M') (∑ i, s i ⊗ₜ[R] m i) =
-      (compFstRight R S S M M') (∑ i, (r.1 • s i) ⊗ₜ[R] m i) := by
-    simp_rw [← map_smul, Finset.smul_sum, smul_tmul']
-  have h2 : r.2 • (compSndRight R S S M M') (∑ i, s i ⊗ₜ[R] m i) =
-      (compSndRight R S S M M') (∑ i, (r.2 • s i) ⊗ₜ[R] m i) := by
-    simp_rw [← map_smul, Finset.smul_sum, smul_tmul']
-  simp_rw [h1, h2]
-  simp only [smul_eq_mul, map_sum, compFstRight_tmul, inlRight_tmul, compSndRight_tmul,
-    inrRight_tmul]
-  rw [← toFun_eq_toFun']
-  sorry
 
 theorem isBiHomogeneousOfBiDegree_biCoeff {a b : ℕ} (hf : f.IsBiHomogeneousOfDegree (a, b))
     (m : M × M') {d : ℕ × ℕ} (hd : d ≠ (a, b)) : (biCoeff m f) d = 0 :=

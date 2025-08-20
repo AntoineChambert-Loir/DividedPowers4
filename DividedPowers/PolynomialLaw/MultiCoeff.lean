@@ -37,7 +37,7 @@ to the term of `MvPolynomial ι R ⊗[R] N` obtained by applying `f.toFun (MvPol
 sum `∑ i, X i ⊗ₜ[R] m i`. -/
 noncomputable def multiGenerize (m : Π i, M i) :
     ((Π i, M i) →ₚₗ[R] N) →ₗ[R] MvPolynomial ι R ⊗[R] N where
-  toFun f       := f.toFun (MvPolynomial ι R) (∑ i : ι, X i ⊗ₜ[R] (Pi.single i (m i)))
+  toFun f       := f.toFun (MvPolynomial ι R) (∑ i : ι, X i ⊗ₜ[R] (Pi.single i (m i))) -- ? Use linear combination
   map_add' p q  := by simp [add_toFun_apply]
   map_smul' r p := by simp [RingHom.id_apply, smul_toFun, Pi.smul_apply]
 
