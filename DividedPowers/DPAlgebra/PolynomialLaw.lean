@@ -127,7 +127,7 @@ theorem gamma'_mem_grade (n : ℕ) : gamma' R M n ∈ PolynomialLaw.grade n := b
 
 noncomputable example {N : Type*} [AddCommGroup N] [Module R N] (n : ℕ) :
     ((DividedPowerAlgebra.grade R M n) →ₗ[R] N) ≃ₗ[R]
-  PolynomialLaw.grade (R := R) (M := M) (N := N) n where
+      PolynomialLaw.grade (R := R) (M := M) (N := N) n where
   toFun u := by
     let f : M →ₚₗ[R] N := PolynomialLaw.comp (PolynomialLaw.ofLinearMap u) (gamma' R M n)
     use f
@@ -148,7 +148,9 @@ noncomputable example {N : Type*} [AddCommGroup N] [Module R N] (n : ℕ) :
   left_inv := sorry
   right_inv := sorry
 
-/-- For `b : Basis ι R M`, a basis of `DividedPowerAlgebra.grade R M n` -/
+/-- For `b : Basis ι R M`, a basis of `DividedPowerAlgebra.grade R M n`.
+
+Roby 1963, theorem IV.2.-/
 noncomputable
 def grade_basis (n : ℕ) {ι : Type*} (b : Basis ι R M) :
     Basis { h : ι →₀ ℕ // (h.sum fun i n ↦ n) = n } R (grade R M n) := by
