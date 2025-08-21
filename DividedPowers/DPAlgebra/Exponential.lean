@@ -21,7 +21,7 @@ We define
 
 -/
 
-variable (R : Type*) [CommRing R] {A : Type*} [CommRing A] [Algebra R A]
+variable (R : Type*) [CommRing R] {A : Type*} [CommSemiring A] [Algebra R A]
   {M : Type*} [AddCommMonoid M] [Module R M] [Module A M] [IsScalarTower R A M]
 
 namespace DividedPowerAlgebra

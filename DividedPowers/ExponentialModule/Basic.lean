@@ -7,6 +7,7 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 import DividedPowers.ForMathlib.RingTheory.PowerSeries.Substitution
 import Mathlib.RingTheory.PowerSeries.Inverse
 import Mathlib.Data.Nat.Choose.Multinomial
+import Mathlib.Algebra.Ring.Ext
 
 /-! # Exponential module of a commutative ring
 
@@ -33,6 +34,15 @@ indeterminates. It is an abelian group under multiplication, and an `R`-module u
   is equal to the power series `f(-X)`.
 
 -/
+
+/-- The `CommRing` structure on a `CommSemiring` induced by a ring morphism from a `CommRing`. -/
+def RingHom.commSemiringToCommRing
+    {R S : Type*} [CommRing R] [CommSemiring S] (φ : R →+* S) :
+    CommRing S := by
+  let _ : Algebra R S := RingHom.toAlgebra φ
+  refine {
+    toRing := Algebra.semiringToRing R
+    mul_comm := CommMonoid.mul_comm }
 
 section SMul
 
@@ -196,7 +206,7 @@ theorem MvPolynomial.coeff_linearCombination_X_pow (σ : Type*) (a : σ →₀ R
       rw [if_neg]
       intro hd''
       apply hd'
-      simp only [mem_piAntidiag, ne_eq, mem_support_iff, not_imp_not]
+      simp only [mem_piAntidiag, ne_eq]
       constructor
       · rw [Finsupp.ext_iff'] at hd''
         rw [← hd, Finset.sum_subset (s₁ := d.support) (s₂ := a.support)]
@@ -206,7 +216,7 @@ theorem MvPolynomial.coeff_linearCombination_X_pow (σ : Type*) (a : σ →₀ R
         · rw [hd''.1]
           apply Finsupp.restrict_support_le
         · intro x
-          simp [mem_support_iff, ne_eq, Decidable.not_not]
+          simp
       · intro i
         rw [not_imp_comm]
         simp only [Finsupp.mem_support_iff, ne_eq, Finsupp.restrict_apply]
@@ -217,7 +227,7 @@ theorem MvPolynomial.coeff_linearCombination_X_pow (σ : Type*) (a : σ →₀ R
     rw [if_neg]
     rintro ⟨rfl⟩
     apply hd
-    simp only [mem_piAntidiag, ne_eq, mem_support_iff, not_imp_not] at hx
+    simp only [mem_piAntidiag, ne_eq] at hx
     rw [← hx.1]
     rw [Finset.sum_subset (Finsupp.restrict_support_le)]
     · apply Finset.sum_congr rfl
@@ -237,7 +247,7 @@ theorem MvPolynomial.fintype_coeff_linearCombination_X_pow
   rw [← MvPolynomial.coeff_linearCombination_X_pow]
   congr 2
   rw [Finsupp.linearCombination_apply]
-  simp [ha, Finsupp.sum_of_support_subset (s := univ)]
+  simp [Finsupp.sum_of_support_subset (s := univ)]
 
 theorem MvPolynomial.fintype_coeff_sum_X_pow
     {σ : Type*} [Fintype σ] (d : σ →₀ ℕ) (n : ℕ) :
@@ -286,7 +296,7 @@ private lemma MvPolynomial.coeff_add_pow' (d : Fin 2 →₀ ℕ) (n : ℕ) :
       C_1, one_ne_zero, not_false_eq_true, single_eq_of_ne, add_zero, zero_ne_one, zero_add,
       one_mul]
   rw [Commute.add_pow' (Commute.all _ _), coeff_sum]
-  simp only [nsmul_eq_smul, coeff_smul, Fin.isValue, cast_ite, cast_zero, hmon]
+  simp only [coeff_smul, Fin.isValue, cast_ite, cast_zero, hmon]
   split_ifs with hd
   · rw [sum_eq_single (d 0, d 1) _ (fun hd' ↦ absurd hd hd')]
     · rw [coeff_monomial, if_pos]
@@ -310,7 +320,7 @@ end CommSemiring
 
 namespace PowerSeries
 
-variable {A R S : Type*} [CommSemiring A] [CommRing R] [Algebra A R] [CommRing S] [Algebra A S]
+variable {A R S : Type*} [CommSemiring A] [CommRing R] [Algebra A R] [CommSemiring S] [Algebra A S]
 
 
 section Bivariate
@@ -326,8 +336,7 @@ lemma coeff_subst_single {σ : Type*} [DecidableEq σ] (s : σ) (f : R⟦X⟧) (
       if e = single s (e s) then PowerSeries.coeff R (e s) f else 0 := by
   rw [PowerSeries.coeff_subst (PowerSeries.hasSubst_of_constantCoeff_zero (by simp)),
     finsum_eq_single _ (e s)]
-  · rw [MvPowerSeries.coeff_X_pow]
-    simp only [Fin.isValue, ↓reduceIte, smul_eq_mul, mul_one]
+  · rw [MvPowerSeries.coeff_X_pow, smul_eq_mul]
     split_ifs with he
     · rw [mul_one]
     · rw [mul_zero]
@@ -442,16 +451,15 @@ protected theorem mul {f g : PowerSeries R} (hf : IsExponential f) (hg : IsExpon
 protected theorem npow {f : R⟦X⟧} (hf : IsExponential f) (n : ℕ) :
     IsExponential (f ^ n) := by
   induction n with
-  | zero => simp only [zero_eq, pow_zero, IsExponential.one]
-  | succ n hn => simp only [pow_succ, hn.mul hf]
+  | zero => simp [pow_zero, IsExponential.one]
+  | succ n hn => simp [pow_succ, hn.mul hf]
 
 /-- If `f` is exponential, then `f(r • T)` is exponential, for any `r : R`. -/
 protected theorem rescale (a : A) {f : PowerSeries R} (hf : IsExponential f) :
     IsExponential (rescale (algebraMap A R a) f) where
   constantCoeff := by
     rw [← coeff_zero_eq_constantCoeff, coeff_rescale]
-    simp only [pow_zero, coeff_zero_eq_constantCoeff, one_smul, hf.constantCoeff]
-    simp only [mul_one]
+    simp [coeff_zero_eq_constantCoeff, hf.constantCoeff]
   add_mul := by
     repeat rw [subst_linear_subst_scalar_comm]
     simp only [← MvPowerSeries.coe_rescaleAlgHom, ← map_mul, hf.add_mul]
@@ -509,7 +517,7 @@ protected theorem neg {f : R⟦X⟧} (hf : IsExponential f) :
 protected theorem self_mul_neg_eq_one {f : R⟦X⟧} (hf : IsExponential f) :
     f * (rescale (-1 : R) f) = 1 := by
   have hadd := hf.rescale_add (1 : R) (-1 : R)
-  simp only [Algebra.id.map_eq_id, RingHom.id_apply, add_neg_cancel, rescale_zero,
+  simp only [Algebra.algebraMap_self, RingHom.id_apply, add_neg_cancel, rescale_zero,
     RingHom.coe_comp, Function.comp_apply, rescale_one] at hadd
   rw [← hadd, hf.constantCoeff, map_one]
 
@@ -534,7 +542,9 @@ protected theorem inv {f : R⟦X⟧} (hf : IsExponential f) : IsExponential (f.i
   simp [hf.invOfUnit_eq_rescale_neg_one, hf.neg]
 
 protected theorem map (φ : R →+* S) {f : R⟦X⟧} (hf : IsExponential f) :
+    let _ : CommRing S := RingHom.commSemiringToCommRing φ
     IsExponential (PowerSeries.map φ f) := by
+  let _ : CommRing S := RingHom.commSemiringToCommRing φ
   rw [isExponential_iff]
   constructor
   · intro p q
@@ -622,7 +632,7 @@ theorem coe_mk {f : R⟦X⟧} (hf : IsExponential f) : ↑(⟨f, hf⟩ : Exponen
 
 noncomputable instance instSMul : SMul A (ExponentialModule R) where
   smul r f := ⟨r • (f : Additive R⟦X⟧), by
-    simp only [mem_exponentialModule_iff', toAdditive_smul_coe',f.prop.rescale (algebraMap A R r)]
+    simp only [mem_exponentialModule_iff', toAdditive_smul_coe']
     exact f.prop.rescale (algebraMap A R r)⟩
 
 theorem smul_def (r : A) (f : ExponentialModule R) :
@@ -654,15 +664,13 @@ lemma coe_smul (r : A) (f : ExponentialModule R) :
 noncomputable instance instAddCommGroup : AddCommGroup (ExponentialModule R) where
   neg f := (-1 : ℤ) • f
   zsmul n f := n • f
-  zsmul_zero' f := by simp [← Subtype.coe_inj]
-  zsmul_succ' n f := by
-    simp only [succ_eq_add_one, Int.ofNat_eq_coe, cast_add, cast_one, ← Subtype.coe_inj,
-      AddSubmonoid.coe_add, add_smul, one_smul, AddSubmonoid.coe_add]
+  zsmul_zero' f := by simp
+  zsmul_succ' n f := by simp [add_smul]
   zsmul_neg' n f := by simp [Int.negSucc_eq, ← smul_assoc]
   neg_add_cancel f := by
     rw [← Subtype.coe_inj]
     apply Additive.toMul.injective
-    simp only [toPowerSeries, AddSubmonoid.coe_add, toMul_add]
+    simp only [AddSubmonoid.coe_add, toMul_add]
     rw [ZeroMemClass.coe_zero, toMul_zero, ← f.2.neg_mul_self_eq_one]
     simp [coe_smul]
   add_comm f g := add_comm f g
@@ -698,14 +706,16 @@ variable {S : Type*} [CommRing S] [Algebra A S] (φ : R →ₐ[A] S)
 
 /-- Given `A`-algebras `R` and `S`, this is the linear map between multivariate formal
 power series induced by an `A`-algebra map on the coefficients.-/
-noncomputable def linearMap : ExponentialModule R →ₗ[A] ExponentialModule S where
+noncomputable def linearMap :
+  ExponentialModule R →ₗ[A] ExponentialModule S where
   toFun := fun f ↦
     ⟨ofMul (PowerSeries.map φ (f : R⟦X⟧)), by
       simp [mem_exponentialModule_iff]
-      exact f.prop.map (φ  : R →+* S)⟩
+      convert f.prop.map (φ  : R →+* S)
+      ext <;> rfl⟩
   map_add' := fun f g ↦ by
     apply coe_injective
-    simp [coe_add, map_mul, ofMul_mul, AddSubmonoid.mk_add_mk]
+    simp [coe_add, map_mul, ofMul_mul]
   map_smul' := fun a f ↦ by
     apply coe_injective
     simp only [coe_smul, RingHom.id_apply, coe_ofMul, rescale_map_eq_map_rescale]

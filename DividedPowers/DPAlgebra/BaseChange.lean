@@ -45,7 +45,7 @@ lemma Algebra.TensorProduct.coe_map_id₂ (R : Type*) [CommSemiring R]
     (φ : S →ₐ[R] S') (A : Type*) [Semiring A] [Algebra R A] :
     ⇑(Algebra.TensorProduct.map φ (AlgHom.id R A)) = ⇑(LinearMap.rTensor A φ.toLinearMap) := by rfl
 
-variable (R : Type*) [CommRing R] (S : Type*) [CommRing S] [Algebra R S]
+variable (R : Type*) [CommSemiring R] (S : Type*) [CommSemiring S] [Algebra R S]
   (M : Type*) [AddCommMonoid M] [Module R M]
   (N : Type*) [AddCommMonoid N] [Module R N] [Module S N] [IsScalarTower R S N]
 

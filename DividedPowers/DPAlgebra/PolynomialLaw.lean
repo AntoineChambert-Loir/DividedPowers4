@@ -6,6 +6,7 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 import DividedPowers.DPAlgebra.BaseChange
 import DividedPowers.PolynomialLaw.Homogeneous
 import Mathlib.LinearAlgebra.FreeModule.Basic
+import Mathlib.LinearAlgebra.DirectSum.Basis
 
 /-
 
@@ -23,35 +24,40 @@ open scoped TensorProduct
 universe u
 
 variable (R : Type u) [CommRing R]
-variable (M : Type*) [AddCommGroup M] [Module R M]
+variable (M : Type*) [AddCommMonoid M] [Module R M]
 
 namespace DividedPowerAlgebra
 
 open TensorProduct AlgEquiv LinearMap MvPolynomial DividedPowerAlgebra
-
-#exit -- TODO: fix
 
 /- TODO :  we need to prove that DividedPowerAlgebra.dpScalarExtensionEquiv
   is compatible with the graded structure and induces equivs componentwise -/
 /-- The universal polynomial map (homogeneous of degree n) on a module -/
 noncomputable
 def gamma (n : ℕ) : PolynomialLaw R M (DividedPowerAlgebra R M) where
-  toFun' S _ _ := fun m ↦
+  toFun' S _ _ m :=
+    let _ : CommRing S := RingHom.commSemiringToCommRing (algebraMap R S)
     (DividedPowerAlgebra.dpScalarExtensionEquiv R S M).symm
       (DividedPowerAlgebra.dp S n m)
   isCompat' {S _ _ S' _ _} φ := by
     ext x
+    let _ : CommRing S := RingHom.commSemiringToCommRing (algebraMap R S)
+    let _ : CommRing S' := RingHom.commSemiringToCommRing (algebraMap R S')
     apply rTensor_comp_dpScalarExtensionEquiv_symm_eq
+
 
 theorem gamma_toFun (n : ℕ) {S : Type*} [CommRing S] [Algebra R S] (m : S ⊗[R] M) :
     (gamma R M n).toFun S m = (dpScalarExtensionEquiv R S M).symm (dp S n m) := by
   obtain ⟨k, ψ, p, rfl⟩ := PolynomialLaw.exists_lift m
   rw [← (gamma R M n).isCompat_apply, PolynomialLaw.toFun_eq_toFun']
-  simp only [gamma, rTensor_comp_dpScalarExtensionEquiv_symm_eq]
+  simp only [gamma]
+  have := rTensor_comp_dpScalarExtensionEquiv_symm_eq R M ψ n p
+  convert this <;> ext <;> rfl
 
 theorem isHomogeneousOfDegree_gamma (n : ℕ) :
     PolynomialLaw.IsHomogeneousOfDegree n (DividedPowerAlgebra.gamma R M n) := by
   intro S _ _ r sm
+  let _ : CommRing S := RingHom.commSemiringToCommRing (algebraMap R S)
   simp only [gamma]
   apply (dpScalarExtensionEquiv R S M).injective
   simp only [apply_symm_apply, LinearMapClass.map_smul]
@@ -123,12 +129,12 @@ noncomputable example {N : Type*} [AddCommGroup N] [Module R N] (n : ℕ) :
     ((DividedPowerAlgebra.grade R M n) →ₗ[R] N) ≃ₗ[R]
   PolynomialLaw.grade (R := R) (M := M) (N := N) n where
   toFun u := by
-    let f : M →ₚ[R] N := PolynomialLaw.comp (PolynomialLaw.ofLinearMap u) (gamma' R M n)
+    let f : M →ₚₗ[R] N := PolynomialLaw.comp (PolynomialLaw.ofLinearMap u) (gamma' R M n)
     use f
     rw [PolynomialLaw.mem_grade]
     simp only [f]
     apply PolynomialLaw.IsHomogeneousOfDegree.ofLinearMap_comp
-    rw [← (PolynomialLaw.mem_grade (gamma' R M n) n)]
+    rw [← PolynomialLaw.mem_grade]
     apply gamma'_mem_grade
   map_add' u v := by
     ext S _ _ m
