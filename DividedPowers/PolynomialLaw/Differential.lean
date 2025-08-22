@@ -732,7 +732,7 @@ example {ι  : Type*} (s : Set ι) (k : ι →₀ ℕ) :
   exact k.subtypeDomain s
 
 def _root_.Set.complSumSelfEquiv {ι : Type*} (s : Set ι) [∀ x, Decidable (x ∈ s)] :
-    ι ≃ ↑s.compl ⊕ ↑s  where
+    ι ≃ s.compl ⊕ s  where
   toFun x := if hx : x ∈ s then Sum.inr ⟨x, hx⟩ else Sum.inl ⟨x, hx⟩
   invFun x := by rcases x with (x | x) <;> exact (x : ι)
   right_inv x := by
@@ -742,43 +742,68 @@ def _root_.Set.complSumSelfEquiv {ι : Type*} (s : Set ι) [∀ x, Decidable (x 
     · simp only [Subtype.coe_prop, ↓reduceDIte, Subtype.coe_eta]
   left_inv x := by by_cases hx : x ∈ s <;> simp [hx]
 
-
 def _root_.MvPolynomial.splitAlgEquiv {ι : Type*} (s : Set ι) [∀ x, Decidable (x ∈ s)] :
     (MvPolynomial ι R) ≃ₐ[R] MvPolynomial (s.compl) (MvPolynomial (s) R) :=
   (renameEquiv R s.complSumSelfEquiv).trans (sumAlgEquiv R s.compl s)
 
 theorem _root_.Finsupp.prod_mul_prod_compl {ι M N : Type*} [Zero M] [CommMonoid N] (s : Set ι)
-   [DecidablePred (fun x ↦ x ∈ s)] (f : ι →₀ M) (g : ι → M → N) (gs : s → M → N)
-   (gs' : s.compl → M → N) (hs : ∀ x : s, g x = gs x) (hs' : ∀ x : s.compl, g x = gs' x) :
+   [DecidablePred (fun x ↦ x ∈ s)] (f : ι →₀ M) (g : ι → M → N) (gs : Subtype s → M → N)
+   (gs' : Subtype s.compl → M → N) (hs : ∀ x : s, g x = gs x) (hs' : ∀ x : s.compl, g x = gs' x) :
    ((Finsupp.subtypeDomain s f).prod gs) *
-     ((Finsupp.subtypeDomain s.compl f).prod gs') = Finsupp.prod f g := sorry
+     ((Finsupp.subtypeDomain s.compl f).prod gs') = Finsupp.prod f g := by
+  classical
+  simp only [Finsupp.prod]
+  rw [← Finset.prod_attach f.support]
+  rw [← Finset.prod_coe_sort_eq_attach]
+  rw [← Finset.prod_mul_prod_compl (s := Finset.univ.filter (fun (x : {x // x ∈ f.support}) ↦ x.val ∈ s))]
+  apply congr_arg₂
+  · simp only [Finsupp.support_subtypeDomain, Finsupp.subtypeDomain_apply, Finset.univ_eq_attach]
+    rw [Finset.prod_bij'
+      (i := fun x hx ↦ ⟨x.val, Finset.mem_subtype.mp hx⟩)
+      (j := fun (x : f.support) (hx : x ∈ Finset.filter (fun i ↦ ↑i ∈ s) f.support.attach) ↦ by
+        simp only [Finset.mem_filter, Finset.mem_attach, true_and] at hx
+        refine ⟨x.val, hx⟩)]
+    all_goals simp [← hs]
+  · simp only [Finsupp.support_subtypeDomain, Finsupp.subtypeDomain_apply,
+    Finset.univ_eq_attach]
+    rw [show ({x ∈ f.support.attach | ↑x ∈ s})ᶜ = {x ∈ f.support.attach | ↑x ∈ sᶜ} by ext; simp]
+    rw [Finset.prod_bij'
+      (i := fun x hx ↦ ⟨x.val, Finset.mem_subtype.mp hx⟩)
+      (j := fun (x : f.support) (hx : x ∈ Finset.filter (fun i ↦ ↑i ∈ sᶜ) f.support.attach) ↦ by
+        simp only [Finset.mem_filter, Finset.mem_attach, true_and] at hx
+        refine ⟨x.val, hx⟩)]
+    all_goals simp [← hs']
+    intro i hi _; exact hi
 
 lemma _root_.MvPolynomial.splitAlgEquiv_monomial
     {ι : Type*} (s : Set ι) [∀ x, Decidable (x ∈ s)]  (k : ι →₀ ℕ) (r : R) :
     splitAlgEquiv s (monomial k r) =
       monomial (k.subtypeDomain s.compl) (monomial (k.subtypeDomain s) r) := by
-  classical
-  simp only [splitAlgEquiv, AlgEquiv.trans_apply, renameEquiv_apply]
+  simp only [splitAlgEquiv, AlgEquiv.trans_apply]
+  simp only [renameEquiv_apply, sumAlgEquiv_apply]
   simp only [rename_monomial]
-  rw [sumAlgEquiv_apply]
   simp only [sumToIter, coe_eval₂Hom, eval₂_monomial, RingHom.coe_comp, Function.comp_apply]
+  rw [← Finsupp.equivMapDomain_eq_mapDomain, Finsupp.prod_equivMapDomain]
   simp only [Set.complSumSelfEquiv, Equiv.coe_fn_mk]
   simp only [monomial_eq, C_mul]
   simp only [C_mul', Algebra.smul_mul_assoc]
   congr
-  rw [smul_eq_C_mul]
-  rw [map_finsuppProd]
+  rw [smul_eq_C_mul, map_finsuppProd]
   simp only [C_pow]
-  rw [eq_comm]
-  rw [Finsupp.prod_mul_prod_compl]
-  sorry
-  sorry
-  sorry
-  --have := Finsupp.prod_mul_prod_compl s
-  --simp only [Finsupp.prod, Finsupp.subtypeDomain_apply]
-  sorry
-
-#exit
+  rw [Finsupp.prod_mul_prod_compl s (M := ℕ) k
+    (g := fun i e ↦ if hi : i ∈ s then
+      C (σ := Subtype s.compl) (R := MvPolynomial s R) (X ⟨i, hi⟩ ^ e)
+      else X ⟨i, hi⟩ ^ e)
+    (gs := fun a b ↦ C (X (R := R) a) ^b)
+    (gs' := fun n e ↦ X n ^ e)]
+  congr
+  · ext1 _; ext1 _; split_ifs with hi
+    · simp; rfl
+    · simp
+  · intro x; ext1 e
+    simp only [Subtype.coe_prop, ↓reduceDIte, Subtype.coe_eta, C_pow]
+    rfl
+  · intro x; simp [dif_neg (show ¬((x : ι) ∈ s) by aesop)]
 
 lemma _root_.MvPolynomial.test {ι : Type*} (s : Set ι) [∀ x, Decidable (x ∈ s)]
     (P : MvPolynomial ι R) (k : ι →₀ ℕ) :
@@ -786,8 +811,25 @@ lemma _root_.MvPolynomial.test {ι : Type*} (s : Set ι) [∀ x, Decidable (x �
       (MvPolynomial.coeff (k.subtypeDomain s.compl) (P.splitAlgEquiv s)) := by
   induction P using MvPolynomial.induction_on' with
   | monomial n r =>
-
-    sorry
+    classical
+    simp only [splitAlgEquiv_monomial, MvPolynomial.coeff_monomial]
+    have : n = k ↔ n.subtypeDomain s = k.subtypeDomain s ∧ n.subtypeDomain s.compl = k.subtypeDomain s.compl := by
+      simp only [Finsupp.ext_iff, Finsupp.subtypeDomain_apply, Subtype.forall, ← forall_and]
+      apply forall_congr'
+      intro i
+      rw [← or_imp]
+      simp only [Classical.imp_iff_left_iff]
+      left
+      exact Decidable.or_iff_not_imp_left.mpr fun a ↦ a
+    by_cases hn : n = k
+    · rw [if_pos hn]
+      rw [this] at hn
+      rw [if_pos hn.2, coeff_monomial, if_pos hn.1]
+    · rw [if_neg hn]
+      rw [this, and_comm, not_and] at hn
+      split_ifs with hn'
+      · rw [coeff_monomial, if_neg (hn hn')]
+      · simp
   | add p q hp hq => simp only [coeff_add, hp, hq, map_add]
 
 lemma firstPartialDerivative_comp_multiple_eq_coeff' {ι S : Type*} [CommSemiring S] [Algebra R S]
@@ -806,11 +848,8 @@ lemma firstPartialDerivative_comp_multiple_eq_coeff' {ι S : Type*} [CommSemirin
       assoc_symm_tmul, LinearEquiv.rTensor_tmul, AlgEquiv.toLinearEquiv_apply]
     set sm' : (Polynomial S) ⊗[R] M :=
       LinearMap.rTensor M Polynomial.CAlgHom.toLinearMap sm + (Polynomial.X) ⊗ₜ[R] (x i)
-    have := optionEquivRight
-
+    -- have := optionEquivRight
     sorry
-
-#exit
 
 -- Roby63, pg 241 (Prop. II.4 for general n)
 -- NOTE: the `reverse` is to state it in the same order as in Roby, but `partialDerivative_comm`
