@@ -6,8 +6,8 @@ open MvPolynomial TensorProduct
 
 universe u
 
-variable {R : Type u} [CommSemiring R] {M M' N : Type*} [AddCommGroup M] [Module R M]
-  [AddCommGroup M'] [Module R M'] [AddCommGroup N] [Module R N] (f : M →ₚₗ[R] N) (n p : ℕ)
+variable {R : Type u} [CommSemiring R] {M M' N : Type*} [AddCommMonoid M] [Module R M]
+  [AddCommMonoid M'] [Module R M'] [AddCommMonoid N] [Module R N] (f : M →ₚₗ[R] N) (n p : ℕ)
 
 namespace PolynomialLaw
 
@@ -388,7 +388,7 @@ def setprod (x : Unit →₀ ℕ) : Finset (Fin 2 →₀ ℕ) := by
   sorry
 
 --open Classical in
-theorem bar [DecidableEq N] (f : M →ₚₗ[R] N) (m m' : M) (x : Unit →₀ ℕ) :
+theorem bar'' [DecidableEq N] (f : M →ₚₗ[R] N) (m m' : M) (x : Unit →₀ ℕ) :
   ((coeff fun (x : Unit) ↦ m + m') f) x =
     ∑ y ∈ setprod x, ((coeff ![m, m']) f) y  := sorry
 
@@ -420,7 +420,7 @@ theorem bar' [DecidableEq N] (f : M →ₚₗ[R] N) (m m' : M) :
       · sorry
       · sorry
     sorry
-  simp_rw [bar, this]
+  simp_rw [bar'', this]
   congr
   ext z
   simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Finsupp.mem_support_iff, ne_eq, Fin.isValue,
@@ -623,12 +623,22 @@ lemma partialDerivative_comp_eq_coeff {S : Type*} [CommSemiring S] [Algebra R S]
               X (1 : Fin 2) ⊗ₜ[R] ((1 : S) ⊗ₜ[R] x₂))))) ((finTwoArrowEquiv' ℕ).symm (k₁, k₂)) := by
   sorry
 
--- Roby63, pg 241 (Prop. II.4) **MI**: TODO (not sure how to state this. Perhaps using an inductive
--- definition for the LHS?)
-/- lemma partialDerivative_multiComp_eq_coeff {S : Type*} [CommSemiring S] [Algebra R S]
-    {k : ℕ}  {x : Fin k → M} (sm : S ⊗[R] M) :
-    0 = 0 := by
-  sorry -/
+example (F : Fin n → (M →ₚₗ[R] N) →ₗ[R] M →ₚₗ[R] N) :
+    List ((M →ₚₗ[R] N) →ₗ[R] M →ₚₗ[R] N) := by
+  exact List.map F (List.finRange n)
+
+-- Roby63, pg 241 (Prop. II.4 for general n)
+-- NOTE: the `reverse` is to state it in the same order as in Roby, but `partialDerivative_comm`
+-- shows it is not needed.
+lemma partialDerivative_comp_multiple_eq_coeff {S : Type*} [CommSemiring S] [Algebra R S] {n : ℕ}
+    (k : Fin n →₀ ℕ) (x : Fin n → M) (sm : S ⊗[R] M) :
+    ((List.map (fun (i : Fin n) ↦ partialDerivative (k i) (x i))
+      (List.finRange n).reverse).prod f).toFun S sm =
+      MvPolynomial.rTensor (f.toFun (MvPolynomial (Fin n) S)
+        ((LinearEquiv.rTensor M scalarRTensorAlgEquiv.toLinearEquiv)
+          ((TensorProduct.assoc R (MvPolynomial (Fin n) R) S M).symm
+            ((1 ⊗ₜ[R] sm) + ∑ (i : Fin n), (X (R := R) i) ⊗ₜ[R]  ((1 : S) ⊗ₜ[R] x i) )))) k := by
+  sorry
 
 -- Roby63, pg 241 (Prop. II.5)
 -- Generalized as in remark after Prop. II.5
@@ -726,6 +736,19 @@ lemma partialDerivative_snd_comp (f : (M × M') →ₚₗ[R] N) (x : M × M') :
       (n.choose p) * partialDerivative (n + p) (0, x.2) f := by
   sorry
 
--- Section II.10 : TODO
+-- We could probably replace `Fin n` by a fintype ι, but it might not be worht it.
+-- Roby63, pg 244 (Prop II.9 for general n)
+lemma taylor_sum_pi {M : Fin n → Type*} [∀ i, AddCommMonoid (M i)] [∀ i, Module R (M i)]
+    (f : (Π i, M i) →ₚₗ[R] N) (m x : Π i, M i) :
+    f (m + x) = lfsum (fun (k : Fin n →₀ ℕ) ↦ ((List.map (fun (i : Fin n) ↦
+      partialDerivative (k i) (Pi.single i (x i))) (List.finRange n).reverse)).prod f) m := by
+  sorry
+
+-- Roby63, pg 244 (Prop. II.9 for general n)
+lemma partialDerivative_comp_single {M : Fin n → Type*} [∀ i, AddCommMonoid (M i)]
+    [∀ i, Module R (M i)] (f : (Π i, M i) →ₚₗ[R] N) (x : Π i, M i) (i : Fin n):
+    partialDerivative n (Pi.single i (x i)) (partialDerivative p (Pi.single i (x i)) f) =
+      (n.choose p) * partialDerivative (n + p) (Pi.single i (x i)) f := by
+  sorry
 
 end PolynomialLaw

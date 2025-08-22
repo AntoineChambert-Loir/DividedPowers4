@@ -1,11 +1,11 @@
-import DividedPowers.PolynomialLaw.Basic
+import DividedPowers.PolynomialLaw.Basic2
 
 /-
 
 # Base Change
 
 The goal is to define a base change map
-  `PolynomialLaw R M N → PolynomialLaw R' (R' ⊗[R] M) (R' ⊗[R] N)``
+  `PolynomialLaw R M N →ₗ[R] PolynomialLaw R' (R' ⊗[R] M) (R' ⊗[R] N)``
 when M and N are R-modules and R' is an R-algebra (commutative)
 
 This requires to simplify the tensor product
@@ -16,6 +16,12 @@ to
 an S'-isomorphism which Mathlib doesn't know (yet)
 
 What follows is draft
+
+Prove that coeff, multiCoeff, biCoeff commute with base change
+
+Compare ground
+
+(Maybe) commSemiring the file
 
 -/
 
@@ -31,12 +37,15 @@ variable {S' : Type w} [CommRing S'] [Algebra R' S']
 
 variable [Algebra R S'] [IsScalarTower R R' S']
 
+-- variant of `Algebra.TensorProdyct.includeRight`
 noncomputable def baseChange_include : M →ₗ[R] R' ⊗[R] M := {
   toFun     := fun m ↦ 1 ⊗ₜ[R] m
   map_add'  := fun x y ↦ TensorProduct.tmul_add 1 x y
   map_smul' := fun r m  ↦ by
     simp only [AddHom.toFun_eq_coe, AddHom.coe_mk, RingHom.id_apply, ← TensorProduct.smul_tmul]
     rfl }
+
+-- Try to use some module analogue of Algebra.TensorProduct.assoc and Algebra.TensorProduct.rid.
 
 example : S' ⊗[R'] (R' ⊗[R] M) →ₗ[S'] S' ⊗[R] M := by
   apply TensorProduct.AlgebraTensorModule.lift {

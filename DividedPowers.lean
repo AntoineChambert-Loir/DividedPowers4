@@ -21,6 +21,7 @@ import DividedPowers.ForMathlib.Algebra.Algebra.Bilinear
 import DividedPowers.ForMathlib.Algebra.BigOperators.Finsupp.Basic
 import DividedPowers.ForMathlib.Algebra.BigOperators.Finsupp.Fin
 import DividedPowers.ForMathlib.Algebra.BigOperators.Group.Finset.Basic
+import DividedPowers.ForMathlib.Algebra.Module.LinearMap.Defs
 --import DividedPowers.ForMathlib.Algebra.MvPolynomial.Equiv -- In PR #15019
 import DividedPowers.ForMathlib.Algebra.MvPolynomial.Lemmas
 import DividedPowers.ForMathlib.Algebra.Polynomial.AlgebraMap

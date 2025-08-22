@@ -9,6 +9,7 @@ import Mathlib.LinearAlgebra.DirectSum.Finsupp
 import Mathlib.RingTheory.TensorProduct.Basic
 import Mathlib.Algebra.Polynomial.Eval.Defs
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.LinearEquiv
+import DividedPowers.ForMathlib.Algebra.Module.LinearMap.Defs
 
 /-! # Tensor products of a polynomial ring
 
@@ -211,5 +212,17 @@ theorem rTensor'_sum
           smul_eq_mul]
   | add p q hp hq => rw [LinearEquiv.map_add, Finsupp.sum_add_index (fun _ _ ↦ smul_zero _)
       (fun _ _ ↦ smul_add _ ), hp, hq, LinearMap.map_add]
+
+open TensorProduct in
+lemma rTensor_monomial_eq {S : Type*} [CommSemiring S] [Algebra R S] {sm : S ⊗[R] M} {p n : ℕ} :
+    ((rTensor R M S) ((LinearMap.rTensor M ((monomial p).restrictScalars R)) sm)) n =
+      if p = n then sm else 0 := by
+  simp only [rTensor_apply, ← rTensor_comp_apply]
+  have : (lcoeff S n) ∘ₗ (monomial p) = if p = n then LinearMap.id else 0 := by
+    ext
+    simp only [coe_comp, Function.comp_apply, lcoeff_apply, coeff_monomial]
+    split_ifs <;> simp
+  simp only [← restrictScalars_comp, this]
+  split_ifs <;> simp
 
 end Polynomial

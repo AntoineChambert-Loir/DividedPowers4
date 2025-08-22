@@ -365,10 +365,13 @@ theorem rTensor_biCoeff_S_eq {S' : Type*} [CommSemiring S'] [Algebra R S'] (φ :
     simp only [Fin.isValue, map_add, tmul_add] at hsm hsm' ⊢
     rw [add_add_add_comm, hsm, hsm', add_add_add_comm]
 
+
 /-- The bi-coefficients of a bihomogeneous polynomial map of bi-degree `n` vanish outside of
 bi-degree `n`. -/
 lemma isBiHomogeneousOfDegree_biCoeff_S {d : ℕ × ℕ} (hf : IsBiHomogeneousOfDegree n f)
     (sm : S ⊗[R] (M × M')) (hd : d ≠ n) : biCoeff_S sm d f = 0 := by
+  
+  
   sorry
 
 /-- The bi-coefficients of a homogeneous polynomial map of degree `n` vanish outside of
@@ -384,12 +387,16 @@ lemma isHomogeneousOfDegree_biCoeff_S' {n : ℕ} {d : ℕ × ℕ} (hf : IsHomoge
     (sm : S ⊗[R] (M × M')) (hd : d.1 + d.2 ≠ n) : biCoeff_S sm d f = 0 := by
   induction sm using TensorProduct.induction_on with
   | zero =>
-    have h0 : f.toFun (MvPolynomial (Fin 2) S) 0 = 0 := by
+      simp only [biCoeff_S_apply, Fin.isValue, map_zero, tmul_zero, add_zero,
+      finTwoArrowEquiv'_symm_apply]
+
+      sorry
+    /- have h0 : f.toFun (MvPolynomial (Fin 2) S) 0 = 0 := by
       apply toFun_zero_of_constantBiCoeff_zero
       apply biCoeff_zero_of_isHomogeneousOfDegree _ hf
-      sorry -- **MI** : this seems to suggest n ≠ 0 is required (?)
-    simp only [biCoeff_S_apply, Fin.isValue, map_zero, tmul_zero, add_zero, h0,
-      finTwoArrowEquiv'_symm_apply, coe_zero, Pi.zero_apply]
+      sorry -- **MI** : this seems to suggest n ≠ 0 is required (?) -/
+    /- simp only [biCoeff_S_apply, Fin.isValue, map_zero, tmul_zero, add_zero, h0,
+      finTwoArrowEquiv'_symm_apply, coe_zero, Pi.zero_apply] -/
   | add sm sm' hsm hsm' =>
     -- **MI** : unclear
     sorry

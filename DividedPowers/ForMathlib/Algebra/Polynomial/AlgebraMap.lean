@@ -40,4 +40,16 @@ lemma baseChange_monomial (φ : S →ₐ[R] S') (n : ℕ) (a : S) :
   simp only [baseChange, AlgHom.coe_mk, coe_eval₂RingHom, eval₂_monomial, RingHom.coe_comp,
     RingHom.coe_coe, Function.comp_apply, C_mul_X_pow_eq_monomial]
 
+open LinearMap TensorProduct in
+lemma X_pow_mul_rTensor_monomial {S : Type*} [CommSemiring S] [Algebra R S] {N : Type*}
+    [AddCommMonoid N] [Module R N] (k : ℕ) (sn : S ⊗[R] N) :
+      X (R := S) ^ k • (LinearMap.rTensor N ((monomial 0).restrictScalars R)) sn =
+        (LinearMap.rTensor N ((monomial k).restrictScalars R)) sn := by
+    induction sn using TensorProduct.induction_on with
+    | zero => simp
+    | add x y hx hy => simp [hx, hy]
+    | tmul s n =>
+      simp only [rTensor_tmul, coe_restrictScalars, monomial_zero_left]
+      rw [smul_tmul', smul_eq_mul, mul_comm, C_mul_X_pow_eq_monomial]
+
 end Polynomial

@@ -7,8 +7,8 @@ open MvPolynomial TensorProduct
 
 universe u
 
-variable (R : Type u) [CommSemiring R] (M M' : Type*) [AddCommGroup M] [Module R M]
-  [AddCommGroup M'] [Module R M'] {N : Type*} [AddCommGroup N] [Module R N]
+variable (R : Type u) [CommSemiring R] (M M' : Type*) [AddCommMonoid M] [Module R M]
+  [AddCommMonoid M'] [Module R M'] {N : Type*} [AddCommMonoid N] [Module R N]
   (f : M →ₚₗ[R] N) (n p : ℕ)
 
 namespace PolynomialLaw

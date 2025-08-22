@@ -2,6 +2,7 @@
 
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.Polynomial
 import DividedPowers.PolynomialLaw.Coeff
+import DividedPowers.ForMathlib.Algebra.Module.LinearMap.Defs
 import DividedPowers.ForMathlib.Algebra.Polynomial.AlgebraMap
 import DividedPowers.ForMathlib.Algebra.Algebra.Bilinear
 import DividedPowers.ForMathlib.Algebra.BigOperators.Finsupp.Basic
@@ -554,6 +555,36 @@ theorem recompose_component : lfsum (fun p ↦ f.component p) = f := by
   simp only [AlgHom.toLinearMap_apply, AlgHom.coe_restrictScalars', coe_aeval_eq_eval,
     Polynomial.lsum_apply, coe_restrictScalars, lsmul_apply, smul_eq_mul, one_mul, eval_eq_sum]
   exact congr_arg₂ _ rfl (by simp)
+
+variable {f p}
+
+/-- If `f` is homogeneous of degree `p` and `p ≠ n`, then `f.component n` is zero. -/
+lemma component_eq_zero_of_ne (hf : IsHomogeneousOfDegree p f) {n : ℕ} (hn : p ≠ n) :
+    f.component n = 0 := by
+  ext S _ _ sm
+  dsimp only [component]
+  simp only [zero_def, Pi.zero_apply]
+  unfold IsHomogeneousOfDegree at hf
+  specialize hf S[X] X (rTensor M ((monomial 0).restrictScalars R) sm)
+  have h' : f.toFun' S[X] ((LinearMap.rTensor M ((monomial 0).restrictScalars R)) sm) =
+      LinearMap.rTensor N ((monomial 0).restrictScalars R) (f.toFun' S sm) := by
+    set g : S →ₐ[R] S[X] := CAlgHom
+    have : (CAlgHom (A := S)).toLinearMap = (monomial 0).restrictScalars R := by
+      ext s n
+      simp
+    rw [← this, ← f.isCompat_apply']
+  rw [← X_pow_mul_rTensor_monomial  1, pow_one, hf, h', X_pow_mul_rTensor_monomial,
+    rTensor_monomial_eq, if_neg hn]
+
+theorem isHomogeneousOfDegree_iff_component :
+    IsHomogeneousOfDegree p f ↔ ∀ (n : ℕ) (_ : p ≠ n), f.component n = 0 := by
+  refine ⟨fun hf n hn ↦ component_eq_zero_of_ne hf hn, fun h ↦ ?_⟩
+  rw [← recompose_component f]
+  convert component_isHomogeneous p f
+  ext S _ _ sm
+  rw [lfsum_eq_of_locFinsupp (by simp [LocFinsupp]), Finsupp.sum, Finsupp.ofSupportFinite_coe,
+    Finset.sum_eq_single p (fun n _ hn ↦ by simp [h n (Ne.symm hn)])
+      (fun hp ↦ by simpa [Finsupp.ofSupportFinite_coe] using hp)]
 
 end Components
 
