@@ -451,6 +451,7 @@ lemma map_add_eq_sum_differential_apply (m m' : M) :
 
 -- Section II.5
 
+variable (R N) in
 /-- The nth partial derivative of `f` at `x`. -/
 def partialDerivative (n : ℕ) (x : M) : (M →ₚₗ[R] N) →ₗ[R] (M →ₚₗ[R] N) where
   toFun f := (f.differential n).comp (inl R M M + (inr R M M).comp (const R M M x))
@@ -476,7 +477,7 @@ lemma differential_toFun_eq_coeff {S : Type*} [CommSemiring S] [Algebra R S] (n 
 -- TODO: golf
 -- pg 239
 lemma partialDerivative_eq_coeff {S : Type*} [CommSemiring S] [Algebra R S] (x : M)
-    (sm : S ⊗[R] M) : (partialDerivative n x f).toFun S sm =
+    (sm : S ⊗[R] M) : (partialDerivative R N n x f).toFun S sm =
     Polynomial.rTensor _ _ _ (f.toFun _ ((LinearEquiv.rTensor M
       (Polynomial.scalarRTensorAlgEquiv _ _).toLinearEquiv)
         (((TensorProduct.assoc R (Polynomial R) S M).symm ((1 : Polynomial R) ⊗ₜ sm))) +
@@ -500,7 +501,7 @@ lemma partialDerivative_eq_coeff {S : Type*} [CommSemiring S] [Algebra R S] (x :
 -- **MI**: something is off here.
 lemma partialDerivative_isHomogeneousOfDegree_of_le [Nontrivial R]
     (hf : IsHomogeneousOfDegree p f) (hnp : n ≤ p) (x : M) :
-    (partialDerivative n x f).IsHomogeneousOfDegree (p - n) := by
+    (partialDerivative R N n x f).IsHomogeneousOfDegree (p - n) := by
   intro S _ _ s m
   simp only [partialDerivative, LinearMap.coe_mk, AddHom.coe_mk]
   rw [differential_eq_biComponent_of_le hf hnp]
@@ -571,14 +572,14 @@ lemma partialDerivative_isHomogeneousOfDegree_of_le [Nontrivial R]
 
 -- Roby63, pg 240
 lemma partialDerivative_eq_zero_of_gt (hf : IsHomogeneousOfDegree p f) (hnp : p < n) (x : M) :
-    partialDerivative n x f = 0 := by
+    partialDerivative R N n x f = 0 := by
   ext S _ _ sm
   simp only [partialDerivative, LinearMap.coe_mk, AddHom.coe_mk]
   rw [differential_eq_zero_of_gt hf hnp]
   simp [comp_toFun']
 
 -- Roby63, pg 240 (Prop. II.2)
-lemma taylor_sum (m x : M) : f (m + x) = lfsum (fun (n : ℕ) ↦ partialDerivative n x f) m := by
+lemma taylor_sum (m x : M) : f (m + x) = lfsum (fun (n : ℕ) ↦ partialDerivative R N n x f) m := by
   rw [map_add_eq_sum_differential_apply]
   simp only [ground_apply, partialDerivative, LinearMap.coe_mk, AddHom.coe_mk,
     EmbeddingLike.apply_eq_iff_eq]
@@ -596,8 +597,8 @@ lemma taylor_sum (m x : M) : f (m + x) = lfsum (fun (n : ℕ) ↦ partialDerivat
 
 -- Roby63, pg 240 (Prop. II.2)
 lemma partialDerivative_comp (x : M) :
-    partialDerivative n x (partialDerivative p x f) =
-      (n.choose p) * partialDerivative (n + p) x f := by
+    partialDerivative R N n x (partialDerivative R N p x f) =
+      (n.choose p) * partialDerivative R N (n + p) x f := by
   sorry
 
 -- Section II.6
@@ -606,7 +607,7 @@ lemma partialDerivative_comp (x : M) :
 lemma differential_toFun_eq_lfsum {S : Type*} [CommSemiring S] [Algebra R S] (sm sm' : S ⊗[R] M)
     {k : ℕ} {s : Fin k → S} {x : Fin k → M} (hsm' : sm' = ∑ i, (s i) ⊗ₜ (x i)) :
     (differential 1 f).toFun S ((prodRight R S S M M).symm (sm, sm')) =
-      ∑ i, (s i) • (partialDerivative 1 (x i) f).toFun S sm := by
+      ∑ i, (s i) • (partialDerivative R N 1 (x i) f).toFun S sm := by
   sorry
 
 -- Section II.7
@@ -615,7 +616,7 @@ lemma differential_toFun_eq_lfsum {S : Type*} [CommSemiring S] [Algebra R S] (sm
 -- Generalized as in remark after Prop. II.5
 lemma partialDerivative_comp_eq_coeff {S : Type*} [CommSemiring S] [Algebra R S] (k₁ k₂ : ℕ)
     (x₁ x₂ : M) (sm : S ⊗[R] M) :
-    (partialDerivative k₁ x₁ (partialDerivative k₂ x₂ f)).toFun S sm =
+    (partialDerivative R N k₁ x₁ (partialDerivative R N k₂ x₂ f)).toFun S sm =
       MvPolynomial.rTensor (f.toFun (MvPolynomial (Fin 2) S)
         ((LinearEquiv.rTensor M scalarRTensorAlgEquiv.toLinearEquiv)
           ((TensorProduct.assoc R (MvPolynomial (Fin 2) R) S M).symm
@@ -627,25 +628,229 @@ example (F : Fin n → (M →ₚₗ[R] N) →ₗ[R] M →ₚₗ[R] N) :
     List ((M →ₚₗ[R] N) →ₗ[R] M →ₚₗ[R] N) := by
   exact List.map F (List.finRange n)
 
+-- Roby63, pg 241 (Prop. II.5)
+-- Generalized as in remark after Prop. II.5
+lemma partialDerivative_comm {S : Type*} [CommSemiring S] [Algebra R S] (k₁ k₂ : ℕ)
+    (x₁ x₂ : M) (sm : S ⊗[R] M) :
+    (partialDerivative R N k₁ x₁ (partialDerivative R N k₂ x₂ f)).toFun S sm =
+      (partialDerivative R N k₂ x₂ (partialDerivative R N k₁ x₁ f)).toFun S sm := sorry
+
+variable (R N) in
+-- Roby63, pg 241 (Prop. II.5)
+-- Generalized as in remark after Prop. II.5
+lemma partialDerivativeCommute (k₁ k₂ : ℕ) (x₁ x₂ : M) :
+    Commute (partialDerivative R N k₁ x₁) (partialDerivative R N k₂ x₂) := by
+
+  sorry
+
+-- TODO: move
+lemma _root_.MvPolynomial.coeff_scalarRTensorAlgEquiv {σ S : Type*} [DecidableEq σ] [CommSemiring S]
+    [Algebra R S] (p : MvPolynomial σ R) (s : S) (k : σ →₀ ℕ) :
+    MvPolynomial.coeff k (scalarRTensorAlgEquiv (p ⊗ₜ[R] s)) = (MvPolynomial.coeff k p) • s := by
+  simp [scalarRTensorAlgEquiv, AlgEquiv.trans_apply, rTensorAlgEquiv_apply, mapAlgEquiv_apply,
+    coeff_map, coeff_rTensorAlgHom_tmul, RingHom.coe_coe, Algebra.TensorProduct.lid_tmul]
+
+-- TODO: move
+-- TODO: add to Mathlib (with _apply, as in Polynomial case)
+/-- `MvPolynomial.C` as an `AlgHom`. -/
+@[simps! apply]
+def _root_.MvPolynomial.CAlgHom {R : Type*} [CommSemiring R] {A : Type*} [CommSemiring A] [Algebra R A]
+     {σ : Type*} : A →ₐ[R] MvPolynomial σ A where
+  toRingHom := C
+  commutes' _ := rfl
+
+-- Roby63, pg 241 (Prop. II.4 for general n)
+-- NOTE: the `reverse` is to state it in the same order as in Roby, but `partialDerivative_comm`
+-- shows it is not needed.
+lemma firstPartialDerivative_comp_multiple_eq_coeff {S : Type*} [CommSemiring S] [Algebra R S]
+    {n : ℕ}
+    (k : Fin n →₀ ℕ) (hk : ∀ i, k i = 1) (x : Fin n → M) (sm : S ⊗[R] M) :
+    ((List.map (fun (i : Fin n) ↦ partialDerivative R N 1 (x i))
+      (List.finRange n)).prod f).toFun S sm =
+      MvPolynomial.rTensor (f.toFun (MvPolynomial (Fin n) S)
+        ((LinearEquiv.rTensor M scalarRTensorAlgEquiv.toLinearEquiv)
+          ((TensorProduct.assoc R (MvPolynomial (Fin n) R) S M).symm
+            ((1 ⊗ₜ[R] sm) + ∑ (i : Fin n), (X (R := R) i) ⊗ₜ[R]  ((1 : S) ⊗ₜ[R] x i) )))) k := by
+  induction n generalizing S sm with
+  | zero =>
+    simp only [List.finRange_zero, List.map_nil, List.prod_nil, Module.End.one_apply,
+      Finset.univ_eq_empty, Finset.sum_empty, add_zero]
+    rw [MvPolynomial.rTensor_apply]
+    simp only [Subsingleton.eq_zero k]
+    let g := MvPolynomial.CAlgHom (R := R) (A := S) (σ := Fin 0)
+    let h := (MvPolynomial.aeval (R := S) (S₁ := S) (σ := Fin 0) 0).restrictScalars R
+    set j := (lcoeff S (σ := Fin 0) 0).restrictScalars R with hj_def
+    have hj : j = h.toLinearMap := by
+      ext p
+      simp only [hj_def, LinearMap.coe_restrictScalars, lcoeff_apply, Matrix.zero_empty,
+        AlgHom.toLinearMap_apply, AlgHom.coe_restrictScalars', h]
+      rw [show ![] = 0 by simp only [Matrix.zero_empty]]
+      rw [aeval_zero]
+      simp only [Algebra.algebraMap_self, constantCoeff, RingHom.coe_mk, MonoidHom.coe_mk,
+        OneHom.coe_mk, RingHom.id_apply]
+    have hg := f.isCompat_apply g sm
+    have hh := f.isCompat_apply h (LinearMap.rTensor M g sm)
+    simp only [← LinearMap.rTensor_comp_apply] at hh
+    have heq : h.toLinearMap ∘ₗ ↑g = LinearMap.id := by
+      ext
+      simp only [Matrix.zero_empty, LinearMap.coe_comp, LinearMap.coe_coe, Function.comp_apply,
+        CAlgHom_apply, AlgHom.toLinearMap_apply, AlgHom.coe_restrictScalars', algHom_C,
+        Algebra.algebraMap_self, RingHom.id_apply, LinearMap.id_coe, id_eq, h, g]
+    simp only [heq, LinearMap.rTensor_id, LinearMap.id_coe, id_eq] at hh
+    rw [hj]
+    rw [f.isCompat_apply]
+    congr
+    simp only [LinearEquiv.rTensor_apply, AlgEquiv.toLinearEquiv_toLinearMap]
+    induction sm using TensorProduct.induction_on with
+    | zero => simp only [tmul_zero, map_zero]
+    | add sm sm' hsm hsm' =>
+      simp only [f.isCompat_apply, forall_const, ← LinearMap.rTensor_comp_apply,
+        heq, LinearMap.rTensor_id, LinearMap.id_coe, id_eq, forall_const] at hsm hsm'
+      simp only [tmul_add, map_add, ← LinearMap.rTensor_comp_apply, ← hsm, ← hsm']
+    | tmul s m =>
+      simp only [assoc_symm_tmul, LinearMap.rTensor_tmul, AlgEquiv.toLinearMap_apply,
+        AlgHom.toLinearMap_apply]
+      simp only [Matrix.zero_empty, AlgHom.coe_restrictScalars', h]
+      rw [show ![] = 0 by simp only [Matrix.zero_empty]]
+      rw [aeval_zero]
+      simp only [Algebra.algebraMap_self, constantCoeff, RingHom.coe_mk, MonoidHom.coe_mk,
+        OneHom.coe_mk, RingHom.id_apply]
+      congr
+      rw [coeff_scalarRTensorAlgEquiv]
+      simp only [coeff_zero_one, _root_.one_smul]
+  | succ n hn =>
+    rw [List.finRange_succ, List.map_cons, List.prod_cons]
+    set x' : Fin n → M := fun i ↦ x (Fin.succ i)
+    have : (List.map (fun i ↦ partialDerivative R N 1 (x i)) (List.map Fin.succ (List.finRange n))) =
+      (List.map (fun i ↦ partialDerivative R N 1 (x' i)) (List.finRange n)) := by
+      simp [x']
+
+    sorry
+
+example {ι  : Type*} (s : Set ι) (k : ι →₀ ℕ) :
+    s →₀ ℕ := by
+  exact k.subtypeDomain s
+
+def _root_.Set.complSumSelfEquiv {ι : Type*} (s : Set ι) [∀ x, Decidable (x ∈ s)] :
+    ι ≃ ↑s.compl ⊕ ↑s  where
+  toFun x := if hx : x ∈ s then Sum.inr ⟨x, hx⟩ else Sum.inl ⟨x, hx⟩
+  invFun x := by rcases x with (x | x) <;> exact (x : ι)
+  right_inv x := by
+    rcases x with (x | x)
+    · simp only [Subtype.coe_eta, dite_eq_right_iff, reduceCtorEq, imp_false]
+      exact x.2
+    · simp only [Subtype.coe_prop, ↓reduceDIte, Subtype.coe_eta]
+  left_inv x := by by_cases hx : x ∈ s <;> simp [hx]
+
+
+def _root_.MvPolynomial.splitAlgEquiv {ι : Type*} (s : Set ι) [∀ x, Decidable (x ∈ s)] :
+    (MvPolynomial ι R) ≃ₐ[R] MvPolynomial (s.compl) (MvPolynomial (s) R) :=
+  (renameEquiv R s.complSumSelfEquiv).trans (sumAlgEquiv R s.compl s)
+
+theorem _root_.Finsupp.prod_mul_prod_compl {ι M N : Type*} [Zero M] [CommMonoid N] (s : Set ι)
+   [DecidablePred (fun x ↦ x ∈ s)] (f : ι →₀ M) (g : ι → M → N) (gs : s → M → N)
+   (gs' : s.compl → M → N) (hs : ∀ x : s, g x = gs x) (hs' : ∀ x : s.compl, g x = gs' x) :
+   ((Finsupp.subtypeDomain s f).prod gs) *
+     ((Finsupp.subtypeDomain s.compl f).prod gs') = Finsupp.prod f g := sorry
+
+lemma _root_.MvPolynomial.splitAlgEquiv_monomial
+    {ι : Type*} (s : Set ι) [∀ x, Decidable (x ∈ s)]  (k : ι →₀ ℕ) (r : R) :
+    splitAlgEquiv s (monomial k r) =
+      monomial (k.subtypeDomain s.compl) (monomial (k.subtypeDomain s) r) := by
+  classical
+  simp only [splitAlgEquiv, AlgEquiv.trans_apply, renameEquiv_apply]
+  simp only [rename_monomial]
+  rw [sumAlgEquiv_apply]
+  simp only [sumToIter, coe_eval₂Hom, eval₂_monomial, RingHom.coe_comp, Function.comp_apply]
+  simp only [Set.complSumSelfEquiv, Equiv.coe_fn_mk]
+  simp only [monomial_eq, C_mul]
+  simp only [C_mul', Algebra.smul_mul_assoc]
+  congr
+  rw [smul_eq_C_mul]
+  rw [map_finsuppProd]
+  simp only [C_pow]
+  rw [eq_comm]
+  rw [Finsupp.prod_mul_prod_compl]
+  sorry
+  sorry
+  sorry
+  --have := Finsupp.prod_mul_prod_compl s
+  --simp only [Finsupp.prod, Finsupp.subtypeDomain_apply]
+  sorry
+
+#exit
+
+lemma _root_.MvPolynomial.test {ι : Type*} (s : Set ι) [∀ x, Decidable (x ∈ s)]
+    (P : MvPolynomial ι R) (k : ι →₀ ℕ) :
+    P.coeff k  = MvPolynomial.coeff (k.subtypeDomain s)
+      (MvPolynomial.coeff (k.subtypeDomain s.compl) (P.splitAlgEquiv s)) := by
+  induction P using MvPolynomial.induction_on' with
+  | monomial n r =>
+
+    sorry
+  | add p q hp hq => simp only [coeff_add, hp, hq, map_add]
+
+lemma firstPartialDerivative_comp_multiple_eq_coeff' {ι S : Type*} [CommSemiring S] [Algebra R S]
+    [Fintype ι] [DecidableEq ι] {L : List ι} (hL : L.Nodup)
+    (k : ι →₀ ℕ) (hk : ∀ i, k i = 1) (x : ι → M) (sm : S ⊗[R] M) :
+    ((List.map (fun i ↦ partialDerivative R N 1 (x i)) L).prod f).toFun S sm =
+      MvPolynomial.rTensor (f.toFun (MvPolynomial ι S)
+        ((LinearEquiv.rTensor M scalarRTensorAlgEquiv.toLinearEquiv)
+          ((TensorProduct.assoc R (MvPolynomial ι R) S M).symm
+            ((1 ⊗ₜ[R] sm) +
+            List.sum (List.map (fun i ↦ (X (R := R) i) ⊗ₜ[R] ((1 : S) ⊗ₜ[R] x i)) L))))) k := by
+  induction L generalizing S sm with
+  | nil => sorry
+  | cons i L hL' =>
+    simp only [List.map_cons, List.prod_cons, Module.End.mul_apply, List.sum_cons, map_add,
+      assoc_symm_tmul, LinearEquiv.rTensor_tmul, AlgEquiv.toLinearEquiv_apply]
+    set sm' : (Polynomial S) ⊗[R] M :=
+      LinearMap.rTensor M Polynomial.CAlgHom.toLinearMap sm + (Polynomial.X) ⊗ₜ[R] (x i)
+    have := optionEquivRight
+
+    sorry
+
+#exit
+
 -- Roby63, pg 241 (Prop. II.4 for general n)
 -- NOTE: the `reverse` is to state it in the same order as in Roby, but `partialDerivative_comm`
 -- shows it is not needed.
 lemma partialDerivative_comp_multiple_eq_coeff {S : Type*} [CommSemiring S] [Algebra R S] {n : ℕ}
     (k : Fin n →₀ ℕ) (x : Fin n → M) (sm : S ⊗[R] M) :
-    ((List.map (fun (i : Fin n) ↦ partialDerivative (k i) (x i))
-      (List.finRange n).reverse).prod f).toFun S sm =
+    ((List.map (fun (i : Fin n) ↦ partialDerivative R N (k i) (x i))
+      (List.finRange n)).prod f).toFun S sm =
       MvPolynomial.rTensor (f.toFun (MvPolynomial (Fin n) S)
         ((LinearEquiv.rTensor M scalarRTensorAlgEquiv.toLinearEquiv)
           ((TensorProduct.assoc R (MvPolynomial (Fin n) R) S M).symm
             ((1 ⊗ₜ[R] sm) + ∑ (i : Fin n), (X (R := R) i) ⊗ₜ[R]  ((1 : S) ⊗ₜ[R] x i) )))) k := by
+
+
   sorry
 
--- Roby63, pg 241 (Prop. II.5)
--- Generalized as in remark after Prop. II.5
-lemma partialDerivative_comm {S : Type*} [CommSemiring S] [Algebra R S] (k₁ k₂ : ℕ)
-    (x₁ x₂ : M) (sm : S ⊗[R] M) :
-    (partialDerivative k₁ x₁ (partialDerivative k₂ x₂ f)).toFun S sm =
-      (partialDerivative k₂ x₂ (partialDerivative k₁ x₁ f)).toFun S sm := sorry
+-- Roby63, pg 241 (Prop. II.4 for general n)
+-- NOTE: the `reverse` is to state it in the same order as in Roby, but `partialDerivative_comm`
+-- shows it is not needed.
+lemma partialDerivative_comp_multiple_eq_coeff' {S : Type*} [CommSemiring S] [Algebra R S] {n : ℕ}
+    (k : Fin n →₀ ℕ) (x : Fin n → M) (sm : S ⊗[R] M) (f : M →ₚₗ[R] N) :
+    (Finset.univ.noncommProd
+    (fun i ↦ partialDerivative R N (k i) (x i))
+    (fun a _ b _ _ ↦  partialDerivativeCommute R N (k a) (k b) (x a) (x b)) f).toFun S sm =
+      MvPolynomial.rTensor (f.toFun (MvPolynomial (Fin n) S)
+        ((LinearEquiv.rTensor M scalarRTensorAlgEquiv.toLinearEquiv)
+          ((TensorProduct.assoc R (MvPolynomial (Fin n) R) S M).symm
+            ((1 ⊗ₜ[R] sm) + ∑ (i : Fin n), (X (R := R) i) ⊗ₜ[R]  ((1 : S) ⊗ₜ[R] x i) )))) k := by
+  classical
+  set g := fun (i : Fin n) ↦ partialDerivative (R := R) (N := N) (k i) (x i)
+  set S := (Finset.univ.image g)
+  let U := Finset.univ.noncommProd
+    (fun i ↦ partialDerivative R N (k i) (x i))
+    (fun a _ b _ _ ↦  partialDerivativeCommute R N (k a) (k b) (x a) (x b))
+  sorry
+
+
+
+
+
 
 -- Roby63, pg 242 (Partial derivative of constant polynomial law).
 lemma partialDerivative_of_isHomogeneousOfDegree_zero_eq_zero (hn : 0 < n) (x : M)
