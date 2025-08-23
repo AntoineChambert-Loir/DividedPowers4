@@ -43,7 +43,11 @@ def dividedDifferential : (M →ₚₗ[R] N) →ₗ[R] ((M × M) →ₚₗ[R] N)
     rfl -- the functions are definitionally equal
 
 -- TODO: rename, golf
--- ACL : this is surprisingly slow!
+/- ACL :
+  * this is surprisingly slow!
+  * If I understand things correctly, we pass through `biCoeff_S`
+    because of `finTwoArrowEquiv'`, but do we need that, couldn't we
+    be content with `Fin 2 → ?_` ? -/
 lemma asdf (a n : ℕ) (m m' : M) :
     biCoeff_S ((1 : R) ⊗ₜ[R] (m, m')) (a, n) f.polarizedProd =
       1 ⊗ₜ[R] ((coeff ![m, m']) f) ((finTwoArrowEquiv' ℕ).symm (a, n)) := by
