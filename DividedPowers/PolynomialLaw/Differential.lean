@@ -970,14 +970,14 @@ lemma taylor_sum_prod (f : (M × M') →ₚₗ[R] N) (m x : M × M') :
 
 -- Roby63, pg 244 (Prop. II.9 for n = 2)
 lemma partialDerivative_fst_comp (f : (M × M') →ₚₗ[R] N) (x : M × M') :
-    partialDerivative n (x.1, 0) (partialDerivative p (x.1, 0) f) =
-      (n.choose p) * partialDerivative (n + p) (x.1, 0) f := by
+    partialDerivative R N n (x.1, 0) (partialDerivative R N p (x.1, 0) f) =
+      (n.choose p) * partialDerivative R N (n + p) (x.1, 0) f := by
   sorry
 
 -- Roby63, pg 244 (Prop. II.9 for n = 2)
 lemma partialDerivative_snd_comp (f : (M × M') →ₚₗ[R] N) (x : M × M') :
-    partialDerivative n (0, x.2) (partialDerivative p (0, x.2) f) =
-      (n.choose p) * partialDerivative (n + p) (0, x.2) f := by
+    partialDerivative R N n (0, x.2) (partialDerivative R N p (0, x.2) f) =
+      (n.choose p) * partialDerivative R N (n + p) (0, x.2) f := by
   sorry
 
 -- We could probably replace `Fin n` by a fintype ι, but it might not be worht it.
@@ -985,14 +985,14 @@ lemma partialDerivative_snd_comp (f : (M × M') →ₚₗ[R] N) (x : M × M') :
 lemma taylor_sum_pi {M : Fin n → Type*} [∀ i, AddCommMonoid (M i)] [∀ i, Module R (M i)]
     (f : (Π i, M i) →ₚₗ[R] N) (m x : Π i, M i) :
     f (m + x) = lfsum (fun (k : Fin n →₀ ℕ) ↦ ((List.map (fun (i : Fin n) ↦
-      partialDerivative (k i) (Pi.single i (x i))) (List.finRange n).reverse)).prod f) m := by
+      partialDerivative R N (k i) (Pi.single i (x i))) (List.finRange n).reverse)).prod f) m := by
   sorry
 
 -- Roby63, pg 244 (Prop. II.9 for general n)
 lemma partialDerivative_comp_single {M : Fin n → Type*} [∀ i, AddCommMonoid (M i)]
     [∀ i, Module R (M i)] (f : (Π i, M i) →ₚₗ[R] N) (x : Π i, M i) (i : Fin n):
-    partialDerivative n (Pi.single i (x i)) (partialDerivative p (Pi.single i (x i)) f) =
-      (n.choose p) * partialDerivative (n + p) (Pi.single i (x i)) f := by
+    partialDerivative R N n (Pi.single i (x i)) (partialDerivative R N p (Pi.single i (x i)) f) =
+      (n.choose p) * partialDerivative R N (n + p) (Pi.single i (x i)) f := by
   sorry
 
 end PolynomialLaw

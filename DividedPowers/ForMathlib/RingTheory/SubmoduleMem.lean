@@ -16,13 +16,7 @@ theorem mem_span_iff_exists_sum' {R : Type _} [CommSemiring R] {M : Type _} [Add
     x ∈ span R (f '' s) ↔ ∃ a : ↥s →₀ R, (a.sum fun (i : ↥s) (c : R) => c • f ↑i) = x := by
   rw [← top_smul (span R (f '' s)), mem_ideal_smul_span_iff_exists_sum']
   apply exists_congr
-  intro a
-  constructor
-  . rintro ⟨_, h⟩
-    exact h
-  . intro h
-    simp only [mem_top, Subtype.forall, implies_true, exists_prop, true_and]
-    exact h
+  exact fun _ ↦ exists_prop_of_true fun i ↦ trivial
 
 theorem mem_span_set_iff_exists_sum {R : Type _} [CommSemiring R] {M : Type _} [AddCommMonoid M]
     [Module R M] (s : Set M) (x : M) :
