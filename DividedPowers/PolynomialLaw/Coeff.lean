@@ -133,6 +133,16 @@ lemma lfsumHom_apply' {f : ↥(Submodule.locFinsupp R M N ι)} : lfsumHom f = lf
 
 lemma lfsumHom_apply (hf : LocFinsupp f) : lfsumHom ⟨f, hf⟩ = lfsum f := rfl
 
+lemma lfsumHom_add (hf : LocFinsupp f) (hg : LocFinsupp g) (hfg : LocFinsupp (f + g)) :
+    lfsumHom ⟨(f + g), hfg⟩ = lfsumHom ⟨f, hf⟩ + lfsumHom ⟨g, hg⟩ := by
+  rw [← map_add]
+  rfl
+
+lemma lfsumHom_smul (hf : LocFinsupp f) {r : R} (hrf : LocFinsupp (r • f)) :
+    lfsumHom ⟨r • f, hrf⟩ = r • lfsumHom ⟨f, hf⟩ := by
+  rw [← map_smul]
+  rfl
+
 end LocFinsupp
 
 /- ## Coefficients of polynomial laws. -/
