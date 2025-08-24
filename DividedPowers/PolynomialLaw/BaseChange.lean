@@ -72,10 +72,166 @@ theorem prod_eq_iff_of_nonempty {α β : Type*} {s s' : Set α} {t t' : Set β}
 
 end Set
 
+namespace Finset
+
+noncomputable def biUnion₂ {α β : Type*} [DecidableEq α] [DecidableEq β]
+    (s : Finset α) (t : α → Finset β) : Finset (α × β) :=
+  Finset.biUnion s (fun a ↦ {a} ×ˢ t a)
+
+@[to_additive]
+theorem prod_biUnion₂ {α β γ : Type*} [DecidableEq α] [DecidableEq β] [CommMonoid γ]
+    {s : Finset α} {t : α → Finset β} {f : α → β → γ} :
+    ∏ a ∈ s, ∏ b ∈ t a, f a b =
+      ∏ x ∈ Finset.biUnion₂ s t, f x.1 x.2 := by
+  simp only [Finset.biUnion₂]
+  rw [Finset.prod_biUnion]
+  · apply Finset.prod_congr rfl
+    intro a ha
+    simp only [Finset.singleton_product, Finset.prod_map, Function.Embedding.coeFn_mk]
+  · intro a _ a' _ h
+    simp only [Function.onFun, ← Finset.disjoint_coe, Finset.singleton_product, Finset.coe_map, Function.Embedding.coeFn_mk]
+    rw [Set.disjoint_iff_forall_ne]
+    rintro ⟨x, y⟩ hxy ⟨x', y'⟩ hxy' H
+    apply h
+    simp only [Set.mem_image, Finset.mem_coe, Prod.mk.injEq, exists_eq_right_right] at hxy hxy'
+    simp only [Prod.mk.injEq] at H
+    rw [hxy.2, H.1, hxy'.2]
+
+end Finset
+
+namespace Multiset
+
+variable {α β γ M : Type*}
+    [CommMonoid M]
+  -- [DecidableEq α] [DecidableEq β] [DecidableEq γ]
+
+@[to_additive]
+theorem map_fst_prod (n : Multiset γ) (g : α → γ → M) (a : α) :
+    (map (g a) n).prod = (map (fun x ↦ g x.1 x.2) (({a} : Multiset α).product n)).prod := by
+  induction n using Multiset.induction_on with
+  | empty => rfl
+  | cons b n hn =>
+    simp [Multiset.map_cons, Multiset.prod_cons, hn,
+      show ({a} : Multiset α).product (b ::ₘ n) = (a, b) ::ₘ ({a} : Multiset α).product n from Multiset.product_cons b {a} n]
+
+/--  ∏ (a, b) ∈ m, ∏ c ∈ f b, g a c = ∏ (a, c) ∈ (m.map ?_), g a c -/
+@[to_additive]
+theorem map_prod_map_prod
+    (m : Multiset (α × β)) (f : β → Multiset γ) (g : α → γ → M) :
+    (m.map (fun x ↦ ((f x.2).map (g x.1)).prod)).prod =
+      ((Multiset.map (fun x ↦ Multiset.product {x.1} (f x.2)) m).sum.map (fun x ↦ g x.1 x.2)).prod := by
+  induction m using Multiset.induction_on with
+  | empty => simp
+  | cons a m hm =>
+    simp only [Multiset.map_cons, Multiset.prod_cons, Multiset.sum_cons, Multiset.map_add,
+      Multiset.prod_add]
+    congr 1
+    apply map_fst_prod
+
+example [DecidableEq α] (m : Multiset α) (f : α → M) :
+    (m.map f).prod = ∏ a ∈ m.toFinset, f a ^ m.count a := by
+  exact Finset.prod_multiset_map_count m f
+
+-- example (m : Multiset α) (f : α → β) (g : β → γ) : g (m.map f).prod
+end Multiset
+
 namespace TensorProduct
 
 variable {R : Type*} [CommSemiring R]
   {M : Type*}  [AddCommMonoid M] [Module R M]
+  {N : Type*}  [AddCommMonoid N] [Module R N]
+
+theorem finset_sum_tmul_left {ι : Type*}
+    (m : M) (n : ι → N) (s : Finset ι) :
+    ∑ i ∈ s, m ⊗ₜ[R] n i = m ⊗ₜ[R] ∑ i ∈ s, n i := by
+  classical
+  induction s using Finset.induction_on with
+  | empty => simp
+  | insert a s has hs =>
+    simp [Finset.sum_insert has, hs, tmul_add]
+
+theorem finset_sum_tmul_right {ι : Type*}
+    (m : ι → M) (n : N) (s : Finset ι) :
+    ∑ i ∈ s, m i ⊗ₜ[R] n = (∑ i ∈ s, m i) ⊗ₜ[R] n:= by
+  classical
+  induction s using Finset.induction_on with
+  | empty => simp
+  | insert a s has hs =>
+    simp [Finset.sum_insert has, hs, add_tmul]
+
+theorem multiset_sum_tmul (m : Multiset M) (n : N) :
+    m.sum ⊗ₜ[R] n = (m.map (fun x ↦ x ⊗ₜ[R] n)).sum := by
+  induction m using Multiset.induction_on with
+  | empty => simp
+  | cons a n has => simp [has, add_tmul]
+
+
+theorem tmul_multiset_sum (m : M) (n : Multiset N) :
+    m ⊗ₜ[R] n.sum = (n.map (fun y ↦ m ⊗ₜ[R] y)).sum := by
+  induction n using Multiset.induction_on with
+  | empty => simp
+  | cons a n has => simp [has, tmul_add]
+
+theorem exists_nonempty_finset (x : M ⊗[R] N) :
+    ∃ (s : Finset (M × N)), s.Nonempty ∧ x = ∑ j ∈ s, j.1 ⊗ₜ[R] j.2 := by
+  obtain ⟨s, hxs⟩ := TensorProduct.exists_finset x
+  by_cases hs : s.Nonempty
+  · exact ⟨s, hs, hxs⟩
+  · use {(0, 0)}
+    simp only [Finset.not_nonempty_iff_eq_empty] at hs ⊢
+    simp [hxs, hs]
+
+theorem exists_multiset_eq_sum_tmul_tmul {S P: Type*}
+    [CommSemiring S] [Algebra R S]
+    [Module S N] [IsScalarTower R S N]
+    [AddCommMonoid P] [Module S P]
+    (x : M ⊗[R] N ⊗[S] P) :
+    ∃ (ξ : Multiset (M × N × P)),
+      x = (ξ.map (fun x ↦ x.1 ⊗ₜ[R] x.2.1 ⊗ₜ[S] x.2.2)).sum := by
+  obtain ⟨m1, hx⟩ := TensorProduct.exists_multiset x
+  let m2 (y : N ⊗[S] P) := (TensorProduct.exists_multiset y).choose
+  use (m1.map (fun x ↦ ({x.1} : Multiset M).product (m2 x.2))).sum
+  have hx' : x = (m1.map
+    fun i ↦ (((m2 i.2).map (fun z ↦ z.1 ⊗ₜ[S] z.2)).map (fun y ↦ i.1 ⊗ₜ[R] y)).sum
+      ).sum := by
+    rw [hx]
+    apply congr_arg
+    apply congr_arg₂ _ _ rfl
+    ext ⟨m, np⟩
+    dsimp only
+    simp_rw [← tmul_multiset_sum m _]
+    congr
+    apply (TensorProduct.exists_multiset _).choose_spec
+  simp only [Multiset.map_map, Function.comp_apply] at hx'
+  classical
+  rwa [Multiset.map_sum_map_sum m1 m2 (g := fun x y ↦ x ⊗ₜ[R] y.1 ⊗ₜ[S] y.2)] at hx'
+
+theorem exists_multiset_eq_sum_tmul_tmul' {R S M N P: Type*}
+    [CommSemiring R] [CommSemiring S]
+    [AddCommMonoid P] [Module S P]
+    [AddCommMonoid N] [Module S N]
+    [Algebra S R] [Module S N] [Module R N] [IsScalarTower S R N]
+    [AddCommMonoid M] [Module R M]
+    (x : M ⊗[R] N ⊗[S] P) :
+    ∃ (ξ : Multiset (M × N × P)),
+      x = (ξ.map (fun x ↦ x.1 ⊗ₜ[R] x.2.1 ⊗ₜ[S] x.2.2)).sum := by
+  obtain ⟨m1, hx⟩ := TensorProduct.exists_multiset x
+  let m2 (y : N ⊗[S] P) := (TensorProduct.exists_multiset y).choose
+  use (m1.map (fun x ↦ ({x.1} : Multiset M).product (m2 x.2))).sum
+  have hx' : x = (m1.map
+    fun i ↦ (((m2 i.2).map (fun z ↦ z.1 ⊗ₜ[S] z.2)).map (fun y ↦ i.1 ⊗ₜ[R] y)).sum
+      ).sum := by
+    rw [hx]
+    apply congr_arg
+    apply congr_arg₂ _ _ rfl
+    ext ⟨m, np⟩
+    dsimp only
+    simp_rw [← tmul_multiset_sum m _]
+    congr
+    apply (TensorProduct.exists_multiset _).choose_spec
+  simp only [Multiset.map_map, Function.comp_apply] at hx'
+  classical
+  rwa [Multiset.map_sum_map_sum m1 m2 (g := fun x y ↦ x ⊗ₜ[R] y.1 ⊗ₜ[S] y.2)] at hx'
 
 variable {R' : Type*} [CommSemiring R'] [Algebra R R']
 variable {S' : Type*} [CommSemiring S'] [Algebra R' S']
@@ -237,88 +393,36 @@ theorem baseChange_toFun'_smul_tmul_tmul_eq_coeff_sum
     IsScalarTower.of_algebraMap_eq (fun r ↦ by simp [RingHom.algebraMap_toAlgebra])
   rw [← baseChangeEquiv_tmul_tmul]
 
-theorem  TensorProduct.exists_nonempty_finset {R M N : Type*}
-    [CommSemiring R] [AddCommMonoid M] [Module R M]
-    [AddCommMonoid N] [Module R N] (x : M ⊗[R] N) :
-    ∃ (s : Finset (M × N)) (_ : s.Nonempty), x = ∑ j ∈ s, j.1 ⊗ₜ[R] j.2 := by
-  obtain ⟨s, hxs⟩ := TensorProduct.exists_finset x
-  by_cases hs : s.Nonempty
-  · exact ⟨s, hs, hxs⟩
-  · use {(0, 0)}
-    simp only [Finset.not_nonempty_iff_eq_empty] at hs ⊢
-    simp [hxs, hs]
-
--- Doesn't work yet
-theorem exists_eq_sum_tmul_tmul'
-      {R S M N P: Type*} [CommSemiring R] [CommSemiring S] [Algebra R S]
-    [AddCommMonoid P] [Module R P]
-    [AddCommMonoid N] [Module R N] [Module S N] [IsScalarTower R S N]
-    [AddCommMonoid M] [Module S M]
-    (x : M ⊗[S] N ⊗[R] P) :
-    ∃ (ι : Type*) (hι : Fintype ι) (m : ι → M) (n : ι → N) (p : ι → P),
-      x = ∑ i, m i ⊗ₜ[S] n i ⊗ₜ[R] p i := by
+-- Not working
+/-- The coefficients of a base change of a polynomial law. -/
+example (f : M →ₚₗ[R] N) {ι : Type*} [Fintype ι] [DecidableEq ι]
+    (m : ι → M) (r : ι → R') (k : ι →₀ ℕ) :
+    coeff (fun i ↦ r i ⊗ₜ[R] m i) (f.baseChange R') k =
+      (∏ i, r i ^ k i) ⊗ₜ[R] coeff m f k := by
+  nth_rewrite 1 [coeff]
+  simp only [LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply]
+  simp only [MvPolynomial.scalarRTensor, finsuppScalarLeft]
+  simp [finsuppLeft]
+  rw [← LinearEquiv.eq_symm_apply, lid_symm_apply]
+  simp [finsuppLEquivDirectSum, finsuppLequivDFinsupp]
+  have : MvPolynomial ι R' ⊗[R'] R' ⊗[R] N
+    ≃ₗ[R'] MvPolynomial ι R' ⊗[R] N := by
+      exact AlgebraTensorModule.cancelBaseChange R R' R' (MvPolynomial ι R') N
+  have : (generize fun i ↦ r i ⊗ₜ[R] m i) (baseChange R' f)
+   = (AlgebraTensorModule.cancelBaseChange R R' R' (MvPolynomial ι R') N).symm (generize' m r f) := by
+     rw [generize'_eq_generize]
+     simp [baseChange, baseChangeEquiv, baseChangeEquiv']
+     sorry
   sorry
 
-
--- Doesn't work yet
-theorem exists_eq_sum_tmul_tmul
-      {R S M N P: Type*} [CommSemiring R] [CommSemiring S] [Algebra R S]
-    [AddCommMonoid P] [Module R P]
-    [AddCommMonoid N] [Module R N] [Module S N] [IsScalarTower R S N]
-    [AddCommMonoid M] [Module S M]
-    (x : M ⊗[S] N ⊗[R] P) :
-    ∃ (ξ : Finset (M × N × P)),
-      x = ξ.sum (fun mnp ↦ mnp.1 ⊗ₜ[S] mnp.2.1 ⊗ₜ[R] mnp.2.2) := by
-
-  obtain ⟨x1, h1⟩ := TensorProduct.exists_finset x
-  have (i : x1) := TensorProduct.exists_finset i.val.2
-  set x2 := fun (i : x1) ↦ (TensorProduct.exists_finset i.val.2).choose
-  have hx2 (i : x1) : i.val.2 = ∑ j ∈ x2 i, j.1 ⊗ₜ[R] j.2 :=
-    (TensorProduct.exists_finset i.val.2).choose_spec
-
-  classical
-  let f : M × N ⊗[R] P → Finset (M × N × P) :=
-    fun mnp ↦ Finset.product {mnp.1} (TensorProduct.exists_finset mnp.2).choose
-
-  have hf (m : M) (np : N ⊗[R] P) :
-      (TensorProduct.exists_finset np).choose = Finset.image Prod.snd (f (m, np)) :=
-    (Finset.product_image_snd (Finset.singleton_nonempty m)).symm
-  have hf' (m : M) (np : N ⊗[R] P) :
-      np = ∑ x ∈ ((f (m, np)).image Prod.snd), x.1 ⊗ₜ[R] x.2 := by
-    rw [← hf]
-    exact (TensorProduct.exists_finset _).choose_spec
-
-  let jf : M × N ⊗[R] P ↪ Finset (M × N × P) := {
-    toFun := f
-    inj' := fun ⟨m, np⟩ ⟨m', np'⟩ h ↦ by
-      suffices m = m' by
-        ext
-        · exact this
-        have k := hf' m np
-        rwa [h, ← hf' m' np'] at k
-      by_cases hnp : np = 0
-      · sorry
-      · have H1 (m : M) (np : N ⊗[R] P) (hnp : np ≠ 0) :
-            {m} = Finset.image Prod.fst (f (m, np)) := by
-          symm
-          apply Finset.product_image_fst
-          by_contra! hm'
-          apply hnp
-          simp only [Finset.not_nonempty_iff_eq_empty] at hm'
-          rw [hf' m np]
-          have that := hf m np
-          rw [hm'] at that
-          simp [← that]
-        have hm := H1 m np hnp
-        rw [h] at hm
-        rw [← H1 m' np' ?_] at hm
-        · simpa using hm
-        intro hnp'
-        apply hnp
-        rwa [hf' m np, h, ← hf'] }
+-- Todo
+theorem baseChange_toFun_smul_tmul_tmul_eq_coeff_sum
+    (f : M →ₚₗ[R] N) {ι : Type*} [Fintype ι] [DecidableEq ι]
+    (m : ι → M) (r : ι → R')
+    {S' : Type*} [CommSemiring S'] [Algebra R' S'] (s : ι → S') :
+    (f.baseChange R').toFun S' (∑ i, s i ⊗ₜ[R'] r i ⊗ₜ[R] m i) =
+      (((coeff m) f).sum fun k n ↦  ((∏ i, s i ^ k i) ⊗ₜ[R'] (∏ i, r i ^ k i) ⊗ₜ[R] n))  := by
   sorry
-
-example (s t : Finset ℕ) : Finset (ℕ × ℕ) := Finset.product s t
 
 theorem baseChange_apply (f : M →ₚₗ[R] N)
     {R' : Type u} [CommSemiring R'] [Algebra R R']
@@ -326,9 +430,12 @@ theorem baseChange_apply (f : M →ₚₗ[R] N)
     [algR'S' : Algebra R' S'] [algRS' : Algebra R S'] [istRR'S' : IsScalarTower R R' S']
     (srm : S' ⊗[R'] R' ⊗[R] M) :
     (f.baseChange R').toFun S' srm = baseChangeEquiv.symm (f.toFun S' (baseChangeEquiv srm)) := by
-  obtain ⟨ι, hι, s, r, m, rfl⟩ := exists_eq_sum_tmul_tmul' srm
+  obtain ⟨m, rfl⟩ := exists_multiset_eq_sum_tmul_tmul' srm
   classical
   rw [toFun_eq_toFun']
+  erw [Finset.sum_multiset_map_count]
+  simp_rw [smul_tmul']
+  rw [← Finset.sum_attach, ← Finset.sum_coe_sort_eq_attach]
   rw [baseChange_toFun'_smul_tmul_tmul_eq_coeff_sum]
   rw [map_sum]
   simp_rw [baseChangeEquiv_tmul_tmul]
@@ -342,39 +449,6 @@ theorem baseChange_apply (f : M →ₚₗ[R] N)
   simp_rw [smul_pow, Algebra.smul_def, Finset.prod_mul_distrib,
     ← map_prod]
 
-
-
-/- à guche :
- @baseChangeEquiv R inst✝⁸ N inst✝⁵ inst✝⁴ R' inst✝³ inst✝² S' inst✝¹ algR'S'
-  ((algebraMap R' S').comp (algebraMap R R')).toAlgebra ⋯ : S' ⊗[R'] R' ⊗[R] N ≃ₗ[S'] S' ⊗[R] N
-
-à droite :
-
-@baseChangeEquiv R inst✝⁸ N inst✝⁵ inst✝⁴ R' inst✝³ inst✝² S' inst✝¹ algR'S' algRS' inst✝ : S' ⊗[R'] R' ⊗[R] N ≃ₗ[S'] S' ⊗[R] N
-
-
--/
-  have H1 : ((algebraMap R' S').comp (algebraMap R R')).toAlgebra = algRS' := by
-    ext r s
-    change (algebraMap R' S').comp (algebraMap R R') r • s = r • s
-    simp [← Algebra.smul_def]
-  have H2 : @IsScalarTower R R' S' _ _ algRS'.toSMul :=
-    IsScalarTower.of_algebraMap_eq (fun r ↦ by simp only [← H1]; rfl)
-  suffices @baseChangeEquiv R _ N _ _ R' _ _ S' _ algR'S' algRS' H2
-    = @baseChangeEquiv R _ N _ _ R' _ _ S' _ algR'S' ((algebraMap R' S').comp (algebraMap R R')).toAlgebra sorry by
-      sorry
-  congr 1
-  · congr
-    simp [this]
-  · congr
-  · apply Function.hfunext
-    congr
-    intro x y h
-    congr
-  · sorry
-  · sorry
-  · sorry
-
 theorem toFun_baseChangeEquiv_one_tmul (f : M →ₚₗ[R] N) (m : R' ⊗[R] M) :
     f.toFun R' (baseChangeEquiv ((1 : R') ⊗ₜ[R'] m)) = baseChangeEquiv ((1 : R') ⊗ₜ[R'] f.toFun R' m) := by
   simp [baseChangeEquiv_one_tmul]
@@ -385,26 +459,7 @@ theorem baseChange_ground (f : M →ₚₗ[R] N) :
   simp only [ground, Function.comp_apply]
   simp only [← LinearEquiv.eq_symm_apply, lid_symm_apply]
   simp only [baseChange, LinearEquiv.symm_apply_eq]
-
-
-  simp only [ground, baseChange, Function.comp_apply]
-  simp only [← LinearEquiv.eq_symm_apply, lid_symm_apply]
-  have h1 : f.toFun R' (baseChangeEquiv (1 ⊗ₜ[R'] m)) = f.toFun R' m := by
-    rw [baseChangeEquiv_one_tmul]
-  have h2 : f.toFun R' m = baseChangeEquiv (1 ⊗ₜ[R'] f.toFun R' m) := by
-    rw [baseChangeEquiv_one_tmul]
-  simp only [LinearEquiv.symm_symm]
-  have h := h1.trans h2
-  convert h
-  · ext r s
-    change (algebraMap R' R').comp (algebraMap R R') r • s = _
-    simp [Algebra.smul_def]
-  · ext r s
-    change (algebraMap R' R').comp (algebraMap R R') r • s = _
-    simp [Algebra.smul_def]
-  · congr
-    sorry
-  · sorry
+  sorry
 
 
 noncomputable def baseChange_linearMap : (M →ₚₗ[R] N) →ₗ[R] RestrictScalars R R' ((R' ⊗[R] M) →ₚₗ[R'] (R' ⊗[R] N)) where
@@ -418,11 +473,10 @@ noncomputable def baseChange_linearMap : (M →ₚₗ[R] N) →ₗ[R] RestrictSc
     ext S' _ _ srm
     let _ : Algebra R S' := RingHom.toAlgebra
       ((algebraMap R' S').comp (algebraMap R R'))
-    have _ : IsScalarTower R R' S' := sorry
+    have _ : IsScalarTower R R' S' := IsScalarTower.of_algebraMap_eq (fun r ↦ by simp [RingHom.algebraMap_toAlgebra])
     simp only [baseChange, smul_toFun, Pi.smul_apply, smul_def, algebraMap_smul]
     rw [← algebraMap_smul S' r (f.toFun S' (baseChangeEquiv srm))]
     rw [← algebraMap_smul S' r]
     rw [map_smul]
-
 
 end PolynomialLaw

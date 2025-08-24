@@ -168,6 +168,22 @@ noncomputable def generize (m : ι → M) :
   map_add' p q  := by simp [add_toFun_apply]
   map_smul' r p := by simp [RingHom.id_apply, smul_toFun, Pi.smul_apply]
 
+variable {S : Type*} [CommSemiring S] [Algebra R S]
+/-- Given `m : ι → M` and `s : ι → S`, `generize m` is the `R`-linear map sending `f : M →ₚₗ[R] N` to the
+term of `MvPolynomial ι S ⊗[R] N` obtained by applying `f.toFun (MvPolynomial ι R)` to the
+sum `∑ i, s i • X i ⊗ₜ[R] m i`. -/
+noncomputable def generize' (m : ι → M) (s : ι → S) :
+    (M →ₚₗ[R] N) →ₗ[R] MvPolynomial ι S ⊗[R] N where
+  toFun f       := f.toFun (MvPolynomial ι S) (∑ i, s i • X i ⊗ₜ[R] m i)
+  map_add' p q  := by simp [add_toFun_apply]
+  map_smul' r p := by simp [RingHom.id_apply, smul_toFun, Pi.smul_apply]
+
+theorem generize'_eq_generize
+    (m : ι → M) (s : ι → S) (f : M →ₚₗ[R] N) :
+    generize' m s f =
+      (aeval (R := R) fun i ↦ s i • X (R := S) i).toLinearMap.rTensor N (generize m f) := by
+  simp [generize, generize', f.isCompat_apply, smul_tmul']
+
 /-- **MI** : do we need these two lemmas? I don't think we are using them. -/
 theorem generize_comp_equiv {κ : Type*} [Fintype κ] {e : ι ≃ κ} {m : κ → M} {f : M →ₚₗ[R] N} :
     generize m f =
@@ -193,7 +209,9 @@ end generize
 
 section coeff
 
-variable [DecidableEq ι] (m : ι → M) (k : ι →₀ ℕ) (f : M →ₚₗ[R] N)
+variable [DecidableEq ι] (m : ι → M) (k : ι →₀ ℕ)
+  {S : Type*} [CommSemiring S] [Algebra R S] (s : ι → S)
+  (f : M →ₚₗ[R] N)
 
 /-- The coefficients of a `PolynomialLaw`, as linear maps. -/
 noncomputable def coeff : (M →ₚₗ[R] N) →ₗ[R] (ι →₀ ℕ) →₀ N :=
@@ -208,6 +226,19 @@ theorem generize_eq : generize m f = (coeff m f).sum (fun k n ↦ (monomial k 1)
   rw [Finsupp.sum_apply, Finsupp.sum_eq_single d (fun _ _ hb ↦ by simp [if_neg hb,
     scalarRTensor_apply_tmul_apply]) (by simp), scalarRTensor_apply_tmul_apply,
     coeff_monomial, if_pos rfl, _root_.one_smul]
+
+theorem generize'_eq  :
+    generize' m s f = (coeff m f).sum
+      fun k n ↦ k.prod (fun i e ↦ s i ^ e) • (monomial k 1) ⊗ₜ n := by
+  rw [generize'_eq_generize, generize_eq, map_finsuppSum]
+  apply Finsupp.sum_congr
+  intro k hk
+  simp only [rTensor_tmul, AlgHom.toLinearMap_apply, Finsupp.prod_pow]
+  congr
+  simp only [aeval_monomial, map_one, Finsupp.prod_pow, one_mul]
+  simp_rw [smul_pow, Algebra.smul_def]
+  rw [Finset.prod_mul_distrib, ← map_prod]
+  simp [monomial_eq]
 
 theorem coeff_eq :
   coeff m f k = (TensorProduct.lid R N) ((LinearMap.rTensor N (MvPolynomial.lcoeff R k))
@@ -399,7 +430,7 @@ section Fintype
 variable [Fintype ι]
 
 -- BP
-/-- Given `b : Basis ι R M` and `h : (ι →₀ ℕ) →₀ ℕ`, `Finsupp.polynomialLaw b h : M →ₚₗ[R] N` is
+/-- Given `b : Basis ι R M` and `h : (ι →₀ ℕ) →₀ N`, `Finsupp.polynomialLaw b h : M →ₚₗ[R] N` is
 the polynomial map whose coefficients at `b` are given by `h`. -/
 noncomputable def polynomialLaw : M →ₚₗ[R] N where
   toFun' S _ _ x := h.sum fun k n ↦ (∏ i, (LinearForm.baseChange R S _ (b.coord i)) x ^ k i) ⊗ₜ[R] n
