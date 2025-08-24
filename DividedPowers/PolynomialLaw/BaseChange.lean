@@ -237,6 +237,17 @@ theorem baseChange_toFun'_smul_tmul_tmul_eq_coeff_sum
     IsScalarTower.of_algebraMap_eq (fun r ↦ by simp [RingHom.algebraMap_toAlgebra])
   rw [← baseChangeEquiv_tmul_tmul]
 
+theorem  TensorProduct.exists_nonempty_finset {R M N : Type*}
+    [CommSemiring R] [AddCommMonoid M] [Module R M]
+    [AddCommMonoid N] [Module R N] (x : M ⊗[R] N) :
+    ∃ (s : Finset (M × N)) (_ : s.Nonempty), x = ∑ j ∈ s, j.1 ⊗ₜ[R] j.2 := by
+  obtain ⟨s, hxs⟩ := TensorProduct.exists_finset x
+  by_cases hs : s.Nonempty
+  · exact ⟨s, hs, hxs⟩
+  · use {(0, 0)}
+    simp only [Finset.not_nonempty_iff_eq_empty] at hs ⊢
+    simp [hxs, hs]
+
 -- Doesn't work yet
 theorem exists_eq_sum_tmul_tmul'
       {R S M N P: Type*} [CommSemiring R] [CommSemiring S] [Algebra R S]
