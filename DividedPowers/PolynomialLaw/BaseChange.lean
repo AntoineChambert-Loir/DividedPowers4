@@ -208,10 +208,10 @@ theorem exists_multiset_eq_sum_tmul_tmul {S P: Type*}
 
 theorem exists_multiset_eq_sum_tmul_tmul' {R S M N P: Type*}
     [CommSemiring R] [CommSemiring S]
-    [AddCommMonoid P] [Module S P]
-    [AddCommMonoid N] [Module S N]
-    [Algebra S R] [Module S N] [Module R N] [IsScalarTower S R N]
     [AddCommMonoid M] [Module R M]
+    [AddCommMonoid N] [Module S N]
+    [AddCommMonoid P] [Module S P]
+    [Algebra S R] [Module R N] [IsScalarTower S R N]
     (x : M ⊗[R] N ⊗[S] P) :
     ∃ (ξ : Multiset (M × N × P)),
       x = (ξ.map (fun x ↦ x.1 ⊗ₜ[R] x.2.1 ⊗ₜ[S] x.2.2)).sum := by

@@ -1,6 +1,7 @@
 /- Copyright ACL & MIdFF 2024 -/
 
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.Polynomial
+import DividedPowers.PolynomialLaw.LocFinsupp
 import DividedPowers.PolynomialLaw.Coeff
 import DividedPowers.ForMathlib.Algebra.Module.LinearMap.Defs
 import DividedPowers.ForMathlib.Algebra.Polynomial.AlgebraMap
@@ -540,7 +541,8 @@ theorem LocFinsupp_component_eq {S : Type u} [CommSemiring S] [Algebra R S] (m :
 hence there is no graded module structure.) -/
 theorem recompose_component : lfsum (fun p ↦ f.component p) = f := by
   ext S _ _ sm
-  rw [lfsum_eq_of_locFinsupp (LocFinsupp_component f), LocFinsupp_component_eq]
+  simp only [lfsum, LocFinsupp_component, ↓reduceDIte,
+    LocFinsupp.sum_toFun'_eq_finsupp_sum, LocFinsupp_component_eq]
   have hsm : sm = ((aeval 1).restrictScalars R).toLinearMap.rTensor M
     (((monomial 1).restrictScalars R).rTensor M sm) := by
     rw [← LinearMap.rTensor_comp_apply, LinearMap.rTensor, eq_comm]
@@ -582,9 +584,14 @@ theorem isHomogeneousOfDegree_iff_component :
   rw [← recompose_component f]
   convert component_isHomogeneous p f
   ext S _ _ sm
-  rw [lfsum_eq_of_locFinsupp (by simp [LocFinsupp]), Finsupp.sum, Finsupp.ofSupportFinite_coe,
-    Finset.sum_eq_single p (fun n _ hn ↦ by simp [h n (Ne.symm hn)])
-      (fun hp ↦ by simpa [Finsupp.ofSupportFinite_coe] using hp)]
+  simp only [lfsum, LocFinsupp_component, dif_pos, LocFinsupp.sum_toFun'_eq_finsupp_sum, LocFinsupp_component_eq]
+  rw [Finsupp.sum_eq_single p]
+  · simp
+  · intro n _ hn
+    specialize h n (Ne.symm hn)
+    simp only [component, PolynomialLaw.ext_iff, funext_iff] at h
+    simp [h]
+  · simp
 
 end Components
 

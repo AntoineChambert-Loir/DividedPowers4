@@ -18,133 +18,6 @@ namespace PolynomialLaw
 
 open Finset MvPolynomial TensorProduct
 
-/- ## LocFinsupp. -/
-noncomputable section LocFinsupp
-
-open Finsupp Function
-
-variable {M N ι : Type*} [AddCommMonoid M] [Module R M]
-  [AddCommMonoid N] [Module R N] (r : R) {f g : ι → M →ₚₗ[R] N}
-
-variable (f) in
-/-- A family `f : ι → M →ₚₗ[R] N` of polynomial maps has locally finite support
-  if, for all `S`, `fun i ↦ (f i).toFun' S` has finite support` -/
-def LocFinsupp := ∀ (S : Type u) [CommSemiring S] [Algebra R S] (m : S ⊗[R] M),
-    (fun i ↦ (f i).toFun' S m).support.Finite
-
-theorem locFinsupp_add (hf : LocFinsupp f) (hg : LocFinsupp g) : LocFinsupp (f + g) :=
-  fun S _ _ m ↦ (Set.finite_union.mpr ⟨hf S m, hg S m⟩).subset (support_add _ _)
-
-theorem locFinsupp_zero : LocFinsupp (0 : ι → M →ₚₗ[R] N) := fun S _ _ _ ↦ by
-  simp [zero_def, Function.support_zero, Set.finite_empty]
-
-theorem locFinsupp_smul (hf : LocFinsupp f) : LocFinsupp (r • f) :=
-  fun S _ _ m ↦ (hf S m).subset (Function.support_smul_subset_right _ _)
-
-variable (f)
-
-lemma locFinsupp_of_fintype [Fintype ι] : LocFinsupp f := fun _ _ _ _ ↦ Set.toFinite _
-
-variable (R M N)
-/-- The submodule of families of polynomial maps which have locally finite support  -/
-def Submodule.locFinsupp (ι : Type*) : Submodule R (ι → M →ₚₗ[R] N) where
-  carrier   := LocFinsupp
-  add_mem'  := locFinsupp_add
-  zero_mem' := locFinsupp_zero
-  smul_mem' := locFinsupp_smul
-
-variable {R M N}
-
-open Classical in
-/-- The sum of of a family polynomial maps (0 if not locally finite). -/
-noncomputable def lfsum : M →ₚₗ[R] N :=
-  if hf : LocFinsupp f then {
-    toFun'    := fun S _ _ m ↦ (ofSupportFinite _ (hf S m)).sum fun _ m ↦ m
-    isCompat' := fun {S _ _ S' _ _} φ ↦ by
-      ext m
-      simp only [Function.comp_apply, map_finsuppSum]
-      rw [sum]
-      suffices hSm : _ ⊆ (hf S m).toFinset by
-        rw [sum_of_support_subset _ hSm _ (fun i _ ↦ rfl)]
-        exact sum_congr rfl (fun i _ ↦ by simp [ofSupportFinite_coe, isCompat_apply'])
-      intro i
-      simp only [ofSupportFinite_coe, not_imp_not, Finsupp.mem_support_iff,
-        Set.Finite.mem_toFinset, Function.mem_support, ← isCompat_apply']
-      intro hi
-      rw [hi, map_zero] }
-  else 0
-
-variable {f}
-
-theorem lfsum_eq_of_locFinsupp (hf : LocFinsupp f) (S : Type u) [CommSemiring S] [Algebra R S]
-    (m : S ⊗[R] M) : (lfsum f).toFun' S m = (ofSupportFinite _ (hf S m)).sum fun _ m ↦ m := by
-  rw [lfsum, dif_pos hf]
-
-theorem support_ground_finite (hf : LocFinsupp f) (m : M) :
-    (Function.support fun i ↦ (f i).ground m).Finite := by
-  simp only [ground, Function.comp_apply, lid_symm_apply]
-  have : (Function.support fun i ↦ ((f i).toFun' R (1 ⊗ₜ[R] m))).Finite := hf R _
-  convert this
-  ext i
-  simp only [mem_support, ne_eq, EmbeddingLike.map_eq_zero_iff]
-
-theorem lfsum_ground_eq_of_locFinsupp (hf : LocFinsupp f) (m : M) :
-    (lfsum f).ground m =
-      (ofSupportFinite (fun i ↦ (f i).ground m) (support_ground_finite hf m)).sum fun _ m ↦ m := by
-  simp only [ground, Function.comp_apply, lid_symm_apply]
-  rw [lfsum_eq_of_locFinsupp hf]
-  rw [map_finsuppSum, Finsupp.sum, Finsupp.sum]
-  congr
-  ext i
-  simp only [Finsupp.mem_support_iff, ofSupportFinite_coe, ne_eq, EmbeddingLike.map_eq_zero_iff]
-
-/-- The sum of a locally finite family of polynomial maps, as a linear map -/
-noncomputable def lfsumHom :
-    Submodule.locFinsupp R M N ι →ₗ[R] M →ₚₗ[R] N where
-  toFun fhf := PolynomialLaw.lfsum fhf.val
-  map_add'  := fun ⟨f, hf⟩ ⟨g, hg⟩ ↦ by
-    classical
-    ext S _ _ m
-    rw [AddSubmonoid.mk_add_mk, add_def, Pi.add_apply, lfsum_eq_of_locFinsupp hf,
-      lfsum_eq_of_locFinsupp hg, lfsum_eq_of_locFinsupp (locFinsupp_add hf hg)]
-    simp only [Pi.add_apply, add_def_apply]
-    rw [sum_of_support_subset (s := (hf S m).toFinset ∪ (hg S m).toFinset) _ _ _ (fun _ _ ↦ rfl),
-      sum_of_support_subset _ subset_union_left _ (fun _ _ ↦ rfl),
-      sum_of_support_subset _ subset_union_right _ (fun _ _ ↦ rfl), ← sum_add_distrib]
-    · exact sum_congr rfl (fun _ _ ↦ rfl)
-    · intro x
-      simp only [ofSupportFinite_support, Set.Finite.mem_toFinset,
-        Function.mem_support, ne_eq, mem_union, ← not_and_or, not_imp_not]
-      intro h
-      rw [h.1, h.2, add_zero]
-  map_smul' := fun a ⟨f,hf⟩ ↦ by
-    ext S _ _ m
-    simp only [SetLike.val_smul, smul_def, RingHom.id_apply, Pi.smul_apply,
-      lfsum_eq_of_locFinsupp hf, lfsum_eq_of_locFinsupp (locFinsupp_smul a hf)]
-    rw [sum_of_support_subset _ _ _ (fun i _ ↦ rfl)]
-    · rw [Finsupp.smul_sum, sum]
-      exact sum_congr rfl fun i _ ↦ rfl
-    · intro i
-      simp only [ofSupportFinite_coe, Finsupp.mem_support_iff, ne_eq, not_imp_not]
-      intro hi
-      rw [hi, smul_zero]
-
-lemma lfsumHom_apply' {f : ↥(Submodule.locFinsupp R M N ι)} : lfsumHom f = lfsum f.val := rfl
-
-lemma lfsumHom_apply (hf : LocFinsupp f) : lfsumHom ⟨f, hf⟩ = lfsum f := rfl
-
-lemma lfsumHom_add (hf : LocFinsupp f) (hg : LocFinsupp g) (hfg : LocFinsupp (f + g)) :
-    lfsumHom ⟨(f + g), hfg⟩ = lfsumHom ⟨f, hf⟩ + lfsumHom ⟨g, hg⟩ := by
-  rw [← map_add]
-  rfl
-
-lemma lfsumHom_smul (hf : LocFinsupp f) {r : R} (hrf : LocFinsupp (r • f)) :
-    lfsumHom ⟨r • f, hrf⟩ = r • lfsumHom ⟨f, hf⟩ := by
-  rw [← map_smul]
-  rfl
-
-end LocFinsupp
-
 /- ## Coefficients of polynomial laws. -/
 
 section Coefficients
@@ -431,7 +304,7 @@ variable [Fintype ι]
 
 -- BP
 /-- Given `b : Basis ι R M` and `h : (ι →₀ ℕ) →₀ N`, `Finsupp.polynomialLaw b h : M →ₚₗ[R] N` is
-the polynomial map whose coefficients at `b` are given by `h`. -/
+the polynomial law whose coefficients at `b` are given by `h`. -/
 noncomputable def polynomialLaw : M →ₚₗ[R] N where
   toFun' S _ _ x := h.sum fun k n ↦ (∏ i, (LinearForm.baseChange R S _ (b.coord i)) x ^ k i) ⊗ₜ[R] n
   isCompat' φ   := by
@@ -485,7 +358,7 @@ theorem generize_polynomialLaw_eq_sum :
   rw [hi, pow_zero]
 
 /-- Given `b : Basis ι R M` and `h : (ι →₀ ℕ) →₀ ℕ,
-  `Finsupp.polynomialLaw b h : M →ₚₗ[R] N` is the polynomial map
+  `Finsupp.polynomialLaw b h : M →ₚₗ[R] N` is the polynomial law
   whose coefficients at `b` are given by `h` -/
 theorem coeff_polynomialLaw [DecidableEq ι] :
     coeff (DFunLike.coe b) (polynomialLaw b h) = h := by
@@ -526,3 +399,5 @@ noncomputable def polynomialLawEquivCoeff : ((ι →₀ ℕ) →₀ N) ≃ₗ[R]
 end Fintype
 
 end Finsupp
+
+#min_imports
