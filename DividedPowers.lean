@@ -68,6 +68,7 @@ import DividedPowers.PolynomialLaw.BiHomogeneous
 import DividedPowers.PolynomialLaw.Coeff
 import DividedPowers.PolynomialLaw.Differential
 import DividedPowers.PolynomialLaw.Homogeneous
+import DividedPowers.PolynomialLaw.LocFinsupp
 import DividedPowers.PolynomialLaw.MultiCoeff
 import DividedPowers.PolynomialLaw.MultiHomogeneous -- It has a sorry
 import DividedPowers.PolynomialLaw.Polarized
