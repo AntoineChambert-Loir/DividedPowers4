@@ -433,6 +433,13 @@ theorem zero_toFun (S : Type*) [CommSemiring S] [Algebra R S] :
   obtain ⟨⟨s, p⟩, ha⟩ := π_surjective t
   simp only [toFun_eq_toFunLifted_apply _ ha, zero_def, Pi.zero_apply, _root_.map_zero]
 
+/-- Extension of `PolynomialLaw.id.toFun'` -/
+theorem id_toFun_apply {S : Type*} [CommSemiring S] [Algebra R S]
+    (t : S ⊗[R] M) :
+    id.toFun S t = t  := by
+  obtain ⟨n, ψ, p, rfl⟩ := PolynomialLaw.exists_lift t
+  simp [← isCompat_apply, toFun_eq_toFun', id_apply']
+
 /-- Extension of `PolynomialLaw.add_def_apply` -/
 theorem add_toFun_apply {S : Type*} [CommSemiring S] [Algebra R S] (t : S ⊗[R] M) :
     (f + g).toFun S t = f.toFun S t + g.toFun S t := by

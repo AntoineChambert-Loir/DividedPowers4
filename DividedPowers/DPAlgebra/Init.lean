@@ -145,8 +145,7 @@ def ι : M →ₗ[R] DividedPowerAlgebra R M := {
     simp only [dp_add]
     simp only [Nat.antidiagonal_succ, zero_add, antidiagonal_zero, map_singleton,
       Embedding.coe_prodMap, Embedding.coeFn_mk, Prod.map_apply, Nat.reduceSucc,
-      Embedding.refl_apply, cons_eq_insert, mem_singleton, Prod.mk.injEq, and_self,
-      not_false_eq_true, sum_insert, sum_singleton]
+      Embedding.refl_apply, cons_eq_insert]
     simp only [mem_singleton, Prod.mk.injEq, zero_ne_one, one_ne_zero, and_self, not_false_eq_true,
       sum_insert, dp_zero, one_mul, sum_singleton, mul_one, add_comm]
   map_smul' := fun r x ↦ by
@@ -204,7 +203,7 @@ theorem lift'_imp {f : ℕ × M → A} (hf_zero : ∀ m, f (0, m) = 1)
     (p q : MvPolynomial (ℕ × M) R) (h : (Rel R M) p q) :
     (eval₂AlgHom R f) p = (eval₂AlgHom R f) q := by
   rcases h <;>
-  simp_all [eval₂AlgHom_X', map_one, map_zero, map_smul, _root_.map_mul, map_nsmul, map_sum]
+  simp_all
 
 
 variable {R M}

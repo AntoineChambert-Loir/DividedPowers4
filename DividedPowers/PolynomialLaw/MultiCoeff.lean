@@ -41,6 +41,10 @@ noncomputable def multiGenerize (m : Π i, M i) :
   map_add' p q  := by simp [add_toFun_apply]
   map_smul' r p := by simp [RingHom.id_apply, smul_toFun, Pi.smul_apply]
 
+theorem multiGenerize_eq_generize (m : Π i, M i) :
+    multiGenerize (R := R) (N := N) m = generize (fun (i : ι)  ↦ Pi.single i (m i)) := by
+  simp [generize, multiGenerize]
+
 end multiGenerize
 
 section multiCoeff
@@ -50,6 +54,12 @@ variable (m : Π i, M i) (k : ι →₀ ℕ) (f : (Π i, M i) →ₚₗ[R] N)
 /-- The multi-coefficients of a `PolynomialLaw`, as linear maps. -/
 noncomputable def multiCoeff : ((Π i, M i) →ₚₗ[R] N) →ₗ[R] (ι →₀ ℕ) →₀ N :=
   scalarRTensor.toLinearMap.comp (multiGenerize m)
+
+include M N R in
+theorem multiCoeff_eq_coeff (m : Π i, M i) :
+    multiCoeff  (R := R) (N := N) m = coeff (R := R) (ι := ι) (M := Π i, M i)  (N := N)
+        (fun i ↦ Pi.single i (m i)) := by
+  simp only [multiCoeff, coeff, multiGenerize_eq_generize]
 
 theorem multiGenerize_eq : multiGenerize m f =
     (multiCoeff m f).sum (fun k n ↦ (monomial k 1) ⊗ₜ n) := by
