@@ -53,7 +53,8 @@ section multiCoeff
 variable (m : Π i, M i) (k : ι →₀ ℕ) (f : (Π i, M i) →ₚₗ[R] N)
 
 /-- The multi-coefficients of a `PolynomialLaw`, as linear maps. -/
-noncomputable def multiCoeff : ((Π i, M i) →ₚₗ[R] N) →ₗ[R] (ι →₀ ℕ) →₀ N :=
+noncomputable def multiCoeff :
+    ((Π i, M i) →ₚₗ[R] N) →ₗ[R] (ι →₀ ℕ) →₀ N :=
   scalarRTensor.toLinearMap.comp (multiGenerize m)
 
 include M N R in
