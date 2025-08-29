@@ -166,11 +166,11 @@ open Classical in
 noncomputable def lfsum : M →ₚₗ[R] N :=
   if hf : LocFinsupp f then hf.sum else 0
 
-/- Deleted, probably useless
 variable {f}
 
-theorem lfsum_eq_of_locFinsupp (hf : LocFinsupp f) (S : Type u) [CommSemiring S] [Algebra R S]
-    (m : S ⊗[R] M) : (lfsum f).toFun' S m = (ofSupportFinite _ (hf S m)).sum fun _ m ↦ m := by
+theorem lfsum_toFun'_eq_of_locFinsupp (hf : LocFinsupp f)
+    (S : Type u) [CommSemiring S] [Algebra R S] (m : S ⊗[R] M) :
+    (lfsum f).toFun' S m = (ofSupportFinite _ (hf S m)).sum fun _ m ↦ m := by
   rw [lfsum, dif_pos hf, hf.sum_toFun'_eq_finsupp_sum]
 
 lemma lfsumHom_apply' {f : ↥(Submodule.locFinsupp R M N ι)} : lfsumHom f = lfsum f.val := by
@@ -190,7 +190,6 @@ lemma lfsumHom_smul (hf : LocFinsupp f) {r : R} (hrf : LocFinsupp (r • f)) :
     lfsumHom ⟨r • f, hrf⟩ = r • lfsumHom ⟨f, hf⟩ := by
   rw [← map_smul]
   rfl
--/
 
 end LocFinsupp
 

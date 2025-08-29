@@ -6,6 +6,7 @@ import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Pi
 import DividedPowers.PolynomialLaw.Homogeneous
 import DividedPowers.PolynomialLaw.MultiCoeff
 import DividedPowers.PolynomialLaw.Basic3
+import DividedPowers.PolynomialLaw.BaseChange
 import Mathlib.Data.Finsupp.Weight
 universe u uι
 
@@ -70,7 +71,8 @@ lemma mem_multiGrade : f ∈ multiGrade n ↔ IsMultiHomogeneousOfDegree n f := 
 -- TODO: golf
 /-- If `f` is multihomogeneous of multidegree `n`, then all `f.toFun S` are multihomogeneous of
   multidegree `n`. -/
-lemma isMultiHomogeneousOfDegree_toFun {n : ι →₀ ℕ} {f : (Π i, M i) →ₚₗ[R] N}
+lemma IsMultiHomogeneousOfDegree.toFun
+    {n : ι →₀ ℕ} {f : (Π i, M i) →ₚₗ[R] N}
     (hf : IsMultiHomogeneousOfDegree n f) (S : Type*) [CommSemiring S] [Algebra R S] (r : ι → S)
     (m : S ⊗[R] (Π i, M i)) :
     f.toFun S (∑ i, r i • TensorProduct.compRight R S S M i m) =
@@ -104,28 +106,7 @@ lemma isMultiHomogeneousOfDegree_ground {n : ι →₀ ℕ} {f : (Π i, M i) →
   simp_rw [map_sum, projRight_compRight]
   simp [projRight]
 
-section
-
-variable  (f : N  →ₚₗ[R] (Π i, M i))
-
-variable (i : ι)
-  (S : Type u) [CommSemiring S] [Algebra R S] (n : S ⊗[R] N)
-#check ((proj i).toPolynomialLaw.comp f)
-#check ((proj i).toPolynomialLaw.comp f).toFun' S n
-
-example : (Π i, S ⊗[R] (M i)) ≃ₗ[R] S ⊗[R] (Π i, M i) := by
-  exact (piRight R R S M).symm
-
-example : S ⊗[R] (M i) →ₗ[R] S ⊗[R] (Π i, M i) := by
-  exact singleRight R R S M i
-
-example (i : ι) : M i →ₗ[R] (Π i, M i) := by
-  exact LinearMap.single R M i
-
-example (i : ι) : (Π i, M i) →ₗ[R] (Π i, M i) := by
-  refine (single R M i).comp (proj i)
-
-theorem eq_sum_single_comp_proj :
+theorem eq_sum_single_comp_proj (f : N  →ₚₗ[R] (Π i, M i)) :
     f = ∑ (i : ι), ((single R M i).comp (proj i)).toPolynomialLaw.comp f := by
   rw [← sum_comp]
   convert f.id_comp.symm
@@ -136,7 +117,7 @@ theorem eq_sum_single_comp_proj :
     rw [ofLinearMapHom_apply, ofLinearMap_id]
   aesop
 
-theorem toFun_eq_sum_single_proj
+theorem toFun_eq_sum_single_proj (f : N  →ₚₗ[R] (Π i, M i))
     {S : Type*} [CommSemiring S] [Algebra R S] (n : S ⊗[R] N) :
     f.toFun S n = ∑ (i : ι), singleRight R S S M i (((proj i).toPolynomialLaw.comp f).toFun S n) := by
   nth_rewrite 1 [eq_sum_single_comp_proj f]
@@ -149,6 +130,20 @@ theorem toFun_eq_sum_single_proj
   ext m
   simp [singleRight_tmul]
 
+/-- Composition of multihomogeneous polynomial laws.
+
+See `IsMultiHomogeneousOfDegree.comp` for a generalization where the target module is a product. -/
+theorem IsMultiHomogeneousOfDegree.comp'
+    {P : Type*} [AddCommMonoid P] [Module R P]
+    {f : (Π i, M i) →ₚₗ[R] N} {g : N →ₚₗ[R] P} {p : ι →₀ ℕ} {q : ℕ}
+    (hf : f.IsMultiHomogeneousOfDegree p) (hg : g.IsHomogeneousOfDegree q) :
+    (g.comp f).IsMultiHomogeneousOfDegree (q • p) := by
+  intro S _ _ r m
+  simp [comp_toFun', mul_comm q, pow_mul, Finset.prod_pow, hf S, hg S]
+
+/-- Composition of multihomogeneous polynomial maps, [Roby-1963], I.2.
+
+When the target module is not in product form, use `IsMultiHomogeneousOfDegree.comp'. -/
 theorem IsMultiHomogeneousOfDegree.comp {κ : Type*} [Fintype κ] [DecidableEq κ] {N : κ → Type*} [∀ k, AddCommMonoid (N k)] [∀ k, Module R (N k)] {P : Type*} [AddCommMonoid P] [Module R P]
     {f : (Π i, M i) →ₚₗ[R] (Π k, N k)}
     {g : (Π k, N k) →ₚₗ[R] P}
@@ -160,8 +155,7 @@ theorem IsMultiHomogeneousOfDegree.comp {κ : Type*} [Fintype κ] [DecidableEq �
   intro S _ _ s m
   simp only [← toFun_eq_toFun', comp_toFun, Function.comp_apply]
   nth_rewrite 1 [f.toFun_eq_sum_single_proj]
-  simp_rw [isMultiHomogeneousOfDegree_toFun (hf _),
-    map_smul]
+  simp_rw [(hf _).toFun, map_smul]
   simp only [comp_toFun, Function.comp_apply, ofLinearMap_toFun]
   set r := fun x ↦ ∏ i, s i ^ (n x) i with hr
   change g.toFun S (∑ x, (r x • _)) = _
@@ -169,7 +163,9 @@ theorem IsMultiHomogeneousOfDegree.comp {κ : Type*} [Fintype κ] [DecidableEq �
   specialize hg S (fun x ↦ r x)
   rw [← toFun_eq_toFun'] at hg
   convert hg m' with i
-  · sorry
+  · simp only [TensorProduct.compRight, coe_comp, Function.comp_apply]
+    congr
+    ext; simp [projRight]
   · simp only [hr]
     simp_rw [← Finset.prod_pow, ← pow_mul]
     rw [Finset.prod_comm]
@@ -177,30 +173,19 @@ theorem IsMultiHomogeneousOfDegree.comp {κ : Type*} [Fintype κ] [DecidableEq �
     intro i _
     rw [Finset.prod_pow_eq_pow_sum, hq]
 
-
-
--- TODO : generalize as in Prop I.2
-theorem IsMultiHomogeneousOfDegree.comp' {P : Type*} [AddCommMonoid P] [Module R P]
-    {f : (Π i, M i) →ₚₗ[R] N} {g : N →ₚₗ[R] P} {p : ι →₀ ℕ} {q : ℕ}
-    (hf : f.IsMultiHomogeneousOfDegree p) (hg : g.IsHomogeneousOfDegree q) :
-    (g.comp f).IsMultiHomogeneousOfDegree (q • p) := by
-  intro S _ _ r m
-  simp [comp_toFun', Function.comp_apply, Finsupp.coe_smul, Pi.smul_apply,
-    smul_eq_mul, mul_comm q, pow_mul, Finset.prod_pow, Pi.smul_apply, hf S, hg S]
-
-theorem IsMultiHomogeneousOfMultiDegree.isHomogeneousOfDegree {f : (Π i, M i) →ₚₗ[R] N} {n : ι →₀ ℕ}
-    (hf : f.IsMultiHomogeneousOfDegree n) : f.IsHomogeneousOfDegree n.degree := by
+/-- A multihomogeneous polynomial law is homogeneous. -/
+theorem IsMultiHomogeneousOfMultiDegree.isHomogeneousOfDegree
+    {n : ι →₀ ℕ} (hf : f.IsMultiHomogeneousOfDegree n) :
+    f.IsHomogeneousOfDegree n.degree := by
   intro S _ _ r m
   rw [degree_eq_sum, ← Finset.prod_pow_eq_pow_sum, ← hf S (fun i ↦ r) m, ← Pi.smul_def]
   simp [Pi.smul_apply, ← Finset.smul_sum, sum_compRight]
 
 /-- The coefficients of a homogeneous polynomial map of degree `p` vanish outside of degree `p`. -/
-lemma isMultiHomogeneousOfDegree_multiCoeff {n d : ι →₀ ℕ} {f : (Π i, M i) →ₚₗ[R] N}
+lemma IsMultiHomogeneousOfDegree.multiCoeff_eq_zero {n d : ι →₀ ℕ}
     (hf : IsMultiHomogeneousOfDegree n f) (m : Π i, M i) (hd : d ≠ n) :
     PolynomialLaw.multiCoeff m f d = 0 := by
-  have hf' := isMultiHomogeneousOfDegree_toFun hf
-  specialize hf' (MvPolynomial ι R) (fun i ↦ X i)
-    (∑ i, (1 : MvPolynomial ι R) ⊗ₜ[R] Pi.single i (m i))
+  have hf' := hf.toFun (MvPolynomial ι R) X (∑ i, 1 ⊗ₜ[R] Pi.single i (m i))
   simp only [map_sum, compRight_tmul, singleRight_tmul] at hf'
   have : (∑ x, X (R := R) x • ∑ x_1, (1 : MvPolynomial ι R) ⊗ₜ[R]
     Pi.single x (Pi.single x_1 (m x_1) x)) =
@@ -214,14 +199,13 @@ lemma isMultiHomogeneousOfDegree_multiCoeff {n d : ι →₀ ℕ} {f : (Π i, M 
   simp only [smul_sum, smul_tmul', smul_eq_mul, ] at hf'
   let φ : MvPolynomial ι R ⊗[R] N →ₗ[R] N :=
     (TensorProduct.lid R N).toLinearMap.comp (LinearMap.rTensor N (lcoeff R d))
-  let hφ := LinearMap.congr_arg (f := φ) hf'
+  let hφ := LinearMap.congr_arg (f := φ)  hf'
   simp only [mul_one, map_finsuppSum, one_pow, Finset.prod_const_one] at hφ
   rw [Finsupp.sum_eq_single d ?_ (by simp only [tmul_zero, map_zero, implies_true]),
     Finsupp.sum_eq_single d ?_ (by simp only [tmul_zero, map_zero, implies_true])] at hφ
-  · simp only [lcoeff, coe_comp, LinearEquiv.coe_coe, Function.comp_apply, rTensor_tmul,
-      LinearMap.coe_mk, AddHom.coe_mk, lid_tmul, φ, prod_X_pow_eq_monomial', coeff_monomial,
-      ↓reduceIte, _root_.one_smul, ite_smul, _root_.zero_smul, left_eq_ite_iff] at hφ
-    exact hφ (Ne.symm hd)
+  · rw [ne_comm] at hd
+    revert hd
+    simpa [φ, prod_X_pow_eq_monomial'] using hφ
   · intro k hk0 hkd
     simp [coe_comp, LinearEquiv.coe_coe, Function.comp_apply, rTensor_tmul, lcoeff_apply, φ,
       prod_X_pow_eq_monomial', coeff_monomial, if_neg (Ne.symm hd)]
@@ -229,24 +213,12 @@ lemma isMultiHomogeneousOfDegree_multiCoeff {n d : ι →₀ ℕ} {f : (Π i, M 
     simp [coe_comp, LinearEquiv.coe_coe, Function.comp_apply, rTensor_tmul, lcoeff_apply, φ,
       prod_X_pow_eq_monomial', coeff_monomial, if_neg hkd]
 
-theorem toFun_zero_of_constantCoeff_zero (hf : coeff (0 : ι → Π i, M i) f = 0) (S : Type*)
-    [CommSemiring S] [Algebra R S] : f.toFun S 0 = 0 := by
-  have : (0 : S ⊗[R] (Π i, M i)) = ∑ i, (0 : S) ⊗ₜ[R] Pi.single i (0 : M i) := by simp
-  rw [this, toFun_sum_tmul_eq_coeff_sum]
-  simp only [sum, Pi.single_zero]
-  conv_rhs => rw [← Finset.sum_const_zero (s := ( ((coeff (0 : ι → Π i, M i)) f).support))]
-  apply Finset.sum_congr rfl
-  erw [hf]
-  simp
-
-theorem toFun'_zero_of_constantCoeff_zero (hf : coeff (0 : ι → Π i, M i) f = 0) (S : Type u)
-    [CommSemiring S] [Algebra R S] : f.toFun' S 0 = 0 := by
-  rw [← toFun_eq_toFun', toFun_zero_of_constantCoeff_zero hf]
-
-theorem isMultiHomogeneousOfMultiDegreeOne_multiCoeff {f : (Π i, M i) →ₚₗ[R] N} (i : ι)
-    (hf : f.IsMultiHomogeneousOfDegree (Finsupp.single i 1)) (m : Π i, M i) {d : ι →₀ ℕ}
-    (hd : d ≠ Finsupp.single i 1) : (multiCoeff m f) d = 0 :=
-  isMultiHomogeneousOfDegree_multiCoeff hf m hd
+theorem isMultiHomogeneousOfMultiDegreeOne_multiCoeff
+    {i : ι}
+    (hf : f.IsMultiHomogeneousOfDegree (Finsupp.single i 1))
+    (m : Π i, M i) {d : ι →₀ ℕ} (hd : d ≠ Finsupp.single i 1) :
+    (multiCoeff m f) d = 0 :=
+  hf.multiCoeff_eq_zero m hd
 
 theorem isMultiHomogeneousOfDegreeOne_multiCoeff_support_le {f : (Π i, M i) →ₚₗ[R] N} (i : ι)
     (hf : f.IsMultiHomogeneousOfDegree (Finsupp.single i 1)) (m : Π i, M i) :
@@ -255,9 +227,12 @@ theorem isMultiHomogeneousOfDegreeOne_multiCoeff_support_le {f : (Π i, M i) →
   intro d hd
   simp only [Finsupp.mem_support_iff, ne_eq] at hd
   simp only [Finset.mem_map, Finset.mem_univ, Function.Embedding.coeFn_mk, true_and]
-  exact ⟨i, ((not_imp_comm.mp (isMultiHomogeneousOfMultiDegreeOne_multiCoeff i hf m)) hd).symm⟩
+  exact ⟨i, ((not_imp_comm.mp (
+    hf.multiCoeff_eq_zero m)) hd).symm⟩
 
-theorem isMultiHomogeneousOfMultiDegreeOne_multiCoeff_single {f : (Π i, M i) →ₚₗ[R] N} (i : ι)
+theorem IsMultiHomogeneousOfMultiDegree.multicoeff_single_eq_ground
+    {f : (Π i, M i) →ₚₗ[R] N}
+    (i : ι)
     (hf : f.IsMultiHomogeneousOfDegree (Finsupp.single i 1)) (m : Π i, M i) :
     (multiCoeff m f) (Finsupp.single i 1) = f.ground (Pi.single i (m i)) := by
   classical
@@ -604,7 +579,9 @@ theorem recompose_multiComponent {ι : Type u} [Fintype ι] [DecidableEq ι] {R 
   (f : (Π i, M i) →ₚₗ[R] N) :
     PolynomialLaw.lfsum (fun n ↦ f.multiComponent n) = f := by
   ext S _ _ sm
-  rw [lfsum_eq_of_locFinsupp (LocFinsupp_multiComponent f), LocFinsupp_multiComponent_eq]
+  rw [lfsum_toFun'_eq_of_locFinsupp (LocFinsupp_multiComponent f), LocFinsupp_multiComponent_eq]
+  -- It is painful to have to invent this kind of lemmas
+  -- is there a natural general statement?
   have hsm' : sm = ((aeval 1).restrictScalars R).toLinearMap.rTensor (Π i, M i) (∑ x,
     (LinearEquiv.rTensor ((i : ι) → M i) scalarRTensorAlgEquiv.toLinearEquiv)
       ((TensorProduct.assoc R (MvPolynomial ι R) S ((i : ι) → M i)).symm
@@ -645,6 +622,48 @@ noncomputable def multiGenerize_S' (sm : S ⊗[R] Π i, M i) (f : (Π i, M i) �
   (TensorProduct.assoc R (MvPolynomial ι R) S N) (
     LinearEquiv.rTensor (R := R) N scalarRTensorAlgEquiv.toLinearEquiv.symm
     (f.toFun (MvPolynomial ι S) (el_S''_hom ι R M S sm)))
+
+variable (f : (Π i, M i) →ₚₗ[R] N)
+example : S ⊗[R] (Π i, M i)  ≃ₗ[S] (Π i, S ⊗[R] M i) := by
+  exact piRight R S S M
+
+example : S ⊗[R] (Π i, M i)  →ₗ[S] (Π i, S ⊗[R] M i) := by
+  exact piRightHom R S S M
+
+example : MvPolynomial ι R ⊗[R] S ⊗[R] N ≃ₗ[R] (MvPolynomial ι R ⊗[R] S) ⊗[R] N := by
+  exact (TensorProduct.assoc R (MvPolynomial ι R) S N).symm
+
+example : S ⊗[R] MvPolynomial ι R →ₗ[R] MvPolynomial ι S :=
+  TensorProduct.lift {
+    toFun s := ((lsmul S (MvPolynomial ι S) s).restrictScalars R).comp (mapAlgHom (Algebra.algHom R R S)).toLinearMap
+    map_add' := by aesop
+    map_smul' := by aesop }
+
+example : S ⊗[R] MvPolynomial ι R ≃ₗ[S] MvPolynomial ι S := by
+  have : MvPolynomial ι R ≃ₗ[R] ((ι →₀ ℕ) →₀ R) := by
+    exact (LinearEquiv.refl R ((ι →₀ ℕ) →₀ R)).symm
+  have : S ⊗[R] ((ι →₀ ℕ) →₀ R) ≃ₗ[R] ((ι →₀ ℕ) →₀ S) := by
+    exact finsuppScalarRight R S (ι →₀ ℕ)
+
+example : MvPolynomial ι R ⊗[R] S ≃ₗ[R] MvPolynomial ι S :=
+  finsuppScalarLeft R S (ι →₀ ℕ)
+
+example : MvPolynomial ι R ⊗[R] S ⊗[R] N ≃ₗ[R] MvPolynomial ι S ⊗[R] N :=
+  (TensorProduct.assoc R _ S N).symm.trans ((finsuppScalarLeft R S _).rTensor N)
+
+example (sm : S ⊗[R] Π i, M i) (f : (Π i, M i) →ₚₗ[R] N) :
+    multiGenerize_S' sm f = 0 := by
+        -- (piRight R S S M sm):= by
+  let e : MvPolynomial ι R ⊗[R] S ⊗[R] N ≃ₗ[R] MvPolynomial ι S ⊗[R] N :=
+    (TensorProduct.assoc R _ S N).symm.trans ((finsuppScalarLeft R S _).rTensor N)
+
+  have := generize (ι := ι) ?_m (f.baseChange S)
+  sorry
+  sorry
+
+-- example {ι M N : Type*} [AddCommMonoid M] [AddCommMonoid N]
+--   {f : ι → M} {e : M ≃+ N} :
+--     Function.support (e ∘ f)
 
 theorem sum_multiCoeff_S [Fintype ι] [DecidableEq ι]
     (f : (Π i, M i) →ₚₗ[R] N) (z : S ⊗[R] (Π i, M i)) /- (s : Π (i : ι), S) -/ :
@@ -693,7 +712,15 @@ theorem sum_multiCoeff_S [Fintype ι] [DecidableEq ι]
       · intro b hb
         rw [rTensor_apply_monomial_tmul, if_neg (Ne.symm hb)]
         simp only [tmul_zero, map_zero]
-      · sorry
+      · simp only [← LinearEquiv.coe_toLinearMap,
+          ← LinearMap.comp_apply, LinearEquiv.comp_coe]
+        simp_rw [← Function.comp_def]
+        rw [Function.support_comp_eq]
+        · sorry
+        · intro x
+          sorry
+
+
       · sorry
   | add x y hx hy =>
     simp only [map_add, coe_add, Pi.add_apply, tmul_add]

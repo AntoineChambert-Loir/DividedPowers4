@@ -42,7 +42,7 @@ noncomputable def generize (m : ι → M) :
   map_smul' r p := by simp [RingHom.id_apply, smul_toFun, Pi.smul_apply]
 
 variable {S : Type*} [CommSemiring S] [Algebra R S]
-/-- Given `m : ι → M` and `s : ι → S`, `generize m` is the `R`-linear map sending `f : M →ₚₗ[R] N` to the
+/-- Given `m : ι → M` and `s : ι → S`, `generize' m s` is the `R`-linear map sending `f : M →ₚₗ[R] N` to the
 term of `MvPolynomial ι S ⊗[R] N` obtained by applying `f.toFun (MvPolynomial ι R)` to the
 sum `∑ i, s i • X i ⊗ₜ[R] m i`. -/
 noncomputable def generize' (m : ι → M) (s : ι → S) :
@@ -51,8 +51,7 @@ noncomputable def generize' (m : ι → M) (s : ι → S) :
   map_add' p q  := by simp [add_toFun_apply]
   map_smul' r p := by simp [RingHom.id_apply, smul_toFun, Pi.smul_apply]
 
-theorem generize'_eq_generize
-    (m : ι → M) (s : ι → S) (f : M →ₚₗ[R] N) :
+theorem generize'_eq_generize (m : ι → M) (s : ι → S) (f : M →ₚₗ[R] N) :
     generize' m s f =
       (aeval (R := R) fun i ↦ s i • X (R := S) i).toLinearMap.rTensor N (generize m f) := by
   simp [generize, generize', f.isCompat_apply, smul_tmul']
@@ -206,6 +205,24 @@ theorem toFun_tmul_eq_coeff_sum (S : Type*) [CommSemiring S] [Algebra R S] (r : 
   simp only [LinearMap.rTensor_tmul, AlgHom.toLinearMap_apply]
   apply congr_arg₂ _ _ rfl
   simp [aeval_monomial, _root_.map_one, Finsupp.prod_pow, one_mul]
+
+theorem toFun_zero_of_constantCoeff_zero
+    {M : Type*} [AddCommMonoid M] [Module R M] (f : M →ₚₗ[R] N)
+    (hf : f.coeff (0 : ι → M) = 0)
+    (S : Type*) [CommSemiring S] [Algebra R S] :
+    f.toFun S 0 = 0 := by
+  have : (0 : S ⊗[R] M) =
+    ∑ (i : ι), ((0 : ι → S) i) ⊗ₜ[R] ((0 : ι → M) i) := by
+    simp
+  rw [this, toFun_sum_tmul_eq_coeff_sum, hf]
+  simp
+
+theorem toFun'_zero_of_constantCoeff_zero
+    {M : Type*} [AddCommMonoid M] [Module R M] (f : M →ₚₗ[R] N)
+    (hf : f.coeff (0 : ι → M) = 0)
+    (S : Type u) [CommSemiring S] [Algebra R S] :
+    f.toFun' S 0 = 0 := by
+  rw [← toFun_eq_toFun', toFun_zero_of_constantCoeff_zero _ hf]
 
 end coeff
 

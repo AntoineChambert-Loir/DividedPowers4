@@ -2,7 +2,7 @@ import Mathlib.LinearAlgebra.TensorProduct.Finiteness
 import DividedPowers.PolynomialLaw.Basic2
 import DividedPowers.PolynomialLaw.Coeff
 
-/-! # Base change of polynomial maps
+/-! # Base change of polynomial laws
 
 This file defines a base change map
   `PolynomialLaw R M N →ₗ[R] PolynomialLaw R' (R' ⊗[R] M) (R' ⊗[R] N)``
@@ -374,27 +374,48 @@ theorem baseChange_toFun'_smul_tmul_tmul_eq_coeff_sum
     IsScalarTower.of_algebraMap_eq (fun r ↦ by simp [RingHom.algebraMap_toAlgebra])
   rw [← baseChangeEquiv_tmul_tmul]
 
--- Not working
-/-- The coefficients of a base change of a polynomial law. -/
-example (f : M →ₚₗ[R] N) {ι : Type*} [Fintype ι] [DecidableEq ι]
+/-- The coefficients of a base change of a polynomial law,
+for `ι : Type`. -/
+theorem coeff_baseChange' (f : M →ₚₗ[R] N) {ι : Type} [Fintype ι] [DecidableEq ι]
     (m : ι → M) (r : ι → R') (k : ι →₀ ℕ) :
     coeff (fun i ↦ r i ⊗ₜ[R] m i) (f.baseChange R') k =
       (∏ i, r i ^ k i) ⊗ₜ[R] coeff m f k := by
-  nth_rewrite 1 [coeff]
-  simp only [LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply]
-  simp only [MvPolynomial.scalarRTensor, finsuppScalarLeft]
-  simp [finsuppLeft]
-  rw [← LinearEquiv.eq_symm_apply, lid_symm_apply]
-  simp [finsuppLEquivDirectSum, finsuppLequivDFinsupp]
-  have : MvPolynomial ι R' ⊗[R'] R' ⊗[R] N
-    ≃ₗ[R'] MvPolynomial ι R' ⊗[R] N := by
-      exact AlgebraTensorModule.cancelBaseChange R R' R' (MvPolynomial ι R') N
-  have : (generize fun i ↦ r i ⊗ₜ[R] m i) (baseChange R' f)
-   = (AlgebraTensorModule.cancelBaseChange R R' R' (MvPolynomial ι R') N).symm (generize' m r f) := by
-     rw [generize'_eq_generize]
-     simp [baseChange, baseChangeEquiv, baseChangeEquiv']
-     sorry
-  sorry
+  simp only [coeff_eq, toFun_eq_toFun', baseChange_toFun'_smul_tmul_tmul_eq_coeff_sum]
+  simp only [← LinearEquiv.eq_symm_apply, lid_symm_apply]
+  simp only [map_finsuppSum, LinearMap.rTensor_tmul, MvPolynomial.lcoeff_apply]
+  rw [Finsupp.sum_eq_single k, coeff_eq, toFun_eq_toFun']
+  · congr
+    convert MvPolynomial.coeff_monomial k k (1 : R') <;>
+      simp [MvPolynomial.monomial_eq]
+  · intro l _ hlk
+    suffices MvPolynomial.coeff k (∏ i, MvPolynomial.X (R := R') i ^ l i) = 0 by
+      simp [this]
+    convert MvPolynomial.coeff_monomial k l (1 : R') <;>
+      simp [MvPolynomial.monomial_eq, hlk]
+  · simp
+
+/-- The coefficients of the base change of a polynomial law. -/
+theorem coeff_baseChange (f : M →ₚₗ[R] N) {ι : Type*} [Fintype ι] [DecidableEq ι]
+    (m : ι → M) (r : ι → R') (k : ι →₀ ℕ) :
+    coeff (fun i ↦ r i ⊗ₜ[R] m i) (f.baseChange R') k =
+      (∏ i, r i ^ k i) ⊗ₜ[R] coeff m f k := by
+  have : ∃ κ : Type, Nonempty (ι ≃ κ) := Small.equiv_small
+  obtain ⟨κ, ⟨e⟩⟩ := this
+  have : Fintype κ := Fintype.ofEquiv ι e
+  have : DecidableEq κ := Classical.typeDecidableEq κ
+  set n := m.comp e.symm with hn
+  have hn' : m = n.comp e := by ext; simp [hn]
+  set s := r.comp e.symm with hs
+  have hs' : r = s.comp e := by ext; simp [hs]
+  rw [hn', ← coeff_comp_equiv]
+  set l := k.equivMapDomain e with hl
+  have : ∏ i, r i ^ k i = ∏ i, s i ^ l i := by
+    simp [hs, hl]
+    rw [Fintype.prod_equiv e.symm]
+    simp
+  rw [this, ← coeff_baseChange', coeff_comp_equiv]
+  congr
+  ext; simp [hs']
 
 -- Todo
 theorem baseChange_toFun_smul_tmul_tmul_eq_coeff_sum
