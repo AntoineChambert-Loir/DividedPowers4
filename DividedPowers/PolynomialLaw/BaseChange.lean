@@ -141,30 +141,11 @@ variable {R : Type*} [CommSemiring R]
   {M : Type*}  [AddCommMonoid M] [Module R M]
   {N : Type*}  [AddCommMonoid N] [Module R N]
 
-theorem finset_sum_tmul_left {ι : Type*}
-    (m : M) (n : ι → N) (s : Finset ι) :
-    ∑ i ∈ s, m ⊗ₜ[R] n i = m ⊗ₜ[R] ∑ i ∈ s, n i := by
-  classical
-  induction s using Finset.induction_on with
-  | empty => simp
-  | insert a s has hs =>
-    simp [Finset.sum_insert has, hs, tmul_add]
-
-theorem finset_sum_tmul_right {ι : Type*}
-    (m : ι → M) (n : N) (s : Finset ι) :
-    ∑ i ∈ s, m i ⊗ₜ[R] n = (∑ i ∈ s, m i) ⊗ₜ[R] n:= by
-  classical
-  induction s using Finset.induction_on with
-  | empty => simp
-  | insert a s has hs =>
-    simp [Finset.sum_insert has, hs, add_tmul]
-
 theorem multiset_sum_tmul (m : Multiset M) (n : N) :
     m.sum ⊗ₜ[R] n = (m.map (fun x ↦ x ⊗ₜ[R] n)).sum := by
   induction m using Multiset.induction_on with
   | empty => simp
   | cons a n has => simp [has, add_tmul]
-
 
 theorem tmul_multiset_sum (m : M) (n : Multiset N) :
     m ⊗ₜ[R] n.sum = (n.map (fun y ↦ m ⊗ₜ[R] y)).sum := by

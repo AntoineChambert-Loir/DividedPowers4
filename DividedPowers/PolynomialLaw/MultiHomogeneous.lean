@@ -5,8 +5,8 @@ import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Basic
 import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Pi
 import DividedPowers.PolynomialLaw.Homogeneous
 import DividedPowers.PolynomialLaw.MultiCoeff
+import DividedPowers.PolynomialLaw.Basic3
 import Mathlib.Data.Finsupp.Weight
-
 universe u uι
 
 /- # Multihomogeneous components of a polynomial map
@@ -42,7 +42,7 @@ variable {M : ι → Type*} [∀ i, AddCommMonoid (M i)] [∀ i, Module R (M i)]
 
 -- TODO: fix docstring
 /-- A polynomial map `f : Π (i : ι), M i →ₚ[R] N` is multihomogeneous of multidegree `n : ι →₀ ℕ`
-  if for all families `{z_i : R ⊗ M i}_{i : ι}`, `{r_i : R}_{i : ι}`, one has
+  if for all `S : Type u`, all families `{z_i : S ⊗ M i}_{i : ι}`, `{r_i : S}_{i : ι}`, one has
   `f (r_1 • z_1, r_2 • z_2, ...) = Π i r_i^(n i) • f (z_1, z_2, ...)`. -/
 def IsMultiHomogeneousOfDegree (n : ι →₀ ℕ) (f : (Π i, M i) →ₚₗ[R] N) : Prop :=
   ∀ (S : Type u) [CommSemiring S] [Algebra R S] (r : ι → S) (m : S ⊗ ((i : ι) → M i)),
@@ -79,19 +79,17 @@ lemma isMultiHomogeneousOfDegree_toFun {n : ι →₀ ℕ} {f : (Π i, M i) →�
   simp only [← hr', ← hm', ← map_pow, ← map_prod, ← isCompat_apply, toFun_eq_toFun', smul_rTensor]
   rw [← hf, ← toFun_eq_toFun', isCompat_apply]
   simp only [TensorProduct.compRight, singleRight, projRight, coe_comp, LinearEquiv.coe_coe,
-    coe_single, coe_proj, Function.comp_apply, Function.eval,]
-  apply congr_arg
-  simp only [map_sum]
-  apply Finset.sum_congr rfl
-  intro i _
-  simp only [← smul_rTensor]
+    coe_single, coe_proj, Function.comp_apply, Function.eval]
+  simp only [map_sum, ← smul_rTensor]
+  congr
+  ext i
   congr
   rw [LinearEquiv.symm_apply_eq]
   ext j
-  simp only [piRight_rTensor_eq_rTensor_piRight', LinearEquiv.apply_symm_apply]
   by_cases hij : j = i
-  · rw [hij, Pi.single_eq_same, Pi.single_eq_same]
-  · rw [Pi.single_eq_of_ne hij, Pi.single_eq_of_ne hij, map_zero]
+  · subst hij
+    simp [piRight_rTensor_eq_rTensor_piRight']
+  · simp [piRight_rTensor_eq_rTensor_piRight', hij]
 
 /-- If `f` is multihomogeneous of multidegree `n`, then `f.ground` is too.  -/
 lemma isMultiHomogeneousOfDegree_ground {n : ι →₀ ℕ} {f : (Π i, M i) →ₚₗ[R] N}
@@ -106,9 +104,83 @@ lemma isMultiHomogeneousOfDegree_ground {n : ι →₀ ℕ} {f : (Π i, M i) →
   simp_rw [map_sum, projRight_compRight]
   simp [projRight]
 
+section
+
+variable  (f : N  →ₚₗ[R] (Π i, M i))
+
+variable (i : ι)
+  (S : Type u) [CommSemiring S] [Algebra R S] (n : S ⊗[R] N)
+#check ((proj i).toPolynomialLaw.comp f)
+#check ((proj i).toPolynomialLaw.comp f).toFun' S n
+
+example : (Π i, S ⊗[R] (M i)) ≃ₗ[R] S ⊗[R] (Π i, M i) := by
+  exact (piRight R R S M).symm
+
+example : S ⊗[R] (M i) →ₗ[R] S ⊗[R] (Π i, M i) := by
+  exact singleRight R R S M i
+
+example (i : ι) : M i →ₗ[R] (Π i, M i) := by
+  exact LinearMap.single R M i
+
+example (i : ι) : (Π i, M i) →ₗ[R] (Π i, M i) := by
+  refine (single R M i).comp (proj i)
+
+theorem eq_sum_single_comp_proj :
+    f = ∑ (i : ι), ((single R M i).comp (proj i)).toPolynomialLaw.comp f := by
+  rw [← sum_comp]
+  convert f.id_comp.symm
+  simp only [← ofLinearMapHom_apply, ← Submodule.coe_sum,
+    ← map_sum]
+  suffices ∑ x, LinearMap.single R M x ∘ₗ proj x = LinearMap.id by
+    rw [this]
+    rw [ofLinearMapHom_apply, ofLinearMap_id]
+  aesop
+
+theorem toFun_eq_sum_single_proj
+    {S : Type*} [CommSemiring S] [Algebra R S] (n : S ⊗[R] N) :
+    f.toFun S n = ∑ (i : ι), singleRight R S S M i (((proj i).toPolynomialLaw.comp f).toFun S n) := by
+  nth_rewrite 1 [eq_sum_single_comp_proj f]
+  rw [sum_toFun]
+  apply Finset.sum_congr rfl
+  intro i _
+  simp [ofLinearMap_comp, comp_toFun,
+    ofLinearMap_toFun]
+  congr
+  ext m
+  simp [singleRight_tmul]
+
+theorem IsMultiHomogeneousOfDegree.comp {κ : Type*} [Fintype κ] [DecidableEq κ] {N : κ → Type*} [∀ k, AddCommMonoid (N k)] [∀ k, Module R (N k)] {P : Type*} [AddCommMonoid P] [Module R P]
+    {f : (Π i, M i) →ₚₗ[R] (Π k, N k)}
+    {g : (Π k, N k) →ₚₗ[R] P}
+    {n : κ → ι →₀ ℕ}
+    (hf : ∀ k, IsMultiHomogeneousOfDegree (n k) ((proj k).toPolynomialLaw.comp f))
+    {p : κ →₀ ℕ} (hg : IsMultiHomogeneousOfDegree p g)
+    (q : ι →₀ ℕ) (hq : ∀ i, q i = ∑ k, n k i * p k):
+    IsMultiHomogeneousOfDegree q (g.comp f) := by
+  intro S _ _ s m
+  simp only [← toFun_eq_toFun', comp_toFun, Function.comp_apply]
+  nth_rewrite 1 [f.toFun_eq_sum_single_proj]
+  simp_rw [isMultiHomogeneousOfDegree_toFun (hf _),
+    map_smul]
+  simp only [comp_toFun, Function.comp_apply, ofLinearMap_toFun]
+  set r := fun x ↦ ∏ i, s i ^ (n x) i with hr
+  change g.toFun S (∑ x, (r x • _)) = _
+  generalize f.toFun S m = m'
+  specialize hg S (fun x ↦ r x)
+  rw [← toFun_eq_toFun'] at hg
+  convert hg m' with i
+  · sorry
+  · simp only [hr]
+    simp_rw [← Finset.prod_pow, ← pow_mul]
+    rw [Finset.prod_comm]
+    apply Finset.prod_congr rfl
+    intro i _
+    rw [Finset.prod_pow_eq_pow_sum, hq]
+
+
 
 -- TODO : generalize as in Prop I.2
-theorem IsMultiHomogeneousOfDegree.comp {P : Type*} [AddCommMonoid P] [Module R P]
+theorem IsMultiHomogeneousOfDegree.comp' {P : Type*} [AddCommMonoid P] [Module R P]
     {f : (Π i, M i) →ₚₗ[R] N} {g : N →ₚₗ[R] P} {p : ι →₀ ℕ} {q : ℕ}
     (hf : f.IsMultiHomogeneousOfDegree p) (hg : g.IsHomogeneousOfDegree q) :
     (g.comp f).IsMultiHomogeneousOfDegree (q • p) := by
