@@ -167,6 +167,7 @@ variable (R S N M) in
 def singleRight (i : ι) : N ⊗[R] M i →ₗ[S] N ⊗[R] (Π i, M i) :=
   (piRight R S N M).symm.toLinearMap.comp (LinearMap.single S (fun i ↦ (N ⊗[R] M i)) i)
 
+@[simp]
 lemma singleRight_tmul (i : ι) (n : N) (m : M i) :
     singleRight R S N M i (n ⊗ₜ m) = n ⊗ₜ Pi.single i m := by
   simp [singleRight]
@@ -199,10 +200,12 @@ def compRight (i : ι) : N ⊗[R] (Π i, M i) →ₗ[S] N ⊗[R] (Π i, M i) :=
 lemma sum_compRight (nm : N ⊗[R] (Π i, M i)) : ∑ i, (compRight R S N M i nm) = nm :=
   (right_ext_iff S).mpr fun i ↦ by simp [projRight, compRight, singleRight]
 
+@[simp]
 lemma compRight_tmul (i : ι) (n : N) (m : Π i, M i) :
     (compRight R S N M i (n ⊗ₜ (fun i ↦ m i))) = singleRight R S N M i (n ⊗ₜ m i) := by
   simp [compRight, singleRight, projRight]
 
+@[simp]
 lemma compRight_piRight_tmul (i : ι) (n : ι → N) (m : Π i, M i) :
     (compRight R S N M i ((piRight R S N M).symm fun i ↦ n i ⊗ₜ m i)) =
       singleRight R S N M i (n i ⊗ₜ m i) := by
@@ -233,6 +236,7 @@ lemma projRight_compRight (i j : ι) (nm : N ⊗[R] (Π i, M i)) :
   · exact h ▸ projRight_compRight_eq_same i nm
   · simp [compRight, singleRight, projRight, Pi.single_eq_of_ne h]
 
+@[simp]
 lemma projRight_compRight_piRight_tmul (i : ι) (n : ι → N) (m : Π i, M i) :
     projRight R S N M i (compRight R S N M i ((piRight R S N M).symm fun i ↦ n i ⊗ₜ m i)) =
       (n i ⊗ₜ m i) := by
