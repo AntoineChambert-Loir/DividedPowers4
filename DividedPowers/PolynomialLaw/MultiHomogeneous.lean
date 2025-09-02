@@ -1,13 +1,12 @@
 /- Copyright ACL & MIdFF 2024 -/
 
 import DividedPowers.ForMathlib.Algebra.MvPolynomial.Lemmas
-import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Basic
 import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Pi
+import DividedPowers.PolynomialLaw.Basic3
 import DividedPowers.PolynomialLaw.Homogeneous
 import DividedPowers.PolynomialLaw.MultiCoeff
-import DividedPowers.PolynomialLaw.Basic3
-import DividedPowers.PolynomialLaw.BaseChange
 import Mathlib.Data.Finsupp.Weight
+
 universe u uι
 
 /- # Multihomogeneous components of a polynomial map
@@ -333,105 +332,22 @@ noncomputable def multiCoeff_S (sm : S ⊗[R] Π i, M i) (f : (Π i, M i) →ₚ
     (ι →₀ ℕ) →₀ S ⊗[R] N :=
   finsuppLeft R S N _ (f.toFun _ (multiGenerize_S' sm))
 
-variable (ι R S M)
-
-
--- **MI**: we need to rename these.
-
-/- Note (ACL) : I wonder whether we should handle such triple tensor products which,
-mathematically, we would want to rewrite as a double tensor prpoduct, without further notice.
-Probably an API is needed. -/
-
-private noncomputable def el_S_hom :
-    (S ⊗[R] Π i, M i) →ₗ[R] MvPolynomial ι R ⊗[R] (S ⊗[R] (Π i, M i)) where
-  toFun := fun m ↦ ∑ (i : ι), (X i) ⊗ₜ (compRight R S S M i m)
-  map_add' m m'  := by simp [map_add, ← Finset.sum_add_distrib, tmul_add]
-  map_smul' r m := by simp [Finset.smul_sum]
-
-private noncomputable def el_S'_hom :
-    (S ⊗[R] Π i, M i) →ₗ[R] (MvPolynomial ι R ⊗[R] S) ⊗[R] (Π i, M i) :=
-  (TensorProduct.assoc R (MvPolynomial ι R) S (Π i, M i)).symm.comp (el_S_hom ι R M S)
-
-/-- Maps (s ⊗ m) to ∑ (s i • X i) ⊗ (m i) -/
-private noncomputable def el_S''_hom : (S ⊗[R] Π i, M i) →ₗ[R] (MvPolynomial ι S) ⊗[R] (Π i, M i) :=
-  (LinearEquiv.rTensor (Π i, M i) scalarRTensorAlgEquiv.toLinearEquiv).comp (el_S'_hom ι R M S)
-
-variable {ι R M S}
-
-private lemma el_S_hom_apply_tmul (s : ι → S) (m : Π i, M i) :
-    el_S_hom ι R M S ((piRight R R _ _ ).symm (fun i ↦ s i ⊗ₜ m i)) =
-      ∑ (i : ι), (X i) ⊗ₜ (s i ⊗ₜ (Pi.single i (m i))) := by
-  simp only [el_S_hom, TensorProduct.compRight, singleRight, projRight, coe_comp,
-    LinearEquiv.coe_coe, coe_single, coe_proj, coe_piRight, Function.comp_apply,
-    Function.eval, coe_mk, AddHom.coe_mk]
-  exact Finset.sum_congr rfl fun i _ ↦ by simp [LinearEquiv.apply_symm_apply, piRight_symm_single]
-
-private lemma el_S'_hom_apply_tmul (s : ι → S) (m : Π i, M i) :
-    el_S'_hom ι R M S ((piRight R R _ _ ).symm (fun i ↦ s i ⊗ₜ m i)) =
-      ∑ (i : ι), (X i) ⊗ₜ s i ⊗ₜ (Pi.single i (m i)) := by
-  simp [el_S'_hom, coe_piRight_symm, coe_comp, LinearEquiv.coe_coe, Function.comp_apply,
-    el_S_hom_apply_tmul, map_sum, assoc_symm_tmul]
-
-private lemma el_S''_hom_apply_tmul (s : ι → S) (m : Π i, M i) :
-    el_S''_hom ι R M S ((piRight R R _ _ ).symm (fun i ↦ s i ⊗ₜ m i)) =
-      ∑ (i : ι), (C (s i) * (X i)) ⊗ₜ (Pi.single i (m i)) := by
-  simp only [el_S''_hom,
-    LinearEquiv.coe_rTensor, coe_piRight_symm, coe_comp, Function.comp_apply, el_S'_hom_apply_tmul,
-    map_sum, rTensor_tmul, LinearEquiv.coe_coe,
-    AlgEquiv.toLinearEquiv_apply, ]
-  apply Finset.sum_congr rfl
-  intro i _
-  congr
-  simp only [scalarRTensorAlgEquiv, AlgEquiv.trans_apply, rTensorAlgEquiv_apply, rTensorAlgHom,
-    Algebra.TensorProduct.lift_tmul, mapAlgHom_apply, eval₂_X, AlgHom.coe_comp,
-    IsScalarTower.coe_toAlgHom', algebraMap_eq, Function.comp_apply,
-    Algebra.TensorProduct.includeRight_apply, map_mul, mapAlgEquiv_apply, map_X, map_C,
-    RingHom.coe_coe, Algebra.TensorProduct.lid_tmul, _root_.one_smul]
-  rw [mul_comm]
-
-/- **ACL** : By comparison with `PolynomialLaw.generize`, I am not sure the name is ok
-Possibly important, but I'm not sure, we lose the linearity in `f`. -/
-noncomputable def multiGenerize_S (sm : S ⊗[R] Π i, M i) (f : (Π i, M i) →ₚₗ[R] N) :
-    MvPolynomial ι S ⊗[R] N := f.toFun (MvPolynomial ι S) (el_S''_hom ι R M S sm)
-
--- This does not look so useful.
-lemma multiGenerize_S_apply_pi_tmul (s : ι → S) (m : Π i, M i) (f : (Π i, M i) →ₚₗ[R] N) :
-    multiGenerize_S ((piRight R R _ _ ).symm (fun i ↦ s i ⊗ₜ m i)) f =
-      (((multiCoeff m) f).sum fun k n ↦ (∏ i, (C (s i) * X i) ^ k i) ⊗ₜ[R] n) := by
-  simp [multiGenerize_S, el_S''_hom_apply_tmul, toFun_sum_tmul_eq_multiCoeff_sum]
-
-theorem multiGenerize_S_eq_map_multiGenerize_S' (sm : S ⊗[R] Π i, M i) (f : (Π i, M i) →ₚₗ[R] N) :
-    f.multiGenerize_S sm = f.toFun _ (multiGenerize_S' sm) := by
-  simp only [multiGenerize_S, el_S''_hom, multiGenerize_S'_apply_eq]
-  congr
-
 theorem multiGenerize_eq_sum_multiCoeff_S (sm : S ⊗[R] Π i, M i) (f : (Π i, M i) →ₚₗ[R] N) :
-    multiGenerize_S sm f = (f.multiCoeff_S sm).sum
+    f.toFun _ (multiGenerize_S' sm) = (f.multiCoeff_S sm).sum
       (fun k ↦ AlgebraTensorModule.map (monomial k) LinearMap.id) := by
-  simp only [multiCoeff_S, multiGenerize_S_eq_map_multiGenerize_S']
+  simp only [multiCoeff_S]
   set sn := finsuppLeft R S N _ (f.toFun _ (multiGenerize_S' sm)) with hsn
   rw [← LinearEquiv.symm_apply_eq] at hsn
   rw [← hsn]
   rw [finsuppLeft_symm_apply_eq_sum]
 
--- **ACL** : your initial definition
-@[simp]
-lemma coe_multiCoeff_S (sm : S ⊗[R] Π i, M i) (f : (Π i, M i) →ₚₗ[R] N) :
-    ⇑(f.multiCoeff_S sm) = fun k ↦ MvPolynomial.rTensor (multiGenerize_S sm f) k := by
-  simp only [multiCoeff_S, multiGenerize_S_eq_map_multiGenerize_S', DFunLike.coe_fn_eq]
-  generalize f.toFun _ (multiGenerize_S' sm) = sn
-  rfl -- missing lemma?
-
 lemma multiCoeff_S_apply' (sm : S ⊗[R] Π i, M i) (f : (Π i, M i) →ₚₗ[R] N) :
     multiCoeff_S sm f = MvPolynomial.rTensor
       (f.toFun (MvPolynomial ι S) (multiGenerize_S' sm)) := by
   ext k
-  simp only [multiGenerize_S', coe_multiCoeff_S, multiGenerize_S, el_S''_hom, el_S'_hom, el_S_hom]
-  simp only [TensorProduct.compRight, singleRight, projRight, coe_comp, LinearEquiv.coe_coe]
-  simp
-/-  simp only [multiGenerize_S, el_S''_hom, el_S'_hom, el_S_hom,
-    TensorProduct.compRight, singleRight, projRight, coe_comp, LinearEquiv.coe_coe, coe_single,
-    coe_proj, Function.comp_apply, Function.eval, coe_mk, AddHom.coe_mk, map_sum] -/
+  simp only [multiCoeff_S]
+  rw [multiGenerize_eq_sum_multiCoeff_S]
+  rfl -- missing API?
 
 lemma multiCoeff_S_apply (sm : S ⊗[R] Π i, M i) (f : (Π i, M i) →ₚₗ[R] N) :
     multiCoeff_S sm f = MvPolynomial.rTensor (f.toFun (MvPolynomial ι S)
@@ -448,14 +364,6 @@ lemma multiCoeff_S_apply_tmul (s : S) (m : Π i, M i) (f : (Π i, M i) →ₚₗ
   rw [multiCoeff_S_apply]
   congr
   simp [TensorProduct.compRight, singleRight, projRight]
-
--- This does not look so useful.
-lemma multiCoeff_S_apply_pi_tmul (s : ι → S) (m : Π i, M i) (f : (Π i, M i) →ₚₗ[R] N) :
-    multiCoeff_S ((piRight R R _ _ ).symm (fun i ↦ s i ⊗ₜ m i)) f =
-      MvPolynomial.rTensor (((multiCoeff m) f).sum
-        fun k n ↦ (∏ i, (C (s i) * X i) ^ k i) ⊗ₜ[R] n) := by
-  ext d
-  simp [multiGenerize_S_apply_pi_tmul]
 
 variable (s : Π (_ : ι), S) (m : Π i, M i)
 
@@ -722,45 +630,6 @@ theorem recompose_multiComponent {ι : Type u} [Fintype ι] [DecidableEq ι] {R 
     simp [AlgHom.toLinearMap_apply, AlgHom.coe_restrictScalars', aeval_eq_eval₂Hom, eval_eq,
       Finset.prod_const_one, MvPolynomial.lsum, coe_restrictScalars, LinearMap.coe_mk,
       AddHom.coe_mk, Finsupp.sum, MvPolynomial.coeff, finsupp_support_eq_support]
-
-open BigOperators
-
-section todelete
-
-noncomputable def multiGenerize_S'' (sm : S ⊗[R] Π i, M i) (f : (Π i, M i) →ₚₗ[R] N) :
-    MvPolynomial ι R ⊗[R] (S ⊗[R] N) := by
-  let g := f.toFun (MvPolynomial ι S) (el_S''_hom ι R M S sm)
-  let p := scalarRTensorAlgEquiv (R := R) (N := S) (σ := ι)
-  let h := LinearEquiv.rTensor (R := R) N p.toLinearEquiv.symm
-  let g' := (TensorProduct.assoc R (MvPolynomial ι R) S N) (h g)
-  exact g'
-
-noncomputable def multiGenerize_S''' (sm : S ⊗[R] Π i, M i) (f : (Π i, M i) →ₚₗ[R] N) :
-    MvPolynomial ι R ⊗[R] (S ⊗[R] N) :=
-  (TensorProduct.assoc R (MvPolynomial ι R) S N) (
-    LinearEquiv.rTensor (R := R) N scalarRTensorAlgEquiv.toLinearEquiv.symm
-    (f.toFun (MvPolynomial ι S) (el_S''_hom ι R M S sm)))
-
-theorem multiCoeff_S_support_finite
-    (f : (Π i, M i) →ₚₗ[R] N) (z : S ⊗[R] (Π i, M i))  :
-    Finite (multiCoeff_S  z f).support:=
-  Finite.of_fintype { x // x ∈ (multiCoeff_S z f).support }
-
-end todelete
-
-/- private noncomputable def el_S_hom :
-    (S ⊗[R] Π i, M i) →ₗ[R] MvPolynomial ι R ⊗[R] (S ⊗[R] (Π i, M i)) where
-  toFun := fun m ↦ ∑ (i : ι), (X i) ⊗ₜ (compRight R S S M i m)
-  map_add' m m'  := by simp [map_add, ← Finset.sum_add_distrib, tmul_add]
-  map_smul' r m := by simp [Finset.smul_sum]
-
-private noncomputable def el_S'_hom :
-    (S ⊗[R] Π i, M i) →ₗ[R] (MvPolynomial ι R ⊗[R] S) ⊗[R] (Π i, M i) :=
-  (TensorProduct.assoc R (MvPolynomial ι R) S (Π i, M i)).symm.comp (el_S_hom ι R M S)
-
-private noncomputable def el_S''_hom : (S ⊗[R] Π i, M i) →ₗ[R] (MvPolynomial ι S) ⊗[R] (Π i, M i) :=
-  (LinearEquiv.rTensor (Π i, M i) scalarRTensorAlgEquiv.toLinearEquiv).comp (el_S'_hom ι R M S)
--/
 
 end Components
 

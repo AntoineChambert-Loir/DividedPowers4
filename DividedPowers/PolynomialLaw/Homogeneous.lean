@@ -342,8 +342,9 @@ open Finsupp LinearMap
 
 theorem ofLinearMap_coeff_single (u : M →ₗ[R] N) (ι : Type*) [DecidableEq ι] [Fintype ι]
     (m : ι → M) (i : ι) : coeff m u.toPolynomialLaw (single i 1) = u (m i) := by
-  rw [coeff, generize, coe_comp, LinearEquiv.coe_coe, LinearMap.coe_mk, AddHom.coe_mk,
+  rw [coeff, generize', coe_comp, LinearEquiv.coe_coe, LinearMap.coe_mk, AddHom.coe_mk,
     Function.comp_apply]
+  simp only [Module.generize, LinearMap.coe_mk, AddHom.coe_mk]
   simp only [ofLinearMap_toFun, map_sum, LinearMap.baseChange_tmul]
   rw [coe_finset_sum, Finset.sum_apply, Finset.sum_eq_single i ?_ (fun hi => by simp at hi),
     scalarRTensor_apply_tmul_apply, coeff_X, _root_.one_smul]

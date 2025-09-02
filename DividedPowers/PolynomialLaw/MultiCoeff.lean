@@ -32,32 +32,45 @@ section multiGenerize
 /-- Given `m : ι → Π i, M i`, `generize m` is the `R`-linear map sending `f : (Π i, M i) →ₚₗ[R] N`
 to the term of `MvPolynomial ι R ⊗[R] N` obtained by applying `f.toFun (MvPolynomial ι R)` to the
 sum `∑ i, X i ⊗ₜ[R] m i`. -/
-noncomputable def multiGenerize (m : Π i, M i) :
+noncomputable def _root_.Module.multiGenerize :
+    ((Π i, M i)) →ₗ[R] MvPolynomial ι R ⊗[R] (Π i, M i) where
+  toFun m       := (∑ i : ι, X i ⊗ₜ[R] (Pi.single i (m i)))
+  map_add' p q  := by simp [Pi.single_add, tmul_add, sum_add_distrib]
+  map_smul' r p := by simp [ Pi.single_smul, Finset.smul_sum]
+
+/-- Given `m : ι → Π i, M i`, `generize m` is the `R`-linear map sending `f : (Π i, M i) →ₚₗ[R] N`
+to the term of `MvPolynomial ι R ⊗[R] N` obtained by applying `f.toFun (MvPolynomial ι R)` to the
+sum `∑ i, X i ⊗ₜ[R] m i`. -/
+noncomputable def multiGenerize' (m : Π i, M i) :
     ((Π i, M i) →ₚₗ[R] N) →ₗ[R] MvPolynomial ι R ⊗[R] N where
   toFun f       := f.toFun (MvPolynomial ι R) (∑ i : ι, X i ⊗ₜ[R] (Pi.single i (m i)))
   map_add' p q  := by simp [add_toFun_apply]
   map_smul' r p := by simp [RingHom.id_apply, smul_toFun, Pi.smul_apply]
 
-theorem multiGenerize_eq_generize (m : Π i, M i) :
-    multiGenerize (R := R) (N := N) m = generize (fun (i : ι)  ↦ Pi.single i (m i)) := by
+open Module in
+theorem multiGenerize_eq_generize (f : ((Π i, M i) →ₚₗ[R] N)) (m : Π i, M i) :
+    f.toFun (MvPolynomial ι R) (multiGenerize m) =
+    f.toFun (MvPolynomial ι R) (generize (fun (i : ι) ↦ Pi.single i (m i))) := by
   simp [generize, multiGenerize]
 
 end multiGenerize
 
 section multiCoeff
 
+open Module
+
 variable (m : Π i, M i) (k : ι →₀ ℕ) (f : (Π i, M i) →ₚₗ[R] N)
 
 /-- The multi-coefficients of a `PolynomialLaw`, as linear maps. -/
 noncomputable def multiCoeff :
     ((Π i, M i) →ₚₗ[R] N) →ₗ[R] (ι →₀ ℕ) →₀ N :=
-  scalarRTensor.toLinearMap.comp (multiGenerize m)
+  scalarRTensor.toLinearMap.comp (multiGenerize' m)
 
 theorem multiCoeff_eq_coeff (m : Π i, M i) :
     multiCoeff m = coeff (R := R) (ι := ι) (N := N) (fun i ↦ Pi.single i (m i)) := by
-  simp [multiCoeff, coeff, multiGenerize_eq_generize]
+  simp [multiCoeff, multiGenerize', coeff, generize', generize, coe_mk, AddHom.coe_mk]
 
-theorem multiGenerize_eq : multiGenerize m f =
+theorem multiGenerize_eq : f.toFun (MvPolynomial ι R) (multiGenerize m)=
     (multiCoeff m f).sum (fun k n ↦ (monomial k 1) ⊗ₜ n) := by
   simp [multiCoeff_eq_coeff, multiGenerize_eq_generize, generize_eq]
 
