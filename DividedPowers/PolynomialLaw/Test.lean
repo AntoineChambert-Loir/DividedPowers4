@@ -8,6 +8,12 @@ variable (R : Type*) (S : Type*) (smulRS : SMul R S) (smulRS' : SMul R S) (r : R
 lemma smulRS_eq (h : smulRS = smulRS') : @SMul.smul R S smulRS r x = @SMul.smul R S smulRS' r x := by
   rw [h]
 
+def foo' (h : smulRS = smulRS') :
+    @MulActionHom R R id S smulRS S smulRS' :=
+  @MulActionHom.mk _ _ _ _ (_) _ (_) (fun x => x) (fun _ _ => h ▸ rfl)
+
+#check foo'
+-- doesn't work
 def foo' (h : smulRS = smulRS') : @MulActionHom R R id S smulRS S smulRS' where
   toFun := id
   map_smul' r x : @SMul.smul R S smulRS r x = @SMul.smul R S smulRS' r x := sorry
