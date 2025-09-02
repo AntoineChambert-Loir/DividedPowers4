@@ -390,26 +390,7 @@ theorem baseChangeEquiv_congr'' {R : Type u} {M N : Type*} {R' : Type*} {S' : Ty
   · congr
   · aesop
 
-example  {R : Type u} {M N : Type*} {R' : Type*} {S' : Type*}
-    [CommSemiring R]
-    [AddCommMonoid M] [Module R M]
-    [AddCommMonoid N] [Module R N]
-    (f : M →ₚₗ[R] N)
-    [CommSemiring R']
-    [alg3 : Algebra R R'] [alg4 : Algebra R R']
-    [CommSemiring S'] [Algebra R' S']
-    [alg1 : Algebra R S'] [ist1 : @IsScalarTower R R' S' alg3.toSMul _ alg1.toSMul]
-    [alg2 : Algebra R S'] [ist2 : @IsScalarTower R R' S' alg4.toSMul _ alg2.toSMul] :
-    False := by
-  let t := @IsScalarTower.right R R' _ _ alg3
-  let i := @SMulCommClass.of_commMonoid R R' R' _ alg3.toSMul _ t _
-  let m := @leftModule R _ R' _ R' M _ _ alg3.toModule _ _ i
-  let T := S' ⊗[R'] (@TensorProduct R _ R' M _ _ (@Algebra.toModule R R' _ _ alg3) _)
-  let T' := @TensorProduct R' _ S' (@TensorProduct R _ R' M _ _ (@Algebra.toModule R R' _ _ alg3) _)
-   _ _ _ (@leftModule R _ R' _ R' M _ _ alg3.toModule _ _
-     (@SMulCommClass.of_commMonoid R R' R' _ alg3.toSMul _ (@IsScalarTower.right R R' _ _ alg3) _))
-  have : T = T' := rfl
-  sorry
+
 
 theorem baseChangeEquiv_congr {R : Type u} {M N : Type*} {R' : Type*} {S' : Type*}
     [CommSemiring R]
@@ -538,6 +519,105 @@ theorem toFun_baseChangeEquiv_one_tmul (f : M →ₚₗ[R] N) (m : R' ⊗[R] M) 
     f.toFun R' (baseChangeEquiv ((1 : R') ⊗ₜ[R'] m)) = baseChangeEquiv ((1 : R') ⊗ₜ[R'] f.toFun R' m) := by
   simp [baseChangeEquiv_one_tmul]
 
+--attribute [-instance] Algebra.id
+
+section
+
+variable (R : Type u) (M N R' S' : Type*)
+    [CommSemiring R]
+    [AddCommMonoid M] [Module R M]
+    [AddCommMonoid N] [Module R N]
+    (f : M →ₚₗ[R] N)
+    [CommSemiring R']
+    (alg3 : Algebra R R') --(alg4 : Algebra R R')
+    [CommSemiring S'] [Algebra R' S']
+    [alg1 : Algebra R S'] [ist13 : @IsScalarTower R R' S' alg3.toSMul _ alg1.toSMul]
+    --[alg2 : Algebra R S'] --[ist2 : @IsScalarTower R R' S' alg4.toSMul _ alg2.toSMul]
+
+#synth Algebra R R'
+
+set_option pp.instances true in
+example :
+    False := by
+  let t := @IsScalarTower.right R R' _ _ alg3
+  let i := @SMulCommClass.of_commMonoid R R' R' _ alg3.toSMul _ t _
+  let m := @leftModule R _ R' _ R' M _ _ alg3.toModule _ _ i
+  let T := S' ⊗[R'] (@TensorProduct R _ R' M _ _ (@Algebra.toModule R R' _ _ alg3) _)
+  let T' := @TensorProduct R' _ S' (@TensorProduct R _ R' M _ _ (@Algebra.toModule R R' _ _ alg3) _)
+   _ _ _ (@leftModule R _ R' _ R' M _ _ alg3.toModule _ _
+     (@SMulCommClass.of_commMonoid R R' R' _ alg3.toSMul _ (@IsScalarTower.right R R' _ _ alg3) _))
+  have : T = T' := rfl
+  sorry
+
+def t : @IsScalarTower R R' R' alg3.toSMul (Monoid.toMulAction R').toSMul alg3.toSMul :=
+  @IsScalarTower.right R R' _ _ alg3
+def i : @SMulCommClass R R' R' alg3.toSMul (Algebra.id R').toSMul :=
+  @SMulCommClass.of_commMonoid R R' R' _ alg3.toSMul _ (t R R' alg3) _
+def m := @leftModule R _ R' _ R' M _ _ alg3.toModule _ _ (i R R' alg3)
+def T2 := (TensorProduct R  R' M)
+
+instance : AddCommMonoid (T2 R M R' alg3) := addCommMonoid
+
+instance : Module R' (T2 R M R' alg3) := leftModule
+
+def T3 := TensorProduct R' S' (T2 R M R' alg3)
+
+instance : AddCommMonoid (T3 R M R' S' alg3) := addCommMonoid
+
+instance : Module R' (T3 R M R' S' alg3) := TensorProduct.instModule
+
+variable (alg4 : Algebra R R')
+    [alg2 : Algebra R S'] [ist24 : @IsScalarTower R R' S' alg4.toSMul _ alg2.toSMul]
+/-
+example : @Algebra.toModule R R' _ _ alg3 = alg3.toModule  := rfl
+#check alg3.toModule  -/
+
+variable (r : R) (x : R') (m : M)
+
+example : R → R' → R' := @SMul.smul R R' alg3.toSMul
+
+lemma smul_eq : @SMul.smul R R' alg3.toSMul r x = @SMul.smul R R' alg4.toSMul r x := sorry
+
+example (r : R) (m : M) : alg3.toAlgHom _ _ r = alg4.toAlgHom _ _ r := by
+
+  sorry
+
+#check LinearMap
+
+#check  @LinearMap R R _ _ (RingHom.id R) R' R' _ _ alg3.toModule alg4.toModule
+
+def foo'' : @AddHom R' R' _ _  := AddHom.id R'
+
+set_option trace.Meta.synthInstance true in
+def foo' : @MulActionHom R R (RingHom.id R) R' alg3.toSMul R' alg4.toSMul := {
+  AddHom.id R' with
+  map_smul' r x : @SMul.smul R R' alg3.toSMul r x = @SMul.smul R R' alg4.toSMul r x :=
+    smul_eq R R' alg3 alg4 r x}
+
+#exit
+
+def foo' : @LinearMap R R _ _ (RingHom.id R) R' R' _ _ alg3.toModule alg4.toModule := {
+  AddHom.id R' with
+  map_smul' r x := smul_eq R R' alg3 alg4 r x }
+
+#exit
+
+def foo'' : @LinearMap R R _ _ (RingHom.id R) (R' ⊗[R] M) R' _ _ alg3.toModule alg4.toModule where
+  toFun := ?toFun
+  map_add' := ?map_add'
+  map_smul' := ?map_smul'
+
+def foo : T R M R' S' alg3 ≃ₗ[R'] T R M R' S' alg4 where
+    toFun t := by
+      unfold T at t ⊢
+
+      sorry
+    map_add' := sorry
+    map_smul' := sorry
+    invFun := sorry
+    left_inv := sorry
+    right_inv := sorry
+
 --set_option pp.all true in
 theorem baseChange_ground (f : M →ₚₗ[R] N) :
     (f.baseChange R').ground = f.toFun R' := by
@@ -545,7 +625,13 @@ theorem baseChange_ground (f : M →ₚₗ[R] N) :
   simp only [ground, Function.comp_apply]
   simp only [← LinearEquiv.eq_symm_apply, lid_symm_apply]
   simp only [baseChange, LinearEquiv.symm_apply_eq]
-  have : f.toFun R' (baseChangeEquiv (1 ⊗ₜ[R'] m)) = baseChangeEquiv (1 ⊗ₜ[R'] f.toFun R' m) := sorry
+  --rw [← toFun_baseChangeEquiv_one_tmul R' f m]
+  have : f.toFun R' (baseChangeEquiv (1 ⊗ₜ[R'] m)) = baseChangeEquiv (1 ⊗ₜ[R'] f.toFun R' m) :=
+    toFun_baseChangeEquiv_one_tmul _ _ _
+  rename_i alg1 _
+  set alg2 : Algebra R R' :=
+    RingHom.toAlgebra ((algebraMap R' R').comp (algebraMap R R'))
+
   convert this using 1
   · congr
     exact Algebra.algebra_ext ((algebraMap R' R').comp (algebraMap R R')).toAlgebra _
@@ -566,11 +652,14 @@ theorem baseChange_ground (f : M →ₚₗ[R] N) :
     let i := @SMulCommClass.of_commMonoid R R' R' _ alg1.toSMul _ t _
     let hm := @leftModule R _ R' _ R' M _ _ alg1.toModule _ _ i
     specialize this (1 ⊗ₜ[R'] (cast _ m)) (1 ⊗ₜ[R'] m)
-    ·
-      sorry
+    · congr
     · --rw [this]
       --have : HEq  ((1 : R') ⊗ₜ[R'] (cast _ m)) ((1 : R')  ⊗ₜ[R'] m) := sorry
-      sorry
+      apply HEq.trans _ (HEq.comm.mp (this ?_))
+
+      ·
+        sorry
+      · sorry
   · apply heq_of_cast_eq
     swap
     · congr
