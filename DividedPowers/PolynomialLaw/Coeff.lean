@@ -42,6 +42,7 @@ noncomputable def generize (m : ι → M) :
   map_smul' r p := by simp [RingHom.id_apply, smul_toFun, Pi.smul_apply]
 
 variable {S : Type*} [CommSemiring S] [Algebra R S]
+
 /-- Given `m : ι → M` and `s : ι → S`, `generize' m s` is the `R`-linear map sending `f : M →ₚₗ[R] N` to the
 term of `MvPolynomial ι S ⊗[R] N` obtained by applying `f.toFun (MvPolynomial ι R)` to the
 sum `∑ i, s i • X i ⊗ₜ[R] m i`. -/
@@ -49,7 +50,13 @@ noncomputable def generize' (m : ι → M) (s : ι → S) :
     (M →ₚₗ[R] N) →ₗ[R] MvPolynomial ι S ⊗[R] N where
   toFun f       := f.toFun (MvPolynomial ι S) (∑ i, s i • X i ⊗ₜ[R] m i)
   map_add' p q  := by simp [add_toFun_apply]
-  map_smul' r p := by simp [RingHom.id_apply, smul_toFun, Pi.smul_apply]
+  map_smul' r p := by simp [smul_toFun, Pi.smul_apply]
+
+-- Is it useful ? analogue of generize_S' for multiHomogeneous
+noncomputable def generize'' : (ι → S ⊗[R] M) →ₗ[S] (MvPolynomial ι S) ⊗[R] M where
+  toFun m := ∑ (i : ι), LinearMap.rTensor M ((monomial (Finsupp.single i 1)).restrictScalars R) (m i)
+  map_add' x y := by simp [map_add, Finset.sum_add_distrib]
+  map_smul' s m := by simp [Finset.smul_sum, rTensor_smul']
 
 theorem generize'_eq_generize (m : ι → M) (s : ι → S) (f : M →ₚₗ[R] N) :
     generize' m s f =
@@ -89,7 +96,8 @@ variable [DecidableEq ι] (m : ι → M) (k : ι →₀ ℕ)
 noncomputable def coeff : (M →ₚₗ[R] N) →ₗ[R] (ι →₀ ℕ) →₀ N :=
   scalarRTensor.toLinearMap.comp (generize m)
 
-theorem generize_eq : generize m f = (coeff m f).sum (fun k n ↦ (monomial k 1) ⊗ₜ n)  := by
+theorem generize_eq :
+    generize m f = (coeff m f).sum (fun k n ↦ (monomial k 1) ⊗ₜ n)  := by
   dsimp only [coeff, coe_comp, LinearEquiv.coe_coe, Function.comp_apply]
   generalize h : scalarRTensor (generize m f) = p
   rw [eq_comm, ← LinearEquiv.symm_apply_eq] at h

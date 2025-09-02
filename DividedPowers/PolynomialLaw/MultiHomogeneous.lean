@@ -6,7 +6,7 @@ import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Pi
 import DividedPowers.PolynomialLaw.Homogeneous
 import DividedPowers.PolynomialLaw.MultiCoeff
 import DividedPowers.PolynomialLaw.Basic3
-import DividedPowers.PolynomialLaw.BaseChange
+-- import DividedPowers.PolynomialLaw.BaseChange
 import Mathlib.Data.Finsupp.Weight
 universe u uι
 
@@ -283,7 +283,8 @@ theorem _root_.TensorProduct.finsuppLeft_symm_apply_eq_sum [DecidableEq ι]
 variable [Fintype ι] [DecidableEq ι]
 
 /-- multiGenerize maps s ⊗ (m_i) to ∑ s (X i) ⊗ m_i  -/
-def multiGenerize_S' : (S ⊗[R] Π i, M i) →ₗ[S] (MvPolynomial ι S) ⊗[R] Π i, M i where
+def multiGenerize_S' :
+    (S ⊗[R] Π i, M i) →ₗ[S] (MvPolynomial ι S) ⊗[R] Π i, M i where
   toFun sm := LinearEquiv.rTensor (Π i, M i) scalarRTensorAlgEquiv.toLinearEquiv
     ((TensorProduct.assoc R (MvPolynomial ι R) S (Π i, M i)).symm
       (∑ (i : ι), (X i) ⊗ₜ (piRight R S S _).symm (Pi.single i (piRight R S S _ sm i))))
@@ -728,14 +729,6 @@ open BigOperators
 section todelete
 
 noncomputable def multiGenerize_S'' (sm : S ⊗[R] Π i, M i) (f : (Π i, M i) →ₚₗ[R] N) :
-    MvPolynomial ι R ⊗[R] (S ⊗[R] N) := by
-  let g := f.toFun (MvPolynomial ι S) (el_S''_hom ι R M S sm)
-  let p := scalarRTensorAlgEquiv (R := R) (N := S) (σ := ι)
-  let h := LinearEquiv.rTensor (R := R) N p.toLinearEquiv.symm
-  let g' := (TensorProduct.assoc R (MvPolynomial ι R) S N) (h g)
-  exact g'
-
-noncomputable def multiGenerize_S''' (sm : S ⊗[R] Π i, M i) (f : (Π i, M i) →ₚₗ[R] N) :
     MvPolynomial ι R ⊗[R] (S ⊗[R] N) :=
   (TensorProduct.assoc R (MvPolynomial ι R) S N) (
     LinearEquiv.rTensor (R := R) N scalarRTensorAlgEquiv.toLinearEquiv.symm

@@ -1,5 +1,5 @@
 import DividedPowers.PolynomialLaw.Coeff
-import DividedPowers.PolynomialLaw.BaseChange
+-- import DividedPowers.PolynomialLaw.BaseChange
 
 universe u
 
