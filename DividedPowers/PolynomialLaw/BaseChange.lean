@@ -31,10 +31,12 @@ as well as for divided (partial) differentials
 
 namespace Set
 
+-- MI: I think we can omit this
 theorem prod_eq_iff_of_nonempty {α β : Type*} {s s' : Set α} {t t' : Set β}
     (hs : s.Nonempty) (ht : t.Nonempty) :
     s ×ˢ t = s' ×ˢ t' ↔ (s = s' ∧ t = t') := by
-  constructor
+  rw [prod_eq_prod_iff_of_nonempty (Nonempty.prod hs ht)]
+  /- constructor
   · intro h
     suffices hss' : s = s' by
       refine ⟨hss', ?_⟩
@@ -68,7 +70,7 @@ theorem prod_eq_iff_of_nonempty {α β : Type*} {s s' : Set α} {t t' : Set β}
       have h' : (a, b) ∈ s' ×ˢ t' := by simp [Set.mem_prod, ha, hb]
       rw [← h, Set.mem_prod] at h'
       exact h'.1
-  · rintro ⟨rfl, rfl⟩; rfl
+  · rintro ⟨rfl, rfl⟩; rfl-/
 
 end Set
 
@@ -81,13 +83,9 @@ noncomputable def biUnion₂ {α β : Type*} [DecidableEq α] [DecidableEq β]
 @[to_additive]
 theorem prod_biUnion₂ {α β γ : Type*} [DecidableEq α] [DecidableEq β] [CommMonoid γ]
     {s : Finset α} {t : α → Finset β} {f : α → β → γ} :
-    ∏ a ∈ s, ∏ b ∈ t a, f a b =
-      ∏ x ∈ Finset.biUnion₂ s t, f x.1 x.2 := by
-  simp only [Finset.biUnion₂]
-  rw [Finset.prod_biUnion]
-  · apply Finset.prod_congr rfl
-    intro a ha
-    simp only [Finset.singleton_product, Finset.prod_map, Function.Embedding.coeFn_mk]
+    ∏ a ∈ s, ∏ b ∈ t a, f a b = ∏ x ∈ Finset.biUnion₂ s t, f x.1 x.2 := by
+  rw [Finset.biUnion₂, Finset.prod_biUnion]
+  · exact Finset.prod_congr rfl (fun _ _ ↦ by simp)
   · intro a _ a' _ h
     simp only [Function.onFun, ← Finset.disjoint_coe, Finset.singleton_product, Finset.coe_map, Function.Embedding.coeFn_mk]
     rw [Set.disjoint_iff_forall_ne]
@@ -111,13 +109,12 @@ theorem map_fst_prod (n : Multiset γ) (g : α → γ → M) (a : α) :
   induction n using Multiset.induction_on with
   | empty => rfl
   | cons b n hn =>
-    simp [Multiset.map_cons, Multiset.prod_cons, hn,
-      show ({a} : Multiset α).product (b ::ₘ n) = (a, b) ::ₘ ({a} : Multiset α).product n from Multiset.product_cons b {a} n]
+    simp [Multiset.map_cons, Multiset.prod_cons, hn, show ({a} : Multiset α).product (b ::ₘ n) =
+      (a, b) ::ₘ ({a} : Multiset α).product n from Multiset.product_cons b {a} n]
 
 /--  ∏ (a, b) ∈ m, ∏ c ∈ f b, g a c = ∏ (a, c) ∈ (m.map ?_), g a c -/
 @[to_additive]
-theorem map_prod_map_prod
-    (m : Multiset (α × β)) (f : β → Multiset γ) (g : α → γ → M) :
+theorem map_prod_map_prod (m : Multiset (α × β)) (f : β → Multiset γ) (g : α → γ → M) :
     (m.map (fun x ↦ ((f x.2).map (g x.1)).prod)).prod =
       ((Multiset.map (fun x ↦ Multiset.product {x.1} (f x.2)) m).sum.map (fun x ↦ g x.1 x.2)).prod := by
   induction m using Multiset.induction_on with
@@ -352,6 +349,92 @@ theorem baseChangeEquiv_congr {R : Type u} {M : Type*} {R' : Type u} {S' : Type 
     sorry
 -/
 
+--set_option pp.proofs true in
+theorem baseChangeEquiv_congr' {R : Type u} {M N : Type*} {R' : Type u} {S' : Type u}
+    [CommSemiring R]
+    [AddCommMonoid M] [Module R M]
+    [AddCommMonoid N] [Module R N]
+    (f : M →ₚₗ[R] N)
+    [CommSemiring R'] [Algebra R R']
+    [CommSemiring S'] [Algebra R' S']
+    [alg1 : Algebra R S'] [ist1 : IsScalarTower R R' S']
+    [alg2 : Algebra R S'] [ist2 : IsScalarTower R R' S']
+    (halg : alg1 = alg2)
+    (srm : S' ⊗[R'] R' ⊗[R] M) :
+    let j1 := @baseChangeEquiv R _ M _ _ R' _ _ S' _ _ alg1 ist1
+    let j2 := @baseChangeEquiv R _ M _ _ R' _ _ S' _ _ alg2 ist2
+    HEq (@f.toFun' S' _ alg1 (j1 srm)) (@f.toFun' S' _ alg2 (j2 srm)) := by
+  simp only
+  apply heq_of_cast_eq
+  swap
+  · congr
+  · aesop
+
+theorem baseChangeEquiv_congr'' {R : Type u} {M N : Type*} {R' : Type*} {S' : Type*}
+    [CommSemiring R]
+    [AddCommMonoid M] [Module R M]
+    [AddCommMonoid N] [Module R N]
+    (f : M →ₚₗ[R] N)
+    [CommSemiring R'] [Algebra R R']
+    [CommSemiring S'] [Algebra R' S']
+    [alg1 : Algebra R S'] [ist1 : @IsScalarTower R R' S' _ _ alg1.toSMul]
+    [alg2 : Algebra R S'] [ist2 : @IsScalarTower R R' S' _ _ alg2.toSMul]
+    (halg : alg1 = alg2)
+    (srm : S' ⊗[R'] R' ⊗[R] M) :
+    --let j1 := @baseChangeEquiv R _ M _ _ R' _ _ S' _ _ alg1 ist1
+    --let j2 := @baseChangeEquiv R _ M _ _ R' _ _ S' _ _ alg2 ist2
+    HEq (@f.toFun R _ M _ _ N _ _ S' _ alg1 (@baseChangeEquiv R _ M _ _ R' _ _ S' _ _ alg1 ist1 srm))
+      (@f.toFun R _ M _ _ N _ _ S' _ alg2 (@baseChangeEquiv R _ M _ _ R' _ _ S' _ _ alg2 ist2 srm)) := by
+  apply heq_of_cast_eq
+  swap
+  · congr
+  · aesop
+
+example  {R : Type u} {M N : Type*} {R' : Type*} {S' : Type*}
+    [CommSemiring R]
+    [AddCommMonoid M] [Module R M]
+    [AddCommMonoid N] [Module R N]
+    (f : M →ₚₗ[R] N)
+    [CommSemiring R']
+    [alg3 : Algebra R R'] [alg4 : Algebra R R']
+    [CommSemiring S'] [Algebra R' S']
+    [alg1 : Algebra R S'] [ist1 : @IsScalarTower R R' S' alg3.toSMul _ alg1.toSMul]
+    [alg2 : Algebra R S'] [ist2 : @IsScalarTower R R' S' alg4.toSMul _ alg2.toSMul] :
+    False := by
+  let t := @IsScalarTower.right R R' _ _ alg3
+  let i := @SMulCommClass.of_commMonoid R R' R' _ alg3.toSMul _ t _
+  let m := @leftModule R _ R' _ R' M _ _ alg3.toModule _ _ i
+  let T := S' ⊗[R'] (@TensorProduct R _ R' M _ _ (@Algebra.toModule R R' _ _ alg3) _)
+  let T' := @TensorProduct R' _ S' (@TensorProduct R _ R' M _ _ (@Algebra.toModule R R' _ _ alg3) _)
+   _ _ _ (@leftModule R _ R' _ R' M _ _ alg3.toModule _ _
+     (@SMulCommClass.of_commMonoid R R' R' _ alg3.toSMul _ (@IsScalarTower.right R R' _ _ alg3) _))
+  have : T = T' := rfl
+  sorry
+
+theorem baseChangeEquiv_congr {R : Type u} {M N : Type*} {R' : Type*} {S' : Type*}
+    [CommSemiring R]
+    [AddCommMonoid M] [Module R M]
+    [AddCommMonoid N] [Module R N]
+    (f : M →ₚₗ[R] N)
+    [CommSemiring R']
+    [alg3 : Algebra R R'] [alg4 : Algebra R R']
+    [CommSemiring S'] [Algebra R' S']
+    [alg1 : Algebra R S'] [ist1 : @IsScalarTower R R' S' alg3.toSMul _ alg1.toSMul]
+    [alg2 : Algebra R S'] [ist2 : @IsScalarTower R R' S' alg4.toSMul _ alg2.toSMul]
+    (halg : alg1 = alg2) (halg' : alg3 = alg4)
+    (srm : S' ⊗[R'] R' ⊗[R] M)
+    (srm' : @TensorProduct R' _ S' (@TensorProduct R _ R' M _ _ (@Algebra.toModule R R' _ _ alg3) _)
+       _ _ _ (@leftModule R _ R' _ R' M _ _ alg3.toModule _ _
+      (@SMulCommClass.of_commMonoid R R' R' _ alg3.toSMul _
+      (@IsScalarTower.right R R' _ _ alg3) _))) (hsrm : HEq srm srm') :
+    HEq (@f.toFun R _ M _ _ N _ _ S' _ alg1 (@baseChangeEquiv R _ M _ _ R' _ alg3 S' _ _ alg1 ist1
+      srm'))
+      (@f.toFun R _ M _ _ N _ _ S' _ alg2 (@baseChangeEquiv R _ M _ _ R' _ _ S' _ _ alg2 ist2 srm)) := by
+  apply heq_of_cast_eq
+  swap
+  · congr
+  · aesop
+
 -- generalize to `toFun`, with `S'` in an arbitrary universe
 theorem baseChange_toFun'_smul_tmul_tmul_eq_coeff_sum
     (f : M →ₚₗ[R] N) {ι : Type*} [Fintype ι] [DecidableEq ι]
@@ -455,13 +538,102 @@ theorem toFun_baseChangeEquiv_one_tmul (f : M →ₚₗ[R] N) (m : R' ⊗[R] M) 
     f.toFun R' (baseChangeEquiv ((1 : R') ⊗ₜ[R'] m)) = baseChangeEquiv ((1 : R') ⊗ₜ[R'] f.toFun R' m) := by
   simp [baseChangeEquiv_one_tmul]
 
+--set_option pp.all true in
 theorem baseChange_ground (f : M →ₚₗ[R] N) :
     (f.baseChange R').ground = f.toFun R' := by
   ext m
   simp only [ground, Function.comp_apply]
   simp only [← LinearEquiv.eq_symm_apply, lid_symm_apply]
   simp only [baseChange, LinearEquiv.symm_apply_eq]
-  sorry
+  have : f.toFun R' (baseChangeEquiv (1 ⊗ₜ[R'] m)) = baseChangeEquiv (1 ⊗ₜ[R'] f.toFun R' m) := sorry
+  convert this using 1
+  · congr
+    exact Algebra.algebra_ext ((algebraMap R' R').comp (algebraMap R R')).toAlgebra _
+        (congrFun rfl)
+  · rename_i alg1 _
+    let alg2 : Algebra R R' :=
+      RingHom.toAlgebra ((algebraMap R' R').comp (algebraMap R R'))
+    have ist2 : @IsScalarTower R R' R' _ _ alg2.toSMul :=
+      IsScalarTower.of_algebraMap_eq (fun r ↦ by simp [RingHom.algebraMap_toAlgebra])
+    have ist1 : @IsScalarTower R R' R' (@Algebra.toSMul R R' _ _ alg1)
+      (Algebra.id R').toSMul alg1.toSMul := sorry
+    have halg : alg1 = alg2 := sorry
+
+    have := baseChangeEquiv_congr (alg1 := alg1) (alg2 := alg2) (alg3 := alg1)
+      --(ist1 := IsScalarTower.of_algebraMap_eq (fun r ↦ by simp [RingHom.algebraMap_toAlgebra]))
+      (ist2 := ist2) (ist1 := ist1) f halg halg
+    let t := @IsScalarTower.right R R' _ _ alg1
+    let i := @SMulCommClass.of_commMonoid R R' R' _ alg1.toSMul _ t _
+    let hm := @leftModule R _ R' _ R' M _ _ alg1.toModule _ _ i
+    specialize this (1 ⊗ₜ[R'] (cast _ m)) (1 ⊗ₜ[R'] m)
+    ·
+      sorry
+    · --rw [this]
+      --have : HEq  ((1 : R') ⊗ₜ[R'] (cast _ m)) ((1 : R')  ⊗ₜ[R'] m) := sorry
+      sorry
+  · apply heq_of_cast_eq
+    swap
+    · congr
+    · simp only [Algebra.algebraMap_self]
+      sorry
+
+    /- · sorry
+    convert this
+    · sorry
+    ·
+      sorry
+
+    ·
+      sorry
+  · sorry -/
+  /- · exact Algebra.algebra_ext ((algebraMap R' R').comp (algebraMap R R')).toAlgebra _
+        (congrFun rfl)
+  · apply heq_of_cast_eq
+    swap
+    · congr
+    · simp only [cast, Algebra.algebraMap_self]
+      aesop
+      sorry -/
+    /- simp only [Algebra.algebraMap_self]
+    simp only [baseChangeEquiv_one_tmul]
+
+    induction m using TensorProduct.induction_on with
+    | zero =>
+      simp
+      (expose_names;
+        refine
+          heq_of_eqRec_eq
+            (congrFun
+              (congrArg
+                (@TensorProduct R inst R' M inst_5.toNonAssocSemiring.toAddCommMonoid inst_1)
+                (congrArg (@Algebra.toModule R R' inst inst_5.toSemiring) e_12))
+              inst_2)
+            ?_)
+
+      sorry
+    | add => sorry
+    | tmul => sorry -/
+
+  /- set alg : Algebra R R' := inferInstance
+  have halg : alg = ((algebraMap R' R').comp (algebraMap R R')).toAlgebra := sorry
+  have := baseChangeEquiv_one_tmul (f.toFun R' m)
+
+  /- have := @baseChangeEquiv_one_tmul R _ N _ _ R' _
+    (((algebraMap R' R').comp (algebraMap R R')).toAlgebra)
+    (f.toFun R' m)
+  erw [this] -/
+  induction m using TensorProduct.induction_on with
+  | zero =>
+
+    rw [baseChangeEquiv_one_tmul]
+  | add => sorry
+  | tmul r m =>
+    simp only [Algebra.algebraMap_self, baseChangeEquiv_tmul_tmul, smul_eq_mul, mul_one]
+  --simp only [Algebra.algebraMap_self, baseChangeEquiv, LinearEquiv.trans_apply]
+  --simp? [AlgebraTensorModule.assoc_symm_tmul] -/
+
+
+
 
 
 noncomputable def baseChange_linearMap : (M →ₚₗ[R] N) →ₗ[R] RestrictScalars R R' ((R' ⊗[R] M) →ₚₗ[R'] (R' ⊗[R] N)) where
