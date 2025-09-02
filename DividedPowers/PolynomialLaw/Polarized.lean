@@ -80,7 +80,7 @@ theorem locFinsupp_polarizedProd_biComponent (f : PolynomialLaw R M N) :
 -- TODO: rename, avoid (?)
 lemma hf (r : R) : LocFinsupp fun p ↦ (r • polarizedProd f).biComponent (p, n) := by
   have hf' : LocFinsupp (r • (fun p ↦ (polarizedProd f).biComponent (p, n))) := by
-    exact locFinsupp_smul r (locFinsupp_polarizedProd_biComponent n f)
+    exact locFinsupp_smul (locFinsupp_polarizedProd_biComponent n f) r
   convert hf'
   simp
 
@@ -134,7 +134,7 @@ def sum_proj : (Π (_ : ι), M) →ₚₗ[R] M := lfsum (fun i ↦ proj R M i)
 lemma sum_proj_toFun'_apply [Fintype ι] [DecidableEq ι] {S : Type u} [CommSemiring S] [Algebra R S]
     {m : TensorProduct R S (ι → M)} : (sum_proj ι R M).toFun' S m =
     (∑ i, (piRight R R S fun _ ↦ M) m i) := by
-  rw [sum_proj, piRight_apply, lfsum_eq_of_locFinsupp (locFinsupp_of_fintype _),
+  rw [sum_proj, piRight_apply, lfsum_toFun'_eq_of_locFinsupp (locFinsupp_of_fintype _),
     Finsupp.sum_fintype _ _ (by intro; rfl)]
   exact Finset.sum_congr rfl (fun i _ ↦ proj_toFun'_apply i)
 
@@ -149,7 +149,7 @@ lemma polarized_apply [Fintype ι] {m : ι → M} : polarized ι f m = f (∑ (i
   simp only [polarized, ground_apply, sum_proj, comp_toFun',
     Function.comp_apply, EmbeddingLike.apply_eq_iff_eq]
   congr 1
-  rw [lfsum_eq_of_locFinsupp (locFinsupp_of_fintype _), Finsupp.sum_fintype _ _ (by intro; rfl),
+  rw [lfsum_toFun'_eq_of_locFinsupp (locFinsupp_of_fintype _), Finsupp.sum_fintype _ _ (by intro; rfl),
     tmul_sum]
   simp [Finsupp.ofSupportFinite_coe, proj_toFun'_tmul]
 
@@ -168,7 +168,7 @@ lemma isHomogeneousOfDegree_polarized [Fintype ι] (hf : IsHomogeneousOfDegree p
   simp only [polarized_toFun'_apply, ← hf S s (∑ (i : ι), (TensorProduct.piRight R R _ _) m i)]
   congr
   rw [Finset.smul_sum]
-  exact Finset.sum_congr rfl (fun i _ ↦ piRightHom_smul_proj s _ i)
+  exact Finset.sum_congr rfl (fun i _ ↦ by rw [piRight_smul_proj]; simp)
 
 -- Roby63, example in pg 234
 lemma coeff_component_eq_zero_of_ne [Fintype ι] {n : ℕ} (m : (Fin n) → ι → M) (d : (Fin n) →₀ ℕ)

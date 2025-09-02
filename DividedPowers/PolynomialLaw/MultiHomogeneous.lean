@@ -6,6 +6,8 @@ import DividedPowers.PolynomialLaw.Basic3
 import DividedPowers.PolynomialLaw.Homogeneous
 import DividedPowers.PolynomialLaw.MultiCoeff
 import Mathlib.Data.Finsupp.Weight
+import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Basic
+
 
 universe u uι
 

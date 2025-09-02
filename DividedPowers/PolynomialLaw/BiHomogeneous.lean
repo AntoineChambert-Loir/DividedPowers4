@@ -370,8 +370,8 @@ theorem rTensor_biCoeff_S_eq {S' : Type*} [CommSemiring S'] [Algebra R S'] (φ :
 bi-degree `n`. -/
 lemma isBiHomogeneousOfDegree_biCoeff_S {d : ℕ × ℕ} (hf : IsBiHomogeneousOfDegree n f)
     (sm : S ⊗[R] (M × M')) (hd : d ≠ n) : biCoeff_S sm d f = 0 := by
-  
-  
+
+
   sorry
 
 /-- The bi-coefficients of a homogeneous polynomial map of degree `n` vanish outside of
@@ -546,7 +546,7 @@ theorem tmul_eq_aeval_sum' (S : Type*) [CommSemiring S] [Algebra R S] (s : S) (m
 theorem recompose_biComponent :
     PolynomialLaw.lfsum (fun n ↦ f.biComponent n) = f := by
   ext S _ _ sm
-  rw [lfsum_eq_of_locFinsupp (LocFinsupp_biComponent f), LocFinsupp_biComponent_eq]
+  rw [lfsum_toFun'_eq_of_locFinsupp (LocFinsupp_biComponent f), LocFinsupp_biComponent_eq]
   have hsm' : sm = ((aeval 1).restrictScalars R).toLinearMap.rTensor (M × M') (
     (LinearEquiv.rTensor (M × M') scalarRTensorAlgEquiv.toLinearEquiv)
       ((TensorProduct.assoc R (MvPolynomial (Fin 2) R) S (M × M')).symm

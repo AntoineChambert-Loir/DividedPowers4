@@ -191,5 +191,14 @@ lemma lfsumHom_smul (hf : LocFinsupp f) {r : R} (hrf : LocFinsupp (r • f)) :
   rw [← map_smul]
   rfl
 
-end LocFinsupp
+theorem lfsum_ground_eq_of_locFinsupp (hf : LocFinsupp f) (m : M) :
+    (lfsum f).ground m =
+      (ofSupportFinite (fun i ↦ (f i).ground m) (support_ground_finite hf m)).sum fun _ m ↦ m := by
+  simp only [ground, Function.comp_apply, lid_symm_apply]
+  rw [lfsum_toFun'_eq_of_locFinsupp hf]
+  rw [map_finsuppSum, Finsupp.sum, Finsupp.sum]
+  congr
+  ext i
+  simp only [Finsupp.mem_support_iff, ofSupportFinite_coe, ne_eq, EmbeddingLike.map_eq_zero_iff]
 
+end LocFinsupp
