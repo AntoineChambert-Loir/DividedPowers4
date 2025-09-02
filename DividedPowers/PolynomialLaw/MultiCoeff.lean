@@ -1,5 +1,4 @@
 import DividedPowers.PolynomialLaw.Coeff
-import DividedPowers.PolynomialLaw.BaseChange
 
 universe u
 
@@ -11,12 +10,9 @@ namespace PolynomialLaw
 
 variable {R}
 
-/- **MI** : The file now works assuming the weaker hypotheses `CommSemiring R`, `CommSemiring S`,
-  `AddCommMonoid M`, `AddCommMonoid N`. -/
-
 open Finset MvPolynomial TensorProduct
 
-/- ## Coefficients of polynomial laws. -/
+/- ## Multi-coefficients of polynomial laws. -/
 
 section Coefficients
 
@@ -38,7 +34,7 @@ to the term of `MvPolynomial ι R ⊗[R] N` obtained by applying `f.toFun (MvPol
 sum `∑ i, X i ⊗ₜ[R] m i`. -/
 noncomputable def multiGenerize (m : Π i, M i) :
     ((Π i, M i) →ₚₗ[R] N) →ₗ[R] MvPolynomial ι R ⊗[R] N where
-  toFun f       := f.toFun (MvPolynomial ι R) (∑ i : ι, X i ⊗ₜ[R] (Pi.single i (m i))) -- ? Use linear combination
+  toFun f       := f.toFun (MvPolynomial ι R) (∑ i : ι, X i ⊗ₜ[R] (Pi.single i (m i)))
   map_add' p q  := by simp [add_toFun_apply]
   map_smul' r p := by simp [RingHom.id_apply, smul_toFun, Pi.smul_apply]
 
@@ -57,24 +53,13 @@ noncomputable def multiCoeff :
     ((Π i, M i) →ₚₗ[R] N) →ₗ[R] (ι →₀ ℕ) →₀ N :=
   scalarRTensor.toLinearMap.comp (multiGenerize m)
 
-include M N R in
 theorem multiCoeff_eq_coeff (m : Π i, M i) :
-    multiCoeff  (R := R) (N := N) m = coeff (R := R) (ι := ι) (M := Π i, M i)  (N := N)
-        (fun i ↦ Pi.single i (m i)) := by
-  simp only [multiCoeff, coeff, multiGenerize_eq_generize]
+    multiCoeff m = coeff (R := R) (ι := ι) (N := N) (fun i ↦ Pi.single i (m i)) := by
+  simp [multiCoeff, coeff, multiGenerize_eq_generize]
 
 theorem multiGenerize_eq : multiGenerize m f =
     (multiCoeff m f).sum (fun k n ↦ (monomial k 1) ⊗ₜ n) := by
-  simp only [multiCoeff_eq_coeff, multiGenerize_eq_generize]
-  simp only [generize_eq]
-/-  dsimp only [multiCoeff, coe_comp, LinearEquiv.coe_coe, Function.comp_apply]
-  generalize h : scalarRTensor (multiGenerize m f) = p
-  rw [eq_comm, ← LinearEquiv.symm_apply_eq] at h
-  rw [← h, LinearEquiv.symm_apply_eq, map_finsuppSum]
-  ext d
-  rw [Finsupp.sum_apply, Finsupp.sum_eq_single d (fun _ _ hb ↦ by simp [if_neg hb,
-    scalarRTensor_apply_tmul_apply]) (by simp), scalarRTensor_apply_tmul_apply,
-    coeff_monomial, if_pos rfl, _root_.one_smul] -/
+  simp [multiCoeff_eq_coeff, multiGenerize_eq_generize, generize_eq]
 
 theorem multiCoeff_eq :
   multiCoeff m f k = (TensorProduct.lid R N) ((LinearMap.rTensor N (MvPolynomial.lcoeff R k))
@@ -85,33 +70,19 @@ theorem multiCoeff_eq :
 theorem toFun_sum_tmul_eq_multiCoeff_sum (S : Type*) [CommSemiring S] [Algebra R S] (r : ι → S) :
     f.toFun S (∑ i, r i ⊗ₜ[R] (Pi.single i (m i))) =
       (multiCoeff m f).sum (fun k n ↦ (∏ i, r i ^ k i) ⊗ₜ[R] n) := by
-  simp only [multiCoeff_eq_coeff, toFun_sum_tmul_eq_coeff_sum]
-  /- have this := congr_fun (f.isCompat (MvPolynomial.aeval r)) (∑ i, X i ⊗ₜ[R] (Pi.single i (m i)))
-  simp only [Function.comp_apply, map_sum, LinearMap.rTensor_tmul,
-    AlgHom.toLinearMap_apply, MvPolynomial.aeval_X] at this
-  let h := multiGenerize_eq m f
-  simp only [multiGenerize, coe_mk, AddHom.coe_mk] at h
-  rw [← this, h, Finsupp.sum, _root_.map_sum]
-  apply sum_congr rfl
-  intro k _
-  simp only [LinearMap.rTensor_tmul, AlgHom.toLinearMap_apply]
-  apply congr_arg₂ _ _ rfl
-  simp [aeval_monomial, _root_.map_one, Finsupp.prod_pow, one_mul] -/
+  simp [multiCoeff_eq_coeff, toFun_sum_tmul_eq_coeff_sum]
 
 theorem toFun_tmul_eq_multiCoeff_sum (S : Type*) [CommSemiring S] [Algebra R S] (r : S) (i : ι) :
     f.toFun S (r ⊗ₜ[R] (Pi.single i (m i))) =
       ((multiCoeff (Pi.single i (m i)) f).sum fun k n ↦ (∏ i, r ^ k i) ⊗ₜ[R] n) := by
   simp only [multiCoeff_eq_coeff]
-  have : r ⊗ₜ[R] Pi.single i (m i) =
-      ∑ (j : ι), r ⊗ₜ[R] Pi.single j (Pi.single i (m i) j) := by
+  have : r ⊗ₜ[R] Pi.single i (m i) = ∑ (j : ι), r ⊗ₜ[R] Pi.single j (Pi.single i (m i) j) := by
     rw [← tmul_sum, eq_comm]
     congr
     rw [Finset.sum_eq_single i (fun _ _ hj ↦ by rw [Pi.single_eq_of_ne hj, Pi.single_zero])
       (fun hi ↦ absurd (mem_univ i) hi),
       Pi.single_eq_same]
-  rw [this]
-  -- rw [toFun_sum_tmul_eq_multiCoeff_sum]
-  rw [toFun_sum_tmul_eq_coeff_sum]
+  rw [this, toFun_sum_tmul_eq_coeff_sum]
 
 end multiCoeff
 
@@ -123,23 +94,12 @@ theorem ground_apply_sum_smul_eq_multiCoeff_sum :
     ground f (∑ i, (r i) • Pi.single i (m i)) =
       (multiCoeff m f).sum (fun k n ↦ (∏ i,  r i ^ k i) • n) := by
   simp [multiCoeff_eq_coeff, ground_apply_sum_smul]
-/-
-  apply (TensorProduct.lid R N).symm.injective
-  rw [TensorProduct.lid_symm_apply, one_tmul_ground_apply', ← TensorProduct.lid_symm_apply]
-  simp only [map_sum, TensorProduct.lid_symm_apply, ← TensorProduct.smul_tmul, smul_eq_mul, mul_one]
-  rw [← toFun_eq_toFun', toFun_sum_tmul_eq_coeff_sum, ← TensorProduct.lid_symm_apply]
-  simp only [map_finsuppSum, TensorProduct.lid_symm_apply]
-  exact Finsupp.sum_congr (fun d _ ↦ by rw [← TensorProduct.smul_tmul, smul_eq_mul, mul_one])
--/
 
 theorem ground_apply_smul_eq_multiCoeff_sum :
     ground f (r₁ • m₁) = (multiCoeff m₁ f).sum (fun k n ↦ r₁ ^ (∑ i, k i) • n) := by
   suffices r₁ • m₁ = ∑ i, r₁ • (Pi.single i (m₁ i)) by
     simp only [this, multiCoeff_eq_coeff, ground_apply_sum_smul,
       Finset.prod_pow_eq_pow_sum]
-/-  suffices r₁ • m₁ = ∑ i, r₁ • (Pi.single i (m₁ i)) by
-    rw [this, ground_apply_sum_smul_eq_multiCoeff_sum]
-    exact sum_congr rfl (fun i _ ↦ by simp [Finset.prod_pow_eq_pow_sum]) -/
   simp [← Finset.smul_sum]
   congr
   ext i
@@ -152,17 +112,7 @@ theorem multiCoeff_injective {m : Π i, M i}
     Function.Injective (multiCoeff m : ((Π i, M i) →ₚₗ[R] N) →ₗ[R] (ι →₀ ℕ) →₀ N) := fun f g h ↦ by
   classical
   simp only [multiCoeff_eq_coeff] at h
-  apply coeff_injective hm h
-/-
-  ext S _ _ p
-  suffices hp : p ∈ Submodule.span S (Set.range fun i ↦ 1 ⊗ₜ[R] Pi.single i (m i)) by
-    simp only [Submodule.mem_span_iff_exists_sum _ p, TensorProduct.smul_tmul'] at hp
-    obtain ⟨r, rfl⟩ := hp
-    rw [Finsupp.sum_of_support_subset _ (subset_univ _) _ (fun  i _ ↦ by
-      rw [smul_eq_mul, _root_.mul_one, TensorProduct.zero_tmul])]
-    simp [smul_eq_mul, mul_one, ← toFun_eq_toFun'_apply, toFun_sum_tmul_eq_multiCoeff_sum, h]
-  simp [Submodule.span_tensorProduct_eq_top_of_span_eq_top _ hm]
--/
+  exact coeff_injective hm h
 
 theorem multiCoeff_inj {m : Π i, M i}
     (hm : Submodule.span R (Set.range fun i ↦ Pi.single i (m i)) = ⊤)
