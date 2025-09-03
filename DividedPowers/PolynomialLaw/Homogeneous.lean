@@ -45,13 +45,6 @@ following sense : for all `R`-algebras `S` and all `m : S ⊗[R] M`,
 the function `p ↦ (f.component p).toFun' S m` has finite support,
 and its sum is `f.toFun' S m`.
 
-## TODO
-
-* Characterize homogeneous polynomial maps of degree 2:
-one should recover quadratic maps `M → N`
-(whether this is exactly true depends on subtleties of the definition
-of quadratic maps for modules).
-
 ## Construction of the homogeneous components
 
 Let `S` be an `R`-algebra and let `j : S →ₐ[S] S[X]` be the canonical algebra map.
@@ -64,6 +57,12 @@ The components of `f` are defined so that
 If one consider the morphism of evaluation at 1, `ε : S[X] →ₐ[R] S`,
 we have `ε ∘ j = @id S`, and the compatibility properties of `f` implies that
 `f.toFun' S[X] m = ∑ (f.component p).toFun' S m`.
+
+## TODO
+
+* Characterize homogeneous polynomial maps of degree 2: one should recover quadratic maps
+`M → N` (whether this is exactly true depends on subtleties of the definition of quadratic
+maps for modules).
 
 -/
 
@@ -475,8 +474,6 @@ theorem component_toFun_apply (S : Type*) [CommSemiring S] [Algebra R S] (m : S 
   simp only [rTensor_apply, ← rTensor_comp_apply]
   rw [lcoeff_comp_baseChange_eq, toFun_eq_toFun'_apply]
 
--- TODO: continue from here.
-
 /-- `f.component p` is homogeneous of degree `p`. -/
 lemma component_isHomogeneous : IsHomogeneousOfDegree p (f.component p) := by
   intro S _ _ s sm
@@ -487,9 +484,8 @@ lemma component_isHomogeneous : IsHomogeneousOfDegree p (f.component p) := by
     rw [this, ← f.isCompat_apply' ψ]
     generalize toFun' f S[X] (rTensor M ((monomial 1).restrictScalars R) sm) = t
     rw [rTensor_apply, rTensor_apply, ← rTensor_comp_apply]
-    conv_rhs =>
-      rw [← (IsLinearMap.isLinearMap_smul (s ^ p)).mk'_apply, ← coe_restrictScalars R,
-        ← LinearMap.comp_apply]
+    conv_rhs => rw [← (IsLinearMap.isLinearMap_smul (s ^ p)).mk'_apply, ← coe_restrictScalars R,
+      ← LinearMap.comp_apply]
     apply LinearMap.congr_fun
     rw [eq_comm, LinearMap.rTensor, TensorProduct.map]
     apply TensorProduct.lift.unique
@@ -507,13 +503,11 @@ lemma component_isHomogeneous : IsHomogeneousOfDegree p (f.component p) := by
         . rw [smul_eq_mul, mul_comm, h, AlgHom.coe_restrictScalars', aeval_monomial, monomial_pow,
             one_mul, ← C_eq_algebraMap, C_mul_monomial, coeff_monomial, if_pos rfl]
         . simp [coeff_monomial, if_neg h]
-  .  --
-    suffices ∀ (sm : S ⊗[R] M), s • sm =
+  . suffices ∀ (sm : S ⊗[R] M), s • sm =
         rTensor M (((IsLinearMap.isLinearMap_smul s).mk').restrictScalars R) sm by
       simp only [this, ← rTensor_comp_apply]
       exact LinearMap.congr_fun
         (congr_arg _ (LinearMap.ext_iff.mpr fun r ↦ by simp [mul_comm s r, ψ])) _
-    --
     intro sm
     rw [← (IsLinearMap.isLinearMap_smul s).mk'_apply, ← LinearMap.coe_restrictScalars R]
     apply LinearMap.congr_fun
@@ -528,13 +522,13 @@ theorem component_smul : (r • f).component p = r • f.component p := by
   ext S _ _ sm
   simp [rTensor_apply]
 
-theorem support_component' {S : Type u} [CommSemiring S] [Algebra R S] (m : S ⊗[R] M) :
+theorem support_component_toFun' {S : Type u} [CommSemiring S] [Algebra R S] (m : S ⊗[R] M) :
     Function.support (fun i => ((fun p => component p f) i).toFun' S m) =
     (rTensor R N S ((f.toFun' S[X] ((rTensor M ((monomial 1).restrictScalars R)) m)))).support := by
   ext n
   simp
 
-theorem support_component {S : Type*} [CommSemiring S] [Algebra R S] (m : S ⊗[R] M) :
+theorem support_component_toFun {S : Type*} [CommSemiring S] [Algebra R S] (m : S ⊗[R] M) :
     Function.support (fun i => ((fun p => component p f) i).toFun S m) =
     (rTensor R N S ((f.toFun S[X] ((rTensor M ((monomial 1).restrictScalars R)) m)))).support := by
   ext i
@@ -551,9 +545,9 @@ theorem LocFinsupp_component_eq {S : Type u} [CommSemiring S] [Algebra R S] (m :
   simp [Finsupp.ofSupportFinite_coe]
 
 /-- A polynomial map is the locally finite sum of its homogeneous components.
-(PolynomialLaw lies in between the direct sum and the product of its graded submodules,
-hence there is no graded module structure.) -/
-theorem recompose_component : lfsum (fun p ↦ f.component p) = f := by
+Note that `PolynomialLaw` lies in between the direct sum and the product of its graded submodules,
+hence there is no graded module structure. -/
+theorem lfsum_component : lfsum (fun p ↦ f.component p) = f := by
   ext S _ _ sm
   simp only [lfsum, LocFinsupp_component, ↓reduceDIte,
     LocFinsupp.sum_toFun'_eq_finsupp_sum, LocFinsupp_component_eq]
@@ -565,12 +559,7 @@ theorem recompose_component : lfsum (fun p ↦ f.component p) = f := by
     simp
   conv_rhs => rw [hsm, ← f.isCompat_apply']
   generalize f.toFun' S[X] (((monomial 1).restrictScalars R).rTensor M sm) = sn
-  convert rTensor'_sum (R := R) (fun _ ↦ 1) sn
-  rw [_root_.one_smul]
-  ext p
-  simp only [AlgHom.toLinearMap_apply, AlgHom.coe_restrictScalars', coe_aeval_eq_eval,
-    Polynomial.lsum_apply, coe_restrictScalars, lsmul_apply, smul_eq_mul, one_mul, eval_eq_sum]
-  exact congr_arg₂ _ rfl (by simp)
+  exact rTensor_sum_id sn
 
 variable {f p}
 
@@ -595,10 +584,11 @@ lemma component_eq_zero_of_ne (hf : IsHomogeneousOfDegree p f) {n : ℕ} (hn : p
 theorem isHomogeneousOfDegree_iff_component :
     IsHomogeneousOfDegree p f ↔ ∀ (n : ℕ) (_ : p ≠ n), f.component n = 0 := by
   refine ⟨fun hf n hn ↦ component_eq_zero_of_ne hf hn, fun h ↦ ?_⟩
-  rw [← recompose_component f]
+  rw [← lfsum_component f]
   convert component_isHomogeneous p f
   ext S _ _ sm
-  simp only [lfsum, LocFinsupp_component, dif_pos, LocFinsupp.sum_toFun'_eq_finsupp_sum, LocFinsupp_component_eq]
+  simp only [lfsum, LocFinsupp_component, dif_pos, LocFinsupp.sum_toFun'_eq_finsupp_sum,
+    LocFinsupp_component_eq]
   rw [Finsupp.sum_eq_single p]
   · simp
   · intro n _ hn
