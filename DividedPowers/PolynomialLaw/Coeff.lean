@@ -103,9 +103,9 @@ open Module
 variable [DecidableEq ι] (m : ι → M) (k : ι →₀ ℕ) (s : ι → S) (f : M →ₚₗ[R] N)
 
 /-- Given `m : ι → M`, `generize' m` is the `R`-linear map sending `f : M →ₚₗ[R] N` to the
-  term of `MvPolynomial ι R ⊗[R] N` obtained by applying `f.toFun (MvPolynomial ι R)` to the
-  sum `∑ i, X i ⊗ₜ[R] m i`.
-  This is provided as an auxiliary map for the definition `PolynomialLaw.coeff`. -/
+term of `MvPolynomial ι R ⊗[R] N` obtained by applying `f.toFun (MvPolynomial ι R)` to the
+sum `∑ i, X i ⊗ₜ[R] m i`.
+This is provided as an auxiliary map for the definition `PolynomialLaw.coeff`. -/
 noncomputable def generize' (m : ι → M) :
     (M →ₚₗ[R] N) →ₗ[R] MvPolynomial ι R ⊗[R] N where
   toFun f       := f.toFun (MvPolynomial ι R) (Module.generize m)

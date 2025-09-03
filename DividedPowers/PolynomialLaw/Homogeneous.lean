@@ -558,8 +558,7 @@ theorem lfsum_component : lfsum (fun p ↦ f.component p) = f := by
     ext s
     simp
   conv_rhs => rw [hsm, ← f.isCompat_apply']
-  generalize f.toFun' S[X] (((monomial 1).restrictScalars R).rTensor M sm) = sn
-  exact rTensor_sum_id sn
+  exact rTensor_sum_id _
 
 variable {f p}
 
