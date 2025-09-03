@@ -330,13 +330,13 @@ noncomputable def baseChange (f : M →ₚₗ[R] N) :
       IsScalarTower.of_algebraMap_eq (fun r ↦ by simp [RingHom.algebraMap_toAlgebra])
     exact baseChangeEquiv (R' := R').symm (f.toFun S' (baseChangeEquiv srm))
   isCompat' {S' _ _ S'' _ _} φ := by
-    let algRS' : Algebra R S' :=
+    letI algRS' : Algebra R S' :=
       RingHom.toAlgebra ((algebraMap R' S').comp (algebraMap R R'))
-    have istRR'S' : @IsScalarTower R R' S' _ _ algRS'.toSMul :=
+    haveI istRR'S' : @IsScalarTower R R' S' _ _ algRS'.toSMul :=
       IsScalarTower.of_algebraMap_eq (fun r ↦ by simp [RingHom.algebraMap_toAlgebra])
-    let algRS'' : Algebra R S'' :=
+    letI algRS'' : Algebra R S'' :=
       RingHom.toAlgebra ((algebraMap R' S'').comp (algebraMap R R'))
-    have istRR'S'' : @IsScalarTower R R' S'' _ _ algRS''.toSMul :=
+    haveI istRR'S'' : @IsScalarTower R R' S'' _ _ algRS''.toSMul :=
       IsScalarTower.of_algebraMap_eq (fun r ↦ by simp [RingHom.algebraMap_toAlgebra])
     ext srm
     dsimp only
@@ -357,7 +357,7 @@ noncomputable def baseChange_linearMap : (M →ₚₗ[R] N) →ₗ[R] RestrictSc
   map_smul' r f := by
     change baseChange R' (r • f) = algebraMap R R' r • baseChange R' f
     ext S' _ _ srm
-    let _ : Algebra R S' := RingHom.toAlgebra
+    letI _ : Algebra R S' := RingHom.toAlgebra
       ((algebraMap R' S').comp (algebraMap R R'))
     have _ : IsScalarTower R R' S' := IsScalarTower.of_algebraMap_eq (fun r ↦ by simp [RingHom.algebraMap_toAlgebra])
     simp only [baseChange, smul_toFun, Pi.smul_apply, smul_def, algebraMap_smul]
@@ -390,9 +390,9 @@ theorem baseChange_toFun'_smul_tmul_tmul_eq_coeff_sum
   simp_rw [Algebra.smul_def, mul_pow]
   rw [Finset.prod_mul_distrib]
   simp_rw [← map_pow, ← map_prod, ← Algebra.smul_def]
-  let algRS' : Algebra R S' :=
+  letI algRS' : Algebra R S' :=
     RingHom.toAlgebra ((algebraMap R' S').comp (algebraMap R R'))
-  have istRR'S' : @IsScalarTower R R' S' _ _ algRS'.toSMul :=
+  haveI istRR'S' : @IsScalarTower R R' S' _ _ algRS'.toSMul :=
     IsScalarTower.of_algebraMap_eq (fun r ↦ by simp [RingHom.algebraMap_toAlgebra])
   rw [← baseChangeEquiv_tmul_tmul]
 
