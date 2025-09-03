@@ -46,9 +46,9 @@ noncomputable def multiGenerizeBaseChange :
     induction x using TensorProduct.induction_on with
     | zero => simp
     | tmul r m =>
-      simp only [piRightHom_tmul, piRight_symm_single, assoc_symm_tmul, LinearEquiv.rTensor_tmul,
-        AlgEquiv.toLinearEquiv_apply, smul_tmul', smul_eq_mul]
-      simp [scalarRTensorAlgEquiv, rTensorAlgHom, smul_eq_C_mul _ s, mul_left_comm (C s)]
+      simp [piRightHom_tmul, piRight_symm_single, assoc_symm_tmul, LinearEquiv.rTensor_tmul,
+        AlgEquiv.toLinearEquiv_apply, smul_tmul', smul_eq_mul,
+        scalarRTensorAlgEquiv, rTensorAlgHom, smul_eq_C_mul _ s, mul_left_comm (C s)]
     | add x y hx hy =>
       simp [Pi.single_add, smul_add, map_add, tmul_add, ← hx, ← hy]
 
@@ -83,8 +83,8 @@ open Finset MvPolynomial TensorProduct
 
 section Coefficients
 
-variable {ι N : Type*} {M : ι → Type*} [(i : ι) → AddCommMonoid (M i)]
-  [(i : ι) → Module R (M i)] [AddCommMonoid N] [Module R N]
+variable {ι N : Type*} {M : ι → Type*} [(i : ι) → AddCommMonoid (M i)] [(i : ι) → Module R (M i)]
+  [AddCommMonoid N] [Module R N]
 
 open LinearMap
 
@@ -162,9 +162,7 @@ theorem ground_apply_smul_eq_multiCoeff_sum :
   ext i
   simp
 
-variable {S : Type*} [CommSemiring S] [Algebra R S]
-
-variable {m}
+variable {S : Type*} [CommSemiring S] [Algebra R S] {m}
 
 theorem multiCoeff_injective (hm : Submodule.span R (Set.range fun i ↦ Pi.single i (m i)) = ⊤) :
     Function.Injective (multiCoeff m : ((Π i, M i) →ₚₗ[R] N) →ₗ[R] (ι →₀ ℕ) →₀ N) := fun f g h ↦ by
@@ -309,8 +307,8 @@ theorem multiGenerizeBaseChange_rTensor :
       LinearMap.rTensor _ (mapAlgHom φ).toLinearMap (multiGenerizeBaseChange sm) := by
   induction sm using TensorProduct.induction_on with
   | zero => simp
-  | tmul s m =>
-    simp [rTensor_tmul, multiGenerizeBaseChange_apply_tmul, smul_tmul', smul_eq_C_mul, mapAlgHom_apply]
+  | tmul s m =>  simp [rTensor_tmul, multiGenerizeBaseChange_apply_tmul, smul_tmul',
+      smul_eq_C_mul, mapAlgHom_apply]
   | add x y hx hy => simp [map_add, ← hx, ← hy]
 
 theorem rTensor_multiCoeffBaseChange_eq :
@@ -324,3 +322,28 @@ end Decidable_Fintype
 end Coefficients
 
 end PolynomialLaw
+
+open LinearMap MvPolynomial TensorProduct
+
+theorem extracted_1_1 {ι R S : Type*}
+  [CommSemiring R] {M : ι → Type*} [(i : ι) → AddCommMonoid (M i)]
+  [(i : ι) → Module R (M i)]
+  [Fintype ι] [DecidableEq ι] [CommSemiring S] [Algebra R S]
+  (sm : S ⊗[R] ((i : ι) → M i)) :
+  sm =
+    (LinearMap.rTensor ((i : ι) → M i) (AlgHom.restrictScalars R (aeval 1)).toLinearMap)
+      (∑ j,
+        (LinearEquiv.rTensor ((i : ι) → M i) scalarRTensorAlgEquiv.toLinearEquiv)
+          ((TensorProduct.assoc R (MvPolynomial ι R) S ((i : ι) → M i)).symm
+            (X j ⊗ₜ[R] (TensorProduct.compRight R S S M j) sm))) := by
+  simp only [map_sum, LinearMap.rTensor]
+  induction sm using TensorProduct.induction_on with
+  | zero =>  simp [map_zero, tmul_zero, Finset.sum_const_zero]
+  | tmul s m =>
+    simp only [compRight_tmul, singleRight_tmul, assoc_symm_tmul, LinearEquiv.rTensor_tmul,
+      AlgEquiv.toLinearEquiv_apply, map_tmul, AlgHom.toLinearMap_apply,
+      AlgHom.coe_restrictScalars', id_coe, id_eq]
+    apply tmul_eq_aeval_one_sum
+  | add sm₁ sm₂ hsm₁ hsm₂ => simp [map_add, tmul_add, Finset.sum_add_distrib, ← hsm₁, ← hsm₂]
+
+#find_home! extracted_1_1

@@ -444,3 +444,9 @@ noncomputable def polynomialLawEquivPoly : MvPolynomial ι N ≃ₗ[R] (M →ₚ
   polynomialLawEquivCoeff b
 
 end CommSemiring
+
+open Finsupp MvPolynomial TensorProduct
+
+variable {ι : Type*} {R : Type u} [CommSemiring R] {M : ι → Type*} [∀ i, AddCommMonoid (M i)] [∀ i, Module R (M i)]
+  {N : Type*} [AddCommMonoid N] [Module R N] {S : Type*} [CommSemiring S] [Algebra R S] [Fintype ι] [DecidableEq ι]
+  (s : Π (_ : ι), S) (m : Π i, M i)
