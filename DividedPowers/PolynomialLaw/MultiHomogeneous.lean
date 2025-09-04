@@ -262,11 +262,11 @@ theorem multiComponent_toFun_apply (m : S ⊗[R] (Π i, M i)) :
     (f.multiComponent n).toFun S m = multiCoeffBaseChange f m n := by
   obtain ⟨n', ψ, q, rfl⟩ := exists_lift m
   rw [← PolynomialLaw.isCompat_apply, toFun_eq_toFun'_apply, multiComponent.toFun'_apply]
-  exact rTensor_multiCoeffBaseChange_eq n f q ψ
+  exact rTensor_multiCoeffBaseChange_eq f n q ψ
 
 lemma multiComponentIsMultiHomogeneous [Nontrivial R]  :
     IsMultiHomogeneousOfDegree n (multiComponent n f) :=
-  fun _ _ _ s sm ↦ multiCoeffBaseChange_apply_smul n f sm s
+  fun _ _ _ s sm ↦ multiCoeffBaseChange_apply_smul f n sm s
 
 theorem multiComponent_add :
     (f + g).multiComponent n = f.multiComponent n + g.multiComponent n := by
