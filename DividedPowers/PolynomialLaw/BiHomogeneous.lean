@@ -10,7 +10,6 @@ universe u uι
 
 -/
 
--- **MI** : TODO: variable order, implicit/explicit (also in MultiHomogeneous)
 noncomputable section
 
 namespace PolynomialLaw

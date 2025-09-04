@@ -188,7 +188,7 @@ end biCoeff
 
 open Function
 
-variable (r : R × R) (r₁ r₂ : R) (m m₁ m₂ : M × M') (k : ℕ × ℕ) (f : (M × M') →ₚₗ[R] N)
+variable (r : R × R) (r₁ r₂ : R) (m m₁ m₂ : M × M') (f : (M × M') →ₚₗ[R] N) (k : ℕ × ℕ)
 
 theorem ground_apply_sum_smul_eq_biCoeff_sum :
     ground f (r.1 • (m.1, 0) + r.2 • (0, m.2)) =

@@ -96,7 +96,7 @@ section multiCoeff
 
 open Module
 
-variable (m : Π i, M i) (k : ι →₀ ℕ) (f : (Π i, M i) →ₚₗ[R] N)
+variable (m : Π i, M i) (f : (Π i, M i) →ₚₗ[R] N) (k : ι →₀ ℕ)
 
 /-- Given `m : Π i, M i`, `multiGenerize' m` is the `R`-linear map sending
 `f : (Π i, M i) →ₚₗ[R] N` to the term of `MvPolynomial ι R ⊗[R] N` obtained by applying
@@ -111,11 +111,11 @@ noncomputable def multiGenerize' : ((Π i, M i) →ₚₗ[R] N) →ₗ[R] MvPoly
 noncomputable def multiCoeff : ((Π i, M i) →ₚₗ[R] N) →ₗ[R] (ι →₀ ℕ) →₀ N :=
   scalarRTensor.toLinearMap.comp (multiGenerize' m)
 
-theorem multiCoeff_eq_coeff (m : Π i, M i) :
+theorem multiCoeff_eq_coeff :
     multiCoeff m = coeff (R := R) (ι := ι) (N := N) (fun i ↦ Pi.single i (m i)) := by
   simp [multiCoeff, multiGenerize', coeff, generize', generize, coe_mk, AddHom.coe_mk]
 
-theorem toFun_multiGenerize_eq : f.toFun (MvPolynomial ι R) (multiGenerize m)=
+theorem toFun_multiGenerize_eq : f.toFun (MvPolynomial ι R) (multiGenerize m) =
     (multiCoeff m f).sum (fun k n ↦ (monomial k 1) ⊗ₜ n) := by
   simp [multiCoeff_eq_coeff, multiGenerize_eq_generize, toFun_generize_eq]
 
@@ -146,7 +146,7 @@ end multiCoeff
 
 open Function
 
-variable (r : ι → R) (r₁ r₂ : R) (m m₁ m₂ : Π i, M i) (k : ι →₀ ℕ) (f : (Π i, M i) →ₚₗ[R] N)
+variable (r : ι → R) (r₁ r₂ : R) (m m₁ m₂ : Π i, M i) (f : (Π i, M i) →ₚₗ[R] N) (k : ι →₀ ℕ)
 
 theorem ground_apply_sum_smul_eq_multiCoeff_sum :
     ground f (∑ i, (r i) • Pi.single i (m i)) =
