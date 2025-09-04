@@ -2,9 +2,9 @@
 import DividedPowers.ForMathlib.Algebra.MvPolynomial.Lemmas
 import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Prod
 import DividedPowers.PolynomialLaw.BiCoeff
-import DividedPowers.PolynomialLaw.Homogeneous
+import DividedPowers.PolynomialLaw.MultiHomogeneous
 
-universe u uι
+universe u v uι
 
 /- # Bihomogeneous components of a polynomial map
 
@@ -16,7 +16,7 @@ namespace PolynomialLaw
 
 variable {R : Type u} [CommSemiring R]
 
-variable {M M' N : Type*} [AddCommMonoid M] [Module R M] [AddCommMonoid M'] [Module R M']
+variable {M M' : Type v} {N : Type*} [AddCommMonoid M] [Module R M] [AddCommMonoid M'] [Module R M']
   [AddCommMonoid N] [Module R N]
 
 open LinearMap TensorProduct
@@ -27,31 +27,90 @@ open Finsupp MvPolynomial
 
 open TensorProduct
 
-def IsBiHomogeneousOfDegree (n : ℕ × ℕ) (f : PolynomialLaw R (M × M') N) : Prop :=
+def IsBiHomogeneousOfDegree (n : ℕ × ℕ) (f : (M × M') →ₚₗ[R] N) : Prop :=
   ∀ (S : Type u) [CommSemiring S] [Algebra R S] (s : S × S) (m : S ⊗[R] (M × M')),
     f.toFun' S (s.1 • TensorProduct.compFstRight R S S M M' m +
       s.2 • TensorProduct.compSndRight R S S M M' m) = (s.1 ^ n.1 * s.2 ^ n.2) • f.toFun' S m
 
+instance : (i : Fin 2) → AddCommMonoid (![M, M'] i) := fun i ↦ by
+  by_cases hi : i = 0
+  · have h : AddCommMonoid M := inferInstance
+    exact hi ▸ h
+  · have h : AddCommMonoid M' := inferInstance
+    exact Fin.eq_one_of_ne_zero i hi ▸ h
+
+instance : (i : Fin 2) → Module R (![M, M'] i) := fun i ↦ by
+  by_cases hi : i = 0
+  · have h : Module R M := inferInstance
+    exact hi ▸ h
+  · have h : Module R M' := inferInstance
+    exact Fin.eq_one_of_ne_zero i hi ▸ h
+
+variable (R M M') in
+/-- A product space `α × β` is equivalent to the space `Π i : Fin 2, γ i`, where
+`γ = Fin.cons α (Fin.cons β finZeroElim)`. See also `piFinTwoEquiv` and
+`finTwoArrowEquiv`. -/
+--@[simps! -fullyApplied]
+def _root_.prodLinearEquivPiFinTwo : (M × M') ≃ₗ[R] (∀ i : Fin 2, ![M, M'] i) :=
+  { prodEquivPiFinTwo M M' with
+    map_add' x y := by
+      simp only [prodEquivPiFinTwo]
+      erw [Equiv.symm_apply_eq]
+      simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Fin.isValue, Equiv.toFun_as_coe]
+      rfl
+    map_smul' r x := by
+      simp only [prodEquivPiFinTwo]
+      erw [Equiv.symm_apply_eq]
+      simp only [Nat.succ_eq_add_one, Nat.reduceAdd, RingHom.id_apply, Fin.isValue,
+        Equiv.toFun_as_coe]
+      rfl }
+
+def foo (f : (M × M') →ₚₗ[R] N) : ((i : Fin 2) → ![M, M'] i) →ₚₗ[R] N where
+  toFun' S _ _ sm :=
+    f.toFun S (LinearMap.lTensor S (prodLinearEquivPiFinTwo R M M').symm.toLinearMap sm)
+  isCompat' {S} _ _ {S'} _ _ φ := by
+    ext sm
+    simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Function.comp_apply, f.isCompat_apply φ]
+    congr 1
+    induction sm using TensorProduct.induction_on with
+    | zero => simp
+    | add sm sm' h h' => simp [h, h']
+    | tmul sm => simp
+
+lemma isBiHomogeneousOfDegree_iff_isMultiHomogeneousOfDegree (n : ℕ × ℕ) (f : (M × M') →ₚₗ[R] N) :
+    f.IsBiHomogeneousOfDegree n ↔ (foo f).IsMultiHomogeneousOfDegree
+        (Finsupp.ofSupportFinite ![n.1, n.2] (Set.toFinite _)) := by
+  simp only [IsBiHomogeneousOfDegree, Prod.forall, IsMultiHomogeneousOfDegree, Nat.succ_eq_add_one,
+    Nat.reduceAdd, Fin.sum_univ_two, Fin.isValue, Fin.prod_univ_two]
+  refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
+  · intro S _ _ s sm
+    specialize h S (s 0) (s 1)
+      (LinearMap.lTensor S (prodLinearEquivPiFinTwo R M M').symm.toLinearMap sm)
+    simp only [foo, Nat.succ_eq_add_one, Nat.reduceAdd, Fin.isValue, map_add]
+    sorry
+  · sorry
+
+#exit
 -- TODO: prove equivalence to IsMultiHomogeneous with Fin 2 and use this in proofs.
 
-theorem IsBiHomogeneousOfDegree_add (n : ℕ × ℕ) {f g : PolynomialLaw R (M × M') N}
+theorem IsBiHomogeneousOfDegree_add (n : ℕ × ℕ) {f g : (M × M') →ₚₗ[R] N}
     (hf : f.IsBiHomogeneousOfDegree n) (hg : g.IsBiHomogeneousOfDegree n) :
     (f + g).IsBiHomogeneousOfDegree n := fun S _ _ s m ↦ by
   simp [add_def_apply, smul_add, hf S s m, hg S s m]
 
-theorem IsBiHomogeneousOfDegree_smul (n : ℕ × ℕ) (r : R) {f : PolynomialLaw R (M × M') N}
+theorem IsBiHomogeneousOfDegree_smul (n : ℕ × ℕ) (r : R) {f : (M × M') →ₚₗ[R] N}
     (hf : f.IsBiHomogeneousOfDegree n) :
     (r • f).IsBiHomogeneousOfDegree n := fun S _ _ s m ↦ by
   simp [smul_def, Pi.smul_apply, hf S, smul_comm r]
 
 /-- The submodule of bihomogeneous polynomial laws of degree `n`. -/
-def biGrade (n : ℕ × ℕ) : Submodule R (PolynomialLaw R (M × M') N) where
+def biGrade (n : ℕ × ℕ) : Submodule R ((M × M') →ₚₗ[R] N) where
   carrier            := IsBiHomogeneousOfDegree n
   add_mem' hf hg     := IsBiHomogeneousOfDegree_add n hf hg
   smul_mem' r f hf   := IsBiHomogeneousOfDegree_smul n r hf
   zero_mem' S _ _ r _:= by simp only [zero_def, Pi.zero_apply, smul_zero]
 
-variable (n : ℕ × ℕ) (f : PolynomialLaw R (M × M') N)
+variable (n : ℕ × ℕ) (f : (M × M') →ₚₗ[R] N)
 
 lemma mem_biGrade  :
     f ∈ biGrade n ↔ IsBiHomogeneousOfDegree n f := by rfl
