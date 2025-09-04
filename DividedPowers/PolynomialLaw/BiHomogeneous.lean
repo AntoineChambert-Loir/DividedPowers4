@@ -32,14 +32,14 @@ def IsBiHomogeneousOfDegree (n : ℕ × ℕ) (f : (M × M') →ₚₗ[R] N) : Pr
     f.toFun' S (s.1 • TensorProduct.compFstRight R S S M M' m +
       s.2 • TensorProduct.compSndRight R S S M M' m) = (s.1 ^ n.1 * s.2 ^ n.2) • f.toFun' S m
 
-instance : (i : Fin 2) → AddCommMonoid (![M, M'] i) := fun i ↦ by
+local instance : (i : Fin 2) → AddCommMonoid (![M, M'] i) := fun i ↦ by
   by_cases hi : i = 0
   · have h : AddCommMonoid M := inferInstance
     exact hi ▸ h
   · have h : AddCommMonoid M' := inferInstance
     exact Fin.eq_one_of_ne_zero i hi ▸ h
 
-instance : (i : Fin 2) → Module R (![M, M'] i) := fun i ↦ by
+local instance : (i : Fin 2) → Module R (![M, M'] i) := fun i ↦ by
   by_cases hi : i = 0
   · have h : Module R M := inferInstance
     exact hi ▸ h
