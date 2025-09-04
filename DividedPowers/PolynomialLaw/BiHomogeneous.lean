@@ -149,7 +149,7 @@ lemma isBiHomogeneousOfDegree_biCoeff {d : ℕ × ℕ} (hf : IsBiHomogeneousOfDe
 bi-degree `n`. -/
 lemma isHomogeneousOfDegree_biCoeff {n : ℕ} {d : ℕ × ℕ} (hf : IsHomogeneousOfDegree n f)
     (m : M × M') (hd : d.1 + d.2 ≠ n) : PolynomialLaw.biCoeff m f d = 0 := by
-  simp only [biCoeff_apply, coe_comp, LinearEquiv.coe_coe, Function.comp_apply, biGenerize,
+  simp only [biCoeff_apply, coe_comp, LinearEquiv.coe_coe, Function.comp_apply, biGenerize',
     LinearMap.coe_mk, AddHom.coe_mk,  scalarRTensor_apply, EmbeddingLike.map_eq_zero_iff]
   simp only [toFun_add_tmul_eq_coeff_sum, sum, map_sum, rTensor_tmul, lcoeff_apply]
   have h2' (e :  Fin 2 →₀ ℕ) : X (R := R) (0 : Fin 2) ^ (e 0) * X 1 ^ (e 1) =
