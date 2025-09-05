@@ -521,7 +521,7 @@ lemma dividedPartialDerivative_isHomogeneousOfDegree_of_le [Nontrivial R]
       apply Finset.sum_congr rfl
       intro k hk
       simp only [polarizedProd, LinearMap.coe_mk, AddHom.coe_mk, Finsupp.mem_support_iff,
-        biCoeff_apply, biGenerize, Fin.isValue, Prod.mk_zero_zero, tmul_zero, zero_add,
+        biCoeff_apply, biGenerize', Fin.isValue, Prod.mk_zero_zero, tmul_zero, zero_add,
         LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply, ne_eq] at hk
       simp only [Fin.isValue, scalarRTensor_apply, EmbeddingLike.map_eq_zero_iff, ne_eq] at hk
       sorry

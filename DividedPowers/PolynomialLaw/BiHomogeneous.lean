@@ -32,66 +32,6 @@ def IsBiHomogeneousOfDegree (n : ℕ × ℕ) (f : (M × M') →ₚₗ[R] N) : Pr
     f.toFun' S (s.1 • TensorProduct.compFstRight R S S M M' m +
       s.2 • TensorProduct.compSndRight R S S M M' m) = (s.1 ^ n.1 * s.2 ^ n.2) • f.toFun' S m
 
-local instance : (i : Fin 2) → AddCommMonoid (![M, M'] i) := fun i ↦ by
-  by_cases hi : i = 0
-  · have h : AddCommMonoid M := inferInstance
-    exact hi ▸ h
-  · have h : AddCommMonoid M' := inferInstance
-    exact Fin.eq_one_of_ne_zero i hi ▸ h
-
-local instance : (i : Fin 2) → Module R (![M, M'] i) := fun i ↦ by
-  by_cases hi : i = 0
-  · have h : Module R M := inferInstance
-    exact hi ▸ h
-  · have h : Module R M' := inferInstance
-    exact Fin.eq_one_of_ne_zero i hi ▸ h
-
-variable (R M M') in
-/-- A product space `α × β` is equivalent to the space `Π i : Fin 2, γ i`, where
-`γ = Fin.cons α (Fin.cons β finZeroElim)`. See also `piFinTwoEquiv` and
-`finTwoArrowEquiv`. -/
---@[simps! -fullyApplied]
-def _root_.prodLinearEquivPiFinTwo : (M × M') ≃ₗ[R] (∀ i : Fin 2, ![M, M'] i) :=
-  { prodEquivPiFinTwo M M' with
-    map_add' x y := by
-      simp only [prodEquivPiFinTwo]
-      erw [Equiv.symm_apply_eq]
-      simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Fin.isValue, Equiv.toFun_as_coe]
-      rfl
-    map_smul' r x := by
-      simp only [prodEquivPiFinTwo]
-      erw [Equiv.symm_apply_eq]
-      simp only [Nat.succ_eq_add_one, Nat.reduceAdd, RingHom.id_apply, Fin.isValue,
-        Equiv.toFun_as_coe]
-      rfl }
-
-def foo (f : (M × M') →ₚₗ[R] N) : ((i : Fin 2) → ![M, M'] i) →ₚₗ[R] N where
-  toFun' S _ _ sm :=
-    f.toFun S (LinearMap.lTensor S (prodLinearEquivPiFinTwo R M M').symm.toLinearMap sm)
-  isCompat' {S} _ _ {S'} _ _ φ := by
-    ext sm
-    simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Function.comp_apply, f.isCompat_apply φ]
-    congr 1
-    induction sm using TensorProduct.induction_on with
-    | zero => simp
-    | add sm sm' h h' => simp [h, h']
-    | tmul sm => simp
-
-lemma isBiHomogeneousOfDegree_iff_isMultiHomogeneousOfDegree (n : ℕ × ℕ) (f : (M × M') →ₚₗ[R] N) :
-    f.IsBiHomogeneousOfDegree n ↔ (foo f).IsMultiHomogeneousOfDegree
-        (Finsupp.ofSupportFinite ![n.1, n.2] (Set.toFinite _)) := by
-  simp only [IsBiHomogeneousOfDegree, Prod.forall, IsMultiHomogeneousOfDegree, Nat.succ_eq_add_one,
-    Nat.reduceAdd, Fin.sum_univ_two, Fin.isValue, Fin.prod_univ_two]
-  refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
-  · intro S _ _ s sm
-    specialize h S (s 0) (s 1)
-      (LinearMap.lTensor S (prodLinearEquivPiFinTwo R M M').symm.toLinearMap sm)
-    simp only [foo, Nat.succ_eq_add_one, Nat.reduceAdd, Fin.isValue, map_add]
-    sorry
-  · sorry
-
-#exit
--- TODO: prove equivalence to IsMultiHomogeneous with Fin 2 and use this in proofs.
 
 theorem IsBiHomogeneousOfDegree_add (n : ℕ × ℕ) {f g : (M × M') →ₚₗ[R] N}
     (hf : f.IsBiHomogeneousOfDegree n) (hg : g.IsBiHomogeneousOfDegree n) :
@@ -721,3 +661,77 @@ lemma multiCoeff_S_apply_smul [Nontrivial R] (s : Π _, S) (sm : S ⊗[R] Π i, 
       pow_zero]) (fun hj ↦ absurd (Finset.mem_univ _) hj)]
     simp [single_eq_monomial, mul_comm (s i) t, C_mul_monomial,]
   | add sm sm' h h' => simp only [map_add, smul_add, Finset.sum_add_distrib, tmul_add, h, h']
+
+
+local instance : (i : Fin 2) → AddCommMonoid (![M, M'] i) := fun i ↦ by
+  by_cases hi : i = 0
+  · have h : AddCommMonoid M := inferInstance
+    exact hi ▸ h
+  · have h : AddCommMonoid M' := inferInstance
+    exact Fin.eq_one_of_ne_zero i hi ▸ h
+
+local instance : (i : Fin 2) → Module R (![M, M'] i) := fun i ↦ by
+  by_cases hi : i = 0
+  · have h : Module R M := inferInstance
+    exact hi ▸ h
+  · have h : Module R M' := inferInstance
+    exact Fin.eq_one_of_ne_zero i hi ▸ h
+
+variable (R M M') in
+/-- A product space `α × β` is equivalent to the space `Π i : Fin 2, γ i`, where
+`γ = Fin.cons α (Fin.cons β finZeroElim)`. See also `piFinTwoEquiv` and
+`finTwoArrowEquiv`. -/
+--@[simps! -fullyApplied]
+def _root_.prodLinearEquivPiFinTwo : (M × M') ≃ₗ[R] (∀ i : Fin 2, ![M, M'] i) :=
+  { prodEquivPiFinTwo M M' with
+    map_add' x y := by
+      simp only [prodEquivPiFinTwo]
+      erw [Equiv.symm_apply_eq]
+      simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Fin.isValue, Equiv.toFun_as_coe]
+      rfl
+    map_smul' r x := by
+      simp only [prodEquivPiFinTwo]
+      erw [Equiv.symm_apply_eq]
+      simp only [Nat.succ_eq_add_one, Nat.reduceAdd, RingHom.id_apply, Fin.isValue,
+        Equiv.toFun_as_coe]
+      rfl }
+
+def foo (f : (M × M') →ₚₗ[R] N) : ((i : Fin 2) → ![M, M'] i) →ₚₗ[R] N where
+  toFun' S _ _ sm :=
+    f.toFun S (LinearMap.lTensor S (prodLinearEquivPiFinTwo R M M').symm.toLinearMap sm)
+  isCompat' {S} _ _ {S'} _ _ φ := by
+    ext sm
+    simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Function.comp_apply, f.isCompat_apply φ]
+    congr 1
+    induction sm using TensorProduct.induction_on with
+    | zero => simp
+    | add sm sm' h h' => simp [h, h']
+    | tmul sm => simp
+
+lemma isBiHomogeneousOfDegree_iff_isMultiHomogeneousOfDegree (n : ℕ × ℕ) (f : (M × M') →ₚₗ[R] N) :
+    f.IsBiHomogeneousOfDegree n ↔ (foo f).IsMultiHomogeneousOfDegree
+        (Finsupp.ofSupportFinite ![n.1, n.2] (Set.toFinite _)) := by
+  simp only [IsBiHomogeneousOfDegree, Prod.forall, IsMultiHomogeneousOfDegree, Nat.succ_eq_add_one,
+    Nat.reduceAdd, Fin.sum_univ_two, Fin.isValue, Fin.prod_univ_two]
+  refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
+  · intro S _ _ s sm
+    specialize h S (s 0) (s 1)
+      (LinearMap.lTensor S (prodLinearEquivPiFinTwo R M M').symm.toLinearMap sm)
+    simp only [foo, Nat.succ_eq_add_one, Nat.reduceAdd, Fin.isValue, map_add]
+    simp only [Fin.isValue, ofSupportFinite_coe, Matrix.cons_val_zero, Matrix.cons_val_one,
+      Matrix.cons_val_fin_one]
+    rw [toFun_eq_toFun', ← h]
+    congr 1
+    simp only [Fin.isValue, Nat.succ_eq_add_one, Nat.reduceAdd]
+    congr 1
+    · induction sm using TensorProduct.induction_on with
+      | zero => simp
+      | add x y hx hy =>
+        simp only [Fin.isValue, map_add, smul_add]
+        sorry
+      | tmul =>
+        sorry
+    sorry
+  · sorry
+
+-- TODO: prove equivalence to IsMultiHomogeneous with Fin 2 and use this in proofs.

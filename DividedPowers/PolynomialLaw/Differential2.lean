@@ -106,6 +106,16 @@ noncomputable def diff (k : ℕ) (f : M →ₚₗ[R] N) : M × M →ₚₗ[R] N 
     | add x y hx hy => simp [map_add, hx, hy]
     | tmul s n => simp
 
+lemma diff_eq_coeff (f : M →ₚₗ[R] N) (m m' : M) :
+    f.diff (m, m') =
+      Polynomial.scalarRTensor R N (f.toFun' (Polynomial R)
+          ((1 : Polynomial R) ⊗ₜ[R] m + Polynomial.X (R := R) ⊗ₜ[R] m')) 1 := by
+  simp only [diff, map', generize₂, add_apply, coe_comp, coe_mk, AddHom.coe_mk, Function.comp_apply,
+    ground_apply, baseChange_tmul, fst_apply, map_tmul, coe_restrictScalars, monomial_zero_left,
+    map_one, id_coe, id_eq, snd_apply]
+  simp only [scalarRTensor_apply, EmbeddingLike.apply_eq_iff_eq]
+  rfl
+
 end  PolynomialLaw
 
 section Junk
@@ -154,5 +164,3 @@ noncomputable example
   mapAlgHom φ
 
 end Junk
-
-

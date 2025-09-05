@@ -1,4 +1,4 @@
-import DividedPowers.PolynomialLaw.MultiCoeff
+import DividedPowers.PolynomialLaw.Coeff
 import DividedPowers.ForMathlib.Algebra.BigOperators.Finsupp.Fin
 
 universe u

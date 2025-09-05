@@ -200,7 +200,7 @@ lemma IsMultiHomogeneousOfDegree.multiCoeff_eq_zero {n d : ι →₀ ℕ}
     simp [coe_comp, LinearEquiv.coe_coe, Function.comp_apply, rTensor_tmul, lcoeff_apply, φ,
       prod_X_pow_eq_monomial', coeff_monomial, if_neg hkd]
 
-theorem isMultiHomogeneousOfMultiDegreeOne_multiCoeff {i : ι}
+theorem isMultiHomogeneousOfDegreeOne_multiCoeff {i : ι}
     (hf : f.IsMultiHomogeneousOfDegree (Finsupp.single i 1)) (m : Π i, M i) {d : ι →₀ ℕ}
     (hd : d ≠ Finsupp.single i 1) : (multiCoeff m f) d = 0 :=
   hf.multiCoeff_eq_zero m hd
