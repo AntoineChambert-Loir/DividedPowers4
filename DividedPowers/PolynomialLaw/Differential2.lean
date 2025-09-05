@@ -92,8 +92,8 @@ theorem generize₂_rTensor_eq_rTensor_mapAlgHom_generize₂
   | tmul s m => simp [generize₂, map'_coe, map_tmul]
   | add x y hx hy => simp [map_add, ← hx, ← hy]
 
-noncomputable def diff (f : M →ₚₗ[R] N) : M × M →ₚₗ[R] N where
-  toFun' S _ _ m := map' (lcoeff S 1) LinearMap.id (f.toFun' _ (generize₂ m))
+noncomputable def diff (k : ℕ) (f : M →ₚₗ[R] N) : M × M →ₚₗ[R] N where
+  toFun' S _ _ m := map' (lcoeff S k) LinearMap.id (f.toFun' _ (generize₂ m))
   isCompat' {S} _ _ {S'} _ _ φ := by
     ext m
     simp [generize₂_rTensor_eq_rTensor_mapAlgHom_generize₂]
@@ -114,9 +114,13 @@ variable {R : Type u} [CommSemiring R]
   {M : Type*} [AddCommMonoid M] [Module R M]
   {N : Type*} [AddCommMonoid N] [Module R N]
   (f : M →ₚₗ[R] N)
+  (σ : Type*)  [DecidableEq σ]
 
 variable {S : Type*} [CommSemiring S] [Algebra R S]
 
+example : S ⊗[R] MvPolynomial σ R ≃ₐ[S] MvPolynomial σ S :=
+  have := MvPolynomial.scalarRTensorAlgEquiv (R := R) (σ := σ) (N := S)
+  sorry
 example : S ⊗[R] (M × M) ≃ₗ[S] (S ⊗[R] M) × (S ⊗[R] M) :=
   prodRight R S S M M
 
