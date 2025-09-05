@@ -87,10 +87,22 @@ lemma isBiHomogeneousOfDegree_iff_isMultiHomogeneousOfDegree (n : ℕ × ℕ) (f
     specialize h S (s 0) (s 1)
       (LinearMap.lTensor S (prodLinearEquivPiFinTwo R M M').symm.toLinearMap sm)
     simp only [foo, Nat.succ_eq_add_one, Nat.reduceAdd, Fin.isValue, map_add]
+    simp only [Fin.isValue, ofSupportFinite_coe, Matrix.cons_val_zero, Matrix.cons_val_one,
+      Matrix.cons_val_fin_one]
+    rw [toFun_eq_toFun', ← h]
+    congr 1
+    simp only [Fin.isValue, Nat.succ_eq_add_one, Nat.reduceAdd]
+    congr 1
+    · induction sm using TensorProduct.induction_on with
+      | zero => simp
+      | add x y hx hy =>
+        simp only [Fin.isValue, map_add, smul_add]
+        sorry
+      | tmul =>
+        sorry
     sorry
   · sorry
 
-#exit
 -- TODO: prove equivalence to IsMultiHomogeneous with Fin 2 and use this in proofs.
 
 theorem IsBiHomogeneousOfDegree_add (n : ℕ × ℕ) {f g : (M × M') →ₚₗ[R] N}
@@ -160,6 +172,17 @@ theorem IsBiHomogeneousOfDegree.isHomogeneousOfDegree
   simp only [← pow_add] at hf'
   rw [← hf', ← smul_add]
   simp [compFstRight_add_compSndRight]
+
+/-- The bi-coefficients of a homogeneous polynomial map of bi-degree `n` vanish outside of
+bi-degree `n`. -/
+lemma isBiHomogeneousOfDegree_biCoeff' {d : ℕ × ℕ} (hf : IsBiHomogeneousOfDegree n f) (m : M × M')
+    (hd : d ≠ n) : PolynomialLaw.biCoeff m f d = 0 := by
+  simp only [isBiHomogeneousOfDegree_iff_isMultiHomogeneousOfDegree, Nat.succ_eq_add_one,
+    Nat.reduceAdd] at hf
+  simp only [biCoeff_eq_coeff, Nat.succ_eq_add_one, Nat.reduceAdd, finTwoArrowEquiv'_symm_apply]
+  have := IsMultiHomogeneousOfDegree.multiCoeff_eq_zero hf
+    (n := (ofSupportFinite ![n.1, n.2] (by sorry))) (d := (ofSupportFinite ![d.1, d.2] (by sorry)))
+  sorry
 
 /-- The bi-coefficients of a homogeneous polynomial map of bi-degree `n` vanish outside of
 bi-degree `n`. -/
