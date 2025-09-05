@@ -168,7 +168,7 @@ theorem dpow_prod {I : Ideal R} (hI : DividedPowers I)
     rw [Finset.prod_insert has]
     by_cases h : s.Nonempty
     · rw [dpow_mul]
-      · simp only [Finset.card_insert_of_not_mem has, add_tsub_cancel_right,
+      · simp only [Finset.card_insert_of_notMem has, add_tsub_cancel_right,
           nsmul_eq_mul, Nat.cast_pow, Finset.prod_insert has]
         rw [hrec h]
         · simp only [nsmul_eq_mul, Nat.cast_pow, ← mul_assoc]
@@ -269,8 +269,8 @@ lemma basis_single_eq (i : ι) (n : ℕ) :
     basis R M b (Finsupp.single i n) = dp R n (b i) := by
   simp only [basis_eq]
   rw [Finsupp.prod_of_support_subset (s := {i}) _ Finsupp.support_single_subset]
-  · simp [prod_singleton, Finsupp.single_eq_same]
-  · simp [mem_singleton, forall_eq, dp_zero]
+  · simp [prod_singleton]
+  · simp [dp_zero]
 
 lemma basis_single_one_eq (i : ι) :
     basis R M b (Finsupp.single i 1) = DividedPowerAlgebra.ι R M (b i) := by
@@ -285,7 +285,7 @@ theorem basis_repr_ι (m : M) (d) [Decidable (∃ i, d = Finsupp.single i 1)] :
     simpa only [Finsupp.linearCombination, Finsupp.lsum] using this
   conv_lhs => rw [hm]
   simp [map_finsuppSum]
-  simp only [← basis_single_one_eq, Basis.repr_self, Finsupp.single_apply]
+  simp only [← basis_single_one_eq, Basis.repr_self]
   split_ifs with H
   · obtain ⟨i, rfl⟩ := id H
     rw [Finsupp.sum_eq_single i]
@@ -376,8 +376,7 @@ theorem basis_prod (α : Type*) (f : α → (ι →₀ ℕ)) (s : Finset α) :
     · apply Finset.prod_congr rfl
       intro i hi
       simp only [mem_sdiff, Finsupp.mem_support_iff, Finsupp.coe_finset_sum, sum_apply, ne_eq,
-        sum_eq_zero_iff, mem_insert, forall_eq_or_imp, not_and, not_forall, Classical.not_imp,
-        not_exists, Decidable.not_not] at hi
+        sum_eq_zero_iff, mem_insert, forall_eq_or_imp, not_and, not_forall, not_exists, Decidable.not_not] at hi
       rw [Nat.multinomial_insert has]
       simp only [Finset.sum_insert has, Finsupp.coe_add, Finsupp.coe_finset_sum, Pi.add_apply,
         sum_apply]
@@ -424,7 +423,7 @@ theorem basis_repr_mul [DecidableEq ι] (x y : DividedPowerAlgebra R M) (d : ι 
     rw [Finsupp.single_eq_of_ne]
     simpa only [mem_antidiagonal] using ha'
   · intro a ha' ha
-    simp only [mem_product, Finsupp.not_mem_support_iff, not_and_or] at ha
+    simp only [mem_product, Finsupp.notMem_support_iff, not_and_or] at ha
     rcases ha with ha | ha <;> simp [ha]
   · intro a ha ha'
     simp [mem_antidiagonal] at ha'
@@ -469,9 +468,8 @@ lemma mem_augIdeal_iff_of_repr [DecidableEq R] {x : DividedPowerAlgebra R M} :
     exact Submodule.smul_of_tower_mem (augIdeal R M) _ (basis_mem_augIdeal b hc.1)
   nth_rewrite 1 [H]
   rw [Submodule.add_mem_iff_right _ hx']
-  simp only [basis_zero_eq_one, Finsupp.mem_support_iff, ne_eq, gt_iff_lt,
-    mem_augIdeal_iff, map_smul, map_one]
-  simp [smul_eq_mul, mul_one]
+  simp only [basis_zero_eq_one, mem_augIdeal_iff, map_smul, map_one]
+  simp [smul_eq_mul]
 
 theorem ne_zero_of_mem_support_of_mem_augIdeal [DecidableEq R]
     {x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) {d : ι →₀ ℕ}
@@ -564,8 +562,8 @@ noncomputable def cK [DecidableEq ι] {n : ℕ} (k : Sym (ι →₀ ℕ) n) (s :
 theorem cK_eq_of_subset [DecidableEq ι] {n : ℕ} {k : Sym (ι →₀ ℕ) n}
     {s t : Finset (ι →₀ ℕ)} (hst : s ⊆ t) (hk : k ∈ s.sym n) : cK k s = cK k t := by
   have H0 (d) (hd : d ∉ s) : Multiset.count d ↑k = 0 := by
-    simp only [Finsupp.mem_support_iff, ne_eq, Decidable.not_not] at hd
-    simp only [mem_sym_iff, Finsupp.mem_support_iff, ne_eq] at hk
+    -- simp only [Finsupp.mem_support_iff, ne_eq, Decidable.not_not] at hd
+    simp only [mem_sym_iff] at hk
     simp only [Multiset.count_eq_zero, Sym.mem_coe]
     exact fun a ↦ hd (hk d a)
   unfold cK
@@ -669,8 +667,7 @@ theorem cK_map_single_eq_one {s : Finset ι} {k : Sym ι n} (hk : k  ∈ s.sym n
       ⟨fun i ↦ Finsupp.single i 1, Finsupp.single_left_injective Nat.one_ne_zero⟩
     cK (Sym.map g k) (s.map g) = 1 := by
   intro g
-  simp only [cK, Sym.val_eq_coe, Sym.coe_map, Finsupp.coe_smul, Pi.smul_apply,
-    smul_eq_mul, Nat.cast_mul, Nat.cast_finsuppProd, Nat.cast_prod, Nat.cast_pow]
+  simp only [cK, Sym.val_eq_coe, Sym.coe_map, Finsupp.coe_smul, Pi.smul_apply, smul_eq_mul]
   convert mul_one _
   · apply Finset.prod_eq_one
     intro d hd
@@ -696,14 +693,13 @@ theorem cK_map_single_eq_one {s : Finset ι} {k : Sym ι n} (hk : k  ∈ s.sym n
     intro i hi
     rw [← Nat.mul_right_inj, mul_one]
     convert Nat.multinomial_spec _ _
-    · simp only [Multiset.toFinsupp_support, Multiset.mem_toFinset, Sym.mem_coe, g] at hi
-      simp only [prod_map, Function.Embedding.coeFn_mk, sum_map]
-      simp only [Multiset.count_map_eq_count' _ _ g.injective]
+    · simp only [g] at hi
+      simp only [prod_map, sum_map, Multiset.count_map_eq_count' _ _ g.injective]
       have H (j) (hj : j ≠ i) : Multiset.count j k * (g j) i = 0 := by
         simp [g, Finsupp.single_eq_of_ne hj]
       have H' (hi : i ∉ s) : Multiset.count i k * (g i) i = 0 := by
         convert zero_mul _
-        simp only [Multiset.count_eq_zero, Sym.mem_coe, g]
+        simp only [Multiset.count_eq_zero, Sym.mem_coe]
         rw [mem_sym_iff] at hk
         exact fun a ↦ hi (hk i a)
       rw [Finset.prod_eq_single i _ _ , Finset.sum_eq_single i]
@@ -745,8 +741,7 @@ theorem cK_map_single_eq_one {s : Finset ι} {k : Sym ι n} (hk : k  ∈ s.sym n
   intro k hk
   simp only [Function.Embedding.coeFn_mk, Sym.coe_map, Sym.val_eq_coe, gg, hst]
   rw [cK_map_single_eq_one hk, one_smul]
-  simp only [prod_map, gg]
-  simp only [Multiset.count_map_eq_count' _ _ g.injective]
+  simp only [prod_map, Multiset.count_map_eq_count' _ _ g.injective]
   have (x) (_ : x ∈ s) :
     ((basis R M b).repr ((DividedPowerAlgebra.ι R M) m)) (g x) ^ Multiset.count x k =
     (b.repr m) x ^ Multiset.count x ↑k := by
@@ -758,7 +753,6 @@ theorem cK_map_single_eq_one {s : Finset ι} {k : Sym ι n} (hk : k  ∈ s.sym n
     · intro i hi hix
       convert mul_zero _
       rw [Finsupp.single_eq_of_ne]
-      simp only [Function.Embedding.coeFn_mk, g, gg]
       exact g.injective.ne_iff.mpr hix
     · simp
   rw [Finset.prod_congr rfl this]
@@ -780,14 +774,14 @@ theorem cK_map_single_eq_one {s : Finset ι} {k : Sym ι n} (hk : k  ∈ s.sym n
   simp [basis_eq, Finsupp.prod]
   have : (k : Multiset ι).toFinset ⊆ s := by
     intro i hi
-    simp only [Multiset.mem_toFinset, Sym.mem_coe, g] at hi
+    simp only [Multiset.mem_toFinset, Sym.mem_coe] at hi
     rw [mem_sym_iff] at hk
     exact hk i hi
   rw [← Finset.prod_sdiff this, eq_comm]
   convert one_mul _
   rw [Finset.prod_eq_one]
   intro i hi
-  simp only [mem_sdiff, Multiset.mem_toFinset, Sym.mem_coe, g] at hi
+  simp only [mem_sdiff, Multiset.mem_toFinset, Sym.mem_coe] at hi
   rw [← Sym.mem_coe, ← Multiset.count_eq_zero] at hi
   rw [hi.2, dp_zero]
 
@@ -796,7 +790,6 @@ omit [DecidableEq R] in
 lemma repr_dp_one (m : M) : (basis R M b).repr (dp R 1 m) =
     ∑ x ∈ (b.repr m).support, (((b.repr m) x) • (basis R M b).repr
           ((basis R M b) (Multiset.toFinsupp (Sym.oneEquiv x)))) := by
-  classical
   have hm : m = ((b.repr m).sum fun i c ↦ c • b i) := by
       have := (Basis.linearCombination_repr b m).symm
       simpa only [Finsupp.linearCombination, Finsupp.lsum] using this
@@ -804,9 +797,12 @@ lemma repr_dp_one (m : M) : (basis R M b).repr (dp R 1 m) =
   conv_lhs =>
     rw [hm, dp_sum]
     simp only [sym_succ, Nat.succ_eq_add_one, Nat.reduceAdd, sym_zero, image_singleton,
-      sup_singleton'', Finsupp.mem_support_iff, ne_eq, Sym.cons_inj_left, imp_self, implies_true,
+      sup_singleton_apply, Finsupp.mem_support_iff, ne_eq, Sym.cons_inj_left, imp_self, implies_true,
       sum_image, map_sum]
     simp only [dp_smul, Finset.prod_smul', map_smul]
+  simp only [Sym.cons_inj_left, implies_true, Set.injOn_of_eq_iff_eq, sum_image, Sym.oneEquiv_apply,
+    Sym.coe_mk, Multiset.toFinsupp_singleton, Basis.repr_self, Finsupp.smul_single, smul_eq_mul,
+    mul_one]
   have hx' (x : ι) : x ::ₛ (∅ : Sym ι 0) = Sym.oneEquiv x := rfl
   calc
     ∑ x ∈ (b.repr m).support,
@@ -819,7 +815,7 @@ lemma repr_dp_one (m : M) : (basis R M b).repr (dp R 1 m) =
       intro x hx
       rw [basis_eq']
       simp only [Nat.succ_eq_add_one, Nat.reduceAdd, sym_succ, sym_zero, image_singleton,
-        sup_singleton'', hx' x, Sym.oneEquiv_apply, mem_image, Finsupp.mem_support_iff, ne_eq]
+        sup_singleton_apply, hx' x, Sym.oneEquiv_apply, mem_image, Finsupp.mem_support_iff, ne_eq]
       simp only [Finsupp.mem_support_iff, ne_eq] at hx
       use x, hx
       simp only [hx' x, Sym.oneEquiv_apply]
@@ -835,7 +831,10 @@ lemma repr_dp_one (m : M) : (basis R M b).repr (dp R 1 m) =
       apply Finset.prod_eq_single_of_mem _ hx
       intro y hy hyx
       have hyx' : Multiset.count y {x} = 0 := by rw [Multiset.count_singleton, if_neg hyx]
-      simp [hyx']
+      rw [hyx', pow_zero]
+    _ = _ := by
+      simp
+
 
 theorem dpow_null {n : ℕ} {x : DividedPowerAlgebra R M} (hx : x ∉ augIdeal R M) :
     dpow b n x = 0 := by
@@ -852,7 +851,7 @@ theorem cK_zero {k : Sym (ι →₀ ℕ) 0} {s : Finset (ι →₀ ℕ)} :
 theorem dpow_zero {x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) :
     dpow b 0 x = 1 := by
   have : ↑(∅ : Sym (ι →₀ ℕ) 0) = 0 := rfl
-  simp [dpow, if_pos hx, this, Nat.uniformBell_zero_left, basis_eq, cK_zero]
+  simp [dpow, if_pos hx, this, basis_eq, cK_zero]
 
 theorem _root_.Nat.multinomial_single {α : Type*} [DecidableEq α]
     (s : Finset α) (a : α) (n : ℕ) :
@@ -889,11 +888,11 @@ theorem cK_one {s : Finset (ι →₀ ℕ)} {k : Sym (ι →₀ ℕ) 1} :
         ext a
         split_ifs with h <;> simp [Pi.single_apply, h]
       simp [Multiset.nodup_singleton, Multiset.count_singleton, ← this, Nat.multinomial_single]
-    · simp [kval, Nat.uniformBell_one_left]
+    · simp [Nat.uniformBell_one_left]
   · intro c hc hcd
-    simp [Multiset.count_singleton, if_neg hcd, Nat.uniformBell_zero_left, kval]
+    simp [Multiset.count_singleton, if_neg hcd, Nat.uniformBell_zero_left]
   · intros
-    simp [Multiset.count_singleton, Nat.uniformBell_one_left]
+    simp [Nat.uniformBell_one_left]
 
 theorem dpow_one {x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) :
     dpow b 1 x = x := by
@@ -901,11 +900,11 @@ theorem dpow_one {x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) :
   have : ↑(∅ : Sym (ι →₀ ℕ) 0) = 0 := rfl
   simp only [dpow, if_pos hx]
   conv_rhs => rw [eq_of_basis b x]
-  simp only [sym_succ, Nat.succ_eq_add_one, Nat.reduceAdd, sym_zero, this, image_singleton,
-    sup_singleton'', Sym.val_eq_coe, nsmul_eq_mul, Algebra.mul_smul_comm, Finsupp.mem_support_iff,
-    ne_eq, Sym.cons_inj_left, imp_self, implies_true, sum_image, Sym.coe_cons, Sym.toMultiset_zero,
-    Multiset.cons_zero, Multiset.nodup_singleton, Multiset.count_singleton, pow_ite, pow_one,
-    pow_zero, prod_ite_eq', ite_not, Multiset.sum_singleton, ite_smul, one_smul]
+  simp only [sym_succ, Nat.succ_eq_add_one, sym_zero, this, image_singleton, sup_singleton_apply,
+    Sym.val_eq_coe, nsmul_eq_mul, Algebra.mul_smul_comm, Sym.cons_inj_left, implies_true,
+    Set.injOn_of_eq_iff_eq, sum_image, Sym.coe_cons, Sym.toMultiset_zero, Multiset.cons_zero,
+    Multiset.count_singleton, pow_ite, pow_one, pow_zero, prod_ite_eq', Finsupp.mem_support_iff,
+    ne_eq, ite_not, Multiset.sum_singleton, ite_smul]
   apply Finset.sum_congr rfl
   intro d hd
   simp only [cK_one, Nat.cast_one, one_mul, ite_eq_right_iff]
@@ -1075,7 +1074,7 @@ noncomputable local instance : Algebra ℚ (S R) := RingHom.toAlgebra
 variable (ι R) in
 abbrev N := ι →₀ (S R)
 
-abbrev c : Basis ι (S R) (N R ι) := Finsupp.basisSingleOne
+noncomputable abbrev c : Basis ι (S R) (N R ι) := Finsupp.basisSingleOne
 
 noncomputable abbrev f : M →ₗ[R] (N R ι) := Basis.constr b (S R) c
 
@@ -1117,7 +1116,7 @@ theorem augIdeal_map_lift_eq [DecidableEq (S R)] :
     apply Ideal.mul_mem_left
     rw [compare_basis b c (f b) (by exact hf b)]
     apply Ideal.mem_map_of_mem
-    simp only [mem_augIdeal_iff_of_repr b, Basis.repr_self, S, N]
+    simp only [mem_augIdeal_iff_of_repr b, Basis.repr_self]
     rw [Finsupp.single_eq_of_ne]
     intro hd'
     apply hd
@@ -1236,10 +1235,10 @@ private lemma id_eq_lift_toN (x : DividedPowerAlgebra R M) :
   intro d
   simp only [toN, Finsupp.linearCombination, Finsupp.coe_lsum, LinearMap.coe_smulRight,
     LinearMap.id_coe, id_eq, map_finsuppSum, map_smul, Finsupp.sum_apply]
-  simp only [lift_f, algebra_compatible_smul R, Algebra.id.map_eq_id, RingHomCompTriple.comp_apply,
-    map_smul, Basis.repr_self, Finsupp.coe_smul, Pi.smul_apply, smul_eq_mul]
+  simp only [lift_f, algebra_compatible_smul R, Algebra.algebraMap_self, RingHomCompTriple.comp_apply,
+    map_smul, Basis.repr_self, Finsupp.coe_smul, Pi.smul_apply]
   rw [Finsupp.sum_eq_single d]
-  · simp only [Finsupp.mapRange_apply, Finsupp.single_eq_same, mul_one, φ, f]
+  · simp only [Finsupp.mapRange_apply, Finsupp.single_eq_same,φ]
     split_ifs with hd
     · simp [hd]
     · simp [RingHom.algebraMap_toAlgebra]
@@ -1350,8 +1349,7 @@ theorem LinearMap.ker_lift_of_surjective (hf : Function.Surjective f) :
     rw [span_le]
     rintro _ ⟨⟨n, ⟨q, hq⟩⟩, rfl⟩
     simp only [LinearMap.mem_ker] at hq
-    simp only [SetLike.mem_coe, RingHom.mem_ker, LinearMap.lift_apply_dp, hq, dp_null]
-    simp [if_neg]
+    simp [SetLike.mem_coe, RingHom.mem_ker, LinearMap.lift_apply_dp, hq, dp_null]
 
 theorem isSubDPIdeal_of_free
     [DecidableEq R]

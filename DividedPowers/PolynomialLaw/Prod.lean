@@ -1,4 +1,5 @@
 import DividedPowers.PolynomialLaw.Basic2
+import DividedPowers.PolynomialLaw.Homogeneous
 import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Prod
 
 noncomputable section
@@ -82,6 +83,8 @@ lemma sum_fst_snd_toFun'_apply {S : Type u} [CommSemiring S] [Algebra R S]
     TensorProduct.AlgebraTensorModule.lift_apply, LinearMap.restrictScalars_comp]
   congr 1
 
+#check LinearMap.toPolynomialLaw
+
 def inl : M →ₚₗ[R] M × M' where
   toFun' S _ _ := (TensorProduct.map (LinearMap.id (M := S)) (LinearMap.inl R M M'))
   isCompat' φ := by
@@ -89,6 +92,7 @@ def inl : M →ₚₗ[R] M × M' where
     simp only [Function.comp_apply, LinearMap.rTensor_def, ← LinearMap.comp_apply,
       ← TensorProduct.map_comp, LinearMap.comp_id, LinearMap.id_comp]
 
+#check LinearMap.toPolynomialLaw
 lemma inl_apply (m : M) : inl R M M' m = (m, 0) := by simp [inl, ground_apply]
 
 lemma inl_toFun'_apply {S : Type u} [CommSemiring S] [Algebra R S] {m : TensorProduct R S M} :

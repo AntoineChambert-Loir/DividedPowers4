@@ -339,6 +339,8 @@ open MvPolynomial
 
 open Finsupp LinearMap
 
+-- change names?
+
 theorem ofLinearMap_coeff_single (u : M →ₗ[R] N) (ι : Type*) [DecidableEq ι] [Fintype ι]
     (m : ι → M) (i : ι) : coeff m u.toPolynomialLaw (single i 1) = u (m i) := by
   rw [coeff, generize', coe_comp, LinearEquiv.coe_coe, LinearMap.coe_mk, AddHom.coe_mk,

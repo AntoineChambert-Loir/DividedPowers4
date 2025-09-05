@@ -428,6 +428,7 @@ theorem bar' [DecidableEq N] (f : M →ₚₗ[R] N) (m m' : M) :
   intro hz
   sorry
 
+--    maybe write : f (m + m') = finsum (fun n ↦ f.dividedDifferential n (m, m'))
 lemma map_add_eq_sum_differential_apply (m m' : M) :
     f (m + m') = lfsum (fun n ↦ f.dividedDifferential n) (m, m') := by
   classical
@@ -513,6 +514,10 @@ lemma dividedPartialDerivative_isHomogeneousOfDegree_of_le [Nontrivial R]
     have h0 : (inl R M M).toFun S 0 = 0 := by
       rw [inl_toFun_apply, map_zero]
     simp only [smul_zero, h0, inr_toFun_apply, inrRight_tmul, zero_add]
+    /- (ACL) this is probably wrong. My guess is that the LHS
+    is 0 is p ≠ n, and is t if x if p = n.
+
+    LH(ACL)my guess -/
     have h : ((biComponent (p - n, n)) (polarizedProd f)).toFun S (1 ⊗ₜ[R] (0, x)) = 0 := by
       rw [toFun_tmul_snd_eq_biCoeff_sum (0, x)]
       simp only [Finsupp.sum, one_pow, mul_one]
@@ -524,6 +529,8 @@ lemma dividedPartialDerivative_isHomogeneousOfDegree_of_le [Nontrivial R]
         biCoeff_apply, biGenerize', Fin.isValue, Prod.mk_zero_zero, tmul_zero, zero_add,
         LinearMap.coe_comp, LinearEquiv.coe_coe, Function.comp_apply, ne_eq] at hk
       simp only [Fin.isValue, scalarRTensor_apply, EmbeddingLike.map_eq_zero_iff, ne_eq] at hk
+      convert tmul_zero N (1 : S)
+
       sorry
     simp only [h, smul_zero]
     /- rw [toFun_tmul_snd_eq_biCoeff_sum (0, x)]
