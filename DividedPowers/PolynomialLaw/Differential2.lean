@@ -52,6 +52,68 @@ lemma map_lTensor (f : M →ₗ[R] P) (g : N →ₗ[R] Q) (g' : S →ₗ[R] N) (
 
 end LinearMap
 
+namespace TensorProduct
+
+variable (R S T M₁ M₁' M₂ M₃ : Type*)
+    [CommSemiring R] [Semiring S] [Semiring T]
+    [AddCommMonoid M₁] [AddCommMonoid M₁'] [AddCommMonoid M₂] [AddCommMonoid M₃]
+    [Algebra R S] [Algebra R T]
+    [Module R M₁] [Module R M₁']
+    [Module S M₁] [Module T M₁']
+    [IsScalarTower R S M₁]
+    [IsScalarTower R T M₁']
+    [Module R M₂] [Module R M₃]
+--   M₁ ⊗[R] (M₂ × M₃) ≃ₗ[S] M₁ ⊗[R] M₂ × M₁ ⊗[R] M₃
+
+theorem prodRight_rTensor₁ (φ : M₁ →ₗ[R] M₁') (t : M₁ ⊗[R] (M₂ × M₃)) :
+    ((prodRight R T M₁' M₂ M₃)
+      ((LinearMap.rTensor (M₂ × M₃) φ) t)).1 =
+    (LinearMap.rTensor M₂ φ)
+      ((prodRight R S M₁ M₂ M₃) t).1 := by
+  induction t using TensorProduct.induction_on with
+  | zero => simp
+  | tmul t m => simp
+  | add x y hx hy => simp [map_add, ← hx, ← hy]
+
+theorem prodRight_rTensor₂ (φ : M₁ →ₗ[R] M₁') (t : M₁ ⊗[R] (M₂ × M₃)) :
+    ((prodRight R T M₁' M₂ M₃)
+      ((LinearMap.rTensor (M₂ × M₃) φ) t)).2 =
+    (LinearMap.rTensor M₃ φ)
+      ((prodRight R S M₁ M₂ M₃) t).2 := by
+  induction t using TensorProduct.induction_on with
+  | zero => simp
+  | tmul t m => simp
+  | add x y hx hy => simp [map_add, ← hx, ← hy]
+
+theorem prodRight_symm_rTensor (φ : M₁ →ₗ[R] M₁') (m₂ : M₁ ⊗[R] M₂) (m₃ : M₁ ⊗[R] M₃) :
+    ((prodRight R T M₁' M₂ M₃).symm
+      ((LinearMap.rTensor M₂ φ) m₂, (LinearMap.rTensor M₃ φ) m₃)) =
+        LinearMap.rTensor (M₂ × M₃) φ
+          ((prodRight R S M₁ M₂ M₃).symm (m₂, m₃)) := by
+  rw [LinearEquiv.symm_apply_eq]
+  ext
+  · simp [prodRight_rTensor₁ R S T]
+  · simp [prodRight_rTensor₂ R S T]
+
+end TensorProduct
+
+namespace Polynomial
+
+variable {R S T : Type*} [CommSemiring R] [Semiring S] [Semiring T]
+  [Algebra R T] [Algebra R S] (φ : T →ₐ[R] S)
+
+theorem monomial_comp_algHom (k : ℕ) :
+    (monomial k).restrictScalars R ∘ₗ φ.toLinearMap
+      = (Polynomial.mapAlgHom φ).toLinearMap ∘ₗ ((monomial k).restrictScalars R):= by
+  ext; simp
+
+theorem lcoeff_comp_mapAlgHom (k : ℕ) :
+    ((lcoeff S k).restrictScalars R) ∘ₗ (mapAlgHom φ).toLinearMap
+      = φ.toLinearMap ∘ₗ ((lcoeff T k).restrictScalars R) := by
+  ext; simp
+
+end Polynomial
+
 namespace PolynomialLaw
 
 variable {R : Type u} [CommSemiring R]
@@ -160,8 +222,24 @@ lemma dividedDifferential_eq_coeff (k : ℕ) (f : M →ₚₗ[R] N)
     (m₁ m₁' : (MvPolynomial (Fin n) R) ⊗[R] M),
     m = φ.toLinearMap.rTensor M m₁ ∧ m' = φ.toLinearMap.rTensor M m₁' by
     obtain ⟨n, φ, m₁, m₁', h₁, h₁'⟩ := this
-    sorry
-  sorry
+    simp [h₁, h₁']
+    simp only [← LinearMap.rTensor_comp_apply]
+    simp only [monomial_comp_algHom]
+    simp only [LinearMap.rTensor_comp_apply]
+    rw [← map_add, ← f.isCompat_apply, ← LinearMap.rTensor_comp_apply]
+    rw [prodRight_symm_rTensor R (MvPolynomial (Fin n) R) S]
+    rw [← PolynomialLaw.isCompat_apply]
+    simp only [toFun_eq_toFun', dividedDifferential_eq_coeff', ← rTensor_comp_apply]
+    simp [lcoeff_comp_mapAlgHom]
+  set mm' := (prodRight R S S M M).symm (m, m') with hmm'
+  have hm : m = (prodRight R S S M M mm').1 := by simp [hmm']
+  have hm' : m' = (prodRight R S S M M mm').2 := by simp [hmm']
+  obtain ⟨n, φ, t, ht⟩ := exists_lift mm'
+  have := (prodRight R (MvPolynomial (Fin n) R) _ M M t).1
+  use n, φ, (prodRight R (MvPolynomial (Fin n) R) _ _ _ t).1, (prodRight R (MvPolynomial (Fin n) R) _ _ _ t).2
+  simp [hm, hm', ← ht,
+    prodRight_rTensor₁ R (MvPolynomial (Fin n) R) S,
+    prodRight_rTensor₂ R (MvPolynomial (Fin n) R) S]
 
 /-- The nth divided partial derivative of `f` at `x`. -/
 noncomputable def dividedPartialDerivative (k : ℕ) (x : M) :
