@@ -73,7 +73,7 @@ lemma mk_C (a : R) : mk (C a) = algebraMap R (DividedPowerAlgebra R M) a := by
 
 variable (R)
 
-/-- `dp R n m` is the equivalence class of `X (⟨n, m⟩)` in `divided_power_algebra R M`. -/
+/-- `dp R n m` is the equivalence class of `X (⟨n, m⟩)` in `DividedPowerAlgebra R M`. -/
 def dp (n : ℕ) (m : M) : DividedPowerAlgebra R M := mkAlgHom R (Rel R M) (X ⟨n, m⟩)
 
 theorem dp_def (n : ℕ) (m : M) :
@@ -242,14 +242,11 @@ def lift : DividedPowerAlgebra R M →ₐ[R] A :=
   lift' (f := fun nm => hI.dpow nm.1 (φ nm.2))
     (fun m => hI.dpow_zero (hφ m))
     (fun n r m => by
-      dsimp
+      dsimp only
       rw [LinearMap.map_smulₛₗ, RingHom.id_apply, ← algebraMap_smul A r (φ m), smul_eq_mul,
         hI.dpow_mul (hφ m), ← smul_eq_mul, ← map_pow, algebraMap_smul])
-    (fun n p m => by
-      rw [hI.mul_dpow (hφ m), ← nsmul_eq_mul])
-    (fun n u v => by
-      dsimp
-      rw [map_add, hI.dpow_add (hφ u) (hφ v)])
+    (fun n p m => by rw [hI.mul_dpow (hφ m), ← nsmul_eq_mul])
+    (fun n u v => by simp [hI.dpow_add (hφ u) (hφ v)])
 
 variable {φ}
 

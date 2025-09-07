@@ -294,7 +294,7 @@ theorem eq_of_repr (x : DividedPowerAlgebra R M) :
   simpa only [Finsupp.linearCombination, Finsupp.lsum] using
     (Basis.linearCombination_repr (basis R M b) x).symm
 
-/- When `M` is free with basis `b` (it would suffice that `b` generates `M`,
+/- When `M` is free with basis `B` (it would suffice that `B` generates `M`,
 then any `x : DividedPowerAlgebra R M` can be written as
  `x = (B.repr x).sum fun d c ↦ c • B d)` :
  `x = ∑ d ∈ (B.repr x).support, B.repr x d • B d`
@@ -315,7 +315,7 @@ dpow m (∏ j ∈ i.support, dp R (i j) (b j))
  =  .. `
 
  dpow m (∏ i ∈ s, r i) =
- * s = ∅ : dpow m 1 = 1 si m = 0, sinon = 0 si 1 ∉ I
+ * s = ∅ : dpow m 1 = 1 if m = 0, else = 0 if 1 ∉ I
  * s ≠ ∅ : s = insert j t
     dpow m (r j * ∏ i ∈ t, r i) = dpow m (r j) * ∏ i ∈ t, r i ^ m
     r i ^ m = m! * dpow m (r i)
@@ -360,7 +360,7 @@ Multiset.count d ↑k • d : ι →₀ ℕ
 -- TODO: golf and speed up
 lemma repr_dp_one [DecidableEq ι] (m : M) : (basis R M b).repr (dp R 1 m) =
     ∑ x ∈ (b.repr m).support, (((b.repr m) x) • (basis R M b).repr
-          ((basis R M b) (Multiset.toFinsupp (Sym.oneEquiv x)))) := by
+      ((basis R M b) (Multiset.toFinsupp (Sym.oneEquiv x)))) := by
   have hm : m = ((b.repr m).sum fun i c ↦ c • b i) := by
       have := (Basis.linearCombination_repr b m).symm
       simpa only [Finsupp.linearCombination, Finsupp.lsum] using this
@@ -637,7 +637,7 @@ theorem dpow_eq_of_support_subset {x : DividedPowerAlgebra R M} (hx : x ∈ augI
     · simp
   rw [Finset.prod_congr rfl this]
   clear this
-  have hk':  (Multiset.map g k).sum = Multiset.toFinsupp (k : Multiset ι) := by
+  have hk' :  (Multiset.map g k).sum = Multiset.toFinsupp (k : Multiset ι) := by
     symm
     rw [Multiset.toFinsupp_eq_iff]
     ext i
@@ -673,23 +673,6 @@ theorem dpow_zero {x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) :
     dpow b 0 x = 1 := by
   have : ↑(∅ : Sym (ι →₀ ℕ) 0) = 0 := rfl
   simp [dpow, if_pos hx, this, basis_eq, cK_zero]
-
-theorem dpow_one {x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) :
-    dpow b 1 x = x := by
-  have : ↑(∅ : Sym (ι →₀ ℕ) 0) = 0 := rfl
-  simp only [dpow, if_pos hx]
-  conv_rhs => rw [eq_of_basis b x]
-  simp only [sym_succ, Nat.succ_eq_add_one, sym_zero, this, image_singleton, sup_singleton_apply,
-    Sym.val_eq_coe, nsmul_eq_mul, Algebra.mul_smul_comm, Sym.cons_inj_left, implies_true,
-    Set.injOn_of_eq_iff_eq, sum_image, Sym.coe_cons, Sym.toMultiset_zero, Multiset.cons_zero,
-    Multiset.count_singleton, pow_ite, pow_one, pow_zero, prod_ite_eq', Finsupp.mem_support_iff,
-    ne_eq, ite_not, Multiset.sum_singleton, ite_smul]
-  apply Finset.sum_congr rfl
-  intro d hd
-  simp only [cK_one, Nat.cast_one, one_mul, ite_eq_right_iff]
-  intro h
-  simp only [Finsupp.mem_support_iff] at hd
-  exact (hd h).elim
 
 theorem dpow_eval_zero {n : ℕ} (hn : n ≠ 0) : dpow b n 0 = 0 := by
   simp [dpow, (Finset.sym_eq_empty (s := ∅) (n := n)).mpr, hn]
@@ -953,12 +936,12 @@ private def toN (x : DividedPowerAlgebra R M) :
 
 lemma toN_repr (x : DividedPowerAlgebra R M) (d : ι →₀ ℕ) :
       ((basis (MvPolynomial R ℤ) (ι →₀ MvPolynomial R ℤ) Finsupp.basisSingleOne).repr
-        (toN b x) d) =  φ ((basis R M b).repr x d) := by
+        (toN b x) d) = φ ((basis R M b).repr x d) := by
     simp only [toN]
     simp [Finsupp.linearCombination, Finsupp.lsum, map_finsuppSum]
 
 lemma toNx {x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) :
-    toN b x ∈ augIdeal  (MvPolynomial R ℤ) (ι →₀ MvPolynomial R ℤ) := by
+    toN b x ∈ augIdeal (MvPolynomial R ℤ) (ι →₀ MvPolynomial R ℤ) := by
   rw [mem_augIdeal_iff_of_repr Finsupp.basisSingleOne]
   rw [mem_augIdeal_iff_of_repr b] at hx
   simp [toN_repr, hx, φ]
@@ -1031,13 +1014,18 @@ theorem mul_dpow (hx : x ∈ augIdeal R M) :
 
 theorem dpow_comp (hn : n ≠ 0) (hx : x ∈ augIdeal R M) :
     dpow b m (dpow b n x) = ↑(m.uniformBell n) * dpow b (m * n) x := by
-  classical
   let c : Basis ι (MvPolynomial R ℤ) (ι →₀ _) := Finsupp.basisSingleOne
   rw [id_eq_lift_toN b x, ← lift_dpow (f_apply b) (toNx b hx),
     ← lift_dpow (f_apply b) (dpow_mem _ hn ((toNx b hx))),
     ← dpow_eq _ (CharZero.dpow_ι_eq_dp c) c, ← dpow_eq _ (CharZero.dpow_ι_eq_dp c) c,
     DividedPowers.dpow_comp _ hn (toNx b hx), map_mul, map_natCast,
     dpow_eq _ (CharZero.dpow_ι_eq_dp c) c, lift_dpow (f_apply b) (toNx b hx)]
+
+theorem dpow_one {x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) :
+    dpow b 1 x = x := by
+  let c : Basis ι (MvPolynomial R ℤ) (ι →₀ _) := Finsupp.basisSingleOne
+  rw [id_eq_lift_toN b x, ← lift_dpow (f_apply b) (toNx b hx),
+    ← dpow_eq _ (CharZero.dpow_ι_eq_dp c) c, DividedPowers.dpow_one _ (toNx b hx)]
 
 def dividedPowers : DividedPowers (augIdeal R M) where
   dpow := dpow b
@@ -1209,4 +1197,4 @@ end Unused
 
 end DividedPowerAlgebra
 
---#lint
+#min_imports

@@ -122,7 +122,7 @@ theorem deg_one_left_inv :
   exact ι_mem_grade_one _ _
 
 /-- The linear equivalence `(proj' R M 1).comp (ι R M) : M → grade R M 1`. -/
-def linearEquivDegreeOne : LinearEquiv (RingHom.id R) M (grade R M 1) where
+def linearEquivDegreeOne : M ≃ₗ[R] (grade R M 1) where
   toFun         := (proj' R M 1).comp (ι R M)
   invFun x      := TrivSqZeroExt.sndHom R M (toTrivSqZeroExt R M x.1)
   map_add' x y  := by simp only [map_add]
