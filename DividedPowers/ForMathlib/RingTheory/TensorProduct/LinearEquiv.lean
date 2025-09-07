@@ -21,17 +21,17 @@ variable {R : Type u} {M : Type v} {N : Type w} [CommSemiring R] [AddCommMonoid 
 
 variable {S : Type*} [CommSemiring S] [Algebra R S]
 
-section Module
-
-open TensorProduct LinearMap
+open LinearMap
 
 variable [AddCommMonoid N] [Module R N]
 
 variable [Module S M] [IsScalarTower R S M] [Module S N] [IsScalarTower R S N]
     {P : Type*} [AddCommMonoid P] [Module R P] {Q : Type*} [AddCommMonoid Q] [Module R Q]
 
+namespace TensorProduct
+
 /--  If `e` is `S`-linear, then `TensorProduct.map e f` is `S`-linear -/
-noncomputable def TensorProduct.map' (e : M →ₗ[S] N) (f : P →ₗ[R] Q) :
+noncomputable def map' (e : M →ₗ[S] N) (f : P →ₗ[R] Q) :
     M ⊗[R] P →ₗ[S] N ⊗[R] Q where
   toFun := map (e.restrictScalars R) f
   map_add' := map_add _
@@ -43,36 +43,54 @@ noncomputable def TensorProduct.map' (e : M →ₗ[S] N) (f : P →ₗ[R] Q) :
       simp [hx, hy]
     | tmul m p => simp [map_tmul, coe_restrictScalars, map_smul, smul_tmul']
 
-theorem TensorProduct.map'_restrictScalars (e : M →ₗ[S] N) (f : P →ₗ[R] Q) :
+@[simp]
+theorem map'_restrictScalars (e : M →ₗ[S] N) (f : P →ₗ[R] Q) :
     (map' e f).restrictScalars R = map (e.restrictScalars R) f := rfl
 
-theorem TensorProduct.map'_coe (e : M →ₗ[S] N) (f : P →ₗ[R] Q) :
+@[simp]
+theorem map'_coe (e : M →ₗ[S] N) (f : P →ₗ[R] Q) :
     ⇑(map' e f) = ⇑(map (e.restrictScalars R) f) := rfl
+
+@[simp]
+theorem map'_tmul (e : M →ₗ[S] N) (f : P →ₗ[R] Q) (m : M) (p : P) :
+      map' e f (m ⊗ₜ p) = (e m) ⊗ₜ (f p) := rfl
 
 /--  If `e` is a `S`-linear equivalence and `f` is an `R`-linear equivalence,
   then `TensorProduct.congr' e f` is a `S`-linear equivalence -/
-noncomputable def TensorProduct.congr'
+noncomputable def congr'
     (e : M ≃ₗ[S] N) (f : P ≃ₗ[R] Q) : M ⊗[R] P ≃ₗ[S] N ⊗[R] Q :=
-  LinearEquiv.ofLinear (map' e f) (map' e.symm.toLinearMap f.symm)
-    (by ext n q; simp [Function.comp_apply, map'_coe])
-    (by ext m p; simp [Function.comp_apply, map'_coe])
+  LinearEquiv.ofLinear (map' e f) (map' e.symm.toLinearMap f.symm) (by ext; simp) (by ext; simp)
 
-theorem TensorProduct.congr'_restrictScalars (e : M ≃ₗ[S] N) (f : P ≃ₗ[R] Q) :
+@[simp]
+theorem congr'_restrictScalars (e : M ≃ₗ[S] N) (f : P ≃ₗ[R] Q) :
     (congr' e f).restrictScalars R = (congr (e.restrictScalars R) f) := rfl
 
-theorem TensorProduct.congr'_coe (e : M ≃ₗ[S] N) (f : P ≃ₗ[R] Q) :
+@[simp]
+theorem congr'_coe (e : M ≃ₗ[S] N) (f : P ≃ₗ[R] Q) :
     ⇑(congr' e f) = ⇑(congr (e.restrictScalars R) f) := by rfl
+
+end TensorProduct
 
 variable (P) (e : M ≃ₗ[S] N)
 
+namespace LinearEquiv
+
+open TensorProduct
+
 /-- Tensor a linear equivalence to the right or to the left gives a linear equivalence-/
-noncomputable def LinearEquiv.rTensor' : M ⊗[R] P ≃ₗ[S] N ⊗[R] P :=
+noncomputable def rTensor' : M ⊗[R] P ≃ₗ[S] N ⊗[R] P :=
   congr' e (LinearEquiv.refl R P)
 
-lemma LinearEquiv.rTensor'_restrictScalars :
+@[simp]
+lemma rTensor'_restrictScalars :
     (e.rTensor' P).restrictScalars R = (e.restrictScalars R).rTensor P := rfl
 
-lemma LinearEquiv.rTensor'_apply (mp : M ⊗[R] P) :
+@[simp]
+lemma rTensor'_apply (mp : M ⊗[R] P) :
     e.rTensor' P mp = (e.restrictScalars R).rTensor P mp := rfl
 
-lemma LinearEquiv.rTensor'_coe : ⇑(e.rTensor' P) = (e.restrictScalars R).rTensor P := rfl
+@[simp]
+lemma rTensor'_coe : ⇑(e.rTensor' P) = (e.restrictScalars R).rTensor P := rfl
+
+end LinearEquiv
+
