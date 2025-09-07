@@ -1,4 +1,8 @@
 import DividedPowers.DPAlgebra.Graded.GradeZero
+import DividedPowers.ForMathlib.Data.FinsetLemmas
+import DividedPowers.ForMathlib.Data.Nat.Choose.Multinomial
+import DividedPowers.ForMathlib.RingTheory.DividedPowers.Basic
+import DividedPowers.ForMathlib.RingTheory.Localization.FractionRing
 import DividedPowers.Padic
 import DividedPowers.SubDPIdeal
 import Mathlib.RingTheory.MvPolynomial.Basic
@@ -7,207 +11,6 @@ import Mathlib.RingTheory.PowerSeries.PiTopology
 
 /-! # Construction of the divided power structure on the divided power algebra
 -/
-
-namespace Localization
-
-variable {R : Type*} [CommRing R] {M : Submonoid R}
-
--- [Mathlib.RingTheory.Localization.Basic]
-theorem r_iff_of_le_nonZeroDivisors (hM : M ≤ nonZeroDivisors R) (a c : R) (b d : M) :
-    Localization.r _ (a, b) (c, d) ↔ a * d = b * c  := by
-  simp only [Localization.r_eq_r', Localization.r', Subtype.exists, exists_prop, Con.rel_mk]
-  refine ⟨?_, fun h ↦ ⟨1, Submonoid.one_mem M, by simpa only [one_mul, mul_comm a] using h⟩⟩
-  rintro ⟨u, hu, h⟩
-  have hu' : u ∈ nonZeroDivisors R := hM hu
-  simp only [mem_nonZeroDivisors_iff, mul_comm] at hu'
-  rw [← sub_eq_zero]
-  apply hu'
-  rwa [mul_sub, sub_eq_zero, mul_comm a]
-
--- [Mathlib.RingTheory.Localization.FractionRing]
-instance {R : Type*} [CommRing R] [DecidableEq R] : DecidableEq (FractionRing R) := by
-  intro x y
-  apply recOnSubsingleton₂ x y (r := fun x y ↦ Decidable (x = y))
-  intro a c b d
-  simp only [mk_eq_mk_iff, r_iff_of_le_nonZeroDivisors (le_refl _)]
-  infer_instance
-
-end Localization
-
-section
-
-namespace Nat
-
-open Finset
-
--- [Mathlib.Data.Nat.Choose.Multinomial]
-theorem multinomial_congr_of_sdiff {α : Type*} [DecidableEq α] {f g : α → ℕ} {s t : Finset α}
-    (hst : s ⊆ t) (H1 : ∀ a ∈ t \ s, g a = 0) (H2 : ∀ a ∈ s, f a = g a) :
-    multinomial s f = multinomial t g := by
-  rw [← Nat.mul_right_inj (a := ∏ a ∈ t, (g a)!), multinomial_spec,
-    ← sum_subset_zero_on_sdiff hst H1 H2, ← multinomial_spec s f]
-  · apply congr_arg₂ _ _ rfl
-    symm
-    apply prod_subset_one_on_sdiff hst
-    · intro x hx
-      rw [H1 x hx, factorial_zero]
-    · intro x hx
-      rw [H2 x hx]
-  · simp only [ne_eq, prod_eq_zero_iff, not_exists, not_and]
-    intro x hx
-    exact factorial_ne_zero (g x)
-
--- [Mathlib.Data.Nat.Choose.Multinomial]
-theorem multinomial_single {α : Type*} [DecidableEq α] (s : Finset α) (a : α) (n : ℕ) :
-    Nat.multinomial s (Pi.single a n) = 1 := by
-  rw [← Nat.mul_right_inj, mul_one, Nat.multinomial_spec]
-  · simp only [sum_pi_single']
-    split_ifs with ha
-    · rw [Finset.prod_eq_single a]
-      · simp
-      · intro b hb hba
-        simp [Pi.single_apply, if_neg hba]
-      · simp_all
-    · rw [eq_comm, Nat.factorial_zero]
-      apply Finset.prod_eq_one
-      intro b hb
-      rw [Pi.single_apply, if_neg, Nat.factorial_zero]
-      exact ne_of_mem_of_not_mem hb ha
-  · simp only [ne_eq, prod_eq_zero_iff, not_exists, not_and]
-    intro x hx
-    apply Nat.factorial_ne_zero
-
-end Nat
-
-namespace Finset
-
-open Sym
-
--- Mathlib.Algebra.BigOperators.GroupWithZero.Action?
-/- [Mathlib.GroupTheory.GroupAction.Quotient, Mathlib.GroupTheory.MonoidLocalization.Basic,
-  Mathlib.RingTheory.Coprime.Lemmas, Mathlib.Algebra.Ring.Subsemiring.Basic,
-  Mathlib.Algebra.Module.Submodule.Basic, Mathlib.Algebra.BigOperators.Pi,
-  Mathlib.Topology.EMetricSpace.Basic, Mathlib.Algebra.BigOperators.Fin,
-  Mathlib.Algebra.Group.Subgroup.Finite, Mathlib.Algebra.GradedMonoid,
-  Mathlib.GroupTheory.Coset.Card, Mathlib.Algebra.Module.Submodule.Lattice,
-  Mathlib.RingTheory.NonUnitalSubring.Basic] -/
-theorem prod_smul' {α β ι : Type*} [CommMonoid β] [CommMonoid α] [MulAction α β]
-    [IsScalarTower α β β] [SMulCommClass α β β] (s : Finset ι) (b : ι → α) (f : ι → β) :
-    ∏ i ∈ s, b i • f i = (∏ i ∈ s, b i) • ∏ i ∈ s, f i := by
-  induction s using cons_induction_on with
-  | empty =>  simp
-  | cons _ _ hj ih => rw [prod_cons, ih, smul_mul_smul_comm, ← prod_cons hj, ← prod_cons hj]
-
--- [Mathlib.Data.Finset.Sym]
-lemma sym_map {α β : Type*} [DecidableEq α] [DecidableEq β] {n : ℕ} (g : α ↪ β) (s : Finset α) :
-    (s.map g).sym n = (s.sym n).map ⟨Sym.map g, Sym.map_injective g.injective _⟩ := by
-  ext d
-  simp only [mem_sym_iff, mem_map, Function.Embedding.coeFn_mk]
-  constructor
-  · intro hd
-    let g' : {x // x ∈ d} → α := fun ⟨x, hx⟩ ↦ (hd x hx).choose
-    let h : Sym {x // x ∈ d} n → Sym α n := fun p ↦ Sym.map g' p
-    use h d.attach
-    constructor
-    · simp only [Sym.mem_map, Sym.mem_attach, true_and, Subtype.exists, forall_exists_index, h, g']
-      intro i e he hi
-      rw [← hi]
-      exact (hd e he).choose_spec.1
-    · simp only [Sym.map_map, Function.comp_apply, h, g']
-      convert Sym.attach_map_coe d with ⟨x, hx⟩ hx'
-      exact (hd x hx).choose_spec.2
-  · rintro ⟨b, hb, rfl⟩ d hd
-    simp only [Sym.mem_map] at hd
-    obtain ⟨a, ha, rfl⟩ := hd
-    refine ⟨a, hb a ha, rfl⟩
-
-end Finset
-
-namespace Sym
-
-open Finset
-
--- [Mathlib.RingTheory.MvPowerSeries.Basic]
-theorem sum_eq_val_sum {ι : Type*} [DecidableEq ι] {n : ℕ} (k : Sym (ι →₀ ℕ) n)
-    {s : Finset (ι →₀ ℕ)} (hk : k ∈ s.sym n) :
-    ∑ d ∈ s, Multiset.count d k • d = k.val.sum := by
-  induction n with
-  | zero =>
-    simp only [sym_zero, mem_singleton] at hk
-    have : ↑k = 0 := by simp [hk]; rfl
-    simp [this]
-  | succ n hrec =>
-    simp only [sym_succ, Nat.succ_eq_add_one, mem_sup, mem_image, mem_sym_iff] at hk
-    obtain ⟨a, hat, k, hk, rfl⟩ := hk
-    simp [Sym.val_eq_coe, Nat.succ_eq_add_one, Sym.coe_cons, Multiset.count_cons, add_smul]
-    rw [sum_add_distrib]
-    nth_rewrite 2 [sum_eq_single a (fun _ _ hab ↦ by rw [if_neg hab]) (fun has ↦ (has hat).elim)]
-    rw [if_pos rfl, add_comm]
-    apply congr_arg₂ _ rfl
-    apply hrec
-    rwa [mem_sym_iff]
-
-end Sym
-
-namespace DividedPowers
-
-open Finset
-
-variable {R : Type*} [CommSemiring R] {I : Ideal R} (hI : DividedPowers I)
-  {ι : Type*} [DecidableEq ι]
-
--- [Mathlib.RingTheory.DividedPowers.Basic]
-/-- A "multinomial" theorem for divided powers — without multinomial coefficients -/
-theorem dpow_finsupp_sum {x : ι →₀ R} (hx : ∀ i, x i ∈ I) {n : ℕ} :
-    hI.dpow n (x.sum fun _ r ↦ r) =
-      ∑ k ∈ (x.support.sym n), x.prod fun i r ↦ hI.dpow (Multiset.count i k) r := by
-  simp [Finsupp.sum, hI.dpow_sum (fun i _ ↦ hx i), Finsupp.prod]
-
--- [Mathlib.RingTheory.DividedPowers.Basic]
-/-- A "multinomial" theorem for divided powers — without multinomial coefficients -/
-theorem dpow_linearCombination {A : Type*} [CommSemiring A] [Algebra R A] {J : Ideal A}
-    (hJ : DividedPowers J) {b : ι → A} {x : ι →₀ R} (hx : ∀ i ∈ x.support, b i ∈ J) {n : ℕ} :
-    hJ.dpow n (x.sum fun i r ↦ r • (b i)) =
-      ∑ k ∈ x.support.sym n,
-        x.prod fun i r ↦ r ^ (Multiset.count i k) • hJ.dpow (Multiset.count i k) (b i) := by
-  rw [Finsupp.sum, hJ.dpow_sum (fun i hi ↦ Submodule.smul_of_tower_mem J _ (hx i hi))]
-  apply Finset.sum_congr rfl
-  intros
-  simp only [Finsupp.prod]
-  apply Finset.prod_congr rfl
-  intro i hi
-  rw [Algebra.smul_def, hJ.dpow_mul (hx i hi), ← map_pow, ← Algebra.smul_def]
-
--- [Mathlib.RingTheory.DividedPowers.Basic]
-theorem dpow_prod {r : ι → R} {s : Finset ι} (hs : s.Nonempty) (hs' : ∀ i ∈ s, r i ∈ I) {n : ℕ} :
-    hI.dpow n (∏ i ∈ s, r i) = n.factorial ^ (s.card - 1) • (∏ i ∈ s, hI.dpow n (r i)) := by
-  induction s using Finset.induction with
-  | empty => simp_all
-  | @insert a s has hrec =>
-    rw [Finset.prod_insert has]
-    by_cases h : s.Nonempty
-    · rw [dpow_mul]
-      · simp only [Finset.card_insert_of_notMem has, add_tsub_cancel_right,
-          nsmul_eq_mul, Nat.cast_pow, Finset.prod_insert has]
-        rw [hrec h]
-        · simp only [nsmul_eq_mul, Nat.cast_pow, ← mul_assoc]
-          apply congr_arg₂ _ _ rfl
-          have : #s = #s - 1 + 1 := by
-            refine (Nat.sub_eq_iff_eq_add ?_).mp rfl
-            exact one_le_card.mpr h
-          nth_rewrite 2 [this]
-          rw [mul_comm, pow_succ, mul_assoc, hI.factorial_mul_dpow_eq_pow]
-          exact hs' a (mem_insert_self a s)
-        · intro i hi
-          apply hs' i (mem_insert_of_mem hi)
-      obtain ⟨j, hj⟩ := h
-      rw [Finset.prod_eq_prod_diff_singleton_mul hj]
-      apply Ideal.mul_mem_left
-      apply hs' j (mem_insert_of_mem hj)
-    · simp only [not_nonempty_iff_eq_empty] at h
-      simp [h]
-
-end DividedPowers
 
 section
 
@@ -1374,6 +1177,8 @@ end
 end General
 
 section Unused
+
+-- I think we could remove this section.
 
 open DividedPowerAlgebra.Free
 
