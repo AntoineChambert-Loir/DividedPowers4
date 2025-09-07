@@ -111,7 +111,7 @@ open Classical in
   valued in the graded part of degree n -/
 noncomputable
 def gamma' (n : ℕ) : PolynomialLaw R M (grade R M n) :=
-  PolynomialLaw.comp (PolynomialLaw.ofLinearMap (proj' R M n)) (gamma R M n)
+  PolynomialLaw.comp (proj' R M n).toPolynomialLaw (gamma R M n)
 
 theorem gamma'_mem_grade (n : ℕ) : gamma' R M n ∈ PolynomialLaw.grade n := by
   classical
@@ -129,7 +129,7 @@ noncomputable example {N : Type*} [AddCommGroup N] [Module R N] (n : ℕ) :
     ((DividedPowerAlgebra.grade R M n) →ₗ[R] N) ≃ₗ[R]
       PolynomialLaw.grade (R := R) (M := M) (N := N) n where
   toFun u := by
-    let f : M →ₚₗ[R] N := PolynomialLaw.comp (PolynomialLaw.ofLinearMap u) (gamma' R M n)
+    let f : M →ₚₗ[R] N := PolynomialLaw.comp u.toPolynomialLaw (gamma' R M n)
     use f
     rw [PolynomialLaw.mem_grade]
     simp only [f]
