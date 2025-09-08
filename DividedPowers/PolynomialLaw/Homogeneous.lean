@@ -7,10 +7,11 @@ import DividedPowers.ForMathlib.Algebra.Module.LinearMap.Defs
 import DividedPowers.ForMathlib.Algebra.Polynomial.AlgebraMap
 import DividedPowers.ForMathlib.Algebra.Algebra.Bilinear
 import DividedPowers.ForMathlib.Algebra.BigOperators.Finsupp.Basic
+import DividedPowers.PolynomialLaw.Linear
 
 universe u
 
-/- # Homogeneous components of a polynomial map
+/- # Homogeneous components of a polynomial law
 
 Let `R` be a commutative ring, let `M` and `N` be `R`-modules, and let `f : M →ₚₗ[R] N` be a
 polynomial law.
@@ -292,79 +293,49 @@ theorem isHomogeneousOfDegreeOne_coeff_single (hf : f.IsHomogeneousOfDegree 1) (
 
 end coeff
 
-variable (v : M →ₗ[R] N)
+variable (r : R) (v w : M →ₗ[R] N)
 
-noncomputable def _root_.LinearMap.toPolynomialLaw :
-    M →ₚₗ[R] N where
-  toFun' S _ _ := v.baseChange S
-  isCompat' φ  := by
-    ext
-    simp [← LinearMap.comp_apply, baseChange_eq_ltensor, Function.comp_apply]
-
-lemma ofLinearMap_mem_grade_one : IsHomogeneousOfDegree 1 (v.toPolynomialLaw) :=
+lemma toPolynomialLaw_mem_grade_one : IsHomogeneousOfDegree 1 (v.toPolynomialLaw) :=
   fun S _ _ r m => by simp [toPolynomialLaw]
 
 theorem IsHomogeneousOfDegree.comp_toPolynomialLaw {P : Type*} [AddCommMonoid P] [Module R P]
     {f : M →ₗ[R] N} {g : N →ₚₗ[R] P} {q : ℕ} (hg : g.IsHomogeneousOfDegree q) :
     (g.comp f.toPolynomialLaw).IsHomogeneousOfDegree q := by
-  simpa using IsHomogeneousOfDegree.comp (ofLinearMap_mem_grade_one f) hg
+  simpa using IsHomogeneousOfDegree.comp (toPolynomialLaw_mem_grade_one f) hg
 
-theorem IsHomogeneousOfDegree.ofLinearMap_comp {P : Type*} [AddCommMonoid P] [Module R P]
+theorem IsHomogeneousOfDegree.toPolynomialLaw_comp {P : Type*} [AddCommMonoid P] [Module R P]
     {f : M →ₚₗ[R] N} {g : N →ₗ[R] P} {p : ℕ} (hf : f.IsHomogeneousOfDegree p) :
     (g.toPolynomialLaw.comp f).IsHomogeneousOfDegree p := by
-  simpa using IsHomogeneousOfDegree.comp hf (ofLinearMap_mem_grade_one g)
-
-theorem ofLinearMap_toFun' (S : Type u) [CommSemiring S] [Algebra R S] :
-    v.toPolynomialLaw.toFun' S = LinearMap.baseChange S v := rfl
-
-theorem ofLinearMap_toFun (S : Type*) [CommSemiring S] [Algebra R S] :
-    v.toPolynomialLaw.toFun S = v.baseChange S := by
-  ext sm
-  obtain ⟨n, φ, p, rfl⟩ := exists_lift sm
-  simp only [← isCompat_apply, toFun_eq_toFun', ofLinearMap_toFun', baseChange_eq_ltensor,
-    ← LinearMap.comp_apply, rTensor_comp_lTensor, lTensor_comp_rTensor]
-
-theorem ofLinearMap_id :
-    (LinearMap.id).toPolynomialLaw = PolynomialLaw.id (R := R) (M := M) := by
-  ext S _ _ m
-  simp [ofLinearMap_toFun', id_apply']
-
-theorem ofLinearMap_comp {P : Type*} [AddCommMonoid P] [Module R P]
-    (f : M →ₗ[R] N) (g : N →ₗ[R] P) :
-    (g.comp f).toPolynomialLaw = g.toPolynomialLaw.comp f.toPolynomialLaw := by
-  ext S _ _ m
-  simp [ofLinearMap_toFun', baseChange_comp, comp_toFun']
+  simpa using IsHomogeneousOfDegree.comp hf (toPolynomialLaw_mem_grade_one g)
 
 open MvPolynomial
 
 open Finsupp LinearMap
 
--- change names?
-
-theorem ofLinearMap_coeff_single (u : M →ₗ[R] N) (ι : Type*) [DecidableEq ι] [Fintype ι]
+theorem toPolynomialLaw_coeff_single (u : M →ₗ[R] N) (ι : Type*) [DecidableEq ι] [Fintype ι]
     (m : ι → M) (i : ι) : coeff m u.toPolynomialLaw (single i 1) = u (m i) := by
   rw [coeff, generize', coe_comp, LinearEquiv.coe_coe, LinearMap.coe_mk, AddHom.coe_mk,
     Function.comp_apply]
   simp only [Module.generize, LinearMap.coe_mk, AddHom.coe_mk]
-  simp only [ofLinearMap_toFun, map_sum, LinearMap.baseChange_tmul]
+  simp only [toPolynomialLaw_toFun, map_sum, LinearMap.baseChange_tmul]
   rw [coe_finset_sum, Finset.sum_apply, Finset.sum_eq_single i ?_ (fun hi => by simp at hi),
     scalarRTensor_apply_tmul_apply, coeff_X, _root_.one_smul]
   intro b _ hb
   have hb' : ¬ single b 1 = single i 1 := by rwa [Finsupp.single_left_inj]; norm_num
   rw [scalarRTensor_apply_tmul_apply, coeff_X', if_neg hb', _root_.zero_smul]
 
-noncomputable def _root_.LinearMap.toPolynomialLawHom :
+noncomputable def _root_.LinearMap.toDegreeOnePolynomialLaw :
     (M →ₗ[R] N) →ₗ[R] (grade 1 : Submodule R (M →ₚₗ[R] N)) where
-  toFun         := fun u ↦ ⟨u.toPolynomialLaw, ofLinearMap_mem_grade_one u⟩
+  toFun         := fun u ↦ ⟨u.toPolynomialLaw, toPolynomialLaw_mem_grade_one u⟩
   map_add' u v  := by
     ext S _ _ m
-    simp [ofLinearMap_toFun']
+    simp [toPolynomialLaw_toFun']
   map_smul' a v := by
     ext S _ _ m
-    simp [ofLinearMap_toFun']
+    simp [toPolynomialLaw_toFun']
 
-theorem ofLinearMapHom_apply :
-    v.toPolynomialLawHom = v.toPolynomialLaw := rfl
+theorem _root_.LinearMap.toDegreeOnePolynomialLaw_apply :
+    v.toDegreeOnePolynomialLaw = v.toPolynomialLaw := rfl
 
 private lemma zero_pow_add_zero_pow (a b : ℕ) (h : a + b = 1) :
     0 ^ a + 0 ^ b = (1 : R) := by
@@ -407,18 +378,18 @@ noncomputable def toLinearMap (f : (grade 1 : Submodule R (M →ₚₗ[R] N))) :
 lemma toLinearMap_eq_ground (f : (grade 1 : Submodule R (M →ₚₗ[R] N))) :
    toLinearMap f = (f.1).ground := rfl
 
-noncomputable def ofLinearMapEquiv :
+noncomputable def _root_.LinearMap.toDegreeOnePolynomialLawEquiv :
     (M →ₗ[R] N) ≃ₗ[R] (grade 1 : Submodule R (M →ₚₗ[R] N)) := {
-  LinearMap.toPolynomialLawHom with
+  LinearMap.toDegreeOnePolynomialLaw with
   invFun := toLinearMap
   left_inv f := by
     ext m
-    simp [toLinearMap, ground, toPolynomialLawHom, toPolynomialLaw]
+    simp [toLinearMap, ground, toDegreeOnePolynomialLaw, toPolynomialLaw]
   right_inv f := by
     ext S _ _ sm
     obtain ⟨n, s, m, rfl⟩ := TensorProduct.exists_Fin S sm
-    simp only [AddHom.toFun_eq_coe, toPolynomialLawHom, AddHom.coe_mk, ← toFun_eq_toFun',
-      ofLinearMap_toFun, map_sum, LinearMap.baseChange_tmul]
+    simp only [AddHom.toFun_eq_coe, toDegreeOnePolynomialLaw, AddHom.coe_mk, ← toFun_eq_toFun',
+      toPolynomialLaw_toFun, map_sum, LinearMap.baseChange_tmul]
     rw [toFun_sum_tmul_eq_coeff_sum, sum_of_support_subset _
       (isHomogeneousOfDegreeOne_coeff_support_le f.prop m) _ (by simp), Finset.sum_map,
       Function.Embedding.coeFn_mk]
@@ -430,10 +401,6 @@ noncomputable def ofLinearMapEquiv :
       rw [single_eq_of_ne (ne_comm.mp hj), pow_zero] }
 
 end Linear
-
-section Quadratic
-
-end Quadratic
 
 section Components
 

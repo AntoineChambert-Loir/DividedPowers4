@@ -117,7 +117,7 @@ theorem gamma'_mem_grade (n : ℕ) : gamma' R M n ∈ PolynomialLaw.grade n := b
   classical
   simp only [gamma']
   let u := (proj' R M n)
-  have Hu := PolynomialLaw.ofLinearMap_mem_grade_one
+  have Hu := PolynomialLaw.toPolynomialLaw_mem_grade_one
     (M := DividedPowerAlgebra R M) (R := R) (N := grade R M n) u
   have Hγ := isHomogeneousOfDegree_gamma R M n
   rw [PolynomialLaw.mem_grade]
@@ -133,17 +133,17 @@ noncomputable example {N : Type*} [AddCommGroup N] [Module R N] (n : ℕ) :
     use f
     rw [PolynomialLaw.mem_grade]
     simp only [f]
-    apply PolynomialLaw.IsHomogeneousOfDegree.ofLinearMap_comp
+    apply PolynomialLaw.IsHomogeneousOfDegree.toPolynomialLaw_comp
     rw [← PolynomialLaw.mem_grade]
     apply gamma'_mem_grade
   map_add' u v := by
     ext S _ _ m
     simp [PolynomialLaw.add_def_apply, PolynomialLaw.comp_toFun',
-      PolynomialLaw.ofLinearMap_toFun']
+      LinearMap.toPolynomialLaw_toFun']
   map_smul' r u := by
     ext S _ _ m
     simp
-    simp [PolynomialLaw.comp_toFun', PolynomialLaw.ofLinearMap_toFun']
+    simp [PolynomialLaw.comp_toFun', LinearMap.toPolynomialLaw_toFun']
   invFun f := sorry
   left_inv := sorry
   right_inv := sorry

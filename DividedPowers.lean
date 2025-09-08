@@ -68,12 +68,13 @@ import DividedPowers.Padic
 import DividedPowers.PolynomialLaw.BaseChange
 --import DividedPowers.PolynomialLaw.Basic -- In PR #22912
 import DividedPowers.PolynomialLaw.Basic2 -- toFun, PR #26719
-import DividedPowers.PolynomialLaw.Basic2 -- new basic stuff
+import DividedPowers.PolynomialLaw.Basic3 -- new basic stuff
 import DividedPowers.PolynomialLaw.BiCoeff
 import DividedPowers.PolynomialLaw.BiHomogeneous
 import DividedPowers.PolynomialLaw.Coeff
 import DividedPowers.PolynomialLaw.Differential
 import DividedPowers.PolynomialLaw.Homogeneous
+import DividedPowers.PolynomialLaw.Linear
 import DividedPowers.PolynomialLaw.LocFinsupp
 import DividedPowers.PolynomialLaw.MultiCoeff
 import DividedPowers.PolynomialLaw.MultiHomogeneous -- It has a sorry
