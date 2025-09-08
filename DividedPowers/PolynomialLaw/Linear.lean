@@ -16,7 +16,6 @@ open PolynomialLaw TensorProduct
 variable {R : Type u} [CommSemiring R] {M N : Type*} [AddCommMonoid M] [Module R M]
   [AddCommMonoid N] [Module R N]
 
-
 variable (r : R) (v w : M →ₗ[R] N)
 
 /-- The `R`-linear map sending a linear map `v : M →ₗ[R] N` to the polynomial law given by

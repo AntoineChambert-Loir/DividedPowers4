@@ -526,7 +526,6 @@ section const
 /-- The constant polynomial law.-/
 def const (n : N) : M →ₚₗ[R] N where
   toFun' S _ _ sm := 1 ⊗ₜ n
-  isCompat' φ := by ext; simp
 
 variable {R M N}
 
