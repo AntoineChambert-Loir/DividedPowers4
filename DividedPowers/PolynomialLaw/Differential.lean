@@ -161,7 +161,8 @@ lemma dividedDifferential_eq_coeff (n : ℕ) (m m' : M) :
   rw [asdf]
 
 lemma dividedDifferential_map_add_snd'' (m m₁ m₂ : M) :
-    f.dividedDifferential 1 (m, m₁ + m₂) = f.dividedDifferential 1 (m, m₁) + f.dividedDifferential 1 (m, m₂) := by
+    f.dividedDifferential 1 (m, m₁ + m₂) = f.dividedDifferential 1 (m, m₁) +
+      f.dividedDifferential 1 (m, m₂) := by
   simp only [dividedDifferential, LinearMap.coe_mk, AddHom.coe_mk]
   rw [lfsum_ground_eq_of_locFinsupp, lfsum_ground_eq_of_locFinsupp, lfsum_ground_eq_of_locFinsupp]
   simp only [Finsupp.sum, Finsupp.ofSupportFinite_coe]
@@ -172,7 +173,8 @@ lemma dividedDifferential_map_add_snd'' (m m₁ m₂ : M) :
 
 -- Roby63, pg 239
 lemma dividedDifferential_map_add_snd (m m₁ m₂ : M) :
-    f.dividedDifferential 1 (m, m₁ + m₂) = f.dividedDifferential 1 (m, m₁) + f.dividedDifferential 1 (m, m₂) := by
+    f.dividedDifferential 1 (m, m₁ + m₂) = f.dividedDifferential 1 (m, m₁) +
+      f.dividedDifferential 1 (m, m₂) := by
   classical
   simp only [dividedDifferential_eq_coeff]
   simp only [← toFun_eq_toFun', toFun_add_tmul_eq_coeff_sum, finTwoArrowEquiv_symm_apply,
@@ -205,7 +207,7 @@ lemma dividedDifferential_map_add_snd_toFun {S : Type*} [CommSemiring S] [Algebr
   sorry
 
 -- Roby63, pg 239
-lemma dividedDifferential_map_smul_snd (r : R) (m m' : M) :
+lemma dividedDifferential_smul_right (r : R) (m m' : M) :
     f.dividedDifferential 1 (m, r • m') = r • f.dividedDifferential 1 (m, m') := by
   sorry
 
@@ -814,7 +816,7 @@ lemma _root_.MvPolynomial.splitAlgEquiv_monomial
 
 lemma _root_.MvPolynomial.test {ι : Type*} (s : Set ι) [∀ x, Decidable (x ∈ s)]
     (P : MvPolynomial ι R) (k : ι →₀ ℕ) :
-    P.coeff k  = MvPolynomial.coeff (k.subtypeDomain s)
+    P.coeff k = MvPolynomial.coeff (k.subtypeDomain s)
       (MvPolynomial.coeff (k.subtypeDomain s.compl) (P.splitAlgEquiv s)) := by
   induction P using MvPolynomial.induction_on' with
   | monomial n r =>
@@ -892,11 +894,6 @@ lemma dividedPartialDerivative_comp_multiple_eq_coeff' {S : Type*} [CommSemiring
     (fun i ↦ dividedPartialDerivative R N (k i) (x i))
     (fun a _ b _ _ ↦  dividedPartialDerivativeCommute R N (k a) (k b) (x a) (x b))
   sorry
-
-
-
-
-
 
 -- Roby63, pg 242 (Partial derivative of constant polynomial law).
 lemma dividedPartialDerivative_of_isHomogeneousOfDegree_zero_eq_zero (hn : 0 < n) (x : M)
@@ -987,13 +984,39 @@ lemma dividedPartialDerivative_snd_comp (f : (M × M') →ₚₗ[R] N) (x : M ×
       (n.choose p) * dividedPartialDerivative R N (n + p) (0, x.2) f := by
   sorry
 
+def translation (a : M) : (M →ₚₗ[R] N) →ₗ[R] (M →ₚₗ[R] N) where
+  toFun f := {
+    toFun' S _ _ m := f.toFun' S (m + 1 ⊗ₜ[R] a)
+    isCompat' := sorry }
+  map_add' := sorry
+  map_smul' := sorry
+
+theorem lfsum_dividedPartialDerivative (x : M) (f : M →ₚₗ[R] N) :
+    lfsum (fun k ↦ f.dividedPartialDerivative R N k x) = f.translation x :=
+  sorry
+
 -- We could probably replace `Fin n` by a fintype ι, but it might not be worht it.
 -- Roby63, pg 244 (Prop II.9 for general n)
 lemma taylor_sum_pi {M : Fin n → Type*} [∀ i, AddCommMonoid (M i)] [∀ i, Module R (M i)]
     (f : (Π i, M i) →ₚₗ[R] N) (m x : Π i, M i) :
     f (m + x) = lfsum (fun (k : Fin n →₀ ℕ) ↦ ((List.map (fun (i : Fin n) ↦
       dividedPartialDerivative R N (k i) (Pi.single i (x i))) (List.finRange n).reverse)).prod f) m := by
+  rw [eq_comm]
+  have hf := lfsum_dividedPartialDerivative x f
+  have hg : f.ground (m + x) = (f.translation x).ground m := sorry
+  rw [hg, ← hf]
+  simp only [List.map_reverse]
+  rw [lfsum_ground_eq_of_locFinsupp]
+  rw [lfsum_ground_eq_of_locFinsupp]
+  simp only [Finsupp.sum]
   sorry
+  sorry
+  sorry
+
+/- -- Taylor formula
+theorem lfsum_dividedPartialDerivative (x : M) (f : M →ₚₗ[R] N) :
+    lfsum (fun k ↦ f.dividedPartialDerivative k x) = f.translation x :=
+  sorry-/
 
 -- Roby63, pg 244 (Prop. II.9 for general n)
 lemma dividedPartialDerivative_comp_single {M : Fin n → Type*} [∀ i, AddCommMonoid (M i)]
