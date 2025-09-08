@@ -7,8 +7,8 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 import DividedPowers.BasicLemmas
 import DividedPowers.Exponential
 import DividedPowers.ForMathlib.LinearAlgebra.OnSup
-import DividedPowers.RatAlgebra
-import DividedPowers.SubDPIdeal
+import Mathlib.RingTheory.DividedPowers.RatAlgebra
+import Mathlib.RingTheory.DividedPowers.SubDPIdeal
 import Mathlib.Data.Nat.Choose.Vandermonde
 
 /-! # Divided powers on sums of ideals
@@ -51,10 +51,10 @@ open Nat PowerSeries
 variable {A : Type*} [CommRing A] {I J : Ideal A} {hI : DividedPowers I} {hJ : DividedPowers J}
 
 -- TODO: PR the next two lemmas to `Mathlib.RingTheory.DividedPowers.Basic`.
-theorem coeff_exp (n : ℕ) (a : A) : coeff A n (hI.exp a) = hI.dpow n a := by
+theorem coeff_exp (n : ℕ) (a : A) : coeff n (hI.exp a) = hI.dpow n a := by
   simp only [exp, coeff_mk]
 
-theorem constantCoeff_exp {a : A} (ha : a ∈ I) : constantCoeff A (hI.exp a) = 1 := by
+theorem constantCoeff_exp {a : A} (ha : a ∈ I) : constantCoeff (hI.exp a) = 1 := by
   simp only [exp, constantCoeff_mk, hI.dpow_zero ha]
 
 namespace IdealAdd
@@ -92,10 +92,10 @@ theorem exp'_linearMap_apply_right (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.d
 /-- The divided power function on the sup of two ideals `I` and `J` extending divided power
   structures `hI` and `hJ` that agree on `I ∩ J`. -/
 noncomputable def dpow (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) (n : ℕ) :=
-  Function.extend (fun a ↦ ↑a : (I + J) → A) (fun a ↦ coeff A n (exp'_linearMap hIJ a)) 0
+  Function.extend (fun a ↦ ↑a : (I + J) → A) (fun a ↦ coeff n (exp'_linearMap hIJ a)) (0 :  A → A)
 
 theorem dpow_def (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) (n : ℕ) {a : A}
-    (ha : a ∈ I + J) : dpow hIJ n a = coeff A n (exp'_linearMap hIJ ⟨a, ha⟩) :=
+    (ha : a ∈ I + J) : dpow hIJ n a = coeff n (exp'_linearMap hIJ ⟨a, ha⟩) :=
   Subtype.val_injective.extend_apply _ _ ⟨a, ha⟩
 
 theorem dpow_eq (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
@@ -403,7 +403,7 @@ private theorem dpow_comp_coeffs {m n p : ℕ} (hn : n ≠ 0) (hp : p ≤ m * n)
   let h1 : (1 : A) ∈ I := Submodule.mem_top
   let hX : Polynomial.X ∈ I := Submodule.mem_top
   rw [← hI.factorial_mul_dpow_eq_pow Submodule.mem_top, ← Polynomial.coeff_C_mul,
-    ← mul_assoc, mul_comm (C (uniformBell m n : ℚ)), mul_assoc, C_eq_natCast,
+    ← mul_assoc, mul_comm (Polynomial.C (uniformBell m n : ℚ)), mul_assoc, C_eq_natCast,
     ← hI.dpow_comp hn Submodule.mem_top, ← dpow_eq_of_mem_left' hII Submodule.mem_top,
     ← dpow_eq_of_mem_left' hII Submodule.mem_top, dpow_comp_aux hII hn hX h1,
     ← C_eq_natCast, mul_sum, finset_sum_coeff]

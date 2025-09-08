@@ -226,7 +226,7 @@ theorem IsMultiHomogeneousOfMultiDegree.multicoeff_single_eq_ground {i : ι}
   simp only [← this, toFun_sum_tmul_eq_multiCoeff_sum, map_finsuppSum, lid_tmul]
   rw [sum_of_support_subset _ (isMultiHomogeneousOfDegreeOne_multiCoeff_support_le hf m) _
     (by simp), Finset.sum_map, Function.Embedding.coeFn_mk, Finset.sum_eq_single i _ (by simp)]
-  · rw [Finset.prod_eq_single i (fun j _ hj => by rw [single_eq_of_ne hj.symm, pow_zero])
+  · rw [Finset.prod_eq_single i (fun j _ hj => by rw [single_eq_of_ne hj, pow_zero])
       (fun hi => by simp only [Finset.mem_univ, not_true_eq_false] at hi), Pi.single_eq_same,
       one_pow, _root_.one_smul]
   · intro j _ hj

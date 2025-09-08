@@ -60,7 +60,7 @@ noncomputable def exp'_linearMap (hI : DividedPowers I) :
   map_smul' := fun r a ↦ by
     rw [RingHom.id_apply, ← coe_inj]
     simp only [coe_exp', SetLike.val_smul, smul_eq_mul, hI.exp_smul a.prop, coe_smul,
-      Algebra.id.map_eq_id, RingHom.id_apply]
+      Algebra.algebraMap_self, RingHom.id_apply]
 
 theorem exp'_linearMap_apply (hI : DividedPowers I) (x : I) :
     hI.exp'_linearMap x = hI.exp x := rfl
@@ -70,11 +70,12 @@ theorem exp'_linearMap_apply (hI : DividedPowers I) (x : I) :
 
 /-- The divided power structure on `I` induced by a linear map `I →ₗ[R] ExponentialModule R`. -/
 noncomputable def of_exp [DecidablePred (fun x ↦ x ∈ I)] (e : I →ₗ[R] ExponentialModule R)
-    (coeff_one : ∀ a, coeff R 1 ↑(e a) = a) (coeff_mem : ∀ a {n} (_ : n ≠ 0), coeff R n ↑(e a) ∈ I)
-    (coeff_comp : ∀ a m {n} (hn : n ≠ 0), coeff R m (e ⟨coeff R n (e a), coeff_mem a hn⟩) =
-      Nat.uniformBell m n * coeff R (m * n) (e a)) :
+    (coeff_one : ∀ a, coeff 1 (e a : R⟦X⟧) = a)
+    (coeff_mem : ∀ a {n} (_ : n ≠ 0), coeff n ↑(e a) ∈ I)
+    (coeff_comp : ∀ a m {n} (hn : n ≠ 0), coeff m (e ⟨coeff n (e a), coeff_mem a hn⟩) =
+      Nat.uniformBell m n * coeff (m * n) (e a : R⟦X⟧)) :
     DividedPowers I where
-  dpow n a       := if ha : a ∈ I then coeff R n (toPowerSeries (e ⟨a, ha⟩)) else 0
+  dpow n a       := if ha : a ∈ I then coeff n (toPowerSeries (e ⟨a, ha⟩)) else 0
   dpow_null ha   := by simp only [dif_neg ha]
   dpow_zero ha   := by simp only [dif_pos ha, coeff_zero_eq_constantCoeff_apply, constantCoeff_coe]
   dpow_one ha    := by simp only [dif_pos ha, coeff_one]
@@ -88,7 +89,7 @@ noncomputable def of_exp [DecidablePred (fun x ↦ x ∈ I)] (e : I →ₗ[R] Ex
   dpow_mul n {r a} ha := by
     simp only [dif_pos ha, dif_pos (I.mul_mem_left r ha)]
     have : (⟨r * a, I.mul_mem_left r ha⟩ : I) = r • ⟨a, ha⟩ := rfl
-    rw [this, map_smul, coe_smul, coeff_rescale, Algebra.id.map_eq_id, RingHom.id_apply]
+    rw [this, map_smul, coe_smul, coeff_rescale, Algebra.algebraMap_self, RingHom.id_apply]
   mul_dpow ha := by simp only [dif_pos ha, choose_mul_coeff_add_eq]
   dpow_comp hn ha := by simp only [dif_pos ha, dif_pos (coeff_mem _ hn), coeff_comp _ _ hn]
 

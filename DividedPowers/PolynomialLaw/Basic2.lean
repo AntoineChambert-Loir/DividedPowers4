@@ -267,14 +267,16 @@ theorem toFunLifted_factorsThrough_π :
     Function.FactorsThrough f.toFunLifted (π R M S) := by
   rintro ⟨s, p⟩ ⟨s', p'⟩ h
   simp only [toFunLifted]
+  have hft (s : Finset S) : Algebra.FiniteType R (MvPolynomial (Fin s.card) R) :=
+    inferInstance
   set u := rTensor M (φ R s).rangeRestrict.toLinearMap p with hu
   have uFG : Subalgebra.FG (R := R) (φ R s).range := by
     rw [← Algebra.map_top]
-    exact Subalgebra.FG.map _ (Algebra.FiniteType.mvPolynomial R (Fin s.card)).out
+    exact Subalgebra.FG.map _ (hft s).out
   set u' := rTensor M (φ R s').rangeRestrict.toLinearMap p' with hu'
   have u'FG : Subalgebra.FG (R := R) (φ R s').range := by
     rw [← Algebra.map_top]
-    exact Subalgebra.FG.map _ (Algebra.FiniteType.mvPolynomial R (Fin s'.card)).out
+    exact Subalgebra.FG.map _ (hft s').out
   have huu' : rTensor M (Subalgebra.val _).toLinearMap u =
     rTensor M (Subalgebra.val _).toLinearMap u' := by
     simp only [π] at h

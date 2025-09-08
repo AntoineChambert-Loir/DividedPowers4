@@ -14,12 +14,12 @@ theorem Finsupp.sum_eq_one_iff {α : Type*} [DecidableEq α] (d : α →₀ ℕ)
     · use a
       simp only [Finsupp.sum, Finsupp.support_erase, sum_eq_zero_iff, mem_erase] at ha'
       ext b
-      by_cases hb : a = b
-      · rw [← hb, Finsupp.single_eq_same, ha]
+      by_cases hb : b = a
+      · rw [hb, Finsupp.single_eq_same, ha]
       · rw [Finsupp.single_eq_of_ne hb, eq_comm]
         simp only [Finsupp.mem_support_iff, and_imp] at ha'
-        simpa [Finsupp.erase_ne (ne_comm.mp hb)] using ha' b (ne_comm.mp hb)
+        simpa [Finsupp.erase_ne hb] using ha' b (hb)
     · exact fun _ ↦ rfl
   · rintro ⟨a, rfl⟩
     rw [Finsupp.sum_eq_single a ?_ (fun _ ↦ rfl), Finsupp.single_eq_same]
-    exact fun _ _ hba ↦ Finsupp.single_eq_of_ne hba.symm
+    exact fun _ _ hba ↦ Finsupp.single_eq_of_ne hba

@@ -297,8 +297,8 @@ lemma fst_biComponent_eq_zero (p : ℕ) : (fst R M M).toPolynomialLaw.biComponen
         rw [Finsupp.ext_iff]
         simp only [Fin.isValue, finTwoArrowEquiv', Equiv.coe_fn_symm_mk,
           Finsupp.ofSupportFinite_coe, Fin.forall_fin_two, Finsupp.single_eq_same,
-          Matrix.cons_val_zero, ne_eq, zero_ne_one, not_false_eq_true, Finsupp.single_eq_of_ne,
-          Matrix.cons_val_one, Matrix.cons_val_fin_one, and_false]
+          Matrix.cons_val_zero, ne_eq, one_ne_zero, not_false_eq_true, Finsupp.single_eq_of_ne,
+          Matrix.cons_val_one, Matrix.cons_val_fin_one, zero_ne_one, and_false]
       simp only [Fin.isValue, compFstRight_tmul, inlRight_tmul, assoc_symm_tmul,
         LinearEquiv.rTensor_tmul, AlgEquiv.toLinearEquiv_apply, prodRight_tmul, tmul_zero,
         LinearMap.rTensor_tmul, LinearMap.coe_restrictScalars, lcoeff_apply, h0, zero_tmul]
@@ -326,9 +326,8 @@ lemma biCoeff_S_snd_eq_zero_of_ne {S : Type*} [CommSemiring S] [Algebra R S]
     rw [if_neg, zero_tmul]
     rw [Finsupp.ext_iff]
     simp only [Fin.isValue, finTwoArrowEquiv', Equiv.coe_fn_symm_mk, Finsupp.ofSupportFinite_coe,
-      Fin.forall_fin_two, ne_eq, one_ne_zero, not_false_eq_true, Finsupp.single_eq_of_ne,
-      Matrix.cons_val_zero, Finsupp.single_eq_same, Matrix.cons_val_one, Matrix.cons_val_fin_one,
-      (Ne.symm hn), and_false]
+      Fin.forall_fin_two, not_false_eq_true, Matrix.cons_val_zero, Finsupp.single_eq_same,
+      Matrix.cons_val_one, Matrix.cons_val_fin_one, (Ne.symm hn), and_false]
   | add sm sm' hsm hsm' =>
     simp only [biCoeff_S_apply, Fin.isValue, map_add, rTensor_apply] at hsm hsm' ⊢
     simp only [Fin.isValue, tmul_add, map_add]
