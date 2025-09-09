@@ -352,7 +352,8 @@ theorem dpScalarExtension_mem_grade {a : DividedPowerAlgebra R M} {n : ℕ} (ha 
     rw [← AlgHom.comp_apply, MvPolynomial.comp_aeval, aeval_def]
     simp only [eval₂_eq,]
     have h_sum : ∀ (d : ℕ × M →₀ ℕ), algebraMap R S (coeff d p) =
-          (coeff d (∑ x ∈ p.support, C ((algebraMap R S) (coeff x p)) * (monomial x) 1)) := by
+        (coeff d (∑ x ∈ p.support, MvPolynomial.C ((algebraMap R S) (coeff x p)) *
+          (monomial x) 1)) := by
       classical
       intro d
       conv_lhs => rw [MvPolynomial.as_sum (p := p)]

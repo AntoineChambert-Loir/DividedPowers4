@@ -69,8 +69,7 @@ noncomputable def kerφ : Ideal (M ⊗[R] N) :=
 
 lemma mkₐ_smul_one_tmul_one' (s : S) :
     (Ideal.Quotient.mkₐ S (kerφ R S M N)) ((s • (1 : M)) ⊗ₜ[R] (1 : N)) =
-      s • (1 : M ⊗[R] N ⧸ kerφ R S M N) := by
-  apply mkₐ_smul_one_tmul_one''
+      s • (1 : M ⊗[R] N ⧸ kerφ R S M N) := rfl
 
 lemma mkₐ_one_tmul_smul_one (s : S) :
     (Ideal.Quotient.mk (kerφ R S M N)) (1 ⊗ₜ[R] (s • 1)) = s • 1 := by
@@ -145,10 +144,10 @@ theorem kerφ_eq : RingHom.ker (φ R S M N).toRingHom = kerφ R S M N := by
     obtain ⟨y, rfl⟩ := Ideal.Quotient.mk_surjective z
     simp only [AlgHom.toRingHom_eq_coe, Ideal.Quotient.lift_mk, AlgHom.coe_toRingHom]
     induction y using TensorProduct.induction_on with
-    | zero => simp only [RingHom.map_zero, map_zero]
+    | zero => simp only [map_zero]
     | tmul m n => simp only [ψ_apply, φ_apply]
     | add x y hx hy =>
-        simp only [RingHom.map_add, map_add, ← Ideal.Quotient.mkₐ_eq_mk, hx, hy]
+        rw [RingHom.map_add, map_add, map_add, hx, hy] --simp fails (?)
   rw [kerφ, Ideal.span_le]
   intro z hz
   simp only [Set.top_eq_univ, Set.image_univ, Set.mem_range] at hz

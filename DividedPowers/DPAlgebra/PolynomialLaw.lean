@@ -148,6 +148,8 @@ noncomputable example {N : Type*} [AddCommGroup N] [Module R N] (n : ℕ) :
   left_inv := sorry
   right_inv := sorry
 
+open Module
+
 /-- For `b : Basis ι R M`, a basis of `DividedPowerAlgebra.grade R M n`.
 
 Roby 1963, theorem IV.2.-/

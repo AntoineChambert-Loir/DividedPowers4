@@ -11,7 +11,7 @@ theorem r_iff_of_le_nonZeroDivisors (hM : M ≤ nonZeroDivisors R) (a c : R) (b 
   refine ⟨?_, fun h ↦ ⟨1, Submonoid.one_mem M, by simpa only [one_mul, mul_comm a] using h⟩⟩
   rintro ⟨u, hu, h⟩
   have hu' : u ∈ nonZeroDivisors R := hM hu
-  simp only [mem_nonZeroDivisors_iff, mul_comm] at hu'
+  simp only [mem_nonZeroDivisors_iff, mul_comm, and_self] at hu'
   rw [← sub_eq_zero]
   apply hu'
   rwa [mul_sub, sub_eq_zero, mul_comm a]

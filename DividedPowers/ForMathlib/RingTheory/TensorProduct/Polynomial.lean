@@ -62,8 +62,8 @@ lemma scalarRTensor_apply_tmul_apply (p : R[X]) (n : N) (i : ℕ) :
 lemma scalarRTensor_apply_tmul (p : R[X]) (n : N) :
     scalarRTensor R N (p ⊗ₜ[R] n) = p.sum (fun i r => Finsupp.single i (r • n)) := by
   ext i
-  rw [scalarRTensor_apply_tmul_apply, sum_def, Finset.sum_apply',
-    Finset.sum_eq_single i (fun _ _ => Finsupp.single_eq_of_ne) ?_, Finsupp.single_eq_same]
+  rw [scalarRTensor_apply_tmul_apply, sum_def, Finset.sum_apply', Finset.sum_eq_single i
+    (fun _ _ h => Finsupp.single_eq_of_ne h.symm) ?_ , Finsupp.single_eq_same]
   intro h
   simp only [mem_support_iff, ne_eq, not_not] at h
   rw [h, zero_smul, Finsupp.single_zero, Finsupp.coe_zero, Pi.zero_apply]

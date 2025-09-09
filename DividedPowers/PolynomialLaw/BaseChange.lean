@@ -163,9 +163,9 @@ theorem exists_multiset_eq_sum_tmul_tmul {S P: Type*}
     [CommSemiring S] [Algebra R S]
     [Module S N] [IsScalarTower R S N]
     [AddCommMonoid P] [Module S P]
-    (x : M ⊗[R] N ⊗[S] P) :
+    (x : M ⊗[R] (N ⊗[S] P)) :
     ∃ (ξ : Multiset (M × N × P)),
-      x = (ξ.map (fun x ↦ x.1 ⊗ₜ[R] x.2.1 ⊗ₜ[S] x.2.2)).sum := by
+      x = (ξ.map (fun x ↦ x.1 ⊗ₜ[R] (x.2.1 ⊗ₜ[S] x.2.2))).sum := by
   obtain ⟨m1, hx⟩ := TensorProduct.exists_multiset x
   let m2 (y : N ⊗[S] P) := (TensorProduct.exists_multiset y).choose
   use (m1.map (fun x ↦ ({x.1} : Multiset M).product (m2 x.2))).sum
@@ -182,7 +182,7 @@ theorem exists_multiset_eq_sum_tmul_tmul {S P: Type*}
     apply (TensorProduct.exists_multiset _).choose_spec
   simp only [Multiset.map_map, Function.comp_apply] at hx'
   classical
-  rwa [Multiset.map_sum_map_sum m1 m2 (g := fun x y ↦ x ⊗ₜ[R] y.1 ⊗ₜ[S] y.2)] at hx'
+  rwa [Multiset.map_sum_map_sum m1 m2 (g := fun x y ↦ x ⊗ₜ[R] (y.1 ⊗ₜ[S] y.2))] at hx'
 
 theorem exists_multiset_eq_sum_tmul_tmul' {R S M N P: Type*}
     [CommSemiring R] [CommSemiring S]
@@ -190,9 +190,9 @@ theorem exists_multiset_eq_sum_tmul_tmul' {R S M N P: Type*}
     [AddCommMonoid N] [Module S N]
     [AddCommMonoid P] [Module S P]
     [Algebra S R] [Module R N] [IsScalarTower S R N]
-    (x : M ⊗[R] N ⊗[S] P) :
+    (x : M ⊗[R] (N ⊗[S] P)) :
     ∃ (ξ : Multiset (M × N × P)),
-      x = (ξ.map (fun x ↦ x.1 ⊗ₜ[R] x.2.1 ⊗ₜ[S] x.2.2)).sum := by
+      x = (ξ.map (fun x ↦ x.1 ⊗ₜ[R] (x.2.1 ⊗ₜ[S] x.2.2))).sum := by
   obtain ⟨m1, hx⟩ := TensorProduct.exists_multiset x
   let m2 (y : N ⊗[S] P) := (TensorProduct.exists_multiset y).choose
   use (m1.map (fun x ↦ ({x.1} : Multiset M).product (m2 x.2))).sum
@@ -209,7 +209,7 @@ theorem exists_multiset_eq_sum_tmul_tmul' {R S M N P: Type*}
     apply (TensorProduct.exists_multiset _).choose_spec
   simp only [Multiset.map_map, Function.comp_apply] at hx'
   classical
-  rwa [Multiset.map_sum_map_sum m1 m2 (g := fun x y ↦ x ⊗ₜ[R] y.1 ⊗ₜ[S] y.2)] at hx'
+  rwa [Multiset.map_sum_map_sum m1 m2 (g := fun x y ↦ x ⊗ₜ[R] (y.1 ⊗ₜ[S] y.2))] at hx'
 
 variable {R' : Type*} [CommSemiring R'] [Algebra R R']
 variable {S' : Type*} [CommSemiring S'] [Algebra R' S']
@@ -244,7 +244,7 @@ def baseChangeEquiv' : (S' ⊗[R'] R') ⊗[R] M ≃ₗ[S'] S' ⊗[R] M := {
         simp [← tmul_smul] }
 
 def baseChangeEquiv :
-    S' ⊗[R'] R' ⊗[R] M ≃ₗ[S'] S' ⊗[R] M :=
+    S' ⊗[R'] (R' ⊗[R] M) ≃ₗ[S'] S' ⊗[R] M :=
   (AlgebraTensorModule.assoc R R' S' S' R' M).symm.trans baseChangeEquiv'
 
 theorem baseChangeEquiv_rTensor_baseChangeEquivSymm (y : S' ⊗[R] M) :
@@ -256,7 +256,7 @@ theorem baseChangeEquiv_rTensor_baseChangeEquivSymm (y : S' ⊗[R] M) :
   | add x y hx hy => simp only [map_add, hx, hy]
   | tmul s n => simp [baseChangeEquiv, baseChangeEquiv']
 
-theorem baseChangeEquiv_rTensor_eq_baseChangeEquivSymm_rTensor (x : S' ⊗[R'] R' ⊗[R] M) :
+theorem baseChangeEquiv_rTensor_eq_baseChangeEquivSymm_rTensor (x : S' ⊗[R'] (R' ⊗[R] M)) :
     baseChangeEquiv ((LinearMap.rTensor (R' ⊗[R] M) φ.toLinearMap) x) =
       LinearMap.rTensor M ((φ.restrictScalars R).toLinearMap) (baseChangeEquiv x) := by
   set y := baseChangeEquiv x with hy
@@ -371,7 +371,7 @@ theorem baseChangeEquiv_tmul_tmul {R M R' S' : Type*} [CommSemiring R]
     [CommSemiring S'] [Algebra R' S']
     [Algebra R S'] [IsScalarTower R R' S']
     (s' : S') (r' : R') (m : M) :
-    baseChangeEquiv (s' ⊗ₜ[R'] r' ⊗ₜ[R] m) = (r' • s') ⊗ₜ[R] m := by
+    baseChangeEquiv (s' ⊗ₜ[R'] (r' ⊗ₜ[R] m)) = (r' • s') ⊗ₜ[R] m := by
   simp [baseChangeEquiv, baseChangeEquiv']
 
 -- generalize to `toFun`, with `S'` in an arbitrary universe
@@ -379,8 +379,8 @@ theorem baseChange_toFun'_smul_tmul_tmul_eq_coeff_sum
     (f : M →ₚₗ[R] N) {ι : Type*} [Fintype ι] [DecidableEq ι]
     (m : ι → M) (r : ι → R')
     {S' : Type v} [CommSemiring S'] [Algebra R' S'] (s : ι → S') :
-    (f.baseChange R').toFun' S' (∑ i, s i ⊗ₜ[R'] r i ⊗ₜ[R] m i) =
-      (((coeff m) f).sum fun k n ↦  ((∏ i, s i ^ k i) ⊗ₜ[R'] (∏ i, r i ^ k i) ⊗ₜ[R] n))  := by
+    (f.baseChange R').toFun' S' (∑ i, s i ⊗ₜ[R'] (r i ⊗ₜ[R] m i)) =
+      (((coeff m) f).sum fun k n ↦  ((∏ i, s i ^ k i) ⊗ₜ[R'] ((∏ i, r i ^ k i) ⊗ₜ[R] n)))  := by
   simp only [baseChange, map_sum, baseChangeEquiv_tmul_tmul]
   rw [toFun_sum_tmul_eq_coeff_sum]
   rw [map_finsuppSum]
@@ -442,12 +442,12 @@ theorem baseChange_toFun_smul_tmul_tmul_eq_coeff_sum
     (f : M →ₚₗ[R] N) {ι : Type*} [Fintype ι] [DecidableEq ι]
     (m : ι → M) (r : ι → R')
     {S' : Type*} [CommSemiring S'] [Algebra R' S'] (s : ι → S') :
-    (f.baseChange R').toFun S' (∑ i, s i ⊗ₜ[R'] r i ⊗ₜ[R] m i) =
-      (((coeff m) f).sum fun k n ↦  ((∏ i, s i ^ k i) ⊗ₜ[R'] (∏ i, r i ^ k i) ⊗ₜ[R] n))  := by
+    (f.baseChange R').toFun S' (∑ i, s i ⊗ₜ[R'] (r i ⊗ₜ[R] m i)) =
+      (((coeff m) f).sum fun k n ↦  ((∏ i, s i ^ k i) ⊗ₜ[R'] ((∏ i, r i ^ k i) ⊗ₜ[R] n)))  := by
   have := exists_lift'' (R := R') (M := R' ⊗[R] M) (S := S') (t := 0) s
   obtain ⟨n, φ, _, t, _, ht⟩ := exists_lift'' (R := R') (M := R' ⊗[R] M) (S := S') 0 s
-  set srm := ∑ i, s i ⊗ₜ[R'] r i ⊗ₜ[R] m i with hsrm
-  set trm := ∑ i, t i ⊗ₜ[R'] r i ⊗ₜ[R] m i with htrm
+  set srm := ∑ i, s i ⊗ₜ[R'] (r i ⊗ₜ[R] m i) with hsrm
+  set trm := ∑ i, t i ⊗ₜ[R'] (r i ⊗ₜ[R] m i) with htrm
   have : φ.toLinearMap.rTensor _ trm = srm := by
     unfold srm trm
     simp only [map_sum, LinearMap.rTensor_tmul, AlgHom.toLinearMap_apply, ht]
@@ -461,7 +461,7 @@ theorem baseChange_apply (f : M →ₚₗ[R] N)
     {R' : Type v} [CommSemiring R'] [Algebra R R']
     {S' : Type v} [CommSemiring S']
     [algR'S' : Algebra R' S'] [algRS' : Algebra R S'] [istRR'S' : IsScalarTower R R' S']
-    (srm : S' ⊗[R'] R' ⊗[R] M) :
+    (srm : S' ⊗[R'] (R' ⊗[R] M)) :
     (f.baseChange R').toFun S' srm = baseChangeEquiv.symm (f.toFun S' (baseChangeEquiv srm)) := by
   obtain ⟨m, rfl⟩ := exists_multiset_eq_sum_tmul_tmul' srm
   classical
@@ -511,7 +511,6 @@ theorem baseChange_ground (f : M →ₚₗ[R] N) :
   simp only [ground, Function.comp_apply]
   simp only [← LinearEquiv.eq_symm_apply, lid_symm_apply]
   rw [← toFun_eq_toFun', baseChange_apply, toFun_baseChangeEquiv_one_tmul, LinearEquiv.symm_apply_apply]
-
 
 end PolynomialLaw
 

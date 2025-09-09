@@ -152,7 +152,7 @@ theorem LinearMap.isCompl_lTensor
     ext x
     simp only [add_apply, coe_comp, coe_subtype, Function.comp_apply,
       id_coe, id_eq]
-    rw [linear_proj_add_linearProjOfIsCompl_eq_self]
+    erw [Submodule.IsCompl.projection_add_projection_eq_self]
   apply IsCompl.mk
   · rw [disjoint_def]
     intro x h h'
@@ -389,7 +389,7 @@ def disjoint_left (hM : IsCompl M' M'') :
     ext x
     simp only [add_apply, LinearMap.coe_comp, coe_subtype, Function.comp_apply,
       id_coe, id_eq]
-    rw [linear_proj_add_linearProjOfIsCompl_eq_self]
+    erw [Submodule.IsCompl.projection_add_projection_eq_self]
   rw [disjoint_def]
   intro x h h'
   rw [← id_apply x (R := A), ← rTensor_id, ← hq]
@@ -412,7 +412,7 @@ def disjoint_right {N' N'' : Submodule A N} (hN : IsCompl N' N'') :
     ext x
     simp only [add_apply, LinearMap.coe_comp, coe_subtype, Function.comp_apply,
       id_coe, id_eq]
-    rw [linear_proj_add_linearProjOfIsCompl_eq_self]
+    erw [Submodule.IsCompl.projection_add_projection_eq_self]
   rw [disjoint_def]
   intro x h h'
   rw [← id_apply x (R := A), ← lTensor_id, ← hq]

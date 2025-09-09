@@ -32,8 +32,7 @@ open PowerSeries Additive ExponentialModule
 noncomputable def exp' (m : M) : PowerSeries (DividedPowerAlgebra R M) :=
   PowerSeries.mk (fun n ↦ dp R n m)
 
-lemma coeff_exp' (m : M) (n : ℕ) :
-    coeff (DividedPowerAlgebra R M) n (exp' R m) = dp R n m := by
+lemma coeff_exp' (m : M) (n : ℕ) : coeff n (exp' R m) = dp R n m := by
   simp only [coeff_mk, exp']
 
 theorem isExponential_exp' (m : M) : IsExponential (exp' R m) := by
@@ -50,7 +49,7 @@ noncomputable def exp (m : M) : ExponentialModule (DividedPowerAlgebra R M) :=
 
 theorem coe_exp (m : M) : ↑(exp R m) = exp' R m := rfl
 
-theorem coeff_exp (m : M) (n : ℕ) : coeff _ n (exp R m) = dp R n m := by
+theorem coeff_exp (m : M) (n : ℕ) : coeff n (exp R m) = dp R n m := by
   simp only [coe_exp, coeff_exp']
 
 -- TODO : The following could serve as a definition of an exponential structure
@@ -81,7 +80,7 @@ theorem coe_exp_LinearMap :
     ⇑(exp_LinearMap R M) = exp R := rfl
 
 theorem coeff_exp_LinearMap (n : ℕ) (m : M) :
-    coeff (DividedPowerAlgebra R M) n (exp_LinearMap R M m) = dp R n m := by
+    coeff n (exp_LinearMap R M m) = dp R n m := by
   rw [coe_exp_LinearMap, coeff_exp]
 
 variable {S : Type*} [CommRing S] [Algebra R S]
@@ -97,7 +96,7 @@ def dividedPowerAlgebra_exponentialModule_equiv :
     (DividedPowerAlgebra R M →ₐ[R] S) ≃ (M →ₗ[R] ExponentialModule S) where
   toFun α := (linearMap α).comp (exp_LinearMap R M)
   invFun β := by
-    apply DividedPowerAlgebra.lift' (f := fun (n, m) ↦ coeff S n (β m))
+    apply DividedPowerAlgebra.lift' (f := fun (n, m) ↦ coeff n (β m))
     · intro m
       simp only [coeff_zero_eq_constantCoeff]
       exact constantCoeff_coe (β m)
@@ -134,8 +133,7 @@ theorem dividedPowerAlgebra_exponentialModule_equiv_apply
 
 variable {R} in
 theorem dividedPowerAlgebra_exponentialModule_equiv_symm_apply
-    (β : M →ₗ[R] ExponentialModule S) (n : ℕ) (m : M):
-    (dividedPowerAlgebra_exponentialModule_equiv R M S).symm β (dp R n m)
-      = coeff S n (β m) := by
+    (β : M →ₗ[R] ExponentialModule S) (n : ℕ) (m : M) :
+    (dividedPowerAlgebra_exponentialModule_equiv R M S).symm β (dp R n m) = coeff n (β m) := by
   unfold dividedPowerAlgebra_exponentialModule_equiv
   simp only [Equiv.coe_fn_symm_mk, lift'_apply_dp]

@@ -284,7 +284,7 @@ theorem isHomogeneousOfDegreeOne_coeff_single (hf : f.IsHomogeneousOfDegree 1) (
   simp only [← this, toFun_sum_tmul_eq_coeff_sum, map_finsuppSum, lid_tmul]
   rw [sum_of_support_subset _ (isHomogeneousOfDegreeOne_coeff_support_le hf m) _ (by simp),
     Finset.sum_map, Function.Embedding.coeFn_mk, Finset.sum_eq_single i _ (by simp)]
-  · rw [Finset.prod_eq_single i (fun j _ hj => by rw [single_eq_of_ne hj.symm, pow_zero])
+  · rw [Finset.prod_eq_single i (fun j _ hj => by rw [single_eq_of_ne hj, pow_zero])
       (fun hi => by simp only [Finset.mem_univ, not_true_eq_false] at hi), Pi.single_eq_same,
       one_pow, _root_.one_smul]
   · intro j _ hj
@@ -398,7 +398,7 @@ noncomputable def _root_.LinearMap.toDegreeOnePolynomialLawEquiv :
       rw [isHomogeneousOfDegreeOne_coeff_single f.prop, Finset.prod_eq_single i ?_ (by simp),
         single_eq_same, pow_one, toLinearMap_eq_ground]
       intro j _ hj
-      rw [single_eq_of_ne (ne_comm.mp hj), pow_zero] }
+      rw [single_eq_of_ne hj, pow_zero] }
 
 end Linear
 
