@@ -4,9 +4,8 @@ import DividedPowers.ForMathlib.Data.Nat.Choose.Multinomial
 import DividedPowers.ForMathlib.RingTheory.DividedPowers.Basic
 import DividedPowers.ForMathlib.RingTheory.Localization.FractionRing
 import DividedPowers.Padic
-import DividedPowers.SubDPIdeal
+import Mathlib.RingTheory.DividedPowers.SubDPIdeal
 import Mathlib.RingTheory.MvPolynomial.Basic
-import Mathlib.RingTheory.Polynomial.Basic
 import Mathlib.RingTheory.PowerSeries.PiTopology
 
 /-! # Construction of the divided power structure on the divided power algebra
@@ -35,6 +34,8 @@ theorem onDPAlgebra_unique (h h' : DividedPowers (augIdeal R M))
     h'.dpow_comp (ne_of_gt hq) (ι_mem_augIdeal R M m), h1 _ m, h1' _ m]
 
 namespace Free
+
+open Module
 
 /-- The basis of the nth graded part of `DividedPowerAlgebra R M` associated with a basis of `M`. -/
 noncomputable def basis_grade {ι : Type*} (b : Basis ι R M) (n : ℕ) :
@@ -107,12 +108,13 @@ theorem basis_repr_ι (m : M) (d) [Decidable (∃ i, d = Finsupp.single i 1)] :
       rw [← Finsupp.single_left_inj Nat.one_ne_zero]
       exact H.choose_spec
     · intro j hj hji
+      rw [ne_comm] at hji
       rw [Finsupp.single_eq_of_ne, mul_zero]
       rwa [ne_eq, Finsupp.single_left_inj Nat.one_ne_zero]
     · simp
   · convert Finsupp.sum_zero with i r
     rw [Finsupp.single_eq_of_ne, mul_zero]
-    exact fun H' ↦ H ⟨i, H'.symm⟩
+    exact fun H' ↦ H ⟨i, H'⟩
 
 theorem ι_repr_support_eq (m : M) :
     ((basis R M b).repr (DividedPowerAlgebra.ι R M m)).support =
@@ -229,7 +231,8 @@ theorem basis_repr_mul [DecidableEq ι] (x y : DividedPowerAlgebra R M) (d : ι 
     simp only [Finsupp.coe_add, Pi.add_apply, Basis.repr_self, Finsupp.smul_single, nsmul_eq_mul,
       Nat.cast_prod, mul_one]
     rw [Finsupp.single_eq_of_ne]
-    simpa only [mem_antidiagonal] using ha'
+    simp only [mem_antidiagonal] at ha'
+    exact Ne.symm ha'
   · intro a ha' ha
     simp only [mem_product, Finsupp.notMem_support_iff, not_and_or] at ha
     rcases ha with ha | ha <;> simp [ha]
@@ -456,16 +459,16 @@ theorem cK_map_single_eq_one {s : Finset ι} {k : Sym ι n} (hk : k  ∈ s.sym n
     convert mul_one _
     · apply Finset.prod_eq_one
       intro i hi
-      have : j = i := by
+      have : i = j := by
         by_contra! h
         simp [g, Finsupp.single_eq_of_ne h] at hi
       simp [this, g, Nat.uniformBell_one_right]
     · suffices (g j).support = {j} by simp [this, card_singleton, tsub_self, pow_zero]
       ext i
       simp only [Finsupp.mem_support_iff, ne_eq, mem_singleton, g]
-      by_cases h : j = i
+      by_cases h : i = j
       · simp [h]
-      · simp [Finsupp.single_eq_of_ne h, Ne.symm h]
+      · simp [Finsupp.single_eq_of_ne h, h]
   · rw [eq_comm]
     simp only [Finsupp.prod]
     apply Finset.prod_eq_one
@@ -474,7 +477,7 @@ theorem cK_map_single_eq_one {s : Finset ι} {k : Sym ι n} (hk : k  ∈ s.sym n
     convert Nat.multinomial_spec _ _
     · simp only [g] at hi
       simp only [prod_map, sum_map, Multiset.count_map_eq_count' _ _ g.injective]
-      have H (j) (hj : j ≠ i) : Multiset.count j k * (g j) i = 0 := by
+      have H (j) (hj : i ≠ j) : Multiset.count j k * (g j) i = 0 := by
         simp [g, Finsupp.single_eq_of_ne hj]
       have H' (hi : i ∉ s) : Multiset.count i k * (g i) i = 0 := by
         convert zero_mul _
@@ -482,10 +485,10 @@ theorem cK_map_single_eq_one {s : Finset ι} {k : Sym ι n} (hk : k  ∈ s.sym n
         rw [mem_sym_iff] at hk
         exact fun a ↦ hi (hk i a)
       rw [Finset.prod_eq_single i _ _ , Finset.sum_eq_single i]
-      · exact fun j hj hij ↦ H j hij
+      · exact fun j hj hij ↦ H j (Ne.symm hij)
       · intro hi; rw [H' hi]
       · intro j hj hij
-        rw [H j hij, Nat.factorial_zero]
+        rw [H j (Ne.symm hij), Nat.factorial_zero]
       · intro hi; rw [H' hi, Nat.factorial_zero]
     · intro H
       rw [Finset.prod_eq_zero_iff] at H
@@ -633,7 +636,7 @@ theorem dpow_eq_of_support_subset {x : DividedPowerAlgebra R M} (hx : x ∈ augI
     · intro i hi hix
       convert mul_zero _
       rw [Finsupp.single_eq_of_ne]
-      exact g.injective.ne_iff.mpr hix
+      exact g.injective.ne_iff.mpr (Ne.symm hix)
     · simp
   rw [Finset.prod_congr rfl this]
   clear this
@@ -740,7 +743,7 @@ theorem repr_lift_eq :
   rw [this, map_finsuppSum, Finsupp.sum_apply, Finsupp.sum_eq_single d]
   · simp [algebra_compatible_smul S]
   · intro e he hed
-    simp [algebra_compatible_smul S, Finsupp.single_eq_of_ne hed]
+    simp [algebra_compatible_smul S, Finsupp.single_eq_of_ne (Ne.symm hed)]
   · simp
 
 theorem repr_lift_support_subset :
@@ -827,18 +830,18 @@ theorem augIdeal_map_lift_eq :
     rw [Finsupp.single_eq_of_ne]
     intro hd'
     apply hd
-    rw [hd', hx]
+    rw [← hd', hx]
 
 variable [CharZero R] [IsDomain R]
 
-noncomputable local instance : Algebra ℚ (S R) := RingHom.toAlgebra
-  (IsLocalization.lift (M := nonZeroDivisors ℤ) (g := Int.castRingHom _) (by
-  intro y
-  refine IsFractionRing.isUnit_map_of_injective ?_ y
-  rw [injective_iff_map_eq_zero]
-  intro a ha
-  rw [← Int.cast_eq_zero (α := R), ← (FaithfulSMul.algebraMap_injective R (S R)).eq_iff]
-  simpa using ha))
+noncomputable local instance : Algebra ℚ (S R) :=
+  RingHom.toAlgebra (IsLocalization.lift (M := nonZeroDivisors ℤ) (g := Int.castRingHom _) (by
+    intro y
+    refine IsFractionRing.isUnit_map_of_injective ?_ y
+    rw [injective_iff_map_eq_zero]
+    intro a ha
+    rw [← Int.cast_eq_zero (α := R), ← (FaithfulSMul.algebraMap_injective R (S R)).eq_iff]
+    simpa using ha))
 
 variable [DecidableEq R]
 
@@ -959,7 +962,7 @@ private lemma id_eq_lift_toN (x : DividedPowerAlgebra R M) :
     split_ifs with hd
     · simp [hd]
     · simp [RingHom.algebraMap_toAlgebra]
-  · intro _ _ hed; simp [Finsupp.single_eq_of_ne hed]
+  · intro _ _ hed; simp [Finsupp.single_eq_of_ne (Ne.symm hed)]
   · simp
 
 variable [DecidableEq ι]
@@ -1094,7 +1097,7 @@ structure _root_.Module.Presentation where
     /-- The `R`-module structure on `L`. -/
     mRL : Module R L
     /-- An `R`-basis of `L` indexed by the set `s`. -/
-    b : Basis s R L
+    b : Module.Basis s R L
     /-- An `R`-linear map from the free `R`-module `L` to `M`. -/
     f : L →ₗ[R] M
     /-- Surjectivity of `f`. -/
@@ -1136,7 +1139,7 @@ theorem isSubDPIdeal :
       n hn hx.1, dpow_mem _ hn hx.2⟩
 
 def dividedPowers : DividedPowers (augIdeal R M) :=
-  DividedPowers.Quotient.OfSurjective.dividedPowers (Free.dividedPowers p.b) (augIdeal R M)
+  DividedPowers.Quotient.OfSurjective.dividedPowers (Free.dividedPowers p.b)
     (LinearMap.lift_surjective_of p.surj) (LinearMap.augIdeal_map_lift R p.L p.f p.surj).symm
     (isSubDPIdeal p)
 
@@ -1144,7 +1147,7 @@ theorem dpow_eq_dp (n : ℕ) (x : M) : (dividedPowers p).dpow n (ι R M x) = dp 
   simp only [dividedPowers]
   obtain ⟨y, rfl⟩ := p.surj x
   rw [← LinearMap.lift_ι_apply]
-  erw [Quotient.OfSurjective.dpow_apply (Free.dividedPowers p.b) (augIdeal R M)
+  erw [Quotient.OfSurjective.dpow_apply (Free.dividedPowers p.b)
     (LinearMap.lift_surjective_of p.surj) (LinearMap.augIdeal_map_lift R p.L p.f p.surj).symm
     (isSubDPIdeal p) (ι_mem_augIdeal _ _ y) (n := n)]
   simp [Free.dpow_eq_dp p.b, LinearMap.lift_apply_dp]
@@ -1168,7 +1171,7 @@ section Unused
 
 -- I think we could remove this section.
 
-open DividedPowerAlgebra.Free
+open DividedPowerAlgebra.Free Module
 
 variable {R M} {ι : Type*} (b : Basis ι R M) {n : ℕ} [DecidableEq R] [DecidableEq ι]
 
@@ -1187,8 +1190,7 @@ theorem dpowExp_eq_of_support_subset {x : DividedPowerAlgebra R M} (hx : x ∈ a
     {s : Finset (ι →₀ ℕ)} (hs : ((basis R M b).repr x).support ⊆ s) :
     dpowExp b x = ∑' (n : ℕ), ∑ k ∈ s.sym n,
       (∏ d ∈ s, ((basis R M b).repr x) d ^ Multiset.count d k) •
-        (PowerSeries.monomial (DividedPowerAlgebra R M) n)
-        ((cK k s) * (basis R M b) (k : Multiset (ι →₀ ℕ)).sum) := by
+        (PowerSeries.monomial n) ((cK k s) * (basis R M b) (k : Multiset (ι →₀ ℕ)).sum) := by
   rw [PowerSeries.as_tsum (dpowExp b x)]
   simp [dpowExp, dpow_eq_of_support_subset b hx hs, Sym.val_eq_coe, nsmul_eq_mul,
     Algebra.mul_smul_comm, PowerSeries.coeff_mk, map_sum, LinearMap.map_smul_of_tower]
