@@ -103,11 +103,11 @@ theorem eq_sum_single_comp_proj (f : N  →ₚₗ[R] (Π i, M i)) :
     f = ∑ (i : ι), ((single R M i).comp (proj i)).toPolynomialLaw.comp f := by
   rw [← sum_comp]
   convert f.id_comp.symm
-  simp only [← ofLinearMapHom_apply, ← Submodule.coe_sum,
+  simp only [← toDegreeOnePolynomialLaw_apply, ← Submodule.coe_sum,
     ← map_sum]
   suffices ∑ x, LinearMap.single R M x ∘ₗ proj x = LinearMap.id by
     rw [this]
-    rw [ofLinearMapHom_apply, ofLinearMap_id]
+    rw [toDegreeOnePolynomialLaw_apply, toPolynomialLaw_id]
   aesop
 
 theorem toFun_eq_sum_single_proj (f : N  →ₚₗ[R] (Π i, M i)) {S : Type*} [CommSemiring S]
@@ -117,7 +117,7 @@ theorem toFun_eq_sum_single_proj (f : N  →ₚₗ[R] (Π i, M i)) {S : Type*} [
   rw [sum_toFun]
   apply Finset.sum_congr rfl
   intro i _
-  simp only [ofLinearMap_comp, comp_toFun, ofLinearMap_toFun, Function.comp_apply]
+  simp only [toPolynomialLaw_comp, comp_toFun, toPolynomialLaw_toFun, Function.comp_apply]
   congr
   ext m
   simp [singleRight_tmul]
@@ -144,7 +144,7 @@ theorem IsMultiHomogeneousOfDegree.comp {κ : Type*} [Fintype κ] [DecidableEq �
   simp only [← toFun_eq_toFun', comp_toFun, Function.comp_apply]
   nth_rewrite 1 [f.toFun_eq_sum_single_proj]
   simp_rw [(hf _).toFun, map_smul]
-  simp only [comp_toFun, Function.comp_apply, ofLinearMap_toFun]
+  simp only [comp_toFun, Function.comp_apply, toPolynomialLaw_toFun]
   set r := fun x ↦ ∏ i, s i ^ (n x) i with hr
   change g.toFun S (∑ x, (r x • _)) = _
   generalize f.toFun S m = m'
@@ -226,7 +226,7 @@ theorem IsMultiHomogeneousOfMultiDegree.multicoeff_single_eq_ground {i : ι}
   simp only [← this, toFun_sum_tmul_eq_multiCoeff_sum, map_finsuppSum, lid_tmul]
   rw [sum_of_support_subset _ (isMultiHomogeneousOfDegreeOne_multiCoeff_support_le hf m) _
     (by simp), Finset.sum_map, Function.Embedding.coeFn_mk, Finset.sum_eq_single i _ (by simp)]
-  · rw [Finset.prod_eq_single i (fun j _ hj => by rw [single_eq_of_ne hj.symm, pow_zero])
+  · rw [Finset.prod_eq_single i (fun j _ hj => by rw [single_eq_of_ne hj, pow_zero])
       (fun hi => by simp only [Finset.mem_univ, not_true_eq_false] at hi), Pi.single_eq_same,
       one_pow, _root_.one_smul]
   · intro j _ hj

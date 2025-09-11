@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 
-import DividedPowers.RatAlgebra
+import Mathlib.RingTheory.DividedPowers.RatAlgebra
 import Mathlib.NumberTheory.Padics.PadicIntegers
 
 /-! # Divided powers on ℤ_[p]
@@ -88,7 +88,7 @@ noncomputable def _root_.DividedPowers.ofInjective (f : A →+* B) (hf : Injecti
     simp only [dif_pos hx]
     obtain ⟨y, hy, h⟩ := hmem 1 hx
     rw [hJ.dpow_one (hIJ ▸ Ideal.mem_map_of_mem f hx)] at h ⊢
-    simp [← h, Function.leftInverse_invFun hf y, hy]
+    simp [← h, Function.leftInverse_invFun hf y]
     exact hf h
   dpow_mem {n x} hn hx := by
     obtain ⟨y, hy, h⟩ := hmem n hx
@@ -178,8 +178,8 @@ lemma dpow'_norm_le_of_ne_zero {n : ℕ} (hn : n ≠ 0) {x : ℤ_[p]}
       exact factorial_ne_zero n
     rw [← zpow_neg_one, ← Nat.cast_one (R := ℤ)]
     rw [Padic.norm_le_pow_iff_norm_lt_pow_add_one]
-    simp only [inverse_eq_inv', padicNormE.mul, norm_inv, _root_.norm_pow, padic_norm_e_of_padicInt,
-      cast_one, Int.reduceNeg, neg_add_cancel, zpow_zero]
+    simp only [inverse_eq_inv', norm_mul, norm_inv, norm_pow, padic_norm_e_of_padicInt, cast_one,
+      Int.reduceNeg, neg_add_cancel, zpow_zero]
     rw [norm_eq_zpow_neg_valuation hx0, inv_mul_lt_one₀ hnorm, Padic.norm_eq_zpow_neg_valuation
       (cast_ne_zero.mpr n.factorial_ne_zero), ← zpow_natCast, ← zpow_mul]
     gcongr
@@ -213,7 +213,7 @@ private theorem dpow_mem {n : ℕ} {x : ℤ_[p]} (hm : n ≠ 0) (hx : x ∈ Idea
   have hiff := PadicInt.norm_le_pow_iff_mem_span_pow ⟨dpow' p n x, dpow'_int p n hx⟩ 1
   rw [pow_one] at hiff
   rw [← hiff]
-  simp only [dif_pos hx, cast_one, zpow_neg_one]
+  simp only [cast_one, zpow_neg_one]
   exact dpow'_norm_le_of_ne_zero p hm hx
 
 variable [DecidablePred fun x ↦ x ∈ Ideal.span {(p : ℤ_[p])}]

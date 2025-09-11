@@ -48,7 +48,7 @@ import DividedPowers.ForMathlib.RingTheory.Localization.FractionRing
 import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.StronglySummable.Basic -- it uses sorry
 import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.StronglySummable.Topology
 --import DividedPowers.ForMathlib.MvPowerSeries.Sandbox -- Test file, do not import here.
-import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Substitution
+--import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Substitution
 import DividedPowers.ForMathlib.RingTheory.Polynomial.Coeff
 --import DividedPowers.ForMathlib.MvPowerSeries.Trunc -- In PR 20958
 --import DividedPowers.ForMathlib.RingTheory.PowerSeries.Topology -- In PR #14866
@@ -68,16 +68,17 @@ import DividedPowers.Padic
 import DividedPowers.PolynomialLaw.BaseChange
 --import DividedPowers.PolynomialLaw.Basic -- In PR #22912
 import DividedPowers.PolynomialLaw.Basic2 -- toFun, PR #26719
-import DividedPowers.PolynomialLaw.Basic2 -- new basic stuff
+import DividedPowers.PolynomialLaw.Basic3 -- new basic stuff
 import DividedPowers.PolynomialLaw.BiCoeff
 import DividedPowers.PolynomialLaw.BiHomogeneous
 import DividedPowers.PolynomialLaw.Coeff
 import DividedPowers.PolynomialLaw.Differential
 import DividedPowers.PolynomialLaw.Homogeneous
+import DividedPowers.PolynomialLaw.Linear
 import DividedPowers.PolynomialLaw.LocFinsupp
 import DividedPowers.PolynomialLaw.MultiCoeff
 import DividedPowers.PolynomialLaw.MultiHomogeneous -- It has a sorry
 import DividedPowers.PolynomialLaw.Polarized
 import DividedPowers.PolynomialLaw.Prod
-import DividedPowers.RatAlgebra -- In PR #22322
-import DividedPowers.SubDPIdeal
+--import DividedPowers.RatAlgebra -- In PR #22322
+--import DividedPowers.SubDPIdeal

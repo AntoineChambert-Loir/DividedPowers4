@@ -5,7 +5,7 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 
 import DividedPowers.BasicLemmas
-import DividedPowers.RatAlgebra
+import Mathlib.RingTheory.DividedPowers.RatAlgebra
 import Mathlib.Data.Nat.Choose.Vandermonde
 import Mathlib.RingTheory.DividedPowers.DPMorphism
 
@@ -139,7 +139,7 @@ theorem dpow_zero (hIJ : ∀ (n : ℕ), ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow
   rw [Ideal.add_eq_sup, Submodule.mem_sup]
   rintro ⟨a, ha, b, hb, rfl⟩
   rw [dpow_eq hI hJ hIJ ha hb]
-  simp only [zero_add, range_one, ge_iff_le, zero_le, tsub_eq_zero_of_le, sum_singleton]
+  simp only [zero_add, range_one, zero_le, tsub_eq_zero_of_le, sum_singleton]
   rw [hI.dpow_zero ha, hJ.dpow_zero hb, mul_one]
 
 theorem dpow_mul (hIJ : ∀ (n : ℕ), ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) {m n : ℕ} {x : A} :
@@ -177,18 +177,15 @@ theorem dpow_mul (hIJ : ∀ (n : ℕ), ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow 
           hI.dpow y.fst a * hJ.dpow y.snd b)) := by
     apply sum_congr rfl
     rintro ⟨u, v⟩ _
-    simp only [Prod.mk.injEq, mem_product, mem_antidiagonal, and_imp, Prod.forall, Nat.cast_sum,
-    Nat.cast_mul, sum_mul]
+    simp only [Nat.cast_sum, Nat.cast_mul, sum_mul]
     apply sum_congr rfl
     rintro ⟨⟨i, j⟩, ⟨k, l⟩⟩ hx
-    simp only [hs_def, mem_product, mem_antidiagonal, and_imp, Prod.forall, mem_filter,
-      Prod.mk.injEq] at hx
+    simp only [hs_def, mem_product, mem_antidiagonal, mem_filter, Prod.mk.injEq] at hx
     rw [hx.2.1, hx.2.2]
   rw [hs', dpow_eq hI hJ hIJ ha hb, ← Nat.sum_antidiagonal_eq_sum_range_succ fun i j =>
     hI.dpow i a * hJ.dpow j b, mul_sum]
   apply sum_congr rfl
   rintro ⟨u, v⟩ h
-  simp only [Prod.mk_inj]
   rw [← mul_assoc]
   apply congr_arg₂ _ _ rfl
   apply congr_arg₂ _ _ rfl
@@ -297,7 +294,7 @@ theorem dpow_comp_aux (hIJ : ∀ (n : ℕ), ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.
           rw [mul_comm (hI.dpow _ a)]
           simp only [← mul_assoc]
           apply congr_arg₂ _ _ rfl
-          simp only [Sym.mem_coe, ge_iff_le, Nat.cast_mul]
+          simp only [Nat.cast_mul]
           apply congr_arg₂ _ _ rfl
           rw [mul_comm]
     set φ : Sym ℕ m → ℕ := fun k => (range (n + 1)).sum fun i => Multiset.count i ↑k * i with hφ_def
@@ -312,8 +309,7 @@ theorem dpow_comp_aux (hIJ : ∀ (n : ℕ), ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.
                       ↑(Nat.multinomial (range (n + 1)) fun i : ℕ => Multiset.count i ↑k * i) *
                     ↑(Nat.multinomial (range (n + 1)) fun i : ℕ => Multiset.count i ↑k * (n - i)) *
               hI.dpow p a * hJ.dpow (m * n - p) b by
-          simp only [sum_congr rfl L4, Sym.mem_coe, mem_sym_iff, mem_range, ge_iff_le, Nat.cast_sum,
-            Nat.cast_mul, Nat.cast_prod, sum_mul]
+          simp only [sum_congr rfl L4, Nat.cast_sum, Nat.cast_mul, Nat.cast_prod, sum_mul]
           congr
       intro p _
       apply sum_congr rfl
@@ -331,7 +327,7 @@ theorem dpow_comp_aux (hIJ : ∀ (n : ℕ), ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.
       rw [mul_comm]
     -- hφ
     intro k hk
-    simp only [φ, Sym.mem_coe, mem_range, Nat.lt_succ_iff, range_sym_weighted_sum_le hk]
+    simp only [φ, mem_range, Nat.lt_succ_iff, range_sym_weighted_sum_le hk]
   . -- dpow_zero
     intro x hx
     rw [dpow_zero hI hJ hIJ hx]
@@ -358,8 +354,7 @@ theorem dpow_comp_coeffs {m n p : ℕ} (hn : n ≠ 0) (hp : p ≤ m * n) :
   classical
   rw [← mul_left_inj' (pos_iff_ne_zero.mp (Nat.choose_pos hp))]
   apply @Nat.cast_injective ℚ
-  simp only [Sym.mem_coe, mem_sym_iff, mem_range, ge_iff_le,
-    Nat.cast_sum, Nat.cast_mul, Nat.cast_prod, Nat.cast_eq_zero]
+  simp only [Nat.cast_sum, Nat.cast_mul, Nat.cast_prod]
   conv_lhs => rw [← Polynomial.coeff_X_add_one_pow ℚ (m * n) p]
   let A := ℚ[X]
   let I : Ideal A := ⊤
@@ -373,8 +368,8 @@ theorem dpow_comp_coeffs {m n p : ℕ} (hn : n ≠ 0) (hp : p ≤ m * n) :
     ← dpow_eq_of_mem_left' hI hI hII Submodule.mem_top, dpow_comp_aux hI hI hII hn hX h1,
     ← C_eq_natCast, mul_sum, finset_sum_coeff]
   simp only [hI, RatAlgebra.dpow_eq_inv_fact_smul _ _ Submodule.mem_top, map_natCast,
-    Nat.cast_sum, Nat.cast_mul, Nat.cast_prod, Ring.inverse_eq_inv', Algebra.mul_smul_comm, one_pow,
-    mul_one, coeff_smul, coeff_natCast_mul, smul_eq_mul]
+    Ring.inverse_eq_inv', Algebra.mul_smul_comm, one_pow, mul_one, coeff_smul, coeff_natCast_mul,
+    smul_eq_mul]
   simp only [← Nat.cast_prod, ← Nat.cast_mul, ← Nat.cast_sum]
   rw [sum_eq_single p]
   · conv_lhs =>
@@ -482,5 +477,3 @@ theorem dpow_eq_of_mem_right (hIJ : ∀ (n : ℕ), ∀ a ∈ I ⊓ J, hI.dpow n 
 end IdealAdd_v1
 
 end DividedPowers
-
-#min_imports

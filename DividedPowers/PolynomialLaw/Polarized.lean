@@ -15,11 +15,13 @@ namespace PolynomialLaw
 
 section PolarizedProd
 
+open LinearMap
+
 /-- Given a polynomial law `f : M →ₚₗ[R] N` and a finite type `ι`, the `ι`-polarized of `f`
 is the polynomial law `(Π (_ : ι), M) →ₚₗ[R] N` obtained by composing `f` and `sum_proj R M ι`.
 This is denoted by `Π_p` in Roby63 II.1 (where `p` corresponds to the size of `ι`). -/
 def polarizedProd : (M →ₚₗ[R] N) →ₗ[R] (M × M →ₚₗ[R] N) where
-  toFun f := f.comp (sum_fst_snd R M)
+  toFun f := f.comp (fst R M M + snd R M M).toPolynomialLaw
   map_add' f g := by
     ext S _ _ sm
     simp [comp_toFun']
@@ -28,11 +30,9 @@ def polarizedProd : (M →ₚₗ[R] N) →ₗ[R] (M × M →ₚₗ[R] N) where
     simp [comp_toFun']
 
 lemma polarizedProd_apply (m : M × M) : f.polarizedProd m = f (m.fst + m.snd):= by
-  simp only [polarizedProd, sum_fst_snd, fst, snd, LinearMap.coe_mk, AddHom.coe_mk, ground_apply,
-    comp_toFun', add_def, Function.comp_apply, Pi.add_apply, map_tmul, LinearMap.id_coe, id_eq,
-    LinearMap.fst_apply, LinearMap.snd_apply, EmbeddingLike.apply_eq_iff_eq]
-  congr 1
-  rw [tmul_add]
+  simp only [polarizedProd, fst, snd, coe_mk, AddHom.coe_mk, ground_apply, comp_toFun',
+    Function.comp_apply, EmbeddingLike.apply_eq_iff_eq]
+  rfl
 
 -- Not needed?
 lemma map_add_eq_polarizedprod_two_apply (m m' : M) :
@@ -42,7 +42,10 @@ lemma map_add_eq_polarizedprod_two_apply (m m' : M) :
 lemma polarizedProd_toFun'_apply {S : Type u} [CommSemiring S] [Algebra R S]
     {m : TensorProduct R S (M × M)} : (polarizedProd f).toFun' S m =
       f.toFun' S (((prodRight R R S M M) m).fst + ((prodRight R R S M  M) m).snd) := by
-  simp [polarizedProd, comp_toFun', sum_fst_snd_toFun'_apply]
+  simp [polarizedProd, comp_toFun']
+  congr 1
+  simp only [toPolynomialLaw_toFun']
+  rw [baseChange_fst_eq_prodRight_fst, baseChange_snd_eq_prodRight_snd]
 
 variable {f p}
 

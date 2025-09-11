@@ -14,7 +14,7 @@ theorem rTensor_lcoeff (sn : MvPolynomial σ R ⊗[R] N) (k : σ →₀ ℕ) :
   | zero => simp
   | tmul s n =>
     simp only [rTensor_tmul, scalarRTensor_apply_tmul, Finsupp.sum_apply]
-    rw [Finsupp.sum_eq_single k (fun b _ hb ↦ by rw [Finsupp.single_eq_of_ne hb])
+    rw [Finsupp.sum_eq_single k (fun b _ hb ↦ by rw [Finsupp.single_eq_of_ne hb.symm])
       (fun _ ↦ by rw [_root_.zero_smul, Finsupp.single_zero, Finsupp.coe_zero, Pi.zero_apply]),
       Finsupp.single_eq_same, lcoeff_apply, ← smul_tmul, smul_eq_mul, mul_one]
     congr
@@ -85,7 +85,7 @@ theorem TensorProduct.tmul_eq_aeval_one_sum :
 
 theorem TensorProduct.eq_rTensor_sum (sm : S ⊗[R] ((i : ι) → M i)) :
     sm = (LinearMap.rTensor ((i : ι) → M i) (AlgHom.restrictScalars R (aeval 1)).toLinearMap)
-      (∑ j, (LinearEquiv.rTensor ((i : ι) → M i) scalarRTensorAlgEquiv.toLinearEquiv)
+      (∑ j, (LinearEquiv.rTensor ((i : ι) → M i) (scalarRTensorAlgEquiv (R := R)).toLinearEquiv)
         ((TensorProduct.assoc R (MvPolynomial ι R) S ((i : ι) → M i)).symm
           (X j ⊗ₜ[R] (TensorProduct.compRight R S S M j) sm))) := by
   simp only [map_sum, LinearMap.rTensor]

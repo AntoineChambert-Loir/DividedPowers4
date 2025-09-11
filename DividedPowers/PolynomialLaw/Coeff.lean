@@ -326,7 +326,7 @@ from a basis `b` of `M` and `N`-valued polynomials, a polynomial law.
 In this way, we get an `R`-linear isomorphism between `(ι →₀ ℕ) →₀ N` (which agrees with
 `MvPolynomial ι N` when `N` is a semiring) and `M →ₚₗ[R] N`. -/
 
-open Finset MvPolynomial PolynomialLaw TensorProduct
+open Finset Module MvPolynomial PolynomialLaw TensorProduct
 
 variable {M N ι : Type*} [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module R N] [Fintype ι]
   (S : Type*) [CommSemiring S] [Algebra R S] (b : Basis ι R M) (h : (ι →₀ ℕ) →₀ N) (m : S ⊗[R] M)
@@ -375,7 +375,7 @@ theorem generize_polynomialLaw_eq_sum :
       Basis.repr_self, single_eq_same, _root_.one_smul, mul_one]
     · intro j _ hj
       rw [LinearForm.baseChange_apply_tmul, Basis.coord_apply, Basis.repr_self,
-        Algebra.mul_smul_comm, mul_one, single_smul, one_smul, single_eq_of_ne hj]
+        Algebra.mul_smul_comm, mul_one, single_smul, one_smul, single_eq_of_ne hj.symm]
     · simp
   simp only [← hm, this]
   apply sum_congr (fun k _ ↦ ?_)
@@ -433,7 +433,7 @@ end Finsupp
 
 section CommSemiring
 
-open TensorProduct Finsupp
+open Module TensorProduct Finsupp
 
 variable {M N ι : Type*} [AddCommMonoid M] [Module R M] [CommSemiring N] [Module R N] [Fintype ι]
   (S : Type*) [CommSemiring S] [Algebra R S] (b : Basis ι R M)

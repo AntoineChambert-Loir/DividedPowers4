@@ -286,8 +286,8 @@ lemma multiCoeffBaseChange_apply_smul [Nontrivial R] (s : Π _, S) :
     simp only [eval₂, RingHom.coe_comp, RingHom.coe_coe, Function.comp_apply, Finsupp.prod_pow,
       map_zero, zero_mul, Finsupp.sum_single_index, Algebra.TensorProduct.lid_tmul, X,
       ← single_eq_monomial, Finsupp.single_eq_same, _root_.one_smul]
-    rw [Finset.prod_eq_single i (fun _ _ hj ↦ by rw [Finsupp.single_eq_of_ne (Ne.symm hj),
-      pow_zero]) (fun hj ↦ absurd (Finset.mem_univ _) hj)]
+    rw [Finset.prod_eq_single i (fun _ _ hj ↦ by rw [Finsupp.single_eq_of_ne hj, pow_zero])
+      (fun hj ↦ absurd (Finset.mem_univ _) hj)]
     simp [single_eq_monomial, mul_comm (s i) t, C_mul_monomial,]
   | add sm sm' h h' => simp only [map_add, smul_add, Finset.sum_add_distrib, tmul_add, h, h']
 
