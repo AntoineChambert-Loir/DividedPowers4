@@ -232,7 +232,7 @@ variable (f) in
 def K : Ideal (DividedPowerAlgebra R M) := Ideal.span
   (Set.range (fun (nq : PNat × (LinearMap.ker f)) ↦ dp R nq.1 (nq.2 : M)))
 
-variable (hf) in
+include hf in
 noncomputable def fsymm' :
     DividedPowerAlgebra R N →ₐ[R] (DividedPowerAlgebra R M ⧸ (K f)) :=
   let es := esymm (LinearMap.ker f)
@@ -243,7 +243,7 @@ noncomputable def fsymm' :
     LinearEquiv.lift this
   sorry
 
-noncomputable def fsymm' :
+noncomputable def fsymm'' :
     DividedPowerAlgebra R N →ₐ[R] (DividedPowerAlgebra R M ⧸ (K f)) :=
   (dividedPowerAlgebra_exponentialModule_equiv R N (DividedPowerAlgebra R M ⧸ (K f))).symm (sorry)
 
