@@ -137,3 +137,72 @@ theorem dividedPowerAlgebra_exponentialModule_equiv_symm_apply
     (dividedPowerAlgebra_exponentialModule_equiv R M S).symm β (dp R n m) = coeff n (β m) := by
   unfold dividedPowerAlgebra_exponentialModule_equiv
   simp only [Equiv.coe_fn_symm_mk, lift'_apply_dp]
+
+section quotient
+
+variable {R M : Type*} [CommRing R] [AddCommGroup M] [Module R M]
+
+variable (Q : Submodule R M)
+
+def J : Ideal (DividedPowerAlgebra R M) := Ideal.span
+  (Set.range (fun (nq : ℕ × Q) ↦ dp R (nq.1 + 1) (nq.2 : M)))
+
+noncomputable def h :
+    ExponentialModule (DividedPowerAlgebra R M) →ₗ[R]
+      ExponentialModule (DividedPowerAlgebra R M ⧸ J Q) :=
+  linearMap (Ideal.Quotient.mkₐ R (J Q))
+
+
+theorem coeff_linearMap (A B : Type*) [CommRing A] [CommRing B] [Algebra R A] [Algebra R B] (f : A →ₐ[R] B) (x : ExponentialModule A) (n : ℕ) :
+  coeff n ((linearMap f x) : B⟦X⟧) = f (coeff n (x : A⟦X⟧)) :=
+  rfl
+
+lemma coe_zero_eq_one (A : Type*) [CommRing A] :
+    ((0 : ExponentialModule A) : A⟦X⟧) = 1 := by
+  rfl
+
+noncomputable def h' :
+    M ⧸ Q →ₗ[R] ↥(ExponentialModule (DividedPowerAlgebra R M ⧸ J Q)) :=
+  Q.liftQ ((linearMap (Ideal.Quotient.mkₐ R (J Q))).comp (exp_LinearMap R M)) (fun q hq ↦ by
+  simp only [LinearMap.mem_ker, LinearMap.coe_comp, Function.comp_apply]
+  ext n
+  simp only [coeff_linearMap, coeff_exp_LinearMap, Ideal.Quotient.mkₐ_eq_mk, coe_zero_eq_one,
+    coeff_one]
+  split_ifs with hn
+  · simp [hn, dp_zero] -- make dp_zero @[simp] ?
+  · rw [Ideal.Quotient.eq_zero_iff_mem, J]
+    apply Ideal.subset_span
+    simp only [Set.mem_range, Prod.exists, Subtype.exists, exists_prop]
+    use n.pred, q, hq
+    congr
+    exact (Nat.succ_pred_eq_of_ne_zero hn))
+
+noncomputable def esymm :
+    DividedPowerAlgebra R (M ⧸ Q) →ₐ[R] DividedPowerAlgebra R M ⧸ (J Q) :=
+  (dividedPowerAlgebra_exponentialModule_equiv R (M ⧸ Q) (DividedPowerAlgebra R M ⧸ (J Q))).symm (h' Q)
+
+noncomputable def e :
+    DividedPowerAlgebra R M ⧸ (J Q) →ₐ[R] (DividedPowerAlgebra R (M ⧸ Q)) := by
+  let h := Ideal.Quotient.mkₐ R (J Q)
+  apply Ideal.Quotient.liftₐ (J Q) (LinearMap.lift R Q.mkQ)
+  suffices J Q ≤ RingHom.ker (LinearMap.lift R Q.mkQ) by
+    intro a ; apply this
+  rw [J]
+  rw [Ideal.span_le]
+  rintro x ⟨⟨n, q⟩, rfl⟩
+  simp only [SetLike.mem_coe, RingHom.mem_ker]
+  simp only [LinearMap.lift_apply_dp]
+  suffices Q.mkQ (q : M) = 0 by
+    rw [this]
+    apply dp_null_of_ne_zero R
+    exact Ne.symm (Nat.zero_ne_add_one n)
+  aesop
+
+noncomputable example :
+    (DividedPowerAlgebra R M ⧸ (J Q)) ≃ₐ[R] DividedPowerAlgebra R (M ⧸ Q) := by
+  apply AlgEquiv.ofAlgHom (e Q) (esymm Q)
+  · sorry
+  · sorry
+
+end quotient
+end DividedPowerAlgebra
