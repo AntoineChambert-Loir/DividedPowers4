@@ -147,12 +147,6 @@ variable (Q : Submodule R M)
 def J : Ideal (DividedPowerAlgebra R M) := Ideal.span
   (Set.range (fun (nq : ℕ × Q) ↦ dp R (nq.1 + 1) (nq.2 : M)))
 
-noncomputable def h :
-    ExponentialModule (DividedPowerAlgebra R M) →ₗ[R]
-      ExponentialModule (DividedPowerAlgebra R M ⧸ J Q) :=
-  linearMap (Ideal.Quotient.mkₐ R (J Q))
-
-
 theorem coeff_linearMap (A B : Type*) [CommRing A] [CommRing B] [Algebra R A] [Algebra R B] (f : A →ₐ[R] B) (x : ExponentialModule A) (n : ℕ) :
   coeff n ((linearMap f x) : B⟦X⟧) = f (coeff n (x : A⟦X⟧)) :=
   rfl
@@ -161,9 +155,8 @@ lemma coe_zero_eq_one (A : Type*) [CommRing A] :
     ((0 : ExponentialModule A) : A⟦X⟧) = 1 := by
   rfl
 
-noncomputable def h' :
-    M ⧸ Q →ₗ[R] ↥(ExponentialModule (DividedPowerAlgebra R M ⧸ J Q)) :=
-  Q.liftQ ((linearMap (Ideal.Quotient.mkₐ R (J Q))).comp (exp_LinearMap R M)) (fun q hq ↦ by
+theorem ker_linearMap_mk_exp_LinearMap :
+    Q ≤ LinearMap.ker (linearMap (S := DividedPowerAlgebra R M ⧸ (J Q)) (Ideal.Quotient.mkₐ R (J Q)) ∘ₗ exp_LinearMap R M) := fun q hq ↦ by
   simp only [LinearMap.mem_ker, LinearMap.coe_comp, Function.comp_apply]
   ext n
   simp only [coeff_linearMap, coeff_exp_LinearMap, Ideal.Quotient.mkₐ_eq_mk, coe_zero_eq_one,
@@ -175,11 +168,19 @@ noncomputable def h' :
     simp only [Set.mem_range, Prod.exists, Subtype.exists, exists_prop]
     use n.pred, q, hq
     congr
-    exact (Nat.succ_pred_eq_of_ne_zero hn))
+    exact (Nat.succ_pred_eq_of_ne_zero hn)
 
 noncomputable def esymm :
     DividedPowerAlgebra R (M ⧸ Q) →ₐ[R] DividedPowerAlgebra R M ⧸ (J Q) :=
-  (dividedPowerAlgebra_exponentialModule_equiv R (M ⧸ Q) (DividedPowerAlgebra R M ⧸ (J Q))).symm (h' Q)
+  (dividedPowerAlgebra_exponentialModule_equiv R (M ⧸ Q) (DividedPowerAlgebra R M ⧸ (J Q))).symm (
+  Q.liftQ ((linearMap (Ideal.Quotient.mkₐ R (J Q))).comp (exp_LinearMap R M)) (by exact ker_linearMap_mk_exp_LinearMap Q))
+
+theorem esymm_dp (n : ℕ) (m : M) :
+    esymm Q (dp R n (Q.mkQ m)) = Ideal.Quotient.mk _ (dp R n m) := by
+  simp only [esymm]
+  simp only [Submodule.mkQ_apply]
+  rw [dividedPowerAlgebra_exponentialModule_equiv_symm_apply]
+  simp [coeff_linearMap, coeff_exp_LinearMap]
 
 noncomputable def e :
     DividedPowerAlgebra R M ⧸ (J Q) →ₐ[R] (DividedPowerAlgebra R (M ⧸ Q)) := by
@@ -198,11 +199,24 @@ noncomputable def e :
     exact Ne.symm (Nat.zero_ne_add_one n)
   aesop
 
-noncomputable example :
+theorem e_dp (n : ℕ) (m : M) :
+    (e Q) ((Ideal.Quotient.mk (J Q)) (dp R n m)) = dp R n (Q.mkQ m) := by
+  simp [e, LinearMap.lift_apply_dp]
+
+noncomputable def dividedPowerAlgebra_quotient_equiv :
     (DividedPowerAlgebra R M ⧸ (J Q)) ≃ₐ[R] DividedPowerAlgebra R (M ⧸ Q) := by
   apply AlgEquiv.ofAlgHom (e Q) (esymm Q)
-  · sorry
-  · sorry
+  · rw [algHom_ext_iff]
+    rintro n ⟨m⟩
+    simp only [AlgHom.coe_comp, Function.comp_apply, AlgHom.coe_id, id_eq]
+    rw [show Quot.mk ⇑Q.quotientRel m = ⇑Q.mkQ m from by rfl,
+      esymm_dp, e_dp]
+  · apply Ideal.Quotient.algHom_ext
+    rw [algHom_ext_iff]
+    intro n m
+    simp only [AlgHom.coe_comp, Ideal.Quotient.mkₐ_eq_mk, Function.comp_apply, Submodule.mkQ_apply, e_dp]
+    rw [show Submodule.Quotient.mk m = Q.mkQ m from by rfl, esymm_dp]
+    simp
 
 end quotient
 end DividedPowerAlgebra
