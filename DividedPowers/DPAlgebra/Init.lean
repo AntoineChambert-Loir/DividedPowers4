@@ -347,6 +347,54 @@ theorem LinearMap.lift_surjective_of
   simp [LinearMap.lift_apply_dp]
   rfl
 
+variable {P : Type*} [AddCommMonoid P] [Module R P]
+
+-- is there a variant where a ring T acts on P?
+
+lemma LinearMap.lift_comp (f : M →ₗ[R] N) (g : N →ₗ[R] P) :
+    LinearMap.lift R (g.comp f) = (LinearMap.lift R g).comp (LinearMap.lift R f) := by
+  rw [algHom_ext_iff]
+  intros; simp [lift_apply_dp]
+
+lemma LinearMap.lift_id :
+    LinearMap.lift R (LinearMap.id (R := R) (M := M)) = AlgHom.id R _ := by
+  rw [algHom_ext_iff]
+  intros
+  simp [lift_apply_dp]
+
+/-- The functoriality map between divided power algebras associated with a linear equivalence of the
+  underlying modules.
+  Given an `R`-algebra `S`, an `S`-module `N` and an `R`-linear equivalence `f : M →ₗ[R] N`,
+  this is the map `DividedPowerAlgebra R M →ₐ[R] DividedPowerAlgebra S N`
+  sending `dp R n m` to `dp S n (f m)`. -/
+def LinearEquiv.lift (g : M ≃ₗ[R] N) :
+    DividedPowerAlgebra R M ≃ₐ[R] DividedPowerAlgebra R N :=
+  AlgEquiv.ofAlgHom (LinearMap.lift R g.toLinearMap)
+    (LinearMap.lift R g.symm.toLinearMap)
+    (by simp [← LinearMap.lift_comp, LinearMap.lift_id])
+    (by simp [← LinearMap.lift_comp, LinearMap.lift_id])
+
+theorem LinearEquiv.lift_symm (g : M ≃ₗ[R] N) :
+    (LinearEquiv.lift g).symm = LinearEquiv.lift g.symm :=
+  rfl
+
+theorem LinearEquiv.coe_lift (g : M ≃ₗ[R] N) :
+    LinearEquiv.lift g = LinearMap.lift R g.toLinearMap :=
+  rfl
+
+theorem LinearEquiv.coe_lift_symm (g : M ≃ₗ[R] N) :
+    (LinearEquiv.lift g).symm = LinearMap.lift R g.symm.toLinearMap :=
+  rfl
+
+theorem LinearEquiv.lift_refl :
+    LinearEquiv.lift (LinearEquiv.refl R M) = AlgEquiv.refl :=
+  AlgEquiv.coe_algHom_injective (by exact LinearMap.lift_id)
+
+theorem LinearEquiv.lift_trans (g : M ≃ₗ[R] N) (h : N ≃ₗ[R] P) :
+    (LinearEquiv.lift g).trans (LinearEquiv.lift h)
+      = LinearEquiv.lift (g.trans h) :=
+  AlgEquiv.coe_algHom_injective (by exact (LinearMap.lift_comp _ _).symm)
+
 end IsScalarTower
 
 end Functoriality

@@ -1,5 +1,7 @@
 import DividedPowers.DPAlgebra.Init
 import DividedPowers.ExponentialModule.Basic
+import Mathlib.LinearAlgebra.Isomorphisms
+
 -- import DividedPowers.ForMathlib.MvPowerSeries.Order
 -- import DividedPowers.ForMathlib.MvPowerSeries.Topology
 
@@ -203,7 +205,7 @@ theorem e_dp (n : ℕ) (m : M) :
     (e Q) ((Ideal.Quotient.mk (J Q)) (dp R n m)) = dp R n (Q.mkQ m) := by
   simp [e, LinearMap.lift_apply_dp]
 
-noncomputable def dividedPowerAlgebra_quotient_equiv :
+noncomputable def quotient_equiv :
     (DividedPowerAlgebra R M ⧸ (J Q)) ≃ₐ[R] DividedPowerAlgebra R (M ⧸ Q) := by
   apply AlgEquiv.ofAlgHom (e Q) (esymm Q)
   · rw [algHom_ext_iff]
@@ -219,4 +221,32 @@ noncomputable def dividedPowerAlgebra_quotient_equiv :
     simp
 
 end quotient
+
+section quotient'
+
+variable {R M N : Type*} [CommRing R]
+  [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
+  {f : M →ₗ[R] N} (hf : Function.Surjective f)
+
+variable (f) in
+def K : Ideal (DividedPowerAlgebra R M) := Ideal.span
+  (Set.range (fun (nq : PNat × (LinearMap.ker f)) ↦ dp R nq.1 (nq.2 : M)))
+
+variable (hf) in
+noncomputable def fsymm' :
+    DividedPowerAlgebra R N →ₐ[R] (DividedPowerAlgebra R M ⧸ (K f)) :=
+  let es := esymm (LinearMap.ker f)
+  have : M →ₗ[R] M ⧸ (LinearMap.ker f) := (LinearMap.ker f).mkQ
+  have : N ≃ₗ[R] M ⧸ (LinearMap.ker f) :=
+    (LinearMap.quotKerEquivOfSurjective f hf).symm
+  have : DividedPowerAlgebra R N ≃ₐ[R] DividedPowerAlgebra R (M ⧸ (LinearMap.ker f)) :=
+    LinearEquiv.lift this
+  sorry
+
+noncomputable def fsymm' :
+    DividedPowerAlgebra R N →ₐ[R] (DividedPowerAlgebra R M ⧸ (K f)) :=
+  (dividedPowerAlgebra_exponentialModule_equiv R N (DividedPowerAlgebra R M ⧸ (K f))).symm (sorry)
+
+end quotient'
+
 end DividedPowerAlgebra

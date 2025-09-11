@@ -1056,6 +1056,7 @@ section General
 variable {M} {L : Type*} [AddCommGroup L] [Module R L] [Module.Free R L] {f : L →ₗ[R] M}
 
 -- This is a difficult theorem, proved in `[Roby-1963, Prop. IV.8]`.
+-- Now, a variant is proved as `DividedPowerAlgebra.quotient_equiv`.
 theorem LinearMap.ker_lift_of_surjective (hf : Function.Surjective f) :
     RingHom.ker (LinearMap.lift R f) =
       Ideal.span (Set.range fun (nm : PNat × (LinearMap.ker f)) ↦ dp R nm.1 (nm.2 : L)) := by
