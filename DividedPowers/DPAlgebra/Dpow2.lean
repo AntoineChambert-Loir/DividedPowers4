@@ -7,6 +7,7 @@ import DividedPowers.Padic
 import Mathlib.RingTheory.DividedPowers.SubDPIdeal
 import Mathlib.RingTheory.MvPolynomial.Basic
 import Mathlib.RingTheory.PowerSeries.PiTopology
+import DividedPowers.DPAlgebra.Exponential
 
 /-! # Construction of the divided power structure on the divided power algebra
 -/
@@ -1053,25 +1054,12 @@ end Free
 
 section General
 
-variable {M} {L : Type*} [AddCommGroup L] [Module R L] [Module.Free R L] {f : L →ₗ[R] M}
+variable {M} {L : Type*} [AddCommGroup L] [Module R L] {f : L →ₗ[R] M}
 
--- This is a difficult theorem, proved in `[Roby-1963, Prop. IV.8]`.
--- Now, a variant is proved as `DividedPowerAlgebra.quotient_equiv`.
-theorem LinearMap.ker_lift_of_surjective (hf : Function.Surjective f) :
-    RingHom.ker (LinearMap.lift R f) =
-      Ideal.span (Set.range fun (nm : PNat × (LinearMap.ker f)) ↦ dp R nm.1 (nm.2 : L)) := by
-  apply le_antisymm
-  · sorry
-  · -- This inclusion is easy
-    rw [span_le]
-    rintro _ ⟨⟨n, ⟨q, hq⟩⟩, rfl⟩
-    simp only [LinearMap.mem_ker] at hq
-    simp [SetLike.mem_coe, RingHom.mem_ker, LinearMap.lift_apply_dp, hq, dp_null]
-
-theorem isSubDPIdeal_of_free [DecidableEq R] (hL : DividedPowers (augIdeal R L))
+theorem isSubDPIdeal_of_isSurjective [DecidableEq R] (hL : DividedPowers (augIdeal R L))
     (dpow_eq_dp : ∀ (n : ℕ) (x : L), hL.dpow n (ι R L x) = dp R n x) (hf : Function.Surjective f) :
     hL.IsSubDPIdeal (RingHom.ker (LinearMap.lift R f)) := by
-  rw [LinearMap.ker_lift_of_surjective R hf, hL.span_isSubDPIdeal_iff]
+  rw [LinearMap.ker_lift_of_surjective f hf, kerLift, hL.span_isSubDPIdeal_iff]
   · rintro n hn _ ⟨⟨⟨q, hq⟩, ⟨l, hl⟩⟩, rfl⟩
     simp only [PNat.mk_coe]
     rw [← dpow_eq_dp, hL.dpow_comp (Nat.ne_zero_of_lt hq) (ι_mem_augIdeal R L l)]

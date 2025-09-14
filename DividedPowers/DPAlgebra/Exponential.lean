@@ -23,6 +23,49 @@ We define
 
 -/
 
+namespace LinearMap
+-- TODO : move to     Mathlib/LinearAlgebra/Isomorphisms.lean
+
+variable {R M N P : Type*} [CommRing R]
+  [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
+  [AddCommGroup P] [Module R P]
+  (f : M →ₗ[R] N) (hf : Function.Surjective f)
+
+@[simp]
+theorem quotKerEquivOfSurjective_symm_apply (hf : Function.Surjective f) (x : M) :
+    (f.quotKerEquivOfSurjective hf).symm (f x) =
+      (LinearMap.ker f).mkQ x := by
+  rw [← LinearMap.quotKerEquivOfSurjective_apply_mk f hf,
+    @LinearEquiv.symm_apply_apply, @Submodule.mkQ_apply]
+
+variable (P) in
+noncomputable def equiv_of_isSurjective :
+    (N →ₗ[R] P) ≃ {g : M →ₗ[R] P // LinearMap.ker f ≤ LinearMap.ker g} where
+  toFun h := ⟨h.comp f, fun x hx ↦ by
+    simp only [LinearMap.mem_ker, LinearMap.coe_comp, Function.comp_apply] at hx ⊢
+    rw [hx, map_zero]⟩
+  invFun := fun ⟨g, hg⟩ ↦ (Submodule.liftQ (LinearMap.ker f) g hg).comp
+     (f.quotKerEquivOfSurjective hf).symm.toLinearMap
+  left_inv h := by
+    ext n
+    obtain ⟨m, rfl⟩ := hf n
+    simp [f.quotKerEquivOfSurjective_symm_apply hf]
+  right_inv := fun ⟨g, hg⟩ ↦ by
+    ext m
+    simp [f.quotKerEquivOfSurjective_symm_apply hf]
+
+@[simp]
+theorem equiv_of_isSurjective_apply (h : N →ₗ[R] P) (m : M) :
+    ((f.equiv_of_isSurjective P hf) h).1 m = h (f m) := rfl
+
+@[simp]
+theorem equiv_of_isSurjective_symm_apply
+  (g : M →ₗ[R] P) (hg : LinearMap.ker f ≤ LinearMap.ker g) (m : M) :
+    (f.equiv_of_isSurjective P hf).symm ⟨g, hg⟩ (f m) = g m := by
+  simp [LinearMap.equiv_of_isSurjective]
+
+end LinearMap
+
 variable (R : Type*) [CommRing R] {A : Type*} [CommSemiring A] [Algebra R A]
   {M : Type*} [AddCommMonoid M] [Module R M] [Module A M] [IsScalarTower R A M]
 
@@ -142,111 +185,93 @@ theorem dividedPowerAlgebra_exponentialModule_equiv_symm_apply
 
 section quotient
 
-variable {R M : Type*} [CommRing R] [AddCommGroup M] [Module R M]
+variable {R M N : Type*} [CommRing R]
+  [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
+  (f : M →ₗ[R] N) (hf : Function.Surjective f)
 
-variable (Q : Submodule R M)
-
-def J : Ideal (DividedPowerAlgebra R M) := Ideal.span
-  (Set.range (fun (nq : ℕ × Q) ↦ dp R (nq.1 + 1) (nq.2 : M)))
-
+-- TODO : move somewhere else
+@[simp]
 theorem coeff_linearMap (A B : Type*) [CommRing A] [CommRing B] [Algebra R A] [Algebra R B] (f : A →ₐ[R] B) (x : ExponentialModule A) (n : ℕ) :
   coeff n ((linearMap f x) : B⟦X⟧) = f (coeff n (x : A⟦X⟧)) :=
   rfl
 
+-- TODO : move somewhere else
+@[simp]
 lemma coe_zero_eq_one (A : Type*) [CommRing A] :
     ((0 : ExponentialModule A) : A⟦X⟧) = 1 := by
   rfl
 
-theorem ker_linearMap_mk_exp_LinearMap :
-    Q ≤ LinearMap.ker (linearMap (S := DividedPowerAlgebra R M ⧸ (J Q)) (Ideal.Quotient.mkₐ R (J Q)) ∘ₗ exp_LinearMap R M) := fun q hq ↦ by
-  simp only [LinearMap.mem_ker, LinearMap.coe_comp, Function.comp_apply]
-  ext n
-  simp only [coeff_linearMap, coeff_exp_LinearMap, Ideal.Quotient.mkₐ_eq_mk, coe_zero_eq_one,
-    coeff_one]
-  split_ifs with hn
-  · simp [hn, dp_zero] -- make dp_zero @[simp] ?
-  · rw [Ideal.Quotient.eq_zero_iff_mem, J]
-    apply Ideal.subset_span
-    simp only [Set.mem_range, Prod.exists, Subtype.exists, exists_prop]
-    use n.pred, q, hq
-    congr
-    exact (Nat.succ_pred_eq_of_ne_zero hn)
-
-noncomputable def esymm :
-    DividedPowerAlgebra R (M ⧸ Q) →ₐ[R] DividedPowerAlgebra R M ⧸ (J Q) :=
-  (dividedPowerAlgebra_exponentialModule_equiv R (M ⧸ Q) (DividedPowerAlgebra R M ⧸ (J Q))).symm (
-  Q.liftQ ((linearMap (Ideal.Quotient.mkₐ R (J Q))).comp (exp_LinearMap R M)) (by exact ker_linearMap_mk_exp_LinearMap Q))
-
-theorem esymm_dp (n : ℕ) (m : M) :
-    esymm Q (dp R n (Q.mkQ m)) = Ideal.Quotient.mk _ (dp R n m) := by
-  simp only [esymm]
-  simp only [Submodule.mkQ_apply]
-  rw [dividedPowerAlgebra_exponentialModule_equiv_symm_apply]
-  simp [coeff_linearMap, coeff_exp_LinearMap]
-
-noncomputable def e :
-    DividedPowerAlgebra R M ⧸ (J Q) →ₐ[R] (DividedPowerAlgebra R (M ⧸ Q)) := by
-  let h := Ideal.Quotient.mkₐ R (J Q)
-  apply Ideal.Quotient.liftₐ (J Q) (LinearMap.lift R Q.mkQ)
-  suffices J Q ≤ RingHom.ker (LinearMap.lift R Q.mkQ) by
-    intro a ; apply this
-  rw [J]
-  rw [Ideal.span_le]
-  rintro x ⟨⟨n, q⟩, rfl⟩
-  simp only [SetLike.mem_coe, RingHom.mem_ker]
-  simp only [LinearMap.lift_apply_dp]
-  suffices Q.mkQ (q : M) = 0 by
-    rw [this]
-    apply dp_null_of_ne_zero R
-    exact Ne.symm (Nat.zero_ne_add_one n)
-  aesop
-
-theorem e_dp (n : ℕ) (m : M) :
-    (e Q) ((Ideal.Quotient.mk (J Q)) (dp R n m)) = dp R n (Q.mkQ m) := by
-  simp [e, LinearMap.lift_apply_dp]
-
-noncomputable def quotient_equiv :
-    (DividedPowerAlgebra R M ⧸ (J Q)) ≃ₐ[R] DividedPowerAlgebra R (M ⧸ Q) := by
-  apply AlgEquiv.ofAlgHom (e Q) (esymm Q)
-  · rw [algHom_ext_iff]
-    rintro n ⟨m⟩
-    simp only [AlgHom.coe_comp, Function.comp_apply, AlgHom.coe_id, id_eq]
-    rw [show Quot.mk ⇑Q.quotientRel m = ⇑Q.mkQ m from by rfl,
-      esymm_dp, e_dp]
-  · apply Ideal.Quotient.algHom_ext
-    rw [algHom_ext_iff]
-    intro n m
-    simp only [AlgHom.coe_comp, Ideal.Quotient.mkₐ_eq_mk, Function.comp_apply, Submodule.mkQ_apply, e_dp]
-    rw [show Submodule.Quotient.mk m = Q.mkQ m from by rfl, esymm_dp]
-    simp
-
-end quotient
-
-section quotient'
-
-variable {R M N : Type*} [CommRing R]
-  [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
-  {f : M →ₗ[R] N} (hf : Function.Surjective f)
-
-variable (f) in
-def K : Ideal (DividedPowerAlgebra R M) := Ideal.span
+/-- The kernel of the canonical map from `DividedPowerAlgebra R M`
+to `DividedPowerAlgebra R N` associated with a surjective linear map
+from `M` to `N`. -/
+def kerLift : Ideal (DividedPowerAlgebra R M) := Ideal.span
   (Set.range (fun (nq : PNat × (LinearMap.ker f)) ↦ dp R nq.1 (nq.2 : M)))
 
+noncomputable def quotientEquiv_toAlgHom :
+    DividedPowerAlgebra R M ⧸ (kerLift f) →ₐ[R] DividedPowerAlgebra R N := by
+  apply Ideal.Quotient.liftₐ (kerLift f) (LinearMap.lift R f)
+  suffices kerLift f ≤  RingHom.ker (LinearMap.lift R f) by
+    exact fun a ha ↦ this ha
+  simp only [kerLift, Ideal.span_le]
+  intro x
+  simp only [Set.mem_range, Prod.exists, Subtype.exists, LinearMap.mem_ker, exists_prop,
+    SetLike.mem_coe, RingHom.mem_ker, forall_exists_index, and_imp]
+  rintro ⟨n, hn⟩ m hm ⟨rfl⟩
+  simp only [PNat.mk_coe, LinearMap.lift_apply_dp, hm]
+  exact dp_null_of_ne_zero R (Nat.ne_zero_of_lt hn)
+
+@[simp]
+theorem quotientEquiv_toAlgHom_mk_dp (n : ℕ) (m : M) :
+    (quotientEquiv_toAlgHom f) ((Ideal.Quotient.mk (kerLift f)) (dp R n m)) = dp R n (f m) := by
+  simp [quotientEquiv_toAlgHom, LinearMap.lift_apply_dp]
+
+noncomputable def quotientEquiv_symm_toAlgHom :
+    DividedPowerAlgebra R N →ₐ[R] (DividedPowerAlgebra R M ⧸ (kerLift f)) :=
+  (dividedPowerAlgebra_exponentialModule_equiv R N (DividedPowerAlgebra R M ⧸ kerLift f)).symm (by
+    let h : M →ₗ[R] (ExponentialModule (DividedPowerAlgebra R M)) :=
+      exp_LinearMap R M
+    let h' : (ExponentialModule (DividedPowerAlgebra R M)) →ₗ[R] (ExponentialModule (DividedPowerAlgebra R M ⧸ kerLift f)) :=
+      linearMap (Ideal.Quotient.mkₐ R (kerLift f))
+    refine (f.equiv_of_isSurjective _ hf).invFun ⟨h'.comp h, ?_⟩
+    intro m hm
+    simp only [LinearMap.mem_ker, LinearMap.coe_comp, Function.comp_apply, h', h] at hm ⊢
+    ext k
+    simp only [coeff_linearMap, coeff_exp_LinearMap, Ideal.Quotient.mkₐ_eq_mk, coe_zero_eq_one,
+      coeff_one]
+    split_ifs with hk
+    · simp [hk, dp_zero]
+    · rw [Ideal.Quotient.eq_zero_iff_mem, kerLift]
+      apply Ideal.subset_span
+      simp only [Set.mem_range, Prod.exists, Subtype.exists, LinearMap.mem_ker, exists_prop]
+      exact ⟨⟨k, Nat.zero_lt_of_ne_zero hk⟩, m, hm, by simp⟩)
+
+@[simp]
+def quotientEquiv_symm_toAlgHom_dp (k : ℕ) (m : M) :
+    quotientEquiv_symm_toAlgHom f hf (dp R k (f m)) = Submodule.mkQ _ (dp R k m) := by
+  simp [quotientEquiv_symm_toAlgHom, dividedPowerAlgebra_exponentialModule_equiv_symm_apply, coeff_linearMap, coeff_exp_LinearMap]
+
+/-- The canonical algebra equivalence of a quotient of
+divided power algebra associated with a surjective linear map. -/
+noncomputable def quotientEquiv :
+    (DividedPowerAlgebra R M ⧸ (kerLift f)) ≃ₐ[R] DividedPowerAlgebra R N := by
+  apply AlgEquiv.ofAlgHom (quotientEquiv_toAlgHom f) (quotientEquiv_symm_toAlgHom f hf)
+  · rw [algHom_ext_iff]
+    intro k n
+    obtain ⟨m, rfl⟩ := hf n
+    simp
+  · apply Ideal.Quotient.algHom_ext
+    rw [algHom_ext_iff]
+    intros; simp
+
 include hf in
-noncomputable def fsymm' :
-    DividedPowerAlgebra R N →ₐ[R] (DividedPowerAlgebra R M ⧸ (K f)) :=
-  let es := esymm (LinearMap.ker f)
-  have : M →ₗ[R] M ⧸ (LinearMap.ker f) := (LinearMap.ker f).mkQ
-  have : N ≃ₗ[R] M ⧸ (LinearMap.ker f) :=
-    (LinearMap.quotKerEquivOfSurjective f hf).symm
-  have : DividedPowerAlgebra R N ≃ₐ[R] DividedPowerAlgebra R (M ⧸ (LinearMap.ker f)) :=
-    LinearEquiv.lift this
-  sorry
+-- This is [Roby-1963, Prop. IV.8].
+theorem LinearMap.ker_lift_of_surjective :
+    RingHom.ker (LinearMap.lift R f) = kerLift f := by
+  ext x
+  rw [RingHom.mem_ker, ← Ideal.Quotient.eq_zero_iff_mem]
+  simp [← EmbeddingLike.map_eq_zero_iff (f := (quotientEquiv f hf)),
+    quotientEquiv, quotientEquiv_toAlgHom]
 
-noncomputable def fsymm'' :
-    DividedPowerAlgebra R N →ₐ[R] (DividedPowerAlgebra R M ⧸ (K f)) :=
-  (dividedPowerAlgebra_exponentialModule_equiv R N (DividedPowerAlgebra R M ⧸ (K f))).symm (sorry)
-
-end quotient'
+end quotient
 
 end DividedPowerAlgebra
