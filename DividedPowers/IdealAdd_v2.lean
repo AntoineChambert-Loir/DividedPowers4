@@ -68,21 +68,30 @@ private def cnik (n i : ℕ) (k : Multiset ℕ) : ℕ :=
     else if i = n then  (k.count i).uniformBell n
       else (k.count i).factorial * (k.count i).uniformBell i * (k.count i).uniformBell (n - i)
 
+theorem exp'_linearPMap_compat (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) :
+  ∀ (x : I) (y : J), (x : A) = (y : A) → hI.exp'_linearMap x = hJ.exp'_linearMap y := fun ⟨x, hx⟩ ⟨y, hy⟩ hxy ↦ by
+    simp only at hxy ⊢
+    rw [← hxy] at hy
+    exact Subtype.coe_inj.mp (PowerSeries.ext (fun _ ↦ hxy ▸ hIJ x ⟨hx, hy⟩))
+
 /-- The exponential map on the sup of two compatible divided power ideals. -/
 noncomputable def exp'_linearMap (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) :
-    A →ₗ.[A] (ExponentialModule A) := by
-  set f : A →ₗ.[A] (ExponentialModule A) := {
-    domain := I
-    toFun := hI.exp'_linearMap } with hf_def
-  set g : A →ₗ.[A] (ExponentialModule A) := {
-    domain := J
-    toFun := hJ.exp'_linearMap
-  } with hg_def
-  apply LinearPMap.sup f g
-  rintro ⟨x, hx⟩ ⟨y, hy⟩ hxy
-  simp only at hxy
-  rw [← hxy] at hy
-  exact Subtype.coe_inj.mp (PowerSeries.ext (fun _ ↦ hxy ▸ hIJ x ⟨hx, hy⟩))
+    A →ₗ.[A] (ExponentialModule A) :=
+  LinearPMap.sup ⟨I, hI.exp'_linearMap⟩ ⟨J, hJ.exp'_linearMap⟩ (exp'_linearPMap_compat hIJ)
+
+theorem exp'_linearMap_apply (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
+    {x y : A} (hx : x ∈ I) (hy : y ∈ J) :
+    exp'_linearMap hIJ ⟨x + y, Submodule.add_mem_sup hx hy⟩ =
+      hI.exp'_linearMap ⟨x, hx⟩ + hJ.exp'_linearMap ⟨y, hy⟩ := by
+  unfold exp'_linearMap
+  simp only [LinearPMap.domain_sup]
+  have hx' : x ∈ I ⊔ J := by exact Submodule.mem_sup_left hx
+  have : (⟨x + y, Submodule.add_mem_sup hx hy⟩ : (I ⊔ J : Ideal A))
+    = (⟨x, Submodule.mem_sup_left hx⟩ : (I ⊔ J : Ideal A)) + (⟨y, Submodule.mem_sup_right hy⟩ : (I ⊔ J : Ideal A)) := by
+      simp
+  rw [this]
+  rw [LinearPMap.sup_apply (exp'_linearPMap_compat hIJ) ⟨x, hx⟩ ⟨y, hy⟩]
+  all_goals simp
 
 #exit
 
