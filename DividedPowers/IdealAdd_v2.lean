@@ -70,55 +70,19 @@ private def cnik (n i : ℕ) (k : Multiset ℕ) : ℕ :=
 
 /-- The exponential map on the sup of two compatible divided power ideals. -/
 noncomputable def exp'_linearMap (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) :
-    (I + J) →ₗ.[A] (ExponentialModule A) := by
-  set f : (I + J) →ₗ.[A] (ExponentialModule A) := {
-    domain := {
-      carrier := {x : I + J | (x : A) ∈ I}
-      add_mem' hx hy := by
-        simp only [Submodule.add_eq_sup, Set.mem_setOf_eq, Submodule.coe_add] at hx hy ⊢
-        exact (Submodule.add_mem_iff_right I hx).mpr hy
-      zero_mem' := by simp
-      smul_mem' a x hx := by
-        simp only [Submodule.add_eq_sup, Set.mem_setOf_eq, SetLike.val_smul, smul_eq_mul] at hx ⊢
-        exact Ideal.mul_mem_left I a hx}
-    toFun := {
-      toFun x := hI.exp'_linearMap ⟨(x : A), x.2⟩
-      map_add' := sorry
-      map_smul' := sorry
-    }
-  } with hf_def
-  set g : (I + J) →ₗ.[A] (ExponentialModule A) := {
-    domain := {
-      carrier := {x : I + J | (x : A) ∈ J}
-      add_mem' hx hy := by
-        simp only [Submodule.add_eq_sup, Set.mem_setOf_eq, Submodule.coe_add] at hx hy ⊢
-        exact (Submodule.add_mem_iff_right J hx).mpr hy
-      zero_mem' := by simp
-      smul_mem' a x hx := by
-        simp only [Submodule.add_eq_sup, Set.mem_setOf_eq, SetLike.val_smul, smul_eq_mul] at hx ⊢
-        exact Ideal.mul_mem_left J a hx }
-    toFun := {
-      toFun x := hJ.exp'_linearMap ⟨(x : A), x.2⟩
-      map_add' := sorry
-      map_smul' := sorry
-    }
+    A →ₗ.[A] (ExponentialModule A) := by
+  set f : A →ₗ.[A] (ExponentialModule A) := {
+    domain := I
+    toFun := hI.exp'_linearMap } with hf_def
+  set g : A →ₗ.[A] (ExponentialModule A) := {
+    domain := J
+    toFun := hJ.exp'_linearMap
   } with hg_def
-  have hf : (f.domain : Set (I + J)) =  {x : I + J | (x : A) ∈ I} := rfl
-  have hg : (g.domain : Set (I + J)) =  {x : I + J | (x : A) ∈ J} := rfl
   apply LinearPMap.sup f g
-  intro x y hxy
-  have hx := x.2
-  have hy := y.2
-  erw [Submodule.mem_carrier, hf, Set.mem_setOf_eq] at hx
-  erw [Submodule.mem_carrier, hg,  Set.mem_setOf_eq, ← hxy] at hy
-  apply Subtype.coe_inj.mp (Additive.toMul.injective (PowerSeries.ext ?_ ))
-  intro n
-  convert hIJ x ⟨hx, hy⟩
-  sorry
-
-  /- LinearMap.onSup (f := hI.exp'_linearMap) (g := hJ.exp'_linearMap)
-    (fun x hxI hxJ ↦ Subtype.coe_inj.mp
-      (Additive.toMul.injective (PowerSeries.ext (fun _ ↦ hIJ x ⟨hxI, hxJ⟩)))) -/
+  rintro ⟨x, hx⟩ ⟨y, hy⟩ hxy
+  simp only at hxy
+  rw [← hxy] at hy
+  exact Subtype.coe_inj.mp (PowerSeries.ext (fun _ ↦ hxy ▸ hIJ x ⟨hx, hy⟩))
 
 #exit
 
