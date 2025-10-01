@@ -488,6 +488,7 @@ lemma dividedDifferential_toFun_eq_coeff {S : Type*} [CommSemiring S] [Algebra R
         (((TensorProduct.assoc R (Polynomial R) S M).symm ((1 : Polynomial R) ⊗ₜ m)) +
           ((TensorProduct.assoc R (Polynomial R) S M).symm
             ((Polynomial.X : Polynomial R) ⊗ₜ m'))))) n := by
+
   sorry
 
 -- TODO: golf
@@ -662,8 +663,10 @@ variable (R N) in
 -- Generalized as in remark after Prop. II.5
 lemma dividedPartialDerivativeCommute (k₁ k₂ : ℕ) (x₁ x₂ : M) :
     Commute (dividedPartialDerivative R N k₁ x₁) (dividedPartialDerivative R N k₂ x₂) := by
-
-  sorry
+  rw [commute_iff_eq]
+  ext f S _ _ sm
+  simp only [Module.End.mul_apply, ← toFun_eq_toFun']
+  exact dividedPartialDerivative_comm k₁ k₂ x₁ x₂ sm
 
 -- TODO: move
 lemma _root_.MvPolynomial.coeff_scalarRTensorAlgEquiv {σ S : Type*} [DecidableEq σ] [CommSemiring S]
@@ -682,8 +685,8 @@ def _root_.MvPolynomial.CAlgHom {R : Type*} [CommSemiring R] {A : Type*} [CommSe
   commutes' _ := rfl
 
 -- Roby63, pg 241 (Prop. II.4 for general n)
--- NOTE: the `reverse` is to state it in the same order as in Roby, but `dividedPartialDerivative_comm`
--- shows it is not needed.
+-- NOTE: in Roby, the product appears in the opposite order, but `dividedPartialDerivative_comm`
+-- shows this version is equivalent.
 lemma firstPartialDerivative_comp_multiple_eq_coeff {S : Type*} [CommSemiring S] [Algebra R S]
     {n : ℕ}
     (k : Fin n →₀ ℕ) (hk : ∀ i, k i = 1) (x : Fin n → M) (sm : S ⊗[R] M) :
@@ -874,8 +877,8 @@ lemma firstPartialDerivative_comp_multiple_eq_coeff' {ι S : Type*} [CommSemirin
     sorry
 
 -- Roby63, pg 241 (Prop. II.4 for general n)
--- NOTE: the `reverse` is to state it in the same order as in Roby, but `dividedPartialDerivative_comm`
--- shows it is not needed.
+-- NOTE: in Roby, the product appears in the opposite order, but `dividedPartialDerivative_comm`
+-- shows this version is equivalent.
 lemma dividedPartialDerivative_comp_multiple_eq_coeff {S : Type*} [CommSemiring S] [Algebra R S] {n : ℕ}
     (k : Fin n →₀ ℕ) (x : Fin n → M) (sm : S ⊗[R] M) :
     ((List.map (fun (i : Fin n) ↦ dividedPartialDerivative R N (k i) (x i))
@@ -889,8 +892,8 @@ lemma dividedPartialDerivative_comp_multiple_eq_coeff {S : Type*} [CommSemiring 
   sorry
 
 -- Roby63, pg 241 (Prop. II.4 for general n)
--- NOTE: the `reverse` is to state it in the same order as in Roby, but `dividedPartialDerivative_comm`
--- shows it is not needed.
+-- NOTE: in Roby, the product appears in the opposite order, but `dividedPartialDerivative_comm`
+-- shows this version is equivalent.
 lemma dividedPartialDerivative_comp_multiple_eq_coeff' {S : Type*} [CommSemiring S] [Algebra R S] {n : ℕ}
     (k : Fin n →₀ ℕ) (x : Fin n → M) (sm : S ⊗[R] M) (f : M →ₚₗ[R] N) :
     (Finset.univ.noncommProd
@@ -921,7 +924,22 @@ lemma dividedPartialDerivative_of_constant_eq_zero (hn : 0 < n) (x : M) (t : N) 
 
 -- Roby63, pg 242 (Partial derivative of linear polynomial law).
 lemma dividedPartialDerivative_of_linear_eq_constant (x : M) (hf : IsHomogeneousOfDegree 1 f) :
-    dividedPartialDerivative R N 1 x f = (const R M N (f x)) :=
+    dividedPartialDerivative R N 1 x f = (const R M N (f x)) := by
+  simp only [dividedPartialDerivative, coe_mk, AddHom.coe_mk]
+  rw [dividedDifferential_eq_biComponent_of_le hf (le_refl _)]
+  ext S _ _ sm
+  simp only [tsub_self, polarizedProd, map_add, coe_mk, AddHom.coe_mk, comp_toFun', add_def,
+    Function.comp_apply, Pi.add_apply, inl_toFun'_apply, const_toFun', inr_toFun'_apply,
+    biComponent_apply_toFun']
+  simp only [biCoeff_S_apply, Fin.isValue, map_add, finTwoArrowEquiv'_symm_apply]
+  simp only [Fin.isValue, inrRight_tmul, compFstRight_tmul, tmul_zero, map_zero, add_zero,
+    compSndRight_tmul]
+  simp only [Fin.isValue, coe_compFstRight, compFstRight_inlRight_eq, coe_compSndRight,
+    compSndRight_inlRight_eq, zero_add, assoc_symm_tmul, LinearEquiv.rTensor_tmul,
+    AlgEquiv.toLinearEquiv_apply]
+  simp only [Fin.isValue, rTensor_apply]
+  simp only [rTensor_def, Fin.isValue, LinearEquiv.rTensor_apply,
+    AlgEquiv.toLinearEquiv_toLinearMap]
   sorry
 
 lemma dividedPartialDerivative_of_linear_apply (x m : M) (hf : IsHomogeneousOfDegree 1 f) :
@@ -985,17 +1003,20 @@ lemma taylor_sum_prod (f : (M × M') →ₚₗ[R] N) (m x : M × M') :
       dividedPartialDerivative R N n.1 (x.1, 0) (dividedPartialDerivative R N n.2 (0, x.2) f)) m := by
   sorry
 
+-- Not needed?
 -- Roby63, pg 244 (Prop. II.9 for n = 2)
 lemma dividedPartialDerivative_fst_comp (f : (M × M') →ₚₗ[R] N) (x : M × M') :
     dividedPartialDerivative R N n (x.1, 0) (dividedPartialDerivative R N p (x.1, 0) f) =
       (n.choose p) * dividedPartialDerivative R N (n + p) (x.1, 0) f := by
-  sorry
+  apply dividedPartialDerivative_comp
 
+
+-- Not needed?
 -- Roby63, pg 244 (Prop. II.9 for n = 2)
 lemma dividedPartialDerivative_snd_comp (f : (M × M') →ₚₗ[R] N) (x : M × M') :
     dividedPartialDerivative R N n (0, x.2) (dividedPartialDerivative R N p (0, x.2) f) =
       (n.choose p) * dividedPartialDerivative R N (n + p) (0, x.2) f := by
-  sorry
+  apply dividedPartialDerivative_comp
 
 def translation (a : M) : (M →ₚₗ[R] N) →ₗ[R] (M →ₚₗ[R] N) where
   toFun f := {
@@ -1013,12 +1034,11 @@ theorem lfsum_dividedPartialDerivative (x : M) (f : M →ₚₗ[R] N) :
 lemma taylor_sum_pi {M : Fin n → Type*} [∀ i, AddCommMonoid (M i)] [∀ i, Module R (M i)]
     (f : (Π i, M i) →ₚₗ[R] N) (m x : Π i, M i) :
     f (m + x) = lfsum (fun (k : Fin n →₀ ℕ) ↦ ((List.map (fun (i : Fin n) ↦
-      dividedPartialDerivative R N (k i) (Pi.single i (x i))) (List.finRange n).reverse)).prod f) m := by
+      dividedPartialDerivative R N (k i) (Pi.single i (x i))) (List.finRange n))).prod f) m := by
   rw [eq_comm]
   have hf := lfsum_dividedPartialDerivative x f
   have hg : f.ground (m + x) = (f.translation x).ground m := sorry
   rw [hg, ← hf]
-  simp only [List.map_reverse]
   rw [lfsum_ground_eq_of_locFinsupp]
   rw [lfsum_ground_eq_of_locFinsupp]
   simp only [Finsupp.sum]
@@ -1031,11 +1051,12 @@ theorem lfsum_dividedPartialDerivative (x : M) (f : M →ₚₗ[R] N) :
     lfsum (fun k ↦ f.dividedPartialDerivative k x) = f.translation x :=
   sorry-/
 
+-- Not needed?
 -- Roby63, pg 244 (Prop. II.9 for general n)
 lemma dividedPartialDerivative_comp_single {M : Fin n → Type*} [∀ i, AddCommMonoid (M i)]
     [∀ i, Module R (M i)] (f : (Π i, M i) →ₚₗ[R] N) (x : Π i, M i) (i : Fin n):
     dividedPartialDerivative R N n (Pi.single i (x i)) (dividedPartialDerivative R N p (Pi.single i (x i)) f) =
       (n.choose p) * dividedPartialDerivative R N (n + p) (Pi.single i (x i)) f := by
-  sorry
+  apply dividedPartialDerivative_comp
 
 end PolynomialLaw

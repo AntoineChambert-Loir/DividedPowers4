@@ -101,6 +101,12 @@ variable (R S N M₁ M₂) in
 def sndRight : N ⊗[R] (M₁ × M₂) →ₗ[S] N ⊗[R] M₂ :=
   (snd _ _ _).comp (prodRight R S N M₁ M₂).toLinearMap
 
+lemma coe_fstRight : ⇑(fstRight R S N M₁ M₂) = (fstRight R R N M₁ M₂) := by
+  simp only [fstRight, coe_comp, coe_fst, LinearEquiv.coe_coe, coe_prodRight]
+
+lemma coe_sndRight : ⇑(sndRight R S N M₁ M₂) = (sndRight R R N M₁ M₂) := by
+  simp only [sndRight, coe_comp, coe_snd, LinearEquiv.coe_coe, coe_prodRight]
+
 lemma prodRight_eq_prod_fstRight_sndRight :
     (prodRight R S N M₁ M₂).toLinearMap = prod (fstRight R S N M₁ M₂) (sndRight R S N M₁ M₂) := by
   simp only [fstRight, sndRight]
@@ -141,6 +147,12 @@ variable (R S N M₁ M₂) in
 @[irreducible]
 def inrRight : N ⊗[R] M₂ →ₗ[S] N ⊗[R] (M₁ × M₂) :=
   (prodRight R S N M₁ M₂).symm.toLinearMap.comp (inr S (N ⊗[R] M₁) (N ⊗[R] M₂))
+
+lemma coe_inlRight : ⇑(inlRight R S N M₁ M₂) = (inlRight R R N M₁ M₂) := by
+  simp [inlRight, coe_prodRight_symm]
+
+lemma coe_inrRight : ⇑(inrRight R S N M₁ M₂) = (inrRight R R N M₁ M₂) := by
+  simp [inrRight, coe_prodRight_symm]
 
 lemma inlRight_tmul (n : N) (m : M₁) : inlRight R S N M₁ M₂ (n ⊗ₜ m) = n ⊗ₜ (m, 0) := by
   simp only [inlRight, coe_comp, LinearEquiv.coe_coe, coe_inl, Function.comp_apply]
@@ -187,6 +199,12 @@ variable (R S N M₁ M₂) in
 variable (R S N M₁ M₂) in
 @[irreducible] def compSndRight : N ⊗[R] (M₁ × M₂) →ₗ[S] N ⊗[R] (M₁ × M₂) :=
   (inrRight R S N M₁ M₂).comp (sndRight R S N M₁ M₂)
+
+lemma coe_compFstRight : ⇑(compFstRight R S N M₁ M₂) = (compFstRight R R N M₁ M₂) := by
+  simp [compFstRight, fstRight, coe_inlRight, coe_prodRight]
+
+lemma coe_compSndRight : ⇑(compSndRight R S N M₁ M₂) = (compSndRight R R N M₁ M₂) := by
+  simp [compSndRight, sndRight, coe_inrRight, coe_prodRight]
 
 lemma compFstRight_add_compSndRight (nm : N ⊗[R] (M₁ × M₂)) :
     compFstRight R S N M₁ M₂ nm + compSndRight R S N M₁ M₂ nm = nm := by
