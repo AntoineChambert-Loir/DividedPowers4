@@ -719,9 +719,12 @@ noncomputable def linearMap :
     apply coe_injective
     simp only [coe_smul, RingHom.id_apply, coe_ofMul, PowerSeries.rescale_map_eq_map_rescale]
 
-
 theorem coeff_linearMap (n : ℕ) (f : ExponentialModule R) :
     coeff n (linearMap φ f) = φ (coeff n f) := rfl
+
+@[simp]
+lemma coe_zero_eq_one (A : Type*) [CommRing A] :
+    ((0 : ExponentialModule A) : A⟦X⟧) = 1 := by rfl
 
 end ExponentialModule
 

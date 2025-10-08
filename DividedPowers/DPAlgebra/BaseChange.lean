@@ -1,78 +1,53 @@
+/-
+Copyright (c) 2025 Antoine Chambert-Loir, María Inés de Frutos-Fernández. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
+-/
 import DividedPowers.DPAlgebra.Exponential
 import DividedPowers.DPAlgebra.Graded.Basic
-import Mathlib.RingTheory.TensorProduct.Basic
-import DividedPowers.ForMathlib.Algebra.MvPolynomial.Lemmas
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.Basic
 
--- import DividedPowers.ForMathlib.RingTheory.TensorProduct
 /-! # Base change properties of the divided power algebra
 
+The main result of this file is the construction of a base change isomorphism
+for the divided power algebra [Roby1963, theorem III.3]:
+`S ⊗[R] DividedPowerAlgebra R M ≃ₐ[S] DividedPowerAlgebra S (S ⊗[R] M)`
 
-The file starts with complements, to dispatch elsewhere,
-regarding base change of algebras/modules.
+## Main definitions
 
-The main result is the construction of a base change isomorphism
-for the divided power algebra:
+* `DividedPowerAlgebra.dpScalarExtensionEquiv`: the base change isomorphism
+  `S ⊗[R] DividedPowerAlgebra R M ≃ₐ[S] DividedPowerAlgebra S (S ⊗[R] M)`
+  for the divided power algebra [Roby1963, theorem III.3]
 
-* `dpScalarExtensionEquiv :
-  S ⊗[R] DividedPowerAlgebra R M ≃ₐ[S] DividedPowerAlgebra S (S ⊗[R] M)`
-(Theorem III.3 of [Roby1963])
-* `dpScalarExtension_apply` and `dpScalarExtensionInv_apply` compute
-its action on basic elements in both directions.
+## Main results
+
+* `DividedPowerAlgebra.dpScalarExtension_apply` and `DividedPowerAlgebra.dpScalarExtensionInv_apply`
+  compute the action of `dpScalarExtensionEquiv` on basic elements in both directions.
 
 ## Note on the proof
 
-The existence of the base change morphism is relatively straightforward,
-but the existence of the morphism in the other direction is nontrivial.
-As in [Roby1963], the proof relies on the `ExponentialModule` that allows
-to linearize the divided power algebra, and then we apply the standard
-base change adjunction for linear maps.
+The existence of the base change morphism is relatively straightforward, but the existence of the
+morphism in the other direction is nontrivial. As in [Roby1963], the proof relies on the
+`ExponentialModule` that allows to linearize the divided power algebra, and then we apply the
+standard base change adjunction for linear maps.
+
+## TODO:
+
+* Add IsHomogeneous for maps of graded algebras/modules.
+
+* Add GradedAlgebra instance on the base change.
 
 -/
 universe u
 
-open scoped TensorProduct
 open AlgHom TensorProduct
-
-namespace MvPolynomial
-
-variable {R : Type*} [CommSemiring R] {S : Type _} [CommSemiring S] [Algebra R S]
-  {S' : Type*} [CommSemiring S'] [Algebra R S']
-
-variable {σ : Type*}
-
--- TODO: add to MvPolynomial.Eval
-section eval
-
-lemma C_eq_algebraMap' (r : R) : C (algebraMap R S r) = algebraMap R (MvPolynomial σ S) r := rfl
-
-end eval
-
-end MvPolynomial
 
 namespace DividedPowerAlgebra
 
 open Algebra.TensorProduct DividedPowers DividedPowerAlgebra
 
-/-- base change morphism for morphism of algebras -/
-noncomputable def AlgHom.baseChange {R A B C : Type _} [CommSemiring R] [CommSemiring A]
-    [Algebra R A] [CommSemiring B] [Algebra R B] [CommSemiring C] [Algebra R C] [Algebra A C]
-    [IsScalarTower R A C] (φ : B →ₐ[R] C) : A ⊗[R] B →ₐ[A] C :=
-  { productMap (IsScalarTower.toAlgHom R A C) φ with
-    commutes' := fun r => by
-      simp only [algebraMap_apply, Algebra.algebraMap_self, RingHom.id_apply, toFun_eq_coe,
-        productMap_apply_tmul, IsScalarTower.coe_toAlgHom', _root_.map_one, _root_.mul_one] }
-
-theorem AlgHom.baseChange_tmul {R A B C : Type _} [CommSemiring R] [CommSemiring A] [Algebra R A]
-    [CommSemiring B] [Algebra R B] [CommSemiring C] [Algebra R C] [Algebra A C]
-    [IsScalarTower R A C] (φ : B →ₐ[R] C) (a : A) (b : B) :
-    baseChange φ (a ⊗ₜ[R] b) = a • (φ b) := by
-  simp only [baseChange, toRingHom_eq_coe, coe_mk, RingHom.coe_coe, productMap_apply_tmul,
-    IsScalarTower.coe_toAlgHom', ← smul_eq_mul, algebraMap_smul]
-
---TODO : prove uniqueness
-/-- A base change morphism for the divided power algebra
-[Roby1963, Proposition III.4] -/
+/-- A base change morphism for the divided power algebra [Roby1963, Proposition III.4].
+-- TODO : prove uniqueness. -/
 noncomputable def dpScalarExtension' (R : Type u) [CommSemiring R] (S : Type _) [CommSemiring S]
     [Algebra R S] (M : Type _) [AddCommMonoid M] [Module R M] [Module S M] [IsScalarTower R S M] :
     S ⊗[R] DividedPowerAlgebra R M →ₐ[S] DividedPowerAlgebra S M := by
@@ -89,6 +64,8 @@ section dpScalarExtension
 variable (A : Type*) [CommSemiring A] (R : Type*) [CommSemiring R] [Algebra A R]
     (M : Type*) [AddCommMonoid M] [Module A M]
 
+/-- The natural `R`-algebra map from `R ⊗[A] DividedPowerAlgebra A M` to
+  `DividedPowerAlgebra R (R ⊗[A] M)`. -/
 noncomputable def dpScalarExtension :
     R ⊗[A] DividedPowerAlgebra A M →ₐ[R] DividedPowerAlgebra R (R ⊗[A] M) := by
   apply AlgHom.baseChange
@@ -114,8 +91,8 @@ theorem dpScalarExtension_tmul (r : R) (m : DividedPowerAlgebra A M) :
 
 /-- Uniqueness for [Roby1963, Theorem III.2] (opposite map) -/
 theorem dpScalarExtension_unique
-  {φ : R ⊗[A] DividedPowerAlgebra A M →ₐ[R] DividedPowerAlgebra R (R ⊗[A] M)}
-  (hφ : ∀ (n : ℕ) (m : M), φ (1 ⊗ₜ[A] (dp A n m)) = dp R n (1 ⊗ₜ[A] m)) :
+    {φ : R ⊗[A] DividedPowerAlgebra A M →ₐ[R] DividedPowerAlgebra R (R ⊗[A] M)}
+    (hφ : ∀ (n : ℕ) (m : M), φ (1 ⊗ₜ[A] (dp A n m)) = dp R n (1 ⊗ₜ[A] m)) :
     φ = dpScalarExtension A R M := by
   apply AlgHom.ext
   intro x
@@ -140,28 +117,29 @@ variable (R : Type*) [CommRing R] (S : Type*) [CommRing S] [Algebra R S]
 
 open PowerSeries
 
+/-- The natural `S`-linear map from `S ⊗[R] M` to
+  `ExponentialModule (S ⊗[R] DividedPowerAlgebra R M)`. -/
 noncomputable def dpScalarExtensionExp :
     S ⊗[R] M →ₗ[S] ExponentialModule (S ⊗[R] DividedPowerAlgebra R M) :=
   (LinearMap.baseChangeEquiv R S M (ExponentialModule (S ⊗[R] DividedPowerAlgebra R M))).symm
     ((ExponentialModule.linearMap Algebra.TensorProduct.includeRight).comp (exp_LinearMap R M))
 
+/-- The natural `S`-algebra map from `DividedPowerAlgebra S (S ⊗[R] M)` to
+  `S ⊗[R] DividedPowerAlgebra R M`. -/
 noncomputable def dpScalarExtensionInv  :
     DividedPowerAlgebra S (S ⊗[R] M) →ₐ[S] S ⊗[R] DividedPowerAlgebra R M :=
-  (dividedPowerAlgebra_exponentialModule_equiv S (S ⊗[R] M)
+  (exponentialModule_equiv S (S ⊗[R] M)
     (S ⊗[R] DividedPowerAlgebra R M)).symm (dpScalarExtensionExp R S M)
 
 /-- Roby1963, theorem III.2 -/
 theorem dpScalarExtensionInv_apply_dp (n : ℕ) (s : S) (m : M) :
     dpScalarExtensionInv R S M (dp S n (s ⊗ₜ[R] m)) = (s ^ n) ⊗ₜ[R] (dp R n m) := by
-  rw [dpScalarExtensionInv, dividedPowerAlgebra_exponentialModule_equiv_symm_apply]
+  rw [dpScalarExtensionInv, exponentialModule_equiv_symm_apply]
   simp only [dpScalarExtensionExp, LinearMap.baseChangeEquiv, LinearEquiv.coe_symm_mk,
     AlgebraTensorModule.lift_apply, lift.tmul, LinearMap.coe_restrictScalars, LinearMap.flip_apply,
     LinearMap.lsmul_apply, LinearMap.smul_apply, LinearMap.coe_comp, Function.comp_apply]
-  rw [ExponentialModule.coe_smul, PowerSeries.coeff_rescale]
-  sorry
-  -- rw [ExponentialModule.coeff_linearMap,
-  --includeRight_apply, smul_tmul', smul_eq_mul, mul_one, coeff_exp_LinearMap]
-
+  rw [ExponentialModule.coe_smul, PowerSeries.coeff_rescale, ExponentialModule.coeff_linearMap]
+  simp [coeff_exp_LinearMap]
 
 /-- Uniqueness claim of Roby1963, theorem III.2 -/
 theorem dpScalarExtensionInv_unique
@@ -194,7 +172,6 @@ noncomputable example (R : Type*) [CommSemiring R] (A : Type*) [CommSemiring A] 
     (S : Type*) [CommSemiring S] [Algebra R S] : Algebra S (S ⊗[R] A) := inferInstance
 
 /-- The base change isomorphism for the divided power algebra
-
 [Roby1963, theorem III.3] -/
 noncomputable def dpScalarExtensionEquiv :
     S ⊗[R] DividedPowerAlgebra R M ≃ₐ[S] DividedPowerAlgebra S (S ⊗[R] M) :=
@@ -233,11 +210,6 @@ theorem coe_dpScalarExtensionEquiv_symm :
     ⇑(dpScalarExtensionEquiv R S M).symm = ⇑(dpScalarExtensionInv R S M) := by
   rfl
 
-/- Once one replaces (dpScalarExtensionEquiv _ _ _).symm
-  by dpScalarExtensionInv,
-  the following proof is very close to the 3rd step of the proof of the dpScalarExtensionEquiv.
-  Can one unify them? -/
-
 theorem rTensor_comp_dpScalarExtensionEquiv_symm_eq {S : Type*} [CommRing S] [Algebra R S]
     {S' : Type*} [CommRing S'] [Algebra R S'] (φ : S →ₐ[R] S') (n : ℕ) (m : S ⊗[R] M) :
     φ.toLinearMap.rTensor (DividedPowerAlgebra R M)
@@ -259,15 +231,10 @@ theorem rTensor_comp_dpScalarExtensionEquiv_symm_eq {S : Type*} [CommRing S] [Al
 
 open MvPolynomial
 
-noncomputable def aux (p : MvPolynomial (ℕ × M) S) : MvPolynomial (ℕ × S ⊗[R] M) S :=
-  rename (Prod.map id (fun m => 1 ⊗ₜ m)) p
-
 theorem dpScalarExtension_mem_grade {a : DividedPowerAlgebra R M} {n : ℕ} (ha : a ∈ grade R M n)
     (s : S) : dpScalarExtension R S M (s ⊗ₜ[R] a) ∈ grade S (S ⊗[R] M) n := by
   rw [mem_grade_iff]
-  set f : R →ₐ[R] S := { -- Where is this in Mathlib?
-    (algebraMap R S) with
-    commutes' := fun r => rfl } with hf
+  set f : R →ₐ[R] S := Algebra.algHom R R S with hf
   obtain ⟨p, hpn, hpa⟩ := ha
   set p' : MvPolynomial (ℕ × M) S := MvPolynomial.baseChange f p with hp'
   use s • rename (Prod.map id (fun m => 1 ⊗ₜ m)) p'
@@ -277,7 +244,7 @@ theorem dpScalarExtension_mem_grade {a : DividedPowerAlgebra R M} {n : ℕ} (ha 
     simp only [MvPolynomial.coeff_smul, smul_eq_mul] at hd'
     obtain ⟨d, hdd', hd0⟩ := coeff_rename_ne_zero _ _ _ (right_ne_zero_of_mul hd')
     rw [← hdd']
-    simp only [hp', hf, coeff_baseChange_apply, coe_mk] at hd0
+    simp only [hp', hf, coeff_baseChange_apply] at hd0
     have hd0' : coeff d p ≠ 0 := by
       intro h
       simp only [h, map_zero, ne_eq, not_true_eq_false] at hd0
@@ -288,21 +255,26 @@ theorem dpScalarExtension_mem_grade {a : DividedPowerAlgebra R M} {n : ℕ} (ha 
       (algebraMap R (MvPolynomial (ℕ × M) S)) := rfl
     have h_eq' : (algebraMap S (DividedPowerAlgebra S (S ⊗[R] M))).comp (algebraMap R S) =
       (algebraMap R (DividedPowerAlgebra S (S ⊗[R] M))) := rfl
+    have h_eq'' (d : ℕ × M →₀ ℕ) : MvPolynomial.coeff d ((MvPolynomial.eval₂Hom
+          (MvPolynomial.C.comp ↑(Algebra.algHom R R S)) MvPolynomial.X) p) =
+            (algebraMap R S) (MvPolynomial.coeff d p) := by
+        rw [← MvPolynomial.coeff_map]
+        congr
     rw [LinearMapClass.map_smul, dpScalarExtension_tmul]
     congr 1
     simp only [SetLike.mem_coe, mem_weightedHomogeneousSubmodule, IsWeightedHomogeneous] at hpn
-    simp only [hp', baseChange, coe_ringHom_mk, coe_mk,  ← hpa,
-      MvPolynomial.rename, ← algebraMap_eq, h_eq, dpScalarExtension, AlgHom.baseChange,
-      toRingHom_eq_coe, coe_mk, RingHom.coe_coe, productMap_apply_tmul,
-      _root_.map_one, one_mul, lift', RingQuot.liftAlgHom_mkAlgHom_apply, coe_eval₂AlgHom,
-      Function.comp_def, baseChange, hf, coe_ringHom_mk, coe_mk]
+    simp only [hp', baseChange, coe_mk, ← hpa, MvPolynomial.rename, ← algebraMap_eq,
+      dpScalarExtension, AlgHom.baseChange, toRingHom_eq_coe, coe_mk, RingHom.coe_coe,
+      productMap_apply_tmul, _root_.map_one, one_mul, lift', RingQuot.liftAlgHom_mkAlgHom_apply,
+      coe_eval₂AlgHom, Function.comp_def, baseChange, hf,  coe_mk]
     rw [← AlgHom.comp_apply, MvPolynomial.comp_aeval, aeval_def]
-    simp only [eval₂_eq,]
-    have h_sum : ∀ (d : ℕ × M →₀ ℕ), algebraMap R S (coeff d p) =
+    simp only [eval₂_eq]
+    have h_sum (d : ℕ × M →₀ ℕ) : MvPolynomial.coeff d ((MvPolynomial.eval₂Hom
+          (MvPolynomial.C.comp ↑(Algebra.algHom R R S)) MvPolynomial.X) p) =
         (coeff d (∑ x ∈ p.support, MvPolynomial.C ((algebraMap R S) (coeff x p)) *
           (monomial x) 1)) := by
       classical
-      intro d
+      rw [h_eq'']
       conv_lhs => rw [MvPolynomial.as_sum (p := p)]
       simp only [coeff_sum, MvPolynomial.coeff_C_mul, _root_.map_sum,
         MvPolynomial.coeff_monomial, mul_ite, mul_one, mul_zero]
@@ -312,30 +284,23 @@ theorem dpScalarExtension_mem_grade {a : DividedPowerAlgebra R M} {n : ℕ} (ha 
       · rw [map_zero]
     classical
     rw [Finset.sum_subset_zero_on_sdiff]
-    · intro x
-      simp only [mem_support_iff, ne_eq]
-      sorry
-      /- simp only [coeff_sum, MvPolynomial.coeff_C_mul, MvPolynomial.coeff_monomial, mul_ite, mul_one, mul_zero, ne_eq, ite_not,
-        Finset.sum_ite_eq',mem_support_iff, ite_eq_left_iff, Classical.not_imp, and_imp]
-      exact fun h _ ↦ h -/
     · intro x hx
-      sorry
-      /- simp only [Finset.mem_sdiff, mem_support_iff, ne_eq, coeff_sum, MvPolynomial.coeff_C_mul,
-        MvPolynomial.coeff_monomial,
-        mul_ite, mul_one, mul_zero, Finset.sum_ite_eq', ite_not, ite_eq_left_iff, Classical.not_imp,
-        not_and, Decidable.not_not] at hx
+      simp only [mem_support_iff, ne_eq] at hx ⊢
+      simp only [algebraMap_eq, h_sum x, coeff_sum, MvPolynomial.coeff_C_mul, mul_one, mul_zero,
+        MvPolynomial.coeff_monomial, mul_ite, Finset.sum_ite_eq', mem_support_iff, ne_eq, ite_not,
+        ite_eq_left_iff, Classical.not_imp] at hx
+      exact hx.1
+    · intro x hx
+      simp only [Finset.mem_sdiff, mem_support_iff, ne_eq, Decidable.not_not, algebraMap_eq,
+        h_sum x, coeff_sum, MvPolynomial.coeff_C_mul, MvPolynomial.coeff_monomial, mul_ite, mul_one,
+        mul_zero, Finset.sum_ite_eq', mem_support_iff, ne_eq, ite_not, ite_eq_left_iff] at hx
       rw [IsScalarTower.algebraMap_apply R S (DividedPowerAlgebra S (S ⊗[R] M)),
-        hx.2 hx.1, map_zero, zero_mul] -/
+        hx.2 hx.1, map_zero, zero_mul]
     · intro d _hd
-      sorry
-      /- rw [← algebraMap_eq, coeff_sum]
-      simp only [MvPolynomial.algebraMap_apply, MvPolynomial.coeff_C_mul, map_sum, dp_def]
-      rw [← h_eq', RingHom.coe_comp, Function.comp_apply, h_sum d, coeff_sum, map_sum]
-      simp only [Algebra.id.map_eq_id, RingHomCompTriple.comp_apply, _root_.map_mul,
-        MvPolynomial.coeff_C_mul]
-      congr 1 -/
+      simp only [dp_def]
+      rw [← h_eq', RingHom.coe_comp, Function.comp_apply, algebraMap_eq, ← h_eq'', h_sum d,
+        coeff_sum, map_sum]
+      simp only [MvPolynomial.coeff_C_mul, MvPolynomial.coeff_monomial, mul_ite, mul_one, mul_zero]
+      rfl
 
--- TODO: add IsHomogeneous for maps of graded algebras/modules (?)
-
--- TODO: add GradedAlgebra instance on the base change.
 end DividedPowerAlgebra

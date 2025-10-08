@@ -76,45 +76,8 @@ local instance :
     GradedAlgebra (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) :=
   weightedGradedAlgebra _ _
 
--- Unused
-/-
-def degree (v : ℕ × M →₀ ℕ) : ℕ :=
-  finsum fun x => v x * x.1
 
-def IsHomogeneousOfDegree (p : MvPolynomial (ℕ × M) R) (n : ℕ) : Prop :=
-  ∀ v ∈ p.support, _root_.degree v = n -/
 
-variable (M)
 
--- TODO: generalize
-theorem eq_finsupp_single_of_degree_one [DecidableEq M] {d : ℕ × M →₀ ℕ}
-    (hd : (Finsupp.weight Prod.fst) d = 1) (hsupp : ∀ nm ∈ d.support, 0 < nm.fst) :
-    ∃ m : M, Finsupp.single (1, m) 1 = d := by
-  rw [Finsupp.weight_apply, Finsupp.sum] at hd
-  have hnm : ∃ nm : ℕ × M, d nm • nm.fst = 1 := by
-    by_contra h0
-    rw [not_exists] at h0
-    have hd0 : (d.support.sum fun a : ℕ × M => d a • a.fst) = 0 := by
-      rw [Finset.sum_eq_zero (fun nm hnm ↦ Nat.lt_one_iff.mp <| lt_of_le_of_ne
-        (hd ▸ Finset.single_le_sum (fun x _ => zero_le (d x • x.fst)) hnm) (h0 nm))]
-    rw [hd0] at hd
-    exact zero_ne_one hd
-  obtain ⟨nm, hnm⟩ := hnm
-  rw [← hnm] at hd
-  simp only [Algebra.id.smul_eq_mul, mul_eq_one] at hnm
-  use nm.snd
-  ext ab
-  rw [Finsupp.single_apply]
-  split_ifs with hab <;> rw [← hnm.2, eq_comm, Prod.mk.eta] at hab
-  · rw [hab, hnm.1]
-  · rw [eq_comm]
-    by_contra hab'
-    have hne0 : d ab * ab.fst ≠ 0 :=
-      mul_ne_zero hab' (ne_of_gt (hsupp ab (Finsupp.mem_support_iff.mpr hab')))
-    have hnm_mem : nm ∈ d.support := by rw [Finsupp.mem_support_iff, hnm.1]; exact one_ne_zero
-    simp only [Finset.sum_eq_sum_diff_singleton_add hnm_mem, add_eq_right,
-      Algebra.id.smul_eq_mul, sum_eq_zero_iff, mem_sdiff,
-      Finsupp.mem_support_iff, mem_singleton] at hd
-    exact hne0 (hd ab ⟨hab', hab⟩)
 
 end

@@ -1,70 +1,32 @@
+/-
+Copyright (c) 2025 Antoine Chambert-Loir, María Inés de Frutos-Fernández. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
+-/
 import DividedPowers.DPAlgebra.Init
 import DividedPowers.ExponentialModule.Basic
+import DividedPowers.ForMathlib.LinearAlgebra.Isomorphisms
 import Mathlib.LinearAlgebra.Isomorphisms
-
--- import DividedPowers.ForMathlib.MvPowerSeries.Order
--- import DividedPowers.ForMathlib.MvPowerSeries.Topology
-
 
 /-! # Divided power algebra and exponential modules
 
-Here we prove Theorem III.1 of [Roby1963].
-M is an R-module
-A is an R-algebra
+Here we prove Theorem III.1 of [Roby1963]: let `R` be a commutative ring, `M` be an `R`-module and
+`A` be an `R`-algebra.
 There is an equivalence between
-* algebra morphisms α : DividedPowerAlgebra R M →ₐ[R] A
-* module morphisms β : M →ₗ[R] ExponentialModule (A)
-which satisfies
-  β m = ∑ α ( dp n m ) X ^ n
-for all m : M
+* algebra morphisms `α : DividedPowerAlgebra R M →ₐ[R] A`
+* module morphisms `β : M →ₗ[R] ExponentialModule A`
+which satisfies `β m = ∑ α ( dp n m ) X ^ n` `for all m : M`.
 
-We define
-- `DividedPowerAlgebra.exp` : the power series `∑ (dp n m) X ^ n
+## Main definitions/results
+
+* `DividedPowerAlgebra.exp` : The exponential power series of an element `m : M` is the power
+  series `∑ (dp n m) X ^ n`, in the `ExponentialModule` of `DividedPowerAlgebra R M`.
+
+* `DividedPowerAlgebra.exponentialModule_equiv`: the equivalence between algebra morphisms
+  `DividedPowerAlgebra R M →ₐ[R] S` and linear maps `M →ₗ[R] ExponentialModule S`.
+  This is [Roby1963, theorem III.1]
 
 -/
-
-namespace LinearMap
--- TODO : move to     Mathlib/LinearAlgebra/Isomorphisms.lean
-
-variable {R M N P : Type*} [CommRing R]
-  [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
-  [AddCommGroup P] [Module R P]
-  (f : M →ₗ[R] N) (hf : Function.Surjective f)
-
-@[simp]
-theorem quotKerEquivOfSurjective_symm_apply (hf : Function.Surjective f) (x : M) :
-    (f.quotKerEquivOfSurjective hf).symm (f x) =
-      (LinearMap.ker f).mkQ x := by
-  rw [← LinearMap.quotKerEquivOfSurjective_apply_mk f hf,
-    @LinearEquiv.symm_apply_apply, @Submodule.mkQ_apply]
-
-variable (P) in
-noncomputable def equiv_of_isSurjective :
-    (N →ₗ[R] P) ≃ {g : M →ₗ[R] P // LinearMap.ker f ≤ LinearMap.ker g} where
-  toFun h := ⟨h.comp f, fun x hx ↦ by
-    simp only [LinearMap.mem_ker, LinearMap.coe_comp, Function.comp_apply] at hx ⊢
-    rw [hx, map_zero]⟩
-  invFun := fun ⟨g, hg⟩ ↦ (Submodule.liftQ (LinearMap.ker f) g hg).comp
-     (f.quotKerEquivOfSurjective hf).symm.toLinearMap
-  left_inv h := by
-    ext n
-    obtain ⟨m, rfl⟩ := hf n
-    simp [f.quotKerEquivOfSurjective_symm_apply hf]
-  right_inv := fun ⟨g, hg⟩ ↦ by
-    ext m
-    simp [f.quotKerEquivOfSurjective_symm_apply hf]
-
-@[simp]
-theorem equiv_of_isSurjective_apply (h : N →ₗ[R] P) (m : M) :
-    ((f.equiv_of_isSurjective P hf) h).1 m = h (f m) := rfl
-
-@[simp]
-theorem equiv_of_isSurjective_symm_apply
-  (g : M →ₗ[R] P) (hg : LinearMap.ker f ≤ LinearMap.ker g) (m : M) :
-    (f.equiv_of_isSurjective P hf).symm ⟨g, hg⟩ (f m) = g m := by
-  simp [LinearMap.equiv_of_isSurjective]
-
-end LinearMap
 
 variable (R : Type*) [CommRing R] {A : Type*} [CommSemiring A] [Algebra R A]
   {M : Type*} [AddCommMonoid M] [Module R M] [Module A M] [IsScalarTower R A M]
@@ -97,13 +59,12 @@ theorem coe_exp (m : M) : ↑(exp R m) = exp' R m := rfl
 theorem coeff_exp (m : M) (n : ℕ) : coeff n (exp R m) = dp R n m := by
   simp only [coe_exp, coeff_exp']
 
--- TODO : The following could serve as a definition of an exponential structure
+-- TODO: The following could serve as a definition of an exponential structure
 -- this is equivalent to the combination of dpow_zero, dpow_add and dpow_smul
 
 variable (M) in
-/-- The exponential power series of an element of a module,
-  valued in the ExponentialModule of the DividedPowerAlgebra,
-  as a LinearMap -/
+/-- The exponential power series of an element of a module, valued in the ExponentialModule of the
+  DividedPowerAlgebra, as a LinearMap -/
 noncomputable def exp_LinearMap :
     M →ₗ[R] ExponentialModule (DividedPowerAlgebra R M) where
   toFun := exp R
@@ -115,14 +76,11 @@ noncomputable def exp_LinearMap :
     apply coe_injective
     ext n
     simp only [coeff_exp, RingHom.id_apply]
-    rw [← algebraMap_smul (DividedPowerAlgebra R M) r (exp R m),
-      coe_smul, coeff_rescale, coeff_exp, ← map_pow, dp_smul]
-    rw [Algebra.algebraMap_self, RingHom.id_apply]
-    rw [Algebra.smul_def, map_pow]
+    rw [← algebraMap_smul (DividedPowerAlgebra R M) r (exp R m), coe_smul, coeff_rescale, coeff_exp,
+      ← map_pow, dp_smul, Algebra.algebraMap_self, RingHom.id_apply,Algebra.smul_def, map_pow]
 
 
-theorem coe_exp_LinearMap :
-    ⇑(exp_LinearMap R M) = exp R := rfl
+theorem coe_exp_LinearMap : ⇑(exp_LinearMap R M) = exp R := rfl
 
 theorem coeff_exp_LinearMap (n : ℕ) (m : M) :
     coeff n (exp_LinearMap R M m) = dp R n m := by
@@ -131,13 +89,11 @@ theorem coeff_exp_LinearMap (n : ℕ) (m : M) :
 variable {S : Type*} [CommRing S] [Algebra R S]
 
 variable (M S) in
-/-- The equivalence between
-  algebra morphisms `DividedPowerAlgebra R M →ₐ[R] S` and
-  linear maps `M →ₗ[R] ExponentialModule S`
 
-  [Roby1963, theorem III.1] -/
+/-- The equivalence between algebra morphisms `DividedPowerAlgebra R M →ₐ[R] S` and
+  linear maps `M →ₗ[R] ExponentialModule S`. This is [Roby1963, theorem III.1] -/
 noncomputable
-def dividedPowerAlgebra_exponentialModule_equiv :
+def exponentialModule_equiv :
     (DividedPowerAlgebra R M →ₐ[R] S) ≃ (M →ₗ[R] ExponentialModule S) where
   toFun α := (linearMap α).comp (exp_LinearMap R M)
   invFun β := by
@@ -151,7 +107,6 @@ def dividedPowerAlgebra_exponentialModule_equiv :
     · intro n p m
       simp only [nsmul_eq_mul]
       rw [(isExponential_iff.mp (isExponential_coe _)).1]
-      -- TODO: add lemmas for product of coeff and constant coeff
     · intro n x y
       simp only [map_add, coe_add, coeff_mul]
   left_inv := by
@@ -159,47 +114,42 @@ def dividedPowerAlgebra_exponentialModule_equiv :
     simp only [LinearMap.coe_comp, Function.comp_apply]
     apply algHom_ext
     intro n m
-    simp only [lift'_apply_dp]
-    rw [coeff_linearMap]
-    simp only [coeff_exp_LinearMap]
+    simp [lift'_apply_dp, coeff_linearMap, coeff_exp_LinearMap]
   right_inv := by
     intro β
     ext m n
-    simp only [LinearMap.coe_comp, Function.comp_apply]
-    rw [coeff_linearMap]
-    rw [coeff_exp_LinearMap]
-    simp only [lift'_apply_dp]
+    simp [Function.comp_apply, coeff_linearMap, coeff_exp_LinearMap, lift'_apply_dp]
 
-variable {R} in
-theorem dividedPowerAlgebra_exponentialModule_equiv_apply
-    (α : DividedPowerAlgebra R M →ₐ[R] S) :
-    dividedPowerAlgebra_exponentialModule_equiv R M S α = (linearMap α).comp (exp_LinearMap R M) :=
-  rfl
+variable {R}
 
-variable {R} in
-theorem dividedPowerAlgebra_exponentialModule_equiv_symm_apply
+theorem exponentialModule_equiv_apply (α : DividedPowerAlgebra R M →ₐ[R] S) :
+    exponentialModule_equiv R M S α = (linearMap α).comp (exp_LinearMap R M) := rfl
+
+theorem exponentialModule_equiv_symm_apply
     (β : M →ₗ[R] ExponentialModule S) (n : ℕ) (m : M) :
-    (dividedPowerAlgebra_exponentialModule_equiv R M S).symm β (dp R n m) = coeff n (β m) := by
-  unfold dividedPowerAlgebra_exponentialModule_equiv
+    (exponentialModule_equiv R M S).symm β (dp R n m) = coeff n (β m) := by
+  unfold exponentialModule_equiv
   simp only [Equiv.coe_fn_symm_mk, lift'_apply_dp]
+
+end DividedPowerAlgebra
+
+-- OLD
+
+variable (R : Type*) [CommRing R] {A : Type*} [CommSemiring A] [Algebra R A]
+  {M : Type*} [AddCommMonoid M] [Module R M] [Module A M] [IsScalarTower R A M]
+
+namespace DividedPowerAlgebra
+
+open PowerSeries Additive ExponentialModule
+
+
+variable {S : Type*} [CommRing S] [Algebra R S]
 
 section quotient
 
 variable {R M N : Type*} [CommRing R]
   [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
   (f : M →ₗ[R] N) (hf : Function.Surjective f)
-
--- TODO : move somewhere else
-@[simp]
-theorem coeff_linearMap (A B : Type*) [CommRing A] [CommRing B] [Algebra R A] [Algebra R B] (f : A →ₐ[R] B) (x : ExponentialModule A) (n : ℕ) :
-  coeff n ((linearMap f x) : B⟦X⟧) = f (coeff n (x : A⟦X⟧)) :=
-  rfl
-
--- TODO : move somewhere else
-@[simp]
-lemma coe_zero_eq_one (A : Type*) [CommRing A] :
-    ((0 : ExponentialModule A) : A⟦X⟧) = 1 := by
-  rfl
 
 /-- The kernel of the canonical map from `DividedPowerAlgebra R M`
 to `DividedPowerAlgebra R N` associated with a surjective linear map
@@ -227,7 +177,7 @@ theorem quotientEquiv_toAlgHom_mk_dp (n : ℕ) (m : M) :
 
 noncomputable def quotientEquiv_symm_toAlgHom :
     DividedPowerAlgebra R N →ₐ[R] (DividedPowerAlgebra R M ⧸ (kerLift f)) :=
-  (dividedPowerAlgebra_exponentialModule_equiv R N (DividedPowerAlgebra R M ⧸ kerLift f)).symm (by
+  (exponentialModule_equiv R N (DividedPowerAlgebra R M ⧸ kerLift f)).symm (by
     let h : M →ₗ[R] (ExponentialModule (DividedPowerAlgebra R M)) :=
       exp_LinearMap R M
     let h' : (ExponentialModule (DividedPowerAlgebra R M)) →ₗ[R] (ExponentialModule (DividedPowerAlgebra R M ⧸ kerLift f)) :=
@@ -248,7 +198,7 @@ noncomputable def quotientEquiv_symm_toAlgHom :
 @[simp]
 def quotientEquiv_symm_toAlgHom_dp (k : ℕ) (m : M) :
     quotientEquiv_symm_toAlgHom f hf (dp R k (f m)) = Submodule.mkQ _ (dp R k m) := by
-  simp [quotientEquiv_symm_toAlgHom, dividedPowerAlgebra_exponentialModule_equiv_symm_apply, coeff_linearMap, coeff_exp_LinearMap]
+  simp [quotientEquiv_symm_toAlgHom, exponentialModule_equiv_symm_apply, coeff_linearMap, coeff_exp_LinearMap]
 
 /-- The canonical algebra equivalence of a quotient of
 divided power algebra associated with a surjective linear map. -/
