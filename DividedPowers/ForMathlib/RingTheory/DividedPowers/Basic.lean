@@ -1,4 +1,23 @@
+/-
+Copyright (c) 2025 Antoine Chambert-Loir, María Inés de Frutos-Fernández. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
+-/
 import Mathlib.RingTheory.DividedPowers.Basic
+
+/-! # Divided powers
+
+We provide some additional formulas for computation with divided powers.
+
+## Main results
+
+* `DividedPowers.dpow_linearCombination`: ` "multinomial" theorem for divided powers, without
+  multinomial coefficients
+
+* `DividedPowers.dpow_prod`: given a nonempty `s : Finset ι` and a family `r : ι → R` such that
+  `r i ∈ I` for all `i ∈ S`, then for all `n : ℕ`, one has
+  `hI.dpow n (∏ i ∈ s, r i) = n.factorial ^ (s.card - 1) • (∏ i ∈ s, hI.dpow n (r i))`.
+-/
 
 namespace DividedPowers
 
@@ -27,6 +46,9 @@ theorem dpow_linearCombination {A : Type*} [CommSemiring A] [Algebra R A] {J : I
   intro i hi
   rw [Algebra.smul_def, hJ.dpow_mul (hx i hi), ← map_pow, ← Algebra.smul_def]
 
+/-- Given a nonempty `s : Finset ι` and a family `r : ι → R` such that `r i ∈ I` for all `i ∈ S`,
+  one has `hI.dpow n (∏ i ∈ s, r i) = n.factorial ^ (s.card - 1) • (∏ i ∈ s, hI.dpow n (r i))`
+  for all `n : ℕ`. -/
 theorem dpow_prod {r : ι → R} {s : Finset ι} (hs : s.Nonempty) (hs' : ∀ i ∈ s, r i ∈ I) {n : ℕ} :
     hI.dpow n (∏ i ∈ s, r i) = n.factorial ^ (s.card - 1) • (∏ i ∈ s, hI.dpow n (r i)) := by
   induction s using Finset.induction with

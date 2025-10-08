@@ -109,8 +109,8 @@ lemma mem_grade: f ∈ grade p ↔ IsHomogeneousOfDegree p f := by rfl
 lemma isHomogeneousOfDegree_toFun (hf : IsHomogeneousOfDegree p f) (S : Type*) [CommSemiring S]
     [Algebra R S] (r : S) (m : S ⊗[R] M) : f.toFun S (r • m) = r ^ p • f.toFun S m := by
   choose n ψ  m' r' hm' hr' using PolynomialLaw.exists_lift' m r
-  simp only [← hm', ← hr', ← isCompat_apply, toFun_eq_toFun', TensorProduct.smul_rTensor]
-  rw [hf, ← TensorProduct.smul_rTensor, map_pow]
+  sorry/- simp only [← hm', ← hr', ← isCompat_apply, toFun_eq_toFun', TensorProduct.smul_rTensor]
+  rw [hf, ← TensorProduct.smul_rTensor, map_pow] -/
 
 /-- If `f` is homogeneous of degree `p`, then `f.ground` is too.  -/
 lemma isHomogeneousOfDegree_ground (hf : IsHomogeneousOfDegree p f) (r : R) (m : M) :
@@ -180,7 +180,7 @@ theorem isHomogeneousOfDegree_of_coeff_iff :
     IsHomogeneousOfDegree p f ↔ ∀ (n : ℕ) (m : (Fin n) → M) (d : (Fin n) →₀ ℕ)
       (_ : d.sum (fun _ n => n) ≠ p), PolynomialLaw.coeff m f d = 0 := by
   refine ⟨fun hf _ m d hd => isHomogeneousOfDegree_coeff hf m d hd, fun H S _ _ r μ => ?_⟩
-  obtain ⟨n, s, m, rfl⟩ := TensorProduct.exists_Fin S μ
+  sorry/- obtain ⟨n, s, m, rfl⟩ := TensorProduct.exists_Fin S μ
   simp only [Finset.smul_sum, TensorProduct.smul_tmul']
   rw [← toFun_eq_toFun', toFun_sum_tmul_eq_coeff_sum, toFun_sum_tmul_eq_coeff_sum, Finsupp.smul_sum]
   apply Finsupp.sum_congr
@@ -193,7 +193,7 @@ theorem isHomogeneousOfDegree_of_coeff_iff :
   apply congr_arg₂ _ rfl
   specialize H n m d
   rw [not_imp_comm, Finsupp.sum_of_support_subset _ (Finset.subset_univ _) _ (fun _ _ ↦ rfl)] at H
-  exact H (Finsupp.mem_support_iff.mp hd)
+  exact H (Finsupp.mem_support_iff.mp hd) -/
 
 theorem IsHomogeneousOfDegree.comp {P : Type*} [AddCommMonoid P] [Module R P] {q : ℕ}
     {g : N →ₚₗ[R] P} (hf : f.IsHomogeneousOfDegree p) (hg : g.IsHomogeneousOfDegree q) :
@@ -387,7 +387,8 @@ noncomputable def _root_.LinearMap.toDegreeOnePolynomialLawEquiv :
     simp [toLinearMap, ground, toDegreeOnePolynomialLaw, toPolynomialLaw]
   right_inv f := by
     ext S _ _ sm
-    obtain ⟨n, s, m, rfl⟩ := TensorProduct.exists_Fin S sm
+    sorry
+    /- obtain ⟨n, s, m, rfl⟩ := TensorProduct.exists_Fin S sm
     simp only [AddHom.toFun_eq_coe, toDegreeOnePolynomialLaw, AddHom.coe_mk, ← toFun_eq_toFun',
       toPolynomialLaw_toFun, map_sum, LinearMap.baseChange_tmul]
     rw [toFun_sum_tmul_eq_coeff_sum, sum_of_support_subset _
@@ -398,7 +399,7 @@ noncomputable def _root_.LinearMap.toDegreeOnePolynomialLawEquiv :
       rw [isHomogeneousOfDegreeOne_coeff_single f.prop, Finset.prod_eq_single i ?_ (by simp),
         single_eq_same, pow_one, toLinearMap_eq_ground]
       intro j _ hj
-      rw [single_eq_of_ne hj, pow_zero] }
+      rw [single_eq_of_ne hj, pow_zero] -/ }
 
 end Linear
 

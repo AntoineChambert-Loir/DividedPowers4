@@ -3,13 +3,14 @@ Copyright (c) 2024 Antoine Chambert-Loir and María Inés de Frutos Fernandez. A
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir and María Inés de Frutos Fernandez.
 -/
-
 import Mathlib.RingTheory.TensorProduct.Basic
 
 /-! # Linear Equivalences on tensor products
 
-* `LinearEquiv.rTensor`, `LinearEquiv.lTensor` : tensor a linear equivalence
-  to the right or to the left gives a linear equivalence;
+## Main definitions
+
+* `LinearEquiv.map`: `e` is `S`-linear and `f : P →ₗ[R] Q`, then `TensorProduct.map e f` is
+  `S`-linear.
 * `LinearEquiv.rTensor'`, `LinearEquiv.lTensor'` : tensor a linear equivalence
   to the right or to the left gives a linear equivalence, with more `smul` properties;
 
@@ -30,7 +31,7 @@ variable [Module S M] [IsScalarTower R S M] [Module S N] [IsScalarTower R S N]
 
 namespace TensorProduct
 
-/--  If `e` is `S`-linear, then `TensorProduct.map e f` is `S`-linear -/
+/--  If `e` is `S`-linear, then `TensorProduct.map e f` is `S`-linear. -/
 noncomputable def map' (e : M →ₗ[S] N) (f : P →ₗ[R] Q) :
     M ⊗[R] P →ₗ[S] N ⊗[R] Q where
   toFun := map (e.restrictScalars R) f
@@ -77,7 +78,7 @@ namespace LinearEquiv
 
 open TensorProduct
 
-/-- Tensor a linear equivalence to the right or to the left gives a linear equivalence-/
+/-- Tensor a linear equivalence to the right or to the left gives a linear equivalence. -/
 noncomputable def rTensor' : M ⊗[R] P ≃ₗ[S] N ⊗[R] P :=
   congr' e (LinearEquiv.refl R P)
 
@@ -93,4 +94,3 @@ lemma rTensor'_apply (mp : M ⊗[R] P) :
 lemma rTensor'_coe : ⇑(e.rTensor' P) = (e.restrictScalars R).rTensor P := rfl
 
 end LinearEquiv
-

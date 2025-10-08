@@ -1,8 +1,9 @@
 /- Copyright ACL @ MIdFF 2024 -/
 
+import DividedPowers.ForMathlib.Algebra.Algebra.Bilinear
+import DividedPowers.ForMathlib.Algebra.MvPolynomial.Lemmas
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.DirectLimit.FG
 import DividedPowers.ForMathlib.RingTheory.Congruence.Hom
-
 import Mathlib.LinearAlgebra.TensorProduct.RightExactness
 import Mathlib.RingTheory.FiniteType
 import Mathlib.RingTheory.Ideal.Quotient.Operations
@@ -65,16 +66,6 @@ open AlgHom LinearMap
 
 section Lemmas
 
-section fg
-
-theorem Subalgebra.fg_sup {R : Type*} [CommSemiring R] {S : Type*} [CommSemiring S] [Algebra R S]
-    {A B : Subalgebra R S} (hA : A.FG) (hB : B.FG) : Subalgebra.FG (A ⊔ B) := by
-  classical
-  rw [← hA.choose_spec, ← hB.choose_spec, ← Algebra.adjoin_union, ← Finset.coe_union]
-  exact ⟨hA.choose ∪ hB.choose, rfl⟩
-
-end fg
-
 section range
 
 variable {R S T : Type*} [CommSemiring R]
@@ -98,32 +89,6 @@ theorem RingCon.kerLiftₐ_eq_val_comp_Equiv :
      RingCon.kerLiftₐ φ = (Subalgebra.val _).comp (RingCon.quotientKerEquivRangeₐ φ).toAlgHom :=
   AlgHom.ext fun _ ↦ refl _
 
-theorem MvPolynomial.aeval_range (R : Type*) [CommSemiring R] (S : Type*) [CommSemiring S]
-    [Algebra R S] {σ : Type*} (s : σ → S) :
-    (aeval s).range = Algebra.adjoin R (Set.range s) := by
-  apply le_antisymm
-  · rintro x ⟨p, rfl⟩
-    simp only [AlgHom.toRingHom_eq_coe, RingHom.coe_coe]
-    induction p using induction_on with
-    | C a => exact aeval_C s a ▸ Subsemiring.subset_closure (Or.inl (Set.mem_range_self a))
-    | add p q hp hq => rw [map_add]; exact Subalgebra.add_mem _ hp hq
-    | mul_X p n h =>
-      simp only [map_mul, aeval_X]
-      exact Subalgebra.mul_mem _ h (Algebra.subset_adjoin (Set.mem_range_self n))
-  · rw [Algebra.adjoin_le_iff]
-    rintro x ⟨i, rfl⟩
-    use X i, by aesop
-
-theorem Subalgebra.val_comp_inclusion {R : Type*} [CommSemiring R] {S : Type*} [Semiring S]
-    [Algebra R S] {A B : Subalgebra R S} (h : A ≤ B) :
-  (Subalgebra.val B).comp (Subalgebra.inclusion h) = Subalgebra.val A := rfl
-
-def Algebra.toAlgHom (R : Type*) [CommSemiring R]
-    (S : Type*) [Semiring S] [Algebra R S] :
-    R →ₐ[R] S where
-  toRingHom := algebraMap R S
-  commutes' := fun _ ↦ rfl
-
 end range
 
 section rTensor
@@ -137,17 +102,6 @@ theorem rTensor_comp_baseChange_comm_apply
   simp [LinearMap.baseChange_eq_ltensor, ← LinearMap.comp_apply]
 
 end rTensor
-
-theorem AlgEquiv.self_trans_symm_eq_refl
-  {R S S' : Type*} [CommSemiring R] [Semiring S] [Semiring S']
-  [Algebra R S] [Algebra R S'] (e : S ≃ₐ[R] S') :
-  e.trans e.symm = AlgEquiv.refl := by aesop
-
-theorem AlgEquiv.symm_trans_self_eq_refl
-  {R S S' : Type*} [CommSemiring R] [Semiring S] [Semiring S']
-  [Algebra R S] [Algebra R S'] (e : S ≃ₐ[R] S') :
-  e.symm.trans e = AlgEquiv.refl := by
-  aesop
 
 end Lemmas
 

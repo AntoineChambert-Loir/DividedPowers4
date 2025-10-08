@@ -1,7 +1,32 @@
-/- Copyright ACL & MIdFF 2025 -/
-
---import Mathlib.LinearAlgebra.TensorProduct.Pi
 import Mathlib.LinearAlgebra.TensorProduct.Prod
+
+/-!
+# Tensor products of products
+
+This file expands the API to work with `TensorProduct`s and `Prod`s.
+
+## Main definitions
+
+- `TensorProduct.fstRight`: the `S`-linear map sending `x : N ⊗[R] (M₁ × M₂)` to its first
+  component in `N ⊗[R] M₁`.
+- `TensorProduct.sndRight`: the `S`-linear map sending `x : N ⊗[R] (M₁ × M₂)` to its second
+  component in `N ⊗[R] M₂`.
+- `TensorProduct.inlRight`: the `S`-linear map sending `x : N ⊗[R] M₁` to the term of
+  `N ⊗[R] (M₁ × M₂)` whose first component is given by `x`, and whose second component is zero.
+- `TensorProduct.inrRight`: the `S`-linear map sending `x : N ⊗[R] M₂` to the term of
+  `N ⊗[R] (M₁ × M₂)` whose second component is given by `x`, and whose first component is zero.
+- `TensorProduct.compFstRight`: the `S`-linear map sending `x : N ⊗[R] (M₁ × M₂)` to the term of
+  `N ⊗[R] (M₁ × M₂)` whose first component agrees with that of `x`, and whose second component
+  is zero.
+- `TensorProduct.compSndRight`: the `S`-linear map sending `x : N ⊗[R] (M₁ × M₂)` to the term of
+  `N ⊗[R] (M₁ × M₂)` whose second component agrees with that of `x`, and whose first component
+  is zero.
+
+## Notes
+
+See `DividedPowerAlgebra/ForMathlib/LinearAlgebra/TensorProduct/Pi.lean` for arbitrary products.
+
+-/
 
 noncomputable section
 
@@ -10,9 +35,9 @@ namespace TensorProduct
 open LinearMap
 
 variable {ι R S T N P M₁ M₂ : Type*} [CommSemiring R] [AddCommMonoid M₁] [Module R M₁]
-    [AddCommMonoid M₂] [Module R M₂] [CommSemiring S] [Algebra R S]
-    [CommSemiring T] [Algebra R T] [AddCommMonoid N] [Module R N] [Module S N]
-    [IsScalarTower R S N] [AddCommMonoid P] [Module R P] [Module S P] [IsScalarTower R S P]
+  [AddCommMonoid M₂] [Module R M₂] [CommSemiring S] [Algebra R S] [CommSemiring T] [Algebra R T]
+  [AddCommMonoid N] [Module R N] [Module S N] [IsScalarTower R S N] [AddCommMonoid P] [Module R P]
+  [Module S P] [IsScalarTower R S P]
 
 lemma prodRight_rTensor_fst_eq_rTensor_prodRight (ψ : N →ₗ[R] P) (m : N ⊗[R] (M₁ × M₂)) :
     ((prodRight R S P M₁ M₂) ((rTensor (M₁ × M₂) ψ) m)).fst =
@@ -92,11 +117,13 @@ theorem smul_const_prodRight_apply (sm : S ⊗[R] (M₁ × M₂)) (r : S) :
     r • (prodRight R S S M₁ M₂) sm = (prodRight R S S M₁ M₂) (r • sm) := by simp
 
 variable (R S N M₁ M₂) in
+/-- The `S`-linear map sending `x : N ⊗[R] (M₁ × M₂)` to its first component in `N ⊗[R] M₁`. -/
 @[irreducible]
 def fstRight : N ⊗[R] (M₁ × M₂) →ₗ[S] N ⊗[R] M₁ :=
   (fst _ _ _).comp (prodRight R S N M₁ M₂).toLinearMap
 
 variable (R S N M₁ M₂) in
+/-- The `S`-linear map sending `x : N ⊗[R] (M₁ × M₂)` to its second component in `N ⊗[R] M₂`. -/
 @[irreducible]
 def sndRight : N ⊗[R] (M₁ × M₂) →ₗ[S] N ⊗[R] M₂ :=
   (snd _ _ _).comp (prodRight R S N M₁ M₂).toLinearMap
@@ -139,11 +166,15 @@ lemma sndRight_prodRight :
   LinearMap.ext_iff.mpr sndRight_prodRight_apply
 
 variable (R S N M₁ M₂) in
+/-- The `S`-linear map sending `x : N ⊗[R] M₁` to the term of `N ⊗[R] (M₁ × M₂)` whose first
+  component is given by `x`, and whose second component is zero. -/
 @[irreducible]
 def inlRight : N ⊗[R] M₁ →ₗ[S] N ⊗[R] (M₁ × M₂) :=
   (prodRight R S N M₁ M₂).symm.toLinearMap.comp (inl S (N ⊗[R] M₁) (N ⊗[R] M₂))
 
 variable (R S N M₁ M₂) in
+/-- The `S`-linear map sending `x : N ⊗[R] M₂` to the term of `N ⊗[R] (M₁ × M₂)` whose second
+  component is given by `x`, and whose first component is zero. -/
 @[irreducible]
 def inrRight : N ⊗[R] M₂ →ₗ[S] N ⊗[R] (M₁ × M₂) :=
   (prodRight R S N M₁ M₂).symm.toLinearMap.comp (inr S (N ⊗[R] M₁) (N ⊗[R] M₂))
@@ -193,10 +224,14 @@ lemma prod_right_ext_iff {x y : N ⊗[R] (M₁ × M₂)} :
   exact Prod.ext_iff
 
 variable (R S N M₁ M₂) in
+/-- The `S`-linear map sending `x : N ⊗[R] (M₁ × M₂)` to the term of `N ⊗[R] (M₁ × M₂)`
+  whose first component agrees with that of `x`, and whose second component is zero. -/
 @[irreducible] def compFstRight : N ⊗[R] (M₁ × M₂) →ₗ[S] N ⊗[R] (M₁ × M₂) :=
   (inlRight R S N M₁ M₂).comp (fstRight R S N M₁ M₂)
 
 variable (R S N M₁ M₂) in
+/-- The `S`-linear map sending `x : N ⊗[R] (M₁ × M₂)` to the term of `N ⊗[R] (M₁ × M₂)`
+  whose second component agrees with that of `x`, and whose first component is zero. -/
 @[irreducible] def compSndRight : N ⊗[R] (M₁ × M₂) →ₗ[S] N ⊗[R] (M₁ × M₂) :=
   (inrRight R S N M₁ M₂).comp (sndRight R S N M₁ M₂)
 
@@ -328,5 +363,32 @@ theorem baseChange_snd_eq_prodRight_snd {S : Type*} [CommSemiring S] [Algebra R 
   | add m m' hm hm' =>
     simp only [map_add, Prod.snd_add, hm, hm']
   | tmul s m =>  simp
+
+variable (R S T) (M₁' M₃ : Type*) [AddCommMonoid M₁'] [Module R M₁'] [Module T M₁']
+  [IsScalarTower R T M₁'] [AddCommMonoid M₃] [Module R M₃] [Module S M₁] [IsScalarTower R S M₁]
+
+theorem prodRight_rTensor₁ (φ : M₁ →ₗ[R] M₁') (t : M₁ ⊗[R] (M₂ × M₃)) :
+    ((prodRight R T M₁' M₂ M₃) ((LinearMap.rTensor (M₂ × M₃) φ) t)).1 =
+    (LinearMap.rTensor M₂ φ) ((prodRight R S M₁ M₂ M₃) t).1 := by
+  induction t using TensorProduct.induction_on with
+  | zero => simp
+  | tmul t m => simp
+  | add x y hx hy => simp [map_add, ← hx, ← hy]
+
+theorem prodRight_rTensor₂ (φ : M₁ →ₗ[R] M₁') (t : M₁ ⊗[R] (M₂ × M₃)) :
+    ((prodRight R T M₁' M₂ M₃) ((LinearMap.rTensor (M₂ × M₃) φ) t)).2 =
+    (LinearMap.rTensor M₃ φ) ((prodRight R S M₁ M₂ M₃) t).2 := by
+  induction t using TensorProduct.induction_on with
+  | zero => simp
+  | tmul t m => simp
+  | add x y hx hy => simp [map_add, ← hx, ← hy]
+
+theorem prodRight_symm_rTensor (φ : M₁ →ₗ[R] M₁') (m₂ : M₁ ⊗[R] M₂) (m₃ : M₁ ⊗[R] M₃) :
+    ((prodRight R T M₁' M₂ M₃).symm ((LinearMap.rTensor M₂ φ) m₂, (LinearMap.rTensor M₃ φ) m₃)) =
+        LinearMap.rTensor (M₂ × M₃) φ ((prodRight R S M₁ M₂ M₃).symm (m₂, m₃)) := by
+  rw [LinearEquiv.symm_apply_eq]
+  ext
+  · simp [prodRight_rTensor₁ R S T]
+  · simp [prodRight_rTensor₂ R S T]
 
 end TensorProduct

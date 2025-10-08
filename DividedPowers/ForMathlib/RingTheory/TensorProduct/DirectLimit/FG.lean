@@ -1,12 +1,11 @@
+/-
+Copyright (c) 2025 Antoine Chambert-Loir, María Inés de Frutos-Fernández. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
+-/
 import Mathlib.LinearAlgebra.TensorProduct.DirectLimit
 import Mathlib.LinearAlgebra.TensorProduct.Tower
 import Mathlib.RingTheory.Adjoin.FG
---import Mathlib.Algebra.Equiv.TransferInstance
-import Mathlib.LinearAlgebra.TensorProduct.RightExactness
-import Mathlib.RingTheory.FiniteType
-import Mathlib.RingTheory.Ideal.Quotient.Operations
-
-import Mathlib.Algebra.DirectSum.Internal
 
 /- # Tensor products and finitely generated submodules
 
@@ -18,8 +17,6 @@ is the direct limit of the modules `P ⊗[R] N`, for all finitely generated
 submodules `P`, with respect to the maps deduced from the inclusions
 
 ## TODO
-
-* Fix namespaces, add docstrings
 
 * The results are valid in the context of `AddCommMonoid M` over a `Semiring`.
 However,  tensor products in mathlib require commutativity of the scalars,
@@ -34,19 +31,11 @@ open Submodule LinearMap
 section Semiring
 
 universe u v
+
 variable {R : Type u} [Semiring R] {M : Type*} [AddCommMonoid M] [Module R M]
 
---  In PR #26717
-/- theorem Subalgebra.FG.sup {R S : Type*} [CommSemiring R] [Semiring S] [Algebra R S]
-    {A A' : Subalgebra R S} (hA : Subalgebra.FG A) (hA' : Subalgebra.FG A') :
-    Subalgebra.FG (A ⊔ A') :=
-  let ⟨s, hs⟩ := Subalgebra.fg_def.1 hA
-  let ⟨s', hs'⟩ := Subalgebra.fg_def.1 hA'
-  Subalgebra.fg_def.2 ⟨s ∪ s', Set.Finite.union hs.1 hs'.1,
-    (by rw [Algebra.adjoin_union, hs.2, hs'.2])⟩ -/
-
 /-- The directed system of finitely generated submodules of `M` -/
-def DirectedSystem.Submodule_fg :
+lemma DirectedSystem.Submodule_fg :
     DirectedSystem (ι := {P : Submodule R M // P.FG}) (F := fun P ↦ P.val)
     (f := fun ⦃P Q⦄ (h : P ≤ Q) ↦ Submodule.inclusion h) where
   map_self := fun _ _ ↦ rfl
@@ -85,9 +74,7 @@ open TensorProduct
 
 universe u v
 
-variable (R : Type u) (M N : Type*)
-  [CommSemiring R]
-  [AddCommMonoid M] [Module R M]
+variable (R : Type u) (M N : Type*) [CommSemiring R] [AddCommMonoid M] [Module R M]
   [AddCommMonoid N] [Module R N]
 
 /-- Given a directed system of `R`-modules, tensor it on the right gives a directed system -/
@@ -165,6 +152,8 @@ instance lTensor_fg_directedSystem :
       (fun _ _ hPQ ↦ LinearMap.lTensor M (Submodule.inclusion hPQ)) :=
   DirectedSystem.lTensor R M DirectedSystem.Submodule_fg
 
+/-- A tensor product `M ⊗[R] N` is the direct limit of the modules `M ⊗[R] Q`,
+where `Q` ranges over all finitely generated submodules of `N`. -/
 noncomputable def lTensor_fgEquiv [DecidableEq {Q : Submodule R N // Q.FG}] :
     Module.DirectLimit (R := R) (ι := {Q : Submodule R N // Q.FG}) (fun Q ↦ M ⊗[R] Q.val)
       (fun _ _ hPQ ↦ (Submodule.inclusion hPQ).lTensor M) ≃ₗ[R] M ⊗[R] N :=
@@ -191,14 +180,6 @@ theorem lTensor_fgEquiv_of' [DecidableEq {Q : Submodule R N // Q.FG}]
         (fun _ _ hPQ ↦ LinearMap.lTensor M (Submodule.inclusion hPQ)) ⟨Q, hQ⟩) u)
       = (LinearMap.lTensor M (Submodule.subtype Q)) u :=
   lTensor_fgEquiv_of R M N ⟨Q, hQ⟩ u
-
-/- @[simp] theorem Submodule.inclusion_refl {P : Submodule R M} :
-      inclusion (le_refl P) = LinearMap.id := rfl
-
-@[simp] theorem Submodule.inclusion_trans {P Q L : Submodule R M}
-    (hPQ : P ≤ Q) (hQL : Q ≤ L) :
-    Submodule.inclusion hQL ∘ₗSubmodule.inclusion hPQ = Submodule.inclusion (le_trans hPQ hQL) := rfl
--/
 
 variable {R M N}
 
@@ -334,25 +315,24 @@ theorem TensorProduct.Algebra.eq_of_fg_of_subtype_eq'
     = Subalgebra.val A := by ext; rfl
   have hj' : (Subalgebra.val (A ⊔ A')).comp (Subalgebra.inclusion le_sup_right)
     = Subalgebra.val A' := by ext; rfl
-  simp only [← hj, ← hj', AlgHom.comp_toLinearMap, LinearMap.rTensor_comp, LinearMap.comp_apply] at h
+  simp only [← hj, ← hj', AlgHom.comp_toLinearMap, LinearMap.rTensor_comp, LinearMap.comp_apply]
+    at h
   let ⟨B, hB_le, hB, h⟩ := TensorProduct.Algebra.eq_of_fg_of_subtype_eq
     (Subalgebra.FG.sup hA hA') _ _ h
   use B, le_trans le_sup_left hB_le, le_trans le_sup_right hB_le, hB
   simpa only [← LinearMap.rTensor_comp, ← LinearMap.comp_apply] using h
 
--- [Mathlib.RingTheory.TensorProduct.Basic]
-theorem LinearMap.rTensor_comp_baseChange_comm_apply
-    {R : Type*} [CommSemiring R] {M N : Type*} [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module R N]
-    {S : Type*} [Semiring S] [Algebra R S]
-    {S' : Type*} [Semiring S'] [Algebra R S']
+theorem LinearMap.rTensor_comp_baseChange_comm_apply {R : Type*} [CommSemiring R] {M N : Type*}
+    [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module R N] {S : Type*} [Semiring S]
+    [Algebra R S] {S' : Type*} [Semiring S'] [Algebra R S']
     (φ : S →ₐ[R] S') (t : S ⊗[R] M) (f : M →ₗ[R] N) :
-    (φ.toLinearMap.rTensor N) (f.baseChange S t)  =
+    (φ.toLinearMap.rTensor N) (f.baseChange S t) =
       (f.baseChange S') (φ.toLinearMap.rTensor M t) := by
   simp [LinearMap.baseChange_eq_ltensor, ← LinearMap.comp_apply]
 
 /-- Lift an element that maps to 0 -/
-theorem Submodule.exists_fg_of_baseChange_eq_zero
-    {R S M N : Type*} [CommSemiring R] [Semiring S] [Algebra R S] [AddCommMonoid M] [AddCommMonoid N] [Module R M] [Module R N]
+theorem Submodule.exists_fg_of_baseChange_eq_zero {R S M N : Type*} [CommSemiring R] [Semiring S]
+    [Algebra R S] [AddCommMonoid M] [AddCommMonoid N] [Module R M] [Module R N]
     (f : M →ₗ[R] N) (t : S ⊗[R] M) (ht : f.baseChange S t = 0) :
     ∃ (A : Subalgebra R S) (_ : A.FG) (u : A ⊗[R] M),
       f.baseChange A u = 0 ∧ A.val.toLinearMap.rTensor M u = t := by
@@ -369,5 +349,11 @@ theorem Submodule.exists_fg_of_baseChange_eq_zero
   · rw [← rTensor_comp_baseChange_comm_apply, hu']
   · rw [← LinearMap.comp_apply, ← LinearMap.rTensor_comp, ← hu]
     congr
+
+theorem Subalgebra.fg_sup {R : Type*} [CommSemiring R] {S : Type*} [CommSemiring S] [Algebra R S]
+    {A B : Subalgebra R S} (hA : A.FG) (hB : B.FG) : Subalgebra.FG (A ⊔ B) := by
+  classical
+  rw [← hA.choose_spec, ← hB.choose_spec, ← Algebra.adjoin_union, ← Finset.coe_union]
+  exact ⟨hA.choose ∪ hB.choose, rfl⟩
 
 end Algebra

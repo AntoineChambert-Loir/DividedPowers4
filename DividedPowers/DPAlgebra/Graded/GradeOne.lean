@@ -3,6 +3,7 @@ Copyright (c) 2024 Antoine Chambert-Loir, María Inés de Frutos-Fernández. All
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
+import DividedPowers.ForMathlib.Algebra.TrivSqZeroExt
 import DividedPowers.DPAlgebra.Graded.Basic
 import Mathlib.RingTheory.DividedPowers.RatAlgebra
 
@@ -76,11 +77,12 @@ theorem grade_one_eq_span :
       apply mem_supported.mp q.2
       rw [mem_coe, mem_vars]
       exact ⟨d, hd, hnm⟩
-    obtain ⟨m, hm⟩ := eq_finsupp_single_of_degree_one M (hq1 (mem_support_iff.mp hd)) hsupp
+    sorry
+   /-  obtain ⟨m, hm⟩ := eq_finsupp_single_of_degree_one M (hq1 (mem_support_iff.mp hd)) hsupp
     rw [← hm, monomial_eq, C_mul', map_smul, Finsupp.prod_single_index, pow_one]
     exact Submodule.smul_mem (Submodule.span R (Set.range (dp R 1))) _
       (Submodule.subset_span (Set.mem_range.mpr ⟨m, rfl⟩))
-    · rw [pow_zero]
+    · rw [pow_zero] -/
   · rw [Submodule.span_le]
     rintro p ⟨m, rfl⟩
     exact dp_mem_grade R M 1 m

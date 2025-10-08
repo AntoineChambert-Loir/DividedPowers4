@@ -10,26 +10,6 @@ universe u v
 
 noncomputable section
 
--- TODO : move to MvPolynomial file
-namespace MvPolynomial
-
-open Ideal.Quotient
-
-theorem mkₐ_eq_aeval {C : Type*} [CommRing C] {D : Type*} (I : Ideal (MvPolynomial D C)) :
-    Ideal.Quotient.mkₐ C I = aeval fun d : D => Ideal.Quotient.mk I (X d) := by
-  ext d
-  simp only [mkₐ_eq_mk, aeval_X]
-
-theorem mk_eq_eval₂ {C : Type*} [CommRing C] {D : Type*} (I : Ideal (MvPolynomial D C)) :
-    (Ideal.Quotient.mk I).toFun =
-      eval₂ (algebraMap C (MvPolynomial D C ⧸ I)) fun d : D => Ideal.Quotient.mk I (X d) := by
-  ext d
-  simp_rw [RingHom.toFun_eq_coe, ← mkₐ_eq_mk C, mkₐ_eq_aeval, aeval_X]
-  rfl
-
-
-end MvPolynomial
-
 namespace DividedPowerAlgebra
 
 open DirectSum Finset Function Ideal Ideal.Quotient MvPolynomial RingEquiv RingQuot TrivSqZeroExt

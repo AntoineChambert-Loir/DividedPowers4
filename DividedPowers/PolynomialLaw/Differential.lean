@@ -668,22 +668,6 @@ lemma dividedPartialDerivativeCommute (k₁ k₂ : ℕ) (x₁ x₂ : M) :
   simp only [Module.End.mul_apply, ← toFun_eq_toFun']
   exact dividedPartialDerivative_comm k₁ k₂ x₁ x₂ sm
 
--- TODO: move
-lemma _root_.MvPolynomial.coeff_scalarRTensorAlgEquiv {σ S : Type*} [DecidableEq σ] [CommSemiring S]
-    [Algebra R S] (p : MvPolynomial σ R) (s : S) (k : σ →₀ ℕ) :
-    MvPolynomial.coeff k (scalarRTensorAlgEquiv (p ⊗ₜ[R] s)) = (MvPolynomial.coeff k p) • s := by
-  simp [scalarRTensorAlgEquiv, AlgEquiv.trans_apply, rTensorAlgEquiv_apply, mapAlgEquiv_apply,
-    coeff_map, coeff_rTensorAlgHom_tmul, RingHom.coe_coe, Algebra.TensorProduct.lid_tmul]
-
--- TODO: move
--- TODO: add to Mathlib (with _apply, as in Polynomial case)
-/-- `MvPolynomial.C` as an `AlgHom`. -/
-@[simps! apply]
-def _root_.MvPolynomial.CAlgHom {R : Type*} [CommSemiring R] {A : Type*} [CommSemiring A] [Algebra R A]
-     {σ : Type*} : A →ₐ[R] MvPolynomial σ A where
-  toRingHom := C
-  commutes' _ := rfl
-
 -- Roby63, pg 241 (Prop. II.4 for general n)
 -- NOTE: in Roby, the product appears in the opposite order, but `dividedPartialDerivative_comm`
 -- shows this version is equivalent.
@@ -755,80 +739,6 @@ lemma firstPartialDerivative_comp_multiple_eq_coeff {S : Type*} [CommSemiring S]
 example {ι  : Type*} (s : Set ι) (k : ι →₀ ℕ) :
     s →₀ ℕ := by
   exact k.subtypeDomain s
-
-def _root_.Set.complSumSelfEquiv {ι : Type*} (s : Set ι) [∀ x, Decidable (x ∈ s)] :
-    ι ≃ s.compl ⊕ s  where
-  toFun x := if hx : x ∈ s then Sum.inr ⟨x, hx⟩ else Sum.inl ⟨x, hx⟩
-  invFun x := by rcases x with (x | x) <;> exact (x : ι)
-  right_inv x := by
-    rcases x with (x | x)
-    · simp only [Subtype.coe_eta, dite_eq_right_iff, reduceCtorEq, imp_false]
-      exact x.2
-    · simp only [Subtype.coe_prop, ↓reduceDIte, Subtype.coe_eta]
-  left_inv x := by by_cases hx : x ∈ s <;> simp [hx]
-
-def _root_.MvPolynomial.splitAlgEquiv {ι : Type*} (s : Set ι) [∀ x, Decidable (x ∈ s)] :
-    (MvPolynomial ι R) ≃ₐ[R] MvPolynomial (s.compl) (MvPolynomial (s) R) :=
-  (renameEquiv R s.complSumSelfEquiv).trans (sumAlgEquiv R s.compl s)
-
-theorem _root_.Finsupp.prod_mul_prod_compl {ι M N : Type*} [Zero M] [CommMonoid N] (s : Set ι)
-   [DecidablePred (fun x ↦ x ∈ s)] (f : ι →₀ M) (g : ι → M → N) (gs : Subtype s → M → N)
-   (gs' : Subtype s.compl → M → N) (hs : ∀ x : s, g x = gs x) (hs' : ∀ x : s.compl, g x = gs' x) :
-   ((Finsupp.subtypeDomain s f).prod gs) *
-     ((Finsupp.subtypeDomain s.compl f).prod gs') = Finsupp.prod f g := by
-  classical
-  simp only [Finsupp.prod]
-  rw [← Finset.prod_attach f.support]
-  rw [← Finset.prod_coe_sort_eq_attach]
-  rw [← Finset.prod_mul_prod_compl (s := Finset.univ.filter (fun (x : {x // x ∈ f.support}) ↦ x.val ∈ s))]
-  apply congr_arg₂
-  · simp only [Finsupp.support_subtypeDomain, Finsupp.subtypeDomain_apply, Finset.univ_eq_attach]
-    rw [Finset.prod_bij'
-      (i := fun x hx ↦ ⟨x.val, Finset.mem_subtype.mp hx⟩)
-      (j := fun (x : f.support) (hx : x ∈ Finset.filter (fun i ↦ ↑i ∈ s) f.support.attach) ↦ by
-        simp only [Finset.mem_filter, Finset.mem_attach, true_and] at hx
-        refine ⟨x.val, hx⟩)]
-    all_goals simp [← hs]
-  · simp only [Finsupp.support_subtypeDomain, Finsupp.subtypeDomain_apply,
-    Finset.univ_eq_attach]
-    rw [show ({x ∈ f.support.attach | ↑x ∈ s})ᶜ = {x ∈ f.support.attach | ↑x ∈ sᶜ} by ext; simp]
-    rw [Finset.prod_bij'
-      (i := fun x hx ↦ ⟨x.val, Finset.mem_subtype.mp hx⟩)
-      (j := fun (x : f.support) (hx : x ∈ Finset.filter (fun i ↦ ↑i ∈ sᶜ) f.support.attach) ↦ by
-        simp only [Finset.mem_filter, Finset.mem_attach, true_and] at hx
-        refine ⟨x.val, hx⟩)]
-    all_goals simp [← hs']
-    intro i hi _; exact hi
-
-lemma _root_.MvPolynomial.splitAlgEquiv_monomial
-    {ι : Type*} (s : Set ι) [∀ x, Decidable (x ∈ s)]  (k : ι →₀ ℕ) (r : R) :
-    splitAlgEquiv s (monomial k r) =
-      monomial (k.subtypeDomain s.compl) (monomial (k.subtypeDomain s) r) := by
-  simp only [splitAlgEquiv, AlgEquiv.trans_apply]
-  simp only [renameEquiv_apply, sumAlgEquiv_apply]
-  simp only [rename_monomial]
-  simp only [sumToIter, coe_eval₂Hom, eval₂_monomial, RingHom.coe_comp, Function.comp_apply]
-  rw [← Finsupp.equivMapDomain_eq_mapDomain, Finsupp.prod_equivMapDomain]
-  simp only [Set.complSumSelfEquiv, Equiv.coe_fn_mk]
-  simp only [monomial_eq, C_mul]
-  simp only [C_mul', Algebra.smul_mul_assoc]
-  congr
-  rw [smul_eq_C_mul, map_finsuppProd]
-  simp only [C_pow]
-  rw [Finsupp.prod_mul_prod_compl s (M := ℕ) k
-    (g := fun i e ↦ if hi : i ∈ s then
-      C (σ := Subtype s.compl) (R := MvPolynomial s R) (X ⟨i, hi⟩ ^ e)
-      else X ⟨i, hi⟩ ^ e)
-    (gs := fun a b ↦ C (X (R := R) a) ^b)
-    (gs' := fun n e ↦ X n ^ e)]
-  congr
-  · ext1 _; ext1 _; split_ifs with hi
-    · simp; rfl
-    · simp
-  · intro x; ext1 e
-    simp only [Subtype.coe_prop, ↓reduceDIte, Subtype.coe_eta, C_pow]
-    rfl
-  · intro x; simp [dif_neg (show ¬((x : ι) ∈ s) by aesop)]
 
 lemma _root_.MvPolynomial.test {ι : Type*} (s : Set ι) [∀ x, Decidable (x ∈ s)]
     (P : MvPolynomial ι R) (k : ι →₀ ℕ) :

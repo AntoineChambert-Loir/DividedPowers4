@@ -117,12 +117,6 @@ theorem biCoeff_apply_eq_coeff_apply :
     biCoeff m f n = coeff ![(m.1, 0), (0, m.2)] f ((finTwoArrowEquiv' ℕ).symm n) := by
   simp [biCoeff_eq_coeff, Finsupp.ofSupportFinite_coe]
 
--- TODO: move
-theorem _root_.Finsupp.ofSupportFinite_fin_two_eq (n : Fin 2 →₀ ℕ) :
-    Finsupp.ofSupportFinite ![n 0, n 1] (Set.toFinite _) = n := by
-  rw [Finsupp.ext_iff, Fin.forall_fin_two]
-  exact ⟨rfl, rfl⟩
-
 theorem toFun_biGenerize_eq : f.toFun (MvPolynomial (Fin 2) R) (biGenerize m) =
     (biCoeff m f).sum (fun k n ↦ (monomial ((finTwoArrowEquiv' ℕ).symm k) 1) ⊗ₜ n) := by
   simp only [biGenerize_eq_generize, Nat.succ_eq_add_one, Nat.reduceAdd, toFun_generize_eq,

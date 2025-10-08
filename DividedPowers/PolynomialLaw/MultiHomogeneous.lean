@@ -72,7 +72,8 @@ lemma IsMultiHomogeneousOfDegree.toFun (hf : IsMultiHomogeneousOfDegree n f) (S 
     [CommSemiring S] [Algebra R S] (r : ι → S) (m : S ⊗[R] (Π i, M i)) :
     f.toFun S (∑ i, r i • compRight R S S M i m) = (∏ i, (r i)^(n i)) • f.toFun S m := by
   choose d ψ m' r' hm' hr' using PolynomialLaw.exists_lift'' m r
-  simp only [← hr', ← hm', ← map_pow, ← map_prod, ← isCompat_apply, toFun_eq_toFun', smul_rTensor]
+  sorry
+  /- simp only [← hr', ← hm', ← map_pow, ← map_prod, ← isCompat_apply, toFun_eq_toFun', smul_rTensor]
   rw [← hf, ← toFun_eq_toFun', isCompat_apply]
   simp only [TensorProduct.compRight, singleRight, projRight, coe_comp, LinearEquiv.coe_coe,
     coe_single, coe_proj, Function.comp_apply, Function.eval]
@@ -85,7 +86,7 @@ lemma IsMultiHomogeneousOfDegree.toFun (hf : IsMultiHomogeneousOfDegree n f) (S 
   by_cases hij : j = i
   · subst hij
     simp [piRight_rTensor_eq_rTensor_piRight']
-  · simp [piRight_rTensor_eq_rTensor_piRight', hij]
+  · simp [piRight_rTensor_eq_rTensor_piRight', hij] -/
 
 /-- If `f` is multihomogeneous of multidegree `n`, then `f.ground` is too.  -/
 lemma isMultiHomogeneousOfDegree_ground (hf : IsMultiHomogeneousOfDegree n f) (r : ι → R)

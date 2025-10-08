@@ -7,12 +7,36 @@ import DividedPowers.DPAlgebra.Init
 import DividedPowers.ForMathlib.GradedRingQuot
 import Mathlib.Algebra.MvPolynomial.CommRing
 
+/-!
+# The graded algebra structure on the universal divided power algebra
+
+Let `R` be a ring and `M` be an `R`-module. We define the graded algebra structure on the universal
+divided power algebra of `M`.
+
+
+## Main definitions/results
+
+* `DividedPowerAlgebra.grade`: the graded submodules of `DividedPowerAlgebra R M`.
+
+* `DividedPowerAlgebra.decomposition`: the canonical decomposition of `DividedPowerAlgebra R M`
+  as a sun of its graded components.
+
+* `DividedPowerAlgebra.gradedAlgebra` : the graded algebra structure on `DividedPowerAlgebra R M`.
+
+* `DividedPowerAlgebra.HasGradedDpow` : we say that a divided power algebra has a graded divided
+  power structure if for every `n : ℕ`, `hI.dpow n` sends elements of `𝒜 i` to elements of
+  `𝒜 (n • i)`.
+
+* `DividedPowerAlgebra.proj'` : the projection from `DividedPowerAlgebra R M` to the degree `n`
+submodule `grade R M n`, as an `R`-linear map.
+
+-/
 
 noncomputable section
 
 namespace DividedPowerAlgebra
 
-open DirectSum Finset Function Ideal Ideal.Quotient MvPolynomial RingEquiv RingQuot TrivSqZeroExt
+open DirectSum Finset Function Ideal Ideal.Quotient MvPolynomial RingEquiv RingQuot
 
 variable (R M : Type*) [CommSemiring R] [AddCommMonoid M] [Module R M]
 
@@ -47,11 +71,11 @@ theorem rel_isPureHomogeneous :
 
 theorem Rel_isHomogeneous :
     Rel.IsHomogeneous (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) (Rel R M) :=
-  Rel.IsHomogeneous_of_isPureHomogeneous (rel_isPureHomogeneous R M) Rel.rfl_zero
+  Rel.isHomogeneous_of_isPureHomogeneous (rel_isPureHomogeneous R M) Rel.rfl_zero
 
 theorem RelI_isHomogeneous (R : Type*) [CommRing R] (M : Type*) [AddCommGroup M] [Module R M] :
     (RelI R M).IsHomogeneous (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ)) :=
-  IsHomogeneous_of_rel_isPureHomogeneous (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ))
+  isHomogeneous_of_rel_isPureHomogeneous (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ))
     (Rel R M) (rel_isPureHomogeneous R M)
 
 /-- The graded submodules of `DividedPowerAlgebra R M`. -/
@@ -68,19 +92,14 @@ theorem one_mem : (1 : DividedPowerAlgebra R M) ∈ grade R M 0 :=
   ⟨1, isWeightedHomogeneous_one R _, map_one _⟩
 
 /-- The canonical decomposition of `DividedPowerAlgebra R M` -/
-def decomposition [DecidableEq R] [DecidableEq M] :
-    DirectSum.Decomposition (M := DividedPowerAlgebra R M) (grade R M) :=
-  quotDecomposition R (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ))
+def decomposition : DirectSum.Decomposition (M := DividedPowerAlgebra R M) (grade R M) :=
+  quotDecomposition (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ))
     (DividedPowerAlgebra.Rel R M) (Rel_isHomogeneous R M)
 
 /-- The graded algebra structure on the divided power algebra-/
-def gradedAlgebra [DecidableEq R] [DecidableEq M] : GradedAlgebra (DividedPowerAlgebra.grade R M) :=
-  DirectSum.Decomposition_RingQuot R (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ))
+instance gradedAlgebra : GradedAlgebra (grade R M) :=
+  quotGradedAlgebra (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ))
     (DividedPowerAlgebra.Rel R M) (Rel_isHomogeneous R M)
-
-open Classical in
-instance : GradedAlgebra (grade R M) :=
-  gradedAlgebra R M
 
 open MvPolynomial
 
@@ -88,26 +107,20 @@ theorem dp_mem_grade (n : ℕ) (m : M) : dp R n m ∈ grade R M n :=
   ⟨X (n, m), isWeightedHomogeneous_X R _ (n, m), rfl⟩
 
 /-- The degree of a product is equal to the sum of the degrees. -/
-theorem mul_mem [DecidableEq R] [DecidableEq M] ⦃i j : ℕ⦄ {gi gj : DividedPowerAlgebra R M}
+theorem mul_mem ⦃i j : ℕ⦄ {gi gj : DividedPowerAlgebra R M}
     (hi : gi ∈ grade R M i) (hj : gj ∈ grade R M j) : gi * gj ∈ grade R M (i + j) :=
   (gradedAlgebra R M).toGradedMonoid.mul_mem hi hj
 
 /-- The equivalence between `DividedPowerAlgebra R M` and the direct sum of `grade R M i`,
   where `i` runs over `ℕ`. -/
-def decompose [DecidableEq R] [DecidableEq M] :
-    DividedPowerAlgebra R M → DirectSum ℕ fun i : ℕ => ↥(grade R M i) :=
+def decompose : DividedPowerAlgebra R M → DirectSum ℕ fun i : ℕ => ↥(grade R M i) :=
   (gradedAlgebra R M).toDecomposition.decompose'
-
-/-- The graded algebra instance on `DividedPowerAlgebra R M`. -/
-instance [DecidableEq R] [DecidableEq M]  : GradedAlgebra (DividedPowerAlgebra.grade R M) :=
-  gradedAlgebra R M
 
 theorem mk_comp_toSupported :
     (@mk R M).comp ((Subalgebra.val _).comp (toSupported R)) = mk := by
   apply MvPolynomial.algHom_ext
   rintro ⟨n, m⟩
-  simp only [AlgHom.coe_comp, mkₐ_eq_mk, Subalgebra.coe_val, Function.comp_apply, aeval_X,
-    toSupported]
+  simp only [AlgHom.coe_comp, Subalgebra.coe_val, Function.comp_apply, aeval_X, toSupported]
   split_ifs with h
   · rfl
   · simp only [not_lt, le_zero_iff] at h
@@ -176,7 +189,7 @@ theorem lift_isHomogeneous {A : Type*} [CommSemiring A] [Algebra R A] (𝒜 : �
   intro n m
   simpa only [Algebra.id.smul_eq_mul, mul_one] using hI' (φ m) (hφ m) n 1 (hφ' m)
 
-variable {N : Type*} [AddCommMonoid N] [DecidableEq S] [DecidableEq N] [Module R N] [Module S N]
+variable {N : Type*} [AddCommMonoid N] [Module R N] [Module S N]
   [IsScalarTower R S N]
 
 theorem lift'_isHomogeneous (f : M →ₗ[R] N) :
@@ -192,13 +205,13 @@ variable (R M)
 
 /-- The projection from `DividedPowerAlgebra R M` to the degree `n` submodule `grade R M n`,
   as an `R`-linear map-/
-def proj' [DecidableEq R] [DecidableEq M] (n : ℕ) : DividedPowerAlgebra R M →ₗ[R] grade R M n :=
+def proj' (n : ℕ) : DividedPowerAlgebra R M →ₗ[R] grade R M n :=
   GradedAlgebra.proj' (grade R M) n
 
-theorem proj'_zero_one [DecidableEq R] [DecidableEq M] : (proj' R M 0) 1 = 1 := by
+theorem proj'_zero_one : (proj' R M 0) 1 = 1 := by
   rw [proj', GradedAlgebra.proj', LinearMap.coe_mk, AddHom.coe_mk, decompose_one]; rfl
 
-theorem proj'_zero_mul [DecidableEq R] [DecidableEq M] (x y : DividedPowerAlgebra R M) :
+theorem proj'_zero_mul (x y : DividedPowerAlgebra R M) :
     (proj' R M 0) (x * y) = (proj' R M 0) x * (proj' R M 0) y := by
   simp only [proj', ← GradedAlgebra.proj'_zeroRingHom_apply, _root_.map_mul]
 

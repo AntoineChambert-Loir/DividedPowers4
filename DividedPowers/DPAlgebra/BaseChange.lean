@@ -2,6 +2,7 @@ import DividedPowers.DPAlgebra.Exponential
 import DividedPowers.DPAlgebra.Graded.Basic
 import Mathlib.RingTheory.TensorProduct.Basic
 import DividedPowers.ForMathlib.Algebra.MvPolynomial.Lemmas
+import DividedPowers.ForMathlib.RingTheory.TensorProduct.Basic
 
 -- import DividedPowers.ForMathlib.RingTheory.TensorProduct
 /-! # Base change properties of the divided power algebra
@@ -33,36 +34,6 @@ universe u
 open scoped TensorProduct
 open AlgHom TensorProduct
 
-section baseChange
-
-lemma Algebra.TensorProduct.coe_map_id₁ (R : Type*) [CommSemiring R]
-    {S S' : Type*} [Semiring S] [Semiring S'] [Algebra R S] [Algebra R S']
-    (φ : S →ₐ[R] S') (A : Type*) [Semiring A] [Algebra R A] :
-    ⇑(Algebra.TensorProduct.map (AlgHom.id R A) φ) = ⇑(LinearMap.lTensor A φ.toLinearMap) := by rfl
-
-lemma Algebra.TensorProduct.coe_map_id₂ (R : Type*) [CommSemiring R]
-    {S S' : Type*} [Semiring S] [Semiring S'] [Algebra R S] [Algebra R S']
-    (φ : S →ₐ[R] S') (A : Type*) [Semiring A] [Algebra R A] :
-    ⇑(Algebra.TensorProduct.map φ (AlgHom.id R A)) = ⇑(LinearMap.rTensor A φ.toLinearMap) := by rfl
-
-variable (R : Type*) [CommSemiring R] (S : Type*) [CommSemiring S] [Algebra R S]
-  (M : Type*) [AddCommMonoid M] [Module R M]
-  (N : Type*) [AddCommMonoid N] [Module R N] [Module S N] [IsScalarTower R S N]
-
-/-- The base change adjunction for linear maps -/
-noncomputable def LinearMap.baseChangeEquiv : (S ⊗[R] M →ₗ[S] N) ≃ₗ[S] (M →ₗ[R] N) where
-  toFun g := LinearMap.comp (g.restrictScalars R) ({
-    toFun       := fun m ↦ 1 ⊗ₜ[R] m
-    map_add'    := fun x y ↦ by simp only [tmul_add]
-    map_smul'   := fun r x ↦ by simp only [tmul_smul, RingHom.id_apply] } : M →ₗ[R] S ⊗[R] M)
-  invFun f      := AlgebraTensorModule.lift ((LinearMap.lsmul S (M →ₗ[R] N)).flip f)
-  left_inv g    := by ext m; simp
-  right_inv f   := by ext m; simp
-  map_add' _ _  := by ext m; simp
-  map_smul' s g := by ext m; simp
-
-end baseChange
-
 namespace MvPolynomial
 
 variable {R : Type*} [CommSemiring R] {S : Type _} [CommSemiring S] [Algebra R S]
@@ -74,23 +45,6 @@ variable {σ : Type*}
 section eval
 
 lemma C_eq_algebraMap' (r : R) : C (algebraMap R S r) = algebraMap R (MvPolynomial σ S) r := rfl
-
-@[simps]
-def eval₂AddMonoidHom (f : R →+* S) (g : σ → S) :
-    (MvPolynomial σ R) →+ S where
-  toFun := eval₂ f g
-  map_zero' := eval₂_zero _ _
-  map_add' _ _ := eval₂_add _ _
-
-def eval₂RingHom (f : R →+* S) (g : σ → S) : (MvPolynomial σ R) →+* S :=
-  { eval₂AddMonoidHom f g with
-    map_one' := eval₂_one _ _
-    map_mul' := fun _ _ => eval₂_mul _ _ }
-
-omit [Algebra R S] in
-@[simp]
-theorem coe_eval₂RingHom (f : R →+* S) (g : σ → S) : ⇑(eval₂RingHom f g) = eval₂ f g :=
-  rfl
 
 end eval
 
@@ -115,13 +69,6 @@ theorem AlgHom.baseChange_tmul {R A B C : Type _} [CommSemiring R] [CommSemiring
     baseChange φ (a ⊗ₜ[R] b) = a • (φ b) := by
   simp only [baseChange, toRingHom_eq_coe, coe_mk, RingHom.coe_coe, productMap_apply_tmul,
     IsScalarTower.coe_toAlgHom', ← smul_eq_mul, algebraMap_smul]
-
-noncomputable def _root_.TensorProduct.includeRight {R S N : Type _} [CommSemiring R]
-    [CommSemiring S] [Algebra R S] [AddCommMonoid N] [Module R N] :
-    N →ₗ[R] S ⊗[R] N where
-  toFun     := fun n ↦ 1 ⊗ₜ n
-  map_add'  := fun x y ↦ tmul_add 1 x y
-  map_smul' := fun r x ↦ by simp only [tmul_smul, smul_tmul', RingHom.id_apply]
 
 --TODO : prove uniqueness
 /-- A base change morphism for the divided power algebra

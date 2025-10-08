@@ -1,6 +1,14 @@
+/-
+Copyright (c) 2025 Antoine Chambert-Loir, María Inés de Frutos-Fernández. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
+-/
 import Mathlib.Data.Nat.Choose.Multinomial
 
-/-! # Construction of the divided power structure on the divided power algebra
+/-! # Multinomial
+
+We provide some lemmas for manipulating multinomial coefficients.
+
 -/
 
 section
@@ -26,8 +34,8 @@ theorem multinomial_congr_of_sdiff {α : Type*} [DecidableEq α] {f g : α → �
     exact factorial_ne_zero (g x)
 
 theorem multinomial_single {α : Type*} [DecidableEq α] (s : Finset α) (a : α) (n : ℕ) :
-    Nat.multinomial s (Pi.single a n) = 1 := by
-  rw [← Nat.mul_right_inj, mul_one, Nat.multinomial_spec]
+    multinomial s (Pi.single a n) = 1 := by
+  rw [← Nat.mul_right_inj, mul_one, multinomial_spec]
   · simp only [sum_pi_single']
     split_ifs with ha
     · rw [Finset.prod_eq_single a]
@@ -35,13 +43,13 @@ theorem multinomial_single {α : Type*} [DecidableEq α] (s : Finset α) (a : α
       · intro b hb hba
         simp [Pi.single_apply, if_neg hba]
       · simp_all
-    · rw [eq_comm, Nat.factorial_zero]
+    · rw [eq_comm, factorial_zero]
       apply Finset.prod_eq_one
       intro b hb
-      rw [Pi.single_apply, if_neg, Nat.factorial_zero]
+      rw [Pi.single_apply, if_neg, factorial_zero]
       exact ne_of_mem_of_not_mem hb ha
   · simp only [ne_eq, prod_eq_zero_iff, not_exists, not_and]
     intro x hx
-    apply Nat.factorial_ne_zero
+    apply factorial_ne_zero
 
 end Nat

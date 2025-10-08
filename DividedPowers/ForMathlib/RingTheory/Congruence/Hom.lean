@@ -4,12 +4,6 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir
 -/
 import Mathlib.Algebra.Algebra.Subalgebra.Lattice
-import Mathlib.Algebra.Algebra.Subalgebra.Basic
-import Mathlib.Algebra.Algebra.Defs
-import Mathlib.Algebra.Group.Hom.Defs
-import Mathlib.RingTheory.Congruence.Basic
-import Mathlib.Algebra.Ring.Subsemiring.Basic
-import Mathlib.Algebra.Ring.Subring.Basic
 import Mathlib.Algebra.RingQuot
 
 /-!
@@ -20,23 +14,19 @@ relations and morphisms for rings and semirings
 
 ## Main definitions
 
-* `RingCon.ker`: the kernel of a monoid homomorphism as a congruence relation
-* `RingCon.lift`, `RingCon.liftₐ`: the homomorphism / the algebra morphism
-  on the quotient given that the congruence is in the kernel
-* `RingCon.map`, `RingCon.mapₐ`: homomorphism / algebra morphism
-  from a smaller to a larger quotient
-
+* `RingCon.ker`: the kernel of a monoid homomorphism as a congruence relation.
+* `RingCon.lift`, `RingCon.liftₐ`: the homomorphism / the algebra morphism on the quotient given
+  that the congruence is in the kernel.
+* `RingCon.map`, `RingCon.mapₐ`: the homomorphism / algebra morphism from a smaller to a larger
+  quotient.
 * `RingCon.quotientKerEquivRangeS`, `RingCon.quotientKerEquivRange`,
-  `RingCon.quotientKerEquivRangeₐ` :
-  the first isomorphism theorem for semirings (using `RingHom.rangeS`),
-  rings (using `RingHom.range`) and algebras (using `AlgHom.range`).
+  `RingCon.quotientKerEquivRangeₐ` : the first isomorphism theorem for semirings (using
+  `RingHom.rangeS`), rings (using `RingHom.range`) and algebras (using `AlgHom.range`).
 * `RingCon.comapQuotientEquivRangeS`, `RingCon.comapQuotientEquivRange`,
-  `RingCon.comapQuotientEquivRangeₐ` : the second isomorphism theorem
-  for semirings (using `RingHom.rangeS`), rings (using `RingHom.range`)
-  and algebras (using `AlgHom.range`).
-
-* `RingCon.quotientQuotientEquivQuotient`, `RingCon.quotientQuotientEquivQuotientₐ` :
-  the third isomorphism theorem for semirings (or rings) and algebras
+  `RingCon.comapQuotientEquivRangeₐ` : the second isomorphism theorem for semirings (using
+  `RingHom.rangeS`), rings (using `RingHom.range`) and algebras (using `AlgHom.range`).
+* `RingCon.quotientQuotientEquivQuotient`, `RingCon.quotientQuotientEquivQuotientₐ` : the third
+  isomorphism theorem for semirings (or rings) and algebras
 
 ## Tags
 
@@ -44,7 +34,6 @@ congruence, congruence relation, quotient, quotient by congruence relation, ring
 quotient ring
 -/
 
--- for Mathlib/Algebra/Ring/Subsemiring/Basic.lean
 namespace RingHom
 
 variable {R S : Type*} [NonAssocSemiring R] [NonAssocSemiring S]

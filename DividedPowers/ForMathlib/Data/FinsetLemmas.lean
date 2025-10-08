@@ -1,7 +1,15 @@
+/-
+Copyright (c) 2025 Antoine Chambert-Loir, María Inés de Frutos-Fernández. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
+-/
 import Mathlib.Data.Finset.Sym
 import Mathlib.Data.Finsupp.SMul
 
+/-! # Auxiliary results about `Finset`s -/
+
 section
+
 namespace Finset
 
 open Sym
@@ -13,7 +21,6 @@ theorem prod_smul' {α β ι : Type*} [CommMonoid β] [CommMonoid α] [MulAction
   | empty =>  simp
   | cons _ _ hj ih => rw [prod_cons, ih, smul_mul_smul_comm, ← prod_cons hj, ← prod_cons hj]
 
--- [Mathlib.Data.Finset.Sym]
 lemma sym_map {α β : Type*} [DecidableEq α] [DecidableEq β] {n : ℕ} (g : α ↪ β) (s : Finset α) :
     (s.map g).sym n = (s.sym n).map ⟨Sym.map g, Sym.map_injective g.injective _⟩ := by
   ext d

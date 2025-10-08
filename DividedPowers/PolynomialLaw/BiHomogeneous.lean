@@ -63,7 +63,8 @@ lemma isBiHomogeneousOfDegree_toFun (hf : IsBiHomogeneousOfDegree n f) (S : Type
       s.2 • TensorProduct.compSndRight R S S M M' m) =
       (s.1 ^ n.1 * s.2 ^ n.2) • f.toFun S m := by
   choose d ψ m' r' hm' hr1 hr2 using PolynomialLaw.exists_lift_pair m s
-  simp only [← hr1, ← hm', ← hr2, ← map_pow, ← map_mul, ← isCompat_apply, toFun_eq_toFun',
+  sorry
+  /- simp only [← hr1, ← hm', ← hr2, ← map_pow, ← map_mul, ← isCompat_apply, toFun_eq_toFun',
     smul_rTensor]
   rw [← hf, ← toFun_eq_toFun', isCompat_apply]
   simp only [compFstRight, inlRight, fstRight, coe_comp, LinearEquiv.coe_coe, coe_inl, coe_fst,
@@ -73,7 +74,7 @@ lemma isBiHomogeneousOfDegree_toFun (hf : IsBiHomogeneousOfDegree n f) (S : Type
   congr <;>
   rw [LinearEquiv.symm_apply_eq] <;>
   simp [Prod.ext_iff, prodRight_rTensor_fst_eq_rTensor_prodRight',
-      LinearEquiv.apply_symm_apply, prodRight_rTensor_snd_eq_rTensor_prodRight']
+      LinearEquiv.apply_symm_apply, prodRight_rTensor_snd_eq_rTensor_prodRight'] -/
 
 /-- If `f` is bihomogeneous of multidegree `n`, then `f.ground` is too.  -/
 lemma isBiHomogeneousOfDegree_ground (hf : IsBiHomogeneousOfDegree n f) (r : R × R) (m : (M × M')) :

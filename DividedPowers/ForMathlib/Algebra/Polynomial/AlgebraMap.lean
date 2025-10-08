@@ -1,7 +1,16 @@
-/- Copyright ACL & MIdFF 2024 -/
-
+/-
+Copyright (c) 2024 Antoine Chambert-Loir, María Inés de Frutos-Fernández. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
+-/
 import Mathlib.Algebra.Polynomial.AlgebraMap
 
+/-! # Base change of polynomial maps
+
+## Main definitions
+- `Polynomial.baseChange` : given `φ : S →ₐ[R] S'`, `baseChange φ` aplies `φ` on the
+  coefficients of a polynomial in `S[X]`.
+-/
 namespace Polynomial
 
 variable {R : Type*} [CommSemiring R] {S : Type*} [CommSemiring S] [Algebra R S]
@@ -9,8 +18,7 @@ variable {R : Type*} [CommSemiring R] {S : Type*} [CommSemiring S] [Algebra R S]
 
 lemma C_eq_algebraMap' (r : R) : C (algebraMap R S r) = algebraMap R S[X] r := rfl
 
--- Mathlib.Algebra.Polynomial.AlgebraMap
-/-- baseChange φ aplies φ on the coefficients of a polynomial in S[X] -/
+/-- `baseChange φ` aplies `φ` on the coefficients of a polynomial in `S[X]` -/
 noncomputable def baseChange (φ : S →ₐ[R] S') : S[X] →ₐ[R] S'[X] where
   toRingHom := eval₂RingHom (C.comp φ) X
   commutes' := fun r ↦ by simp
@@ -34,7 +42,6 @@ lemma lcoeff_comp_baseChange_eq (φ : S →ₐ[R] S') (p : ℕ) :
   simp only [LinearMap.coe_comp, LinearMap.coe_restrictScalars, Function.comp_apply, lcoeff_apply,
     AlgHom.toLinearMap_apply, coeff_baseChange_apply]
 
--- Mathlib.Algebra.Polynomial.AlgebraMap
 lemma baseChange_monomial (φ : S →ₐ[R] S') (n : ℕ) (a : S) :
     (baseChange φ) ((Polynomial.monomial n) a) = (Polynomial.monomial n) (φ a) := by
   simp only [baseChange, AlgHom.coe_mk, coe_eval₂RingHom, eval₂_monomial, RingHom.coe_comp,
