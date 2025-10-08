@@ -1,7 +1,17 @@
-import DividedPowers.PolynomialLaw.Basic2
-import DividedPowers.PolynomialLaw.Homogeneous
+/-
+Copyright (c) 2025 Antoine Chambert-Loir, María Inés de Frutos-Fernández. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
+-/
 import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Prod
+import DividedPowers.PolynomialLaw.Linear
 
+/-! # Linear polynomial laws from/to products
+
+We provide API for the polynomial laws induced by the linear maps `LinearMap.fst`, `LinearMap.snd`,
+`LinearMap.inl`, and `LinearMap.inr`.
+
+-/
 noncomputable section
 
 open LinearMap MvPolynomial TensorProduct

@@ -1,7 +1,33 @@
+/-
+Copyright (c) 2025 Antoine Chambert-Loir, María Inés de Frutos-Fernández. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
+-/
 import DividedPowers.ForMathlib.Algebra.MvPolynomial.Lemmas
 import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Basic
-import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Pi
 import DividedPowers.PolynomialLaw.Coeff
+
+/- # Multicoefficients of polynomial laws.
+
+## Main definitions
+
+* `Module.multiGenerize`: the `R`-linear map sending `m : Π i, M i` to the sum
+  `∑ i : ι, X i ⊗ₜ[R] (Pi.single i (m i))` in `MvPolynomial ι R ⊗[R] (Π i, M i)`.
+
+* `Module.multiGenerizeBaseChange`: the `S`-linear map sending `s ⊗ₜ m : S ⊗[R] Π i, M i` to
+  `∑ i, s • X i ⊗ₜ[R] Pi.single i (m i)` in `(MvPolynomial ι S) ⊗[R] Π i, M i`.
+
+* `PolynomialLaw.multiCoeff`: the multicoefficients of a `PolynomialLaw`, as linear maps.
+
+* `PolynomialLaw.multiCoeffBaseChange`: the multicoefficients of a polynomial law, after base
+  change, as a `Finsupp`.
+
+## Main results
+
+* `PolynomialLaw.toFun_sum_tmul_eq_multiCoeff_sum`, `PolynomialLaw.toFun_tmul_eq_multiCoeff_sum`
+  provide formulas for applications of `f` in terms of sums of multicoefficients.
+
+-/
 
 universe u
 
@@ -27,11 +53,11 @@ theorem multiGenerize_eq_generize (m : Π i, M i) :
 
 variable {S : Type*} [CommSemiring S] [Algebra R S]
 
-/-- `multiGenerize` is the `S`-linear map that sends `s ⊗ₜ m : S ⊗[R] Π i, M i` to
+/-- `multiGenerizeBaseChange` is the `S`-linear map that sends `s ⊗ₜ m : S ⊗[R] Π i, M i` to
   `∑ i, s • X i ⊗ₜ[R] Pi.single i (m i) : (MvPolynomial ι S) ⊗[R] Π i, M i`.  -/
 noncomputable def multiGenerizeBaseChange :
     (S ⊗[R] Π i, M i) →ₗ[S] (MvPolynomial ι S) ⊗[R] Π i, M i where
-  toFun sm := LinearEquiv.rTensor (Π i, M i) scalarRTensorAlgEquiv.toLinearEquiv
+  toFun sm := LinearEquiv.rTensor (R := R) (Π i, M i) scalarRTensorAlgEquiv.toLinearEquiv
     ((TensorProduct.assoc R (MvPolynomial ι R) S (Π i, M i)).symm
       (∑ (i : ι), (X i) ⊗ₜ (piRight R S S _).symm (Pi.single i (piRight R S S _ sm i))))
   map_add' x y := by
@@ -59,9 +85,10 @@ lemma multiGenerizeBaseChange_apply_tmul (s : S) (m : Π i, M i) :
   simp [smul_tmul', scalarRTensorAlgEquiv, rTensorAlgHom, mul_comm _ (C s), C_mul']
 
 lemma multiGenerizeBaseChange_apply_eq (sm : S ⊗[R] Π i, M i) :
-    multiGenerizeBaseChange sm = (LinearEquiv.rTensor (Π i, M i) scalarRTensorAlgEquiv.toLinearEquiv
-      ((TensorProduct.assoc R (MvPolynomial ι R) S (Π i, M i)).symm
-        (∑ (i : ι), (X i) ⊗ₜ (TensorProduct.compRight R S S M i) sm))) := by
+    multiGenerizeBaseChange sm = (LinearEquiv.rTensor (R := R) (Π i, M i)
+      scalarRTensorAlgEquiv.toLinearEquiv
+        ((TensorProduct.assoc R (MvPolynomial ι R) S (Π i, M i)).symm
+          (∑ (i : ι), (X i) ⊗ₜ (TensorProduct.compRight R S S M i) sm))) := by
   simp only [multiGenerizeBaseChange, piRight_apply, map_sum, coe_mk, AddHom.coe_mk]
   congr
   ext i
@@ -73,13 +100,11 @@ lemma multiGenerizeBaseChange_apply_eq (sm : S ⊗[R] Π i, M i) :
 
 end Module
 
-/- # Polynomial laws. -/
-
 namespace PolynomialLaw
 
 open Finset MvPolynomial TensorProduct
 
-/- ## Multi-coefficients of polynomial laws. -/
+/- ## Multicoefficients of polynomial laws. -/
 
 section Coefficients
 
@@ -107,7 +132,7 @@ noncomputable def multiGenerize' : ((Π i, M i) →ₚₗ[R] N) →ₗ[R] MvPoly
   map_add' p q  := by simp [add_toFun_apply]
   map_smul' r p := by simp [RingHom.id_apply, smul_toFun, Pi.smul_apply]
 
-/-- The multi-coefficients of a `PolynomialLaw`, as linear maps. -/
+/-- The multicoefficients of a `PolynomialLaw`, as linear maps. -/
 noncomputable def multiCoeff : ((Π i, M i) →ₚₗ[R] N) →ₗ[R] (ι →₀ ℕ) →₀ N :=
   scalarRTensor.toLinearMap.comp (multiGenerize' m)
 
@@ -125,11 +150,13 @@ theorem multiCoeff_eq :
   rw [multiCoeff, coe_comp, LinearEquiv.coe_coe, Function.comp_apply, ]
   exact scalarRTensor_apply _ _
 
+/-- A formula for `f.toFun S (∑ i, r i ⊗ₜ[R] (Pi.single i (m i)))` as a sum of multicoefficients. -/
 theorem toFun_sum_tmul_eq_multiCoeff_sum (S : Type*) [CommSemiring S] [Algebra R S] (r : ι → S) :
     f.toFun S (∑ i, r i ⊗ₜ[R] (Pi.single i (m i))) =
       (multiCoeff m f).sum (fun k n ↦ (∏ i, r i ^ k i) ⊗ₜ[R] n) := by
   simp [multiCoeff_eq_coeff, toFun_sum_tmul_eq_coeff_sum]
 
+/-- A formula for `f.toFun S (r ⊗ₜ[R] (Pi.single i (m i)))` as a sum of multicoefficients. -/
 theorem toFun_tmul_eq_multiCoeff_sum (S : Type*) [CommSemiring S] [Algebra R S] (r : S) (i : ι) :
     f.toFun S (r ⊗ₜ[R] (Pi.single i (m i))) =
       ((multiCoeff (Pi.single i (m i)) f).sum fun k n ↦ (∏ i, r ^ k i) ⊗ₜ[R] n) := by
@@ -177,7 +204,7 @@ open Module
 
 variable (sm : S ⊗[R] Π i, M i)
 
-/-- The multi-coefficients of a polynomial law, after base change, as a `Finsupp`. -/
+/-- The multicoefficients of a polynomial law, after base change, as a `Finsupp`. -/
 noncomputable def multiCoeffBaseChange : (ι →₀ ℕ) →₀ S ⊗[R] N :=
   finsuppLeft R S N _ (f.toFun _ (multiGenerizeBaseChange sm))
 
@@ -198,7 +225,7 @@ lemma multiCoeffBaseChange_apply' : multiCoeffBaseChange f sm = MvPolynomial.rTe
 
 lemma multiCoeffBaseChange_apply :
     multiCoeffBaseChange f sm = MvPolynomial.rTensor (f.toFun (MvPolynomial ι S)
-      (LinearEquiv.rTensor (Π i, M i) scalarRTensorAlgEquiv.toLinearEquiv
+      (LinearEquiv.rTensor (R := R) (Π i, M i) scalarRTensorAlgEquiv.toLinearEquiv
         ((TensorProduct.assoc R (MvPolynomial ι R) S (Π i, M i)).symm
           (∑ (i : ι), (X i) ⊗ₜ (TensorProduct.compRight R S S M i) sm)))) := by
   rw [multiCoeffBaseChange_apply', multiGenerizeBaseChange_apply_eq]
@@ -207,7 +234,7 @@ variable (m)
 
 lemma multiCoeffBaseChange_apply_tmul (s : S) :
     multiCoeffBaseChange f (s ⊗ₜ m) k = MvPolynomial.rTensor (f.toFun (MvPolynomial ι S)
-      (LinearEquiv.rTensor (Π i, M i) scalarRTensorAlgEquiv.toLinearEquiv
+      (LinearEquiv.rTensor (R := R) (Π i, M i) scalarRTensorAlgEquiv.toLinearEquiv
       ((TensorProduct.assoc R (MvPolynomial ι R) S (Π i, M i)).symm
       (∑ (i : ι), (X i) ⊗ₜ (s ⊗ₜ (Pi.single i (m i))))))) k := by
   rw [multiCoeffBaseChange_apply]
@@ -220,18 +247,18 @@ lemma multiCoeffBaseChange_apply_smul [Nontrivial R] (s : Π _, S) :
     multiCoeffBaseChange f (∑ i, s i • (TensorProduct.compRight R S S M i) sm) k =
       (∏ i, s i ^ k i) • multiCoeffBaseChange f sm k := by
   let ψ := ((aeval (R := S) (fun i ↦ (C (s i) * X i : MvPolynomial ι S))).restrictScalars R)
-  suffices ((LinearEquiv.rTensor ((i : ι) → M i) scalarRTensorAlgEquiv.toLinearEquiv)
+  suffices ((LinearEquiv.rTensor (R := R) (Π i, M i) scalarRTensorAlgEquiv.toLinearEquiv)
       ((TensorProduct.assoc R (MvPolynomial ι R) S ((i : ι) → M i)).symm
         (∑ i, X i ⊗ₜ[R] (TensorProduct.compRight R S S M i)
             (∑ i, s i • (TensorProduct.compRight R S S M i) sm))))  =
       ((LinearMap.rTensor ((i : ι) → M i) ψ.toLinearMap)
-        ((LinearEquiv.rTensor ((i : ι) → M i) scalarRTensorAlgEquiv.toLinearEquiv)
+        ((LinearEquiv.rTensor (R := R) (Π i, M i) scalarRTensorAlgEquiv.toLinearEquiv)
           ((TensorProduct.assoc R (MvPolynomial ι R) S ((i : ι) → M i)).symm
             (∑ i, X i ⊗ₜ[R] (TensorProduct.compRight R S S M i) sm)))) by
     simp only [multiCoeffBaseChange_apply, this, ← f.isCompat_apply]
     clear this
     generalize ht : (f.toFun (MvPolynomial ι S)
-          ((LinearEquiv.rTensor ((i : ι) → M i) scalarRTensorAlgEquiv.toLinearEquiv)
+          ((LinearEquiv.rTensor (R := R) (Π i, M i) scalarRTensorAlgEquiv.toLinearEquiv)
             ((TensorProduct.assoc R (MvPolynomial ι R) S ((i : ι) → M i)).symm
               (∑ i, X i ⊗ₜ[R] (TensorProduct.compRight R S S M i) sm)))) = t
     rw [rTensor_apply, rTensor_apply, ← rTensor_comp_apply]
@@ -293,7 +320,7 @@ lemma multiCoeffBaseChange_apply_smul [Nontrivial R] (s : Π _, S) :
 
 lemma multiCoeffBaseChange_def :
     multiCoeffBaseChange f sm = (MvPolynomial.rTensor (f.toFun (MvPolynomial ι S)
-      (∑ x, (LinearEquiv.rTensor ((i : ι) → M i) scalarRTensorAlgEquiv.toLinearEquiv)
+      (∑ x, (LinearEquiv.rTensor (R := R) (Π i, M i) scalarRTensorAlgEquiv.toLinearEquiv)
         ((TensorProduct.assoc R (MvPolynomial ι R) S ((i : ι) → M i)).symm
           (X x ⊗ₜ[R] (TensorProduct.compRight R S S M x sm)))))) := by
   ext n

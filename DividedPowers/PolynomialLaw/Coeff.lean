@@ -1,15 +1,42 @@
-import DividedPowers.ForMathlib.Algebra.Algebra.Bilinear
+/-
+Copyright (c) 2025 Antoine Chambert-Loir, María Inés de Frutos-Fernández. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
+-/
 import DividedPowers.ForMathlib.Algebra.BigOperators.Group.Finset.Basic
 import DividedPowers.ForMathlib.RingTheory.SubmoduleMem
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.Basic
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.MvPolynomial
-import DividedPowers.PolynomialLaw.Basic2
+import DividedPowers.PolynomialLaw.Basic
 
 universe u
 
 variable {R : Type u} [CommSemiring R]
 
-/- # Polynomial laws. -/
+/- # Coefficients of polynomial laws.
+
+## Main definitions
+
+* `Module.generize`: the `R`-linear map sending `m : ι → M` to the sum `∑ i, X i ⊗ₜ[R] m i` in
+  `MvPolynomial ι R ⊗[R] M`.
+
+* `Module.generizeBaseChange`: the `S`-linear map sending `m : ι → S ⊗[R] M` to the
+  sum `∑ i, X i ⊗ₜ[R] m i` in `MvPolynomial ι R ⊗[R] M`.
+
+* `PolynomialLaw.coeff`: the coefficients of a `PolynomialLaw`, as linear maps.
+
+* `Finsupp.polynomialLaw b h : M →ₚₗ[R] N` is the polynomial law whose coefficients at a given
+`b : Basis ι R M` are provided by `h : (ι →₀ ℕ) →₀ N`.
+
+* `MvPolynomial.polynomialLawEquiv`: the `R`-linear isomorphism between `MvPolynomial ι N` and
+  `M →ₚₗ[R] N` given by `polynomialLaw b`, where `b : Basis ι R M`.
+
+## Main results
+
+* `PolynomialLaw.toFun_sum_tmul_eq_coeff_sum`, `PolynomialLaw.toFun_add_tmul_eq_coeff_sum`,
+  `PolynomialLaw.toFun_tmul_eq_coeff_sum` provide formulas for applications of `f` in terms
+  of sums of coefficients.
+-/
 
 namespace Module
 
@@ -26,8 +53,7 @@ noncomputable def generize : (ι → M) →ₗ[R] MvPolynomial ι R ⊗[R] M whe
   map_smul' r p := by simp [Finset.smul_sum]
 
 /-- `generizeBaseChange` is the `S`-linear map sending `m : ι → S ⊗[R] M` to the
-  sum `∑ i, X i ⊗ₜ[R] m i` in
-  `MvPolynomial ι R ⊗[R] M`. -/
+  sum `∑ i, X i ⊗ₜ[R] m i` in `MvPolynomial ι R ⊗[R] M`. -/
 noncomputable def generizeBaseChange :
     (ι → S ⊗[R] M) →ₗ[S] (MvPolynomial ι S) ⊗[R] M where
   toFun m := ∑ (i : ι), rTensor M ((monomial (Finsupp.single i 1)).restrictScalars R) (m i)
@@ -81,7 +107,7 @@ theorem toFun_generize_eq_comp_equiv {κ : Type*} [Fintype κ] {e : ι ≃ κ} {
   simp only [map_sum, rTensor_tmul, AlgHom.toLinearMap_apply, aeval_X] at hf
   simp only [generize, coe_mk, AddHom.coe_mk, hf]
   apply congr_arg
-  sorry --simp [sum_congr_equiv e, map_univ_equiv, Function.comp_apply, Equiv.apply_symm_apply]
+  simp [← sum_map_equiv e, map_univ_equiv, Function.comp_apply, Equiv.apply_symm_apply]
 
 theorem toFun_generize_comp_equiv {κ : Type*} [Fintype κ] {e : ι ≃ κ} {m : κ → M} {f : M →ₚₗ[R] N} :
     f.toFun (MvPolynomial ι R) (generize (fun x ↦ m (e x))) =
@@ -92,7 +118,7 @@ theorem toFun_generize_comp_equiv {κ : Type*} [Fintype κ] {e : ι ≃ κ} {m :
   simp only [map_sum, rTensor_tmul, AlgHom.toLinearMap_apply, aeval_X] at hf'
   simp only [generize, coe_mk, AddHom.coe_mk, hf']
   apply congr_arg
-  sorry --simp [sum_congr_equiv e, map_univ_equiv, Function.comp_apply, Equiv.apply_symm_apply]
+  simp [← sum_map_equiv e, map_univ_equiv, Function.comp_apply, Equiv.apply_symm_apply]
 
 end generize
 
@@ -174,11 +200,11 @@ theorem coeff_comp_equiv {κ : Type*} [DecidableEq κ] [Fintype κ] (e : ι ≃ 
         ext i
         simpa [Finsupp.equivMapDomain_apply, Equiv.symm_apply_apply] using
           (DFunLike.ext_iff.mp h') (e i)
-    . sorry/- simp [monomial_eq, _root_.map_one, Finsupp.prod_pow, one_mul, prod_congr_equiv e,
-        map_univ_equiv, Function.comp_apply, Equiv.apply_symm_apply] -/
+    . simp [monomial_eq, _root_.map_one, Finsupp.prod_pow, one_mul, ← prod_map_equiv e,
+        map_univ_equiv, Function.comp_apply, Equiv.apply_symm_apply]
   . rw [generize, coe_mk, AddHom.coe_mk]
     apply congr_arg
-    sorry --simp [sum_congr_equiv e, map_univ_equiv, Function.comp_apply, Equiv.apply_symm_apply]
+    simp [← sum_map_equiv e, map_univ_equiv, Function.comp_apply, Equiv.apply_symm_apply]
 
 theorem coeff_eq_comp_equiv {κ : Type*} [DecidableEq κ] [Fintype κ] (e : ι ≃ κ) (m : κ → M)
     (k : κ →₀ ℕ) : coeff m f k = coeff (m ∘ e) f (k.equivMapDomain e.symm) := by
@@ -187,6 +213,7 @@ theorem coeff_eq_comp_equiv {κ : Type*} [DecidableEq κ] [Fintype κ] (e : ι �
   ext k
   simp [Function.comp_apply, Equiv.apply_symm_apply]
 
+/-- A formula for `f.toFun S (∑ i, r i ⊗ₜ[R] m i)` as a sum of coefficients. -/
 theorem toFun_sum_tmul_eq_coeff_sum (S : Type*) [CommSemiring S] [Algebra R S] (r : ι → S) :
     f.toFun S (∑ i, r i ⊗ₜ[R] m i) = (coeff m f).sum (fun k n ↦ (∏ i, r i ^ k i) ⊗ₜ[R] n) := by
   have this := congr_fun (f.isCompat (MvPolynomial.aeval r)) (∑ i, X i ⊗ₜ[R] m i)
@@ -201,6 +228,7 @@ theorem toFun_sum_tmul_eq_coeff_sum (S : Type*) [CommSemiring S] [Algebra R S] (
   apply congr_arg₂ _ _ rfl
   simp [aeval_monomial, _root_.map_one, Finsupp.prod_pow, one_mul]
 
+/-- A formula for `f.toFun S (r ⊗ₜ[R] m₁ + s ⊗ₜ[R] m₂)` as a sum of coefficients. -/
 theorem toFun_add_tmul_eq_coeff_sum (S : Type*) [CommSemiring S] [Algebra R S] (r s : S)
     (m₁ m₂ : M) : f.toFun S (r ⊗ₜ[R] m₁ + s ⊗ₜ[R] m₂) =
       (coeff ((finTwoArrowEquiv _).symm (m₁, m₂)) f).sum
@@ -220,6 +248,7 @@ theorem toFun_add_tmul_eq_coeff_sum (S : Type*) [CommSemiring S] [Algebra R S] (
   apply congr_arg₂ _ _ rfl
   simp [aeval_monomial, _root_.map_one, Finsupp.prod_pow, one_mul]
 
+/-- A formula for `f.toFun S (r ⊗ₜ[R] m₁)` as a sum of coefficients. -/
 theorem toFun_tmul_eq_coeff_sum (S : Type*) [CommSemiring S] [Algebra R S] (r : S)
     (m₁ : M) : f.toFun S (r ⊗ₜ[R] m₁) =
       (coeff (fun (_ : Unit) ↦ m₁) f).sum (fun k n ↦ (r ^ k 0) ⊗ₜ[R] n) := by
@@ -306,7 +335,7 @@ theorem coeff_injective {m : ι → M} (hm : Submodule.span R (Set.range m) = �
     rw [Finsupp.sum_of_support_subset _ (subset_univ _) _ (fun  i _ ↦ by
       rw [smul_eq_mul, _root_.mul_one, TensorProduct.zero_tmul])]
     simp [smul_eq_mul, mul_one, ← toFun_eq_toFun'_apply, toFun_sum_tmul_eq_coeff_sum, h]
-  sorry --simp [Submodule.span_tensorProduct_eq_top_of_span_eq_top m hm]
+  simp [Submodule.span_tensorProduct_eq_top_of_span_eq_top hm]
 
 theorem coeff_inj {m : ι → M} (hm : Submodule.span R (Set.range m) = ⊤)
     {f g : M →ₚₗ[R] N} : coeff m f = coeff m g ↔ f = g := (coeff_injective hm).eq_iff
@@ -331,7 +360,6 @@ open Finset Module MvPolynomial PolynomialLaw TensorProduct
 variable {M N ι : Type*} [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module R N] [Fintype ι]
   (S : Type*) [CommSemiring S] [Algebra R S] (b : Basis ι R M) (h : (ι →₀ ℕ) →₀ N) (m : S ⊗[R] M)
 
--- BP
 /-- Given `b : Basis ι R M` and `h : (ι →₀ ℕ) →₀ N`, `Finsupp.polynomialLaw b h : M →ₚₗ[R] N` is
 the polynomial law whose coefficients at `b` are given by `h`. -/
 noncomputable def polynomialLaw : M →ₚₗ[R] N where
@@ -380,13 +408,12 @@ theorem generize_polynomialLaw_eq_sum :
   simp only [← hm, this]
   apply sum_congr (fun k _ ↦ ?_)
   congr
-  sorry
-  /- rw [← MvPolynomial.prod_X_pow_eq_monomial, ← prod_mul_prod_compl k.support]
+  rw [← MvPolynomial.prod_X_pow_eq_monomial, ← Finset.prod_mul_prod_compl k.support]
   convert mul_one _
   apply prod_eq_one
   intro i hi
   rw [mem_compl, mem_support_iff, ne_eq, not_not] at hi
-  rw [hi, pow_zero] -/
+  rw [hi, pow_zero]
 
 /-- Given `b : Basis ι R M` and `h : (ι →₀ ℕ) →₀ ℕ,
   `Finsupp.polynomialLaw b h : M →ₚₗ[R] N` is the polynomial law
@@ -441,13 +468,7 @@ variable {M N ι : Type*} [AddCommMonoid M] [Module R M] [CommSemiring N] [Modul
 
 /-- The `R`-linear isomorphism between `MvPolynomial ι N` and `M →ₚₗ[R] N` given by
   `polynomialLaw b`, where `b : Basis ι R M`. -/
-noncomputable def polynomialLawEquivPoly : MvPolynomial ι N ≃ₗ[R] (M →ₚₗ[R] N) :=
+noncomputable def MvPolynomial.polynomialLawEquiv : MvPolynomial ι N ≃ₗ[R] (M →ₚₗ[R] N) :=
   polynomialLawEquivCoeff b
 
 end CommSemiring
-
-open Finsupp MvPolynomial TensorProduct
-
-variable {ι : Type*} {R : Type u} [CommSemiring R] {M : ι → Type*} [∀ i, AddCommMonoid (M i)] [∀ i, Module R (M i)]
-  {N : Type*} [AddCommMonoid N] [Module R N] {S : Type*} [CommSemiring S] [Algebra R S] [Fintype ι] [DecidableEq ι]
-  (s : Π (_ : ι), S) (m : Π i, M i)

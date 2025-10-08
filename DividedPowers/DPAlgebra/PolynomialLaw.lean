@@ -54,8 +54,8 @@ theorem gamma_toFun (n : ℕ) {S : Type*} [CommRing S] [Algebra R S] (m : S ⊗[
   have := rTensor_comp_dpScalarExtensionEquiv_symm_eq R M ψ n p
   convert this <;> ext <;> rfl
 
-theorem isHomogeneousOfDegree_gamma (n : ℕ) :
-    PolynomialLaw.IsHomogeneousOfDegree n (DividedPowerAlgebra.gamma R M n) := by
+theorem IsHomogeneous_gamma (n : ℕ) :
+    PolynomialLaw.IsHomogeneous n (DividedPowerAlgebra.gamma R M n) := by
   intro S _ _ r sm
   let _ : CommRing S := RingHom.commSemiringToCommRing (algebraMap R S)
   simp only [gamma]
@@ -119,9 +119,9 @@ theorem gamma'_mem_grade (n : ℕ) : gamma' R M n ∈ PolynomialLaw.grade n := b
   let u := (proj' R M n)
   have Hu := PolynomialLaw.toPolynomialLaw_mem_grade_one
     (M := DividedPowerAlgebra R M) (R := R) (N := grade R M n) u
-  have Hγ := isHomogeneousOfDegree_gamma R M n
+  have Hγ := IsHomogeneous_gamma R M n
   rw [PolynomialLaw.mem_grade]
-  simpa using PolynomialLaw.IsHomogeneousOfDegree.comp
+  simpa using PolynomialLaw.IsHomogeneous.comp
     (M := M) (N := DividedPowerAlgebra R M) (R := R) (P := grade R M n)
     Hγ Hu
 
@@ -133,7 +133,7 @@ noncomputable example {N : Type*} [AddCommGroup N] [Module R N] (n : ℕ) :
     use f
     rw [PolynomialLaw.mem_grade]
     simp only [f]
-    apply PolynomialLaw.IsHomogeneousOfDegree.toPolynomialLaw_comp
+    apply PolynomialLaw.IsHomogeneous.toPolynomialLaw_comp
     rw [← PolynomialLaw.mem_grade]
     apply gamma'_mem_grade
   map_add' u v := by

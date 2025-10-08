@@ -9,8 +9,8 @@ import Mathlib.Algebra.RingQuot
 /-!
 # Congruence relations and ring homomorphisms
 
-This file contains elementary definitions involving congruence
-relations and morphisms for rings and semirings
+This file contains elementary definitions involving congruence relations and morphisms for rings
+and semirings
 
 ## Main definitions
 
@@ -36,29 +36,25 @@ quotient ring
 
 namespace RingHom
 
-variable {R S : Type*} [NonAssocSemiring R] [NonAssocSemiring S]
-  (f : R →+* S)
+variable {R S : Type*} [NonAssocSemiring R] [NonAssocSemiring S] {f : R →+* S}
 
-variable {f} in
 theorem rangeS_eq_top : f.rangeS = ⊤ ↔ Function.Surjective f := by
-simp [← Set.range_eq_univ, SetLike.ext'_iff]
+  simp [← Set.range_eq_univ, SetLike.ext'_iff]
 
-variable {T : Type*}
-variable [NonAssocSemiring T] {s : Subsemiring R}
-variable {σR σS : Type*}
-variable [SetLike σR R] [SetLike σS S] [SubsemiringClass σR R] [SubsemiringClass σS S]
+variable {T σR σS : Type*} [NonAssocSemiring T] {s : Subsemiring R} [SetLike σR R] [SetLike σS S]
+  [SubsemiringClass σR R] [SubsemiringClass σS S] {s : σS} {h : ∀ x, f x ∈ s}
 
 open Subsemiring
 
-theorem injective_codRestrict {f : R →+* S} {s : σS} {h : ∀ x, f x ∈ s} :
+theorem injective_codRestrict :
     Function.Injective (codRestrict f s h) ↔ Function.Injective f := by
   rw [← Set.injective_codRestrict h]; rfl
 
-theorem rangeS_codRestrict {f : R →+* S} {s : σS} {h : ∀ x, f x ∈ s} :
+theorem rangeS_codRestrict :
     rangeS (codRestrict f s h) = Subsemiring.comap (SubsemiringClass.subtype s) f.rangeS := by
   ext; simp [← Subtype.coe_inj]
 
-theorem surjective_codRestrict {f : R →+* S} {s : σS} {h : ∀ x, f x ∈ s} :
+theorem surjective_codRestrict :
     Function.Surjective (codRestrict f s h) ↔ f.rangeS = ofClass s := by
   -- this is `Subsemiring.rangeS_subtype` which is defined below in a lesser generality
   have : (SubsemiringClass.subtype s).rangeS = ofClass s :=
@@ -69,8 +65,9 @@ theorem surjective_codRestrict {f : R →+* S} {s : σS} {h : ∀ x, f x ∈ s} 
 
 end RingHom
 
--- for Mathlib/RingTheory/Congruence/Defs.lean
 namespace RingCon
+
+section AddMul
 
 variable {R : Type*} [Add R] [Mul R]
 
@@ -83,36 +80,28 @@ theorem toSetoid_inj {c d : RingCon R} (H : c.toSetoid = d.toSetoid) : c = d :=
 relations are equal. -/
 theorem coe_inj {c d : RingCon R} : ⇑c = ⇑d ↔ c = d := DFunLike.coe_injective.eq_iff
 
---
+end AddMul
 
 variable {R : Type*} [NonAssocSemiring R] (c : RingCon R)
 
-theorem mk'_surjective : Function.Surjective c.mk' :=
-  Quotient.mk''_surjective
+theorem mk'_surjective : Function.Surjective c.mk' := Quotient.mk''_surjective
 
 @[simp]
-theorem coe_mk' : (c.mk' : R → c.Quotient) = ((↑) : R → c.Quotient) :=
-  rfl
+theorem coe_mk' : (c.mk' : R → c.Quotient) = ((↑) : R → c.Quotient) := rfl
 
 end RingCon
 
--- for Mathlib/Algebra/RingQuot.lean
-
 namespace RingCon
 
-variable {R : Type*} [Semiring R] {S : Type*} [CommSemiring S] {T : Type*} {A : Type*} [Semiring A]
-  [Algebra S A]
+variable {R S T A : Type*} [Semiring R] [CommSemiring S] [Semiring A] [Algebra S A]
 
 variable (S) in
 /-- The algebra morphism from `A` to the quotient by a ring congruence. -/
-def mk'ₐ (c : RingCon A) : A →ₐ[S] c.Quotient := {
-  mk' c with commutes' _ := rfl }
+def mk'ₐ (c : RingCon A) : A →ₐ[S] c.Quotient := { mk' c with commutes' _ := rfl }
 
-theorem mk'ₐ_apply {c : RingCon A} {a : A} :
-    mk'ₐ c (S := S) a = mk' c a := rfl
+theorem mk'ₐ_apply {c : RingCon A} {a : A} : mk'ₐ c (S := S) a = mk' c a := rfl
 
-theorem mk'ₐ_surjective (c : RingCon A) :
-    Function.Surjective (c.mk'ₐ (S := S)) :=
+theorem mk'ₐ_surjective (c : RingCon A) : Function.Surjective (c.mk'ₐ (S := S)) :=
   mk'_surjective c
 
 end RingCon
@@ -149,8 +138,8 @@ section
 variable [NonAssocSemiring M] [NonAssocSemiring N] [NonAssocSemiring P]
   {F} [FunLike F M N] [RingHomClass F M N]
 
-/-- Makes an isomorphism of quotients by two ring congruence
-relations, given that the relations are equal. -/
+/-- Makes an isomorphism of quotients by two ring congruence relations, given that the
+relations are equal. -/
 protected def congr {c d : RingCon M} (h : c = d) :
     c.Quotient ≃+* d.Quotient :=
   { Quotient.congr (Equiv.refl M) <| by apply RingCon.ext_iff.mp h with
@@ -179,7 +168,7 @@ def mapGen {c : RingCon M} (f : M → N) : RingCon N :=
 
 /-- Given a surjective ring homomorphism `f` whose kernel is contained in a ring
 congruence relation `c`, the ring congruence relation on `f`'s codomain defined by
-'`x ≈ y` iff the elements of `f⁻¹(x)` are related to the elements of `f⁻¹(y)` by `c`.' -/
+`x ≈ y` iff the elements of `f⁻¹(x)` are related to the elements of `f⁻¹(y)` by `c`.' -/
 def mapOfSurjective {c : RingCon M} (f : F) (h : ker f ≤ c) (hf : Surjective f) : RingCon N where
   __ := c.toSetoid.mapOfSurjective f h hf
   add' h₁ h₂ := by
@@ -197,9 +186,9 @@ theorem mapOfSurjective_eq_mapGen {c : RingCon M} {f : F} (h : ker f ≤ c) (hf 
     c.mapGen f = c.mapOfSurjective f h hf := by
   rw [← ringConGen_of_ringCon (c.mapOfSurjective f h hf)]; rfl
 
-/-- Given a ring congruence relation `c` on a semiring `M`, the order-preserving
-bijection between the set of ring congruence relations containing `c` and the
-ring congruence relations on the quotient of `M` by `c`. -/
+/-- Given a ring congruence relation `c` on a semiring `M`, the order-preserving bijection between
+the set of ring congruence relations containing `c` and the ring congruence relations on the
+quotient of `M` by `c`. -/
 def correspondence {c : RingCon M} : { d // c ≤ d } ≃o RingCon c.Quotient where
   toFun d :=
     d.1.mapOfSurjective (mk' c) (by rw [RingCon.ker_mk'_eq]; exact d.2) <|
@@ -207,7 +196,7 @@ def correspondence {c : RingCon M} : { d // c ≤ d } ≃o RingCon c.Quotient wh
   invFun d := ⟨RingCon.comap d (mk' c), fun x y h ↦
     show d x y by rw [c.eq.mpr h]; exact d.refl _⟩
   left_inv d :=
-    Subtype.ext_iff_val.2 <|
+    Subtype.ext_iff.2 <|
       ext fun x y =>
         ⟨fun ⟨a, b, H, hx, hy⟩ =>
           d.1.trans (d.1.symm <| d.2 <| c.eq.1 hx) <| d.1.trans H <| d.2 <| c.eq.1 hy,
@@ -218,11 +207,9 @@ def correspondence {c : RingCon M} : { d // c ≤ d } ≃o RingCon c.Quotient wh
         hx ▸ hy ▸ H,
         Con.induction_on₂ x y fun w z h => ⟨w, z, h, rfl, rfl⟩⟩
   map_rel_iff' {s t} := by
-    constructor
-    · intros h x y hs
-      rcases h ⟨x, y, hs, rfl, rfl⟩ with ⟨a, b, ht, hx, hy⟩
-      exact t.1.trans (t.1.symm <| t.2 <| c.eq.1 hx) (t.1.trans ht (t.2 <| c.eq.1 hy))
-    · exact Relation.map_mono
+    refine ⟨fun h x y hs ↦ ?_, Relation.map_mono⟩
+    rcases h ⟨x, y, hs, rfl, rfl⟩ with ⟨a, b, ht, hx, hy⟩
+    exact t.1.trans (t.1.symm <| t.2 <| c.eq.1 hx) (t.1.trans ht (t.2 <| c.eq.1 hy))
 
 variable (c : RingCon M)
 
@@ -251,12 +238,10 @@ def lift (H : c ≤ ker f) : c.Quotient →+* P where
 variable {c f}
 
 /-- The diagram describing the universal property for quotients of ring commutes. -/
-theorem lift_mk' (H : c ≤ ker f) (x) : c.lift f H (c.mk' x) = f x :=
-  rfl
+theorem lift_mk' (H : c ≤ ker f) (x) : c.lift f H (c.mk' x) = f x := rfl
 
 /-- The diagram describing the universal property for quotients of rings commutes. -/
-theorem lift_coe (H : c ≤ ker f) (x : M) : c.lift f H x = f x :=
-  rfl
+theorem lift_coe (H : c ≤ ker f) (x : M) : c.lift f H x = f x := rfl
 
 /-- The diagram describing the universal property for quotients of rings commutes. -/
 theorem lift_comp_mk' (H : c ≤ ker f) : (c.lift f H).comp c.mk' = f := by ext; rfl
@@ -299,15 +284,13 @@ theorem ker_eq_lift_of_injective (H : c ≤ ker f) (h : Injective (c.lift f H)) 
 variable {c}
 
 /-- The homomorphism induced on the quotient of a ring by the kernel of a ring homomorphism. -/
-def kerLift : (ker f).Quotient →+* P :=
-  ((ker f).lift f) fun _ _ => id
+def kerLift : (ker f).Quotient →+* P := ((ker f).lift f) fun _ _ => id
 
 variable {f}
 
 /-- The diagram described by the universal property for quotients of rings, when
 the ring congruence relation is the kernel of the homomorphism, commutes. -/
-theorem kerLift_mk (x : M) : kerLift f x = f x :=
-  rfl
+theorem kerLift_mk (x : M) : kerLift f x = f x := rfl
 
 /-- A ring homomorphism `f` induces an injective homomorphism on the quotient by `f`'s kernel. -/
 theorem kerLift_injective (f : M →+* P) : Injective (kerLift f) := fun x y =>
@@ -323,8 +306,7 @@ def map (c d : RingCon M) (h : c ≤ d) : c.Quotient →+* d.Quotient :=
 the definition of the homomorphism from the quotient by `c` to the quotient by
 `d` induced by `d`'s quotient map. -/
 theorem map_apply {c d : RingCon M} (h : c ≤ d) (x) :
-    c.map d h x = c.lift d.mk' (fun _ _ hc => d.eq.2 <| h hc) x :=
-  rfl
+    c.map d h x = c.lift d.mk' (fun _ _ hc => d.eq.2 <| h hc) x := rfl
 
 end
 
@@ -339,16 +321,15 @@ theorem rangeS_mk' : RingHom.rangeS c.mk' = ⊤ :=
 
 variable {f : M →+* P}
 
-/-- Given a congruence relation `c` on a semiring and a homomorphism
-`f` constant on the equivalence classes of `c`, `f` has the same image
-as the homomorphism that `f` induces on the quotient. -/
+/-- Given a congruence relation `c` on a semiring and a homomorphism `f` constant on the equivalence
+classes of `c`, `f` has the same image as the homomorphism that `f` induces on the quotient. -/
 theorem lift_rangeS (H : c ≤ ker f) :
     RingHom.rangeS (c.lift f H) = f.rangeS :=
   Subsemiring.ext_iff.mpr (fun x ↦
     ⟨by rintro ⟨⟨y⟩, hy⟩; exact ⟨y, hy⟩, by rintro ⟨y, hy⟩; exact ⟨↑y, hy⟩⟩)
 
-/-- Given a ring homomorphism `f`, the induced homomorphism
-on the quotient by `f`'s kernel has the same image as `f`. -/
+/-- Given a ring homomorphism `f`, the induced homomorphism on the quotient by `f`'s kernel has
+the same image as `f`. -/
 theorem kerLift_rangeS_eq : RingHom.rangeS (kerLift f) = RingHom.rangeS f :=
   lift_rangeS fun _ _ => id
 
@@ -375,15 +356,13 @@ def quotientKerEquivOfRightInverse (f : M →+* P) (g : P → M) (hf : Function.
     right_inv := fun x => by (conv_rhs => rw [← hf x]); rfl }
 
 /-- The first isomorphism theorem for rings in the case of a surjective homomorphism.
-
-For a `computable` version, see `RingCon.quotientKerEquivOfRightInverse`.
--/
+For a `computable` version, see `RingCon.quotientKerEquivOfRightInverse`. -/
 noncomputable def quotientKerEquivOfSurjective (f : M →+* P) (hf : Surjective f) :
     (ker f).Quotient ≃+* P :=
   quotientKerEquivOfRightInverse _ _ hf.hasRightInverse.choose_spec
 
-/-- If `e : M →+* N` is surjective then
-`(c.comap e).Quotient ≃+* c.Quotient` with `c : RingCon N` -/
+/-- If `e : M →+* N` is surjective then `(c.comap e).Quotient ≃+* c.Quotient` with
+`c : RingCon N`. -/
 noncomputable def comapQuotientEquivOfSurj
     (c : RingCon M) (f : N →+* M) (hf : Function.Surjective f) :
     (c.comap f).Quotient ≃+* c.Quotient :=
@@ -397,8 +376,7 @@ lemma comapQuotientEquivOfSurj_mk
 
 lemma comapQuotientEquivOfSurj_symm_mk (c : RingCon M) {f : N →+* M} (hf) (x : N) :
     (comapQuotientEquivOfSurj c f hf).symm (f x) = x := by
-  suffices f x = (comapQuotientEquivOfSurj c f hf) x by
-    simp [this]
+  suffices f x = (comapQuotientEquivOfSurj c f hf) x by simp [this]
   rw [comapQuotientEquivOfSurj_mk]
 
 /-- This version infers the surjectivity of the function from a RingEquiv function -/
@@ -423,12 +401,10 @@ def quotientQuotientEquivQuotient (c d : RingCon M) (h : c ≤ d) :
   { Setoid.quotientQuotientEquivQuotient c.toSetoid d.toSetoid h with
     map_add' x y :=
       Con.induction_on₂ x y fun w z =>
-        Con.induction_on₂ w z fun a b =>
-          show _ = d.mk' a + d.mk' b by rw [← d.mk'.map_add]; rfl
+        Con.induction_on₂ w z fun a b => show _ = d.mk' a + d.mk' b by rw [← d.mk'.map_add]; rfl
     map_mul' x y :=
       Con.induction_on₂ x y fun w z =>
-        Con.induction_on₂ w z fun a b =>
-          show _ = d.mk' a * d.mk' b by rw [← d.mk'.map_mul]; rfl }
+        Con.induction_on₂ w z fun a b => show _ = d.mk' a * d.mk' b by rw [← d.mk'.map_mul]; rfl }
 
 end
 
@@ -443,24 +419,22 @@ theorem range_mk' : RingHom.range c.mk' = ⊤ :=
 
 variable {f : M →+* P}
 
-/-- Given a congruence relation `c` on a ring and a homomorphism `f`
-constant on the equivalence classes of `c`, `f` has the same image
-as the homomorphism that `f` induces on the quotient. -/
+/-- Given a congruence relation `c` on a ring and a homomorphism `f` constant on the equivalence
+classes of `c`, `f` has the same image as the homomorphism that `f` induces on the quotient. -/
 theorem lift_range (H : c ≤ ker f) :
     RingHom.range (c.lift f H) = f.range :=
   Subring.ext_iff.mpr (fun x ↦
     ⟨by rintro ⟨⟨y⟩, hy⟩; exact ⟨y, hy⟩, by rintro ⟨y, hy⟩; exact ⟨↑y, hy⟩⟩)
 
-/-- Given a ring homomorphism `f`, the induced homomorphism
-on the quotient by `f`'s kernel has the same image as `f`. -/
+/-- Given a ring homomorphism `f`, the induced homomorphism on the quotient by `f`'s kernel has
+the same image as `f`. -/
 theorem kerLift_range_eq : RingHom.range (kerLift f) = RingHom.range f :=
   lift_range fun _ _ => id
 
 variable (c)
 
 /-- The **first isomorphism theorem for rings**. -/
-noncomputable def quotientKerEquivRange (f : M →+* P) :
-    (ker f).Quotient ≃+* f.range :=
+noncomputable def quotientKerEquivRange (f : M →+* P) : (ker f).Quotient ≃+* f.range :=
   quotientKerEquivRangeS f
 
 /-- The **second isomorphism theorem for semirings**. -/
@@ -478,28 +452,22 @@ variable {R : Type*} [CommSemiring R]
 variable {c d : RingCon M} {f : M →ₐ[R] P}
 
 variable (R) in
-/-- Makes an algebra isomorphism of quotients by two ring congruence
-relations, given that the relations are equal. -/
+/-- Makes an algebra isomorphism of quotients by two ring congruence relations, given that the
+relations are equal. -/
 protected def congrₐ {c d : RingCon M} (h : c = d) :
-    c.Quotient ≃ₐ[R] d.Quotient := {
-  RingCon.congr h with
-  commutes' _ := rfl }
+    c.Quotient ≃ₐ[R] d.Quotient := { RingCon.congr h with commutes' _ := rfl }
 
 theorem congrₐ_mk {c d : RingCon M} (h : c = d) (a : M) :
-    RingCon.congrₐ R h (a : c.Quotient) = (a : d.Quotient) :=
-  rfl
+    RingCon.congrₐ R h (a : c.Quotient) = (a : d.Quotient) := rfl
 
-theorem range_mk'ₐ :
-    AlgHom.range (mk'ₐ R c) = ⊤ :=
+theorem range_mk'ₐ : AlgHom.range (mk'ₐ R c) = ⊤ :=
   (AlgHom.range_eq_top _).mpr (mk'ₐ_surjective _)
 
 /-- The algebra homomorphism on the quotient of an algebra by a
 congruence relation `c` induced by an algebra homomorphism
 constant on the equivalence classes of `c`. -/
 def liftₐ (c : RingCon M) (f : M →ₐ[R] P) (H : c ≤ ker f) :
-    c.Quotient →ₐ[R] P := {
-  c.lift f H with
-  commutes' r := AlgHomClass.commutes (↑f) r }
+    c.Quotient →ₐ[R] P := { c.lift f H with commutes' r := AlgHomClass.commutes (↑f) r }
 
 /-- Given a congruence relation `c` on a ring and a homomorphism `f`
 constant on the equivalence classes of `c`, `f` has the same image
@@ -516,40 +484,30 @@ def kerLiftₐ : (ker f).Quotient →ₐ[R] P :=
 
 /-- The diagram described by the universal property for quotients of rings, when
 the ring congruence relation is the kernel of the homomorphism, commutes. -/
-theorem kerLiftₐ_mk (x : M) : kerLiftₐ f x = f x :=
-  rfl
+theorem kerLiftₐ_mk (x : M) : kerLiftₐ f x = f x := rfl
 
 /-- A ring homomorphism `f` induces an injective homomorphism on the quotient by `f`'s kernel. -/
-theorem kerLiftₐ_injective (f : M →ₐ[R] P) :
-    Injective (kerLiftₐ f) := kerLift_injective f.toRingHom
+theorem kerLiftₐ_injective (f : M →ₐ[R] P) : Injective (kerLiftₐ f) := kerLift_injective f.toRingHom
 
 variable (R) in
-/-- Given ring congruence relations `c, d` on an algebra such that `d`
-contains `c`, `d`'s quotient map induces an algebra homomorphism from
-the quotient by `c` to the quotient by `d`. -/
-def mapₐ (c d : RingCon M) (h : c ≤ d) :
-    c.Quotient →ₐ[R] d.Quotient :=
+/-- Given ring congruence relations `c, d` on an algebra such that `d` contains `c`, `d`'s quotient
+map induces an algebra homomorphism from the quotient by `c` to the quotient by `d`. -/
+def mapₐ (c d : RingCon M) (h : c ≤ d) : c.Quotient →ₐ[R] d.Quotient :=
   (liftₐ c (d.mk'ₐ R)) fun x y hc ↦ show (ker d.mk') x y from (mk'_ker d).symm ▸ h hc
 
-/-- Given ring congruence relations `c, d` on a ring such that `d` contains `c`,
-the definition of the homomorphism from the quotient by `c` to the quotient by
-`d` induced by `d`'s quotient map. -/
+/-- Given ring congruence relations `c, d` on a ring such that `d` contains `c`, the definition of
+the homomorphism from the quotient by `c` to the quotient by `d` induced by `d`'s quotient map. -/
 theorem mapₐ_apply {c d : RingCon M} (h : c ≤ d) (x) :
-    mapₐ (R := R) c d h x =
-      liftₐ (R := R) c (d.mk'ₐ R) (fun _ _ hc ↦ d.eq.2 <| h hc) x :=
-  rfl
+    mapₐ (R := R) c d h x = liftₐ (R := R) c (d.mk'ₐ R) (fun _ _ hc ↦ d.eq.2 <| h hc) x := rfl
 
-/-- Given a ring homomorphism `f`, the induced homomorphism
-on the quotient by `f`'s kernel has the same image as `f`. -/
-theorem kerLiftₐ_range_eq :
-    AlgHom.range (kerLiftₐ f) = AlgHom.range f :=
-  liftₐ_range fun _ _ => id
+/-- Given a ring homomorphism `f`, the induced homomorphism on the quotient by `f`'s kernel has
+the same image as `f`. -/
+theorem kerLiftₐ_range_eq : AlgHom.range (kerLiftₐ f) = AlgHom.range f := liftₐ_range fun _ _ => id
 
 variable (c)
 
 /-- The **first isomorphism theorem for algebra morphisms**. -/
-noncomputable def quotientKerEquivRangeₐ (f : M →ₐ[R] P) :
-    (ker f).Quotient ≃ₐ[R] f.range := by
+noncomputable def quotientKerEquivRangeₐ (f : M →ₐ[R] P) : (ker f).Quotient ≃ₐ[R] f.range := by
   apply AlgEquiv.ofBijective
     (AlgHom.codRestrict (kerLiftₐ f) _ (fun x ↦ by rw [← kerLiftₐ_range_eq]; simp))
   exact (quotientKerEquivRangeS f.toRingHom).bijective
@@ -557,15 +515,37 @@ noncomputable def quotientKerEquivRangeₐ (f : M →ₐ[R] P) :
 /-- The **second isomorphism theorem for algebras**. -/
 noncomputable def comapQuotientEquivRangeₐ (f : N →ₐ[R] M) :
     (comap c f).Quotient ≃ₐ[R] AlgHom.range ((c.mk'ₐ _).comp f) := by
-  apply (RingCon.congrₐ R comap_eq).trans
-    <| quotientKerEquivRangeₐ ((c.mk'ₐ _).comp f)
+  apply (RingCon.congrₐ R comap_eq).trans <| quotientKerEquivRangeₐ ((c.mk'ₐ _).comp f)
 
 /-- The **third isomorphism theorem for algebras**. -/
 def quotientQuotientEquivQuotientₐ (c d : RingCon M) (h : c ≤ d) :
     (RingCon.ker (mapₐ R c d h)).Quotient ≃ₐ[R] d.Quotient :=
-  { quotientQuotientEquivQuotient c d h with
-    commutes' _ := by rfl }
+  { quotientQuotientEquivQuotient c d h with commutes' _ := by rfl }
 
 end
+
+section Semiring
+
+variable {R S T : Type*} [CommSemiring R] [CommSemiring S] [Algebra R S] [Semiring T] [Algebra R T]
+    (φ : S →ₐ[R] T)
+
+theorem _root_.AlgHom.factor (φ : S →ₐ[R] T) :
+    φ = φ.range.val.comp
+      ((RingCon.quotientKerEquivRangeₐ φ).toAlgHom.comp
+        ((RingCon.ker φ).mk'ₐ (S := R))) := by aesop
+
+theorem _root_.AlgHom.comp_rangeRestrict :
+    (Subalgebra.val _).comp φ.rangeRestrict = φ := by aesop
+
+theorem quotientKerEquivRangeₐ_mk :
+    (RingCon.quotientKerEquivRangeₐ φ).toAlgHom.comp
+      (RingCon.mk'ₐ R (RingCon.ker φ)) = φ.rangeRestrict := by
+    aesop
+
+theorem kerLiftₐ_eq_val_comp_Equiv :
+     RingCon.kerLiftₐ φ = (Subalgebra.val _).comp (RingCon.quotientKerEquivRangeₐ φ).toAlgHom :=
+  AlgHom.ext fun _ ↦ refl _
+
+end Semiring
 
 end RingCon

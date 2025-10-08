@@ -1,81 +1,51 @@
-import Mathlib.LinearAlgebra.TensorProduct.Finiteness
-import DividedPowers.PolynomialLaw.Basic2
+/-
+Copyright (c) 2025 Antoine Chambert-Loir, María Inés de Frutos-Fernández. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
+-/
 import DividedPowers.PolynomialLaw.Coeff
+import Mathlib.LinearAlgebra.TensorProduct.Finiteness
 
 /-! # Base change of polynomial laws
 
 This file defines a base change map
-  `PolynomialLaw R M N →ₗ[R] PolynomialLaw R' (R' ⊗[R] M) (R' ⊗[R] N)``
-when M and N are R-modules and R' is an R-algebra (commutative)
+  `PolynomialLaw R M N →ₗ[R] PolynomialLaw R' (R' ⊗[R] M) (R' ⊗[R] N)`
+when `M` and `N` are `R`-modules and `R'` is a (commutative) `R`-algebra.
 
-## Work in progress
-
-This requires to simplify the tensor product
-  `S' ⊗[R'] (R' ⊗[R] M)`
-to
-  `S' ⊗[R] M`
-using an S'-isomorphism — something Mathlib doesn't know (yet)
+This requires to simplify the tensor product `S' ⊗[R'] (R' ⊗[R] M)`
+to `S' ⊗[R] M` using an `S'`-isomorphism — something Mathlib doesn't know (yet)
 because TensorProduct.assoc lacks some heteronomy.
-This is done in a first part.
+This is done in the first part of the file.
 
 Then the base change is defined as a map.
 
-## TODO
+## Main definitions
 
-- Compare ground
-- Extend `PolynomialMap.baseChange` to a linear map.
-- Prove that coeff, multiCoeff, biCoeff, commute with base change,
-as well as for divided (partial) differentials
+* `TensorProduct.baseChangeEquiv`: the natural `S'`-linear isomorphism from the triple tensor
+  product `S' ⊗[R'] (R' ⊗[R] M)` to `S' ⊗[R] M`.
+
+* `PolynomialLaw.baseChange`: the base change of a polynomial law.
+
+* `PolynomialLaw.baseChangeHom`: the base change of a polynomial law, as a linear map.
+
+## Main results
+
+* `PolynomialLaw.coeff_baseChange_tmul`: the coefficients of the base change of a polynomial law
+  satisfy the formula
+  `coeff (fun i ↦ r i ⊗ₜ[R] m i) (f.baseChange R') k = (∏ i, r i ^ k i) ⊗ₜ[R] coeff m f k`.
+
+* `PolynomialLaw.baseChange_ground`: for any `f : M →ₚₗ[R] N)`, one has
+  `(f.baseChange R').ground = f.toFun R'`.
+
+## TODO
+- Prove that `coeff`, `multiCoeff`, `biCoeff`, commute with base change,
+and that the same is true for divided (partial) differentials.
 
 -/
 
-namespace Set
-
--- MI: I think we can omit this
-theorem prod_eq_iff_of_nonempty {α β : Type*} {s s' : Set α} {t t' : Set β}
-    (hs : s.Nonempty) (ht : t.Nonempty) :
-    s ×ˢ t = s' ×ˢ t' ↔ (s = s' ∧ t = t') := by
-  rw [prod_eq_prod_iff_of_nonempty (Nonempty.prod hs ht)]
-  /- constructor
-  · intro h
-    suffices hss' : s = s' by
-      refine ⟨hss', ?_⟩
-      ext b
-      obtain ⟨a, ha⟩ := hs
-      have ha' : a ∈ s' := by rwa [← hss']
-      constructor
-      · intro hb
-        have hst : (a, b) ∈ s ×ˢ t := by simp [Set.mem_prod, ha, hb]
-        rw [h, Set.mem_prod] at hst
-        exact hst.2
-      · intro hb
-        have hst : (a, b) ∈ s' ×ˢ t' := by simp [Set.mem_prod, ha', hb]
-        rw [← h, Set.mem_prod] at hst
-        exact hst.2
-    ext a
-    constructor
-    · intro ha
-      obtain ⟨b, hb⟩ := ht
-      have h' : (a, b) ∈ s ×ˢ t := by simp [Set.mem_prod, ha, hb]
-      rw [h, Set.mem_prod] at h'
-      exact h'.1
-    · intro ha
-      have : t'.Nonempty := by
-        by_contra! ht'
-        simp only [ht', Set.prod_empty, Set.prod_eq_empty_iff] at h
-        cases h with
-        | inl h => simp [h] at hs
-        | inr h => simp [h] at ht
-      obtain ⟨b, hb⟩ := this
-      have h' : (a, b) ∈ s' ×ˢ t' := by simp [Set.mem_prod, ha, hb]
-      rw [← h, Set.mem_prod] at h'
-      exact h'.1
-  · rintro ⟨rfl, rfl⟩; rfl-/
-
-end Set
-
 namespace Finset
 
+/-- `Finset.biUnion₂ s t` the union of `{a} ×ˢ t a` over `a ∈ s`. -/
 noncomputable def biUnion₂ {α β : Type*} [DecidableEq α] [DecidableEq β]
     (s : Finset α) (t : α → Finset β) : Finset (α × β) :=
   Finset.biUnion s (fun a ↦ {a} ×ˢ t a)
@@ -87,7 +57,8 @@ theorem prod_biUnion₂ {α β γ : Type*} [DecidableEq α] [DecidableEq β] [Co
   rw [Finset.biUnion₂, Finset.prod_biUnion]
   · exact Finset.prod_congr rfl (fun _ _ ↦ by simp)
   · intro a _ a' _ h
-    simp only [Function.onFun, ← Finset.disjoint_coe, Finset.singleton_product, Finset.coe_map, Function.Embedding.coeFn_mk]
+    simp only [Function.onFun, ← Finset.disjoint_coe, Finset.singleton_product, Finset.coe_map,
+      Function.Embedding.coeFn_mk]
     rw [Set.disjoint_iff_forall_ne]
     rintro ⟨x, y⟩ hxy ⟨x', y'⟩ hxy' H
     apply h
@@ -99,9 +70,7 @@ end Finset
 
 namespace Multiset
 
-variable {α β γ M : Type*}
-    [CommMonoid M]
-  -- [DecidableEq α] [DecidableEq β] [DecidableEq γ]
+variable {α β γ M : Type*} [CommMonoid M]
 
 @[to_additive]
 theorem map_fst_prod (n : Multiset γ) (g : α → γ → M) (a : α) :
@@ -112,11 +81,11 @@ theorem map_fst_prod (n : Multiset γ) (g : α → γ → M) (a : α) :
     simp [Multiset.map_cons, Multiset.prod_cons, hn, show ({a} : Multiset α).product (b ::ₘ n) =
       (a, b) ::ₘ ({a} : Multiset α).product n from Multiset.product_cons b {a} n]
 
-/--  ∏ (a, b) ∈ m, ∏ c ∈ f b, g a c = ∏ (a, c) ∈ (m.map ?_), g a c -/
 @[to_additive]
 theorem map_prod_map_prod (m : Multiset (α × β)) (f : β → Multiset γ) (g : α → γ → M) :
     (m.map (fun x ↦ ((f x.2).map (g x.1)).prod)).prod =
-      ((Multiset.map (fun x ↦ Multiset.product {x.1} (f x.2)) m).sum.map (fun x ↦ g x.1 x.2)).prod := by
+      ((Multiset.map (fun x ↦ Multiset.product {x.1} (f x.2)) m).sum.map
+        (fun x ↦ g x.1 x.2)).prod := by
   induction m using Multiset.induction_on with
   | empty => simp
   | cons a m hm =>
@@ -125,18 +94,12 @@ theorem map_prod_map_prod (m : Multiset (α × β)) (f : β → Multiset γ) (g 
     congr 1
     apply map_fst_prod
 
-example [DecidableEq α] (m : Multiset α) (f : α → M) :
-    (m.map f).prod = ∏ a ∈ m.toFinset, f a ^ m.count a := by
-  exact Finset.prod_multiset_map_count m f
-
--- example (m : Multiset α) (f : α → β) (g : β → γ) : g (m.map f).prod
 end Multiset
 
 namespace TensorProduct
 
-variable {R : Type*} [CommSemiring R]
-  {M : Type*}  [AddCommMonoid M] [Module R M]
-  {N : Type*}  [AddCommMonoid N] [Module R N]
+variable {R M N : Type*} [CommSemiring R] [AddCommMonoid M] [Module R M]
+  [AddCommMonoid N] [Module R N]
 
 theorem multiset_sum_tmul (m : Multiset M) (n : N) :
     m.sum ⊗ₜ[R] n = (m.map (fun x ↦ x ⊗ₜ[R] n)).sum := by
@@ -159,13 +122,30 @@ theorem exists_nonempty_finset (x : M ⊗[R] N) :
     simp only [Finset.not_nonempty_iff_eq_empty] at hs ⊢
     simp [hxs, hs]
 
-theorem exists_multiset_eq_sum_tmul_tmul {S P: Type*}
-    [CommSemiring S] [Algebra R S]
-    [Module S N] [IsScalarTower R S N]
-    [AddCommMonoid P] [Module S P]
-    (x : M ⊗[R] (N ⊗[S] P)) :
-    ∃ (ξ : Multiset (M × N × P)),
-      x = (ξ.map (fun x ↦ x.1 ⊗ₜ[R] (x.2.1 ⊗ₜ[S] x.2.2))).sum := by
+theorem exists_multiset_eq_sum_tmul_tmul {S P: Type*} [CommSemiring S] [Algebra R S]
+    [Module S N] [IsScalarTower R S N] [AddCommMonoid P] [Module S P] (x : M ⊗[R] (N ⊗[S] P)) :
+    ∃ (ξ : Multiset (M × N × P)), x = (ξ.map (fun x ↦ x.1 ⊗ₜ[R] (x.2.1 ⊗ₜ[S] x.2.2))).sum := by
+  obtain ⟨m1, hx⟩ := TensorProduct.exists_multiset x
+  let m2 (y : N ⊗[S] P) := (TensorProduct.exists_multiset y).choose
+  use (m1.map (fun x ↦ ({x.1} : Multiset M).product (m2 x.2))).sum
+  have hx' : x = (m1.map
+      fun i ↦ (((m2 i.2).map (fun z ↦ z.1 ⊗ₜ[S] z.2)).map (fun y ↦ i.1 ⊗ₜ[R] y)).sum).sum := by
+    rw [hx]
+    apply congr_arg
+    apply congr_arg₂ _ _ rfl
+    ext ⟨m, np⟩
+    dsimp only
+    simp_rw [← tmul_multiset_sum m _]
+    congr
+    apply (TensorProduct.exists_multiset _).choose_spec
+  simp only [Multiset.map_map, Function.comp_apply] at hx'
+  classical
+  rwa [Multiset.map_sum_map_sum m1 m2 (g := fun x y ↦ x ⊗ₜ[R] (y.1 ⊗ₜ[S] y.2))] at hx'
+
+theorem exists_multiset_eq_sum_tmul_tmul' {R S M N P : Type*} [CommSemiring R] [CommSemiring S]
+    [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module S N] [AddCommMonoid P] [Module S P]
+    [Algebra S R] [Module R N] [IsScalarTower S R N] (x : M ⊗[R] (N ⊗[S] P)) :
+    ∃ (ξ : Multiset (M × N × P)), x = (ξ.map (fun x ↦ x.1 ⊗ₜ[R] (x.2.1 ⊗ₜ[S] x.2.2))).sum := by
   obtain ⟨m1, hx⟩ := TensorProduct.exists_multiset x
   let m2 (y : N ⊗[S] P) := (TensorProduct.exists_multiset y).choose
   use (m1.map (fun x ↦ ({x.1} : Multiset M).product (m2 x.2))).sum
@@ -184,42 +164,11 @@ theorem exists_multiset_eq_sum_tmul_tmul {S P: Type*}
   classical
   rwa [Multiset.map_sum_map_sum m1 m2 (g := fun x y ↦ x ⊗ₜ[R] (y.1 ⊗ₜ[S] y.2))] at hx'
 
-theorem exists_multiset_eq_sum_tmul_tmul' {R S M N P: Type*}
-    [CommSemiring R] [CommSemiring S]
-    [AddCommMonoid M] [Module R M]
-    [AddCommMonoid N] [Module S N]
-    [AddCommMonoid P] [Module S P]
-    [Algebra S R] [Module R N] [IsScalarTower S R N]
-    (x : M ⊗[R] (N ⊗[S] P)) :
-    ∃ (ξ : Multiset (M × N × P)),
-      x = (ξ.map (fun x ↦ x.1 ⊗ₜ[R] (x.2.1 ⊗ₜ[S] x.2.2))).sum := by
-  obtain ⟨m1, hx⟩ := TensorProduct.exists_multiset x
-  let m2 (y : N ⊗[S] P) := (TensorProduct.exists_multiset y).choose
-  use (m1.map (fun x ↦ ({x.1} : Multiset M).product (m2 x.2))).sum
-  have hx' : x = (m1.map
-    fun i ↦ (((m2 i.2).map (fun z ↦ z.1 ⊗ₜ[S] z.2)).map (fun y ↦ i.1 ⊗ₜ[R] y)).sum
-      ).sum := by
-    rw [hx]
-    apply congr_arg
-    apply congr_arg₂ _ _ rfl
-    ext ⟨m, np⟩
-    dsimp only
-    simp_rw [← tmul_multiset_sum m _]
-    congr
-    apply (TensorProduct.exists_multiset _).choose_spec
-  simp only [Multiset.map_map, Function.comp_apply] at hx'
-  classical
-  rwa [Multiset.map_sum_map_sum m1 m2 (g := fun x y ↦ x ⊗ₜ[R] (y.1 ⊗ₜ[S] y.2))] at hx'
+variable {R' S' S'' : Type*} [CommSemiring R'] [Algebra R R'] [CommSemiring S'] [Algebra R' S']
+  [CommSemiring S''] [Algebra R' S''] (φ : S' →ₐ[R'] S'') [Algebra R S'] [IsScalarTower R R' S']
+  [Algebra R S''] [IsScalarTower R R' S'']
 
-variable {R' : Type*} [CommSemiring R'] [Algebra R R']
-variable {S' : Type*} [CommSemiring S'] [Algebra R' S']
-variable {S'' : Type*} [CommSemiring S''] [Algebra R' S'']
-variable (φ : S' →ₐ[R'] S'')
-
-variable [Algebra R S'] [IsScalarTower R R' S']
-variable [Algebra R S''] [IsScalarTower R R' S'']
-
-/-- an auxiliary map -/
+/-- An auxiliary linear equiv for the construction of the base change. -/
 def baseChangeEquiv' : (S' ⊗[R'] R') ⊗[R] M ≃ₗ[S'] S' ⊗[R] M := {
   toAddEquiv := (LinearEquiv.rTensor M ((TensorProduct.rid R' S').restrictScalars R)).toAddEquiv
   map_smul' r' srm := by
@@ -243,8 +192,9 @@ def baseChangeEquiv' : (S' ⊗[R'] R') ⊗[R] M ≃ₗ[S'] S' ⊗[R] M := {
         rw [smul_tmul', smul_eq_mul]
         simp [← tmul_smul] }
 
-def baseChangeEquiv :
-    S' ⊗[R'] (R' ⊗[R] M) ≃ₗ[S'] S' ⊗[R] M :=
+/-- The natural `S'`-linear isomorphism from the triple tensor product `S' ⊗[R'] (R' ⊗[R] M)`
+  to `S' ⊗[R] M`. -/
+def baseChangeEquiv : S' ⊗[R'] (R' ⊗[R] M) ≃ₗ[S'] S' ⊗[R] M :=
   (AlgebraTensorModule.assoc R R' S' S' R' M).symm.trans baseChangeEquiv'
 
 theorem baseChangeEquiv_rTensor_baseChangeEquivSymm (y : S' ⊗[R] M) :
@@ -279,9 +229,12 @@ theorem baseChangeEquiv_lid (m : R' ⊗[R] M) :
   | add x y hx hy => simp [tmul_add, hx, hy]
   | tmul s m => simp
 
-def baseChangeEquiv_comp_lid_symm :
-    R' ⊗[R] M ≃ₗ[R'] R' ⊗[R] M :=
-    (TensorProduct.lid R' _).symm.trans baseChangeEquiv
+def baseChangeEquiv_comp_lid_symm : R' ⊗[R] M ≃ₗ[R'] R' ⊗[R] M :=
+  (TensorProduct.lid R' _).symm.trans baseChangeEquiv
+
+theorem baseChangeEquiv_tmul_tmul (s' : S') (r' : R') (m : M) :
+    baseChangeEquiv (s' ⊗ₜ[R'] (r' ⊗ₜ[R] m)) = (r' • s') ⊗ₜ[R] m := by
+  simp [baseChangeEquiv, baseChangeEquiv']
 
 end TensorProduct
 
@@ -289,36 +242,31 @@ namespace PolynomialLaw
 
 open TensorProduct
 
-universe u v w
-variable {R : Type u} [CommSemiring R]
-  {M : Type*}  [AddCommMonoid M] [Module R M]
-  {N : Type*} [AddCommMonoid N] [Module R N]
+universe u v
+
+variable {R : Type u} [CommSemiring R] {M N : Type*} [AddCommMonoid M] [Module R M]
+  [AddCommMonoid N] [Module R N]
 
 variable (R' : Type v) [CommSemiring R'] [Algebra R R']
 
 /- **The definition of the base change of a polynomial law.**
 
-We start from `$R$-modules $M$ and $N$, and a polynomial law $f \in \mathscr P_R(M;N)$.
-We wish to consider the base change $g$ of $f$ to an $R$-algebra $R'$,
-as a polynomial law in $\mathscr P_S(R'\otimes_R M; R' \otimes_R N)$.
-So we have to define, for any $R'$-algebra $S'$,
-a map $g_{S'} \colon S' \otimes_{R'} (R' \otimes_R M) \to S' \otimes_{R'} (R' \otimes_R N)$.
+We start from $R$-modules $M$ and $N$, and a polynomial law $f \in \mathscr P_R(M;N)$.
+We wish to consider the base change $g$ of $f$ to an $R$-algebra $R'$, as a polynomial law in
+$\mathscr P_S(R'\otimes_R M; R' \otimes_R N)$.
+So we have to define, for any $R'$-algebra $S'$, a map
+$g_{S'} \colon S' \otimes_{R'} (R' \otimes_R M) \to S' \otimes_{R'} (R' \otimes_R N)$.
 Consider the isomorphism $\alpha_M \colon S' \otimes_{R'} (R'\otimes_R M)
 \simeq S'\otimes_R M$ deduced from associativity of tensor product
-and the $S'$-linear isomorphism $S'\otimes_{R'} R'\simeq S'$,
-and its analogue for $N$.
-Up to the isomorphisms~$\alpha_M$ and~$\alpha_N$,
-the polynomial law $g$ evaluates on $S'$ as the map
-$ S' \otimes_R M \to S'\otimes_R N$ given by $f_{S'}$.
-In other words,
-$g_{S'} = \alpha_N \circ f_{S'} \circ \alpha_M^{-1}$.
+and the $S'$-linear isomorphism $S'\otimes_{R'} R'\simeq S'$, and its analogue for $N$.
+Up to the isomorphisms~$\alpha_M$ and~$\alpha_N$, the polynomial law $g$ evaluates on $S'$ as
+the map $S' \otimes_R M \to S'\otimes_R N$ given by $f_{S'}$.
+In other words, $g_{S'} = \alpha_N \circ f_{S'} \circ \alpha_M^{-1}$.
 
-But writing the isomorphisms~$\alpha_M$ and~$\alpha_N$ requires
-to consider $S'$ as an $R$-algebra,
+But writing the isomorphisms~$\alpha_M$ and~$\alpha_N$ requires to consider $S'$ as an $R$-algebra,
 which is done by composition of the algebra morphisms $R\to R'\to S'$.
 
 -/
-
 
 /-- The base change of a polynomial law. -/
 noncomputable def baseChange (f : M →ₚₗ[R] N) :
@@ -339,16 +287,13 @@ noncomputable def baseChange (f : M →ₚₗ[R] N) :
     haveI istRR'S'' : @IsScalarTower R R' S'' _ _ algRS''.toSMul :=
       IsScalarTower.of_algebraMap_eq (fun r ↦ by simp [RingHom.algebraMap_toAlgebra])
     ext srm
-    dsimp only
-    symm
     simp only [Function.comp_apply]
-    rw [LinearEquiv.symm_apply_eq]
-    rw [baseChangeEquiv_rTensor_eq_baseChangeEquivSymm_rTensor]
-    rw [baseChangeEquiv_rTensor_baseChangeEquivSymm]
-    rw [← f.isCompat_apply]
+    rw [eq_comm, LinearEquiv.symm_apply_eq, baseChangeEquiv_rTensor_eq_baseChangeEquivSymm_rTensor,
+      baseChangeEquiv_rTensor_baseChangeEquivSymm, ← f.isCompat_apply]
 
 /-- The base change of a polynomial law, as a linear map. -/
-noncomputable def baseChange_linearMap : (M →ₚₗ[R] N) →ₗ[R] RestrictScalars R R' ((R' ⊗[R] M) →ₚₗ[R'] (R' ⊗[R] N)) where
+noncomputable def baseChangeHom :
+    (M →ₚₗ[R] N) →ₗ[R] RestrictScalars R R' ((R' ⊗[R] M) →ₚₗ[R'] (R' ⊗[R] N)) where
   toFun := baseChange R'
   map_add' f g := by
     change baseChange R' (f + g) = baseChange R' f + baseChange R' g
@@ -359,25 +304,19 @@ noncomputable def baseChange_linearMap : (M →ₚₗ[R] N) →ₗ[R] RestrictSc
     ext S' _ _ srm
     letI _ : Algebra R S' := RingHom.toAlgebra
       ((algebraMap R' S').comp (algebraMap R R'))
-    have _ : IsScalarTower R R' S' := IsScalarTower.of_algebraMap_eq (fun r ↦ by simp [RingHom.algebraMap_toAlgebra])
+    have _ : IsScalarTower R R' S' :=
+      IsScalarTower.of_algebraMap_eq (fun r ↦ by simp [RingHom.algebraMap_toAlgebra])
     simp only [baseChange, smul_toFun, Pi.smul_apply, smul_def, algebraMap_smul]
-    rw [← algebraMap_smul S' r (f.toFun S' (baseChangeEquiv srm))]
-    rw [← algebraMap_smul S' r]
-    rw [map_smul]
+    rw [← algebraMap_smul S' r (f.toFun S' (baseChangeEquiv srm)), ← algebraMap_smul S' r, map_smul]
 
-theorem baseChangeEquiv_tmul_tmul {R M R' S' : Type*} [CommSemiring R]
-    [AddCommMonoid M] [Module R M]
-    [CommSemiring R'] [Algebra R R']
-    [CommSemiring S'] [Algebra R' S']
-    [Algebra R S'] [IsScalarTower R R' S']
-    (s' : S') (r' : R') (m : M) :
+theorem baseChangeEquiv_tmul_tmul {R' S' : Type*} [CommSemiring R'] [Algebra R R'] [CommSemiring S']
+    [Algebra R' S'] [Algebra R S'] [IsScalarTower R R' S'] (s' : S') (r' : R') (m : M) :
     baseChangeEquiv (s' ⊗ₜ[R'] (r' ⊗ₜ[R] m)) = (r' • s') ⊗ₜ[R] m := by
   simp [baseChangeEquiv, baseChangeEquiv']
 
--- generalize to `toFun`, with `S'` in an arbitrary universe
-theorem baseChange_toFun'_smul_tmul_tmul_eq_coeff_sum
-    (f : M →ₚₗ[R] N) {ι : Type*} [Fintype ι] [DecidableEq ι]
-    (m : ι → M) (r : ι → R')
+-- TODO: generalize to `toFun`, with `S'` in an arbitrary universe
+theorem baseChange_toFun'_smul_tmul_tmul_eq_coeff_sum (f : M →ₚₗ[R] N) {ι : Type*} [Fintype ι]
+    [DecidableEq ι] (m : ι → M) (r : ι → R')
     {S' : Type v} [CommSemiring S'] [Algebra R' S'] (s : ι → S') :
     (f.baseChange R').toFun' S' (∑ i, s i ⊗ₜ[R'] (r i ⊗ₜ[R] m i)) =
       (((coeff m) f).sum fun k n ↦  ((∏ i, s i ^ k i) ⊗ₜ[R'] ((∏ i, r i ^ k i) ⊗ₜ[R] n)))  := by
@@ -438,9 +377,8 @@ theorem coeff_baseChange (f : M →ₚₗ[R] N) {ι : Type*} [Fintype ι] [Decid
   congr
   ext; simp [hs']
 
-theorem baseChange_toFun_smul_tmul_tmul_eq_coeff_sum
-    (f : M →ₚₗ[R] N) {ι : Type*} [Fintype ι] [DecidableEq ι]
-    (m : ι → M) (r : ι → R')
+theorem baseChange_toFun_smul_tmul_tmul_eq_coeff_sum (f : M →ₚₗ[R] N) {ι : Type*} [Fintype ι]
+    [DecidableEq ι] (m : ι → M) (r : ι → R')
     {S' : Type*} [CommSemiring S'] [Algebra R' S'] (s : ι → S') :
     (f.baseChange R').toFun S' (∑ i, s i ⊗ₜ[R'] (r i ⊗ₜ[R] m i)) =
       (((coeff m) f).sum fun k n ↦  ((∏ i, s i ^ k i) ⊗ₜ[R'] ((∏ i, r i ^ k i) ⊗ₜ[R] n)))  := by
@@ -457,400 +395,92 @@ theorem baseChange_toFun_smul_tmul_tmul_eq_coeff_sum
   intro k _
   simp only [LinearMap.rTensor_tmul, AlgHom.toLinearMap_apply, map_prod, map_pow, ht]
 
-theorem baseChange_apply (f : M →ₚₗ[R] N)
-    {R' : Type v} [CommSemiring R'] [Algebra R R']
-    {S' : Type v} [CommSemiring S']
+/-- The coefficients of a base change of a polynomial law, for `ι : Type`. -/
+theorem coeff_baseChange_tmul' (f : M →ₚₗ[R] N) {ι : Type} [Fintype ι] [DecidableEq ι]
+    (m : ι → M) (r : ι → R') (k : ι →₀ ℕ) :
+    coeff (fun i ↦ r i ⊗ₜ[R] m i) (f.baseChange R') k =
+      (∏ i, r i ^ k i) ⊗ₜ[R] coeff m f k := by
+  simp only [coeff_eq, toFun_eq_toFun', baseChange_toFun'_smul_tmul_tmul_eq_coeff_sum,
+    ← LinearEquiv.eq_symm_apply, lid_symm_apply]
+  simp only [map_finsuppSum, LinearMap.rTensor_tmul, MvPolynomial.lcoeff_apply]
+  rw [Finsupp.sum_eq_single k, coeff_eq, toFun_eq_toFun']
+  · congr
+    convert MvPolynomial.coeff_monomial k k (1 : R') <;>
+      simp [MvPolynomial.monomial_eq]
+  · intro l _ hlk
+    suffices MvPolynomial.coeff k (∏ i, MvPolynomial.X (R := R') i ^ l i) = 0 by
+      simp [this]
+    convert MvPolynomial.coeff_monomial k l (1 : R') <;>
+      simp [MvPolynomial.monomial_eq, hlk]
+  · simp
+
+/-- The coefficients of the base change of a polynomial law satisfy the formula
+  `coeff (fun i ↦ r i ⊗ₜ[R] m i) (f.baseChange R') k = (∏ i, r i ^ k i) ⊗ₜ[R] coeff m f k`. -/
+theorem coeff_baseChange_tmul (f : M →ₚₗ[R] N) {ι : Type*} [Fintype ι] [DecidableEq ι]
+    (m : ι → M) (r : ι → R') (k : ι →₀ ℕ) :
+    coeff (fun i ↦ r i ⊗ₜ[R] m i) (f.baseChange R') k =
+      (∏ i, r i ^ k i) ⊗ₜ[R] coeff m f k := by
+  have : ∃ κ : Type, Nonempty (ι ≃ κ) := Small.equiv_small
+  obtain ⟨κ, ⟨e⟩⟩ := this
+  have : Fintype κ := Fintype.ofEquiv ι e
+  have : DecidableEq κ := Classical.typeDecidableEq κ
+  set n := m.comp e.symm with hn
+  have hn' : m = n.comp e := by ext; simp [hn]
+  set s := r.comp e.symm with hs
+  have hs' : r = s.comp e := by ext; simp [hs]
+  rw [hn', ← coeff_comp_equiv]
+  set l := k.equivMapDomain e with hl
+  have : ∏ i, r i ^ k i = ∏ i, s i ^ l i := by
+    simp [hs, hl]
+    rw [Fintype.prod_equiv e.symm]
+    simp
+  rw [this, ← coeff_baseChange_tmul', coeff_comp_equiv]
+  congr
+  ext; simp [hs']
+
+variable {R'} in
+theorem baseChange_apply (f : M →ₚₗ[R] N) {S' : Type v} [CommSemiring S']
     [algR'S' : Algebra R' S'] [algRS' : Algebra R S'] [istRR'S' : IsScalarTower R R' S']
     (srm : S' ⊗[R'] (R' ⊗[R] M)) :
     (f.baseChange R').toFun S' srm = baseChangeEquiv.symm (f.toFun S' (baseChangeEquiv srm)) := by
   obtain ⟨m, rfl⟩ := exists_multiset_eq_sum_tmul_tmul' srm
   classical
-  rw [toFun_eq_toFun']
-  erw [Finset.sum_multiset_map_count]
+  rw [toFun_eq_toFun', Finset.sum_multiset_map_count]
   simp_rw [smul_tmul']
-  rw [← Finset.sum_attach, ← Finset.sum_coe_sort_eq_attach]
-  rw [baseChange_toFun'_smul_tmul_tmul_eq_coeff_sum]
-  rw [map_sum]
+  rw [← Finset.sum_attach, ← Finset.sum_coe_sort_eq_attach,
+    baseChange_toFun'_smul_tmul_tmul_eq_coeff_sum, map_sum]
   simp_rw [baseChangeEquiv_tmul_tmul]
-  rw [f.toFun_sum_tmul_eq_coeff_sum]
-  rw [map_finsuppSum]
+  rw [f.toFun_sum_tmul_eq_coeff_sum, map_finsuppSum]
   congr
   ext k n
-  rw [LinearEquiv.eq_symm_apply]
-  rw [baseChangeEquiv_tmul_tmul]
-  congr
-  simp_rw [smul_pow, Algebra.smul_def, Finset.prod_mul_distrib,
-    ← map_prod]
+  rw [LinearEquiv.eq_symm_apply, baseChangeEquiv_tmul_tmul]
+  simp_rw [smul_pow, Algebra.smul_def, Finset.prod_mul_distrib, ← map_prod]
 
 theorem toFun_baseChangeEquiv_one_tmul (f : M →ₚₗ[R] N) (m : R' ⊗[R] M) :
-    f.toFun R' (baseChangeEquiv ((1 : R') ⊗ₜ[R'] m)) = baseChangeEquiv ((1 : R') ⊗ₜ[R'] f.toFun R' m) := by
-  simp [baseChangeEquiv_one_tmul]
+    f.toFun R' (baseChangeEquiv ((1 : R') ⊗ₜ[R'] m)) =
+      baseChangeEquiv ((1 : R') ⊗ₜ[R'] f.toFun R' m) := by simp [baseChangeEquiv_one_tmul]
 
-/- If $f\in\mathscr P_R(M;N)$ is a polynomial law,
-then its ground map $f'$ is the map $M\to N$ deduced from~$f_R$
-after applying the $R$-linear isomorphisms $e_M\colon R\otimes_R M\simeq M$
-and $e_N \colon R\otimes_R N\simeq N$. That is,
+/- If $f\in\mathscr P_R(M;N)$ is a polynomial law, then its ground map $f'$ is the
+map $M\to N$ deduced from~$f_R$ after applying the $R$-linear isomorphisms
+$e_M\colon R\otimes_R M\simeq M$ and $e_N \colon R\otimes_R N\simeq N$. That is,
 $f' = e_N \circ f_R \circ e_M^{-1}$.
 
-Now, if $g$ is the base change of $f$ to~$S$, we want to show
-that its ground is simply the map $f_S\colon S\otimes_R M \to S\otimes_R N$.
+Now, if $g$ is the base change of $f$ to~$S$, we want to show that its ground is simply the
+map $f_S\colon S\otimes_R M \to S\otimes_R N$.
 
-By definition, $g' = e_N \circ g_S \circ e_M^{-1}$
-and $g_S = \alpha_N \circ f_S \circ \alpha_M^{-1}$,
-so that
+By definition, $g' = e_N \circ g_S \circ e_M^{-1}$ and
+$g_S = \alpha_N \circ f_S \circ \alpha_M^{-1}$, so that
 $g' = (e_N \circ \alpha_N) \circ f_S \circ (e_M\circ\alpha_M)^{-1}$.
 
-Note that $e_N\circ\alpha_N$ is the identity isomorphism from
-$S\otimes_R N$ to itself.
+Note that $e_N\circ\alpha_N$ is the identity isomorphism from $S\otimes_R N$ to itself.
 
 -/
 
 theorem baseChange_ground (f : M →ₚₗ[R] N) :
     (f.baseChange R').ground = f.toFun R' := by
   ext m
-  simp only [ground, Function.comp_apply]
-  simp only [← LinearEquiv.eq_symm_apply, lid_symm_apply]
-  rw [← toFun_eq_toFun', baseChange_apply, toFun_baseChangeEquiv_one_tmul, LinearEquiv.symm_apply_apply]
-
-end PolynomialLaw
-
-#exit
-/- -- doesn't work for instances reasons
-theorem baseChangeEquiv_congr {R : Type u} {M : Type*} {R' : Type u} {S' : Type u}
-    [CommSemiring R]
-    [AddCommMonoid M] [Module R M]
-    [AddCommMonoid N] [Module R N]
-    (f : M →ₚₗ[R] N)
-    [CommSemiring R'] [Algebra R R']
-    [CommSemiring S'] [Algebra R' S']
-    [alg1 : Algebra R S'] [ist1 : IsScalarTower R R' S']
-    [alg2 : Algebra R S'] [ist2 : IsScalarTower R R' S']
-    (srm : S' ⊗[R'] R' ⊗[R] M) :
-    let j1 := @baseChangeEquiv R _ M _ _ R' _ _ S' _ _ alg1 ist1
-    let j2 := @baseChangeEquiv R _ M _ _ R' _ _ S' _ _ alg2 ist2
-    @f.toFun' S' _ alg1 (j1 srm) = @f.toFun' S' _ alg2 (j2 srm) := by
-    sorry
--/
-
---set_option pp.proofs true in
-theorem baseChangeEquiv_congr' {R : Type u} {M N : Type*} {R' : Type u} {S' : Type u}
-    [CommSemiring R]
-    [AddCommMonoid M] [Module R M]
-    [AddCommMonoid N] [Module R N]
-    (f : M →ₚₗ[R] N)
-    [CommSemiring R'] [Algebra R R']
-    [CommSemiring S'] [Algebra R' S']
-    [alg1 : Algebra R S'] [ist1 : IsScalarTower R R' S']
-    [alg2 : Algebra R S'] [ist2 : IsScalarTower R R' S']
-    (halg : alg1 = alg2)
-    (srm : S' ⊗[R'] R' ⊗[R] M) :
-    let j1 := @baseChangeEquiv R _ M _ _ R' _ _ S' _ _ alg1 ist1
-    let j2 := @baseChangeEquiv R _ M _ _ R' _ _ S' _ _ alg2 ist2
-    HEq (@f.toFun' S' _ alg1 (j1 srm)) (@f.toFun' S' _ alg2 (j2 srm)) := by
-  simp only
-  apply heq_of_cast_eq
-  swap
-  · congr
-  · aesop
-
-theorem baseChangeEquiv_congr'' {R : Type u} {M N : Type*} {R' : Type*} {S' : Type*}
-    [CommSemiring R]
-    [AddCommMonoid M] [Module R M]
-    [AddCommMonoid N] [Module R N]
-    (f : M →ₚₗ[R] N)
-    [CommSemiring R'] [Algebra R R']
-    [CommSemiring S'] [Algebra R' S']
-    [alg1 : Algebra R S'] [ist1 : @IsScalarTower R R' S' _ _ alg1.toSMul]
-    [alg2 : Algebra R S'] [ist2 : @IsScalarTower R R' S' _ _ alg2.toSMul]
-    (halg : alg1 = alg2)
-    (srm : S' ⊗[R'] R' ⊗[R] M) :
-    --let j1 := @baseChangeEquiv R _ M _ _ R' _ _ S' _ _ alg1 ist1
-    --let j2 := @baseChangeEquiv R _ M _ _ R' _ _ S' _ _ alg2 ist2
-    HEq (@f.toFun R _ M _ _ N _ _ S' _ alg1 (@baseChangeEquiv R _ M _ _ R' _ _ S' _ _ alg1 ist1 srm))
-      (@f.toFun R _ M _ _ N _ _ S' _ alg2 (@baseChangeEquiv R _ M _ _ R' _ _ S' _ _ alg2 ist2 srm)) := by
-  apply heq_of_cast_eq
-  swap
-  · congr
-  · aesop
-
-
-
-theorem baseChangeEquiv_congr {R : Type u} {M N : Type*} {R' : Type*} {S' : Type*}
-    [CommSemiring R]
-    [AddCommMonoid M] [Module R M]
-    [AddCommMonoid N] [Module R N]
-    (f : M →ₚₗ[R] N)
-    [CommSemiring R']
-    [alg3 : Algebra R R'] [alg4 : Algebra R R']
-    [CommSemiring S'] [Algebra R' S']
-    [alg1 : Algebra R S'] [ist1 : @IsScalarTower R R' S' alg3.toSMul _ alg1.toSMul]
-    [alg2 : Algebra R S'] [ist2 : @IsScalarTower R R' S' alg4.toSMul _ alg2.toSMul]
-    (halg : alg1 = alg2) (halg' : alg3 = alg4)
-    (srm : S' ⊗[R'] R' ⊗[R] M)
-    (srm' : @TensorProduct R' _ S' (@TensorProduct R _ R' M _ _ (@Algebra.toModule R R' _ _ alg3) _)
-       _ _ _ (@leftModule R _ R' _ R' M _ _ alg3.toModule _ _
-      (@SMulCommClass.of_commMonoid R R' R' _ alg3.toSMul _
-      (@IsScalarTower.right R R' _ _ alg3) _))) (hsrm : HEq srm srm') :
-    HEq (@f.toFun R _ M _ _ N _ _ S' _ alg1 (@baseChangeEquiv R _ M _ _ R' _ alg3 S' _ _ alg1 ist1
-      srm'))
-      (@f.toFun R _ M _ _ N _ _ S' _ alg2 (@baseChangeEquiv R _ M _ _ R' _ _ S' _ _ alg2 ist2 srm)) := by
-  apply heq_of_cast_eq
-  swap
-  · congr
-  · aesop
-
---attribute [-instance] Algebra.id
-
-section
-
-variable (R : Type u) (M N R' S' : Type*)
-    [CommSemiring R]
-    [AddCommMonoid M] [Module R M]
-    [AddCommMonoid N] [Module R N]
-    (f : M →ₚₗ[R] N)
-    [CommSemiring R']
-    (alg3 : Algebra R R') --(alg4 : Algebra R R')
-    [CommSemiring S'] [Algebra R' S']
-    [alg1 : Algebra R S'] [ist13 : @IsScalarTower R R' S' alg3.toSMul _ alg1.toSMul]
-    --[alg2 : Algebra R S'] --[ist2 : @IsScalarTower R R' S' alg4.toSMul _ alg2.toSMul]
-
-#synth Algebra R R'
-
-theorem baseChange_ground (f : M →ₚₗ[R] N) :
-    (f.baseChange R').ground = f.toFun R' := by
-  ext m
-  simp only [ground, Function.comp_apply]
-  simp only [← LinearEquiv.eq_symm_apply, lid_symm_apply]
-  simp only [baseChange, LinearEquiv.symm_apply_eq]
-
-set_option pp.instances true in
-example :
-    False := by
-  let t := @IsScalarTower.right R R' _ _ alg3
-  let i := @SMulCommClass.of_commMonoid R R' R' _ alg3.toSMul _ t _
-  let m := @leftModule R _ R' _ R' M _ _ alg3.toModule _ _ i
-  let T := S' ⊗[R'] (@TensorProduct R _ R' M _ _ (@Algebra.toModule R R' _ _ alg3) _)
-  let T' := @TensorProduct R' _ S' (@TensorProduct R _ R' M _ _ (@Algebra.toModule R R' _ _ alg3) _)
-   _ _ _ (@leftModule R _ R' _ R' M _ _ alg3.toModule _ _
-     (@SMulCommClass.of_commMonoid R R' R' _ alg3.toSMul _ (@IsScalarTower.right R R' _ _ alg3) _))
-  have : T = T' := rfl
-  sorry
-
-def t : @IsScalarTower R R' R' alg3.toSMul (Monoid.toMulAction R').toSMul alg3.toSMul :=
-  @IsScalarTower.right R R' _ _ alg3
-def i : @SMulCommClass R R' R' alg3.toSMul (Algebra.id R').toSMul :=
-  @SMulCommClass.of_commMonoid R R' R' _ alg3.toSMul _ (t R R' alg3) _
-def m := @leftModule R _ R' _ R' M _ _ alg3.toModule _ _ (i R R' alg3)
-def T2 := (TensorProduct R  R' M)
-
-instance : AddCommMonoid (T2 R M R' alg3) := addCommMonoid
-
-instance mod2' : Module R' (T2 R M R' alg3) :=
-  @leftModule R _ R' _ R' M _ _ alg3.toModule _ _ alg3.to_smulCommClass
-
-instance mod2 : Module R (T2 R M R' alg3) :=
-  @TensorProduct.instModule R _ R' M _ _ alg3.toModule _
-
-instance ist2 : @IsScalarTower R R' (T2 R M R' alg3) alg3.toSMul
-  (mod2' R M R' alg3).toSMul (mod2 R M R' alg3).toSMul where
-  smul_assoc r r' z := by
-    unfold T2 at z
-    induction z using TensorProduct.induction_on with
-    | zero => simp
-    | add x y hx hy => simp only [smul_add, hx, hy]
-    | tmul x m => rw [smul_tmul', IsScalarTower.smul_assoc r r' x, smul_tmul', smul_tmul']
-
-def T3 := TensorProduct R' S' (T2 R M R' alg3)
-
-instance : AddCommMonoid (T3 R M R' S' alg3) := addCommMonoid
-
-instance : Module R' (T3 R M R' S' alg3) := TensorProduct.instModule
-
-variable (alg4 : Algebra R R')
-    [alg2 : Algebra R S'] [ist24 : @IsScalarTower R R' S' alg4.toSMul _ alg2.toSMul]
-/-
-example : @Algebra.toModule R R' _ _ alg3 = alg3.toModule  := rfl
-#check alg3.toModule  -/
-
-set_option pp.instances true in
-def foo2_addhom : T2 R M R' alg3 →+ T2 R M R' alg4 := by
-  unfold T2
-  apply @TensorProduct.liftAddHom R _ R' M (T2 R M R' alg4) _ _ _
-    alg3.toModule _ _ (f := {
-    toFun r' := {
-      toFun m := TensorProduct.tmul R r' m
-      map_zero' := by simp
-      map_add' x y := by simp [tmul_add] }
-    map_zero' := by aesop
-    map_add' x y := by ext; simp [add_tmul] })
-  intro r r' m
-  simp only [AddMonoidHom.coe_mk, ZeroHom.coe_mk, tmul_smul]
-  have := @smul_tmul' R _ R _ R' M _ _ alg4.toModule _ alg4.toModule.toDistribMulAction
-    _ r r' m
-  rw [← this]
-  sorry
-  apply CompatibleSMul.mk
-  intro r r' m
-  sorry
-
-
-
-def foo2 : T2 R M R' alg3 ≃ₗ[R'] T2 R M R' alg4 := by
-  unfold T2
-  sorry
-
-variable (r : R) (x : R') (m : M)
-
-example : R → R' → R' := @SMul.smul R R' alg3.toSMul
-
-lemma smul_eq : @SMul.smul R R' alg3.toSMul r x = @SMul.smul R R' alg4.toSMul r x := sorry
-
-example (r : R) (m : M) : alg3.toAlgHom _ _ r = alg4.toAlgHom _ _ r := by
-
-  sorry
-
-#check LinearMap
-
-#check  @LinearMap R R _ _ (RingHom.id R) R' R' _ _ alg3.toModule alg4.toModule
-
-def foo'' : @AddHom R' R' _ _  := AddHom.id R'
-
-set_option trace.Meta.synthInstance true in
-def foo' : @MulActionHom R R (RingHom.id R) R' alg3.toSMul R' alg4.toSMul := {
-  AddHom.id R' with
-  map_smul' r x : @SMul.smul R R' alg3.toSMul r x = @SMul.smul R R' alg4.toSMul r x :=
-    smul_eq R R' alg3 alg4 r x}
-
-def foo'' : @LinearMap R R _ _ (RingHom.id R) R' R' _ _ alg3.toModule alg4.toModule := {
-  AddHom.id R' with
-  map_smul' r x := smul_eq R R' alg3 alg4 r x }
-
-def foo_mulactionhom : @MulActionHom R R id (R' ⊗[R] M) alg3.toSMul
-  (R' ⊗[R] M) alg4.toSMul where
-  toFun := id
-  map_add' := sorry
-  map_smul' := sorry
-
-def foo''' : @LinearMap R R _ _ (RingHom.id R) (R' ⊗[R] M) R' _ _ alg3.toModule alg4.toModule where
-  toFun := ?toFun
-  map_add' := ?map_add'
-  map_smul' := ?map_smul'
-
-def foo2 : T2 R M R' alg3 ≃ₗ[R'] T2 R M R' alg4 := by
-  unfold T2
-
-
-
-def foo3 : T3 R M R' S' alg3 ≃ₗ[R'] T3 R M R' S' alg4 := by
-  unfold T3
-  apply LinearEquiv.lTensor
---set_option pp.all true in
-
-theorem baseChange_ground (f : M →ₚₗ[R] N) :
-    (f.baseChange R').ground = f.toFun R' := by
-  ext m
-  simp only [ground, Function.comp_apply]
-  simp only [← LinearEquiv.eq_symm_apply, lid_symm_apply]
-  simp only [baseChange, LinearEquiv.symm_apply_eq]
-  --rw [← toFun_baseChangeEquiv_one_tmul R' f m]
-  have : f.toFun R' (baseChangeEquiv (1 ⊗ₜ[R'] m)) = baseChangeEquiv (1 ⊗ₜ[R'] f.toFun R' m) :=
-    toFun_baseChangeEquiv_one_tmul _ _ _
-  rename_i alg1 _
-  set alg2 : Algebra R R' :=
-    RingHom.toAlgebra ((algebraMap R' R').comp (algebraMap R R'))
-  let _ : Module R' (R' ⊗[R] M) := leftModule
-  let e := @baseChangeEquiv R _ M _ _ R' _ alg4 R' _ _ alg4 _
-  have : e ((1 : R') ⊗ₜ m) = 0 := sorry
-  convert this using 1
-  · congr
-    exact Algebra.algebra_ext ((algebraMap R' R').comp (algebraMap R R')).toAlgebra _
-        (congrFun rfl)
-  · rename_i alg1 _
-    let alg2 : Algebra R R' :=
-      RingHom.toAlgebra ((algebraMap R' R').comp (algebraMap R R'))
-    have ist2 : @IsScalarTower R R' R' _ _ alg2.toSMul :=
-      IsScalarTower.of_algebraMap_eq (fun r ↦ by simp [RingHom.algebraMap_toAlgebra])
-    have ist1 : @IsScalarTower R R' R' (@Algebra.toSMul R R' _ _ alg1)
-      (Algebra.id R').toSMul alg1.toSMul := sorry
-    have halg : alg1 = alg2 := sorry
-
-    have := baseChangeEquiv_congr (alg1 := alg1) (alg2 := alg2) (alg3 := alg1)
-      --(ist1 := IsScalarTower.of_algebraMap_eq (fun r ↦ by simp [RingHom.algebraMap_toAlgebra]))
-      (ist2 := ist2) (ist1 := ist1) f halg halg
-    let t := @IsScalarTower.right R R' _ _ alg1
-    let i := @SMulCommClass.of_commMonoid R R' R' _ alg1.toSMul _ t _
-    let hm := @leftModule R _ R' _ R' M _ _ alg1.toModule _ _ i
-    specialize this (1 ⊗ₜ[R'] (cast _ m)) (1 ⊗ₜ[R'] m)
-    · congr
-    · --rw [this]
-      --have : HEq  ((1 : R') ⊗ₜ[R'] (cast _ m)) ((1 : R')  ⊗ₜ[R'] m) := sorry
-      apply HEq.trans _ (HEq.comm.mp (this ?_))
-
-      ·
-        sorry
-      · sorry
-  · apply heq_of_cast_eq
-    swap
-    · congr
-    · simp only [Algebra.algebraMap_self]
-      sorry
-
-    /- · sorry
-    convert this
-    · sorry
-    ·
-      sorry
-
-    ·
-      sorry
-  · sorry -/
-  /- · exact Algebra.algebra_ext ((algebraMap R' R').comp (algebraMap R R')).toAlgebra _
-        (congrFun rfl)
-  · apply heq_of_cast_eq
-    swap
-    · congr
-    · simp only [cast, Algebra.algebraMap_self]
-      aesop
-      sorry -/
-    /- simp only [Algebra.algebraMap_self]
-    simp only [baseChangeEquiv_one_tmul]
-
-    induction m using TensorProduct.induction_on with
-    | zero =>
-      simp
-      (expose_names;
-        refine
-          heq_of_eqRec_eq
-            (congrFun
-              (congrArg
-                (@TensorProduct R inst R' M inst_5.toNonAssocSemiring.toAddCommMonoid inst_1)
-                (congrArg (@Algebra.toModule R R' inst inst_5.toSemiring) e_12))
-              inst_2)
-            ?_)
-
-      sorry
-    | add => sorry
-    | tmul => sorry -/
-
-  /- set alg : Algebra R R' := inferInstance
-  have halg : alg = ((algebraMap R' R').comp (algebraMap R R')).toAlgebra := sorry
-  have := baseChangeEquiv_one_tmul (f.toFun R' m)
-
-  /- have := @baseChangeEquiv_one_tmul R _ N _ _ R' _
-    (((algebraMap R' R').comp (algebraMap R R')).toAlgebra)
-    (f.toFun R' m)
-  erw [this] -/
-  induction m using TensorProduct.induction_on with
-  | zero =>
-
-    rw [baseChangeEquiv_one_tmul]
-  | add => sorry
-  | tmul r m =>
-    simp only [Algebra.algebraMap_self, baseChangeEquiv_tmul_tmul, smul_eq_mul, mul_one]
-  --simp only [Algebra.algebraMap_self, baseChangeEquiv, LinearEquiv.trans_apply]
-  --simp? [AlgebraTensorModule.assoc_symm_tmul] -/
-
-
-
+  simp only [ground, Function.comp_apply, ← LinearEquiv.eq_symm_apply, lid_symm_apply]
+  rw [← toFun_eq_toFun', baseChange_apply, toFun_baseChangeEquiv_one_tmul,
+    LinearEquiv.symm_apply_apply]
 
 end PolynomialLaw

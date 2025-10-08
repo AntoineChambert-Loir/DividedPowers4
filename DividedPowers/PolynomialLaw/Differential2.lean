@@ -1,81 +1,34 @@
-import DividedPowers.PolynomialLaw.Homogeneous
-import Mathlib.LinearAlgebra.TensorProduct.Prod
+import DividedPowers.ForMathlib.Algebra.Module.LinearMap.Defs
+import DividedPowers.ForMathlib.RingTheory.TensorProduct.Polynomial
+import DividedPowers.PolynomialLaw.Linear
+import DividedPowers.PolynomialLaw.LocFinsupp
+import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Prod
+
+/-! # Differentials of polynomial laws (work in progress)
+
+In this file we propose a second approach for the definition of the differential of a polynomial
+law, using the characterization right after [Roby63, definition in pg. 239].
+
+## Main definitions
+
+* `PolynomialLaw.dividedDifferential'`: the differential of order `k` of a polynomial law,
+  denoted by `D^k f` in [Roby63].
+
+* `PolynomialLaw.dividedPartialDerivative'`: the `n`th divided partial derivative of `f` at `x`.
+
+## TODO
+
+* Prove the Taylor formula for polynomial laws [Roby63, Prop. II.2]
+
+-/
 
 universe u
 
 open TensorProduct Polynomial LinearMap
 
--- Recent additions to Mathlib
-namespace LinearMap
-
-variable {R : Type u} {S M N P Q : Type*} [CommSemiring R]
-  [AddCommMonoid M] [Module R M]
-  [AddCommMonoid N] [Module R N]
-  [AddCommMonoid P] [Module R P]
-  [AddCommMonoid Q] [Module R Q]
-  [AddCommMonoid S] [Module R S]
-
-@[simp]
-lemma restrictScalars_self (f : M →ₗ[R] N) : f.restrictScalars R = f := rfl
-
-@[simp]
-lemma rTensor_map (f' : P →ₗ[R] S) (f : M →ₗ[R] P) (g : N →ₗ[R] Q) (x : M ⊗[R] N) :
-    f'.rTensor Q (map f g x) = map (f' ∘ₗ f) g x :=
-  LinearMap.congr_fun (rTensor_comp_map _ _ f g) x
-
-@[simp]
-lemma lTensor_map (g' : Q →ₗ[R] S) (f : M →ₗ[R] P) (g : N →ₗ[R] Q) (x : M ⊗[R] N) :
-    g'.lTensor P (map f g x) = map f (g' ∘ₗ g) x :=
-  LinearMap.congr_fun (lTensor_comp_map _ _ f g) x
-
-@[simp]
-theorem map_rTensor (f : M →ₗ[R] P) (g : N →ₗ[R] Q) (f' : S →ₗ[R] M) (x : S ⊗[R] N) :
-    map f g (f'.rTensor _ x) = map (f.comp f') g x :=
-  LinearMap.congr_fun (map_comp_rTensor _ _ _ _) x
-
-@[simp]
-lemma map_lTensor (f : M →ₗ[R] P) (g : N →ₗ[R] Q) (g' : S →ₗ[R] N) (x : M ⊗[R] S) :
-    map f g (g'.lTensor M x) = map f (g ∘ₗ g') x :=
-  LinearMap.congr_fun (map_comp_lTensor _ _ _ _) x
-
-end LinearMap
-
 namespace TensorProduct
 
-variable (R : Type u) (S T M₁ M₁' M₂ M₃ : Type*)
-    [CommSemiring R] [Semiring S] [Semiring T]
-    [AddCommMonoid M₁] [AddCommMonoid M₁'] [AddCommMonoid M₂] [AddCommMonoid M₃]
-    [Algebra R S] [Algebra R T]
-    [Module R M₁] [Module R M₁']
-    [Module S M₁] [Module T M₁']
-    [IsScalarTower R S M₁]
-    [IsScalarTower R T M₁']
-    [Module R M₂] [Module R M₃]
---   M₁ ⊗[R] (M₂ × M₃) ≃ₗ[S] M₁ ⊗[R] M₂ × M₁ ⊗[R] M₃
-
-theorem prodRight_rTensor₁ (φ : M₁ →ₗ[R] M₁') (t : M₁ ⊗[R] (M₂ × M₃)) :
-    ((prodRight R T M₁' M₂ M₃) ((LinearMap.rTensor (M₂ × M₃) φ) t)).1 =
-    (LinearMap.rTensor M₂ φ) ((prodRight R S M₁ M₂ M₃) t).1 := by
-  induction t using TensorProduct.induction_on with
-  | zero => simp
-  | tmul t m => simp
-  | add x y hx hy => simp [map_add, ← hx, ← hy]
-
-theorem prodRight_rTensor₂ (φ : M₁ →ₗ[R] M₁') (t : M₁ ⊗[R] (M₂ × M₃)) :
-    ((prodRight R T M₁' M₂ M₃) ((LinearMap.rTensor (M₂ × M₃) φ) t)).2 =
-    (LinearMap.rTensor M₃ φ) ((prodRight R S M₁ M₂ M₃) t).2 := by
-  induction t using TensorProduct.induction_on with
-  | zero => simp
-  | tmul t m => simp
-  | add x y hx hy => simp [map_add, ← hx, ← hy]
-
-theorem prodRight_symm_rTensor (φ : M₁ →ₗ[R] M₁') (m₂ : M₁ ⊗[R] M₂) (m₃ : M₁ ⊗[R] M₃) :
-    ((prodRight R T M₁' M₂ M₃).symm ((LinearMap.rTensor M₂ φ) m₂, (LinearMap.rTensor M₃ φ) m₃)) =
-        LinearMap.rTensor (M₂ × M₃) φ ((prodRight R S M₁ M₂ M₃).symm (m₂, m₃)) := by
-  rw [LinearEquiv.symm_apply_eq]
-  ext
-  · simp [prodRight_rTensor₁ R S T]
-  · simp [prodRight_rTensor₂ R S T]
+variable (R : Type u) (M₁ : Type*) [CommSemiring R] [AddCommMonoid M₁] [Module R M₁]
 
 theorem prodRight_symm_apply {S : Type u} [CommSemiring S] [Algebra R S] (m m' : S ⊗[R] M₁) :
     (prodRight R S S M₁ M₁).symm (m, m') =
@@ -102,11 +55,10 @@ end Polynomial
 
 namespace PolynomialLaw
 
-variable {R : Type u} [CommSemiring R]
-  {M : Type*} [AddCommMonoid M] [Module R M]
-  {N : Type*} [AddCommMonoid N] [Module R N]
+variable {R : Type u} [CommSemiring R] {M N : Type*} [AddCommMonoid M] [Module R M]
+  [AddCommMonoid N] [Module R N]
 
-/-- maps ⟨m1, m2⟩ to m1 + T m2 -/
+/-- maps `(m1, m2)` to `m1 + T m2` -/
 noncomputable def generize₂ {S : Type*} [CommSemiring S] [Algebra R S] :
     S ⊗[R] (M × M) →ₗ[S] Polynomial S ⊗[R] M :=
   map' (monomial 0) LinearMap.id ∘ₗ baseChange S (fst R M M) +
@@ -149,7 +101,8 @@ theorem generize₂_rTensor_eq_rTensor_mapAlgHom_generize₂
   | tmul s m => simp [generize₂, map'_coe, map_tmul]
   | add x y hx hy => simp [map_add, ← hx, ← hy]
 
-noncomputable def dividedDifferential (k : ℕ) : (M →ₚₗ[R] N) →ₗ[R] (M × M →ₚₗ[R] N) where
+/-- The differential of order `k` of a polynomial law, denoted by `D^k f` in [Roby63]. -/
+noncomputable def dividedDifferential' (k : ℕ) : (M →ₚₗ[R] N) →ₗ[R] (M × M →ₚₗ[R] N) where
   toFun f := {
     toFun' S _ _ m := ((lcoeff S k).restrictScalars R).rTensor N (f.toFun' _ (generize₂ m))
     isCompat' {S} _ _ {S'} _ _ φ := by
@@ -164,22 +117,22 @@ noncomputable def dividedDifferential (k : ℕ) : (M →ₚₗ[R] N) →ₗ[R] (
   map_add' f g := by ext; simp
   map_smul' s f := by ext; simp
 
-lemma dividedDifferential_ground_eq_coeff (k : ℕ) (f : M →ₚₗ[R] N) (m m' : M) :
-    f.dividedDifferential k (m, m') =
+lemma dividedDifferential'_ground_eq_coeff (k : ℕ) (f : M →ₚₗ[R] N) (m m' : M) :
+    f.dividedDifferential' k (m, m') =
       Polynomial.scalarRTensor R N (f.toFun' (Polynomial R)
         ((1 : Polynomial R) ⊗ₜ[R] m + Polynomial.X (R := R) ⊗ₜ[R] m')) k := by
-  simp [dividedDifferential, generize₂, add_apply, coe_comp, coe_mk, AddHom.coe_mk,
+  simp [dividedDifferential', generize₂, add_apply, coe_comp, coe_mk, AddHom.coe_mk,
     Function.comp_apply, ground_apply, baseChange_tmul, fst_apply, map_tmul,
     monomial_zero_left, map_one, id_coe, id_eq, snd_apply, monomial_one_one_eq_X,
     scalarRTensor_apply]
 
-lemma dividedDifferential_eq_coeff' (k : ℕ) (f : M →ₚₗ[R] N)
+lemma dividedDifferential'_eq_coeff' (k : ℕ) (f : M →ₚₗ[R] N)
     (S : Type u) [CommSemiring S] [Algebra R S] (m m' : S ⊗[R] M) :
-    (f.dividedDifferential k).toFun' S ((prodRight R S S M M).symm (m, m')) =
+    (f.dividedDifferential' k).toFun' S ((prodRight R S S M M).symm (m, m')) =
       ((lcoeff S k).restrictScalars R).rTensor N
         (f.toFun' (Polynomial S) (((monomial 0).restrictScalars R).rTensor M m +
           ((monomial 1).restrictScalars R).rTensor M m')) := by
-  simp [dividedDifferential, map'_coe, generize₂]
+  simp [dividedDifferential', map'_coe, generize₂]
   congr 2
   set mm' := (prodRight R S S M M).symm (m, m') with hmm'
   have hm : m = (prodRight R S S M M mm').1 := by simp [hmm']
@@ -191,9 +144,9 @@ lemma dividedDifferential_eq_coeff' (k : ℕ) (f : M →ₚₗ[R] N)
   | add x y hx hy =>
     simp [map_add, add_add_add_comm, ← hx, ← hy]
 
-lemma dividedDifferential_eq_coeff (k : ℕ) (f : M →ₚₗ[R] N)
+lemma dividedDifferential'_eq_coeff (k : ℕ) (f : M →ₚₗ[R] N)
     (S : Type*) [CommSemiring S] [Algebra R S] (m m' : S ⊗[R] M) :
-    (f.dividedDifferential k).toFun S ((prodRight R S S M M).symm (m, m')) =
+    (f.dividedDifferential' k).toFun S ((prodRight R S S M M).symm (m, m')) =
       ((lcoeff S k).restrictScalars R).rTensor N
         (f.toFun (Polynomial S) (((monomial 0).restrictScalars R).rTensor M m +
           ((monomial 1).restrictScalars R).rTensor M m')) := by
@@ -206,7 +159,7 @@ lemma dividedDifferential_eq_coeff (k : ℕ) (f : M →ₚₗ[R] N)
     simp only [LinearMap.rTensor_comp_apply]
     rw [← map_add, ← f.isCompat_apply, ← LinearMap.rTensor_comp_apply,
       prodRight_symm_rTensor R (MvPolynomial (Fin n) R) S, ← PolynomialLaw.isCompat_apply]
-    simp [toFun_eq_toFun', dividedDifferential_eq_coeff', ← rTensor_comp_apply,
+    simp [toFun_eq_toFun', dividedDifferential'_eq_coeff', ← rTensor_comp_apply,
       lcoeff_comp_mapAlgHom]
   set mm' := (prodRight R S S M M).symm (m, m') with hmm'
   have hm : m = (prodRight R S S M M mm').1 := by simp [hmm']
@@ -220,25 +173,25 @@ lemma dividedDifferential_eq_coeff (k : ℕ) (f : M →ₚₗ[R] N)
 variable (S : Type*) [CommSemiring S] [Algebra R S] (f : M →ₚₗ[R] N)
 
 -- Roby63, pg 239
-lemma dividedDifferential_smul_right' (k : ℕ) (f : M →ₚₗ[R] N) (r : R)
+lemma dividedDifferential'_smul_right' (k : ℕ) (f : M →ₚₗ[R] N) (r : R)
     (S : Type u) [CommSemiring S] [Algebra R S] (m m' : S ⊗[R] M) :
-    (f.dividedDifferential k).toFun' S ((prodRight R S S M M).symm (m, r • m')) =
-      r ^ k • (f.dividedDifferential k).toFun' S ((prodRight R S S M M).symm (m, m')) := by
-  rw [dividedDifferential_eq_coeff', dividedDifferential_eq_coeff']
+    (f.dividedDifferential' k).toFun' S ((prodRight R S S M M).symm (m, r • m')) =
+      r ^ k • (f.dividedDifferential' k).toFun' S ((prodRight R S S M M).symm (m, m')) := by
+  rw [dividedDifferential'_eq_coeff', dividedDifferential'_eq_coeff']
   simp only [← map_smul]
   sorry
 
 -- Roby63, pg 239
-lemma dividedDifferential_smul_right (k : ℕ) (f : M →ₚₗ[R] N) (r : R)
+lemma dividedDifferential'_smul_right (k : ℕ) (f : M →ₚₗ[R] N) (r : R)
     (S : Type*) [CommSemiring S] [Algebra R S] (m m' : S ⊗[R] M) :
-    (f.dividedDifferential k).toFun S ((prodRight R S S M M).symm (m, r • m')) =
-      r ^ k • (f.dividedDifferential k).toFun S ((prodRight R S S M M).symm (m, m')) := by
+    (f.dividedDifferential' k).toFun S ((prodRight R S S M M).symm (m, r • m')) =
+      r ^ k • (f.dividedDifferential' k).toFun S ((prodRight R S S M M).symm (m, m')) := by
   sorry
 
 /-- The nth divided partial derivative of `f` at `x`. -/
-noncomputable def dividedPartialDerivative (k : ℕ) (x : M) :
+noncomputable def dividedPartialDerivative' (k : ℕ) (x : M) :
     (M →ₚₗ[R] N) →ₗ[R] (M →ₚₗ[R] N) where
-  toFun f := (f.dividedDifferential k).comp ((inl R M M).toPolynomialLaw +
+  toFun f := (f.dividedDifferential' k).comp ((inl R M M).toPolynomialLaw +
     (inr R M M).toPolynomialLaw.comp (const R M M x))
   map_add' f g := by
     ext S _ _ sm
@@ -248,31 +201,27 @@ noncomputable def dividedPartialDerivative (k : ℕ) (x : M) :
     simp [map_smul, comp_toFun', smul_def, add_def, Function.comp_apply, Pi.add_apply,
       Pi.smul_apply, RingHom.id_apply]
 
-lemma dividedPartialDerivative_apply' (k : ℕ) (x : M) (f : M →ₚₗ[R] N)
+lemma dividedPartialDerivative'_apply' (k : ℕ) (x : M) (f : M →ₚₗ[R] N)
     {S : Type u} [CommSemiring S] [Algebra R S] (m : S ⊗[R] M) :
-    ((dividedPartialDerivative k x) f).toFun' S m =
-      ((dividedDifferential k) f).toFun' S ((inl R M M).toPolynomialLaw.toFun' S m +
+    ((dividedPartialDerivative' k x) f).toFun' S m =
+      ((dividedDifferential' k) f).toFun' S ((inl R M M).toPolynomialLaw.toFun' S m +
         (inr R M M).toPolynomialLaw.toFun' S (1 ⊗ₜ[R] x)) := by
-  unfold dividedPartialDerivative
+  unfold dividedPartialDerivative'
   simp [comp_toFun', const]
 
-lemma dividedPartialDerivative_apply (k : ℕ) (x : M) (f : M →ₚₗ[R] N)
+lemma dividedPartialDerivative'_apply (k : ℕ) (x : M) (f : M →ₚₗ[R] N)
     {S : Type*} [CommSemiring S] [Algebra R S] (m : S ⊗[R] M) :
-    ((dividedPartialDerivative k x) f).toFun S m =
-      ((dividedDifferential k) f).toFun S ((inl R M M).toPolynomialLaw.toFun S m +
+    ((dividedPartialDerivative' k x) f).toFun S m =
+      ((dividedDifferential' k) f).toFun S ((inl R M M).toPolynomialLaw.toFun S m +
         (inr R M M).toPolynomialLaw.toFun S (1 ⊗ₜ[R] x)):= by
   sorry
 
-
-
--- Add the same for `dividedDifferential`?
-
-theorem dividedPartialDerivative_zero (x : M) (f : M →ₚₗ[R] N) :
-    f.dividedPartialDerivative 0 x = f := by
+theorem dividedPartialDerivative'_zero (x : M) (f : M →ₚₗ[R] N) :
+    f.dividedPartialDerivative' 0 x = f := by
   ext S _ _ m
-  rw [dividedPartialDerivative_apply']
+  rw [dividedPartialDerivative'_apply']
   simp only [toPolynomialLaw, LinearMap.baseChange, inl]
-  convert dividedDifferential_eq_coeff' 0 f S m (1 ⊗ₜ[R] x)
+  convert dividedDifferential'_eq_coeff' 0 f S m (1 ⊗ₜ[R] x)
   simp only [rTensor_tmul, coe_restrictScalars]
   let c0 : S[X] →ₐ[R] S := {
     lcoeff S 0 with
@@ -292,50 +241,46 @@ theorem dividedPartialDerivative_zero (x : M) (f : M →ₚₗ[R] N) :
     simp
   | tmul => simp
 
-theorem dividedPartialDerivative_smul_right (k : ℕ) (x : M) (r : R) (f : M →ₚₗ[R] N) :
-    f.dividedPartialDerivative k (r • x) = r ^ k • f.dividedPartialDerivative k x := by
+theorem dividedPartialDerivative'_smul_right (k : ℕ) (x : M) (r : R) (f : M →ₚₗ[R] N) :
+    f.dividedPartialDerivative' k (r • x) = r ^ k • f.dividedPartialDerivative' k x := by
   ext S _ _ m
-  simp only [smul_def, Pi.smul_apply, dividedPartialDerivative_apply', tmul_smul]
-  rw [← prodRight_symm_apply, ← prodRight_symm_apply, dividedDifferential_smul_right']
+  simp only [smul_def, Pi.smul_apply, dividedPartialDerivative'_apply', tmul_smul]
+  rw [← prodRight_symm_apply, ← prodRight_symm_apply, dividedDifferential'_smul_right']
 
-theorem dividedPartialDerivative_one_of_LinearMap (x : M) (f : M →ₗ[R] N) :
-    f.toPolynomialLaw.dividedPartialDerivative 1 x = f.toPolynomialLaw := by
+theorem dividedPartialDerivative'_one_of_LinearMap (x : M) (f : M →ₗ[R] N) :
+    f.toPolynomialLaw.dividedPartialDerivative' 1 x = f.toPolynomialLaw := by
   ext S _ _ m
-  unfold dividedPartialDerivative
+  unfold dividedPartialDerivative'
   sorry
 
-theorem dividedPartialDerivative_commute (k : ℕ) (x : M) (l : ℕ) (y : M) :
-    Commute (dividedPartialDerivative (N := N) (R := R) k x) (dividedPartialDerivative l y) :=
+theorem dividedPartialDerivative'_commute (k : ℕ) (x : M) (l : ℕ) (y : M) :
+    Commute (dividedPartialDerivative' (N := N) (R := R) k x) (dividedPartialDerivative' l y) :=
   sorry
 
-theorem locFinite_dividedPartialDerivative (x : M) (f : M →ₚₗ[R] N) :
-    LocFinsupp (fun k ↦ f.dividedPartialDerivative k x) :=
+theorem locFinite_dividedPartialDerivative' (x : M) (f : M →ₚₗ[R] N) :
+    LocFinsupp (fun k ↦ f.dividedPartialDerivative' k x) :=
   sorry
-
-def translation (a : M) : (M →ₚₗ[R] N) →ₗ[R] (M →ₚₗ[R] N) where
-  toFun f := {
-    toFun' S _ _ m := f.toFun' S (m + 1 ⊗ₜ[R] a)
-    isCompat' := sorry }
-  map_add' := sorry
-  map_smul' := sorry
 
 -- Taylor formula
 example (f : M →ₚₗ[R] N) :
-    lfsum (fun k ↦ f.dividedDifferential k) = f.comp (fst R M M + snd R M M).toPolynomialLaw :=
+    lfsum (fun k ↦ f.dividedDifferential' k) = f.comp (fst R M M + snd R M M).toPolynomialLaw :=
   sorry
 
 -- Taylor formula
-theorem lfsum_dividedPartialDerivative (x : M) (f : M →ₚₗ[R] N) :
-    lfsum (fun k ↦ f.dividedPartialDerivative k x) = f.translation x :=
+theorem lfsum_dividedPartialDerivative' (x : M) (f : M →ₚₗ[R] N) :
+    lfsum (fun k ↦ f.dividedPartialDerivative' k x) = f.translation x :=
   sorry
 
 -- Roby63, pg 240 (Prop. II.2)
-lemma dividedPartialDerivative_comp {n p : ℕ} (x : M) (f : M →ₚₗ[R] N) :
-    dividedPartialDerivative n x (dividedPartialDerivative p x f) =
-      (n.choose p) * dividedPartialDerivative (n + p) x f := by
+lemma dividedPartialDerivative'_comp {n p : ℕ} (x : M) (f : M →ₚₗ[R] N) :
+    dividedPartialDerivative' n x (dividedPartialDerivative' p x f) =
+      (n.choose p) * dividedPartialDerivative' (n + p) x f := by
   sorry
 
 end  PolynomialLaw
+
+
+-- OLD
 
 section Junk
 

@@ -3,7 +3,7 @@ import DividedPowers.ForMathlib.Algebra.BigOperators.Group.Finset.Basic
 import DividedPowers.ForMathlib.RingTheory.SubmoduleMem
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.Basic
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.MvPolynomial
-import DividedPowers.PolynomialLaw.Basic2
+import DividedPowers.PolynomialLaw.Basic
 
 universe u
 

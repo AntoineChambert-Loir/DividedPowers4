@@ -1,6 +1,10 @@
-import Mathlib.RingTheory.PolynomialLaw.Basic
-import DividedPowers.PolynomialLaw.Basic2
+/-
+Copyright (c) 2025 Antoine Chambert-Loir, María Inés de Frutos-Fernández. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
+-/
 import DividedPowers.ForMathlib.Algebra.BigOperators.Group.Finset.Basic
+import DividedPowers.PolynomialLaw.Basic
 
 /-! # Locally finite families of polynomial maps and their sums
 
@@ -11,7 +15,8 @@ import DividedPowers.ForMathlib.Algebra.BigOperators.Group.Finset.Basic
 * `PolynomialLaw.LocFinsupp.sum`: the sum of a locally finite family of polynomial laws,
   as a polynomial law.
 
-* `PolynomialLaw.lfsum` : the sum of an arbitray family of polynomial laws, extended by `0` when it is not locally finite.
+* `PolynomialLaw.lfsum` : the sum of an arbitray family of polynomial laws, extended by `0` when
+  it is not locally finite.
 
 -/
 
@@ -19,12 +24,8 @@ namespace PolynomialLaw
 
 universe u
 
-variable {R : Type u} [CommSemiring R]
-  {M N : Type*} [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module R N]
-  {ι : Type*} {f g : ι → M →ₚₗ[R] N}
-
-/- **MI** : The file now works assuming the weaker hypotheses `CommSemiring R`, `CommSemiring S`,
-  `AddCommMonoid M`, `AddCommMonoid N`. -/
+variable {R : Type u} [CommSemiring R] {M N ι : Type*} [AddCommMonoid M] [Module R M]
+  [AddCommMonoid N] [Module R N] {f g : ι → M →ₚₗ[R] N}
 
 section LocFinsupp
 
@@ -44,16 +45,13 @@ theorem locFinsupp_add (hf : LocFinsupp f) (hg : LocFinsupp g) : LocFinsupp (f +
   fun S _ _ m ↦ (Set.finite_union.mpr ⟨hf S m, hg S m⟩).subset (support_add _ _)
 
 theorem locFinsupp_zero : LocFinsupp (0 : ι → M →ₚₗ[R] N) :=
-  fun S _ _ _ ↦ by
-    simp [zero_def, Function.support_zero, Set.finite_empty]
+  fun S _ _ _ ↦ by simp [zero_def, Set.finite_empty]
 
 theorem locFinsupp_smul (hf : LocFinsupp f) (r : R) :
-    LocFinsupp (r • f) :=
-  fun S _ _ m ↦ (hf S m).subset (Function.support_smul_subset_right _ _)
+    LocFinsupp (r • f) := fun S _ _ m ↦ (hf S m).subset (Function.support_smul_subset_right _ _)
 
 variable (f) in
-lemma locFinsupp_of_fintype [Fintype ι] : LocFinsupp f :=
-  fun _ _ _ _ ↦ Set.toFinite _
+lemma locFinsupp_of_fintype [Fintype ι] : LocFinsupp f := fun _ _ _ _ ↦ Set.toFinite _
 
 variable (R M N) in
 /-- The submodule of families of polynomial laws which have locally finite support.  -/
@@ -82,8 +80,7 @@ noncomputable def LocFinsupp.sum (hf : LocFinsupp f) :
 
 theorem LocFinsupp.sum_toFun'_eq_finsupp_sum (hf : LocFinsupp f)
     (S : Type u) [CommSemiring S] [Algebra R S] (m : S ⊗[R] M) :
-    hf.sum.toFun' S m = (ofSupportFinite _ (hf S m)).sum fun _ m ↦ m :=
-  rfl
+    hf.sum.toFun' S m = (ofSupportFinite _ (hf S m)).sum fun _ m ↦ m := rfl
 
 theorem support_ground_finite (hf : LocFinsupp f) (m : M) :
     (Function.support fun i ↦ (f i).ground m).Finite := by
@@ -97,8 +94,7 @@ theorem LocFinsupp.sum_ground_eq_finsupp_sum (hf : LocFinsupp f)
     hf.sum.ground m =
       (ofSupportFinite (fun i ↦ (f i).ground m) (support_ground_finite hf m)).sum fun _ m ↦ m := by
   simp only [ground, Function.comp_apply, lid_symm_apply]
-  rw [hf.sum_toFun'_eq_finsupp_sum]
-  rw [map_finsuppSum, Finsupp.sum, Finsupp.sum]
+  rw [hf.sum_toFun'_eq_finsupp_sum, map_finsuppSum, Finsupp.sum, Finsupp.sum]
   congr
   ext i
   simp only [Finsupp.mem_support_iff, ofSupportFinite_coe, ne_eq, EmbeddingLike.map_eq_zero_iff]
@@ -115,14 +111,12 @@ theorem LocFinsupp.support_toFun_finite (hf : LocFinsupp f)
 
 theorem LocFinsupp.sum_toFun_eq_finsupp_sum (hf : LocFinsupp f)
     (S : Type*) [CommSemiring S] [Algebra R S] (m : S ⊗[R] M) :
-    hf.sum.toFun S m =
-      (ofSupportFinite (fun i ↦ (f i).toFun S m) (hf.support_toFun_finite S m)).sum fun _ m ↦ m := by
+    hf.sum.toFun S m = (ofSupportFinite (fun i ↦ (f i).toFun S m)
+      (hf.support_toFun_finite S m)).sum fun _ m ↦ m := by
   obtain ⟨n, ψ, p, hm⟩ := exists_lift m
-  rw [← hm, ← isCompat_apply, toFun_eq_toFun']
-  rw [hf.sum_toFun'_eq_finsupp_sum]
-  rw [map_finsuppSum]
+  rw [← hm, ← isCompat_apply, toFun_eq_toFun', hf.sum_toFun'_eq_finsupp_sum, map_finsuppSum]
   simp_rw [← isCompat_apply, toFun_eq_toFun']
-  rw [Finsupp.sum, Finsupp.sum_of_support_subset ]
+  rw [Finsupp.sum, Finsupp.sum_of_support_subset]
   · apply Finset.sum_congr rfl
     simp [Finsupp.ofSupportFinite_coe]
   · intro i
@@ -132,8 +126,7 @@ theorem LocFinsupp.sum_toFun_eq_finsupp_sum (hf : LocFinsupp f)
   · simp
 
 /-- The sum of a locally finite family of polynomial laws, as a linear map. -/
-noncomputable def lfsumHom :
-    Submodule.locFinsupp R M N ι →ₗ[R] M →ₚₗ[R] N where
+noncomputable def lfsumHom : Submodule.locFinsupp R M N ι →ₗ[R] M →ₚₗ[R] N where
   toFun fhf := LocFinsupp.sum fhf.prop
   map_add'  := fun ⟨f, hf⟩ ⟨g, hg⟩ ↦ by
     classical
@@ -183,13 +176,11 @@ lemma lfsumHom_apply (hf : LocFinsupp f) :
 
 lemma lfsumHom_add (hf : LocFinsupp f) (hg : LocFinsupp g) (hfg : LocFinsupp (f + g)) :
     lfsumHom ⟨(f + g), hfg⟩ = lfsumHom ⟨f, hf⟩ + lfsumHom ⟨g, hg⟩ := by
-  rw [← map_add]
-  rfl
+  rw [← map_add, AddMemClass.add_def]
 
 lemma lfsumHom_smul (hf : LocFinsupp f) {r : R} (hrf : LocFinsupp (r • f)) :
     lfsumHom ⟨r • f, hrf⟩ = r • lfsumHom ⟨f, hf⟩ := by
-  rw [← map_smul]
-  rfl
+  rw [← map_smul, SetLike.smul_of_tower_def]
 
 theorem lfsum_ground_eq_of_locFinsupp (hf : LocFinsupp f) (m : M) :
     (lfsum f).ground m =

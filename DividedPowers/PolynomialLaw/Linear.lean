@@ -1,5 +1,5 @@
 /- Copyright ACL & MIdFF 2024 -/
-import DividedPowers.PolynomialLaw.Basic2
+import DividedPowers.PolynomialLaw.Basic
 
 universe u
 
@@ -55,5 +55,3 @@ theorem toPolynomialLaw_comp {P : Type*} [AddCommMonoid P] [Module R P]
   simp [toPolynomialLaw_toFun', baseChange_comp, comp_toFun']
 
 end LinearMap
-
-#lint
