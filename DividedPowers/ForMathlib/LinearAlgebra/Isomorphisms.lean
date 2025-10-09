@@ -1,5 +1,9 @@
+/-
+Copyright (c) 2025 Antoine Chambert-Loir, María Inés de Frutos-Fernández. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
+-/
 import Mathlib.LinearAlgebra.Isomorphisms
-
 
 namespace LinearMap
 

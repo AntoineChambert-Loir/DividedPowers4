@@ -129,12 +129,10 @@ noncomputable def extension (hIt : I = span {t}) (hI : DividedPowers I) :
       Pi.zero_apply]
   dpow_zero hx := by
     obtain ⟨cx, rfl⟩ := (mem_map_span_singleton hIt).mp hx
-    dsimp only
     rw [(factorsThrough hI hIt f 0).extend_apply, pow_zero, one_mul,
       hI.dpow_zero (hIt ▸ mem_span_singleton_self t), map_one]
   dpow_one hx := by
     obtain ⟨cx, rfl⟩ := (mem_map_span_singleton hIt).mp hx
-    dsimp only
     rw [(factorsThrough hI hIt f 1).extend_apply, pow_one,
       hI.dpow_one (hIt ▸ mem_span_singleton_self t)]
   dpow_mem {n x} hn hx := by
@@ -159,7 +157,6 @@ noncomputable def extension (hIt : I = span {t}) (hI : DividedPowers I) :
     ring
   dpow_mul {n a x} hx := by
     obtain ⟨cx, rfl⟩ := (mem_map_span_singleton hIt).mp hx
-    dsimp only
     rw [← mul_assoc, (factorsThrough hI hIt f n).extend_apply,
       (factorsThrough hI hIt f n).extend_apply, mul_pow, mul_assoc]
   mul_dpow hx := by
@@ -173,7 +170,6 @@ noncomputable def extension (hIt : I = span {t}) (hI : DividedPowers I) :
     have hnt : hI.dpow n t ∈ I := dpow_mem hI hn (hIt ▸ mem_span_singleton_self t)
     simp only [hIt, mem_span_singleton'] at hnt
     obtain ⟨cnt, hcnt⟩ := hnt
-    simp only
     rw [(factorsThrough hI hIt f _).extend_apply, ← hcnt, _root_.map_mul, ← mul_assoc]
     simp only [(factorsThrough hI hIt f _).extend_apply]
     rw [← mul_assoc, mul_comm _ (cx^_), ← map_natCast f, mul_assoc, ← _root_.map_mul,
