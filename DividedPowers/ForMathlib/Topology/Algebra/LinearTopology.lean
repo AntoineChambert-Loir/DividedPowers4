@@ -147,8 +147,7 @@ def topology (hB : Ideal.IsBasis B) :
 theorem mem_nhds_zero_iff (hB : Ideal.IsBasis B) (s : Set α) :
     (s ∈ @nhds _ hB.topology 0) ↔
     (∃ i, ((B i : Set α) ∈ @nhds _ hB.topology 0) ∧ (B i : Set α) ⊆ s) := by
-  simp only [AddGroupFilterBasis.nhds_eq, AddGroupFilterBasis.N_zero,
-    Filter.IsBasis.mem_filter_iff, FilterBasis.mem_filter_iff]
+  simp only [AddGroupFilterBasis.nhds_eq, AddGroupFilterBasis.N_zero, FilterBasis.mem_filter_iff]
   constructor
   · rintro ⟨t, ⟨i, rfl⟩, hts⟩
     simp only [Submodule.coe_toAddSubgroup] at hts

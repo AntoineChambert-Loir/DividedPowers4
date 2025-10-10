@@ -31,9 +31,12 @@ theorem sum_eq_tsum [TopologicalSpace α] [T2Space α] {f : ι → MvPowerSeries
   apply HasSum.unique (hf.hasSum_coeff d)
   apply HasSum.map
   . split_ifs with h
-    . rw [← tsum_eq_finsum h]
-      exact hf.summable.hasSum
-    . exact (Classical.choose_spec hf.summable)
+    . simp only [SummationFilter.support_eq_univ, Set.indicator_univ]
+      convert hf.summable.hasSum
+      rw [tsum_eq_finsum]
+      sorry
+    . (expose_names; exact h_1) --exact (Classical.choose_spec hf.summable)
+    · sorry
   . exact continuous_coeff α d
 
 end Semiring
@@ -107,8 +110,7 @@ theorem hasProd_of_one_add (hf : StronglySummable f) :
   classical
   haveI := instIsUniformAddGroup (σ := σ) (R := α)
   intro V hV
-  simp only [Filter.mem_map, Filter.mem_atTop_sets, ge_iff_le, Finset.le_eq_subset,
-    Set.mem_preimage]
+  simp only [Filter.mem_map]
   let V₀ := Add.add hf.toStronglyMultipliable.prod ⁻¹' V
   have hV'₀ : V = Add.add (-hf.toStronglyMultipliable.prod) ⁻¹' V₀ := by
     rw [← Set.preimage_comp, eq_comm]
@@ -124,6 +126,8 @@ theorem hasProd_of_one_add (hf : StronglySummable f) :
     exact hV
   rw [nhds_pi, Filter.mem_pi] at hV₀
   obtain ⟨D, hD, t, ht, htV₀⟩ := hV₀
+  simp only [SummationFilter.unconditional_filter, Filter.mem_atTop_sets, ge_iff_le,
+    Finset.le_eq_subset, Set.mem_preimage]
   use hf.unionOfSupportOfCoeffLe (hD.toFinset.sup id)
   intro J hIJ
   rw [hV'₀, Set.mem_preimage]

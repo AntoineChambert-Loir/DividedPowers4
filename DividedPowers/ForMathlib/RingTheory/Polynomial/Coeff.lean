@@ -24,7 +24,7 @@ theorem inv_C_eq_C_inv {a : R} : inverse (C a) = C (inverse a) := by
     rw [dif_pos ha, dif_pos hCa]
     apply IsUnit.mul_right_cancel hCa
     simp only [← map_mul, IsUnit.val_inv_mul, map_one]
-  · simp only [inverse, dif_neg ha, map_zero]
+  · simp only [dif_neg ha, map_zero]
     rw [dif_neg]
     intro hCa
     apply ha

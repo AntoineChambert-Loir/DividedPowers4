@@ -44,7 +44,7 @@ theorem tendsto_zero_of_summable [AddCommGroup α] [TopologicalSpace α] [IsTopo
     {f : ι → α} (hf : Summable f) : Tendsto f cofinite (nhds 0) := by
   classical
   obtain ⟨a, ha⟩ := hf
-  rw [HasSum, tendsto_atTop_nhds] at ha
+  rw [HasSum, SummationFilter.unconditional_filter, tendsto_atTop_nhds] at ha
   rw [tendsto_nhds]
   intro U₀ hU₀ memU₀
   suffices hU₁ : ∃ U₁ : Set α, IsOpen U₁ ∧ (0 : α) ∈ U₁ ∧ U₁ - U₁ ≤ U₀ by
@@ -347,8 +347,8 @@ theorem of_indicator {f : ι → MvPowerSeries σ α} (hf : StronglySummable f) 
   intro i
   simp only [mem_support, ne_eq, not_imp_not]
   intro hi
-  cases' s.indicator_eq_zero_or_self f i with h h <;>
-  . simp only [h, hi, map_zero]
+  rcases s.indicator_eq_zero_or_self f i with h | h <;>
+  simp only [h, hi, map_zero]
 
 
 /-- If `f` is strongly summable and `s : Set ι` is any set, then the sum of `f` equals the sum of

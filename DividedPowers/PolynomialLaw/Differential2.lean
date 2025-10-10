@@ -274,7 +274,7 @@ theorem lfsum_dividedPartialDerivative' (x : M) (f : M →ₚₗ[R] N) :
 -- Roby63, pg 240 (Prop. II.2)
 lemma dividedPartialDerivative'_comp {n p : ℕ} (x : M) (f : M →ₚₗ[R] N) :
     dividedPartialDerivative' n x (dividedPartialDerivative' p x f) =
-      (n.choose p) * dividedPartialDerivative' (n + p) x f := by
+      (n.choose p) • dividedPartialDerivative' (n + p) x f := by
   sorry
 
 end  PolynomialLaw

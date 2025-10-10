@@ -595,7 +595,7 @@ lemma taylor_sum (m x : M) :
 -- Roby63, pg 240 (Prop. II.2)
 lemma dividedPartialDerivative_comp (x : M) :
     dividedPartialDerivative R N n x (dividedPartialDerivative R N p x f) =
-      (n.choose p) * dividedPartialDerivative R N (n + p) x f := by
+      (n.choose p) • dividedPartialDerivative R N (n + p) x f := by
   sorry
 
 -- Section II.6
@@ -884,14 +884,14 @@ lemma taylor_sum_prod (f : (M × M') →ₚₗ[R] N) (m x : M × M') :
 -- Roby63, pg 244 (Prop. II.9 for n = 2)
 lemma dividedPartialDerivative_fst_comp (f : (M × M') →ₚₗ[R] N) (x : M × M') :
     dividedPartialDerivative R N n (x.1, 0) (dividedPartialDerivative R N p (x.1, 0) f) =
-      (n.choose p) * dividedPartialDerivative R N (n + p) (x.1, 0) f := by
+      (n.choose p) • dividedPartialDerivative R N (n + p) (x.1, 0) f := by
   apply dividedPartialDerivative_comp
 
 -- Not needed?
 -- Roby63, pg 244 (Prop. II.9 for n = 2)
 lemma dividedPartialDerivative_snd_comp (f : (M × M') →ₚₗ[R] N) (x : M × M') :
     dividedPartialDerivative R N n (0, x.2) (dividedPartialDerivative R N p (0, x.2) f) =
-      (n.choose p) * dividedPartialDerivative R N (n + p) (0, x.2) f := by
+      (n.choose p) • dividedPartialDerivative R N (n + p) (0, x.2) f := by
   apply dividedPartialDerivative_comp
 
 theorem lfsum_dividedPartialDerivative (x : M) (f : M →ₚₗ[R] N) :
@@ -921,7 +921,7 @@ lemma dividedPartialDerivative_comp_single {M : Fin n → Type*} [∀ i, AddComm
     [∀ i, Module R (M i)] (f : (Π i, M i) →ₚₗ[R] N) (x : Π i, M i) (i : Fin n):
     dividedPartialDerivative R N n (Pi.single i (x i))
       (dividedPartialDerivative R N p (Pi.single i (x i)) f) =
-        (n.choose p) * dividedPartialDerivative R N (n + p) (Pi.single i (x i)) f := by
+        (n.choose p) • dividedPartialDerivative R N (n + p) (Pi.single i (x i)) f := by
   apply dividedPartialDerivative_comp
 
 end PolynomialLaw

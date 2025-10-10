@@ -284,8 +284,7 @@ namespace TensorProduct
 
 variable (A M N) in
 theorem top_top : TensorProduct (⊤ : Submodule A M) (⊤ : Submodule A N) = ⊤ := by
-  simp only [TensorProduct, range_mapIncl, top_coe, ← TensorProduct.span_tmul_eq_top,
-    Set.image2, Set.mem_univ, true_and]
+  simp [ -mapIncl, TensorProduct, range_mapIncl, map₂_mk_top_top_eq_top, ← span_tmul_eq_top]
 
 variable (N') in
 lemma mono_left (h : M' ≤ M'') : TensorProduct M' N' ≤ TensorProduct M'' N' :=

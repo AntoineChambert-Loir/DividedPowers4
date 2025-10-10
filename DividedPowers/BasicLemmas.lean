@@ -53,8 +53,7 @@ theorem rewriting_4_fold_sums {α : Type*} [AddCommMonoid α] {m n u v : ℕ} (h
     · conv_rhs => rw [← one_smul ℕ (f ⟨i, j⟩)]
       apply congr_arg₂ _ _ rfl
       rw [sum_eq_single (⟨⟨i, j⟩, ⟨u - i, v - j⟩⟩ : (ℕ × ℕ) × ℕ × ℕ)]
-      simp only [Nat.add_sub_of_le hij'.1, Nat.add_sub_of_le hij'.2, eq_self_iff_true, and_self_iff,
-        if_true]
+      simp only [Nat.add_sub_of_le hij'.1, Nat.add_sub_of_le hij'.2, and_self_iff, if_true]
       · rintro ⟨⟨x, y⟩, ⟨z, t⟩⟩ hb hb'; rw [if_neg]; intro hb''
         simp only [mem_product, mem_antidiagonal] at hb
         simp only [ne_eq, Prod.mk.injEq, not_and, and_imp] at hb'
@@ -65,7 +64,7 @@ theorem rewriting_4_fold_sums {α : Type*} [AddCommMonoid α] {m n u v : ℕ} (h
         apply Nat.add_left_cancel; rw [Nat.add_sub_of_le hij'.1, ← hb''.2.1, hb''.1.1]
         apply Nat.add_left_cancel; rw [Nat.add_sub_of_le hij'.2, ← hb''.2.2, hb''.1.2]
       · intro hb; rw [if_neg]; intro hb'; apply hb
-        simp only [eq_self_iff_true, and_true] at hb'
+        simp only [and_true] at hb'
         simp only [mem_product, mem_antidiagonal]
         apply And.intro hij
         apply Nat.add_left_cancel; rw [h, ← hij]

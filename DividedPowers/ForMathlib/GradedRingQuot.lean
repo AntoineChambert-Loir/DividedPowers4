@@ -180,11 +180,13 @@ theorem lmap'_surjective {β γ : ι → Type*} [∀ i, AddCommMonoid (β i)] [�
     [∀ i, AddCommMonoid (γ i)] [∀ i, Module R (γ i)] (f : ∀ i, β i →ₗ[R] γ i)
     (h : ∀ i, Surjective (f i)) : Surjective (lmap' f) := by
   intro c
-  induction' c using DirectSum.induction_on with i xi x y hx hy
-  . exact ⟨0, map_zero _⟩
-  . use of _ i (h i xi).choose
+  induction c using DirectSum.induction_on with
+  | zero => exact ⟨0, map_zero _⟩
+  | of i xi =>
+    use of _ i (h i xi).choose
     rw [← lof_eq_of R, lmap'_lof, lof_eq_of, (h i xi).choose_spec]
-  . obtain ⟨a, ha, rfl⟩ := hx
+  | add x y hx hy =>
+    obtain ⟨a, ha, rfl⟩ := hx
     obtain ⟨b, hb, rfl⟩ := hy
     exact ⟨a + b, map_add _ _ _⟩
 

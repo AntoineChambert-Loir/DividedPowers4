@@ -114,7 +114,8 @@ theorem dpow_def (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow 
 theorem dpow_eq (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
     {n : ℕ} {a b : A} (ha : a ∈ I) (hb : b ∈ J) :
     dpow hIJ n (a + b) = ∑ k ∈ (antidiagonal n), hI.dpow k.1 a * hJ.dpow k.2 b := by
-  rw [dpow_def, exp'_linearMap_apply hIJ ha hb, ExponentialModule.coe_add, PowerSeries.coeff_mul]
+  rw [dpow_def _ _ (Submodule.add_mem_sup ha hb), exp'_linearMap_apply hIJ ha hb,
+    ExponentialModule.coe_add, PowerSeries.coeff_mul]
   apply congr_arg₂ _ rfl
   ext ⟨u, v⟩
   simp only [DividedPowers.exp'_linearMap_apply, coeff_exp]
@@ -141,13 +142,13 @@ theorem dpow_eq' (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow 
 private theorem dpow_eq_of_mem_left' (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
     {n : ℕ} {x : A} (hx : x ∈ I) :
     dpow hIJ n x = hI.dpow n x := by
-  rw [dpow_def, exp'_linearMap_apply_left hIJ hx]
+  rw [dpow_def _ _ (Submodule.mem_sup_left hx), exp'_linearMap_apply_left hIJ hx]
   simp only [DividedPowers.exp'_linearMap_apply, coeff_exp]
 
 private theorem dpow_eq_of_mem_right' (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
     {n : ℕ} {x : A} (hx : x ∈ J) :
     dpow hIJ n x = hJ.dpow n x := by
-  rw [dpow_def, exp'_linearMap_apply_right hIJ hx]
+  rw [dpow_def _ _ (Submodule.mem_sup_right hx), exp'_linearMap_apply_right hIJ hx]
   simp only [DividedPowers.exp'_linearMap_apply, coeff_exp]
 
 theorem dpow_zero (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)

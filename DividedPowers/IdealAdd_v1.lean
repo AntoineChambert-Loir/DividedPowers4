@@ -426,7 +426,7 @@ theorem dpow_one (hIJ : ∀ (n : ℕ), ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow 
     simp only [h, sum_insert, mem_singleton, Nat.zero_ne_one, not_false_iff, tsub_zero,
       sum_singleton, tsub_self, hI.dpow_zero ha, hI.dpow_one ha, hJ.dpow_zero hb, hJ.dpow_one hb]
     ring
-  · rw [range_succ, range_one]; ext k; simp; exact or_comm
+  · rw [range_add_one, range_one]; ext k; simp; exact or_comm
 
 /-- The divided power structure on the ideal `I + J`, given that `hI` and `hJ` agree on `I ⊓ J`. -/
 noncomputable def dividedPowers {J : Ideal A} (hJ : DividedPowers J)

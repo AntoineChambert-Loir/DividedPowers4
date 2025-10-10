@@ -66,11 +66,11 @@ noncomputable def ringHom [MulOneClass α] (e : N →+* P) :
         mapRange.zeroHom_apply, AddMonoidHom.toZeroHom_coe, AddMonoidHom.coe_coe]
       simp only [mapRange_apply]
       simp only [mul_def]
-      rw [sum_apply, map_finsupp_sum, sum_apply]
+      rw [sum_apply, map_finsuppSum, sum_apply]
       rw [sum_mapRange_index (by simp)]
       apply sum_congr
       intro b _
-      rw [sum_apply, map_finsupp_sum, sum_mapRange_index (by simp), sum_apply]
+      rw [sum_apply, map_finsuppSum, sum_mapRange_index (by simp), sum_apply]
       apply sum_congr
       intro c _
       rw [← _root_.map_mul]
