@@ -30,13 +30,14 @@ theorem sum_eq_tsum [TopologicalSpace α] [T2Space α] {f : ι → MvPowerSeries
   rw [tsum_def, dif_pos hf.summable]
   apply HasSum.unique (hf.hasSum_coeff d)
   apply HasSum.map
-  . split_ifs with h
+  . split_ifs with h h'
     . simp only [SummationFilter.support_eq_univ, Set.indicator_univ]
       convert hf.summable.hasSum
       rw [tsum_eq_finsum]
-      sorry
-    . (expose_names; exact h_1) --exact (Classical.choose_spec hf.summable)
-    · sorry
+      simp only [SummationFilter.support_eq_univ, Set.inter_univ] at h
+      exact h.2
+    . exact h'
+    · exact (Classical.choose_spec hf.summable)
   . exact continuous_coeff α d
 
 end Semiring

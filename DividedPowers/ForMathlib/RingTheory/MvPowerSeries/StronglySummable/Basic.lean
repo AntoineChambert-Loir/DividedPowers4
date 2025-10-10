@@ -131,18 +131,16 @@ theorem weightedOrder_tendsto_top_iff [Finite σ] {ι : Type _} {w : σ → ℕ}
     · rename_i n
       simp only [Set.mem_Ioi, eventually_cofinite, not_lt]
       let s := {d : σ →₀ ℕ | (weight w d) ≤ n}
-      suffices h_ss : {i | (f i).weightedOrder w ≤ some n} ⊆
-          ⋃ (d : σ →₀ ℕ) (_ : d ∈ s), {i | coeff d (f i) ≠ 0} by
-        sorry --exact ((finite_of_weight_le w hw n).biUnion fun d _ => hf d).subset h_ss
-      · intro i hi
-        simp only [mem_setOf_eq] at hi
-        simp only [mem_setOf_eq, ne_eq, mem_iUnion, mem_setOf_eq, exists_prop]
-        have heq: (ENat.toNat (weightedOrder w (f i))) = weightedOrder w (f i) := by
-          rw [ENat.coe_toNat_eq_self]
-          exact ne_of_lt (lt_of_le_of_lt hi hn)
-        obtain ⟨d, hd⟩ :=  MvPowerSeries.exists_coeff_ne_zero_and_weightedOrder w heq
-        refine ⟨d, ?_, hd.1⟩
-        simpa [← hd.2, WithTop.some_eq_coe, Nat.cast_le] using hi
+      apply ((finite_of_nat_weight_le w hw n).biUnion fun d _ => hf d).subset
+      intro i hi
+      simp only [mem_setOf_eq] at hi
+      simp only [mem_setOf_eq, mem_iUnion, mem_setOf_eq, exists_prop]
+      have heq : (ENat.toNat (weightedOrder w (f i))) = weightedOrder w (f i) := by
+        rw [ENat.coe_toNat_eq_self]
+        exact ne_of_lt (lt_of_le_of_lt hi hn)
+      obtain ⟨d, hd⟩ :=  MvPowerSeries.exists_coeff_ne_zero_and_weightedOrder w heq
+      refine ⟨d, ?_, hd.1⟩
+      simpa [← hd.2, WithTop.some_eq_coe, Nat.cast_le] using hi
 
 /-- When σ is finite, a family of power series is strongly summable
   iff their orders tend to infinity. -/
@@ -497,9 +495,7 @@ namespace StronglyMultipliable
 theorem finset_prod_eq [DecidableEq ι] (s : Finset ι) (hf : StronglyMultipliable f) :
     (s.prod fun i => 1 + f i)
       = (hf.of_indicator {I : Finset ι | I ⊆ s}).sum := by
-  sorry -- I can't find `Finset.prod_one_add`
-
-  /- rw [Finset.prod_one_add]
+  rw [Finset.prod_one_add]
   ext d
   rw [map_sum, StronglySummable.coeff_sum d]
   · apply sum_congr rfl
@@ -511,7 +507,7 @@ theorem finset_prod_eq [DecidableEq ι] (s : Finset ι) (hf : StronglyMultipliab
     rw [mem_support, ne_eq, mem_coe, Finset.mem_powerset, not_imp_comm]
     intro ht'
     rw [indicator, if_neg, map_zero]
-    exact ht' -/
+    exact ht'
 
 /-- If `f` is strongly_multipliable and `s : Set ι`, the product of the family `(1 + f ι)`
   is equal to the sum `(hf.of_indicator {I : Finset ι | ↑I ⊆ s}).sum +
