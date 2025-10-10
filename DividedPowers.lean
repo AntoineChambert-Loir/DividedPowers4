@@ -35,7 +35,6 @@ import DividedPowers.ForMathlib.GradedRingQuot
 --import DividedPowers.ForMathlib.InfiniteSum.Basic -- In mathlib
 --import DividedPowers.ForMathlib.InfiniteSum.Order -- In mathlib
 import DividedPowers.ForMathlib.Lcoeff
-import DividedPowers.ForMathlib.LinearAlgebra.OnSup
 import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Basic
 import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Pi
 import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Prod

@@ -6,7 +6,6 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 
 import DividedPowers.BasicLemmas
 import DividedPowers.Exponential
---import DividedPowers.ForMathlib.LinearAlgebra.OnSup
 import Mathlib.LinearAlgebra.LinearPMap
 import Mathlib.RingTheory.DividedPowers.RatAlgebra
 import Mathlib.RingTheory.DividedPowers.SubDPIdeal
@@ -58,6 +57,18 @@ theorem coeff_exp (n : ℕ) (a : A) : coeff n (hI.exp a) = hI.dpow n a := by
 theorem constantCoeff_exp {a : A} (ha : a ∈ I) : constantCoeff (hI.exp a) = 1 := by
   simp only [exp, constantCoeff_mk, hI.dpow_zero ha]
 
+namespace LinearPMap
+
+theorem sup_apply_left {R : Type*} [Ring R] {E : Type*} [AddCommGroup E] [Module R E] {F : Type*}
+    [AddCommGroup F] [Module R F] {f g : E →ₗ.[R] F}
+    (H : ∀ (x : f.domain) (y : g.domain), (x : E) = y → f x = g y)
+    (x : f.domain) (z : ↥(f.domain ⊔ g.domain)) (hz : (↑x : E) = ↑z) :
+    f.sup g H z = f x := by
+  simp [LinearPMap.sup_apply H x 0 z (by simp [hz])]
+
+end LinearPMap
+
+
 namespace IdealAdd
 
 open Finset BigOperators Polynomial
@@ -69,7 +80,8 @@ private def cnik (n i : ℕ) (k : Multiset ℕ) : ℕ :=
       else (k.count i).factorial * (k.count i).uniformBell i * (k.count i).uniformBell (n - i)
 
 theorem exp'_linearPMap_compat (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) :
-  ∀ (x : I) (y : J), (x : A) = (y : A) → hI.exp'_linearMap x = hJ.exp'_linearMap y := fun ⟨x, hx⟩ ⟨y, hy⟩ hxy ↦ by
+    ∀ (x : I) (y : J), (x : A) = (y : A) → hI.exp'_linearMap x = hJ.exp'_linearMap y :=
+  fun ⟨x, hx⟩ ⟨y, hy⟩ hxy ↦ by
     simp only at hxy ⊢
     rw [← hxy] at hy
     exact Subtype.coe_inj.mp (PowerSeries.ext (fun _ ↦ hxy ▸ hIJ x ⟨hx, hy⟩))
@@ -83,32 +95,24 @@ theorem exp'_linearMap_apply (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n 
     {x y : A} (hx : x ∈ I) (hy : y ∈ J) :
     exp'_linearMap hIJ ⟨x + y, Submodule.add_mem_sup hx hy⟩ =
       hI.exp'_linearMap ⟨x, hx⟩ + hJ.exp'_linearMap ⟨y, hy⟩ := by
-  unfold exp'_linearMap
-  simp only [LinearPMap.domain_sup]
-  have hx' : x ∈ I ⊔ J := by exact Submodule.mem_sup_left hx
-  have : (⟨x + y, Submodule.add_mem_sup hx hy⟩ : (I ⊔ J : Ideal A))
-    = (⟨x, Submodule.mem_sup_left hx⟩ : (I ⊔ J : Ideal A)) + (⟨y, Submodule.mem_sup_right hy⟩ : (I ⊔ J : Ideal A)) := by
-      simp
-  rw [this]
-  rw [LinearPMap.sup_apply (exp'_linearPMap_compat hIJ) ⟨x, hx⟩ ⟨y, hy⟩]
-  all_goals simp
-
-#exit
-
-theorem exp'_linearMap_apply (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
-    {x y : A} (hx : x ∈ I) (hy : y ∈ J) :
-    exp'_linearMap hIJ ⟨x + y, Submodule.add_mem_sup hx hy⟩ =
-      hI.exp'_linearMap ⟨x, hx⟩ + hJ.exp'_linearMap ⟨y, hy⟩ := by
-  rw [exp'_linearMap, LinearMap.onSup_apply]
+  simp only [exp'_linearMap, LinearPMap.domain_sup]
+  rw [LinearPMap.sup_apply (exp'_linearPMap_compat hIJ) ⟨x, hx⟩ ⟨y, hy⟩ _ rfl]
+  simp
 
 theorem exp'_linearMap_apply_left (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a) {x : A}
     (hx : x ∈ I) : exp'_linearMap hIJ ⟨x, Ideal.mem_sup_left hx⟩ = hI.exp'_linearMap ⟨x, hx⟩ := by
-  rw [exp'_linearMap, LinearMap.onSup_apply_left _ hx]
+  simp only [exp'_linearMap, LinearPMap.domain_sup]
+  rw [LinearPMap.sup_apply (exp'_linearPMap_compat hIJ) ⟨x, hx⟩ 0 ⟨x, Ideal.mem_sup_left hx⟩
+    (by simp)]
+  simp
 
 theorem exp'_linearMap_apply_right (hIJ : ∀ {n : ℕ}, ∀ a ∈ I ⊓ J, hI.dpow n a = hJ.dpow n a)
     {y : A} (hy : y ∈ J) :
     exp'_linearMap hIJ ⟨y, Ideal.mem_sup_right hy⟩ = hJ.exp'_linearMap ⟨y, hy⟩ := by
-  rw [exp'_linearMap, LinearMap.onSup_apply_right _ hy]
+  simp only [exp'_linearMap, LinearPMap.domain_sup]
+  rw [LinearPMap.sup_apply (exp'_linearPMap_compat hIJ) 0 ⟨y, hy⟩ ⟨y, Ideal.mem_sup_right hy⟩
+    (by simp)]
+  simp
 
 /-- The divided power function on the sup of two ideals `I` and `J` extending divided power
   structures `hI` and `hJ` that agree on `I ∩ J`. -/
@@ -575,7 +579,6 @@ theorem dividedPowers_dpow_eq_algebraMap'
       (algebraMap A B) (hI.dpow n a) := by
   rw [← hI'_ext.2 _ ha]
   exact IdealAdd.dpow_eq_of_mem_left h_int (mem_map_of_mem (algebraMap A B) ha)
-
 
 end IdealAdd
 
