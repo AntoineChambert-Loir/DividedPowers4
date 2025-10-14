@@ -6,6 +6,8 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Algebra.BigOperators.Finsupp.Basic
 
+-- In PR #30538
+
 /-! # An equivalence for `Fin 2`. -/
 section Fin2
 

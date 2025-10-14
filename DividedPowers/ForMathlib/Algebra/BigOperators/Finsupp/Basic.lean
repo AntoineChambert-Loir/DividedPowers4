@@ -5,6 +5,8 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 import Mathlib.Algebra.BigOperators.Finsupp.Basic
 
+-- In PR #30537
+
 open Finset
 
 theorem Finsupp.sum_eq_one_iff {α : Type*} [DecidableEq α] (d : α →₀ ℕ) :

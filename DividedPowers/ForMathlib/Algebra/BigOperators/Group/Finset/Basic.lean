@@ -8,6 +8,8 @@ import Mathlib.Data.Finsupp.Defs
 
 /-! # Misc `Finset` results. -/
 
+-- In PR #30539
+
 open Equiv Finsupp Function Set
 
 section Finset
