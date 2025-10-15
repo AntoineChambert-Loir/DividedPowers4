@@ -320,8 +320,7 @@ end CommSemiring
 
 namespace PowerSeries
 
-variable {A R S : Type*} [CommSemiring A] [CommRing R] [Algebra A R] [CommSemiring S] [Algebra A S]
-
+variable {A R S : Type*} [CommSemiring A] [CommSemiring R] [Algebra A R] [CommSemiring S] [Algebra A S]
 
 section Bivariate
 
@@ -330,7 +329,7 @@ noncomputable abbrev X₀ {R : Type*} [Semiring R] := MvPowerSeries.X (σ := Fin
 
 /-- Notation for the second variable of the bivariate power series ring `R⟦X₀, X₁⟧. -/
 noncomputable abbrev X₁ {R : Type*} [Semiring R] := MvPowerSeries.X (σ := Fin 2) (R := R) 1
-
+/-
 lemma coeff_subst_single {σ : Type*} [DecidableEq σ] (s : σ) (f : R⟦X⟧) (e : σ →₀ ℕ) :
     MvPowerSeries.coeff e (subst (MvPowerSeries.X s) f) =
       if e = single s (e s) then PowerSeries.coeff (e s) f else 0 := by
@@ -343,7 +342,7 @@ lemma coeff_subst_single {σ : Type*} [DecidableEq σ] (s : σ) (f : R⟦X⟧) (
     simp only [MvPowerSeries.coeff_X_pow, smul_eq_mul, mul_ite, mul_one, mul_zero, ite_eq_right_iff]
     intro hd'
     simp only [hd', single_eq_same, ne_eq, not_true_eq_false] at hd
-
+ -/
 lemma forall_congr_curry {α : Type*} {p : (Fin 2 → α) → Prop} {q : α → α → Prop}
     (hpq : ∀ e : Fin 2 → α, p e ↔ q (e 0) (e 1)) :
     (∀ (e : Fin 2 → α), p e) ↔ ∀ (u v : α), q u v := by
@@ -357,7 +356,7 @@ lemma forall_congr_curry₀ {α : Type*} [Zero α] {p : (Fin 2 →₀ α) → Pr
   rw [Equiv.forall_congr_left (equivFunOnFinite.trans (finTwoArrowEquiv α))]
   simp [finTwoArrowEquiv_symm_apply, Prod.forall, hpq]
 
-lemma coeff_subst_add_X₀_X₁ (f : R⟦X⟧) (e : Fin 2 →₀ ℕ) :
+/- lemma coeff_subst_add_X₀_X₁ (f : R⟦X⟧) (e : Fin 2 →₀ ℕ) :
     (MvPowerSeries.coeff e) (subst (X₀ + X₁) f) =
       (e 0 + e 1).choose (e 0) * coeff (e 0 + e 1) f := by
   rw [PowerSeries.subst, MvPowerSeries.coeff_subst
@@ -400,48 +399,54 @@ lemma coeff_subst_mul_X₀_X₁ (f : R⟦X⟧) (e : Fin 2 →₀ ℕ) :
     ext i
     match i with
     | 0 => simp
-    | 1 => simp
+    | 1 => simp -/
 
 end Bivariate
 
-/-- A power series `f : R⟦X⟧` is exponential if `f(X + Y) = f(X)*f(Y)` and `f(0) = 1`. -/
+/- /-- A power series `f : R⟦X⟧` is exponential if `f(X + Y) = f(X)*f(Y)` and `f(0) = 1`. -/
 structure IsExponential (f : R⟦X⟧) : Prop where
   add_mul : subst (S := R) (X₀ + X₁) f = subst X₀ f * subst X₁ f
+  constantCoeff : constantCoeff f = 1 -/
+
+/-- A power series `f : R⟦X⟧` is exponential if `f(X + Y) = f(X)*f(Y)` and `f(0) = 1`. -/
+structure IsExponential (f : R⟦X⟧) : Prop where
+  add_mul : ∀ p q, (p + q).choose p * coeff (p + q) f = coeff p f * coeff q f
   constantCoeff : constantCoeff f = 1
 
 /-- A power series `f` satisfies `f(X + Y) = f(X)*f(Y)` iff its coefficients `f n` satisfy
   the relations `(p + q).choose p * f (p + q)= f p * f q`. -/
-theorem subst_add_eq_mul_iff (f : R⟦X⟧) :
+theorem subst_add_eq_mul_iff {R : Type*} [CommRing R] (f : R⟦X⟧) :
     (subst (S := R) (X₀ + X₁) f) = (subst X₀ f) * (subst X₁ f) ↔
       ∀ (p q : ℕ), (p + q).choose p * (coeff (p + q) f) = coeff p f * coeff q f := by
   rw [MvPowerSeries.ext_iff]
-  exact forall_congr_curry₀ (fun e ↦ by rw [coeff_subst_add_X₀_X₁ , coeff_subst_mul_X₀_X₁])
+  sorry --exact forall_congr_curry₀ (fun e ↦ by rw [coeff_subst_add_X₀_X₁ , coeff_subst_mul_X₀_X₁])
 
 /-- A power series `f` is exponential iff its coefficients `f n` satisfy the relations
   `(p + q).choose p * f (p + q)= f p * f q` and its constant coefficient is `1`. -/
-theorem isExponential_iff {f : R⟦X⟧} :
-    IsExponential f ↔ (∀ p q, (p + q).choose p * coeff (p + q) f = coeff p f * coeff q f) ∧
+theorem isExponential_iff {R : Type*} [CommRing R] {f : R⟦X⟧} :
+    IsExponential f ↔ (subst (S := R) (X₀ + X₁) f = subst X₀ f * subst X₁ f) ∧
       (constantCoeff f = 1) := by
-  rw [← subst_add_eq_mul_iff]
+  rw [subst_add_eq_mul_iff]
   exact ⟨fun hf ↦ ⟨hf.add_mul, hf.constantCoeff⟩, fun hf ↦ ⟨hf.1, hf.2⟩⟩
 
 namespace IsExponential
 
 /-- The unit power series is exponential -/
 protected theorem one : IsExponential (1 : R⟦X⟧) where
-  add_mul := by
-    rw [← Polynomial.coe_one, subst_coe (HasSubst.X 1), subst_coe (HasSubst.X 0),
-      subst_coe ((HasSubst.X 0).add (HasSubst.X 1))]
-    simp
+  add_mul p q := by
+    simp only [coeff_one, Nat.add_eq_zero, mul_ite, mul_one, mul_zero]
+    aesop
   constantCoeff := by simp only [map_one]
 
 /-- If `f` and `g` are exponential, then so is `f * g`. -/
 protected theorem mul {f g : PowerSeries R} (hf : IsExponential f) (hg : IsExponential g) :
     IsExponential (f * g) where
-  add_mul := by
-    repeat rw [← coe_substAlgHom (HasSubst.of_constantCoeff_zero (by simp))]
-    simp only [map_mul, coe_substAlgHom, hf.add_mul, hg.add_mul]
-    ring
+  add_mul p q := by
+    --repeat rw [← coe_substAlgHom (HasSubst.of_constantCoeff_zero (by simp))]
+
+    sorry
+    /- simp only [map_mul, coe_substAlgHom, hf.add_mul, hg.add_mul]
+    ring -/
   constantCoeff := by simp only [map_mul, hf.constantCoeff, hg.constantCoeff, mul_one]
 
 /-- If `f` is exponential and  `n : ℕ`, then `f ^ n` is exponential. -/
@@ -457,29 +462,11 @@ protected theorem rescale (a : A) {f : PowerSeries R} (hf : IsExponential f) :
   constantCoeff := by
     rw [← coeff_zero_eq_constantCoeff, coeff_rescale]
     simp [coeff_zero_eq_constantCoeff, hf.constantCoeff]
-  add_mul := by
-    repeat rw [subst_linear_subst_scalar_comm]
-    simp only [← MvPowerSeries.rescaleAlgHom_apply, ← map_mul, hf.add_mul]
-    -- We prove the hypothesis of the last two applications of `subst_linear_subst_scalar_comm`.
-    repeat
-      intro d hd
-      simp only [Fin.isValue, map_add, MvPowerSeries.coeff_X]
-      rw [if_neg]
-      intro hd'
-      apply hd
-      rw [hd']
-      simp only [Fin.isValue, sum_single_index]
-    -- The first application of `subst_linear_subst_scalar_comm` is a bit different.
-    · intro d hd
-      simp only [Fin.isValue, map_add, MvPowerSeries.coeff_X]
-      split_ifs with h0 h1 h1
-      · rw [h1, single_left_inj (by norm_num)] at h0
-        exfalso; exact one_ne_zero h0
-      · exfalso; apply hd
-        simp only [h0, Fin.isValue, sum_single_index]
-      · exfalso; apply hd
-        simp only [h1, Fin.isValue, sum_single_index]
-      · simp only [add_zero]
+  add_mul p q := by
+    simp only [coeff_rescale]
+    rw [mul_mul_mul_comm]
+    rw [← hf.add_mul p q]
+    ring
 
 protected theorem rescale_add (r s : A) {f : R⟦X⟧} (hf : IsExponential f) :
     rescale (algebraMap A R r + algebraMap A R s) f =
