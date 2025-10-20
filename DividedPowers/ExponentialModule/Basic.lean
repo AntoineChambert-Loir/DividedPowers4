@@ -35,6 +35,9 @@ indeterminates. It is an abelian group under multiplication, and an `R`-module u
 
 -/
 
+section Preliminaries
+
+-- [Mathlib.Algebra.Algebra.Basic]
 /-- The `CommRing` structure on a `CommSemiring` induced by a ring morphism from a `CommRing`. -/
 def RingHom.commSemiringToCommRing
     {R S : Type*} [CommRing R] [CommSemiring S] (φ : R →+* S) :
@@ -50,10 +53,12 @@ open MvPowerSeries
 
 variable {σ : Type*} {R : Type*} [CommSemiring R]
 
+-- [Mathlib.RingTheory.MvPowerSeries.Basic]
 @[simp]
 lemma MvPolynomial.coe_smul (φ : MvPolynomial σ R) (r : R) :
   (r • φ : MvPolynomial σ R) = r • (φ : MvPowerSeries σ R) := rfl
 
+-- [Mathlib.RingTheory.PowerSeries.Basic]
 @[simp]
 lemma Polynomial.coe_smul (φ : Polynomial R) (r : R) :
   (r • φ : Polynomial R) = r • (φ : PowerSeries R) := rfl
@@ -68,30 +73,34 @@ variable {R : Type*} [CommSemiring R]
 
 section
 
+namespace Finsupp
+
+-- PR this section to [Mathlib.Data.Finsupp.Defs], or similar, except for the last lemma
+
 variable {σ α : Type*} [Zero α] (f g : σ → α) (s : Finset σ)
   [DecidablePred fun i ↦ i ∈ s] [DecidablePred fun i ↦ f i ≠ 0]
 
-def Finsupp.restrict : σ →₀ α where
+def restrict : σ →₀ α where
   toFun i := if i ∈ s then f i else 0
   support := {i ∈ s | f i ≠ 0}
   mem_support_toFun i := by simp
 
 variable {f g s}
 
-theorem Finsupp.restrict_apply {i : σ} :
-  Finsupp.restrict f s i = if i ∈ s then f i else 0 := rfl
+theorem restrict_apply {i : σ} :
+  restrict f s i = if i ∈ s then f i else 0 := rfl
 
-theorem Finsupp.restrict_support_le : (Finsupp.restrict f s).support ⊆ s := fun i ↦ by
-  simp only [mem_support_iff, ne_eq, not_imp_comm, Finsupp.restrict_apply]
+theorem restrict_support_le : (restrict f s).support ⊆ s := fun i ↦ by
+  simp only [mem_support_iff, ne_eq, not_imp_comm, restrict_apply]
   intro hi
   rw [if_neg hi]
 
-theorem Finsupp.restrict_restrict [DecidableEq σ] {t : Finset σ}
+theorem restrict_restrict [DecidableEq σ] {t : Finset σ}
     [DecidablePred fun i ↦ i ∈ t] [DecidablePred fun i ↦ i ∈ s ∩ t]
     [DecidablePred fun i ↦ (restrict f s) i ≠ 0] :
-    Finsupp.restrict (Finsupp.restrict f s) t = Finsupp.restrict f (s ∩ t) := by
+    restrict (restrict f s) t = restrict f (s ∩ t) := by
   ext i
-  simp only [Finsupp.restrict_apply]
+  simp only [restrict_apply]
   by_cases ht : i ∈ t
   · rw [if_pos ht]
     by_cases hs : i ∈ s
@@ -103,26 +112,45 @@ theorem Finsupp.restrict_restrict [DecidableEq σ] {t : Finset σ}
     intro ht'; apply ht
     exact Finset.inter_subset_right ht'
 
-theorem Finsupp.eq_restrict_iff :
-    g = Finsupp.restrict f s ↔ g.support ⊆ s ∧ ∀ i, i ∈ s → f i = g i := by
+theorem eq_restrict_iff :
+    g = restrict f s ↔ g.support ⊆ s ∧ ∀ i, i ∈ s → f i = g i := by
   suffices g.support ⊆ s ∧ (∀ i, i ∈ s → f i = g i) ↔
     ∀ i, (i ∈ s → g i = f i) ∧ (i ∉ s → g i = 0) by
     rw [this]
     rw [funext_iff]
     apply forall_congr'
     intro i
-    by_cases hi : i ∈ s <;> simp [Finsupp.restrict_apply, hi]
+    by_cases hi : i ∈ s <;> simp [restrict_apply, hi]
   rw [Set.subset_def, and_comm, forall_and]
   apply and_congr
   · simp only [eq_comm]
   · simp [Function.mem_support, not_imp_comm]
 
-theorem Finsupp.self_eq_restrict : f = Finsupp.restrict f s ↔ f.support ⊆ s := by
-  simp [Finsupp.eq_restrict_iff]
+theorem self_eq_restrict : f = restrict f s ↔ f.support ⊆ s := by
+  simp [eq_restrict_iff]
+
+--[Mathlib.Data.Nat.Choose.Multinomial]
+theorem multinomial_eq_of_support_subset
+    {α : Type*} {f : α →₀ ℕ} {s : Finset α} (h : f.support ⊆ s) :
+    f.multinomial = Nat.multinomial s f := by
+  simp only [Finsupp.multinomial_eq, Nat.multinomial]
+  congr 1
+  · simp [Finset.sum_subset h]
+  · rw [Finset.prod_subset h]
+    intro x _
+    simp only [Finsupp.mem_support_iff, ne_eq, Decidable.not_not, factorial_eq_one]
+    intro hx'
+    simp [hx']
+
+end Finsupp
 
 end
 
-theorem MvPolynomial.prod_X_pow {σ : Type*} [DecidableEq σ] (x : σ → ℕ) (s : Finset σ) :
+namespace MvPolynomial
+
+-- PR this section [Mathlib.Algebra.MvPolynomial.Basic], if possible
+
+theorem prod_X_pow {σ : Type*} [DecidableEq σ] (x : σ → ℕ) (s : Finset σ) :
     ∏ y ∈ s, (MvPolynomial.X y : MvPolynomial σ R) ^ x y =
            MvPolynomial.monomial (Finsupp.restrict x s) (1 : R) := by
   rw [MvPolynomial.monomial_eq, MvPolynomial.C_1, one_mul]
@@ -135,19 +163,7 @@ theorem MvPolynomial.prod_X_pow {σ : Type*} [DecidableEq σ] (x : σ → ℕ) (
     rw [Finsupp.mem_support_iff, ne_eq, not_not] at hi'
     rw [hi', pow_zero]
 
-theorem Finsupp.multinomial_eq_of_support_subset
-    {α : Type*} {f : α →₀ ℕ} {s : Finset α} (h : f.support ⊆ s) :
-    f.multinomial = Nat.multinomial s f := by
-  simp only [Finsupp.multinomial_eq, Nat.multinomial]
-  congr 1
-  · simp [Finset.sum_subset h]
-  · rw [Finset.prod_subset h]
-    intro x _
-    simp only [Finsupp.mem_support_iff, ne_eq, Decidable.not_not, factorial_eq_one]
-    intro hx'
-    simp [hx']
-
-theorem MvPolynomial.coeff_prod_X_pow
+theorem coeff_prod_X_pow
     {σ : Type*} [DecidableEq σ] (s : Finset σ) (d : σ →₀ ℕ) (x : σ → ℕ)
     [DecidablePred fun i ↦ i ∈ s] [Decidable (d = Finsupp.restrict x s)] :
     MvPolynomial.coeff d (∏ y ∈ s, (MvPolynomial.X y : MvPolynomial σ R) ^ x y) =
@@ -156,9 +172,10 @@ theorem MvPolynomial.coeff_prod_X_pow
   simp_rw [eq_comm]
   congr
 
-theorem MvPolynomial.coeff_linearCombination_X_pow (σ : Type*) (a : σ →₀ R) (d : σ →₀ ℕ) (n : ℕ) :
-    MvPolynomial.coeff d (((a.linearCombination R MvPolynomial.X : MvPolynomial σ R)) ^ n)
-      = if d.sum (fun _ m ↦ m) = n then d.multinomial * d.prod (fun r m ↦ a r ^ m) else 0 := by
+-- TODO: golf
+theorem coeff_linearCombination_X_pow (σ : Type*) (a : σ →₀ R) (d : σ →₀ ℕ) (n : ℕ) :
+    MvPolynomial.coeff d (((a.linearCombination R MvPolynomial.X : MvPolynomial σ R)) ^ n) =
+      if d.sum (fun _ m ↦ m) = n then d.multinomial * d.prod (fun r m ↦ a r ^ m) else 0 := by
   classical
   simp only [Finsupp.sum, Finsupp.linearCombination_apply, Finset.sum_pow_eq_sum_piAntidiag,
     MvPolynomial.coeff_sum]
@@ -236,27 +253,24 @@ theorem MvPolynomial.coeff_linearCombination_X_pow (σ : Type*) (a : σ →₀ R
     · intro i _
       simp
 
-theorem MvPolynomial.fintype_coeff_linearCombination_X_pow
+theorem fintype_coeff_linearCombination_X_pow
     {σ : Type*} [Fintype σ] (a : σ → R) (d : σ →₀ ℕ) (n : ℕ) :
-    MvPolynomial.coeff d (((∑ i, a i • X i : MvPolynomial σ R)) ^ n)
-      = if d.sum (fun _ m ↦ m) = n then d.multinomial * d.prod (fun r m ↦ a r ^ m) else 0 := by
+    coeff d (((∑ i, a i • X i : MvPolynomial σ R)) ^ n) =
+      if d.sum (fun _ m ↦ m) = n then d.multinomial * d.prod (fun r m ↦ a r ^ m) else 0 := by
   set b := Finsupp.ofSupportFinite a (Set.toFinite _)
   have ha : a = b := by rw [Finsupp.ofSupportFinite_coe]
-  simp only [ha]
-  rw [Finsupp.prod_congr (fun r _ ↦ rfl)]
-  rw [← MvPolynomial.coeff_linearCombination_X_pow]
+  rw [ha, Finsupp.prod_congr (fun r _ ↦ rfl), ← coeff_linearCombination_X_pow]
   congr 2
   rw [Finsupp.linearCombination_apply]
   simp [Finsupp.sum_of_support_subset (s := univ)]
 
-theorem MvPolynomial.fintype_coeff_sum_X_pow
-    {σ : Type*} [Fintype σ] (d : σ →₀ ℕ) (n : ℕ) :
-    MvPolynomial.coeff d (((∑ i, X i : MvPolynomial σ R)) ^ n)
-      = if d.sum (fun _ m ↦ m) = n then d.multinomial else 0 := by
+theorem fintype_coeff_sum_X_pow {σ : Type*} [Fintype σ] (d : σ →₀ ℕ) (n : ℕ) :
+    coeff d (((∑ i, X i : MvPolynomial σ R)) ^ n) =
+      if d.sum (fun _ m ↦ m) = n then d.multinomial else 0 := by
   let a : σ → R := Function.const _ 1
   have : (∑ i, X i : MvPolynomial σ R) = ∑ i, a i • X i := by
     simp [a]
-  rw [this, MvPolynomial.fintype_coeff_linearCombination_X_pow]
+  rw [this, fintype_coeff_linearCombination_X_pow]
   simp [a]
   split_ifs with hi
   · convert mul_one _
@@ -266,12 +280,12 @@ theorem MvPolynomial.fintype_coeff_sum_X_pow
   · rfl
 
 /-- The formula for the `d`th coefficient of `(X 0 + X 1) ^ n`. -/
-lemma MvPolynomial.coeff_add_pow (d : Fin 2 →₀ ℕ) (n : ℕ) :
+lemma coeff_add_pow (d : Fin 2 →₀ ℕ) (n : ℕ) :
     coeff d ((X 0 + X 1 : MvPolynomial (Fin 2) R) ^ n) =
       if (d 0, d 1) ∈ antidiagonal n then n.choose (d 0) else 0 := by
   have : (X 0 + X 1 : MvPolynomial (Fin 2) R) = ∑ i : Fin 2, X i := by
     rw [Fin.sum_univ_two]
-  rw [this, MvPolynomial.fintype_coeff_sum_X_pow]
+  rw [this, fintype_coeff_sum_X_pow]
   apply congr_arg
   simp only [Fin.isValue, mem_antidiagonal]
   have : d.sum (fun x m ↦ m) = d 0 + d 1 := by
@@ -285,7 +299,7 @@ lemma MvPolynomial.coeff_add_pow (d : Fin 2 →₀ ℕ) (n : ℕ) :
 
 open MvPolynomial in
 /-- The formula for the `d`th coefficient of `(X 0 + X 1) ^ n`. -/
-private lemma MvPolynomial.coeff_add_pow' (d : Fin 2 →₀ ℕ) (n : ℕ) :
+private lemma coeff_add_pow' (d : Fin 2 →₀ ℕ) (n : ℕ) :
     coeff d ((X 0 + X 1 : MvPolynomial (Fin 2) R) ^ n) =
       if (d 0, d 1) ∈ antidiagonal n then n.choose (d 0) else 0 := by
   have hmon : ∀ (u v : ℕ), X (0 : Fin 2) ^ u * X 1 ^ v =
@@ -315,6 +329,8 @@ private lemma MvPolynomial.coeff_add_pow' (d : Fin 2 →₀ ℕ) (n : ℕ) :
     intro hed
     apply hd
     simpa [← hed, mem_antidiagonal] using he
+
+end MvPolynomial
 
 end CommSemiring
 
@@ -420,12 +436,6 @@ section CommSemiring
 
 variable [CommSemiring A] [CommSemiring R] [Algebra A R] [CommSemiring S] [Algebra A S]
 
-
-/- /-- A power series `f : R⟦X⟧` is exponential if `f(X + Y) = f(X)*f(Y)` and `f(0) = 1`. -/
-structure IsExponential (f : R⟦X⟧) : Prop where
-  add_mul : subst (S := R) (X₀ + X₁) f = subst X₀ f * subst X₁ f
-  constantCoeff : constantCoeff f = 1 -/
-
 /-- A power series `f : R⟦X⟧` is exponential if `f(X + Y) = f(X)*f(Y)` and `f(0) = 1`. -/
 structure IsExponential (f : R⟦X⟧) : Prop where
   add_mul : ∀ p q, (p + q).choose p * coeff (p + q) f = coeff p f * coeff q f
@@ -461,12 +471,11 @@ protected theorem mul {f g : PowerSeries R} (hf : IsExponential f) (hg : IsExpon
     IsExponential (f * g) where
   add_mul p q := by
     --repeat rw [← coe_substAlgHom (HasSubst.of_constantCoeff_zero (by simp))]
-    have hf1 := hf.1
-    have hg1 := hg.1
-    simp? [coeff_mul]
+    simp only [coeff_mul]
+    rw [Finset.sum_mul_sum]
+    simp_rw [mul_mul_mul_comm]
+    simp_rw [← hf.1, ← hg.1]
     sorry
-    /- simp only [map_mul, coe_substAlgHom, hf.add_mul, hg.add_mul]
-    ring -/
   constantCoeff := by simp only [map_mul, hf.constantCoeff, hg.constantCoeff, mul_one]
 
 /-- If `f` is exponential and  `n : ℕ`, then `f ^ n` is exponential. -/
@@ -486,83 +495,21 @@ protected theorem rescale (a : A) {f : PowerSeries R} (hf : IsExponential f) :
     simp only [coeff_rescale, mul_mul_mul_comm, ← hf.add_mul p q]
     ring
 
--- Very slow, but it might just be my laptop overheating
 protected theorem rescale_add (r s : A) {f : R⟦X⟧} (hf : IsExponential f) :
     rescale (algebraMap A R r + algebraMap A R s) f =
       rescale (algebraMap A R r) f * rescale (algebraMap A R s) f := by
-  have hf1 := hf.1
-  have hf2 := hf.2
   ext d
   simp only [coeff_rescale, coeff_mul]
-  rw [(Commute.all _ _).add_pow']
-  rw [Finset.sum_mul]
+  --TODO: PR add_pow'
+  rw [(Commute.all _ _).add_pow', Finset.sum_mul]
   apply Finset.sum_congr rfl
   intro k hk
-  simp only [mem_antidiagonal] at hk
-  rw [← hk]
-  simp only [nsmul_eq_mul]
-  rw [mul_assoc, mul_comm _ ((coeff (k.1 + k.2)) f), ← mul_assoc, hf1 k.1 k.2]
+  rw [← mem_antidiagonal.mp hk, nsmul_eq_mul, mul_assoc, mul_comm _ ((coeff (k.1 + k.2)) f),
+    ← mul_assoc, hf.1 k.1 k.2]
   ring
 
 
 end IsExponential
-
-end CommSemiring
-
-section CommRing
-
-namespace IsExponential
-
-variable [CommRing R] [CommSemiring S]
-
-protected theorem neg {f : R⟦X⟧} (hf : IsExponential f) :
-    IsExponential (rescale  (-1 : R) f) := hf.rescale (-1 : R)
-
-protected theorem self_mul_neg_eq_one {f : R⟦X⟧} (hf : IsExponential f) :
-    f * (rescale (-1 : R) f) = 1 := by
-  have hadd := hf.rescale_add (1 : R) (-1 : R)
-  simp only [Algebra.algebraMap_self, RingHom.id_apply, add_neg_cancel, rescale_zero,
-    RingHom.coe_comp, Function.comp_apply, rescale_one] at hadd
-  rw [← hadd, hf.constantCoeff, map_one]
-
-protected theorem neg_mul_self_eq_one {f : R⟦X⟧} (hf : IsExponential f) :
-    (rescale (-1) f) * f = 1 := by rw [mul_comm, hf.self_mul_neg_eq_one]
-
-protected theorem isUnit {f : R⟦X⟧} (hf : IsExponential f) : IsUnit f :=
-  isUnit_iff_exists_inv'.mpr ⟨(rescale (-1) f),  hf.neg_mul_self_eq_one⟩
-
-protected theorem inverse_eq_neg_mul_self {f : R⟦X⟧} (hf : IsExponential f) :
-    Ring.inverse f = (rescale (-1) f) := by
-  rw [Ring.inverse, dif_pos hf.isUnit]
-  exact hf.isUnit.unit.inv_eq_of_mul_eq_one_left hf.neg_mul_self_eq_one
-
-protected theorem invOfUnit_eq_rescale_neg_one {f : R⟦X⟧} (hf : IsExponential f) :
-    (f.invOfUnit 1) = rescale (-1) f := by
-  rw [← IsUnit.mul_right_inj hf.isUnit]
-  rw [f.mul_invOfUnit, hf.self_mul_neg_eq_one]
-  simp only [Units.val_one, hf.constantCoeff]
-
-protected theorem inv {f : R⟦X⟧} (hf : IsExponential f) : IsExponential (f.invOfUnit 1) := by
-  simp [hf.invOfUnit_eq_rescale_neg_one, hf.neg]
-
-protected theorem map (φ : R →+* S) {f : R⟦X⟧} (hf : IsExponential f) :
-    let _ : CommRing S := RingHom.commSemiringToCommRing φ
-    IsExponential (PowerSeries.map φ f) := by
-  let _ : CommRing S := RingHom.commSemiringToCommRing φ
-  constructor
-  · intro p q
-    simp only [coeff_map, ← map_mul, ← hf.1 p q]
-    simp only [map_mul, map_natCast]
-  · rw [← coeff_zero_eq_constantCoeff_apply, coeff_map,
-      coeff_zero_eq_constantCoeff, hf.constantCoeff, map_one]
-
-end IsExponential
-
-end CommRing
-
-section CommSemiring
-
-variable [CommSemiring A] [CommSemiring R] [Algebra A R]
 
 open Additive
 
@@ -674,6 +621,53 @@ end ExponentialModule
 end CommSemiring
 
 section CommRing
+
+namespace IsExponential
+
+variable [CommRing R] [CommSemiring S]
+
+protected theorem neg {f : R⟦X⟧} (hf : IsExponential f) :
+    IsExponential (rescale  (-1 : R) f) := hf.rescale (-1 : R)
+
+protected theorem self_mul_neg_eq_one {f : R⟦X⟧} (hf : IsExponential f) :
+    f * (rescale (-1 : R) f) = 1 := by
+  have hadd := hf.rescale_add (1 : R) (-1 : R)
+  simp only [Algebra.algebraMap_self, RingHom.id_apply, add_neg_cancel, rescale_zero,
+    RingHom.coe_comp, Function.comp_apply, rescale_one] at hadd
+  rw [← hadd, hf.constantCoeff, map_one]
+
+protected theorem neg_mul_self_eq_one {f : R⟦X⟧} (hf : IsExponential f) :
+    (rescale (-1) f) * f = 1 := by rw [mul_comm, hf.self_mul_neg_eq_one]
+
+protected theorem isUnit {f : R⟦X⟧} (hf : IsExponential f) : IsUnit f :=
+  isUnit_iff_exists_inv'.mpr ⟨(rescale (-1) f),  hf.neg_mul_self_eq_one⟩
+
+protected theorem inverse_eq_neg_mul_self {f : R⟦X⟧} (hf : IsExponential f) :
+    Ring.inverse f = (rescale (-1) f) := by
+  rw [Ring.inverse, dif_pos hf.isUnit]
+  exact hf.isUnit.unit.inv_eq_of_mul_eq_one_left hf.neg_mul_self_eq_one
+
+protected theorem invOfUnit_eq_rescale_neg_one {f : R⟦X⟧} (hf : IsExponential f) :
+    (f.invOfUnit 1) = rescale (-1) f := by
+  rw [← IsUnit.mul_right_inj hf.isUnit]
+  rw [f.mul_invOfUnit, hf.self_mul_neg_eq_one]
+  simp only [Units.val_one, hf.constantCoeff]
+
+protected theorem inv {f : R⟦X⟧} (hf : IsExponential f) : IsExponential (f.invOfUnit 1) := by
+  simp [hf.invOfUnit_eq_rescale_neg_one, hf.neg]
+
+protected theorem map (φ : R →+* S) {f : R⟦X⟧} (hf : IsExponential f) :
+    let _ : CommRing S := RingHom.commSemiringToCommRing φ
+    IsExponential (PowerSeries.map φ f) := by
+  let _ : CommRing S := RingHom.commSemiringToCommRing φ
+  constructor
+  · intro p q
+    simp only [coeff_map, ← map_mul, ← hf.1 p q]
+    simp only [map_mul, map_natCast]
+  · rw [← coeff_zero_eq_constantCoeff_apply, coeff_map,
+      coeff_zero_eq_constantCoeff, hf.constantCoeff, map_one]
+
+end IsExponential
 
 namespace ExponentialModule
 
