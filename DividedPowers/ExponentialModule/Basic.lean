@@ -132,7 +132,7 @@ theorem eq_restrict_iff :
   · simp only [eq_comm]
   · simp [Function.mem_support, not_imp_comm]
 
-theorem self_eq_restrict : f = restrict f s ↔ f.support ⊆ s := by
+theorem self_eq_restrict_iff : f = restrict f s ↔ f.support ⊆ s := by
   simp [eq_restrict_iff]
 
 --[Mathlib.Data.Nat.Choose.Multinomial]
@@ -145,8 +145,7 @@ theorem multinomial_eq_of_support_subset
   · rw [Finset.prod_subset h]
     intro x _
     simp only [Finsupp.mem_support_iff, ne_eq, Decidable.not_not, factorial_eq_one]
-    intro hx'
-    simp [hx']
+    grind
 
 end Finsupp
 
@@ -157,47 +156,40 @@ namespace MvPolynomial
 -- PR this section [Mathlib.Algebra.MvPolynomial.Basic], if possible
 
 theorem prod_X_pow {σ : Type*} [DecidableEq σ] (x : σ → ℕ) (s : Finset σ) :
-    ∏ y ∈ s, (MvPolynomial.X y : MvPolynomial σ R) ^ x y =
-           MvPolynomial.monomial (Finsupp.restrict x s) (1 : R) := by
-  rw [MvPolynomial.monomial_eq, MvPolynomial.C_1, one_mul]
-  simp only [prod]
-  rw [Finset.prod_subset (s₁ := (Finsupp.restrict x s).support) (s₂ := s) (filter_subset _ s)]
-  · apply Finset.prod_congr rfl
-    intro i hi
-    simp [Finsupp.restrict_apply, hi]
+    ∏ y ∈ s, (X y : MvPolynomial σ R) ^ x y = monomial (Finsupp.restrict x s) (1 : R) := by
+  rw [monomial_eq, C_1, one_mul, prod,
+    Finset.prod_subset (s₁ := (Finsupp.restrict x s).support) (s₂ := s) (filter_subset _ s)]
+  · exact Finset.prod_congr rfl (fun _ hi ↦ by simp [Finsupp.restrict_apply, hi])
   · intro i hi hi'
     rw [Finsupp.mem_support_iff, ne_eq, not_not] at hi'
     rw [hi', pow_zero]
 
-theorem coeff_prod_X_pow
-    {σ : Type*} [DecidableEq σ] (s : Finset σ) (d : σ →₀ ℕ) (x : σ → ℕ)
+theorem coeff_prod_X_pow {σ : Type*} [DecidableEq σ] (s : Finset σ) (d : σ →₀ ℕ) (x : σ → ℕ)
     [DecidablePred fun i ↦ i ∈ s] [Decidable (d = Finsupp.restrict x s)] :
-    MvPolynomial.coeff d (∏ y ∈ s, (MvPolynomial.X y : MvPolynomial σ R) ^ x y) =
+    coeff d (∏ y ∈ s, (X y : MvPolynomial σ R) ^ x y) =
       if d = Finsupp.restrict x s then 1 else 0 := by
-  rw [MvPolynomial.prod_X_pow x s, MvPolynomial.coeff_monomial]
+  rw [prod_X_pow x s, coeff_monomial]
   simp_rw [eq_comm]
   congr
 
 -- TODO: golf
 theorem coeff_linearCombination_X_pow (σ : Type*) (a : σ →₀ R) (d : σ →₀ ℕ) (n : ℕ) :
-    MvPolynomial.coeff d (((a.linearCombination R MvPolynomial.X : MvPolynomial σ R)) ^ n) =
+    coeff d (((a.linearCombination R X : MvPolynomial σ R)) ^ n) =
       if d.sum (fun _ m ↦ m) = n then d.multinomial * d.prod (fun r m ↦ a r ^ m) else 0 := by
   classical
   simp only [Finsupp.sum, Finsupp.linearCombination_apply, Finset.sum_pow_eq_sum_piAntidiag,
-    MvPolynomial.coeff_sum]
-  simp_rw [← MvPolynomial.C_eq_coe_nat, MvPolynomial.coeff_C_mul]
-  simp_rw [MvPolynomial.smul_eq_C_mul, mul_pow, Finset.prod_mul_distrib, ← map_pow, ← map_prod]
-  simp_rw [MvPolynomial.coeff_C_mul]
-  simp_rw [MvPolynomial.coeff_prod_X_pow, mul_ite, mul_one, mul_zero]
+    coeff_sum]
+  simp_rw [← C_eq_coe_nat, coeff_C_mul, smul_eq_C_mul, mul_pow, Finset.prod_mul_distrib, ← map_pow,
+    ← map_prod, coeff_C_mul, coeff_prod_X_pow, mul_ite, mul_one, mul_zero]
   split_ifs with hd
   · rw [Finset.sum_eq_single (Finsupp.restrict d a.support : σ → ℕ)]
     · have := Finsupp.restrict_restrict (f := d) (s := a.support) (t := a.support)
       simp only [inter_self] at this
       simp only [← DFunLike.coe_fn_eq, Finsupp.restrict_restrict, inter_self,
-        Finsupp.self_eq_restrict, fun_support_eq, coe_subset]
+        Finsupp.self_eq_restrict_iff, fun_support_eq, coe_subset]
       split_ifs with hd'
       · have : d = Finsupp.restrict d a.support := by
-          simp only [← DFunLike.coe_fn_eq, Finsupp.self_eq_restrict, fun_support_eq, coe_subset, hd']
+          simp [← DFunLike.coe_fn_eq, Finsupp.self_eq_restrict_iff, hd']
         rw [← this]
         apply congr_arg₂
         · apply congr_arg
@@ -238,8 +230,7 @@ theorem coeff_linearCombination_X_pow (σ : Type*) (a : σ →₀ R) (d : σ →
           rw [Finsupp.restrict_apply, if_pos hx]
         · rw [hd''.1]
           apply Finsupp.restrict_support_le
-        · intro x
-          simp
+        · exact fun _ ↦ by simp
       · intro i
         rw [not_imp_comm]
         simp only [Finsupp.mem_support_iff, ne_eq, Finsupp.restrict_apply]
@@ -250,14 +241,9 @@ theorem coeff_linearCombination_X_pow (σ : Type*) (a : σ →₀ R) (d : σ →
     rw [if_neg]
     rintro ⟨rfl⟩
     apply hd
-    simp only [mem_piAntidiag, ne_eq] at hx
-    rw [← hx.1]
-    rw [Finset.sum_subset (Finsupp.restrict_support_le)]
-    · apply Finset.sum_congr rfl
-      intro i hi
-      rw [Finsupp.restrict_apply, if_pos hi]
-    · intro i _
-      simp
+    rw [← (mem_piAntidiag.mp hx).1,
+      Finset.sum_subset (Finsupp.restrict_support_le) (fun _ _ ↦ by simp)]
+    exact Finset.sum_congr rfl (fun _ hi ↦ by rw [Finsupp.restrict_apply, if_pos hi])
 
 theorem fintype_coeff_linearCombination_X_pow
     {σ : Type*} [Fintype σ] (a : σ → R) (d : σ →₀ ℕ) (n : ℕ) :
