@@ -413,12 +413,12 @@ open Polynomial
 variable {R : Type u} [CommSemiring R] {M : Type*} [AddCommMonoid M] [Module R M]
   {N : Type*} [AddCommMonoid N] [Module R N] (p : ℕ) (r : R) (f g : M →ₚₗ[R] N)
 
-theorem Polynomial.baseChange_comp_monomial_eq {S : Type*} [CommSemiring S] [Algebra R S]
+theorem Polynomial.mapAlgHom_comp_monomial_eq {S : Type*} [CommSemiring S] [Algebra R S]
     {S' : Type*} [CommSemiring S'] [Algebra R S'] (φ : S →ₐ[R] S') (p : ℕ) :
-    (Polynomial.baseChange φ).toLinearMap ∘ₗ ((monomial p).restrictScalars R) =
+    (Polynomial.mapAlgHom φ).toLinearMap ∘ₗ ((monomial p).restrictScalars R) =
       ((monomial p).restrictScalars R) ∘ₗ φ.toLinearMap := by
   ext
-  simp [baseChange_monomial]
+  simp [mapAlgHom_monomial]
 
 /-- The homogeneous component of degree `p` of a `PolynomialLaw`. -/
 @[simps] noncomputable def component : (M →ₚₗ[R] N) →ₗ[R] (M →ₚₗ[R] N) where
@@ -428,8 +428,8 @@ theorem Polynomial.baseChange_comp_monomial_eq {S : Type*} [CommSemiring S] [Alg
     isCompat' {S _ _} {S' _ _} φ := by
       ext sm
       simp only [Function.comp_apply, rTensor_apply, ← rTensor_comp_apply]
-      rw [lcoeff_comp_baseChange_eq, rTensor_comp_apply, f.isCompat_apply', ← rTensor_comp_apply,
-        Polynomial.baseChange_comp_monomial_eq] }
+      rw [lcoeff_comp_mapAlgHom_eq, rTensor_comp_apply, f.isCompat_apply', ← rTensor_comp_apply,
+        Polynomial.mapAlgHom_comp_monomial_eq] }
   map_add' f g  := by ext S _ _ sm; simp
   map_smul' r f := by ext S _ _ sm; simp [rTensor_apply]
 
@@ -442,10 +442,10 @@ theorem component_toFun_apply (S : Type*) [CommSemiring S] [Algebra R S] (m : S 
       (f.toFun S[X] (((monomial 1).restrictScalars R).rTensor M m)) p := by
   obtain ⟨n, ψ, q, rfl⟩ :=  exists_lift m
   rw [← PolynomialLaw.isCompat_apply, toFun_eq_toFun'_apply, component.toFun'_apply,
-    ← LinearMap.rTensor_comp_apply, ← Polynomial.baseChange_comp_monomial_eq,
+    ← LinearMap.rTensor_comp_apply, ← Polynomial.mapAlgHom_comp_monomial_eq,
     LinearMap.rTensor_comp_apply, ← PolynomialLaw.isCompat_apply]
   simp only [rTensor_apply, ← rTensor_comp_apply]
-  rw [lcoeff_comp_baseChange_eq, toFun_eq_toFun'_apply]
+  rw [lcoeff_comp_mapAlgHom_eq, toFun_eq_toFun'_apply]
 
 /-- `f.component p` is homogeneous of degree `p`. -/
 lemma component_isHomogeneous : IsHomogeneous p (f.component p) := by

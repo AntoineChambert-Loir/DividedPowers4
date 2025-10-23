@@ -5,12 +5,14 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 import Mathlib.Algebra.Module.LinearMap.Defs
 
+-- In PR #30546
+
 open LinearMap
 
 @[simp]
 lemma LinearMap.restrictScalars_id (R : Type*) {S M : Type*} [Semiring R] [Semiring S]
     [AddCommMonoid M] [Module R M] [Module S M] [CompatibleSMul M M R S] :
-    (LinearMap.id (R := S) (M := M)).restrictScalars R = LinearMap.id  := rfl
+    (LinearMap.id (R := S) (M := M)).restrictScalars R = LinearMap.id := rfl
 
 @[simp]
 lemma restrictScalars_self {R M N : Type*} [CommSemiring R] [AddCommMonoid M] [Module R M]
