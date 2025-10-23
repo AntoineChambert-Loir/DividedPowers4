@@ -21,10 +21,10 @@ import DividedPowers.ForMathlib.Algebra.Algebra.Bilinear
 import DividedPowers.ForMathlib.Algebra.BigOperators.Finsupp.Basic -- In PR #30537
 import DividedPowers.ForMathlib.Algebra.BigOperators.Finsupp.Fin -- In PR #30538
 import DividedPowers.ForMathlib.Algebra.BigOperators.Group.Finset.Basic -- In PR #30539
-import DividedPowers.ForMathlib.Algebra.Module.LinearMap.Defs
+import DividedPowers.ForMathlib.Algebra.Module.LinearMap.Defs -- In PR #30546
 --import DividedPowers.ForMathlib.Algebra.MvPolynomial.Equiv -- In PR #15019
 import DividedPowers.ForMathlib.Algebra.MvPolynomial.Lemmas
-import DividedPowers.ForMathlib.Algebra.Polynomial.AlgebraMap
+import DividedPowers.ForMathlib.Algebra.Polynomial.AlgebraMap -- In PR #30547
 import DividedPowers.ForMathlib.Algebra.TrivSqZeroExt
 import DividedPowers.ForMathlib.Data.FinsetLemmas
 --import DividedPowers.ForMathlib.Data.Nat.Factorial.NatCast -- In PR #24439
