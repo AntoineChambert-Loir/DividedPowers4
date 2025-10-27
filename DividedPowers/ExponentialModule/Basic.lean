@@ -86,6 +86,7 @@ namespace Finsupp
 variable {σ α : Type*} [Zero α] (f g : σ → α) (s : Finset σ)
   [DecidablePred fun i ↦ i ∈ s] [DecidablePred fun i ↦ f i ≠ 0]
 
+/-- The restriction of a finitely supported map `σ →₀ α` to `s : Finset σ`. -/
 def restrict : σ →₀ α where
   toFun i := if i ∈ s then f i else 0
   support := {i ∈ s | f i ≠ 0}
@@ -96,10 +97,9 @@ variable {f g s}
 theorem restrict_apply {i : σ} :
   restrict f s i = if i ∈ s then f i else 0 := rfl
 
-theorem restrict_support_le : (restrict f s).support ⊆ s := fun i ↦ by
-  simp only [mem_support_iff, ne_eq, not_imp_comm, restrict_apply]
-  intro hi
-  rw [if_neg hi]
+theorem restrict_support_le : (restrict f s).support ⊆ s := fun i hi ↦ by
+  simp only [mem_support_iff, restrict_apply, ne_eq, ite_eq_right_iff, Classical.not_imp] at hi
+  exact hi.1
 
 theorem restrict_restrict [DecidableEq σ] {t : Finset σ}
     [DecidablePred fun i ↦ i ∈ t] [DecidablePred fun i ↦ i ∈ s ∩ t]
@@ -111,26 +111,21 @@ theorem restrict_restrict [DecidableEq σ] {t : Finset σ}
   · rw [if_pos ht]
     by_cases hs : i ∈ s
     · rw [if_pos hs, if_pos (mem_inter_of_mem hs ht)]
-    · rw [if_neg hs, if_neg]
-      intro hs'; apply hs
-      exact Finset.inter_subset_left hs'
-  · rw [if_neg ht, if_neg]
-    intro ht'; apply ht
-    exact Finset.inter_subset_right ht'
+    · rw [if_neg hs, if_neg (fun hs' ↦ hs (Finset.inter_subset_left hs'))]
+  · rw [if_neg ht, if_neg (fun ht' ↦ ht (Finset.inter_subset_right ht'))]
 
 theorem eq_restrict_iff :
     g = restrict f s ↔ g.support ⊆ s ∧ ∀ i, i ∈ s → f i = g i := by
   suffices g.support ⊆ s ∧ (∀ i, i ∈ s → f i = g i) ↔
-    ∀ i, (i ∈ s → g i = f i) ∧ (i ∉ s → g i = 0) by
-    rw [this]
-    rw [funext_iff]
+      ∀ i, (i ∈ s → g i = f i) ∧ (i ∉ s → g i = 0) by
+    rw [this, funext_iff]
     apply forall_congr'
     intro i
     by_cases hi : i ∈ s <;> simp [restrict_apply, hi]
   rw [Set.subset_def, and_comm, forall_and]
   apply and_congr
-  · simp only [eq_comm]
-  · simp [Function.mem_support, not_imp_comm]
+  · simp_rw [eq_comm]
+  · simp [not_imp_comm]
 
 theorem self_eq_restrict_iff : f = restrict f s ↔ f.support ⊆ s := by
   simp [eq_restrict_iff]
@@ -172,7 +167,7 @@ theorem coeff_prod_X_pow {σ : Type*} [DecidableEq σ] (s : Finset σ) (d : σ �
   simp_rw [eq_comm]
   congr
 
-private theorem coeff_linearCombination_X_pow_of_eq (σ : Type*) (a : σ →₀ R) {d : σ →₀ ℕ} {n : ℕ}
+private theorem coeff_linearCombination_X_pow_of_eq {σ : Type*} (a : σ →₀ R) {d : σ →₀ ℕ} {n : ℕ}
     (hd : d.sum (fun _ m ↦ m) = n) :
     coeff d (((a.linearCombination R X : MvPolynomial σ R)) ^ n) =
       d.multinomial * d.prod (fun r m ↦ a r ^ m) := by
@@ -182,29 +177,24 @@ private theorem coeff_linearCombination_X_pow_of_eq (σ : Type*) (a : σ →₀ 
   simp_rw [← C_eq_coe_nat, coeff_C_mul, smul_eq_C_mul, mul_pow, Finset.prod_mul_distrib, ← map_pow,
     ← map_prod, coeff_C_mul, coeff_prod_X_pow, mul_ite, mul_one, mul_zero]
   rw [Finset.sum_eq_single (Finsupp.restrict d a.support : σ → ℕ)]
-  · have := Finsupp.restrict_restrict (f := d) (s := a.support) (t := a.support)
-    simp only [inter_self] at this
-    simp only [← DFunLike.coe_fn_eq, Finsupp.restrict_restrict, inter_self,
+  · simp only [← DFunLike.coe_fn_eq, Finsupp.restrict_restrict, inter_self,
       Finsupp.self_eq_restrict_iff, fun_support_eq, coe_subset]
     split_ifs with hd'
     · have : d = Finsupp.restrict d a.support := by
         simp [← DFunLike.coe_fn_eq, Finsupp.self_eq_restrict_iff, hd']
       rw [← this]
-      apply congr_arg₂
-      · apply congr_arg
-        rw [Finsupp.multinomial_eq_of_support_subset hd']
+      congr 1
+      · rw [Finsupp.multinomial_eq_of_support_subset hd']
       · rw [Finsupp.prod, Finset.prod_subset hd']
-        intro x _
-        simp only [Finsupp.mem_support_iff, ne_eq, Decidable.not_not]
-        intro hx
+        intro x _ hx
+        simp only [Finsupp.mem_support_iff, ne_eq, not_not] at hx
         rw [hx, pow_zero]
     · symm
       convert mul_zero _
-      simp only [not_subset] at hd'
-      obtain ⟨x, hx, hx'⟩ := hd'
+      obtain ⟨x, hx, hx'⟩ := not_subset.mp hd'
       apply Finset.prod_eq_zero hx
       simp only [Finsupp.mem_support_iff, ne_eq, Decidable.not_not] at hx hx'
-      simp only [hx', zero_pow hx]
+      simp [hx', zero_pow hx]
   · intro x hx hx'
     rw [if_neg]
     intro hd
@@ -225,7 +215,7 @@ private theorem coeff_linearCombination_X_pow_of_eq (σ : Type*) (a : σ →₀ 
         Classical.not_imp] at hi ⊢
       exact hi.1
 
-private theorem coeff_linearCombination_X_pow_of_ne (σ : Type*) (a : σ →₀ R) {d : σ →₀ ℕ} {n : ℕ}
+private theorem coeff_linearCombination_X_pow_of_ne {σ : Type*} (a : σ →₀ R) {d : σ →₀ ℕ} {n : ℕ}
     (hd : d.sum (fun _ m ↦ m) ≠ n) :
     coeff d (((a.linearCombination R X : MvPolynomial σ R)) ^ n) = 0 := by
   classical
@@ -242,14 +232,14 @@ private theorem coeff_linearCombination_X_pow_of_ne (σ : Type*) (a : σ →₀ 
     Finset.sum_subset (Finsupp.restrict_support_le) (fun _ _ ↦ by simp)]
   exact Finset.sum_congr rfl (fun _ hi ↦ by rw [Finsupp.restrict_apply, if_pos hi])
 
-theorem coeff_linearCombination_X_pow (σ : Type*) (a : σ →₀ R) (d : σ →₀ ℕ) (n : ℕ) :
+theorem coeff_linearCombination_X_pow {σ : Type*} (a : σ →₀ R) (d : σ →₀ ℕ) (n : ℕ) :
     coeff d (((a.linearCombination R X : MvPolynomial σ R)) ^ n) =
       if d.sum (fun _ m ↦ m) = n then d.multinomial * d.prod (fun r m ↦ a r ^ m) else 0 := by
   split_ifs with hd
-  · exact coeff_linearCombination_X_pow_of_eq σ a hd
-  · exact coeff_linearCombination_X_pow_of_ne σ a hd
+  · exact coeff_linearCombination_X_pow_of_eq a hd
+  · exact coeff_linearCombination_X_pow_of_ne a hd
 
-theorem fintype_coeff_linearCombination_X_pow
+theorem coeff_linearCombination_X_pow_of_fintype
     {σ : Type*} [Fintype σ] (a : σ → R) (d : σ →₀ ℕ) (n : ℕ) :
     coeff d (((∑ i, a i • X i : MvPolynomial σ R)) ^ n) =
       if d.sum (fun _ m ↦ m) = n then d.multinomial * d.prod (fun r m ↦ a r ^ m) else 0 := by
@@ -257,12 +247,12 @@ theorem fintype_coeff_linearCombination_X_pow
     Finsupp.prod_congr (fun r _ ↦ rfl), ← coeff_linearCombination_X_pow]
   simp [Finsupp.linearCombination_apply, Finsupp.sum_of_support_subset (s := univ)]
 
-theorem fintype_coeff_sum_X_pow {σ : Type*} [Fintype σ] (d : σ →₀ ℕ) (n : ℕ) :
+theorem coeff_sum_X_pow_of_fintype {σ : Type*} [Fintype σ] (d : σ →₀ ℕ) (n : ℕ) :
     coeff d (((∑ i, X i : MvPolynomial σ R)) ^ n) =
       if d.sum (fun _ m ↦ m) = n then d.multinomial else 0 := by
   let a : σ → R := Function.const _ 1
   have : (∑ i, X i : MvPolynomial σ R) = ∑ i, a i • X i := by simp [a]
-  rw [this, fintype_coeff_linearCombination_X_pow]
+  rw [this, coeff_linearCombination_X_pow_of_fintype]
   simp only [Function.const_one, Pi.one_apply, one_pow, cast_ite, cast_zero, a]
   split_ifs with hi
   · convert mul_one _
@@ -273,52 +263,16 @@ theorem fintype_coeff_sum_X_pow {σ : Type*} [Fintype σ] (d : σ →₀ ℕ) (n
 lemma coeff_add_pow (d : Fin 2 →₀ ℕ) (n : ℕ) :
     coeff d ((X 0 + X 1 : MvPolynomial (Fin 2) R) ^ n) =
       if (d 0, d 1) ∈ antidiagonal n then n.choose (d 0) else 0 := by
-  have : (X 0 + X 1 : MvPolynomial (Fin 2) R) = ∑ i : Fin 2, X i := by
-    rw [Fin.sum_univ_two]
-  rw [this, fintype_coeff_sum_X_pow]
-  apply congr_arg
-  simp only [Fin.isValue, mem_antidiagonal]
+  rw [← Fin.sum_univ_two, coeff_sum_X_pow_of_fintype]
+  congr 1
   have : d.sum (fun x m ↦ m) = d 0 + d 1 := by
-    simp [Finsupp.sum_of_support_subset d (subset_univ d.support), Fin.sum_univ_two]
-  simp only [this]
+    simp [Finsupp.sum_of_support_subset d (subset_univ d.support)]
+  simp only [mem_antidiagonal, this]
   split_ifs with hd
   · rw [Finsupp.multinomial_eq_of_support_subset (subset_univ d.support)]
     erw [Nat.binomial_eq_choose Fin.zero_ne_one]
     simp [hd]
   · rfl
-
-open MvPolynomial in
-/-- The formula for the `d`th coefficient of `(X 0 + X 1) ^ n`. -/
-private lemma coeff_add_pow' (d : Fin 2 →₀ ℕ) (n : ℕ) :
-    coeff d ((X 0 + X 1 : MvPolynomial (Fin 2) R) ^ n) =
-      if (d 0, d 1) ∈ antidiagonal n then n.choose (d 0) else 0 := by
-  have hmon : ∀ (u v : ℕ), X (0 : Fin 2) ^ u * X 1 ^ v =
-      monomial (single 0 u + single 1 v) (1 : R) := by
-    intro u v
-    rw [monomial_eq, prod_of_support_subset _ (subset_univ _) _ (fun i _ ↦ by rw [pow_zero])]
-    simp only [Fin.isValue, ne_eq, Finsupp.coe_add, Pi.add_apply, Fin.prod_univ_two, single_eq_same,
-      C_1, one_ne_zero, not_false_eq_true, single_eq_of_ne, add_zero, zero_ne_one, zero_add,
-      one_mul]
-  rw [Commute.add_pow' (Commute.all _ _), coeff_sum]
-  simp only [coeff_smul, Fin.isValue, cast_ite, cast_zero, hmon]
-  split_ifs with hd
-  · rw [sum_eq_single (d 0, d 1) _ (fun hd' ↦ absurd hd hd')]
-    · rw [coeff_monomial, if_pos]
-      · simp only [Fin.isValue, nsmul_eq_mul, mul_one]
-      · ext i
-        match i with
-        | 0 => simp
-        | 1 => simp
-    · intro e _ hed
-      rw [coeff_monomial, if_neg, smul_zero]
-      intro hde
-      apply hed
-      simp [← hde]
-  · refine sum_eq_zero (fun e he ↦ ?_)
-    rw [coeff_monomial, if_neg, smul_zero]
-    intro hed
-    apply hd
-    simpa [← hed, mem_antidiagonal] using he
 
 end MvPolynomial
 
@@ -370,7 +324,7 @@ lemma coeff_subst_single {σ : Type*} [DecidableEq σ] (s : σ) (f : R⟦X⟧) (
   · intro d hd
     simp only [MvPowerSeries.coeff_X_pow, smul_eq_mul, mul_ite, mul_one, mul_zero, ite_eq_right_iff]
     intro hd'
-    simp only [hd', single_eq_same, ne_eq, not_true_eq_false] at hd
+    simp [hd'] at hd
 
 lemma coeff_subst_add_X₀_X₁ (f : R⟦X⟧) (e : Fin 2 →₀ ℕ) :
     (MvPowerSeries.coeff e) (subst (X₀ + X₁) f) =
@@ -384,38 +338,35 @@ lemma coeff_subst_add_X₀_X₁ (f : R⟦X⟧) (e : Fin 2 →₀ ℕ) :
   rw [finsum_eq_single _ (single () (e 0 + e 1)), mul_comm]
   · apply congr_arg₂
     simp only [Fin.isValue, single_add, Finsupp.coe_add, Pi.add_apply, single_eq_same,
-      MvPolynomial.coeff_add_pow e _, mem_antidiagonal, ↓reduceIte]
+      MvPolynomial.coeff_add_pow, mem_antidiagonal, reduceIte]
     simp [coeff]
   · intro d hd'
-    simp [MvPolynomial.coeff_add_pow]
+    simp only [Fin.isValue, MvPolynomial.coeff_add_pow, mem_antidiagonal, cast_ite, cast_zero,
+      mul_ite, mul_zero, ite_eq_right_iff]
     intro hd
-    exfalso
-    apply hd'
-    ext
-    simp only [PUnit.default_eq_unit, hd, single_eq_same]
+    have hd_eq : d = single () (e 0 + e 1) := by ext; simp [hd]
+    exact absurd hd_eq hd'
+
 
 lemma coeff_subst_mul_X₀_X₁ (f : R⟦X⟧) (e : Fin 2 →₀ ℕ) :
     MvPowerSeries.coeff e (subst X₀ f * subst X₁ f) = coeff (e 0) f * coeff (e 1) f := by
-  rw [MvPowerSeries.coeff_mul, Finset.sum_eq_single (single 0 (e 0), single 1 (e 1))]
-  · apply congr_arg₂ <;>
-    · simp only [coeff_subst_single, single_eq_same, if_pos]
+  rw [MvPowerSeries.coeff_mul, Finset.sum_eq_single (single 0 (e 0), single 1 (e 1)) ?_ ?_]
+  · apply congr_arg₂ <;> simp [coeff_subst_single]
   · intro b hb hb'
-    rw [mem_antidiagonal] at hb
     by_contra hmul_ne_zero
     rcases ne_zero_and_ne_zero_of_mul hmul_ne_zero with ⟨h0, h1⟩
     simp only [Fin.isValue, coeff_subst_single, ne_eq, ite_eq_right_iff,
       not_forall, exists_prop] at h0 h1
     apply hb'
-    rw [Prod.ext_iff, ← hb, h0.1, h1.1]
+    rw [Prod.ext_iff, ← mem_antidiagonal.mp hb, h0.1, h1.1]
     simp
   · intro he
-    exfalso
-    apply he
-    simp only [mem_antidiagonal]
-    ext i
-    match i with
-    | 0 => simp
-    | 1 => simp
+    have he' : single 0 (e 0) + single 1 (e 1) = e := by
+      ext i
+      match i with
+      | 0 => simp
+      | 1 => simp
+    exact absurd (mem_antidiagonal.mpr he') he
 
 end CommRing
 
@@ -483,14 +434,26 @@ protected theorem rescale (a : A) {f : PowerSeries R} (hf : IsExponential f) :
   · rw [← coeff_zero_eq_constantCoeff, coeff_rescale]
     simp [hf.2]
 
+/- /-- A version of `Commute.add_pow` that avoids ℕ-subtraction by summing over the antidiagonal and
+also with the binomial coefficient applied via scalar action of ℕ. -/
+theorem add_pow' (h : Commute x y) (n : ℕ) :
+    (x + y) ^ n = ∑ m ∈ antidiagonal n, n.choose m.1 • (x ^ m.1 * y ^ m.2) := by
+  simp_rw [Nat.sum_antidiagonal_eq_sum_range_succ fun m p ↦ n.choose m • (x ^ m * y ^ p),
+    nsmul_eq_mul, cast_comm, h.add_pow]
+
+end Commute -/
+
+/-- The **binomial theorem** -/
+theorem _root_.add_pow' (x y : R) (n : ℕ) :
+    (x + y) ^ n = ∑ m ∈ antidiagonal n, n.choose m.1 • (x ^ m.1 * y ^ m.2) :=
+  (Commute.all x y).add_pow' n
+
 protected theorem rescale_add (r s : A) {f : R⟦X⟧} (hf : IsExponential f) :
     rescale (algebraMap A R r + algebraMap A R s) f =
       rescale (algebraMap A R r) f * rescale (algebraMap A R s) f := by
   rw [isExponential_iff] at hf
   ext d
-  simp only [coeff_rescale, coeff_mul]
-  --TODO: PR add_pow'
-  rw [(Commute.all _ _).add_pow', Finset.sum_mul]
+  simp only [coeff_rescale, coeff_mul, add_pow', Finset.sum_mul]
   apply Finset.sum_congr rfl
   intro k hk
   rw [← mem_antidiagonal.mp hk, nsmul_eq_mul, mul_assoc, mul_comm _ ((coeff (k.1 + k.2)) f),
@@ -513,9 +476,7 @@ lemma toAdditive_smul_coe' (r : A) (f : Additive R⟦X⟧) :
   toMul (r • f) = rescale (algebraMap A R r) (toMul f) := rfl
 
 noncomputable instance : DistribMulAction A (Additive R⟦X⟧) where
-  one_smul := by
-    simp only [Additive.forall, toAdditive_smul_coe, map_one, rescale_one, RingHom.id_apply,
-      implies_true]
+  one_smul := by simp [toAdditive_smul_coe]
   mul_smul := by
     suffices  ∀ (x y : A) (b : Additive R⟦X⟧), (y * x) • b = x • y • b by
       intro x y b
@@ -523,8 +484,7 @@ noncomputable instance : DistribMulAction A (Additive R⟦X⟧) where
     simp [toAdditive_smul_coe, rescale_mul]
   smul_zero a := by
     rw [← ofMul_one, toAdditive_smul_coe, map_one]
-  smul_add := by
-    simp only [Additive.forall, toAdditive_smul_coe, ← ofMul_mul, map_mul, forall_const]
+  smul_add := by simp [toAdditive_smul_coe, ← ofMul_mul]
 
 end Instances
 
@@ -535,17 +495,16 @@ variable (R) in
   This is implemented as an `AddSubmonoid (Additive R⟦X⟧) `. -/
 def ExponentialModule : AddSubmonoid (Additive R⟦X⟧) where
   carrier := { f : Additive (R⟦X⟧) | IsExponential (toMul f) }
-  add_mem' {f g} hf hg := by simp only [Set.mem_setOf_eq, toMul_add, hf.mul hg]
-  zero_mem' := by simp only [Set.mem_setOf_eq, toMul_zero, IsExponential.one]
+  add_mem' {f g} hf hg := by simp [hf.mul hg]
+  zero_mem' := by simp [IsExponential.one]
 
 lemma mem_exponentialModule_iff (f : R⟦X⟧) :
     ofMul f ∈ ExponentialModule R ↔ IsExponential f := by
-  simp only [ExponentialModule, AddSubmonoid.mem_mk, AddSubsemigroup.mem_mk, Set.mem_setOf_eq,
-    toMul_ofMul]
+  simp [ExponentialModule]
 
 lemma mem_exponentialModule_iff' (f : Additive R⟦X⟧) :
     f ∈ ExponentialModule R ↔ IsExponential (toMul f) := by
-  simp only [ExponentialModule, AddSubmonoid.mem_mk, AddSubsemigroup.mem_mk, Set.mem_setOf_eq]
+  simp [ExponentialModule]
 
 namespace ExponentialModule
 
@@ -558,8 +517,7 @@ variable (R) in
 instance instCoe : Coe (ExponentialModule R) R⟦X⟧ := ⟨toPowerSeries⟩
 
 lemma coe_injective : Function.Injective ((↑) : ExponentialModule R → R⟦X⟧) :=
-  fun f g ↦ by
-    simp only [toPowerSeries, EmbeddingLike.apply_eq_iff_eq, SetLike.coe_eq_coe, imp_self]
+  fun f g ↦ by simp [toPowerSeries]
 
 @[simp, norm_cast]
 lemma coe_inj {f g : ExponentialModule R} : (f : R⟦X⟧) = ↑g ↔ f = g := coe_injective.eq_iff
@@ -583,20 +541,18 @@ theorem smul_def (r : A) (f : ExponentialModule R) :
 
 noncomputable instance instModule : Module A (ExponentialModule R) where
   one_smul f := by rw [← Subtype.coe_inj, smul_def, one_smul]
-  mul_smul r s f := by simp only [← Subtype.coe_inj, smul_def, mul_smul]
+  mul_smul r s f := by simp [← Subtype.coe_inj, smul_def, mul_smul]
   smul_zero r := by rw [← Subtype.coe_inj, smul_def, ZeroMemClass.coe_zero, smul_zero]
-  smul_add r f g := by
-    simp only [← Subtype.coe_inj, smul_def, AddSubmonoid.coe_add, smul_add]
+  smul_add r f g := by simp [← Subtype.coe_inj, smul_def]
   add_smul r s f := by
     simp only [← Subtype.coe_inj, smul_def, AddSubmonoid.coe_add]
     apply Additive.toMul.injective
-    simp only [toAdditive_smul_coe', toMul_add, map_add, f.prop.rescale_add r s ]
+    simp [toAdditive_smul_coe', -toMul_val_eq_coe, f.prop.rescale_add r s]
   zero_smul f := by
     simp only [← Subtype.coe_inj, smul_def, ZeroMemClass.coe_zero]
     apply Additive.toMul.injective
     have hf : constantCoeff f = (1 : R) := f.prop.constantCoeff
-    simp only [toAdditive_smul_coe', map_zero, rescale_zero, toMul_val_eq_coe, RingHom.coe_comp,
-      Function.comp_apply, hf, map_one, toMul_zero]
+    simp [toAdditive_smul_coe', toMul_val_eq_coe, hf]
 
 lemma coe_add (f g : ExponentialModule R) : (↑(f + g) : R⟦X⟧) = ↑f * ↑g := by
   simp only [toPowerSeries, AddSubmonoid.coe_add, toMul_add]
@@ -637,9 +593,8 @@ protected theorem inverse_eq_neg_mul_self {f : R⟦X⟧} (hf : IsExponential f) 
 
 protected theorem invOfUnit_eq_rescale_neg_one {f : R⟦X⟧} (hf : IsExponential f) :
     (f.invOfUnit 1) = rescale (-1) f := by
-  rw [← IsUnit.mul_right_inj hf.isUnit]
-  rw [f.mul_invOfUnit, hf.self_mul_neg_eq_one]
-  simp only [Units.val_one, hf.constantCoeff]
+  rw [← IsUnit.mul_right_inj hf.isUnit, f.mul_invOfUnit, hf.self_mul_neg_eq_one]
+  simp [Units.val_one, hf.constantCoeff]
 
 protected theorem inv {f : R⟦X⟧} (hf : IsExponential f) : IsExponential (f.invOfUnit 1) := by
   simp [hf.invOfUnit_eq_rescale_neg_one, hf.neg]
@@ -651,9 +606,8 @@ protected theorem map (φ : R →+* S) {f : R⟦X⟧} (hf : IsExponential f) :
   rw [isExponential_iff] at hf ⊢
   refine ⟨fun p q ↦ ?_, ?_⟩
   · simp only [coeff_map, ← map_mul, ← hf.1 p q]
-    simp only [map_mul, map_natCast]
-  · rw [← coeff_zero_eq_constantCoeff_apply, coeff_map,
-      coeff_zero_eq_constantCoeff, hf.2, map_one]
+    simp
+  · rw [← coeff_zero_eq_constantCoeff_apply, coeff_map, coeff_zero_eq_constantCoeff, hf.2, map_one]
 
 end IsExponential
 
@@ -718,12 +672,10 @@ noncomputable def linearMap :
       simp [mem_exponentialModule_iff]
       convert f.prop.map (φ  : R →+* S)
       ext <;> rfl⟩
-  map_add' := fun f g ↦ by
-    apply coe_injective
-    simp [coe_add, map_mul, ofMul_mul]
-  map_smul' := fun a f ↦ by
-    apply coe_injective
-    simp only [coe_smul, RingHom.id_apply, coe_ofMul, PowerSeries.rescale_map_eq_map_rescale]
+  map_add' := fun f g ↦ coe_injective (by simp [coe_add])
+  map_smul' := fun a f ↦
+    coe_injective (by simp [-coe_mk, coe_smul, coe_ofMul, rescale_map_eq_map_rescale])
+
 theorem coeff_linearMap (n : ℕ) (f : ExponentialModule R) :
     coeff n (linearMap φ f) = φ (coeff n f) := rfl
 
@@ -736,3 +688,5 @@ end ExponentialModule
 end CommRing
 
 end PowerSeries
+
+#lint
