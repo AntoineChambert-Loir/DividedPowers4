@@ -172,103 +172,101 @@ theorem coeff_prod_X_pow {σ : Type*} [DecidableEq σ] (s : Finset σ) (d : σ �
   simp_rw [eq_comm]
   congr
 
--- TODO: golf
-theorem coeff_linearCombination_X_pow (σ : Type*) (a : σ →₀ R) (d : σ →₀ ℕ) (n : ℕ) :
+private theorem coeff_linearCombination_X_pow_of_eq (σ : Type*) (a : σ →₀ R) {d : σ →₀ ℕ} {n : ℕ}
+    (hd : d.sum (fun _ m ↦ m) = n) :
     coeff d (((a.linearCombination R X : MvPolynomial σ R)) ^ n) =
-      if d.sum (fun _ m ↦ m) = n then d.multinomial * d.prod (fun r m ↦ a r ^ m) else 0 := by
+      d.multinomial * d.prod (fun r m ↦ a r ^ m) := by
   classical
   simp only [Finsupp.sum, Finsupp.linearCombination_apply, Finset.sum_pow_eq_sum_piAntidiag,
     coeff_sum]
   simp_rw [← C_eq_coe_nat, coeff_C_mul, smul_eq_C_mul, mul_pow, Finset.prod_mul_distrib, ← map_pow,
     ← map_prod, coeff_C_mul, coeff_prod_X_pow, mul_ite, mul_one, mul_zero]
-  split_ifs with hd
-  · rw [Finset.sum_eq_single (Finsupp.restrict d a.support : σ → ℕ)]
-    · have := Finsupp.restrict_restrict (f := d) (s := a.support) (t := a.support)
-      simp only [inter_self] at this
-      simp only [← DFunLike.coe_fn_eq, Finsupp.restrict_restrict, inter_self,
-        Finsupp.self_eq_restrict_iff, fun_support_eq, coe_subset]
-      split_ifs with hd'
-      · have : d = Finsupp.restrict d a.support := by
-          simp [← DFunLike.coe_fn_eq, Finsupp.self_eq_restrict_iff, hd']
-        rw [← this]
-        apply congr_arg₂
-        · apply congr_arg
-          symm
-          apply Finsupp.multinomial_eq_of_support_subset hd'
-        · rw [Finsupp.prod, Finset.prod_subset hd']
-          intro x _
-          simp only [Finsupp.mem_support_iff, ne_eq, Decidable.not_not]
-          intro hx
-          rw [hx, pow_zero]
-      · symm
-        convert mul_zero _
-        simp only [not_subset] at hd'
-        obtain ⟨x, hx, hx'⟩ := hd'
-        apply Finset.prod_eq_zero hx
-        simp only [Finsupp.mem_support_iff, ne_eq, Decidable.not_not] at hx hx'
-        simp only [hx', zero_pow hx]
-    · intro x hx hx'
-      rw [if_neg]
-      intro hd
-      apply hx'
-      rw [Finsupp.eq_restrict_iff, hd]
-      simp only [mem_piAntidiag] at hx
-      constructor
-      · exact hx.2
-      · intro i hi
-        simp only [Finsupp.restrict_apply, if_pos hi]
-    · intro hd'
-      rw [if_neg]
-      intro hd''
-      apply hd'
-      simp only [mem_piAntidiag, ne_eq]
-      constructor
-      · rw [Finsupp.ext_iff'] at hd''
-        rw [← hd, Finset.sum_subset (s₁ := d.support) (s₂ := a.support)]
-        · apply Finset.sum_congr rfl
-          intro x hx
-          rw [Finsupp.restrict_apply, if_pos hx]
-        · rw [hd''.1]
-          apply Finsupp.restrict_support_le
-        · exact fun _ ↦ by simp
-      · intro i
-        rw [not_imp_comm]
-        simp only [Finsupp.mem_support_iff, ne_eq, Finsupp.restrict_apply]
-        intro hi
-        rw [if_neg hi]
-  · apply Finset.sum_eq_zero
-    intro x hx
+  rw [Finset.sum_eq_single (Finsupp.restrict d a.support : σ → ℕ)]
+  · have := Finsupp.restrict_restrict (f := d) (s := a.support) (t := a.support)
+    simp only [inter_self] at this
+    simp only [← DFunLike.coe_fn_eq, Finsupp.restrict_restrict, inter_self,
+      Finsupp.self_eq_restrict_iff, fun_support_eq, coe_subset]
+    split_ifs with hd'
+    · have : d = Finsupp.restrict d a.support := by
+        simp [← DFunLike.coe_fn_eq, Finsupp.self_eq_restrict_iff, hd']
+      rw [← this]
+      apply congr_arg₂
+      · apply congr_arg
+        rw [Finsupp.multinomial_eq_of_support_subset hd']
+      · rw [Finsupp.prod, Finset.prod_subset hd']
+        intro x _
+        simp only [Finsupp.mem_support_iff, ne_eq, Decidable.not_not]
+        intro hx
+        rw [hx, pow_zero]
+    · symm
+      convert mul_zero _
+      simp only [not_subset] at hd'
+      obtain ⟨x, hx, hx'⟩ := hd'
+      apply Finset.prod_eq_zero hx
+      simp only [Finsupp.mem_support_iff, ne_eq, Decidable.not_not] at hx hx'
+      simp only [hx', zero_pow hx]
+  · intro x hx hx'
     rw [if_neg]
-    rintro ⟨rfl⟩
-    apply hd
-    rw [← (mem_piAntidiag.mp hx).1,
-      Finset.sum_subset (Finsupp.restrict_support_le) (fun _ _ ↦ by simp)]
-    exact Finset.sum_congr rfl (fun _ hi ↦ by rw [Finsupp.restrict_apply, if_pos hi])
+    intro hd
+    apply hx'
+    rw [Finsupp.eq_restrict_iff, hd]
+    exact ⟨(mem_piAntidiag.mp hx).2, fun _ hi ↦ by rw [Finsupp.restrict_apply, if_pos hi]⟩
+  · intro hd'
+    rw [if_neg]
+    intro hd''
+    apply hd'
+    simp only [mem_piAntidiag, ne_eq]
+    constructor
+    · rw [← hd, Finsupp.sum, Finset.sum_subset (s₁ := d.support) (s₂ := a.support)
+        ((Finsupp.ext_iff'.mp hd'').1 ▸ Finsupp.restrict_support_le) (fun _ ↦ by simp)]
+      exact Finset.sum_congr rfl (fun _ hx ↦ by rw [Finsupp.restrict_apply, if_pos hx])
+    · intro i hi
+      simp only [restrict_apply, Finsupp.mem_support_iff, ne_eq, ite_not, ite_eq_left_iff,
+        Classical.not_imp] at hi ⊢
+      exact hi.1
+
+private theorem coeff_linearCombination_X_pow_of_ne (σ : Type*) (a : σ →₀ R) {d : σ →₀ ℕ} {n : ℕ}
+    (hd : d.sum (fun _ m ↦ m) ≠ n) :
+    coeff d (((a.linearCombination R X : MvPolynomial σ R)) ^ n) = 0 := by
+  classical
+  simp only [Finsupp.sum, Finsupp.linearCombination_apply, Finset.sum_pow_eq_sum_piAntidiag,
+    coeff_sum]
+  simp_rw [← C_eq_coe_nat, coeff_C_mul, smul_eq_C_mul, mul_pow, Finset.prod_mul_distrib, ← map_pow,
+    ← map_prod, coeff_C_mul, coeff_prod_X_pow, mul_ite, mul_one, mul_zero]
+  apply Finset.sum_eq_zero
+  intro x hx
+  rw [if_neg]
+  rintro ⟨rfl⟩
+  apply hd
+  rw [Finsupp.sum, ← (mem_piAntidiag.mp hx).1,
+    Finset.sum_subset (Finsupp.restrict_support_le) (fun _ _ ↦ by simp)]
+  exact Finset.sum_congr rfl (fun _ hi ↦ by rw [Finsupp.restrict_apply, if_pos hi])
+
+theorem coeff_linearCombination_X_pow (σ : Type*) (a : σ →₀ R) (d : σ →₀ ℕ) (n : ℕ) :
+    coeff d (((a.linearCombination R X : MvPolynomial σ R)) ^ n) =
+      if d.sum (fun _ m ↦ m) = n then d.multinomial * d.prod (fun r m ↦ a r ^ m) else 0 := by
+  split_ifs with hd
+  · exact coeff_linearCombination_X_pow_of_eq σ a hd
+  · exact coeff_linearCombination_X_pow_of_ne σ a hd
 
 theorem fintype_coeff_linearCombination_X_pow
     {σ : Type*} [Fintype σ] (a : σ → R) (d : σ →₀ ℕ) (n : ℕ) :
     coeff d (((∑ i, a i • X i : MvPolynomial σ R)) ^ n) =
       if d.sum (fun _ m ↦ m) = n then d.multinomial * d.prod (fun r m ↦ a r ^ m) else 0 := by
-  set b := Finsupp.ofSupportFinite a (Set.toFinite _)
-  have ha : a = b := by rw [Finsupp.ofSupportFinite_coe]
-  rw [ha, Finsupp.prod_congr (fun r _ ↦ rfl), ← coeff_linearCombination_X_pow]
-  congr 2
-  rw [Finsupp.linearCombination_apply]
-  simp [Finsupp.sum_of_support_subset (s := univ)]
+  rw [← Finsupp.ofSupportFinite_coe (f := a) (hf := Set.toFinite _),
+    Finsupp.prod_congr (fun r _ ↦ rfl), ← coeff_linearCombination_X_pow]
+  simp [Finsupp.linearCombination_apply, Finsupp.sum_of_support_subset (s := univ)]
 
 theorem fintype_coeff_sum_X_pow {σ : Type*} [Fintype σ] (d : σ →₀ ℕ) (n : ℕ) :
     coeff d (((∑ i, X i : MvPolynomial σ R)) ^ n) =
       if d.sum (fun _ m ↦ m) = n then d.multinomial else 0 := by
   let a : σ → R := Function.const _ 1
-  have : (∑ i, X i : MvPolynomial σ R) = ∑ i, a i • X i := by
-    simp [a]
+  have : (∑ i, X i : MvPolynomial σ R) = ∑ i, a i • X i := by simp [a]
   rw [this, fintype_coeff_linearCombination_X_pow]
-  simp [a]
+  simp only [Function.const_one, Pi.one_apply, one_pow, cast_ite, cast_zero, a]
   split_ifs with hi
   · convert mul_one _
-    simp only [Finsupp.prod]
-    apply Finset.prod_eq_one
-    simp
+    exact Finset.prod_eq_one (by simp)
   · rfl
 
 /-- The formula for the `d`th coefficient of `(X 0 + X 1) ^ n`. -/
