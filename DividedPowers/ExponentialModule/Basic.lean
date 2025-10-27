@@ -43,6 +43,7 @@ to that setting.
 
 section Preliminaries
 
+-- In #30974
 -- [Mathlib.Algebra.Algebra.Basic]
 /-- The `CommRing` structure on a `CommSemiring` induced by a ring morphism from a `CommRing`. -/
 def RingHom.commSemiringToCommRing
@@ -54,6 +55,8 @@ def RingHom.commSemiringToCommRing
     mul_comm := CommMonoid.mul_comm }
 
 section SMul
+
+-- In #30972
 
 open MvPowerSeries
 
@@ -81,7 +84,7 @@ section
 
 namespace Finsupp
 
--- PR this section to [Mathlib.Data.Finsupp.Defs], or similar, except for the last lemma
+-- In #30975, except for the last lemma
 
 variable {σ α : Type*} [Zero α] (f g : σ → α) (s : Finset σ)
   [DecidablePred fun i ↦ i ∈ s] [DecidablePred fun i ↦ f i ≠ 0]
@@ -130,6 +133,7 @@ theorem eq_restrict_iff :
 theorem self_eq_restrict_iff : f = restrict f s ↔ f.support ⊆ s := by
   simp [eq_restrict_iff]
 
+-- In #30976
 --[Mathlib.Data.Nat.Choose.Multinomial]
 theorem multinomial_eq_of_support_subset
     {α : Type*} {f : α →₀ ℕ} {s : Finset α} (h : f.support ⊆ s) :
