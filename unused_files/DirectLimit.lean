@@ -1,7 +1,7 @@
 import Mathlib.LinearAlgebra.TensorProduct.DirectLimit
 import Mathlib.LinearAlgebra.TensorProduct.Tower
 import Mathlib.RingTheory.Adjoin.FG
-import Mathlib.Algebra.Equiv.TransferInstance
+--import Mathlib.Algebra.Equiv.TransferInstance
 
 import Mathlib.Algebra.DirectSum.Internal
 
@@ -69,13 +69,13 @@ theorem Submodule.bot_small : Small.{v} (⊥ : Submodule R M) := by
   simp [← Subtype.coe_inj, f, hx]
 
 -- [Mathlib.RingTheory.Adjoin.FG]
-theorem Subalgebra.FG.sup {R S : Type*} [CommSemiring R] [Semiring S] [Algebra R S]
+/- theorem Subalgebra.FG.sup {R S : Type*} [CommSemiring R] [Semiring S] [Algebra R S]
     {A A' : Subalgebra R S} (hA : Subalgebra.FG A) (hA' : Subalgebra.FG A') :
     Subalgebra.FG (A ⊔ A') :=
   let ⟨s, hs⟩ := Subalgebra.fg_def.1 hA
   let ⟨s', hs'⟩ := Subalgebra.fg_def.1 hA'
   Subalgebra.fg_def.2 ⟨s ∪ s', Set.Finite.union hs.1 hs'.1,
-    (by rw [Algebra.adjoin_union, hs.2, hs'.2])⟩
+    (by rw [Algebra.adjoin_union, hs.2, hs'.2])⟩ -/
 
 /-- The directed system of finitely generated submodules of `M` -/
 def DirectedSystem.Submodule_fg :
@@ -145,7 +145,7 @@ theorem Submodule.small_directSum
   ext i
   simp only [Finset.mem_val, DFinsupp.mem_support_toFun, ne_eq, dite_eq_ite, DFinsupp.coe_mk',
     ite_not, SetLike.coe_eq_coe, ite_eq_right_iff, h]
-  simp only [eq_comm, imp_self, h]
+  simp only [eq_comm, imp_self]
 
 theorem Submodule.small_iSup
     {ι : Type*} {P : ι → Submodule R M} (_ : Small.{v} ι) (_ : ∀ i, Small.{v} (P i)) :
