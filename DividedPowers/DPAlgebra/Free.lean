@@ -70,16 +70,28 @@ example (R M N : Type*) [CommSemiring R] [AddCommGroup M] [Module R M] [AddCommG
 noncomputable example : R ⊗[ℤ] DividedPowerAlgebra ℤ M ≃ₐ[R] DividedPowerAlgebra R (R ⊗[ℤ] M) :=
   DividedPowerAlgebra.dpScalarExtensionEquiv ℤ R M
 
-variable {R M} in
-def foo (P Q : {P : Submodule R M // P.FG}) (h : P ≤ Q) :
-    DividedPowerAlgebra R P →ₗ[R] DividedPowerAlgebra R Q := sorry
+example (P Q : {P : Submodule R M // P.FG}) (h : P ≤ Q) :
+    DividedPowerAlgebra R P →ₐ[R] DividedPowerAlgebra R Q :=
+  LinearMap.lift _ (Submodule.inclusion h)
 
 -- Prop A2.2 (Also see Submodules_fg_equiv)
-example [DecidableEq {P : Submodule R M // P.FG}] :
+def directLimit [DecidableEq {P : Submodule R M // P.FG}] :
+  DividedPowerAlgebra R (Module.DirectLimit (ι := {P : Submodule R M // P.FG})
+      (G := fun P ↦ P.val) (fun ⦃P Q⦄ (h : P ≤ Q) ↦ Submodule.inclusion h)) ≃ₗ[R]
   Module.DirectLimit (ι := {P : Submodule R M // P.FG})
-    (fun P ↦ DividedPowerAlgebra R P) (fun ⦃P Q⦄ (h : P ≤ Q) ↦ foo P Q h) ≃ₗ[R]
+    (fun P ↦ DividedPowerAlgebra R P) (fun ⦃P Q⦄ (h : P ≤ Q) ↦
+      (LinearMap.lift _ (Submodule.inclusion h)).toLinearMap) := sorry
+
+example [DecidableEq {P : Submodule R M // P.FG}]: DividedPowerAlgebra R M ≃ₐ[R]
     DividedPowerAlgebra R (Module.DirectLimit (ι := {P : Submodule R M // P.FG})
-      (G := fun P ↦ P.val) (fun ⦃P Q⦄ (h : P ≤ Q) ↦ Submodule.inclusion h)) := sorry
+      (G := fun P ↦ P.val) (fun ⦃P Q⦄ (h : P ≤ Q) ↦ Submodule.inclusion h)) :=
+  LinearEquiv.lift (Submodules_fg_equiv R M).symm
+
+def directLimit_of_fg_submodules [DecidableEq {P : Submodule R M // P.FG}] :
+    DividedPowerAlgebra R M ≃ₗ[R] Module.DirectLimit (ι := {P : Submodule R M // P.FG})
+      (fun P ↦ DividedPowerAlgebra R P)
+      (fun ⦃P Q⦄ (h : P ≤ Q) ↦ (LinearMap.lift _ (Submodule.inclusion h)).toLinearMap) :=
+  (LinearEquiv.lift (Submodules_fg_equiv R M).symm).toLinearEquiv.trans (directLimit R M)
 
 -- Prop A2.3
 example [DecidableEq {P : Submodule R M // P.FG}] :
