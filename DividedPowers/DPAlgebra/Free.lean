@@ -8,8 +8,7 @@ import DividedPowers.DPAlgebra.Graded.Basic
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.DirectLimit.FG
 import Mathlib.LinearAlgebra.FreeModule.Basic
 
-
-section
+noncomputable section
 
 open DividedPowers Finset Ideal Ideal.Quotient MvPolynomial RingQuot
 
@@ -62,10 +61,10 @@ namespace Free
 
 open Module TensorProduct
 
--- Is this missing?
 example (R M N : Type*) [CommSemiring R] [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
     (f : M ≃ₗ[R] N) :
-    DividedPowerAlgebra R M ≃ₗ[R] DividedPowerAlgebra R N := sorry
+    DividedPowerAlgebra R M ≃ₐ[R] DividedPowerAlgebra R N := by
+  exact LinearEquiv.lift f
 
 -- Prop. A2.1
 noncomputable example : R ⊗[ℤ] DividedPowerAlgebra ℤ M ≃ₐ[R] DividedPowerAlgebra R (R ⊗[ℤ] M) :=
@@ -111,7 +110,7 @@ noncomputable def basis {ι : Type*} (b : Basis ι R M) :
   · sorry
   · intro x _
     let y := DividedPowerAlgebra.decompose R M x
-    matsorry
+    sorry
 
 theorem free [Module.Free R M] : Module.Free R (DividedPowerAlgebra R M) :=
   Module.Free.of_basis (basis R M (Module.Free.chooseBasis R M))
