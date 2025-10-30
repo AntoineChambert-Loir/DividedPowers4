@@ -89,35 +89,93 @@ namespace Finsupp
 variable {σ α : Type*} [Zero α] (f g : σ → α) (s : Finset σ)
   [DecidablePred fun i ↦ i ∈ s] [DecidablePred fun i ↦ f i ≠ 0]
 
-/-- The restriction of a finitely supported map `σ →₀ α` to `s : Finset σ`. -/
+/- /-- The restriction of a finitely supported map `σ →₀ α` to `s : Finset σ`. -/
 def restrict : σ →₀ α where
   toFun i := if i ∈ s then f i else 0
   support := {i ∈ s | f i ≠ 0}
-  mem_support_toFun i := by simp
+  mem_support_toFun i := by simp -/
+
+noncomputable def restrict : σ →₀ α := Finsupp.indicator s (fun i _ ↦ f i)
+
+/- lemma restrict_eq_restrict' {i : σ} :
+    restrict f s i = restrict' f s i := by
+  simp? [restrict, restrict', indicator] -/
 
 variable {f g s}
 
-theorem restrict_apply {i : σ} :
-  restrict f s i = if i ∈ s then f i else 0 := rfl
+/- theorem restrict_apply {i : σ} :
+  restrict f s i = if i ∈ s then f i else 0 := by simp [restrict, indicator] -/
 
-theorem restrict_support_le : (restrict f s).support ⊆ s := fun i hi ↦ by
-  simp only [mem_support_iff, restrict_apply, ne_eq, ite_eq_right_iff, Classical.not_imp] at hi
-  exact hi.1
+/- theorem restrict_support_le : (restrict f s).support ⊆ s := by
+  rw [restrict]
 
-theorem restrict_restrict [DecidableEq σ] {t : Finset σ}
+  exact Finsupp.support_indicator_subset s (fun i x ↦ f i) -/
+  /- simp only [mem_support_iff, restrict_apply, ne_eq, ite_eq_right_iff, Classical.not_imp] at hi
+  exact hi.1 -/
+
+theorem indicator_indicator' (f' : (i : σ) → i ∈ s → α) [DecidableEq σ] {t : Finset σ}
+    [DecidablePred fun i ↦ i ∈ t] [DecidablePred fun i ↦ i ∈ s ∩ t]
+    [DecidablePred fun i ↦ (indicator s f') i ≠ 0] :
+    indicator t (fun i _ ↦ indicator s f' i) =
+      indicator (s ∩ t) (fun i hi ↦ f' i (Finset.mem_of_mem_inter_left hi)) := by
+  ext i
+  simp only [indicator_apply]
+  by_cases ht : i ∈ t
+  · rw [dif_pos ht]
+    by_cases hs : i ∈ s
+    · rw [dif_pos hs, dif_pos (mem_inter_of_mem hs ht)]
+    · rw [dif_neg hs, dif_neg (fun hs' ↦ hs (Finset.inter_subset_left hs'))]
+  · rw [dif_neg ht, dif_neg (fun ht' ↦ ht (Finset.inter_subset_right ht'))]
+
+/- theorem indicator_indicator [DecidableEq σ] {t : Finset σ}
     [DecidablePred fun i ↦ i ∈ t] [DecidablePred fun i ↦ i ∈ s ∩ t]
     [DecidablePred fun i ↦ (restrict f s) i ≠ 0] :
     restrict (restrict f s) t = restrict f (s ∩ t) := by
   ext i
-  simp only [restrict_apply]
+  simp only [restrict, indicator_apply]
   by_cases ht : i ∈ t
-  · rw [if_pos ht]
+  · rw [dif_pos ht]
     by_cases hs : i ∈ s
-    · rw [if_pos hs, if_pos (mem_inter_of_mem hs ht)]
-    · rw [if_neg hs, if_neg (fun hs' ↦ hs (Finset.inter_subset_left hs'))]
-  · rw [if_neg ht, if_neg (fun ht' ↦ ht (Finset.inter_subset_right ht'))]
+    · rw [dif_pos hs, dif_pos (mem_inter_of_mem hs ht)]
+    · rw [dif_neg hs, dif_neg (fun hs' ↦ hs (Finset.inter_subset_left hs'))]
+  · rw [dif_neg ht, dif_neg (fun ht' ↦ ht (Finset.inter_subset_right ht'))] -/
 
-theorem eq_restrict_iff :
+
+example (f' : (i : σ) → i ∈ s → α) : (∀ (i : σ), if hi : i ∈ s then f' i hi = g i else g i = 0) ↔
+    ((∀ (i : σ) (hi : i ∈ s),  f' i hi = g i) ∧ ∀ i (hi : i ∉ s), g i = 0) := by
+  refine ⟨fun h ↦ ⟨fun i hi ↦ ?_, fun i hi ↦ ?_⟩, fun h i ↦ ?_⟩
+  · specialize h i
+    simpa only [hi] using h
+  · specialize h i
+    simpa only [hi] using h
+  · split_ifs with hi
+    · exact h.1 i hi
+    · exact h.2 i hi
+
+theorem eq_indicator_iff (f' : (i : σ) → i ∈ s → α) :
+    g = indicator s f' ↔ g.support ⊆ s ∧ ∀ i (hi : i ∈ s), f' i hi = g i := by
+  suffices g.support ⊆ s ∧ (∀ i (hi : i ∈ s), f' i hi = g i) ↔
+      (∀ i , if hi : i ∈ s then f' i hi = g i else g i = 0) by
+    rw [this, funext_iff]
+    apply forall_congr'
+    intro i
+    by_cases hi : i ∈ s <;>
+    simp only [indicator, ne_eq, univ_eq_attach, coe_mk, hi, ↓reduceDIte]
+    rw [eq_comm]
+  rw [Set.subset_def, and_comm]
+  have : (∀ (i : σ), if hi : i ∈ s then f' i hi = g i else g i = 0) ↔
+      ((∀ (i : σ) (hi : i ∈ s),  f' i hi = g i) ∧ ∀ i (hi : i ∉ s), g i = 0) := by
+    grind
+  rw [this]
+  apply and_congr
+  · rfl
+  · simp [not_imp_comm]
+
+#exit
+  /- apply and_congr
+  · simp_rw [eq_comm]
+  · simp [not_imp_comm] -/
+/- theorem eq_restrict_iff :
     g = restrict f s ↔ g.support ⊆ s ∧ ∀ i, i ∈ s → f i = g i := by
   suffices g.support ⊆ s ∧ (∀ i, i ∈ s → f i = g i) ↔
       ∀ i, (i ∈ s → g i = f i) ∧ (i ∉ s → g i = 0) by
@@ -128,7 +186,7 @@ theorem eq_restrict_iff :
   rw [Set.subset_def, and_comm, forall_and]
   apply and_congr
   · simp_rw [eq_comm]
-  · simp [not_imp_comm]
+  · simp [not_imp_comm] -/
 
 theorem self_eq_restrict_iff : f = restrict f s ↔ f.support ⊆ s := by
   simp [eq_restrict_iff]
