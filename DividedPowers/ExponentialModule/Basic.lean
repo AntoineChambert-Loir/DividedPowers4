@@ -95,7 +95,7 @@ def restrict : σ →₀ α where
   support := {i ∈ s | f i ≠ 0}
   mem_support_toFun i := by simp -/
 
-noncomputable def restrict : σ →₀ α := Finsupp.indicator s (fun i _ ↦ f i)
+--noncomputable def restrict : σ →₀ α := Finsupp.indicator s (fun i _ ↦ f i)
 
 /- lemma restrict_eq_restrict' {i : σ} :
     restrict f s i = restrict' f s i := by
@@ -113,7 +113,7 @@ variable {f g s}
   /- simp only [mem_support_iff, restrict_apply, ne_eq, ite_eq_right_iff, Classical.not_imp] at hi
   exact hi.1 -/
 
-theorem indicator_indicator' (f' : (i : σ) → i ∈ s → α) [DecidableEq σ] {t : Finset σ}
+theorem indicator_indicator (f' : (i : σ) → i ∈ s → α) [DecidableEq σ] {t : Finset σ}
     [DecidablePred fun i ↦ i ∈ t] [DecidablePred fun i ↦ i ∈ s ∩ t]
     [DecidablePred fun i ↦ (indicator s f') i ≠ 0] :
     indicator t (fun i _ ↦ indicator s f' i) =
@@ -127,30 +127,10 @@ theorem indicator_indicator' (f' : (i : σ) → i ∈ s → α) [DecidableEq σ]
     · rw [dif_neg hs, dif_neg (fun hs' ↦ hs (Finset.inter_subset_left hs'))]
   · rw [dif_neg ht, dif_neg (fun ht' ↦ ht (Finset.inter_subset_right ht'))]
 
-/- theorem indicator_indicator [DecidableEq σ] {t : Finset σ}
-    [DecidablePred fun i ↦ i ∈ t] [DecidablePred fun i ↦ i ∈ s ∩ t]
-    [DecidablePred fun i ↦ (restrict f s) i ≠ 0] :
-    restrict (restrict f s) t = restrict f (s ∩ t) := by
-  ext i
-  simp only [restrict, indicator_apply]
-  by_cases ht : i ∈ t
-  · rw [dif_pos ht]
-    by_cases hs : i ∈ s
-    · rw [dif_pos hs, dif_pos (mem_inter_of_mem hs ht)]
-    · rw [dif_neg hs, dif_neg (fun hs' ↦ hs (Finset.inter_subset_left hs'))]
-  · rw [dif_neg ht, dif_neg (fun ht' ↦ ht (Finset.inter_subset_right ht'))] -/
-
 
 example (f' : (i : σ) → i ∈ s → α) : (∀ (i : σ), if hi : i ∈ s then f' i hi = g i else g i = 0) ↔
-    ((∀ (i : σ) (hi : i ∈ s),  f' i hi = g i) ∧ ∀ i (hi : i ∉ s), g i = 0) := by
-  refine ⟨fun h ↦ ⟨fun i hi ↦ ?_, fun i hi ↦ ?_⟩, fun h i ↦ ?_⟩
-  · specialize h i
-    simpa only [hi] using h
-  · specialize h i
-    simpa only [hi] using h
-  · split_ifs with hi
-    · exact h.1 i hi
-    · exact h.2 i hi
+    ((∀ (i : σ) (hi : i ∈ s),  f' i hi = g i) ∧ ∀ i (_ : i ∉ s), g i = 0) := by
+  grind
 
 theorem eq_indicator_iff (f' : (i : σ) → i ∈ s → α) :
     g = indicator s f' ↔ g.support ⊆ s ∧ ∀ i (hi : i ∈ s), f' i hi = g i := by
@@ -171,25 +151,9 @@ theorem eq_indicator_iff (f' : (i : σ) → i ∈ s → α) :
   · rfl
   · simp [not_imp_comm]
 
-#exit
-  /- apply and_congr
-  · simp_rw [eq_comm]
-  · simp [not_imp_comm] -/
-/- theorem eq_restrict_iff :
-    g = restrict f s ↔ g.support ⊆ s ∧ ∀ i, i ∈ s → f i = g i := by
-  suffices g.support ⊆ s ∧ (∀ i, i ∈ s → f i = g i) ↔
-      ∀ i, (i ∈ s → g i = f i) ∧ (i ∉ s → g i = 0) by
-    rw [this, funext_iff]
-    apply forall_congr'
-    intro i
-    by_cases hi : i ∈ s <;> simp [restrict_apply, hi]
-  rw [Set.subset_def, and_comm, forall_and]
-  apply and_congr
-  · simp_rw [eq_comm]
-  · simp [not_imp_comm] -/
-
-theorem self_eq_restrict_iff : f = restrict f s ↔ f.support ⊆ s := by
-  simp [eq_restrict_iff]
+/- theorem self_eq_restrict_iff (f : (i : σ) → i ∈ s → α)  :
+  fun i ↦ f i _ = indicator s f ↔ f.support ⊆ s := by
+  sorry -/
 
 -- In #30976
 --[Mathlib.Data.Nat.Choose.Multinomial]
@@ -213,21 +177,22 @@ namespace MvPolynomial
 -- PR this section [Mathlib.Algebra.MvPolynomial.Basic], if possible
 
 theorem prod_X_pow {σ : Type*} [DecidableEq σ] (x : σ → ℕ) (s : Finset σ) :
-    ∏ y ∈ s, (X y : MvPolynomial σ R) ^ x y = monomial (Finsupp.restrict x s) (1 : R) := by
+    ∏ y ∈ s, (X y : MvPolynomial σ R) ^ x y =
+      monomial (Finsupp.indicator s (fun i _ ↦ x i)) (1 : R) := by
   rw [monomial_eq, C_1, one_mul, prod,
-    Finset.prod_subset (s₁ := (Finsupp.restrict x s).support) (s₂ := s) (filter_subset _ s)]
-  · exact Finset.prod_congr rfl (fun _ hi ↦ by simp [Finsupp.restrict_apply, hi])
+    Finset.prod_subset (s₁ := (Finsupp.indicator s (fun i _ ↦ x i)).support) (s₂ := s)
+      (support_indicator_subset _ _)]
+  · exact Finset.prod_congr rfl (fun _ hi ↦ by simp [Finsupp.indicator, hi])
   · intro i hi hi'
     rw [Finsupp.mem_support_iff, ne_eq, not_not] at hi'
     rw [hi', pow_zero]
 
 theorem coeff_prod_X_pow {σ : Type*} [DecidableEq σ] (s : Finset σ) (d : σ →₀ ℕ) (x : σ → ℕ)
-    [DecidablePred fun i ↦ i ∈ s] [Decidable (d = Finsupp.restrict x s)] :
+    [DecidablePred fun i ↦ i ∈ s] [Decidable (d = Finsupp.indicator s (fun i _ ↦ x i))] :
     coeff d (∏ y ∈ s, (X y : MvPolynomial σ R) ^ x y) =
-      if d = Finsupp.restrict x s then 1 else 0 := by
+      if d = Finsupp.indicator s (fun i _ ↦ x i) then 1 else 0 := by
   rw [prod_X_pow x s, coeff_monomial]
   simp_rw [eq_comm]
-  congr
 
 private theorem coeff_linearCombination_X_pow_of_eq {σ : Type*} (a : σ →₀ R) {d : σ →₀ ℕ} {n : ℕ}
     (hd : d.sum (fun _ m ↦ m) = n) :
@@ -238,8 +203,9 @@ private theorem coeff_linearCombination_X_pow_of_eq {σ : Type*} (a : σ →₀ 
     coeff_sum]
   simp_rw [← C_eq_coe_nat, coeff_C_mul, smul_eq_C_mul, mul_pow, Finset.prod_mul_distrib, ← map_pow,
     ← map_prod, coeff_C_mul, coeff_prod_X_pow, mul_ite, mul_one, mul_zero]
-  rw [Finset.sum_eq_single (Finsupp.restrict d a.support : σ → ℕ)]
-  · simp only [← DFunLike.coe_fn_eq, Finsupp.restrict_restrict, inter_self,
+  sorry -- TODO
+  /- rw [Finset.sum_eq_single (Finsupp.indicator a.support (fun i _ ↦ d i) : σ → ℕ)]
+  · simp only [← DFunLike.coe_fn_eq, Finsupp.indicator_indicator, inter_self,
       Finsupp.self_eq_restrict_iff, fun_support_eq, coe_subset]
     split_ifs with hd'
     · have : d = Finsupp.restrict d a.support := by
@@ -275,7 +241,7 @@ private theorem coeff_linearCombination_X_pow_of_eq {σ : Type*} (a : σ →₀ 
     · intro i hi
       simp only [restrict_apply, Finsupp.mem_support_iff, ne_eq, ite_not, ite_eq_left_iff,
         Classical.not_imp] at hi ⊢
-      exact hi.1
+      exact hi.1 -/
 
 private theorem coeff_linearCombination_X_pow_of_ne {σ : Type*} (a : σ →₀ R) {d : σ →₀ ℕ} {n : ℕ}
     (hd : d.sum (fun _ m ↦ m) ≠ n) :
@@ -290,9 +256,10 @@ private theorem coeff_linearCombination_X_pow_of_ne {σ : Type*} (a : σ →₀ 
   rw [if_neg]
   rintro ⟨rfl⟩
   apply hd
-  rw [Finsupp.sum, ← (mem_piAntidiag.mp hx).1,
+  sorry --TODO
+  /- rw [Finsupp.sum, ← (mem_piAntidiag.mp hx).1,
     Finset.sum_subset (Finsupp.restrict_support_le) (fun _ _ ↦ by simp)]
-  exact Finset.sum_congr rfl (fun _ hi ↦ by rw [Finsupp.restrict_apply, if_pos hi])
+  exact Finset.sum_congr rfl (fun _ hi ↦ by rw [Finsupp.restrict_apply, if_pos hi]) -/
 
 theorem coeff_linearCombination_X_pow {σ : Type*} (a : σ →₀ R) (d : σ →₀ ℕ) (n : ℕ) :
     coeff d (((a.linearCombination R X : MvPolynomial σ R)) ^ n) =
@@ -727,7 +694,7 @@ variable [CommRing A] [Algebra A R] {S : Type*} [CommRing S] [Algebra A S] (φ :
 /-- Given `A`-algebras `R` and `S`, this is the linear map between multivariate formal
 power series induced by an `A`-algebra map on the coefficients.-/
 noncomputable def linearMap :
-  ExponentialModule R →ₗ[A] ExponentialModule S where
+    ExponentialModule R →ₗ[A] ExponentialModule S where
   toFun := fun f ↦
     ⟨ofMul (PowerSeries.map φ (f : R⟦X⟧)), by
       simp [mem_exponentialModule_iff]
@@ -750,4 +717,4 @@ end CommRing
 
 end PowerSeries
 
-#lint
+--#lint

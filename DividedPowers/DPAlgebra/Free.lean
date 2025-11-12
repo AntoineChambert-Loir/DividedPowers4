@@ -70,6 +70,10 @@ example (R M N : Type*) [CommSemiring R] [AddCommGroup M] [Module R M] [AddCommG
 noncomputable example : R ⊗[ℤ] DividedPowerAlgebra ℤ M ≃ₐ[R] DividedPowerAlgebra R (R ⊗[ℤ] M) :=
   DividedPowerAlgebra.dpScalarExtensionEquiv ℤ R M
 
+-- In particular:
+
+
+
 example (P Q : {P : Submodule R M // P.FG}) (h : P ≤ Q) :
     DividedPowerAlgebra R P →ₐ[R] DividedPowerAlgebra R Q :=
   LinearMap.lift _ (Submodule.inclusion h)
@@ -93,11 +97,281 @@ def directLimit_of_fg_submodules [DecidableEq {P : Submodule R M // P.FG}] :
       (fun ⦃P Q⦄ (h : P ≤ Q) ↦ (LinearMap.lift _ (Submodule.inclusion h)).toLinearMap) :=
   (LinearEquiv.lift (Submodules_fg_equiv R M).symm).toLinearEquiv.trans (directLimit R M)
 
--- Prop A2.3
-example [DecidableEq {P : Submodule R M // P.FG}] :
-  DividedPowerAlgebra R M ⊗[R] DividedPowerAlgebra R N ≃ₗ[R]
-    DividedPowerAlgebra R (M × N) := sorry
+-- TODO: rename these
 
+private def aux0 : M × N →ₗ[R] M ⊗[R] DividedPowerAlgebra R N where
+  toFun x       := x.1 ⊗ₜ 1
+  map_add' _ _  := by simp [add_tmul]
+  map_smul' _ _ := by simp [smul_tmul]
+
+private lemma aux0_apply (mn : M × N) : aux0 R M N mn = mn.1 ⊗ₜ 1 := rfl
+
+private def aux1 :
+    DividedPowerAlgebra R (M × N) →ₐ[R]
+      DividedPowerAlgebra R (M ⊗[R] DividedPowerAlgebra R N) :=
+  LinearMap.lift R (aux0 R M N)
+
+private lemma aux1_apply_dp (mn : M × N) (p : ℕ) :
+    aux1 R M N (dp R p mn) = dp R p (mn.1 ⊗ₜ 1) := by
+  simp [aux1, LinearMap.lift_apply_dp, aux0_apply]
+
+example : DividedPowerAlgebra R (M ⊗[R] DividedPowerAlgebra R N) →ₐ[R]
+    DividedPowerAlgebra R (DividedPowerAlgebra R N ⊗[R] M) :=
+  LinearMap.lift R (TensorProduct.comm R M (DividedPowerAlgebra R N)).toLinearMap
+
+private def aux2 :
+    DividedPowerAlgebra R (M × N) →ₐ[R]
+      DividedPowerAlgebra R M ⊗[R] DividedPowerAlgebra R N :=
+  (((Algebra.TensorProduct.comm R (DividedPowerAlgebra R N) (DividedPowerAlgebra R M)).toAlgHom.comp
+    (((dpScalarExtensionInv R (DividedPowerAlgebra R N) M).restrictScalars R).comp
+      (LinearMap.lift (DividedPowerAlgebra R N) LinearMap.id))).comp
+        (LinearMap.lift R (TensorProduct.comm R M
+          (DividedPowerAlgebra R N)).toLinearMap)).comp (aux1 R M N)
+
+private lemma aux2_apply_dp (mn : M × N) (p : ℕ) :
+    aux2 R M N (dp R p mn) = dp R p mn.1 ⊗ₜ 1 := by
+  simp [aux2, aux1_apply_dp, LinearMap.lift_apply_dp,
+    dpScalarExtensionInv_apply_dp]
+
+private def aux_prod_algHom_left :
+    (M × N →ₗ[R]
+      ↥(PowerSeries.ExponentialModule (DividedPowerAlgebra R M ⊗[R] DividedPowerAlgebra R N))) :=
+  exponentialModule_equiv R (M × N) _ (aux2 R M N)
+
+private def aux0' : M × N →ₗ[R] DividedPowerAlgebra R M ⊗[R] N where
+  toFun x       := 1 ⊗ₜ x.2
+  map_add' _ _  := by simp [tmul_add]
+  map_smul' _ _ := by simp
+
+private lemma aux0'_apply (mn : M × N) : aux0' R M N mn = 1 ⊗ₜ mn.2 := rfl
+
+private def aux3 :
+    DividedPowerAlgebra R (M × N) →ₐ[R]
+      DividedPowerAlgebra R (DividedPowerAlgebra R M ⊗[R] N) :=
+  LinearMap.lift R (aux0' R M N)
+
+private lemma aux3_apply_dp (mn : M × N) (p : ℕ) :
+    aux3 R M N (dp R p mn) = dp R p (1 ⊗ₜ mn.2) := by
+  simp [aux3, LinearMap.lift_apply_dp, aux0'_apply]
+
+private def aux4 :
+    DividedPowerAlgebra R (M × N) →ₐ[R]
+      DividedPowerAlgebra R M ⊗[R] DividedPowerAlgebra R N :=
+  (((dpScalarExtensionInv R (DividedPowerAlgebra R M) N).restrictScalars R).comp
+    (LinearMap.lift (DividedPowerAlgebra R M) LinearMap.id)).comp (aux3 R M N)
+
+private lemma aux4_apply_dp (mn : M × N) (p : ℕ) :
+    aux4 R M N (dp R p mn) = 1 ⊗ₜ dp R p mn.2 := by
+  simp [aux4, aux3_apply_dp, LinearMap.lift_apply_dp,
+    dpScalarExtensionInv_apply_dp]
+
+private def aux_prod_algHom_right :
+    (M × N →ₗ[R]
+      ↥(PowerSeries.ExponentialModule (DividedPowerAlgebra R M ⊗[R] DividedPowerAlgebra R N))) :=
+  exponentialModule_equiv R (M × N) _ (aux4 R M N)
+
+private def aux_prod_algHom :
+    (M × N →ₗ[R]
+      (PowerSeries.ExponentialModule (DividedPowerAlgebra R M ⊗[R] DividedPowerAlgebra R N))) :=
+  aux_prod_algHom_left R M N + aux_prod_algHom_right R M N
+
+variable {M N}
+
+private lemma aux_prod_algHom_left_apply (m : M) (n : N) :
+    (aux_prod_algHom_left R M N (m, n)) =
+      ⟨PowerSeries.mk (fun p ↦ dp R p m ⊗ₜ 1), by
+      simp only [PowerSeries.mem_exponentialModule_iff',
+        PowerSeries.isExponential_iff]
+      refine ⟨?_, ?_⟩
+      · sorry
+      · sorry⟩ := by
+  ext p
+  simp only [aux_prod_algHom_left, exponentialModule_equiv_apply, LinearMap.coe_comp,
+    Function.comp_apply, PowerSeries.ExponentialModule.coe_mk, PowerSeries.coeff_mk]
+  rw [PowerSeries.ExponentialModule.coeff_linearMap
+    (S := DividedPowerAlgebra R M ⊗[R] DividedPowerAlgebra R N) (aux2 R M N) p]
+  simp [exp_LinearMap, coeff_exp, aux2_apply_dp]
+
+private lemma aux_prod_algHom_right_apply (m : M) (n : N) :
+    (aux_prod_algHom_right R M N (m, n)) =
+      ⟨PowerSeries.mk (fun q ↦ 1 ⊗ₜ dp R q n), by sorry⟩ := by
+  ext p
+  simp only [aux_prod_algHom_right, exponentialModule_equiv_apply, LinearMap.coe_comp,
+    Function.comp_apply, PowerSeries.ExponentialModule.coe_mk, PowerSeries.coeff_mk]
+  rw [PowerSeries.ExponentialModule.coeff_linearMap
+    (S := DividedPowerAlgebra R M ⊗[R] DividedPowerAlgebra R N) (aux4 R M N) p]
+  simp [exp_LinearMap, coeff_exp, aux4_apply_dp]
+
+private lemma aux_prod_algHom_apply (m : M) (n : N) :
+    (aux_prod_algHom R M N (m, n)) =
+      ⟨PowerSeries.mk (fun p ↦ ∑ k ∈ antidiagonal p, dp R k.1 m ⊗ₜ dp R k.2 n), by sorry⟩ := by
+  ext1
+  simp only [aux_prod_algHom, LinearMap.add_apply, aux_prod_algHom_left_apply,
+    aux_prod_algHom_right_apply]
+  rw [PowerSeries.ExponentialModule.coe_add]
+  -- TODO: discuss this commented out code (it seems problematic)
+  -- simp only [AddSubmonoid.mk_add_mk, PowerSeries.ExponentialModule.coe_mk]
+  simp only [PowerSeries.ExponentialModule.coe_mk]
+  ext p
+  simp [PowerSeries.coeff_mk, PowerSeries.coeff_mul]
+
+variable (M N)
+
+def prod_algHom :
+    DividedPowerAlgebra R (M × N) →ₐ[R]
+      DividedPowerAlgebra R M ⊗[R] DividedPowerAlgebra R N :=
+  (exponentialModule_equiv R (M × N) _).symm (aux_prod_algHom R M N)
+
+theorem prod_algHom_apply_dp (mn : M × N) (p : ℕ) :
+    (prod_algHom R M N) (dp R p mn) =
+      ∑ k ∈ antidiagonal p, (dp R k.1 mn.1) ⊗ₜ (dp R k.2 mn.2) := by
+  sorry
+  /- simp only [prod_algHom, aux_prod_algHom, aux_prod_algHom_left, aux_prod_algHom_right]
+  calc
+    ((exponentialModule_equiv R (M × N) (DividedPowerAlgebra R M ⊗[R] DividedPowerAlgebra R N)).symm
+            ((exponentialModule_equiv R (M × N)
+                  (DividedPowerAlgebra R M ⊗[R] DividedPowerAlgebra R N))
+                (aux2 R M N) +
+              (exponentialModule_equiv R (M × N)
+                  (DividedPowerAlgebra R M ⊗[R] DividedPowerAlgebra R N))
+                (aux4 R M N)))
+          (dp R p mn)
+    _ = ((aux2 R M N) (dp R p mn) + (aux4 R M N) (dp R p mn))  := by sorry
+    _ = ∑ k ∈ antidiagonal p, dp R k.1 mn.1 ⊗ₜ[R] dp R k.2 mn.2 := by
+      simp only [aux2, AlgEquiv.toAlgHom_eq_coe, aux1, AlgHom.coe_comp, AlgHom.coe_coe,
+        AlgHom.coe_restrictScalars', Function.comp_apply, LinearMap.lift_apply_dp,
+        LinearEquiv.coe_coe, LinearMap.id_coe, id_eq, aux4, aux3]
+      simp only [aux0, LinearMap.coe_mk, AddHom.coe_mk, comm_tmul, dpScalarExtensionInv_apply_dp,
+        one_pow, Algebra.TensorProduct.comm_tmul, aux0']
+      sorry -/
+
+def tensorProduct_algHom :
+    DividedPowerAlgebra R M ⊗[R] DividedPowerAlgebra R N →ₐ[R]
+      DividedPowerAlgebra R (M × N) :=
+  Algebra.TensorProduct.lift (LinearMap.lift R (LinearMap.inl R M N))
+    (LinearMap.lift R (LinearMap.inr R M N)) (fun _ _ ↦ Commute.all _ _)
+
+variable {R M N}
+
+theorem tensorProduct_algHom_apply_tmul (m : DividedPowerAlgebra R M)
+    (n : DividedPowerAlgebra R N) :
+    ((tensorProduct_algHom R M N) (m ⊗ₜ[R] n)) =
+    (LinearMap.lift R (LinearMap.inl R M N)) m * (LinearMap.lift R (LinearMap.inr R M N)) n := by
+  simp [tensorProduct_algHom]
+
+theorem prod_algHom_comp_tensorProduct_algHom_apply_tmul_dp (m : M) (n : N) (p q : ℕ) :
+    (prod_algHom R M N) ((tensorProduct_algHom R M N) ((dp R p m) ⊗ₜ[R] (dp R q n))) =
+      (dp R p m) ⊗ₜ[R] (dp R q n) := by
+  rw [tensorProduct_algHom_apply_tmul]
+  simp only [LinearMap.lift_apply_dp, LinearMap.coe_inl, LinearMap.coe_inr, map_mul,
+    prod_algHom_apply_dp]
+  rw [Finset.sum_mul]
+  simp_rw [Finset.mul_sum]
+  simp only [Algebra.TensorProduct.tmul_mul_tmul]
+  calc
+    ∑ x ∈ antidiagonal p,
+        ∑ i ∈ antidiagonal q, (dp R x.1 m * dp R i.1 0) ⊗ₜ[R] (dp R x.2 0 * dp R i.2 n)
+    _ = ∑ i ∈ antidiagonal q, (dp R p m * dp R i.1 0) ⊗ₜ[R] (dp R 0 0 * dp R i.2 n) := by
+      rw [Finset.sum_eq_single (p, 0) _ (by simp)]
+      simp only [mem_antidiagonal, ne_eq, Prod.forall, Prod.mk.injEq, not_and_or]
+      intro a b h h0
+      have hb0 : b ≠ 0 := by aesop
+      simp [dp_null_of_ne_zero R hb0]
+    _ = (dp R p m * dp R 0 0) ⊗ₜ[R] (dp R 0 0 * dp R q n) := by
+      rw [Finset.sum_eq_single (0, q) _ (by simp)]
+      simp only [mem_antidiagonal, ne_eq, Prod.forall, Prod.mk.injEq, not_and_or]
+      intro a b h h0
+      have ha0 : a ≠ 0 := by aesop
+      simp [dp_null_of_ne_zero R ha0]
+    _ = dp R p m ⊗ₜ[R] dp R q n := by simp [dp_zero]
+
+-- This seems too long, maybe I could simplify the h_C case
+theorem prod_algHom_comp_tensorProduct_algHom_apply_tmul (m : DividedPowerAlgebra R M)
+    (n : DividedPowerAlgebra R N) :
+    (prod_algHom R M N) ((tensorProduct_algHom R M N) (m ⊗ₜ[R] n)) = m ⊗ₜ[R] n := by
+  rw [tensorProduct_algHom_apply_tmul]
+  induction m using DividedPowerAlgebra.induction_on with
+  | h_C r =>
+    induction n using DividedPowerAlgebra.induction_on with
+    | h_C s =>
+      simp only [algHom_C, AlgHom.commutes, map_mul, Algebra.TensorProduct.algebraMap_apply,
+        Algebra.TensorProduct.tmul_mul_tmul, mul_one]
+      rw [mul_comm, ← smul_eq_mul, algebraMap_smul, smul_tmul,
+        ← algebraMap_smul (DividedPowerAlgebra R N), smul_eq_mul, mul_one]
+    | h_add x y hx hy =>
+      simp only [algHom_C, AlgHom.commutes, map_mul,
+        Algebra.TensorProduct.algebraMap_apply] at hx hy ⊢
+      simp [tmul_add, ← hx, ← hy, mul_add]
+    | h_dp x p nm hx =>
+      simp only [algHom_C, AlgHom.commutes, map_mul, Algebra.TensorProduct.algebraMap_apply] at hx ⊢
+      rw [← mul_assoc, hx]
+      simp only [LinearMap.lift_apply_dp, LinearMap.coe_inr, prod_algHom_apply_dp]
+      calc (algebraMap R (DividedPowerAlgebra R M)) r ⊗ₜ[R] x *
+          ∑ x ∈ antidiagonal p, dp R x.1 0 ⊗ₜ[R] dp R x.2 nm
+        _ = (algebraMap R (DividedPowerAlgebra R M)) r ⊗ₜ[R] x * dp R 0 0 ⊗ₜ[R] dp R p nm := by
+          congr 1
+          rw [Finset.sum_eq_single (0, p) _ (by simp)]
+          simp only [mem_antidiagonal, ne_eq, Prod.forall, Prod.mk.injEq, not_and_or]
+          intro a b h h0
+          have ha0 : a ≠ 0 := by aesop
+          simp [dp_null_of_ne_zero R ha0]
+        _ = (algebraMap R (DividedPowerAlgebra R M)) r ⊗ₜ[R] x * 1 ⊗ₜ[R] dp R p nm := by
+          simp [dp_zero]
+        _ = (algebraMap R (DividedPowerAlgebra R M)) r ⊗ₜ[R] (x * dp R p nm) := by simp
+  | h_add x y hx hy => simp [add_tmul, ← hx, ← hy, add_mul]
+  | h_dp x p nm hx =>
+    simp only [map_mul] at hx ⊢
+    rw [mul_assoc, mul_comm ((prod_algHom R M N)
+      ((LinearMap.lift R (LinearMap.inl R M N)) (dp R p nm))), ← mul_assoc, hx]
+    simp only [LinearMap.lift_apply_dp, LinearMap.coe_inl, prod_algHom_apply_dp]
+    calc x ⊗ₜ[R] n * ∑ x ∈ antidiagonal p, dp R x.1 nm ⊗ₜ[R] dp R x.2 0
+      _ = x ⊗ₜ[R] n * dp R p nm ⊗ₜ[R] dp R 0 0 := by
+        -- TODO: there are several goals of this form, I should make a lemma
+        congr 1
+        rw [Finset.sum_eq_single (p, 0) _ (by simp)]
+        simp only [mem_antidiagonal, ne_eq, Prod.forall, Prod.mk.injEq, not_and_or]
+        intro a b h h0
+        have hb0 : b ≠ 0 := by aesop
+        simp [dp_null_of_ne_zero R hb0]
+      _ = x ⊗ₜ[R] n * dp R p nm ⊗ₜ[R] 1 := by simp [dp_zero]
+      _ = (x * dp R p nm) ⊗ₜ[R] n := by simp only [Algebra.TensorProduct.tmul_mul_tmul, mul_one]
+
+
+
+theorem tensorProduct_algHom_comp_prod_algHom_apply_dp (p : ℕ) (nm : M × N) :
+    (tensorProduct_algHom R M N) ((prod_algHom R M N) (dp R p nm)) = dp R p nm := by
+  rw [prod_algHom_apply_dp]
+  simp only [map_sum, tensorProduct_algHom_apply_tmul, LinearMap.lift_apply_dp,
+    LinearMap.coe_inl, LinearMap.coe_inr]
+  have : nm = (nm.1, 0) + (0, nm.2) := by simp
+  conv_rhs => rw [this, dp_add]
+
+variable (R M N)
+
+-- Prop A2.3. This is proven in [Roby1963, theorem III.4]
+def prod_algEquiv_tensorProduct :
+    DividedPowerAlgebra R (M × N) ≃ₐ[R]
+      DividedPowerAlgebra R M ⊗[R] DividedPowerAlgebra R N := by
+  apply AlgEquiv.ofAlgHom (prod_algHom R M N) (tensorProduct_algHom R M N)
+  · apply AlgHom.ext
+    intro x
+    induction x using TensorProduct.induction_on with
+    | zero => simp
+    | tmul m n  =>
+      simp only [AlgHom.coe_comp, Function.comp_apply, AlgHom.coe_id, id_eq]
+      exact prod_algHom_comp_tensorProduct_algHom_apply_tmul m n
+    | add _ _ hx hy => simp only [AlgHom.coe_id, id_eq, map_add, hx, hy] -- faster than simp_all
+  · apply AlgHom.ext
+    intro x
+    induction x using DividedPowerAlgebra.induction_on with
+    | h_C => simp
+    | h_add x y hx hy =>
+      simp only [AlgHom.coe_comp, Function.comp_apply, AlgHom.coe_id, id_eq] at hx hy
+      simp [hx, hy]
+    | h_dp x p nm hx =>
+      simp only [map_mul, hx, AlgHom.coe_id, id_eq, AlgHom.coe_comp, Function.comp_apply]
+      congr 1
+      exact tensorProduct_algHom_comp_prod_algHom_apply_dp p nm
 
 /-- The basis of the nth graded part of `DividedPowerAlgebra R M` associated with a basis of `M`. -/
 noncomputable def basis_grade {ι : Type*} (b : Basis ι R M) (n : ℕ) :
@@ -119,10 +393,49 @@ theorem free_grade [Module.Free R M] (n : ℕ) : Module.Free R (grade R M n) :=
 noncomputable def basis {ι : Type*} (b : Basis ι R M) :
     Basis (ι →₀ ℕ) R (DividedPowerAlgebra R M) := by
   apply Basis.mk (v := fun d ↦ d.prod (fun i k ↦ dp R k (b i)))
-  · sorry
-  · intro x _
-    let y := DividedPowerAlgebra.decompose R M x
+  · rw [linearIndependent_iff]
+    intro l hl
+
     sorry
+  · intro x _
+    induction x using DirectSum.Decomposition.inductionOn (grade R M) with
+    | zero => simp
+    | homogeneous =>
+      classical
+      rename_i n x _
+      -- This have should be immediate...
+      have : (x : DividedPowerAlgebra R M) ∈
+        Submodule.span R (Set.range fun (r : { d : ι →₀ ℕ // d.degree = n }) ↦
+          (r : ι →₀ ℕ).prod fun i k ↦ dp R k (b i)) := by
+        have := Module.Basis.mem_span (basis_grade R M b n) x
+        simp only [Submodule.mem_span_iff_exists_finset_subset] at this ⊢
+        obtain ⟨f, t, hss, hsupp, hsum⟩ := this
+        use fun x ↦ if hx : x ∈ grade R M n then f ⟨x, hx⟩ else 0,
+          Finset.map ⟨Subtype.val, Subtype.val_injective⟩ t
+        refine ⟨?_, ?_, by simp [← hsum]⟩
+        · simp only [coe_map, Function.Embedding.coeFn_mk, Set.image_subset_iff]
+          simp only [basis_grade, Basis.coe_mk] at hss
+          apply le_trans hss
+          intro x hx
+          simp only [Set.mem_range, Subtype.exists] at hx
+          obtain ⟨a, ha, rfl⟩ := hx
+          simp only [Set.mem_preimage, Set.mem_range, Subtype.exists, exists_prop]
+          use a, ha
+        · intro a ha
+          simp only [Function.support_subset_iff, ne_eq, mem_coe, Subtype.forall,
+            Function.mem_support, dite_eq_right_iff, not_forall, coe_map,
+            Function.Embedding.coeFn_mk, Set.mem_image, Subtype.exists, exists_and_right,
+            exists_eq_right] at hsupp ha ⊢
+          obtain ⟨ha, h⟩ := ha
+          exact ⟨ha, hsupp a _ h⟩
+      apply Set.mem_of_subset_of_mem _ this
+      simp only [SetLike.coe_subset_coe]
+      apply Submodule.span_mono
+      intro x hx
+      simp only [Set.mem_range, Subtype.exists, exists_prop] at hx ⊢
+      obtain ⟨a, _, ha⟩ := hx
+      exact ⟨a, ha⟩
+    | add a b ha hb => simp_all [Submodule.add_mem]
 
 theorem free [Module.Free R M] : Module.Free R (DividedPowerAlgebra R M) :=
   Module.Free.of_basis (basis R M (Module.Free.chooseBasis R M))
