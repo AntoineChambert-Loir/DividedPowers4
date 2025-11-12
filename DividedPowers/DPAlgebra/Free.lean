@@ -177,43 +177,78 @@ private def aux_prod_algHom :
 
 variable {M N}
 
+def foo (m : M) :
+    (PowerSeries.ExponentialModule
+      (DividedPowerAlgebra R M ⊗[R] DividedPowerAlgebra R N)) where
+  val := Additive.ofMul (PowerSeries.mk (fun p ↦ dp R p m ⊗ₜ 1))
+  property := by
+    simp only [PowerSeries.mem_exponentialModule_iff', toMul_ofMul,
+      PowerSeries.isExponential_iff]
+    refine ⟨?_, ?_⟩
+    · intro p q
+      simp only [PowerSeries.coeff_mk, Algebra.TensorProduct.tmul_mul_tmul, mul_one]
+      rw [dp_mul, ← nsmul_eq_mul]
+      rfl -- Missing lemma?
+    · simp only [PowerSeries.constantCoeff_mk, dp_zero]
+      rfl -- Missing lemma?
+
+lemma PowerSeries.coeff_ofMul {R : Type*} [Semiring R] (n : ℕ) (f : PowerSeries R) :
+  PowerSeries.coeff n (Additive.ofMul f) = PowerSeries.coeff n f := rfl
+
 private lemma aux_prod_algHom_left_apply (m : M) (n : N) :
     (aux_prod_algHom_left R M N (m, n)) =
-      ⟨PowerSeries.mk (fun p ↦ dp R p m ⊗ₜ 1), by
-      simp only [PowerSeries.mem_exponentialModule_iff',
+      ⟨Additive.ofMul (PowerSeries.mk (fun p ↦ dp R p m ⊗ₜ 1)), by
+      simp only [PowerSeries.mem_exponentialModule_iff', toMul_ofMul,
         PowerSeries.isExponential_iff]
       refine ⟨?_, ?_⟩
-      · sorry
-      · sorry⟩ := by
-  ext p
+      · intro p q
+        simp only [PowerSeries.coeff_mk, Algebra.TensorProduct.tmul_mul_tmul, mul_one]
+        rw [dp_mul, ← nsmul_eq_mul]
+        rfl -- Missing lemma?
+      · simp only [PowerSeries.constantCoeff_mk, dp_zero]
+        -- Missing lemma?
+        rfl⟩ := by
+  rw [← PowerSeries.ExponentialModule.coe_inj]
+  simp only [PowerSeries.ExponentialModule.coe_mk]
   simp only [aux_prod_algHom_left, exponentialModule_equiv_apply, LinearMap.coe_comp,
-    Function.comp_apply, PowerSeries.ExponentialModule.coe_mk, PowerSeries.coeff_mk]
-  rw [PowerSeries.ExponentialModule.coeff_linearMap
+    Function.comp_apply]
+  ext p
+  --rw [PowerSeries.coeff_ofMul] Does not work
+  -- This is abusing defeq
+  have : (PowerSeries.coeff p) (Additive.ofMul
+    (PowerSeries.mk fun p ↦ dp R p m ⊗ₜ[R] (1 : DividedPowerAlgebra R N))) =
+    (PowerSeries.coeff p) (PowerSeries.mk fun p ↦ dp R p m ⊗ₜ[R] 1) := rfl
+  erw [this]
+  rw [PowerSeries.coeff_mk, PowerSeries.ExponentialModule.coeff_linearMap
     (S := DividedPowerAlgebra R M ⊗[R] DividedPowerAlgebra R N) (aux2 R M N) p]
   simp [exp_LinearMap, coeff_exp, aux2_apply_dp]
 
+-- TODO: Finish as in lemma above
 private lemma aux_prod_algHom_right_apply (m : M) (n : N) :
     (aux_prod_algHom_right R M N (m, n)) =
-      ⟨PowerSeries.mk (fun q ↦ 1 ⊗ₜ dp R q n), by sorry⟩ := by
+      ⟨Additive.toMul (PowerSeries.mk (fun q ↦ 1 ⊗ₜ dp R q n)), by sorry⟩ := by
   ext p
-  simp only [aux_prod_algHom_right, exponentialModule_equiv_apply, LinearMap.coe_comp,
+  sorry
+  /- simp only [aux_prod_algHom_right, exponentialModule_equiv_apply, LinearMap.coe_comp,
     Function.comp_apply, PowerSeries.ExponentialModule.coe_mk, PowerSeries.coeff_mk]
   rw [PowerSeries.ExponentialModule.coeff_linearMap
     (S := DividedPowerAlgebra R M ⊗[R] DividedPowerAlgebra R N) (aux4 R M N) p]
-  simp [exp_LinearMap, coeff_exp, aux4_apply_dp]
+  simp [exp_LinearMap, coeff_exp, aux4_apply_dp] -/
 
-private lemma aux_prod_algHom_apply (m : M) (n : N) :
-    (aux_prod_algHom R M N (m, n)) =
-      ⟨PowerSeries.mk (fun p ↦ ∑ k ∈ antidiagonal p, dp R k.1 m ⊗ₜ dp R k.2 n), by sorry⟩ := by
+-- TODO: Finish as in lemma above
+private lemma aux_prod_algHom_apply (mn : M × N) :
+    (aux_prod_algHom R M N mn) =
+      ⟨Additive.toMul PowerSeries.mk (fun p ↦ ∑ k ∈ antidiagonal p, dp R k.1 mn.1 ⊗ₜ dp R k.2 mn.2),
+        by sorry⟩ := by
   ext1
   simp only [aux_prod_algHom, LinearMap.add_apply, aux_prod_algHom_left_apply,
     aux_prod_algHom_right_apply]
   rw [PowerSeries.ExponentialModule.coe_add]
   -- TODO: discuss this commented out code (it seems problematic)
-  -- simp only [AddSubmonoid.mk_add_mk, PowerSeries.ExponentialModule.coe_mk]
+  --simp only [AddSubmonoid.mk_add_mk, PowerSeries.ExponentialModule.coe_mk]
   simp only [PowerSeries.ExponentialModule.coe_mk]
   ext p
-  simp [PowerSeries.coeff_mk, PowerSeries.coeff_mul]
+  sorry --simp [PowerSeries.coeff_mk, PowerSeries.coeff_mul]
 
 variable (M N)
 
@@ -225,25 +260,14 @@ def prod_algHom :
 theorem prod_algHom_apply_dp (mn : M × N) (p : ℕ) :
     (prod_algHom R M N) (dp R p mn) =
       ∑ k ∈ antidiagonal p, (dp R k.1 mn.1) ⊗ₜ (dp R k.2 mn.2) := by
-  sorry
-  /- simp only [prod_algHom, aux_prod_algHom, aux_prod_algHom_left, aux_prod_algHom_right]
-  calc
-    ((exponentialModule_equiv R (M × N) (DividedPowerAlgebra R M ⊗[R] DividedPowerAlgebra R N)).symm
-            ((exponentialModule_equiv R (M × N)
-                  (DividedPowerAlgebra R M ⊗[R] DividedPowerAlgebra R N))
-                (aux2 R M N) +
-              (exponentialModule_equiv R (M × N)
-                  (DividedPowerAlgebra R M ⊗[R] DividedPowerAlgebra R N))
-                (aux4 R M N)))
-          (dp R p mn)
-    _ = ((aux2 R M N) (dp R p mn) + (aux4 R M N) (dp R p mn))  := by sorry
-    _ = ∑ k ∈ antidiagonal p, dp R k.1 mn.1 ⊗ₜ[R] dp R k.2 mn.2 := by
-      simp only [aux2, AlgEquiv.toAlgHom_eq_coe, aux1, AlgHom.coe_comp, AlgHom.coe_coe,
-        AlgHom.coe_restrictScalars', Function.comp_apply, LinearMap.lift_apply_dp,
-        LinearEquiv.coe_coe, LinearMap.id_coe, id_eq, aux4, aux3]
-      simp only [aux0, LinearMap.coe_mk, AddHom.coe_mk, comm_tmul, dpScalarExtensionInv_apply_dp,
-        one_pow, Algebra.TensorProduct.comm_tmul, aux0']
-      sorry -/
+  simp only [prod_algHom, exponentialModule_equiv_symm_apply,
+    aux_prod_algHom_apply]
+  simp only [PowerSeries.ExponentialModule.coe_mk]
+  calc (PowerSeries.coeff p) (Additive.toMul PowerSeries.mk fun p ↦
+            ∑ k ∈ antidiagonal p, dp R k.1 mn.1 ⊗ₜ[R] dp R k.2 mn.2)
+    _ = (PowerSeries.coeff p) (PowerSeries.mk fun p ↦
+            ∑ k ∈ antidiagonal p, dp R k.1 mn.1 ⊗ₜ[R] dp R k.2 mn.2) := rfl
+    _ = ∑ k ∈ antidiagonal p, dp R k.1 mn.1 ⊗ₜ[R] dp R k.2 mn.2 := by simp
 
 def tensorProduct_algHom :
     DividedPowerAlgebra R M ⊗[R] DividedPowerAlgebra R N →ₐ[R]
