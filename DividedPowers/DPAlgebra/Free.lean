@@ -31,24 +31,24 @@ example (R M : Type*) [CommRing R] [AddCommGroup M] [Module R M]
   intro p _
   induction p using DividedPowerAlgebra.induction_on with
   | h_C r =>
-    simp
-    sorry
+    simp only [algHom_C, Algebra.algebraMap_eq_smul_one]
+    exact Submodule.smul_mem _ _ (Submodule.subset_span ⟨0, by simp⟩)
   | h_add x y hx hy =>
     exact Submodule.add_mem _ (hx Submodule.mem_top) (hy Submodule.mem_top)
   | h_dp x k m hx =>
     have hm : m ∈ Submodule.span R (Set.range v) := by
       simp [hv, Submodule.mem_top]
+
     rw [Submodule.mem_span_iff_exists_finset_subset] at hm
-    obtain ⟨c, s, hs, hc, hm⟩ := hm
-    rw [← hm, dp_sum_smul, mul_sum]
+    obtain ⟨c, s, hs, hc, rfl⟩ := hm
+    rw [dp_sum_smul, mul_sum]
     apply Submodule.sum_mem
     intro d hd
     simp only [Algebra.mul_smul_comm]
     apply Submodule.smul_mem
     specialize hx Submodule.mem_top
     rw [Submodule.mem_span_iff_exists_finset_subset] at hx
-    obtain ⟨e, t, ht, he, hx⟩ := hx
-    rw [← hx]
+    obtain ⟨e, t, ht, he, rfl⟩ := hx
     rw [sum_mul]
     apply Submodule.sum_mem
     intro y hy
@@ -56,7 +56,7 @@ example (R M : Type*) [CommRing R] [AddCommGroup M] [Module R M]
     apply Submodule.smul_mem
     apply ht at hy
     simp only [Set.mem_range] at hy
-    obtain ⟨u, hy⟩ := hy
+    obtain ⟨u, rfl⟩ := hy
     sorry
 
 -- TODO: rename
