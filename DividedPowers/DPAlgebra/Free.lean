@@ -116,7 +116,7 @@ example (P Q : {P : Submodule R M // P.FG}) (h : P ≤ Q) :
     DividedPowerAlgebra R P →ₐ[R] DividedPowerAlgebra R Q :=
   LinearMap.lift _ (Submodule.inclusion h)
 
--- Prop A2.2 (Also see Submodules_fg_equiv)
+/- -- Prop A2.2 (Also see Submodules_fg_equiv)
 def directLimit [DecidableEq {P : Submodule R M // P.FG}] :
   DividedPowerAlgebra R (Module.DirectLimit (ι := {P : Submodule R M // P.FG})
       (G := fun P ↦ P.val) (fun ⦃P Q⦄ (h : P ≤ Q) ↦ Submodule.inclusion h)) ≃ₗ[R]
@@ -133,7 +133,7 @@ def directLimit_of_fg_submodules [DecidableEq {P : Submodule R M // P.FG}] :
     DividedPowerAlgebra R M ≃ₗ[R] Module.DirectLimit (ι := {P : Submodule R M // P.FG})
       (fun P ↦ DividedPowerAlgebra R P)
       (fun ⦃P Q⦄ (h : P ≤ Q) ↦ (LinearMap.lift _ (Submodule.inclusion h)).toLinearMap) :=
-  (LinearEquiv.lift (Submodules_fg_equiv R M).symm).toLinearEquiv.trans (directLimit R M)
+  (LinearEquiv.lift (Submodules_fg_equiv R M).symm).toLinearEquiv.trans (directLimit R M) -/
 
 -- TODO: rename these
 
@@ -215,7 +215,7 @@ private def aux_prod_algHom :
 
 variable {M N}
 
-def foo (m : M) :
+/- def foo (m : M) :
     (PowerSeries.ExponentialModule
       (DividedPowerAlgebra R M ⊗[R] DividedPowerAlgebra R N)) where
   val := Additive.ofMul (PowerSeries.mk (fun p ↦ dp R p m ⊗ₜ 1))
@@ -228,14 +228,14 @@ def foo (m : M) :
       rw [dp_mul, ← nsmul_eq_mul]
       rfl -- Missing lemma?
     · simp only [PowerSeries.constantCoeff_mk, dp_zero]
-      rfl -- Missing lemma?
+      rfl -- Missing lemma? -/
 
 lemma PowerSeries.coeff_ofMul {R : Type*} [Semiring R] (n : ℕ) (f : PowerSeries R) :
   PowerSeries.coeff n (Additive.ofMul f) = PowerSeries.coeff n f := rfl
 
-private lemma aux_prod_algHom_left_apply (m : M) (n : N) :
-    (aux_prod_algHom_left R M N (m, n)) =
-      ⟨Additive.ofMul (PowerSeries.mk (fun p ↦ dp R p m ⊗ₜ 1)), by
+private lemma aux_prod_algHom_left_apply (mn : M × N) :
+    (aux_prod_algHom_left R M N mn) =
+      ⟨Additive.ofMul (PowerSeries.mk (fun p ↦ dp R p mn.1 ⊗ₜ 1)), by
       simp only [PowerSeries.mem_exponentialModule_iff', toMul_ofMul,
         PowerSeries.isExponential_iff]
       refine ⟨?_, ?_⟩
@@ -254,17 +254,17 @@ private lemma aux_prod_algHom_left_apply (m : M) (n : N) :
   --rw [PowerSeries.coeff_ofMul] Does not work
   -- This is abusing defeq
   have : (PowerSeries.coeff p) (Additive.ofMul
-    (PowerSeries.mk fun p ↦ dp R p m ⊗ₜ[R] (1 : DividedPowerAlgebra R N))) =
-    (PowerSeries.coeff p) (PowerSeries.mk fun p ↦ dp R p m ⊗ₜ[R] 1) := rfl
+    (PowerSeries.mk fun p ↦ dp R p mn.1 ⊗ₜ[R] (1 : DividedPowerAlgebra R N))) =
+    (PowerSeries.coeff p) (PowerSeries.mk fun p ↦ dp R p mn.1 ⊗ₜ[R] 1) := rfl
   erw [this]
   rw [PowerSeries.coeff_mk, PowerSeries.ExponentialModule.coeff_linearMap
     (S := DividedPowerAlgebra R M ⊗[R] DividedPowerAlgebra R N) (aux2 R M N) p]
   simp [exp_LinearMap, coeff_exp, aux2_apply_dp]
 
 -- TODO: Finish as in lemma above
-private lemma aux_prod_algHom_right_apply (m : M) (n : N) :
-    (aux_prod_algHom_right R M N (m, n)) =
-      ⟨Additive.toMul (PowerSeries.mk (fun q ↦ 1 ⊗ₜ dp R q n)), by sorry⟩ := by
+private lemma aux_prod_algHom_right_apply (mn : M × N) :
+    (aux_prod_algHom_right R M N mn) =
+      ⟨Additive.ofMul (PowerSeries.mk (fun q ↦ 1 ⊗ₜ dp R q mn.2)), by sorry⟩ := by
   ext p
   sorry
   /- simp only [aux_prod_algHom_right, exponentialModule_equiv_apply, LinearMap.coe_comp,
@@ -273,11 +273,18 @@ private lemma aux_prod_algHom_right_apply (m : M) (n : N) :
     (S := DividedPowerAlgebra R M ⊗[R] DividedPowerAlgebra R N) (aux4 R M N) p]
   simp [exp_LinearMap, coeff_exp, aux4_apply_dp] -/
 
+theorem extract_test (R : Type u) [inst : CommRing R]
+  {M : Type v} [inst_1 : AddCommGroup M] [inst_2 : Module R M] {N : Type w}
+  [inst_3 : AddCommGroup N]
+  [inst_4 : Module R N] (mn : M × N) :
+  (Additive.ofMul PowerSeries.mk fun p ↦ ∑ k ∈ antidiagonal p, dp R k.1 mn.1 ⊗ₜ[R] dp R k.2 mn.2) ∈
+    PowerSeries.ExponentialModule (DividedPowerAlgebra R M ⊗[R] DividedPowerAlgebra R N) := sorry
+
 -- TODO: Finish as in lemma above
 private lemma aux_prod_algHom_apply (mn : M × N) :
     (aux_prod_algHom R M N mn) =
-      ⟨Additive.toMul PowerSeries.mk (fun p ↦ ∑ k ∈ antidiagonal p, dp R k.1 mn.1 ⊗ₜ dp R k.2 mn.2),
-        by sorry⟩ := by
+      ⟨Additive.ofMul PowerSeries.mk (fun p ↦ ∑ k ∈ antidiagonal p, dp R k.1 mn.1 ⊗ₜ dp R k.2 mn.2),
+        extract_test R mn⟩ := by
   ext1
   simp only [aux_prod_algHom, LinearMap.add_apply, aux_prod_algHom_left_apply,
     aux_prod_algHom_right_apply]
@@ -295,17 +302,23 @@ def prod_algHom :
       DividedPowerAlgebra R M ⊗[R] DividedPowerAlgebra R N :=
   (exponentialModule_equiv R (M × N) _).symm (aux_prod_algHom R M N)
 
+theorem test (mn : M × N) (p : ℕ) :
+    0 * (prod_algHom R M N) (dp R p mn) = 0 := by simp
+
 theorem prod_algHom_apply_dp (mn : M × N) (p : ℕ) :
     (prod_algHom R M N) (dp R p mn) =
       ∑ k ∈ antidiagonal p, (dp R k.1 mn.1) ⊗ₜ (dp R k.2 mn.2) := by
   simp only [prod_algHom, exponentialModule_equiv_symm_apply,
     aux_prod_algHom_apply]
-  simp only [PowerSeries.ExponentialModule.coe_mk]
-  calc (PowerSeries.coeff p) (Additive.toMul PowerSeries.mk fun p ↦
+  --rw [PowerSeries.ExponentialModule.coe_mk]
+  calc (PowerSeries.coeff p) (Additive.ofMul PowerSeries.mk fun p ↦
             ∑ k ∈ antidiagonal p, dp R k.1 mn.1 ⊗ₜ[R] dp R k.2 mn.2)
     _ = (PowerSeries.coeff p) (PowerSeries.mk fun p ↦
             ∑ k ∈ antidiagonal p, dp R k.1 mn.1 ⊗ₜ[R] dp R k.2 mn.2) := rfl
-    _ = ∑ k ∈ antidiagonal p, dp R k.1 mn.1 ⊗ₜ[R] dp R k.2 mn.2 := by simp
+    _ = ∑ k ∈ antidiagonal p, dp R k.1 mn.1 ⊗ₜ[R] dp R k.2 mn.2 := by
+      simp only [PowerSeries.coeff_mk]
+
+--#print prod_algHom_apply_dp
 
 def tensorProduct_algHom :
     DividedPowerAlgebra R M ⊗[R] DividedPowerAlgebra R N →ₐ[R]
@@ -844,5 +857,3 @@ lemma repr_dp_one [DecidableEq ι] (m : M) : (basis R M b).repr (dp R 1 m) =
       rw [hyx', pow_zero]
     _ = _ := by
       simp
-
-
