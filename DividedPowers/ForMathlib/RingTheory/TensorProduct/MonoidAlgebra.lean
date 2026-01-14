@@ -6,7 +6,7 @@ Authors: Antoine Chambert-Loir
 
 import Mathlib.LinearAlgebra.DirectSum.Finsupp
 import Mathlib.Algebra.MonoidAlgebra.Basic
-import Mathlib.RingTheory.TensorProduct.Basic
+import Mathlib.RingTheory.TensorProduct.Maps
 import Mathlib.Algebra.Algebra.Equiv
 import Mathlib.Data.Finsupp.Defs
 
