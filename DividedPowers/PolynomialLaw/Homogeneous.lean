@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 import Mathlib.Algebra.BigOperators.Finsupp.Basic
-import DividedPowers.ForMathlib.Algebra.Polynomial.AlgebraMap
+import Mathlib.Algebra.Polynomial.AlgebraMap
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.Polynomial
 import DividedPowers.PolynomialLaw.Coeff
 import DividedPowers.PolynomialLaw.Linear
