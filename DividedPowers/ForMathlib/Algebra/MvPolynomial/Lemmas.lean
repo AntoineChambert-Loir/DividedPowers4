@@ -47,7 +47,7 @@ theorem eval₂_X_pow {s : σ} {n : ℕ} : ((X s) ^ n).eval₂ f x = (x s) ^ n :
 @[simp]
 theorem eval₂Hom.smul (f : R →+* S) (g : σ → S) (r : R) (P : MvPolynomial σ R) :
     eval₂Hom f g (r • P) = f r • eval₂Hom f g P := by
-  simp only [smul_eq_C_mul, coe_eval₂Hom, eval₂_mul, eval₂_C, Algebra.id.smul_eq_mul]
+  simp only [smul_eq_C_mul, coe_eval₂Hom, eval₂_mul, eval₂_C, smul_eq_mul]
 
 /-- `eval₂` as an `AddMonoidHom`. -/
 @[simps]
@@ -292,12 +292,11 @@ variable (R : Type*) [CommSemiring R]
 
 theorem X_pow_mul_X_pow_eq_prod (e : ℕ × ℕ) :
     X (R := R) 0 ^ e.1 * X 1 ^ e.2 = ∏ i, X i ^ (finTwoArrowEquiv' ℕ).symm e i := by
-  simp [Fin.isValue, finTwoArrowEquiv'_symm_apply, Finsupp.ofSupportFinite_coe,
-    Fin.prod_univ_two, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_fin_one]
+  simp
 
 theorem X_pow_mul_X_pow_eq_prod' (e : Fin 2 → ℕ) :
     X (R := R) 0 ^ e 0 * X 1 ^ e 1 = ∏ i, X i ^ e i := by
-  simp [Fin.isValue, Fin.prod_univ_two, ]
+  simp
 
 variable {R}
 
@@ -490,7 +489,7 @@ theorem eq_finsupp_single_of_degree_one [DecidableEq M] {d : ℕ × M →₀ ℕ
     exact zero_ne_one hd
   obtain ⟨nm, hnm⟩ := hnm
   rw [← hnm] at hd
-  simp only [Algebra.id.smul_eq_mul, mul_eq_one] at hnm
+  simp only [smul_eq_mul, mul_eq_one] at hnm
   use nm.snd
   ext ab
   rw [Finsupp.single_apply]
@@ -502,7 +501,7 @@ theorem eq_finsupp_single_of_degree_one [DecidableEq M] {d : ℕ × M →₀ ℕ
       mul_ne_zero hab' (ne_of_gt (hsupp ab (Finsupp.mem_support_iff.mpr hab')))
     have hnm_mem : nm ∈ d.support := by rw [Finsupp.mem_support_iff, hnm.1]; exact one_ne_zero
     simp only [Finset.sum_eq_sum_diff_singleton_add hnm_mem, add_eq_right,
-      Algebra.id.smul_eq_mul, Finset.sum_eq_zero_iff, Finset.mem_sdiff,
+      smul_eq_mul, Finset.sum_eq_zero_iff, Finset.mem_sdiff,
       Finsupp.mem_support_iff, Finset.mem_singleton] at hd
     exact hne0 (hd ab ⟨hab', hab⟩)
 
