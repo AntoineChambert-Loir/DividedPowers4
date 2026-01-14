@@ -79,7 +79,9 @@ namespace PolynomialLaw
 
 variable (f : M →ₚₗ[R] N)
 
-section Lift
+-- In PR #22912
+
+/- section Lift
 
 open LinearMap
 
@@ -336,7 +338,7 @@ theorem isCompat {T : Type w} [CommSemiring T] [Algebra R T] (h : S →ₐ[R] T)
   ext t
   simp only [Function.comp_apply, PolynomialLaw.isCompat_apply]
 
-end Lift
+end Lift -/
 
 section Module
 
@@ -347,20 +349,20 @@ variable {R : Type u} [CommSemiring R] {M : Type*} [AddCommMonoid M] [Module R M
 theorem zero_toFun (S : Type*) [CommSemiring S] [Algebra R S] : (0 : M →ₚₗ[R] N).toFun S = 0 := by
   ext t
   obtain ⟨⟨s, p⟩, ha⟩ := π_surjective t
-  simp only [toFun_eq_toFunLifted_apply _ ha, zero_def, Pi.zero_apply, _root_.map_zero]
+  simp only [toFun_eq_rTensor_φ_toFun' _ ha, zero_def, Pi.zero_apply, _root_.map_zero]
 
 /-- Extension of `PolynomialLaw.id.toFun'` -/
 theorem id_toFun_apply {S : Type*} [CommSemiring S] [Algebra R S]
     (t : S ⊗[R] M) :
     id.toFun S t = t  := by
   obtain ⟨n, ψ, p, rfl⟩ := PolynomialLaw.exists_lift t
-  simp [← isCompat_apply, toFun_eq_toFun', id_apply']
+  simp [← isCompat_apply, ← toFun'_eq_toFun, id_apply']
 
 /-- Extension of `PolynomialLaw.add_def_apply` -/
 theorem add_toFun_apply {S : Type*} [CommSemiring S] [Algebra R S] (t : S ⊗[R] M) :
     (f + g).toFun S t = f.toFun S t + g.toFun S t := by
   obtain ⟨⟨s, p⟩, ha⟩ := π_surjective t
-  simp only [Pi.add_apply, toFun_eq_toFunLifted_apply _ ha, add_def, map_add]
+  simp only [Pi.add_apply, toFun_eq_rTensor_φ_toFun' _ ha, add_def, map_add]
 
 /-- Extension of `PolynomialLaw.add_def` -/
 theorem add_toFun {S : Type*} [CommSemiring S] [Algebra R S] :
@@ -374,14 +376,14 @@ theorem neg_toFun {R : Type u} [CommRing R] {M : Type*} [AddCommGroup M] [Module
     (-f).toFun S = (-1 : R) • (f.toFun S) := by
   ext t
   obtain ⟨⟨s, p⟩, ha⟩ := π_surjective t
-  simp [toFun_eq_toFunLifted_apply _ ha, neg_def]
+  simp [toFun_eq_rTensor_φ_toFun' _ ha]
 
 /-- Extension of `PolynomialLaw.smul_def` -/
 theorem smul_toFun (S : Type*) [CommSemiring S] [Algebra R S] :
     (r • f).toFun S = r • (f.toFun S) := by
   ext t
   obtain ⟨⟨s, p⟩, ha⟩ := π_surjective t
-  simp only [toFun_eq_toFunLifted_apply _ ha, smul_def, Pi.smul_apply, map_smul]
+  simp only [toFun_eq_rTensor_φ_toFun' _ ha, smul_def, Pi.smul_apply, map_smul]
 
 end Module
 
@@ -402,7 +404,7 @@ theorem isCompat_apply'_ground {S : Type u} [CommSemiring S] [Algebra R S] (x : 
 
 theorem isCompat_apply_ground (S : Type*) [CommSemiring S] [Algebra R S] (x : M) :
     1 ⊗ₜ (f.ground x) = (f.toFun S) (1 ⊗ₜ x) := by
-  simp only [ground, ← toFun_eq_toFun']
+  simp only [ground, toFun'_eq_toFun]
   convert f.isCompat_apply (Algebra.toAlgHom R S) (1 ⊗ₜ[R] x)
   · simp only [Function.comp_apply, TensorProduct.lid_symm_apply, TensorProduct.includeRight_lid]
     congr
@@ -423,28 +425,26 @@ theorem sum_toFun' {ι : Type*} [DecidableEq ι] (f : ι → (M →ₚₗ[R] N))
   induction s using Finset.induction_on with
   | empty => simp
   | insert i s his hs =>
+    simp only [toFun'_eq_toFun] at hs
     simp [Finset.sum_insert his, hs]
 
 theorem sum_toFun {ι : Type*} [DecidableEq ι] (f : ι → (M →ₚₗ[R] N)) (s : Finset ι)
   (S : Type*) [CommSemiring S] [Algebra R S] (m : S ⊗[R] M) :
     (∑ i ∈ s, f i).toFun S m = ∑ i ∈ s, (f i).toFun S m := by
   obtain ⟨⟨t, p⟩, hm⟩ := π_surjective m
-  simp [toFun_eq_toFunLifted_apply _ hm, sum_toFun']
+  simp [toFun_eq_rTensor_φ_toFun' _ hm, sum_toFun']
 
 theorem zero_comp (g : P →ₚₗ[R] M) :
     (0 : M →ₚₗ[R] N).comp g = 0 := by
-  ext S _ _ p
-  simp [comp_toFun']
+  ext; simp
 
 theorem add_comp (f f' : M →ₚₗ[R] N) (g : P →ₚₗ[R] M) :
     (f + f').comp g = f.comp g + f'.comp g := by
-  ext S _ _ p
-  simp [comp_toFun']
+  ext; simp
 
 theorem smul_comp (r : R) (f : M →ₚₗ[R] N) (g : P →ₚₗ[R] M) :
     (r • f).comp g = r • f.comp g := by
-  ext S _ _ p
-  simp [comp_toFun']
+  ext; simp
 
 theorem sum_comp {ι : Type*} [DecidableEq ι] (f : ι → (M →ₚₗ[R] N)) (g : P →ₚₗ[R] M)
     (s : Finset ι) : (∑ i ∈ s, f i).comp g = ∑ i ∈ s, (f i).comp g := by
@@ -466,8 +466,8 @@ theorem comp_toFun (S : Type*) [CommSemiring S] [Algebra R S] :
   ext t
   obtain ⟨⟨s, p⟩, ha⟩ := π_surjective t
   have hb : PolynomialLaw.π R N S ⟨s, f.toFun' _ p⟩ = f.toFun S t := by
-    simp only [toFun_eq_toFunLifted_apply _ ha, π]
-  rw [Function.comp_apply, toFun_eq_toFunLifted_apply _ hb, toFun_eq_toFunLifted_apply _ ha,
+    simp only [toFun_eq_rTensor_φ_toFun' _ ha, π]
+  rw [Function.comp_apply, toFun_eq_rTensor_φ_toFun' _ hb, toFun_eq_rTensor_φ_toFun' _ ha,
     comp_toFun', Function.comp_apply]
 
 theorem comp_apply (S : Type*) [CommSemiring S] [Algebra R S] (m : S ⊗[R] M) :
@@ -485,12 +485,13 @@ def const (n : N) : M →ₚₗ[R] N where
 variable {R M N}
 
 lemma const_toFun' {S : Type u} [CommSemiring S] [Algebra R S] (n : N) (sm : S ⊗[R] M) :
-    (const R M N n).toFun' S sm = (1 : S) ⊗ₜ[R] n := by simp [const]
+    (const R M N n).toFun' S sm = (1 : S) ⊗ₜ[R] n := by
+    simp only [const]
 
 lemma const_toFun {S : Type*} [CommSemiring S] [Algebra R S] (n : N) (sm : S ⊗[R] M) :
     (const R M N n).toFun S sm = (1 : S) ⊗ₜ[R] n := by
   obtain ⟨k, ψ, p, rfl⟩ := PolynomialLaw.exists_lift sm
-  rw [← (const R M N n).isCompat_apply, toFun_eq_toFun', const_toFun']
+  rw [← (const R M N n).isCompat_apply, ← toFun'_eq_toFun, const_toFun']
   simp only [LinearMap.rTensor_tmul, AlgHom.toLinearMap_apply, map_one]
 
 end const
@@ -502,8 +503,8 @@ def translation (a : M) : (M →ₚₗ[R] N) →ₗ[R] (M →ₚₗ[R] N) where
     toFun' S _ _ m := f.toFun' S (m + 1 ⊗ₜ[R] a)
     isCompat' {S} _ _ {S'} _ _ φ := by
       ext x
-      simp [Function.comp_apply, f.isCompat_apply'] }
-  map_add' f g  := by ext; simp
-  map_smul' r f := by ext; simp
+      simp [-toFun'_eq_toFun, f.isCompat_apply'] }
+  map_add' f g  := by ext; simp [-toFun'_eq_toFun]
+  map_smul' r f := by ext; simp [-toFun'_eq_toFun]
 
 end PolynomialLaw

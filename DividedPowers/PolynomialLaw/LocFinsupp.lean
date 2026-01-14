@@ -45,7 +45,7 @@ theorem locFinsupp_add (hf : LocFinsupp f) (hg : LocFinsupp g) : LocFinsupp (f +
   fun S _ _ m ↦ (Set.finite_union.mpr ⟨hf S m, hg S m⟩).subset (support_add _ _)
 
 theorem locFinsupp_zero : LocFinsupp (0 : ι → M →ₚₗ[R] N) :=
-  fun S _ _ _ ↦ by simp [zero_def, Set.finite_empty]
+  fun S _ _ _ ↦ by simp [Set.finite_empty]
 
 theorem locFinsupp_smul (hf : LocFinsupp f) (r : R) :
     LocFinsupp (r • f) := fun S _ _ m ↦ (hf S m).subset (Function.support_smul_subset_right _ _)
@@ -71,7 +71,8 @@ noncomputable def LocFinsupp.sum (hf : LocFinsupp f) :
     rw [Finsupp.sum]
     suffices hSm : _ ⊆ (hf S m).toFinset by
       rw [sum_of_support_subset _ hSm _ (fun i _ ↦ rfl)]
-      exact sum_congr rfl (fun i _ ↦ by simp [ofSupportFinite_coe, isCompat_apply'])
+      exact sum_congr rfl (fun i _ ↦ by
+        simp [-toFun'_eq_toFun, ofSupportFinite_coe, isCompat_apply'])
     intro i
     simp only [ofSupportFinite_coe, not_imp_not, Finsupp.mem_support_iff,
       Set.Finite.mem_toFinset, Function.mem_support, ← isCompat_apply']
@@ -105,7 +106,7 @@ theorem LocFinsupp.support_toFun_finite (hf : LocFinsupp f)
   obtain ⟨n, ψ, p, hm⟩ := exists_lift m
   apply Set.Finite.subset (hf _ p)
   intro i
-  simp only [mem_support, ne_eq, ← hm, ← isCompat_apply, not_imp_not, toFun_eq_toFun']
+  simp only [mem_support, ne_eq, ← hm, ← isCompat_apply, not_imp_not, ← toFun'_eq_toFun]
   intro hi
   simp [hi]
 
@@ -114,8 +115,8 @@ theorem LocFinsupp.sum_toFun_eq_finsupp_sum (hf : LocFinsupp f)
     hf.sum.toFun S m = (ofSupportFinite (fun i ↦ (f i).toFun S m)
       (hf.support_toFun_finite S m)).sum fun _ m ↦ m := by
   obtain ⟨n, ψ, p, hm⟩ := exists_lift m
-  rw [← hm, ← isCompat_apply, toFun_eq_toFun', hf.sum_toFun'_eq_finsupp_sum, map_finsuppSum]
-  simp_rw [← isCompat_apply, toFun_eq_toFun']
+  rw [← hm, ← isCompat_apply, ← toFun'_eq_toFun, hf.sum_toFun'_eq_finsupp_sum, map_finsuppSum]
+  simp_rw [← isCompat_apply, ← toFun'_eq_toFun]
   rw [Finsupp.sum, Finsupp.sum_of_support_subset]
   · apply Finset.sum_congr rfl
     simp [Finsupp.ofSupportFinite_coe]

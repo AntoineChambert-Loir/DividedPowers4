@@ -135,8 +135,8 @@ This is provided as an auxiliary map for the definition `PolynomialLaw.coeff`. -
 noncomputable def generize' :
     (M →ₚₗ[R] N) →ₗ[R] MvPolynomial ι R ⊗[R] N where
   toFun f       := f.toFun (MvPolynomial ι R) (Module.generize m)
-  map_add' p q  := by simp [add_toFun_apply]
-  map_smul' r p := by simp [RingHom.id_apply, smul_toFun, Pi.smul_apply]
+  map_add' p q  := by simp
+  map_smul' r p := by simp [RingHom.id_apply, Pi.smul_apply]
 
 /-- The coefficients of a `PolynomialLaw`, as linear maps. -/
 noncomputable def coeff : (M →ₚₗ[R] N) →ₗ[R] (ι →₀ ℕ) →₀ N :=
@@ -179,7 +179,7 @@ theorem coeff_comp_equiv {κ : Type*} [DecidableEq κ] [Fintype κ] (e : ι ≃ 
     generize', coe_mk, AddHom.coe_mk, EmbeddingLike.apply_eq_iff_eq]
   let hf := f.isCompat_apply (MvPolynomial.aeval (fun i ↦ MvPolynomial.X (e i)) :
     MvPolynomial ι R →ₐ[R] MvPolynomial κ R) (∑ i, X i ⊗ₜ[R] (m (e i)))
-  suffices toFun f (MvPolynomial κ R) (∑ x, MvPolynomial.X (e x) ⊗ₜ[R] m (e x)) =
+  suffices toFun (MvPolynomial κ R) f (∑ x, MvPolynomial.X (e x) ⊗ₜ[R] m (e x)) =
     f.toFun (MvPolynomial κ R) (generize m) by
     simp only [map_sum, rTensor_tmul, AlgHom.toLinearMap_apply, MvPolynomial.aeval_X, this] at hf
     rw [← hf]
@@ -272,7 +272,7 @@ theorem toFun_zero_of_constantCoeff_zero (hf : f.coeff (0 : ι → M) = 0) : f.t
 
 theorem toFun'_zero_of_constantCoeff_zero (hf : f.coeff (0 : ι → M) = 0)
     (S : Type u) [CommSemiring S] [Algebra R S] : f.toFun' S 0 = 0 := by
-  rw [← toFun_eq_toFun', toFun_zero_of_constantCoeff_zero _ hf]
+  rw [toFun'_eq_toFun, toFun_zero_of_constantCoeff_zero _ hf]
 
 end coeff
 
@@ -308,7 +308,7 @@ theorem ground_apply_sum_smul :
   apply (TensorProduct.lid R N).symm.injective
   rw [TensorProduct.lid_symm_apply, one_tmul_ground_apply', ← TensorProduct.lid_symm_apply]
   simp only [map_sum, TensorProduct.lid_symm_apply, ← TensorProduct.smul_tmul, smul_eq_mul, mul_one]
-  rw [← toFun_eq_toFun', toFun_sum_tmul_eq_coeff_sum, ← TensorProduct.lid_symm_apply]
+  rw [toFun'_eq_toFun, toFun_sum_tmul_eq_coeff_sum, ← TensorProduct.lid_symm_apply]
   simp only [map_finsuppSum, TensorProduct.lid_symm_apply]
   exact Finsupp.sum_congr (fun d _ ↦ by rw [← TensorProduct.smul_tmul, smul_eq_mul, mul_one])
 
@@ -334,7 +334,7 @@ theorem coeff_injective {m : ι → M} (hm : Submodule.span R (Set.range m) = �
     obtain ⟨r, rfl⟩ := hp
     rw [Finsupp.sum_of_support_subset _ (subset_univ _) _ (fun  i _ ↦ by
       rw [smul_eq_mul, _root_.mul_one, TensorProduct.zero_tmul])]
-    simp [smul_eq_mul, mul_one, ← toFun_eq_toFun'_apply, toFun_sum_tmul_eq_coeff_sum, h]
+    simp [smul_eq_mul, mul_one, toFun'_eq_toFun, toFun_sum_tmul_eq_coeff_sum, h]
   simp [Submodule.span_tensorProduct_eq_top_of_span_eq_top hm]
 
 theorem coeff_inj {m : ι → M} (hm : Submodule.span R (Set.range m) = ⊤)
@@ -379,7 +379,7 @@ noncomputable def polynomialLaw : M →ₚₗ[R] N where
 theorem polynomialLaw_toFun_apply : (polynomialLaw b h).toFun S m =
     h.sum fun k n ↦ (∏ i, (LinearForm.baseChange S (b.coord i)) m ^ k i) ⊗ₜ[R] n := by
   obtain ⟨n, ψ, p, rfl⟩ := PolynomialLaw.exists_lift m
-  simp only [← isCompat_apply, toFun_eq_toFun', polynomialLaw, map_finsuppSum]
+  simp only [← isCompat_apply, ← toFun'_eq_toFun, polynomialLaw, map_finsuppSum]
   apply sum_congr
   intro k _
   rw [LinearMap.rTensor_tmul]
@@ -440,7 +440,7 @@ noncomputable def polynomialLawEquivCoeff : ((ι →₀ ℕ) →₀ N) ≃ₗ[R]
   map_add' h k := by
     classical
     ext S _ _ m
-    simp only [← toFun_eq_toFun', add_toFun, polynomialLaw_toFun_apply, Pi.add_apply]
+    simp only [toFun'_eq_toFun, add_toFun, polynomialLaw_toFun_apply, Pi.add_apply]
     rw [sum_of_support_subset h (h.support.subset_union_left), sum_of_support_subset k
       (h.support.subset_union_right), sum_of_support_subset (h + k) support_add]
     simp_rw [coe_add, Pi.add_apply, TensorProduct.tmul_add]
@@ -448,7 +448,7 @@ noncomputable def polynomialLawEquivCoeff : ((ι →₀ ℕ) →₀ N) ≃ₗ[R]
     all_goals intro i _hi; rw [TensorProduct.tmul_zero]
   map_smul' a h := by
     ext S _ _ m
-    simp only [← toFun_eq_toFun', RingHom.id_apply, smul_toFun, Pi.smul_apply,
+    simp only [toFun'_eq_toFun, RingHom.id_apply, smul_toFun, Pi.smul_apply,
       polynomialLaw_toFun_apply]
     rw [sum_of_support_subset (a • h) support_smul _ (fun k _ ↦ by rw [TensorProduct.tmul_zero]),
       sum, Finset.smul_sum]

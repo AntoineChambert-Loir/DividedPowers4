@@ -26,8 +26,8 @@ noncomputable def toPolynomialLaw : (M →ₗ[R] N) →ₗ[R] M →ₚₗ[R] N w
     isCompat' φ  := by
       ext
       simp [← LinearMap.comp_apply, baseChange_eq_ltensor, Function.comp_apply] }
-  map_add' v w := by ext S _ _ m; simp
-  map_smul' r w := by ext S _ _ m; simp
+  map_add' v w := by ext S _ _ m; simp [-toFun'_eq_toFun]
+  map_smul' r w := by ext S _ _ m; simp [-toFun'_eq_toFun]
 
 theorem toPolynomialLaw_ground_apply (m : M) : v.toPolynomialLaw m = v m := by
   simp only [ground_apply]
@@ -40,18 +40,18 @@ theorem toPolynomialLaw_toFun (S : Type*) [CommSemiring S] [Algebra R S] :
     v.toPolynomialLaw.toFun S = v.baseChange S := by
   ext sm
   obtain ⟨n, φ, p, rfl⟩ := exists_lift sm
-  simp only [← isCompat_apply, toFun_eq_toFun', toPolynomialLaw_toFun', baseChange_eq_ltensor,
+  simp only [← isCompat_apply, ← toFun'_eq_toFun, toPolynomialLaw_toFun', baseChange_eq_ltensor,
     ← LinearMap.comp_apply, rTensor_comp_lTensor, lTensor_comp_rTensor]
 
 theorem toPolynomialLaw_id :
     (LinearMap.id).toPolynomialLaw = PolynomialLaw.id (R := R) (M := M) := by
   ext S _ _ m
-  simp [toPolynomialLaw_toFun', id_apply']
+  simp [-toFun'_eq_toFun, toPolynomialLaw_toFun', id_apply']
 
 theorem toPolynomialLaw_comp {P : Type*} [AddCommMonoid P] [Module R P]
     (f : M →ₗ[R] N) (g : N →ₗ[R] P) :
     (g.comp f).toPolynomialLaw = g.toPolynomialLaw.comp f.toPolynomialLaw := by
   ext S _ _ m
-  simp [toPolynomialLaw_toFun', baseChange_comp, comp_toFun']
+  simp [-toFun'_eq_toFun, toPolynomialLaw_toFun', baseChange_comp, comp_toFun']
 
 end LinearMap
