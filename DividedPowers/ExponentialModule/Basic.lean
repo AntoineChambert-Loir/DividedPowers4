@@ -203,8 +203,8 @@ private theorem coeff_linearCombination_X_pow_of_eq {σ : Type*} (a : σ →₀ 
     coeff_sum]
   simp_rw [← C_eq_coe_nat, coeff_C_mul, smul_eq_C_mul, mul_pow, Finset.prod_mul_distrib, ← map_pow,
     ← map_prod, coeff_C_mul, coeff_prod_X_pow, mul_ite, mul_one, mul_zero]
-  sorry -- TODO
-  /- rw [Finset.sum_eq_single (Finsupp.indicator a.support (fun i _ ↦ d i) : σ → ℕ)]
+  /-
+  rw [Finset.sum_eq_single (Finsupp.indicator a.support (fun i _ ↦ d i) : σ → ℕ)]
   · simp only [← DFunLike.coe_fn_eq, Finsupp.indicator_indicator, inter_self,
       Finsupp.self_eq_restrict_iff, fun_support_eq, coe_subset]
     split_ifs with hd'
@@ -242,6 +242,7 @@ private theorem coeff_linearCombination_X_pow_of_eq {σ : Type*} (a : σ →₀ 
       simp only [restrict_apply, Finsupp.mem_support_iff, ne_eq, ite_not, ite_eq_left_iff,
         Classical.not_imp] at hi ⊢
       exact hi.1 -/
+  sorry
 
 private theorem coeff_linearCombination_X_pow_of_ne {σ : Type*} (a : σ →₀ R) {d : σ →₀ ℕ} {n : ℕ}
     (hd : d.sum (fun _ m ↦ m) ≠ n) :
@@ -522,7 +523,7 @@ variable (R) in
   The scalar multiplication law is given by `PowerSeries.rescale`.
   This is implemented as an `AddSubmonoid (Additive R⟦X⟧) `. -/
 def ExponentialModule : AddSubmonoid (Additive R⟦X⟧) where
-  carrier := { f : Additive (R⟦X⟧) | IsExponential (toMul f) }
+  carrier := { f : Additive R⟦X⟧ | IsExponential (toMul f) }
   add_mem' {f g} hf hg := by simp [hf.mul hg]
   zero_mem' := by simp [IsExponential.one]
 
@@ -557,7 +558,7 @@ lemma coe_ext {f g : ExponentialModule R} (h : (f : R⟦X⟧) = ↑g) : f = g :=
 theorem toMul_val_eq_coe {f : ExponentialModule R} : toMul (↑f : Additive R⟦X⟧) = ↑f := rfl
 
 @[simp]
-theorem coe_mk {f : R⟦X⟧} (hf : IsExponential f) : ↑(⟨f, hf⟩ : ExponentialModule R) = f := rfl
+theorem coe_mk {f : R⟦X⟧} (hf : IsExponential f) : ↑(⟨ofMul f, hf⟩ : ExponentialModule R) = f := rfl
 
 noncomputable instance instSMul : SMul A (ExponentialModule R) where
   smul r f := ⟨r • (f : Additive R⟦X⟧), by

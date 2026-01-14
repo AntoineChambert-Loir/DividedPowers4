@@ -28,12 +28,12 @@ Let `R` be a commutative ring and let `I` be an ideal of `R`.
 
 namespace DividedPowers
 
-open PowerSeries
+open PowerSeries Additive
 
 variable {R : Type*} [CommRing R] {I : Ideal R}
 
 theorem exp_isExponential (hI : DividedPowers I) {a : R} (ha : a ∈ I) :
-    PowerSeries.IsExponential (hI.exp a) :=
+    IsExponential (hI.exp a) :=
   isExponential_iff.mpr ⟨fun p q ↦ by simp only [exp, coeff_mk, hI.mul_dpow ha],
     by simp only [exp, ← coeff_zero_eq_constantCoeff_apply, coeff_mk, dpow_zero _ ha]⟩
 
@@ -44,9 +44,10 @@ lemma exp_smul (hI : DividedPowers I) {r a : R} (ha : a ∈ I) :
 
 /-- The power series `hI.exp a`, as an element of `ExponentialModule R`. -/
 def exp' (hI : DividedPowers I) (a : I) : ExponentialModule R :=
-  ⟨hI.exp a, hI.exp_isExponential a.prop⟩
+  ⟨ofMul (hI.exp a), hI.exp_isExponential a.prop⟩
 
-lemma coe_exp' (hI : DividedPowers I) (a : I) : (hI.exp' a : R⟦X⟧) = hI.exp ↑a := rfl
+lemma coe_exp' (hI : DividedPowers I) (a : I) :
+    (hI.exp' a : R⟦X⟧) = hI.exp ↑a := rfl
 
 open ExponentialModule
 
