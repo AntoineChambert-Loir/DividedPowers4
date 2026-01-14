@@ -84,7 +84,8 @@ theorem sup_restrictScalars :
 
 theorem codisjoint_restrictScalars_iff :
     Codisjoint (M₁.restrictScalars A) (M₂.restrictScalars A) ↔ Codisjoint M₁ M₂ := by
-  simp [codisjoint_iff, ← sup_restrictScalars, restrictScalars_eq_top_iff]
+  simp only [codisjoint_iff]
+  rw [← sup_restrictScalars, restrictScalars_eq_top_iff]
 
 theorem disjoint_restrictScalars_iff :
     Disjoint (M₁.restrictScalars A) (M₂.restrictScalars A) ↔ Disjoint M₁ M₂ := by
@@ -157,6 +158,7 @@ theorem isCompl_lTensor (hM : IsCompl M₁ M₂) :
 
 end LinearMap
 
+/-
 theorem Submodule.disjoint_map (hM : Disjoint M₁ M₂) {N : Type*} [AddCommGroup N] [Module A N]
     {f : M →ₗ[A] N} (hf : Function.Injective f) : Disjoint (M₁.map f) (M₂.map f) := by
   rw [Submodule.disjoint_def] at hM ⊢
@@ -173,11 +175,12 @@ theorem Submodule.codisjoint_map (hM : Codisjoint M₁ M₂) {N : Type*} [AddCom
   rw [LinearMap.map_add]
   exact Submodule.add_mem _ (Submodule.mem_sup_left (mem_map_of_mem hy))
     (Submodule.mem_sup_right (mem_map_of_mem hz))
+-/
 
 theorem Submodule.isCompl_map (hM : IsCompl M₁ M₂) {N : Type*} [AddCommGroup N] [Module A N]
-    (f : M ≃ₗ[A] N) : IsCompl (M₁.map f) (M₂.map f) :=
-  IsCompl.mk (Submodule.disjoint_map hM.disjoint f.injective)
-    (Submodule.codisjoint_map hM.codisjoint f.surjective)
+    (f : M ≃ₗ[A] N) : IsCompl (M₁.map f.toLinearMap) (M₂.map f.toLinearMap) :=
+  IsCompl.mk (Submodule.disjoint_map f.injective hM.disjoint)
+    (Submodule.codisjoint_map f.surjective hM.codisjoint)
 
 theorem LinearMap.isCompl_rTensor (Q : Type*) [AddCommGroup Q] [Module A Q] (hM : IsCompl M₁ M₂) :
     IsCompl (range (rTensor Q M₁.subtype)) (range (rTensor Q M₂.subtype)) := by
@@ -501,6 +504,7 @@ theorem isAugmentation_tensorProduct (A : Type*) [CommRing A] {R S : Type*} [Com
       rw [Submodule.map_top, LinearMap.range_eq_top]
       apply TensorProduct.map_surjective Function.surjective_id
       rw [← LinearMap.range_eq_top, range_subtype]]
+    simp
 
 end Ideal
 
