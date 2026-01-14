@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 
-import Mathlib.RingTheory.DividedPowers.RatAlgebra
+import Mathlib.RingTheory.DividedPowers.Padic
 import Mathlib.NumberTheory.Padics.PadicIntegers
 
 /-! # Divided powers on ℤ_[p]
@@ -24,6 +24,8 @@ If `K` is a `p`-adic local field with ring of integers `R` and uniformizer `π` 
 
 -/
 
+
+-- In #26956 (merged)
 namespace PadicInt
 
 open DividedPowers DividedPowers.OfInvertibleFactorial Nat Ring

@@ -40,7 +40,7 @@ lemma fst_toFun'_apply {S : Type u} [CommSemiring S] [Algebra R S] {m : S ⊗[R]
 lemma fst_toFun_apply {S : Type*} [CommSemiring S] [Algebra R S] {m : S ⊗[R] (M × M')} :
     (fst R M M').toPolynomialLaw.toFun S m = ((TensorProduct.prodRight R R S M  M') m).fst := by
   obtain ⟨k, ψ, p, rfl⟩ := PolynomialLaw.exists_lift m
-  rw [← (fst R M M').toPolynomialLaw.isCompat_apply, PolynomialLaw.toFun_eq_toFun']
+  rw [← (fst R M M').toPolynomialLaw.isCompat_apply, ← toFun'_eq_toFun]
   simp only [fst_toFun'_apply, prodRight_rTensor_fst_eq_rTensor_prodRight]
 
 lemma snd_ground_apply (m : M × M') : (snd R M M').toPolynomialLaw m = m.2 := by
@@ -57,13 +57,13 @@ lemma snd_toFun'_apply {S : Type u} [CommSemiring S] [Algebra R S] {m : S ⊗[R]
 lemma snd_toFun_apply {S : Type*} [CommSemiring S] [Algebra R S] {m : S ⊗[R] (M × M')} :
     (snd R M M').toPolynomialLaw.toFun S m = ((TensorProduct.prodRight R R S M  M') m).snd := by
   obtain ⟨k, ψ, p, rfl⟩ := PolynomialLaw.exists_lift m
-  rw [← (snd R M M').toPolynomialLaw.isCompat_apply, PolynomialLaw.toFun_eq_toFun']
+  rw [← (snd R M M').toPolynomialLaw.isCompat_apply, ← toFun'_eq_toFun]
   simp only [snd_toFun'_apply, prodRight_rTensor_snd_eq_rTensor_prodRight]
 
 lemma sum_fst_snd_toFun'_apply {S : Type u} [CommSemiring S] [Algebra R S] {m : S ⊗[R] (M × M)} :
     (fst R M M + snd R M M).toPolynomialLaw.toFun' S m =
     ((TensorProduct.prodRight R R S M M) m).fst + ((TensorProduct.prodRight R R S M M) m).snd := by
-  simp [toPolynomialLaw_toFun', ← fst_toFun'_apply, ← snd_toFun'_apply]
+  simp [← fst_toFun'_apply, ← snd_toFun'_apply]
 
 lemma inl_ground_apply (m : M) : (inl R M M').toPolynomialLaw m = (m, 0) := by
   simp [toPolynomialLaw_ground_apply, inl_apply]
@@ -83,7 +83,7 @@ lemma inl_toFun'_apply {S : Type u} [CommSemiring S] [Algebra R S] {m : S ⊗[R]
 lemma inl_toFun_apply {S : Type*} [CommSemiring S] [Algebra R S] {m : S ⊗[R] M} :
     (inl R M M').toPolynomialLaw.toFun S m = ((TensorProduct.inlRight R R S M M') m) := by
   obtain ⟨k, ψ, p, rfl⟩ := PolynomialLaw.exists_lift m
-  rw [← (inl R M M').toPolynomialLaw.isCompat_apply, PolynomialLaw.toFun_eq_toFun']
+  rw [← (inl R M M').toPolynomialLaw.isCompat_apply, ← toFun'_eq_toFun]
   simp only [inl_toFun'_apply, rTensor_inlRight_eq_inlRight_rTensor]
 
 lemma inr_ground_apply (m : M') : (inr R M M').toPolynomialLaw m = (0, m) := by
@@ -105,7 +105,7 @@ lemma inr_toFun'_apply {S : Type u} [CommSemiring S] [Algebra R S] {m : S ⊗[R]
 lemma inr_toFun_apply {S : Type*} [CommSemiring S] [Algebra R S] {m : S ⊗[R] M'} :
     (inr R M M').toPolynomialLaw.toFun S m = ((TensorProduct.inrRight R R S M M') m) := by
   obtain ⟨k, ψ, p, rfl⟩ := PolynomialLaw.exists_lift m
-  rw [← (inr R M M').toPolynomialLaw.isCompat_apply, PolynomialLaw.toFun_eq_toFun']
+  rw [← (inr R M M').toPolynomialLaw.isCompat_apply, ← toFun'_eq_toFun]
   simp only [inr_toFun'_apply, rTensor_inrRight_eq_inrRight_rTensor]
 
 end Prod
