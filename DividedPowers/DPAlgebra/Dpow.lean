@@ -10,7 +10,7 @@ import DividedPowers.ForMathlib.Data.FinsetLemmas
 import DividedPowers.ForMathlib.Data.Nat.Choose.Multinomial
 import DividedPowers.ForMathlib.RingTheory.DividedPowers.Basic
 import DividedPowers.ForMathlib.RingTheory.Localization.FractionRing
-import DividedPowers.Padic
+import Mathlib.RingTheory.DividedPowers.Padic
 import Mathlib.RingTheory.DividedPowers.SubDPIdeal
 import Mathlib.RingTheory.MvPolynomial.Basic
 import Mathlib.RingTheory.PowerSeries.PiTopology

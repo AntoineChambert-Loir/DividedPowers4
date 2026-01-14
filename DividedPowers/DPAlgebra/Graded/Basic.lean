@@ -89,7 +89,7 @@ lemma mem_grade_iff (a : DividedPowerAlgebra R M) (n : ℕ) :
   simp only [grade, _root_.quotSubmodule, Submodule.mem_map]; rfl
 
 theorem one_mem : (1 : DividedPowerAlgebra R M) ∈ grade R M 0 :=
-  ⟨1, isWeightedHomogeneous_one R _, map_one _⟩
+  ⟨1, isWeightedHomogeneous_one R _, by simp [map_one]⟩
 
 /-- The canonical decomposition of `DividedPowerAlgebra R M` -/
 def decomposition : DirectSum.Decomposition (M := DividedPowerAlgebra R M) (grade R M) :=
@@ -187,7 +187,7 @@ theorem lift_isHomogeneous {A : Type*} [CommSemiring A] [Algebra R A] (𝒜 : �
     GAlgHom.IsHomogeneous (DividedPowerAlgebra.grade R M) 𝒜  (id : ℕ → ℕ) (lift hI φ hφ) := by
   apply liftAux_isHomogeneous
   intro n m
-  simpa only [Algebra.id.smul_eq_mul, mul_one] using hI' (φ m) (hφ m) n 1 (hφ' m)
+  simpa [smul_eq_mul, mul_one] using hI' (φ m) (hφ m) n 1 (hφ' m)
 
 variable {N : Type*} [AddCommMonoid N] [Module R N] [Module S N]
   [IsScalarTower R S N]

@@ -265,7 +265,7 @@ theorem dpScalarExtension_mem_grade {a : DividedPowerAlgebra R M} {n : ℕ} (ha 
     simp only [SetLike.mem_coe, mem_weightedHomogeneousSubmodule, IsWeightedHomogeneous] at hpn
     simp only [hp', baseChange, coe_mk, ← hpa, MvPolynomial.rename, ← algebraMap_eq,
       dpScalarExtension, AlgHom.baseChange, toRingHom_eq_coe, coe_mk, RingHom.coe_coe,
-      productMap_apply_tmul, _root_.map_one, one_mul, lift', RingQuot.liftAlgHom_mkAlgHom_apply,
+      productMap_apply_tmul, _root_.map_one, one_mul, lift', toLinearMap_apply, RingQuot.liftAlgHom_mkAlgHom_apply,
       coe_eval₂AlgHom, Function.comp_def, baseChange, hf,  coe_mk]
     rw [← AlgHom.comp_apply, MvPolynomial.comp_aeval, aeval_def]
     simp only [eval₂_eq]
