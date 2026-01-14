@@ -1,4 +1,4 @@
-import DividedPowers.ForMathlib.Algebra.Module.LinearMap.Defs
+import Mathlib.Algebra.Module.LinearMap.Defs
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.Polynomial
 import DividedPowers.PolynomialLaw.Linear
 import DividedPowers.PolynomialLaw.LocFinsupp
