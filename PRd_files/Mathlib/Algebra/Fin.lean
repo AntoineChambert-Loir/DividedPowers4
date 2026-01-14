@@ -5,8 +5,10 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Algebra.BigOperators.Finsupp.Basic
+import Mathlib.Algebra.BigOperators.Finsupp.Fin
 
--- In PR #30538
+
+-- In PR #30538 (Merged)
 
 /-! # An equivalence for `Fin 2`. -/
 section Fin2

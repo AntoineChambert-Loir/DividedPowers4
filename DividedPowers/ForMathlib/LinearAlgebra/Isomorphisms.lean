@@ -10,12 +10,12 @@ namespace LinearMap
 variable {R M N P : Type*} [CommRing R] [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
   [AddCommGroup P] [Module R P] (f : M →ₗ[R] N) (hf : Function.Surjective f)
 
-@[simp]
+/- @[simp]
 theorem quotKerEquivOfSurjective_symm_apply (hf : Function.Surjective f) (x : M) :
     (f.quotKerEquivOfSurjective hf).symm (f x) =
       (LinearMap.ker f).mkQ x := by
   rw [← LinearMap.quotKerEquivOfSurjective_apply_mk f hf,
-    @LinearEquiv.symm_apply_apply, @Submodule.mkQ_apply]
+    @LinearEquiv.symm_apply_apply, @Submodule.mkQ_apply] -/
 
 variable (P) in
 noncomputable def equiv_of_isSurjective :
