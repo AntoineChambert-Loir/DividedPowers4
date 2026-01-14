@@ -6,7 +6,7 @@ import DividedPowers.DPAlgebra.Compatible -- TODO: uncomment  -- It uses sorry (
 import DividedPowers.DPAlgebra.Envelope -- TODO: uncomment -- It uses sorry (depended on AlgebraComp)
 import DividedPowers.DPAlgebra.Dpow
 import DividedPowers.DPAlgebra.Exponential
---import DividedPowers.DPAlgebra.Free
+import DividedPowers.DPAlgebra.Free
 import DividedPowers.DPAlgebra.Graded.Basic
 import DividedPowers.DPAlgebra.Graded.GradeOne
 import DividedPowers.DPAlgebra.Graded.GradeZero
