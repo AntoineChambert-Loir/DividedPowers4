@@ -1,5 +1,4 @@
 --import DividedPowers.Basic -- In PR #15657
-import DividedPowers.ForMathlib.RingTheory.Congruence.Hom
 import DividedPowers.BasicLemmas
 import DividedPowers.DPAlgebra.BaseChange -- It uses sorry
 import DividedPowers.DPAlgebra.Compatible -- TODO: uncomment  -- It uses sorry (depended on AlgebraComp)
@@ -67,7 +66,7 @@ import DividedPowers.ForMathlib.Topology.Algebra.LinearTopology
 --import DividedPowers.ForMathlib.Topology.Algebra.TopologicallyNilpotent -- In PR #20971
 import DividedPowers.IdealAdd
 import DividedPowers.IdealAdd_v1 -- For comparison of definitions
-import DividedPowers.Padic
+--import DividedPowers.Padic
 import DividedPowers.PolynomialLaw.BaseChange
 --import DividedPowers.PolynomialLaw.Basic -- In PR #22912
 import DividedPowers.PolynomialLaw.Basic -- toFun, PR #26719, and new basic stuff
