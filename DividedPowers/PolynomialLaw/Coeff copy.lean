@@ -1,5 +1,5 @@
 import DividedPowers.ForMathlib.Algebra.Algebra.Bilinear
-import DividedPowers.ForMathlib.Algebra.BigOperators.Group.Finset.Basic
+import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import DividedPowers.ForMathlib.RingTheory.SubmoduleMem
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.Basic
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.MvPolynomial
