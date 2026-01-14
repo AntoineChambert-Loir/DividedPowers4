@@ -540,7 +540,7 @@ variable (R)
 
 /-- The graded pieces of `RingQuot rel`. -/
 def quotSubmodule (i : ι) : Submodule R (RingQuot rel) :=
-  Submodule.map (RingQuot.mkAlgHom R rel) (𝒜 i)
+  Submodule.map (RingQuot.mkAlgHom R rel).toLinearMap (𝒜 i)
 
 /-- The canonical LinearMap from the graded pieces of A to that of RingQuot rel. -/
 def quotCompMap (i : ι) : (𝒜 i) →ₗ[R] (quotSubmodule R 𝒜 rel i) where
@@ -559,14 +559,14 @@ def quotDecompose' : DirectSum ι (fun i => quotSubmodule R 𝒜 rel i) →ₗ[R
 variable {R}
 
 instance SetLike.GradedMonoid_RingQuot [AddMonoid ι] [h𝒜 : SetLike.GradedMonoid 𝒜] :
-  SetLike.GradedMonoid (fun i => (𝒜 i).map (RingQuot.mkAlgHom R rel)) where
-    one_mem :=  ⟨1, h𝒜.one_mem, by simp only [map_one]⟩
+  SetLike.GradedMonoid (fun i => (𝒜 i).map (RingQuot.mkAlgHom R rel).toLinearMap) where
+    one_mem :=  ⟨1, h𝒜.one_mem, by simp [map_one]⟩
     mul_mem := fun i j x y => by
       rintro ⟨a, ha, rfl⟩ ⟨b, hb, rfl⟩
-      exact ⟨a*b, ⟨h𝒜.mul_mem ha hb, map_mul _ _ _⟩⟩
+      exact ⟨a*b, ⟨h𝒜.mul_mem ha hb, by simp [map_mul]⟩⟩
 
 theorem quotDecompose_left_inv'_aux :
-    (coeLinearMap fun i => Submodule.map (RingQuot.mkAlgHom R rel) (𝒜 i)).comp
+    (coeLinearMap fun i => Submodule.map (RingQuot.mkAlgHom R rel).toLinearMap (𝒜 i)).comp
       (lmap' (quotCompMap R 𝒜 rel)) =
     (RingQuot.mkAlgHom R rel).toLinearMap.comp (coeLinearMap 𝒜) := by
   apply linearMap_ext
@@ -577,7 +577,7 @@ theorem quotDecompose_left_inv'_aux :
   rfl
 
 theorem quotDecompose_left_inv'_aux_apply (x) :
-    (coeLinearMap fun i => Submodule.map (RingQuot.mkAlgHom R rel) (𝒜 i))
+    (coeLinearMap fun i => Submodule.map (RingQuot.mkAlgHom R rel).toLinearMap (𝒜 i))
       (lmap' (quotCompMap R 𝒜 rel) x) =
     (RingQuot.mkAlgHom R rel) (coeLinearMap 𝒜 x) := by
   let e := quotDecompose_left_inv'_aux 𝒜 rel
@@ -677,7 +677,7 @@ theorem quotDecompose'_injective [h𝒜 : GradedAlgebra 𝒜]
 
 theorem quotDecompose_injective' [h𝒜 : GradedAlgebra 𝒜]
     (hrel : Rel.IsHomogeneous 𝒜 rel) :
-    Injective (coeLinearMap (fun i => (𝒜 i).map (RingQuot.mkAlgHom R rel))) := by
+    Injective (coeLinearMap (fun i => (𝒜 i).map (RingQuot.mkAlgHom R rel).toLinearMap)) := by
   have hφ : ∀ i, Surjective (quotCompMap R 𝒜 rel i) := by
     rintro i ⟨x, ⟨a, ha, rfl⟩ ⟩
     exact ⟨⟨a, ha⟩, rfl⟩
@@ -723,11 +723,11 @@ variable (R : Type*) [CommRing R] {ι A : Type*} [CommRing A] [Algebra R A]
 
 /-- The graded pieces of A ⧸ I -/
 def Ideal.quotSubmodule : ι → Submodule R (A ⧸ I) :=
-  fun i => Submodule.map (Ideal.Quotient.mkₐ R I) (𝒜 i)
+  fun i => Submodule.map (Ideal.Quotient.mkₐ R I).toLinearMap (𝒜 i)
 
 theorem Ideal.mem_quotSubmodule_iff (i : ι) (g : A ⧸ I) :
     g ∈ I.quotSubmodule R 𝒜 i ↔ ∃ a ∈ 𝒜 i, Ideal.Quotient.mk I a = g := by
-  rw [Ideal.quotSubmodule, Submodule.mem_map, Ideal.Quotient.mkₐ_eq_mk]
+  simp [Ideal.quotSubmodule, Submodule.mem_map, Ideal.Quotient.mkₐ_eq_mk]
 
 /-- The canonical LinearMap from the graded pieces of `A` to those of `A/I` -/
 def Ideal.quotCompMap (i : ι) : ↥(𝒜 i) →ₗ[R] ↥(quotSubmodule R 𝒜 I i) := {
@@ -807,7 +807,9 @@ theorem Ideal.quotDecomposition_right_inv' [GradedAlgebra 𝒜] (hI : I.IsHomoge
   ext1 y
   obtain ⟨x, hx, hxy⟩ := y.prop
   simp only [LinearMap.coe_comp, comp_apply, LinearMap.id_comp, lof_eq_of, coeLinearMap_of]
-  rw [← hxy, Ideal.Quotient.mkₐ_eq_mk, Ideal.quotDecomposeLaux_apply_mk, Ideal.quotDecomposeLaux]
+  rw [← hxy]
+  simp only [AlgHom.toLinearMap_apply, Quotient.mkₐ_eq_mk, Ideal.quotDecomposeLaux_apply_mk,
+    Ideal.quotDecomposeLaux]
   simp only [LinearMap.coe_comp, comp_apply]
   change lmap' _ (decompose 𝒜 x) = _
   suffices decompose 𝒜 x = lof R ι (fun i => 𝒜 i) i (⟨x, hx⟩ : 𝒜 i) by
@@ -816,8 +818,7 @@ theorem Ideal.quotDecomposition_right_inv' [GradedAlgebra 𝒜] (hI : I.IsHomoge
     rw [quotCompMap]
     simp only [Ideal.Quotient.mkₐ_eq_mk, LinearMap.coe_mk]
     rw [← Subtype.coe_inj, Subtype.coe_mk, ← hxy]
-    simp only [Ideal.Quotient.mkₐ_eq_mk]
-    rfl
+    simp [Ideal.Quotient.mkₐ_eq_mk]
   conv_lhs => rw [← Subtype.coe_mk x hx]
   rw [decompose_coe, lof_eq_of]
 
@@ -843,7 +844,7 @@ def Ideal.gradedQuotAlg [GradedAlgebra 𝒜] (hI : I.IsHomogeneous 𝒜) :
       mul_mem := fun i j gi gj hgi hgj => by
         obtain ⟨ai, hai, rfl⟩ := hgi
         obtain ⟨aj, haj, rfl⟩ := hgj
-        exact ⟨ai * aj, ⟨SetLike.mul_mem_graded hai haj, _root_.map_mul _ _ _⟩⟩ }}
+        exact ⟨ai * aj, ⟨SetLike.mul_mem_graded hai haj, by simp [map_mul]⟩⟩ }}
 
 end Ideal
 

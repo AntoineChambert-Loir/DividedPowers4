@@ -43,16 +43,16 @@ to that setting.
 
 section Preliminaries
 
--- In #30974
+-- In #30974 (Merged)
 -- [Mathlib.Algebra.Algebra.Basic]
-/-- The `CommRing` structure on a `CommSemiring` induced by a ring morphism from a `CommRing`. -/
-def RingHom.commSemiringToCommRing
+/- The `CommRing` structure on a `CommSemiring` induced by a ring morphism from a `CommRing`. -/
+/- def RingHom.commSemiringToCommRing
     {R S : Type*} [CommRing R] [CommSemiring S] (φ : R →+* S) :
     CommRing S := by
   let _ : Algebra R S := RingHom.toAlgebra φ
   refine {
     toRing := Algebra.semiringToRing R
-    mul_comm := CommMonoid.mul_comm }
+    mul_comm := CommMonoid.mul_comm } -/
 
 section SMul
 
@@ -63,14 +63,14 @@ open MvPowerSeries
 variable {σ : Type*} {R : Type*} [CommSemiring R]
 
 -- [Mathlib.RingTheory.MvPowerSeries.Basic]
-@[simp]
+/- @[simp]
 lemma MvPolynomial.coe_smul (φ : MvPolynomial σ R) (r : R) :
   (r • φ : MvPolynomial σ R) = r • (φ : MvPowerSeries σ R) := rfl
 
 -- [Mathlib.RingTheory.PowerSeries.Basic]
 @[simp]
 lemma Polynomial.coe_smul (φ : Polynomial R) (r : R) :
-  (r • φ : Polynomial R) = r • (φ : PowerSeries R) := rfl
+  (r • φ : Polynomial R) = r • (φ : PowerSeries R) := rfl -/
 
 end SMul
 
@@ -155,9 +155,9 @@ theorem eq_indicator_iff (f' : (i : σ) → i ∈ s → α) :
   fun i ↦ f i _ = indicator s f ↔ f.support ⊆ s := by
   sorry -/
 
--- In #30976
+-- In #30976 (Merged)
 --[Mathlib.Data.Nat.Choose.Multinomial]
-theorem multinomial_eq_of_support_subset
+/- theorem multinomial_eq_of_support_subset
     {α : Type*} {f : α →₀ ℕ} {s : Finset α} (h : f.support ⊆ s) :
     f.multinomial = Nat.multinomial s f := by
   simp only [Finsupp.multinomial_eq, Nat.multinomial]
@@ -166,7 +166,7 @@ theorem multinomial_eq_of_support_subset
   · rw [Finset.prod_subset h]
     intro x _
     simp only [Finsupp.mem_support_iff, ne_eq, Decidable.not_not, factorial_eq_one]
-    grind
+    grind -/
 
 end Finsupp
 
