@@ -7,6 +7,7 @@ import Mathlib.Algebra.Module.LinearMap.Defs
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.LinearEquiv
 import Mathlib.Algebra.Polynomial.AlgebraMap
 import Mathlib.LinearAlgebra.DirectSum.Finsupp
+import Mathlib.RingTheory.TensorProduct.Maps
 
 /-! # Tensor products of a polynomial ring
 

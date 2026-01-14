@@ -25,7 +25,7 @@ import DividedPowers.ForMathlib.Algebra.Algebra.Bilinear
 -- import DividedPowers.ForMathlib.Algebra.Module.LinearMap.Defs -- In PR #30546
 --import DividedPowers.ForMathlib.Algebra.MvPolynomial.Equiv -- In PR #15019
 import DividedPowers.ForMathlib.Algebra.MvPolynomial.Lemmas
-import DividedPowers.ForMathlib.Algebra.Polynomial.AlgebraMap -- In PR #30547
+--import DividedPowers.ForMathlib.Algebra.Polynomial.AlgebraMap -- In PR #30547
 import DividedPowers.ForMathlib.Algebra.TrivSqZeroExt
 import DividedPowers.ForMathlib.Data.FinsetLemmas
 --import DividedPowers.ForMathlib.Data.Nat.Factorial.NatCast -- In PR #24439
@@ -40,6 +40,7 @@ import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Basic
 import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Pi
 import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Prod
 import DividedPowers.ForMathlib.RingTheory.AugmentationIdeal -- uses sorry.
+--import DividedPowers.ForMathlib.RingTheory.Congruence.Hom
 import DividedPowers.ForMathlib.RingTheory.DividedPowers.Basic
 import DividedPowers.ForMathlib.RingTheory.GradedAlgebra.Basic
 import DividedPowers.ForMathlib.RingTheory.Localization.FractionRing

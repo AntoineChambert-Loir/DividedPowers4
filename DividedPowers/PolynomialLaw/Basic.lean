@@ -5,7 +5,7 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 import DividedPowers.ForMathlib.Algebra.Algebra.Bilinear
 import DividedPowers.ForMathlib.Algebra.MvPolynomial.Lemmas
-import DividedPowers.ForMathlib.RingTheory.Congruence.Hom
+import Mathlib.RingTheory.Congruence.Hom
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.DirectLimit.FG
 import Mathlib.LinearAlgebra.TensorProduct.RightExactness
 import Mathlib.RingTheory.FiniteType

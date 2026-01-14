@@ -5,6 +5,9 @@ Authors: Antoine Chambert-Loir
 -/
 import Mathlib.Algebra.Algebra.Subalgebra.Lattice
 import Mathlib.Algebra.RingQuot
+import Mathlib.RingTheory.Congruence.Hom
+
+-- Already PR'd
 
 /-!
 # Congruence relations and ring homomorphisms
@@ -34,7 +37,8 @@ congruence, congruence relation, quotient, quotient by congruence relation, ring
 quotient ring
 -/
 
-namespace RingHom
+-- Already PR'd
+/- namespace RingHom
 
 variable {R S : Type*} [NonAssocSemiring R] [NonAssocSemiring S] {f : R →+* S}
 
@@ -63,7 +67,7 @@ theorem surjective_codRestrict :
     ← Subsemiring.map_le_iff_le_comap, ← RingHom.rangeS_eq_map, this]
   exact LE.le.ge_iff_eq (fun y ⟨x, hx⟩ ↦ hx.symm ▸ (h x))
 
-end RingHom
+end RingHom -/
 
 namespace RingCon
 
@@ -76,19 +80,19 @@ relation is injective. -/
 theorem toSetoid_inj {c d : RingCon R} (H : c.toSetoid = d.toSetoid) : c = d :=
   ext <| Setoid.ext_iff.1 H
 
-/-- Two ring congruence relations are equal iff their underlying binary
+/- Two ring congruence relations are equal iff their underlying binary
 relations are equal. -/
-theorem coe_inj {c d : RingCon R} : ⇑c = ⇑d ↔ c = d := DFunLike.coe_injective.eq_iff
+--theorem coe_inj {c d : RingCon R} : ⇑c = ⇑d ↔ c = d := DFunLike.coe_injective.eq_iff
 
 end AddMul
 
-variable {R : Type*} [NonAssocSemiring R] (c : RingCon R)
+/- variable {R : Type*} [NonAssocSemiring R] (c : RingCon R)
 
 theorem mk'_surjective : Function.Surjective c.mk' := Quotient.mk''_surjective
 
 @[simp]
 theorem coe_mk' : (c.mk' : R → c.Quotient) = ((↑) : R → c.Quotient) := rfl
-
+ -/
 end RingCon
 
 namespace RingCon
@@ -153,8 +157,8 @@ theorem comap_eq {c : RingCon M} {f : N →+* M} :
     c.comap f = ker (c.mk'.comp f) :=
   ext fun x y => show c _ _ ↔ c.mk' _ = c.mk' _ by rw [← c.eq]; rfl
 
-theorem comap_rel {c : RingCon M} {f : N →+* M} {x y : N} :
-    c.comap f x y ↔ c (f x) (f y) := Iff.rfl
+/- theorem comap_rel {c : RingCon M} {f : N →+* M} {x y : N} :
+    c.comap f x y ↔ c (f x) (f y) := Iff.rfl -/
 
 /-- The kernel of the quotient map induced by a ring congruence relation `c` equals `c`. -/
 theorem ker_mk'_eq (c : RingCon M) : ker c.mk' = c :=

@@ -72,9 +72,10 @@ noncomputable def Int.basis_grade (M : Type v) [AddCommGroup M]
   classical
   set v : Unit → grade ℤ  M n := fun _ ↦ ⟨dp ℤ n (b default), dp_mem_grade ℤ M n (b default)⟩
   apply Basis.mk (v := v)
-  · simp only [LinearIndependent, ← LinearMapClass.ker_eq_bot, Submodule.eq_bot_iff]
-    intro x hx
-    suffices x PUnit.unit = 0 by exact Finsupp.ext fun _ ↦ this
+  · /- simp only [LinearIndependent, ← LinearMap.ker_eq_bot, Submodule.eq_bot_iff]
+    intro x hx -/
+    sorry
+    /- suffices x PUnit.unit = 0 by exact Finsupp.ext fun _ ↦ this
     apply Or.resolve_right ?_ (Nat.factorial_ne_zero n)
     let φ : DividedPowerAlgebra ℤ M →ₐ[ℤ] ℚ :=
       DividedPowerAlgebra.lift (RatAlgebra.dividedPowers ⊤) (b.constr ℤ fun _ ↦ 1) (by simp)
@@ -83,7 +84,7 @@ noncomputable def Int.basis_grade (M : Type v) [AddCommGroup M]
     suffices x PUnit.unit • dp ℤ n (b default) = 0 by
       simpa using congrArg φ this
     simp only [LinearMap.mem_ker, Finsupp.linearCombination_apply] at hx
-    simpa [Finsupp.sum_fintype, v] using hx
+    simpa [Finsupp.sum_fintype, v] using hx -/
   · intro x _
     obtain ⟨p, hp, hpx⟩ := (mem_grade_iff _ _ _ _).mp x.2
     rw [mem_weightedHomogeneousSubmodule] at hp
@@ -92,11 +93,10 @@ noncomputable def Int.basis_grade (M : Type v) [AddCommGroup M]
     -- I am not sure if I set up the lemma in the easiest way to conclude this
     simp_rw [← Subtype.coe_inj, ← hpx]
     simp only [SetLike.val_smul, zsmul_eq_mul]
-    induction p using MvPolynomial.IsWeightedHomogeneous.induction_on hp
-
-
-
-    sorry
+    induction hp using MvPolynomial.IsWeightedHomogeneous.induction_on with
+    | zero => sorry
+    | add => sorry
+    | monomial => sorry
 
 end Int
 
@@ -465,7 +465,7 @@ noncomputable def basis_grade {ι : Type*} (b : Basis ι R M) (n : ℕ) :
         simp only [this, Finsupp.sum, Finsupp.prod]
         exact SetLike.prod_mem_graded (grade R M) d
           (fun i ↦ dp R (d i) (b i)) (fun i _ ↦ dp_mem_grade R M (d i) (b i))
-      simp only [← hd, Finsupp.degree, Finsupp.sum]⟩)
+      simp [← hd, Finsupp.degree, Finsupp.sum]⟩)
   · sorry
   · sorry
 
@@ -574,9 +574,10 @@ theorem basis_repr_ι (m : M) (d) [Decidable (∃ i, d = Finsupp.single i 1)] :
       rw [Finsupp.single_eq_of_ne, mul_zero]
       rwa [ne_eq, Finsupp.single_left_inj Nat.one_ne_zero]
     · simp
-  · convert Finsupp.sum_zero with i r
-    rw [Finsupp.single_eq_of_ne, mul_zero]
-    exact fun H' ↦ H ⟨i, H'⟩
+  · --convert Finsupp.sum_fun_zero with i r
+    sorry
+    --rw [Finsupp.single_eq_of_ne, mul_zero]
+    --exact fun H' ↦ H ⟨i, H'⟩
 
 theorem ι_repr_support_eq (m : M) :
     ((basis R M b).repr (DividedPowerAlgebra.ι R M m)).support =

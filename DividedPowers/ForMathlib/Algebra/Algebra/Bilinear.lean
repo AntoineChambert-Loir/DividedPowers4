@@ -127,8 +127,8 @@ section
 variable {R S S' : Type*} [CommSemiring R] [Semiring S] [Semiring S']
   [Algebra R S] [Algebra R S']
 
-theorem Subalgebra.val_comp_inclusion {A B : Subalgebra R S} (h : A ≤ B) :
-  (Subalgebra.val B).comp (Subalgebra.inclusion h) = Subalgebra.val A := rfl
+--theorem Subalgebra.val_comp_inclusion {A B : Subalgebra R S} (h : A ≤ B) :
+ -- (Subalgebra.val B).comp (Subalgebra.inclusion h) = Subalgebra.val A := rfl
 
 variable (R S) in
 /-- `algebraMap R S` as an `AlgHom`. -/

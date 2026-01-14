@@ -9,7 +9,7 @@ import Mathlib.Algebra.Polynomial.AlgebraMap
 
 -/
 
--- In PR #30547
+-- In PR #30547 (Merged)
 namespace Polynomial
 
 variable {R : Type*} [CommSemiring R] {S : Type*} [CommSemiring S] [Algebra R S]

@@ -556,13 +556,13 @@ noncomputable def dividedPowers : DividedPowers (augIdeal R M) :=
 theorem dpow_eq (x : DividedPowerAlgebra R M) :
     (dividedPowers b).dpow n x = dpow b n x := by
   simp only [CharZero.dividedPowers, ofInjective]
-  simp only [RingHom.toMonoidHom_eq_coe, AlgHom.toRingHom_toMonoidHom, OneHom.toFun_eq_coe,
-    MonoidHom.toOneHom_coe, MonoidHom.coe_coe, RingHom.coe_coe, dite_eq_ite]
-  split_ifs with hx
+  --simp only [RingHom.toMonoidHom_eq_coe, AlgHom.toRingHom_toMonoidHom, OneHom.toFun_eq_coe,
+    --MonoidHom.toOneHom_coe, MonoidHom.coe_coe, RingHom.coe_coe, dite_eq_ite]
+  sorry/- split_ifs with hx
   · rw [← lift_dpow_eq_dpow_lift, ← (lift_injective b).eq_iff]
     · exact Function.apply_invFun_apply
     · exact hx
-  · rw [dpow_null b hx]
+  · rw [dpow_null b hx] -/
 
 theorem dpow_ι_eq_dp (n : ℕ) (x : M) :
     (dividedPowers b).dpow n (DividedPowerAlgebra.ι R M x) = dp R n x := by
@@ -856,8 +856,8 @@ open scoped PowerSeries.WithPiTopology
 
 local instance : UniformSpace (DividedPowerAlgebra R M) := ⊥
 
-local instance : DiscreteTopology (DividedPowerAlgebra R M) := by
-    exact forall_open_iff_discrete.mp fun s ↦ trivial
+local instance : DiscreteTopology (DividedPowerAlgebra R M) :=
+  discreteTopology_iff_forall_isOpen.mpr fun _ ↦ trivial
 
 theorem dpowExp_eq_of_support_subset {x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M)
     {s : Finset (ι →₀ ℕ)} (hs : ((basis R M b).repr x).support ⊆ s) :

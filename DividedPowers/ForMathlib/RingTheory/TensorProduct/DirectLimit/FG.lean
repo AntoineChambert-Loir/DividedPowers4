@@ -6,6 +6,7 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 import Mathlib.LinearAlgebra.TensorProduct.DirectLimit
 import Mathlib.LinearAlgebra.TensorProduct.Tower
 import Mathlib.RingTheory.Adjoin.FG
+import Mathlib.RingTheory.TensorProduct.DirectLimitFG
 
 /- # Tensor products and finitely generated submodules
 
@@ -28,7 +29,7 @@ and direct limits of modules are restricted to modules over rings.
 
 open Submodule LinearMap
 
-section Semiring
+/- section Semiring
 
 universe u v
 
@@ -221,18 +222,18 @@ theorem TensorProduct.eq_of_fg_of_subtype_eq'
   use Q, le_trans le_sup_left hQ_le, le_trans le_sup_right hQ_le, hQ
   simpa [← LinearMap.comp_apply, ← LinearMap.rTensor_comp] using h
 
-end TensorProducts
+end TensorProducts -/
 
 section Algebra
 
-open TensorProduct
+/- open TensorProduct
 
 -- variable {R S N : Type*} [CommRing R] [CommRing S] [Algebra R S]
 --   [AddCommGroup N] [Module R N]
 
 variable {R S N : Type*} [CommSemiring R] [Semiring S] [Algebra R S]
-  [AddCommMonoid N] [Module R N]
-
+  [AddCommMonoid N] [Module R N] -/
+/-
 theorem TensorProduct.Algebra.exists_of_fg [DecidableEq {P : Submodule R S // P.FG}]
     (t : S ⊗[R] N) :
     ∃ (A : Subalgebra R S), Subalgebra.FG A ∧
@@ -348,7 +349,7 @@ theorem Submodule.exists_fg_of_baseChange_eq_zero {R S M N : Type*} [CommSemirin
   constructor
   · rw [← rTensor_comp_baseChange_comm_apply, hu']
   · rw [← LinearMap.comp_apply, ← LinearMap.rTensor_comp, ← hu]
-    congr
+    congr -/
 
 theorem Subalgebra.fg_sup {R : Type*} [CommSemiring R] {S : Type*} [CommSemiring S] [Algebra R S]
     {A B : Subalgebra R S} (hA : A.FG) (hB : B.FG) : Subalgebra.FG (A ⊔ B) := by
