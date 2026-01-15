@@ -200,7 +200,6 @@ noncomputable def Int.basis_grade (M : Type v) [AddCommGroup M]
       obtain ⟨b, hb⟩ := hq' (x := mk' hq) Submodule.mem_top rfl
       exact ⟨a + b, by simp [add_mul, ha, hb]⟩
     | monomial d r hdn =>
-
       set md := d.sum fun nm e ↦ e • ({nm.1} : Multiset ℕ)
       -- r ∏ (a_i)^(n_i d_i) * plurinomial md, where a_i * v = m_i
       use r * (d.prod fun nm e ↦ (b.coord default nm.2) ^ (nm.1 * e)) *
@@ -221,34 +220,25 @@ noncomputable def Int.basis_grade (M : Type v) [AddCommGroup M]
           rw [mem_grade_iff]
           refine ⟨monomial d r, ?_, rfl⟩
           simp only [mem_weightedHomogeneousSubmodule, isWeightedHomogeneous_monomial]) rfl]
-
         simp only [mul_assoc, map_pow]
         congr 1
-
         rw [Finsupp.prod_add_index (by simp) (by simp [mul_add, pow_add])]
-
         simp only [mul_assoc]
         congr 1
         simp only [mul_zero, pow_zero, Finsupp.prod_single_index]
-        rw [← hdn]
-        rw [map_add]
-        rw [mk_X, pow_dp]
-        simp only [coe_v]
+        rw [← hdn, map_add, mk_X, pow_dp]
+        simp only [coe_v, ← mul_assoc]
+        rw [mul_comm _ ((Multiset.plurinomial _ : DividedPowerAlgebra ℤ M)),
+          mul_comm _ ((Multiset.plurinomial _ : DividedPowerAlgebra ℤ M))]
         simp only [← mul_assoc]
         rw [mul_comm _ ((Multiset.plurinomial _ : DividedPowerAlgebra ℤ M))]
-        rw [mul_comm _ ((Multiset.plurinomial _ : DividedPowerAlgebra ℤ M))]
-
-        simp only [← mul_assoc]
-        rw [mul_comm _ ((Multiset.plurinomial _ : DividedPowerAlgebra ℤ M))]
-        --rw [mul_left_comm]
         have h : b.repr nm.2 default • b default = nm.2 := by
           simpa [Finsupp.linearCombination_apply] using b.linearCombination_repr nm.2
         conv_rhs =>
           rw [← h, dp_smul, zsmul_eq_mul]
           simp only [mul_assoc]
           rw [mul_left_comm (dp _ _ _), dp_mul]
-        simp only [Int.cast_pow, nsmul_eq_mul]
-        simp only [← mul_assoc]
+        simp only [Int.cast_pow, nsmul_eq_mul, ← mul_assoc]
         apply congr_arg₂
         · conv_rhs => rw [mul_comm, mul_comm k]
           simp only [← mul_assoc]
