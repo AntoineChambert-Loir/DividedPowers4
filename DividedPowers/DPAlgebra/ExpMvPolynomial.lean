@@ -77,19 +77,26 @@ def expPolynomial [Algebra ℚ K] : Subalgebra R K[X] :=
           apply Submodule.smul_of_tower_mem
           apply Submodule.mem_span_of_mem
           exact ⟨m + n, rfl⟩
-        | zero => sorry
-        | add => sorry
-        | smul => sorry
-      | zero => sorry
-      | add => sorry
-      | smul => sorry
+        | zero => simp
+        | @add r s _ _ hr hs =>
+          simp only [mul_add]
+          exact Submodule.add_mem _ hr hs
+        | smul a r  _ hr =>
+          simp only [Algebra.mul_smul_comm]
+          exact Submodule.smul_mem _ _ hr
+      | zero => simp
+      | add r s _ _ hr hs =>
+        simp only [add_mul]
+        exact Submodule.add_mem _ (hr hq) (hs hq)
+      | smul a r  _ hr =>
+        simp only [Algebra.smul_mul_assoc]
+        exact Submodule.smul_mem _ _ (hr hq)
     one_mem' := Submodule.mem_span_of_mem ⟨0, by simp⟩
     add_mem' {p} {q} hp hq := Submodule.add_mem _ hp hq
     zero_mem' := by simp
     algebraMap_mem' r := by
       rw [Algebra.algebraMap_eq_smul_one]
       exact Submodule.smul_mem _ _ (Submodule.mem_span_of_mem ⟨0, by simp⟩)}
-
 namespace Int
 
 variable {M : Type*} [AddCommGroup M] {ι : Type*} [Unique ι] (b : Basis ι ℤ M)
@@ -131,6 +138,12 @@ variable [Algebra ℚ K]
 variable {ι} in
 def dpowMonomial (n : ι →₀ ℕ) (r : R) : MvPolynomial ι K :=
   r • n.prod fun i k ↦ (1/(k.factorial : ℚ)) • (X i : MvPolynomial ι K)^k
+
+omit [CharZero R] [IsFractionRing R K] in
+@[simp]
+lemma dpowMonomial_zero (r : R) :
+    dpowMonomial R K (0 : ι →₀ ℕ) r = C (algebraMap R K r) := by
+  simp [dpowMonomial, C_eq_smul_one]
 
 section Finset
 
@@ -194,12 +207,20 @@ def expMvPolynomial : Subalgebra R (MvPolynomial ι K) :=
         obtain ⟨m, rfl⟩ := hp
         induction hq using Submodule.span_induction with
         | @mem q hq => sorry
-        | zero => sorry
-        | add => sorry
-        | smul => sorry
-      | zero => sorry
-      | add => sorry
-      | smul => sorry
+        | zero => simp
+        | @add r s _ _ hr hs =>
+          simp only [mul_add]
+          exact Submodule.add_mem _ hr hs
+        | smul a r  _ hr =>
+          simp only [Algebra.mul_smul_comm]
+          exact Submodule.smul_mem _ _ hr
+      | zero => simp
+      | add r s _ _ hr hs =>
+        simp only [add_mul]
+        exact Submodule.add_mem _ (hr hq) (hs hq)
+      | smul a r  _ hr =>
+        simp only [Algebra.smul_mul_assoc]
+        exact Submodule.smul_mem _ _ (hr hq)
     one_mem' := Submodule.mem_span_of_mem ⟨0, by simp [dpowMonomial]⟩
     add_mem' {p} {q} hp hq := Submodule.add_mem _ hp hq
     zero_mem' := by simp
@@ -222,9 +243,7 @@ def mvMorphism : DividedPowerAlgebra R M →ₐ[R] MvPolynomial ι K :=
 def mvMorphismInv : expMvPolynomial ι R K →ₗ[R] DividedPowerAlgebra R M :=
   (expBasis ι R K).constr R fun n ↦  n.prod (fun i k ↦ dp R k (b i))
 
-#check ((mvMorphism K b).toLinearMap.comp (mvMorphismInv K b))
-
-lemma mvMorphism_comp_eq_id :
+lemma mvMorphism_comp_mvMorphismInv_eq_val :
     ((mvMorphism K b).toLinearMap.comp (mvMorphismInv K b)) =
       (expMvPolynomial ι R K).val := by
   apply (expBasis ι R K).ext
@@ -238,9 +257,74 @@ lemma mvMorphism_comp_eq_id :
 
   sorry
 
-lemma range_mvMorphism : AlgHom.range (mvMorphism K b) = expMvPolynomial ι R K := sorry
+/- lemma mvMorphismInv_comp_mvMorphism_eq_id :
+    ((mvMorphismInv K b).comp (mvMorphism K b).toLinearMap) =
+      1 := by
+  apply (expBasis ι R K).ext
+  intro n
+  simp only [LinearMap.coe_comp, AlgHom.coe_toLinearMap, Function.comp_apply,
+    AlgHom.linearMapMk_toAddHom, AlgHom.toLinearMap_apply, Subalgebra.coe_val,
+    expBasis]
+  erw [Basis.span_apply (dpowMonomial_linearIndependent ι R K) n] --Why erw?
+  simp only [mvMorphismInv,]
+  rw [Basis.constr_apply]
+
+  sorry
+ -/
+lemma range_mvMorphism : AlgHom.range (mvMorphism K b) = expMvPolynomial ι R K := by
+  ext p
+  simp only [AlgHom.mem_range]
+  refine ⟨fun ⟨x, hx⟩ ↦ ?_, fun hp ↦ ?_⟩
+  · induction x using DividedPowerAlgebra.induction_on generalizing p with
+    | h_C a =>
+      rw [← hx]
+      simp only [expMvPolynomial, algHom_C, AlgHom.commutes, algebraMap_apply, Subalgebra.mem_mk,
+        Subsemiring.mem_mk, Submonoid.mem_mk, Subsemigroup.mem_mk, SetLike.mem_coe]
+      have : C ((algebraMap R K) a) = a • dpowMonomial R K (0 : ι →₀ ℕ) 1 := by
+        simp [C_eq_smul_one]
+      rw [this]
+      exact Submodule.smul_mem _ _ (Submodule.mem_span_of_mem ⟨0, rfl⟩)
+    | h_add x y hx' hy' =>
+      simp only [← hx, map_add]
+      exact Submodule.add_mem _ (hx' (mvMorphism K b x) ⟨x, rfl⟩ rfl)
+        (hy' (mvMorphism K b y) ⟨y, rfl⟩ rfl)
+    | h_dp x n m h =>
+      classical
+      rw [← hx]
+      have := h (mvMorphism K b x) ⟨x, rfl⟩ rfl
+      simp only [expMvPolynomial, map_mul, mul_comm (mvMorphism K b x), Subalgebra.mem_mk,
+        Subsemiring.mem_mk, Submonoid.mem_mk, Subsemigroup.mem_mk, SetLike.mem_coe]
+      rw [← smul_eq_mul]
+      -- ?
+      sorry
+
+    /- induction p using MvPolynomial.induction_on with
+    | C a =>
+      simp only [expMvPolynomial, Subalgebra.mem_mk, Subsemiring.mem_mk, Submonoid.mem_mk,
+        Subsemigroup.mem_mk, SetLike.mem_coe]
+      simp? [mvMorphism] at hx
+      simp? [dpowMonomial]
+      sorry
+    | add => sorry
+    | mul_X => sorry -/
+    /- simp only [expMvPolynomial, Subalgebra.mem_mk, Subsemiring.mem_mk, Submonoid.mem_mk,
+      Subsemigroup.mem_mk, SetLike.mem_coe, ← hx, mvMorphism, ]
+    apply Submodule.mem_span_of_mem
+    simp only [Set.mem_range]
+    induction x using DividedPowerAlgebra.induction_on with
+    | h_C a =>
+      simp [dpowMonomial]
+      sorry
+    | h_add => sorry
+    | h_dp => sorry -/
+  · have hp' : ((mvMorphism K b).toLinearMap.comp (mvMorphismInv K b)) ⟨p, hp⟩ = p := by
+      simp [mvMorphism_comp_mvMorphismInv_eq_val]
+    rw [← hp']
+    exact ⟨ mvMorphismInv K b ⟨p, hp⟩, rfl⟩
 
 lemma injective_mvMorphism : Function.Injective (mvMorphism K b) := sorry
 
 
 end MvPolynomial
+
+--#min_imports
