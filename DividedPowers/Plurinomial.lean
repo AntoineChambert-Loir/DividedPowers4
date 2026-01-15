@@ -65,4 +65,23 @@ theorem Multiset.plurinomial_cons (x : ℕ) (m : Multiset ℕ) :
 theorem Multiset.plurinomial_zero : Multiset.plurinomial 0 = 1 := by
   rfl
 
+@[simp]
+theorem Multiset.plurinomial_singleton (n : ℕ) :
+    Multiset.plurinomial {n} = 1 := by
+  simp [← cons_zero, plurinomial_cons]
+
+theorem Multiset.plurinomial_add (m m' : Multiset ℕ) :
+    (m + m').plurinomial = Nat.choose (m + m').sum m.sum * m.plurinomial * m'.plurinomial := by
+  induction m using Multiset.induction_on with
+  | empty => simp
+  | cons x m hind =>
+    simp only [cons_add, sum_cons, sum_add, plurinomial_cons, hind,
+      ← mul_assoc]
+    congr 2
+    rw [← Nat.choose_symm (Nat.le_add_right _ _), add_tsub_cancel_left]
+    rw [eq_comm]
+    rw [Nat.choose_mul (Nat.le_add_right _ _)]
+    rw [← Nat.choose_symm (Nat.le_add_right x (m.sum + m'.sum))]
+    simp only [add_tsub_cancel_left]
+
 #eval Multiset.plurinomial {1, 2, 2}
