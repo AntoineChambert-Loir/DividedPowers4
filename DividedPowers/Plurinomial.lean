@@ -84,4 +84,19 @@ theorem Multiset.plurinomial_add (m m' : Multiset ℕ) :
     rw [← Nat.choose_symm (Nat.le_add_right x (m.sum + m'.sum))]
     simp only [add_tsub_cancel_left]
 
+theorem Multiset.plurinomial_nsmul (k : ℕ) (m : Multiset ℕ) :
+    (k • m).plurinomial = Nat.multinomial (Finset.range k) (fun _ ↦ m.sum) * m.plurinomial ^ k := by
+  induction k with
+  | zero => simp
+  | succ k hk =>
+    rw [succ_nsmul', plurinomial_add, hk, Finset.range_add_one,
+      Nat.multinomial_insert (by simp), sum_add, sum_nsmul, pow_succ']
+    simp only [smul_eq_mul, Finset.sum_const, Finset.card_range]
+    ring
+
+theorem Multiset.plurinomial_nsmul_singleton (k n : ℕ) :
+    (k • {n} : Multiset ℕ).plurinomial = Nat.multinomial (Finset.range k) (fun _ ↦ n) := by
+  simp [plurinomial_nsmul]
+
+
 #eval Multiset.plurinomial {1, 2, 2}
