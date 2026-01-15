@@ -8,6 +8,7 @@ import DividedPowers.DPAlgebra.Graded.Basic
 import DividedPowers.DPAlgebra.Graded.GradeZero
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.DirectLimit.FG
 import DividedPowers.ForMathlib.Data.FinsetLemmas
+import DividedPowers.Plurinomial
 import Mathlib.LinearAlgebra.FreeModule.Basic
 import Mathlib.RingTheory.DividedPowers.RatAlgebra
 import DividedPowers.ForMathlib.RingTheory.DividedPowers.Basic
@@ -146,10 +147,16 @@ lemma prod_dp {R : Type u} [CommRing R] {M : Type v} [AddCommGroup M] [Module R 
     apply congr_arg₂ _ _ rfl
     rw [multinomial_insert hi, mul_comm, cast_mul, sum_insert hi]
 
-lemma pow_dp {R : Type u} [CommRing R] {M : Type v} [AddCommGroup M] [Module R M] (n : ℕ)
+lemma pow_dp' {R : Type u} [CommRing R] {M : Type v} [AddCommGroup M] [Module R M] (n : ℕ)
     (m : M) (k : ℕ) :
     (dp R n m) ^ k = (Nat.multinomial (range k) (fun _ ↦ n)) * dp R (k * n) m := by
   rw [← Fin.prod_const, prod_dp]
+  simp [Nat.multinomial]
+
+lemma pow_dp {R : Type u} [CommRing R] {M : Type v} [AddCommGroup M] [Module R M] (n : ℕ)
+    (m : M) (k : ℕ) :
+    (dp R n m) ^ k = (Multiset.plurinomial (k • {n})) * dp R (k * n) m := by
+  rw [Multiset.plurinomial_nsmul_singleton, ← Fin.prod_const, prod_dp]
   simp [Nat.multinomial]
 
 -- TODO: rename
@@ -164,10 +171,11 @@ noncomputable def Int.basis_grade (M : Type v) [AddCommGroup M]
   have hv_add (m n : ℕ) : (v m ()).1 * v n () = ((m + n).choose m) • v (m + n) () := by
     simp [coe_v, dp_mul]
   apply Basis.mk (v := v n)
-  · /- simp only [LinearIndependent, ← LinearMap.ker_eq_bot, Submodule.eq_bot_iff]
-    intro x hx -/
-    sorry
-    /- suffices x PUnit.unit = 0 by exact Finsupp.ext fun _ ↦ this
+  · -- Before updating Mathlib, f did not need to be explicitly added
+    simp only [LinearIndependent,
+      ← LinearMap.ker_eq_bot (f := (Finsupp.linearCombination ℤ (v n))),  Submodule.eq_bot_iff]
+    intro x hx
+    suffices x PUnit.unit = 0 by exact Finsupp.ext fun _ ↦ this
     apply Or.resolve_right ?_ (Nat.factorial_ne_zero n)
     let φ : DividedPowerAlgebra ℤ M →ₐ[ℤ] ℚ :=
       DividedPowerAlgebra.lift (RatAlgebra.dividedPowers ⊤) (b.constr ℤ fun _ ↦ 1) (by simp)
@@ -176,7 +184,7 @@ noncomputable def Int.basis_grade (M : Type v) [AddCommGroup M]
     suffices x PUnit.unit • dp ℤ n (b default) = 0 by
       simpa using congrArg φ this
     simp only [LinearMap.mem_ker, Finsupp.linearCombination_apply] at hx
-    simpa [Finsupp.sum_fintype, v] using hx -/
+    simpa [Finsupp.sum_fintype, v] using hx
   · intro x _
     obtain ⟨p, hp, hpx⟩ := mem_grade_iff.mp x.2
     rw [mem_weightedHomogeneousSubmodule] at hp
@@ -192,19 +200,22 @@ noncomputable def Int.basis_grade (M : Type v) [AddCommGroup M]
       obtain ⟨b, hb⟩ := hq' (x := mk' hq) Submodule.mem_top rfl
       exact ⟨a + b, by simp [add_mul, ha, hb]⟩
     | monomial d r hdn =>
-      -- r ∏ (a_i)^(n_i d_i) * multinomial ..., where a_i * v = m_i
-      use r * d.prod fun nm e ↦ (b.coord default nm.2) ^ (nm.1 * e) * d.multinomial
+
+      set md := d.sum fun nm e ↦ e • ({nm.1} : Multiset ℕ)
+      -- r ∏ (a_i)^(n_i d_i) * plurinomial md, where a_i * v = m_i
+      use r * (d.prod fun nm e ↦ (b.coord default nm.2) ^ (nm.1 * e)) *
+        (d.sum fun nm e ↦ e • ({nm.1} : Multiset ℕ)).plurinomial
       induction d using Finsupp.induction generalizing n with
       | zero =>
         simp only [map_zero] at hdn
         simp [coe_v, ← hdn, dp_zero]
       | single_add nm k d hnm hk hdn' =>
         simp only [Finsupp.mem_support_iff, ne_eq, Decidable.not_not] at hnm
-        simp only [Basis.coord_apply, Finsupp.prod_mul, Int.cast_mul, Int.cast_finsuppProd,
-          Int.cast_pow, Int.cast_natCast]
+        simp only [Basis.coord_apply, Int.cast_mul, Int.cast_finsuppProd, Int.cast_pow,
+          Int.cast_natCast]
         simp only [Set.range_eq_singleton_iff, implies_true, Submodule.mem_top, Basis.coord_apply,
-          Finsupp.prod_mul, Int.cast_mul, Int.cast_finsuppProd, Int.cast_pow, Int.cast_natCast,
-          forall_const, Subtype.forall, forall_eq'] at hdn'
+          Int.cast_mul, Int.cast_finsuppProd, Int.cast_pow, Int.cast_natCast, forall_const,
+          Subtype.forall, forall_eq'] at hdn'
         rw [add_comm, monomial_add_single, map_mul, ← hdn' _ (by
           -- TODO: add mk_monomial_mem_grade
           rw [mem_grade_iff]
@@ -223,47 +234,39 @@ noncomputable def Int.basis_grade (M : Type v) [AddCommGroup M]
         rw [map_add]
         rw [mk_X, pow_dp]
         simp only [coe_v]
-        simp only [← mul_assoc,
-          mul_comm _ ((Nat.multinomial _ _ : DividedPowerAlgebra ℤ M))]
-        simp only [mul_assoc]
+        simp only [← mul_assoc]
+        rw [mul_comm _ ((Multiset.plurinomial _ : DividedPowerAlgebra ℤ M))]
+        rw [mul_comm _ ((Multiset.plurinomial _ : DividedPowerAlgebra ℤ M))]
+
+        simp only [← mul_assoc]
+        rw [mul_comm _ ((Multiset.plurinomial _ : DividedPowerAlgebra ℤ M))]
         --rw [mul_left_comm]
         have h : b.repr nm.2 default • b default = nm.2 := by
           simpa [Finsupp.linearCombination_apply] using b.linearCombination_repr nm.2
-        conv_rhs => rw [← h, dp_smul, zsmul_eq_mul, mul_left_comm (dp _ _ _), dp_mul]
+        conv_rhs =>
+          rw [← h, dp_smul, zsmul_eq_mul]
+          simp only [mul_assoc]
+          rw [mul_left_comm (dp _ _ _), dp_mul]
         simp only [Int.cast_pow, nsmul_eq_mul]
         simp only [← mul_assoc]
         apply congr_arg₂
-        · rw [mul_assoc, mul_left_comm, mul_comm k]
+        · conv_rhs => rw [mul_comm, mul_comm k]
+          simp only [← mul_assoc]
           congr 1
-          rw [Finsupp.multinomial_update nm]
-          simp only [Finsupp.coe_add, Pi.add_apply, Finsupp.single_eq_same, Nat.cast_mul,
-            Finsupp.prod_mul]
-          have hd_eq : (d + Finsupp.single nm k).update nm 0 = d := sorry
-          rw [hd_eq]
-          rw [Finsupp.prod_add_index']
-          rw [Finsupp.prod_add_index']
-          rw [Finsupp.sum_add_index']
-          simp only [id_eq, Finsupp.sum_single_index]
-          rw [Finsupp.prod_single_index]
-          rw [Finsupp.prod_single_index]
-          ring_nf
-
-          --rw [Finsupp.sum_add_index']
-          sorry
-          sorry
-          sorry
-          sorry
-          sorry
-          sorry
-          sorry
-          sorry
-          sorry
-
+          rw [Finsupp.sum_add_index' (by simp) (by simp [add_smul])]
+          rw [Multiset.plurinomial_add]
+          simp only [zero_nsmul, Finsupp.sum_single_index, Multiset.sum_add, Nat.cast_mul]
+          congr 4
+          · simp only [Finsupp.weight_apply, smul_eq_mul]
+            rw [Finsupp.sum, Multiset.sum_sum, Finsupp.sum]
+            congr <;>
+            simp [Multiset.sum_nsmul, mul_comm k]
+          · simp only [Finsupp.weight_apply, smul_eq_mul]
+            rw [Finsupp.sum, Multiset.sum_sum, Finsupp.sum]
+            apply Finset.sum_congr rfl
+            simp [Multiset.sum_nsmul]
         · rw [add_comm]
-          simp [Finsupp.weight_single]
-
-
-
+          simp [Finsupp.weight]
 
 end Int
 
