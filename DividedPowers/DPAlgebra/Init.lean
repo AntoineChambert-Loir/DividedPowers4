@@ -238,7 +238,6 @@ theorem lift'_imp {f : ℕ × M → A} (hf_zero : ∀ m, f (0, m) = 1)
   rcases h <;>
   simp_all
 
-
 variable {R M}
 /-- The weak universal property of `DividedPowerAlgebra R M`. -/
 def lift' {f : ℕ × M → A} (hf_zero : ∀ m, f (0, m) = 1)
