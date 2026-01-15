@@ -117,7 +117,7 @@ lemma range_morphism : AlgHom.range (morphism K b) = expPolynomial R K := sorry
 
 end Polynomial
 
-section Polynomial
+section MvPolynomial
 
 open Module MvPolynomial
 
@@ -153,9 +153,11 @@ theorem prod_smul {ι M N : Type*}
 
 end Finset
 
-
-lemma dpowMonomial_linearIndependent [IsDomain R] [IsTorsionFree R K] :
+--TODO: golf
+omit [CharZero R] [IsFractionRing R K] in
+lemma dpowMonomial_linearIndependent [Nontrivial K] [IsDomain R] [IsTorsionFree R K] :
     LinearIndependent R (fun (n : ι →₀ ℕ) ↦ dpowMonomial R K n 1) := by
+  classical
   rw [LinearIndependent, ← LinearMap.ker_eq_bot]
   rw [Submodule.eq_bot_iff]
   intro x hx
@@ -165,15 +167,23 @@ lemma dpowMonomial_linearIndependent [IsDomain R] [IsTorsionFree R K] :
   have := congr(coeff n $hx)
   simp only [coeff_zero] at this
   rw [Finsupp.linearCombination_apply, Finsupp.sum, coeff_sum, Finset.sum_eq_single n] at this
-  rw [coeff_smul, ← smul_zero (x n)] at this
-  by_contra h0
-  rw [smul_right_inj h0] at this
-
-  rw [Finsupp.prod, ] at this
-  --have := Finset.prod_smul n.support (fun a ↦ )
-  sorry
-  sorry
-  sorry
+  · rw [coeff_smul, ← smul_zero (x n)] at this
+    by_contra h0
+    -- Refine next step to remove `IsDomain R`, `IsTorsionFree R K`.
+    -- Possible because of `Algebra ℚ K` plus product of factorials is a unit.
+    rw [smul_right_inj h0] at this
+    rw [Finsupp.prod, prod_smul, coeff_smul] at this
+    simp only [prod_inv_distrib, prod_X_pow_eq_monomial, smul_eq_zero, inv_eq_zero] at this
+    simp only [coeff_monomial, ↓reduceIte, one_ne_zero, or_false] at this
+    rw [Finset.prod_eq_zero_iff] at this
+    obtain ⟨a, _, ha⟩ := this
+    norm_cast at ha
+    apply Nat.factorial_ne_zero (n a) ha
+  · intro b hb hbn
+    simp only [coeff_smul, smul_eq_zero]
+    aesop (add norm [Finsupp.prod, prod_smul])
+  · intro hn
+    aesop
 
 def expMvPolynomial : Subalgebra R (MvPolynomial ι K) :=
   { carrier := Submodule.span R
@@ -197,15 +207,40 @@ def expMvPolynomial : Subalgebra R (MvPolynomial ι K) :=
       rw [Algebra.algebraMap_eq_smul_one]
       exact Submodule.smul_mem _ _ (Submodule.mem_span_of_mem ⟨0, by simp [dpowMonomial]⟩)}
 
+def expBasis [Nontrivial K] [IsDomain R] [IsTorsionFree R K] :
+    Basis (ι →₀ ℕ) R (expMvPolynomial ι R K) :=
+  Module.Basis.span (dpowMonomial_linearIndependent ι R K)
+
 variable {ι} {R} {M : Type*} [AddCommGroup M] [Module R M] (b : Basis ι R M)
+   [Nontrivial K] [IsDomain R] [IsTorsionFree R K]
 
 --TODO: rename
 def mvMorphism : DividedPowerAlgebra R M →ₐ[R] MvPolynomial ι K :=
   DividedPowerAlgebra.lift RatAlgebra.dividedPowersTop
     (b.constr ℤ fun i ↦ (X i : MvPolynomial ι K)) (by simp)
 
-lemma injective_mvMorphism : Function.Injective (mvMorphism K b) := sorry
+def mvMorphismInv : expMvPolynomial ι R K →ₗ[R] DividedPowerAlgebra R M :=
+  (expBasis ι R K).constr R fun n ↦  n.prod (fun i k ↦ dp R k (b i))
+
+#check ((mvMorphism K b).toLinearMap.comp (mvMorphismInv K b))
+
+lemma mvMorphism_comp_eq_id :
+    ((mvMorphism K b).toLinearMap.comp (mvMorphismInv K b)) =
+      (expMvPolynomial ι R K).val := by
+  apply (expBasis ι R K).ext
+  intro n
+  simp only [LinearMap.coe_comp, AlgHom.coe_toLinearMap, Function.comp_apply,
+    AlgHom.linearMapMk_toAddHom, AlgHom.toLinearMap_apply, Subalgebra.coe_val,
+    expBasis]
+  erw [Basis.span_apply (dpowMonomial_linearIndependent ι R K) n] --Why erw?
+  simp only [mvMorphismInv,]
+  rw [Basis.constr_apply]
+
+  sorry
 
 lemma range_mvMorphism : AlgHom.range (mvMorphism K b) = expMvPolynomial ι R K := sorry
 
-end Polynomial
+lemma injective_mvMorphism : Function.Injective (mvMorphism K b) := sorry
+
+
+end MvPolynomial
