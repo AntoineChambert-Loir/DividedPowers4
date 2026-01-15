@@ -61,6 +61,7 @@ theorem Multiset.plurinomial_cons (x : ℕ) (m : Multiset ℕ) :
   obtain ⟨l, rfl⟩ := Quotient.exists_rep m
   exact List.plurinomial_cons x l
 
+@[simp]
 theorem Multiset.plurinomial_zero : Multiset.plurinomial 0 = 1 := by
   rfl
 
