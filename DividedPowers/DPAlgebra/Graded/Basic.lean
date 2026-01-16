@@ -83,7 +83,8 @@ def grade (n : ℕ) : Submodule R (DividedPowerAlgebra R M) :=
   quotSubmodule R (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ))
     (DividedPowerAlgebra.Rel R M) n
 
-lemma mem_grade_iff (a : DividedPowerAlgebra R M) (n : ℕ) :
+variable {R M} in
+lemma mem_grade_iff {a : DividedPowerAlgebra R M} {n : ℕ} :
     a ∈ grade R M n ↔ ∃ (p : MvPolynomial (ℕ × M) R),
       (p ∈ weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ) n) ∧ mk p = a := by
   simp only [grade, _root_.quotSubmodule, Submodule.mem_map]; rfl
@@ -139,7 +140,7 @@ variable {R M}
 theorem surjective_of_supported' {n : ℕ} (p : grade R M n) :
     ∃ q : supported R {nm : ℕ × M | 0 < nm.1},
       IsWeightedHomogeneous Prod.fst q.1 n ∧ (@mk R M) q.1 = ↑p := by
-  obtain ⟨p', hpn', hp'⟩ := (mem_grade_iff R M _ _).mpr p.2
+  obtain ⟨p', hpn', hp'⟩ := mem_grade_iff.mpr p.2
   use toSupported R p'
   refine ⟨toSupported_isHomogeneous _ _ _ hpn', ?_⟩
   erw [DFunLike.congr_fun (mk_comp_toSupported R M) p', hp']
