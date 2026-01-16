@@ -56,12 +56,20 @@ def expPolynomial : Subalgebra ℤ ℚ[X] where
         apply Submodule.smul_mem
         apply Submodule.mem_span_of_mem
         exact ⟨m + n, rfl⟩
-      | zero => sorry
-      | add => sorry
-      | smul => sorry
-    | zero => sorry
-    | add => sorry
-    | smul => sorry
+      | zero => simp
+      | @add x y hxmem hymem hx hy =>
+        rw [mul_add]
+        exact Submodule.add_mem _ hx hy
+      | @smul a x hxmem hx =>
+        rw [mul_smul_comm]
+        exact Submodule.smul_mem _ a hx
+    | zero => simp
+    | @add x y hxmem hymem hx hy =>
+      rw [add_mul]
+      exact Submodule.add_mem _ (hx hq) (hy hq)
+    | smul a p hpmem hp =>
+      rw [smul_mul_assoc]
+      exact Submodule.smul_mem _ _ (hp hq)
   one_mem' := Submodule.mem_span_of_mem ⟨0, by simp⟩
   add_mem' {p} {q} hp hq := Submodule.add_mem _ hp hq
   zero_mem' := by simp
