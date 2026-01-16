@@ -92,9 +92,68 @@ def _root_.RatAlgebra.dividedPowersTop {R : Type*} [CommRing R] [Algebra ℚ R] 
 def morphism : DividedPowerAlgebra ℤ M →ₐ[ℤ] ℚ[X] :=
   DividedPowerAlgebra.lift RatAlgebra.dividedPowersTop (b.constr ℤ fun _ ↦ (X : ℚ[X])) (by simp)
 
-lemma injective_morphism : Function.Injective (morphism b) := sorry
+theorem morphism_dp (n : ℕ) : morphism b (dp ℤ n (b default)) = (1 / n.factorial : ℚ) • (X : ℚ[X]) ^ n := by
+  classical
+  rw [morphism, lift_apply_dp, RatAlgebra.dividedPowersTop,
+    RatAlgebra.dpow_apply, if_pos (by simp)]
+  suffices Ring.inverse ↑(n.factorial : ℚ[X]) = Polynomial.C (↑n.factorial)⁻¹ by
+    simpa [Algebra.smul_def]
+  sorry
 
-lemma range_morphism : AlgHom.range (morphism b) = expPolynomial := sorry
+#check Ring.inverse
+example (R A B : Type*) [CommRing R] [CommRing A] [CommRing B]
+  [Algebra R A] [Algebra R B] (f : A →ₐ[R] B) :
+    Function.Injective f ↔ RingHom.ker f = ⊥ := by
+  exact RingHom.injective_iff_ker_eq_bot f
+
+lemma injective_morphism : Function.Injective (morphism b) := by
+  sorry
+/-  rw [RingHom.injective_iff_ker_eq_bot, eq_bot_iff]
+  intro p
+  simp only [RingHom.mem_ker, Submodule.mem_bot]
+  intro hp -/
+
+lemma range_morphism : AlgHom.range (morphism b) = expPolynomial :=  by
+  ext p
+  constructor
+  · rintro ⟨n, rfl⟩
+    induction n using DividedPowerAlgebra.induction_on with
+    | h_C a => simp
+    | h_add f g hf hg =>
+      simp only [map_add]
+      exact Subalgebra.add_mem _ hf hg
+    | h_dp x n m hx =>
+      simp only [AlgHom.toRingHom_eq_coe, RingHom.coe_coe, map_mul]
+      apply Subalgebra.mul_mem _ hx
+      have := b.mem_span m
+      induction (b.mem_span m) using Submodule.span_induction
+        generalizing n with
+      | zero => rw [dp_null]; split_ifs <;> simp
+      | mem m hm =>
+        obtain ⟨i, rfl⟩ := hm
+        have : i = default := Unique.uniq _ i
+        rw [this, morphism_dp]
+        apply Submodule.mem_span_of_mem
+        exact ⟨n, rfl⟩
+      | add x y hxmem hymem hx hy =>
+        rw [dp_add, map_sum]
+        apply Subalgebra.sum_mem
+        intro uv huv
+        rw [map_mul]
+        exact Subalgebra.mul_mem expPolynomial (hx uv.1 hxmem) (hy uv.2 hymem)
+      | smul a x hxmem hx =>
+        rw [dp_smul, map_smul]
+        exact Subalgebra.smul_mem expPolynomial (hx n hxmem) (a ^ n)
+  · intro hp
+    induction hp using Submodule.span_induction with
+    | mem _ hx =>
+      obtain ⟨n, rfl⟩ := hx
+      exact ⟨dp ℤ n (b default), morphism_dp b _⟩
+    | zero => simp
+    | add _ _ _ _ hxmem hymem =>
+      apply Subalgebra.add_mem _ hxmem hymem
+    | smul a x hx hxmem =>
+      exact Subalgebra.smul_mem (morphism b).range hxmem a
 
 
 
