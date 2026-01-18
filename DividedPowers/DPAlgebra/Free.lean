@@ -446,16 +446,35 @@ theorem Int.basis_mem_grade (n : ι →₀ ℕ) :
       · simp
   simp only [map_finsuppProd, basis, Basis.coe_mk, mk_X]
 
+lemma Int.basis_mem_grade_iff_eq (n : ι →₀ ℕ) (d : ℕ) :
+    Int.basis b n ∈ grade ℤ M d ↔ (n.sum fun _ a ↦ a) = d := by
+  by_cases h : (n.sum fun _ a ↦ a) = d
+  · simp only [← h, iff_true]
+    exact basis_mem_grade b n
+  · simp only [h, iff_false]
+    intro h'
+    apply (Int.basis b).ne_zero n
+    rw [← DirectSum.decompose_of_mem_same (fun d ↦ grade ℤ M d) h',
+      DirectSum.decompose_of_mem_ne (fun d ↦ grade ℤ M d) (basis_mem_grade b n) h]
+
 /-- The basis of the nth graded part of `DividedPowerAlgebra ℤ M` associated with a basis of `M`. -/
 noncomputable def Int.basis_grade (d : ℕ) :
-    Basis {n : ι →₀ ℕ | Int.basis b n ∈ grade ℤ M d} ℤ (grade ℤ M d) := by
+    Basis {n : ι →₀ ℕ | (n.sum fun _ a ↦ a) = d} ℤ (grade ℤ M d) := by
   -- take the part of `Int.basis` that has degree `d `.
-  -- More generally: a homogeneous basis of a graded module furnishes a basis of its graded parts.
+  let e : {n : ι →₀ ℕ | Int.basis b n  ∈ grade ℤ M d} ≃
+      {n : ι →₀ ℕ | (n.sum fun _ a ↦ a) = d} := by
+    apply Equiv.setCongr
+    ext n
+    simp [Int.basis_mem_grade_iff_eq]
+  refine Basis.reindex ?_ e
   apply DirectSum.Decomposition.basis (b := Int.basis b) (G := fun d ↦ grade ℤ M d)
   unfold DirectSum.basis_isHomogeneous
-  -- Homogeneity of `Int.basis`, this should be made a lemma
   intro n
   refine ⟨_, basis_mem_grade b n⟩
+
+theorem Int.coe_basis_grade (n : ι →₀ ℕ) (d : ℕ) (hn : (n.sum fun _ a ↦ a) = d) :
+    Int.basis_grade b d ⟨n, hn⟩ = Int.basis b n := by
+  simp [basis_grade, DirectSum.Decomposition.basis, Equiv.setCongr, Equiv.subtypeEquivProp]
 
 end MvPolynomial
 
