@@ -118,9 +118,7 @@ theorem basisFun_eq_prod (n : ι →₀ ℕ) :
   | single_add i a n hn ha hind =>
     have : Disjoint (Finsupp.single i a).support n.support := by
       simp only [Finset.disjoint_right, Finsupp.mem_support_single]
-      intro j hj
-      contrapose hn
-      simpa [← hn.1] using hj
+      grind
     rw [basisFun_add this, Finsupp.prod_add_index_of_disjoint this, ← hind,
       basisFun_single, Finsupp.prod_single_index (by simp)]
 
@@ -302,13 +300,162 @@ lemma injective_morphism : Function.Injective (morphism b) := by
 
 -- NOTE: Perhaps generalize Int.basis_grade to [CharZero R] [IsDomain R]
 
+section
+
+variable {R M : Type*} [CommSemiring R] [AddCommMonoid M] [Module R M]
+    {ι : Type*} [DecidableEq ι] (G : ι → Submodule R M)
+    [DirectSum.Decomposition G]
+    {α : Type*} (b : Basis α R M)
+
+/-- A basis of a module is homogeneous if each of its members
+belongs to one submodule of the decomposition. -/
+def DirectSum.basis_isHomogeneous : Prop :=
+  ∀ a, ∃ i, b a ∈ G i
+
+theorem DirectSum.mem_iff_component_eq_zero (x : M) (i : ι) :
+    x ∈ G i ↔ ∀ j ≠ i, DirectSum.component R ι (fun i ↦ G i) j
+      (DirectSum.decomposeLinearEquiv G x) = 0 := by
+  constructor
+  · intro h j hji
+    simp only [DirectSum.decomposeLinearEquiv_apply]
+    rw [DirectSum.decompose_of_mem G h, ← DirectSum.lof_eq_of R,
+      DirectSum.component.of, dif_neg (Ne.symm hji)]
+  · intro h
+    classical
+    rw [← DirectSum.sum_support_decompose G x]
+    apply Submodule.sum_mem
+    intro j hj
+    by_cases hji : j = i
+    · subst hji
+      exact Submodule.coe_mem (((DirectSum.decompose G) x) j)
+    · specialize h j hji
+      convert Submodule.zero_mem _
+      rwa [← Subtype.coe_inj, Submodule.coe_zero] at h
+
+theorem DirectSum.mem_iff_eq_component (x : M) (i : ι) :
+    x ∈ G i ↔ x = DirectSum.component R ι (fun i ↦ G i) i
+      (DirectSum.decomposeLinearEquiv G x) := by
+  constructor
+  · intro h
+    simp only [DirectSum.decomposeLinearEquiv_apply]
+    rw [DirectSum.decompose_of_mem G h, ← DirectSum.lof_eq_of R,
+      DirectSum.component.of, dif_pos rfl]
+  · intro h
+    rw [h]
+    apply Submodule.coe_mem
+
+variable {G b} in
+theorem mem_iff_basis_mem_of_mem_support
+    (h : DirectSum.basis_isHomogeneous G b) {i : ι} {x : M} :
+    x ∈ G i ↔ ∀ a ∈ (b.repr x).support, b a ∈ G i := by
+  constructor
+  · intro hx a ha
+    obtain ⟨j, hj⟩ :=  h a
+    suffices j = i by simpa [← this]
+    simp only [Finsupp.mem_support_iff] at ha
+    contrapose ha
+    rw [← b.linearCombination_repr x, Finsupp.linearCombination_apply, Finsupp.sum, DirectSum.mem_iff_component_eq_zero] at hx
+    replace hx := congr(b.coord a $(hx j ha))
+    simp only [ZeroMemClass.coe_zero, map_zero, Basis.coord_apply] at hx
+    rw [← hx]
+    simp only [map_sum, map_smul, DirectSum.decomposeLinearEquiv_apply,
+      AddSubmonoidClass.coe_finset_sum, SetLike.val_smul, Finsupp.coe_finset_sum, Finsupp.coe_smul,
+      sum_apply, Pi.smul_apply, smul_eq_mul]
+    rw [Finset.sum_eq_single a]
+    · rw [eq_comm]
+      convert mul_one _
+      rw [DirectSum.decompose_of_mem G hj, ← DirectSum.lof_eq_of R,
+        DirectSum.component.of, dif_pos rfl]
+      simp
+    · intro a' ha' haa'
+      convert mul_zero _
+      obtain ⟨j', hj'⟩ := h a'
+      rw [DirectSum.decompose_of_mem G hj', ← DirectSum.lof_eq_of R,
+      DirectSum.component.of]
+      by_cases hj'j : j' = j
+      · rw [dif_pos hj'j]
+        subst hj'j
+        change (b.repr (b a')) a = 0
+        simp [Finsupp.single_eq_of_ne (Ne.symm haa')]
+      · rw [dif_neg hj'j]
+        simp
+    · intro ha
+      simp only [Finsupp.mem_support_iff, ne_eq, not_not] at ha
+      simp [ha]
+  · intro h
+    rw [← b.linearCombination_repr x, Finsupp.linearCombination_apply, Finsupp.sum]
+    exact Submodule.sum_smul_mem (G i) (⇑(b.repr x)) h
+
+variable {G b} in
+/-- A homogeneous basis gives rise to bases of each submodule of the decomposition. -/
+def DirectSum.Decomposition.basis (h : DirectSum.basis_isHomogeneous G b) (i : ι) :
+    Basis {a | b a ∈ G i} R (G i) := by
+  let v (a : {a : α | b a ∈ G i}) : G i := ⟨b a.val, a.prop⟩
+  apply Basis.mk (v := v)
+  · apply LinearIndependent.of_comp (f := (G i).subtype)
+    exact LinearIndepOn.mono b.linearIndependent.linearIndepOn
+      (Set.subset_univ _)
+  classical
+  rintro ⟨x,  hx⟩ -
+  rw [mem_iff_basis_mem_of_mem_support h] at hx
+  rw [Finsupp.mem_span_range_iff_exists_finsupp]
+  use (b.repr x).subtypeDomain _
+  apply (G i).injective_subtype
+  simp only [Set.coe_setOf, Set.mem_setOf_eq, map_finsuppSum, map_smul, Submodule.subtype_apply, v]
+  simp only [Finsupp.sum]
+  have : ((b.repr x).subtypeDomain (fun x ↦ b x ∈ G i)).support = Finset.subtype _ (b.repr x).support := by simp
+  rw [this]
+  rw [Finset.sum_congr (s₂ := Finset.subtype (fun x ↦ b x ∈ G i) (b.repr x).support) (g := fun u ↦ (b.repr x) u • b u) rfl (by simp)]
+  rw [Finset.sum_subtype_of_mem (fun u ↦ b.repr x u • b u) hx]
+  conv_rhs => rw [← b.linearCombination_repr x, Finsupp.linearCombination_apply,
+    Finsupp.sum]
+
+end
+
+theorem Int.basis_mem_grade (n : ι →₀ ℕ) :
+    Int.basis b n ∈ grade ℤ M (n.sum fun _ a ↦ a) := by
+  rw [mem_grade_iff]
+  use n.prod fun i a ↦ X (a, b i)
+  constructor
+  · simp only [mem_weightedHomogeneousSubmodule]
+    induction n using Finsupp.induction with
+    | zero => simp [isWeightedHomogeneous_one]
+    | single_add i a n hin ha hind =>
+      classical
+      -- already done somewhere, make a lemma?
+      have h : Disjoint (Finsupp.single i a).support n.support := by
+        simp only [Finset.disjoint_right, Finsupp.mem_support_single]
+        grind
+      rw [Finsupp.prod_add_index_of_disjoint h,
+        Finsupp.sum_add_index_of_disjoint h, Finsupp.sum_single_index]
+      convert IsWeightedHomogeneous.mul _ hind
+      · suffices (Finsupp.single i a).prod
+            (fun i a ↦ (X (a, b i) : MvPolynomial (ℕ × M) ℤ)) = X (a, b i) by
+          simp [this, isWeightedHomogeneous_X]
+        -- `Finsupp.prod_single_index` doesn't work because
+        -- it allows the remaining parameter to be `0`.
+        -- one should add a lemma that takes this hypothesis
+        rw [Finsupp.prod, Finset.prod_eq_single i]
+        · simp
+        · intro j hj hj'
+          simp only [Finsupp.mem_support_iff, ne_eq] at hj
+          simp [Finsupp.single_eq_of_ne hj'] at hj
+        · intro hi
+          refine (ha ?_).elim
+          simpa using hi
+      · simp
+  simp only [map_finsuppProd, basis, Basis.coe_mk, mk_X]
+
 /-- The basis of the nth graded part of `DividedPowerAlgebra ℤ M` associated with a basis of `M`. -/
 noncomputable def Int.basis_grade (d : ℕ) :
-    Basis Unit ℤ (grade ℤ M d) :=
+    Basis {n : ι →₀ ℕ | Int.basis b n ∈ grade ℤ M d} ℤ (grade ℤ M d) := by
   -- take the part of `Int.basis` that has degree `d `.
   -- More generally: a homogeneous basis of a graded module furnishes a basis of its graded parts.
-  sorry
-
+  apply DirectSum.Decomposition.basis (b := Int.basis b) (G := fun d ↦ grade ℤ M d)
+  unfold DirectSum.basis_isHomogeneous
+  -- Homogeneity of `Int.basis`, this should be made a lemma
+  intro n
+  refine ⟨_, basis_mem_grade b n⟩
 
 end MvPolynomial
 
