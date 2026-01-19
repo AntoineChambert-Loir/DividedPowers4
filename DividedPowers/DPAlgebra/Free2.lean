@@ -475,6 +475,89 @@ end Int
 variable (R : Type u) [CommRing R] (M : Type v) [AddCommGroup M] [Module R M] (x : M) {n : ℕ}
   (N : Type w) [AddCommGroup N] [Module R N]
 
+namespace Basis
+
+open Module Module.Free TensorProduct
+
+variable {ι : Type*} (b : Basis ι R M)
+
+-- Prop. A2.1
+noncomputable example :
+    R ⊗[ℤ] DividedPowerAlgebra ℤ M ≃ₐ[R] DividedPowerAlgebra R (R ⊗[ℤ] M) :=
+  DividedPowerAlgebra.dpScalarExtensionEquiv ℤ R M
+
+def baseChange_equiv'  :
+    R ⊗[ℤ] (ι →₀ ℤ) ≃ₗ[R] M := by
+  classical
+  exact (finsuppScalarRight' ℤ R ι R).trans (b.repr).symm
+
+def baseChange_equiv :
+    R ⊗[ℤ] DividedPowerAlgebra ℤ (ι →₀ ℤ) ≃ₐ[R]
+      DividedPowerAlgebra R M :=
+  (dpScalarExtensionEquiv ℤ R (ι →₀ ℤ)).trans
+    (LinearEquiv.lift (baseChange_equiv' R M b))
+
+instance : Free ℤ (DividedPowerAlgebra ℤ (ι →₀ ℤ)) :=
+  Module.Free.of_basis (Int.basis (chooseBasis ℤ (ι →₀ ℤ)))
+
+def foo : Basis ι ℤ (ι →₀ ℤ) := by
+  exact Finsupp.basisSingleOne
+
+/-- The basis of `DividedPowerAlgebra R M` associated with a basis of `M`. -/
+noncomputable def basis {ι : Type*} (b : Basis ι R M) :
+    Basis (ι →₀ ℕ) R (DividedPowerAlgebra R M) :=
+  (Algebra.TensorProduct.basis R (Int.basis Finsupp.basisSingleOne)).map (baseChange_equiv R M b).toLinearEquiv
+
+lemma basis_eq (d : ι →₀ ℕ) :
+    basis R M b d = d.prod (fun i k ↦ dp R k (b i)) := by
+  classical
+  induction d using Finsupp.induction with
+  | zero =>
+    simp only [basis, Int.basis, Finsupp.coe_basisSingleOne, Basis.map_apply,
+      Algebra.TensorProduct.basis_apply, Basis.coe_mk, Finsupp.prod_zero_index,
+      AlgEquiv.toLinearEquiv_apply, EmbeddingLike.map_eq_one_iff,
+      Algebra.TensorProduct.one_def]
+  | single_add i n d hd hn h =>
+    simp only [basis, Basis.map_apply, Algebra.TensorProduct.basis_apply,
+      AlgEquiv.toLinearEquiv_apply] at h ⊢
+    have hdisj : Disjoint (Finsupp.single i n).support d.support := by
+      simp only [disjoint_iff, inf_eq_inter', bot_eq_empty]
+      ext x
+      simp only [mem_inter,  notMem_empty, iff_false, not_and]
+      intro hx
+      simp only [Finsupp.mem_support_iff, Finsupp.single_apply, ne_eq, ite_eq_right_iff,
+        Classical.not_imp] at hx
+      rw [← hx.1]
+      exact hd
+    rw [Finsupp.prod_add_index_of_disjoint hdisj]
+    · rw [← h, Finsupp.prod_single_index (by rw [dp_zero])]
+      have : (baseChange_equiv R M b) (1 ⊗ₜ[ℤ] (Int.basis Finsupp.basisSingleOne)
+        (Finsupp.single i n + d)) =
+        (baseChange_equiv R M b) (1 ⊗ₜ[ℤ] (Int.basis Finsupp.basisSingleOne)
+         (Finsupp.single i n) * (1 ⊗ₜ[ℤ] (Int.basis Finsupp.basisSingleOne) d)):= by
+        congr
+        simp only [Algebra.TensorProduct.tmul_mul_tmul, mul_one]
+       -- rw [← tmul_mul]
+        congr
+        simp only [Int.basis, Finsupp.coe_basisSingleOne, Basis.coe_mk]
+        rw [Finsupp.prod_add_index_of_disjoint hdisj]
+      rw [this, map_mul]
+      congr
+      simp only [Int.basis, Finsupp.coe_basisSingleOne, Basis.coe_mk]
+      rw [Finsupp.prod_single_index (by rw [dp_zero])]
+      simp only [baseChange_equiv, dpScalarExtensionEquiv, baseChange_equiv', AlgEquiv.trans_apply,
+        AlgEquiv.ofAlgHom_apply, dpScalarExtension_apply_one_dp]
+      simp only [LinearEquiv.lift, LinearEquiv.trans_symm, LinearEquiv.symm_symm,
+        AlgEquiv.ofAlgHom_apply]
+      rw [LinearMap.lift_apply_dp]
+      congr
+      simp [finsuppScalarRight', finsuppScalarRight_apply_tmul]
+
+theorem free (b : Basis ι R M) : Module.Free R (DividedPowerAlgebra R M) :=
+  Module.Free.of_equiv (baseChange_equiv R M b).toLinearEquiv
+
+end Basis
+
 namespace Free
 
 open Module Module.Free TensorProduct
