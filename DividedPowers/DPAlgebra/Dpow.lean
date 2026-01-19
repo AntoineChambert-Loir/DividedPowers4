@@ -555,12 +555,29 @@ noncomputable def dividedPowers : DividedPowers (augIdeal R M) :=
 
 theorem dpow_eq' (x : DividedPowerAlgebra R M) :
     (dividedPowers b).dpow n x = dpow b n x := by
+  classical
   simp only [CharZero.dividedPowers, ofInjective]
   split_ifs with hx
   · generalize_proofs _ _ _ _ pf
     obtain ⟨hyp, h⟩ := pf.choose_spec
     rw [← (lift_injective b).eq_iff, lift_dpow_eq_dpow_lift b n hx]
     simpa using h
+  · rw [dpow_null b hx]
+
+theorem dpow_eq (x : DividedPowerAlgebra R M) :
+    (dividedPowers b).dpow n x = dpow b n x := by
+  classical
+  simp only [CharZero.dividedPowers, ofInjective]
+  simp only [RingHom.coe_coe]
+  split_ifs with hx
+  · set hmem : ∀ (n : ℕ), ∀ x ∈ augIdeal R M, ∃ y,
+      ∃ (_ : n ≠ 0 → y ∈ augIdeal R M), (LinearMap.lift (S R) (f b)) y =
+        hSN.dpow n ((LinearMap.lift (S R) (f b)) x) :=
+      fun n x hx ↦ ⟨dpow b n x, fun hn ↦ dpow_mem b hn hx, lift_dpow_eq_dpow_lift _ _ hx⟩
+    set t := Exists.choose (hmem n x hx)
+    set ht := Exists.choose_spec (hmem n x hx)
+    rw [← (lift_injective b).eq_iff]
+    rw [ht.choose_spec, ← lift_dpow_eq_dpow_lift _ _ hx]
   · rw [dpow_null b hx]
 
 theorem dpow_ι_eq_dp (n : ℕ) (x : M) :
