@@ -556,13 +556,12 @@ noncomputable def dividedPowers : DividedPowers (augIdeal R M) :=
 theorem dpow_eq (x : DividedPowerAlgebra R M) :
     (dividedPowers b).dpow n x = dpow b n x := by
   simp only [CharZero.dividedPowers, ofInjective]
-  --simp only [RingHom.toMonoidHom_eq_coe, AlgHom.toRingHom_toMonoidHom, OneHom.toFun_eq_coe,
-    --MonoidHom.toOneHom_coe, MonoidHom.coe_coe, RingHom.coe_coe, dite_eq_ite]
-  sorry/- split_ifs with hx
-  · rw [← lift_dpow_eq_dpow_lift, ← (lift_injective b).eq_iff]
-    · exact Function.apply_invFun_apply
-    · exact hx
-  · rw [dpow_null b hx] -/
+  split_ifs with hx
+  · generalize_proofs _ _ _ _ pf
+    obtain ⟨hyp, h⟩ := pf.choose_spec
+    rw [← (lift_injective b).eq_iff, lift_dpow_eq_dpow_lift b n hx]
+    simpa using h
+  · rw [dpow_null b hx]
 
 theorem dpow_ι_eq_dp (n : ℕ) (x : M) :
     (dividedPowers b).dpow n (DividedPowerAlgebra.ι R M x) = dp R n x := by
