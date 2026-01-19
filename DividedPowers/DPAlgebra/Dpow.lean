@@ -553,7 +553,7 @@ noncomputable def dividedPowers : DividedPowers (augIdeal R M) :=
     (LinearMap.lift (S R) (f b)) (lift_injective b) (hSN) (augIdeal_map_lift_eq b)
     (fun n x hx ↦ ⟨dpow b n x, fun hn ↦ dpow_mem b hn hx, lift_dpow_eq_dpow_lift _ _ hx⟩)
 
-theorem dpow_eq (x : DividedPowerAlgebra R M) :
+theorem dpow_eq' (x : DividedPowerAlgebra R M) :
     (dividedPowers b).dpow n x = dpow b n x := by
   simp only [CharZero.dividedPowers, ofInjective]
   split_ifs with hx
