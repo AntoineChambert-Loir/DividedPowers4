@@ -20,20 +20,6 @@ open DividedPowers Finset Ideal Ideal.Quotient MvPolynomial RingQuot
 
 namespace DividedPowerAlgebra
 
-section
-
-variable {R M : Type*} [CommSemiring R] [AddCommMonoid M] [Module R M] {p : MvPolynomial (ℕ × M) R} {n : ℕ}
-
-def mk' (hp : IsWeightedHomogeneous Prod.fst p n) : grade R M n :=
-  ⟨mk p, by
-   rw [mem_grade_iff]
-   refine ⟨p, (mem_weightedHomogeneousSubmodule R Prod.fst n p).mpr hp , rfl⟩⟩
-
-theorem coe_mk' (hp : IsWeightedHomogeneous Prod.fst p n) :
-    mk' hp = mk p := rfl
-
-end
-
 --set_option trace.Meta.synthInstance true
 def _root_.RatAlgebra.dividedPowersTop {R : Type*} [CommRing R] [Algebra ℚ R]  :
     DividedPowers (⊤ : Ideal R) :=
