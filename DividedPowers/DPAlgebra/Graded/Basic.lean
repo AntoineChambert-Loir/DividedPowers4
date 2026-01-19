@@ -83,7 +83,7 @@ def grade (n : ℕ) : Submodule R (DividedPowerAlgebra R M) :=
   quotSubmodule R (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ))
     (DividedPowerAlgebra.Rel R M) n
 
-variable {R M} in
+variable {R M}
 lemma mem_grade_iff {a : DividedPowerAlgebra R M} {n : ℕ} :
     a ∈ grade R M n ↔ ∃ (p : MvPolynomial (ℕ × M) R),
       (p ∈ weightedHomogeneousSubmodule R Prod.fst n) ∧ mk p = a := by
