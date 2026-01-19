@@ -477,109 +477,31 @@ variable (R : Type u) [CommRing R] (M : Type v) [AddCommGroup M] [Module R M] (x
 
 namespace Free
 
-open Module TensorProduct
+open Module Module.Free TensorProduct
 
-example (R M N : Type*) [CommSemiring R] [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N]
-    (f : M ≃ₗ[R] N) :
-    DividedPowerAlgebra R M ≃ₐ[R] DividedPowerAlgebra R N := by
-  exact LinearEquiv.lift f
+variable [Module.Free R M]
 
 -- Prop. A2.1
-noncomputable example : R ⊗[ℤ] DividedPowerAlgebra ℤ M ≃ₐ[R] DividedPowerAlgebra R (R ⊗[ℤ] M) :=
+noncomputable example :
+    R ⊗[ℤ] DividedPowerAlgebra ℤ M ≃ₐ[R] DividedPowerAlgebra R (R ⊗[ℤ] M) :=
   DividedPowerAlgebra.dpScalarExtensionEquiv ℤ R M
 
-def foo {R : Type*} [CommRing R] : R ⊗[ℤ] R →ₗ[ℤ] R := by
-  set f : R →ₗ[ℤ] R →ₗ[ℤ] R:= {
-    toFun r := {
-      toFun s := r * s
-      map_add' s s':= by simp [mul_add]
-      map_smul' a s := by
-        simp only [zsmul_eq_mul, eq_intCast, Int.cast_eq]; ring }
-    map_add' r r' := by
-      ext s; simp [add_mul]
-    map_smul' a r := by
-      ext s; simp [mul_assoc]}
-  exact TensorProduct.lift f
+def baseChange_equiv' [Module.Free R M] :
+    R ⊗[ℤ] (ChooseBasisIndex R M →₀ ℤ) ≃ₗ[R] M :=
+  (finsuppScalarRight' ℤ R (ChooseBasisIndex R M) R).trans
+    ((Module.Free.chooseBasis R M).repr).symm
 
-instance : CompatibleSMul ℤ R R R where
-  smul_tmul r s t := by
-    suffices r ⊗ₜ[ℤ] (1 : R) = (1 : R) ⊗ₜ r by sorry
-    sorry
+def baseChange_equiv :
+    R ⊗[ℤ] DividedPowerAlgebra ℤ (ChooseBasisIndex R M →₀ ℤ) ≃ₐ[R]
+      DividedPowerAlgebra R M :=
+  (dpScalarExtensionEquiv ℤ R (ChooseBasisIndex R M →₀ ℤ)).trans
+    (LinearEquiv.lift (baseChange_equiv' R M))
 
-def TensorProduct.int_linearEquiv : R ⊗[ℤ] R ≃ₗ[R] R :=
-  lidOfCompatibleSMul ℤ R R
+instance : Free ℤ (DividedPowerAlgebra ℤ (ChooseBasisIndex R M →₀ ℤ)) :=
+  Module.Free.of_basis (Int.basis (chooseBasis ℤ (ChooseBasisIndex R M →₀ ℤ)))
 
-def TensorProduct.int_linearEquiv' : R ⊗[ℤ] R ≃ₗ[R] R where
-  toFun x := foo x
-  invFun r := (1 : R) ⊗ₜ r
-  map_add' rs rs' := by simp [foo]
-  map_smul' a rs := by
-    simp only [foo]
-    induction rs using TensorProduct.induction_on with
-    | zero => simp
-    | add rs rs' h h' =>
-      simp only [smul_add, map_add, h, RingHom.id_apply, smul_eq_mul, h', mul_add]
-    | tmul r s => simp [smul_tmul', mul_assoc]
-  left_inv rs := by
-    simp [foo]
-    induction rs using TensorProduct.induction_on with
-    | zero => simp
-    | add rs rs' h h' => simp [h, h', tmul_add]
-    | tmul r s =>
-      simp only [lift.tmul, LinearMap.coe_mk, AddHom.coe_mk]
-      sorry
-  right_inv r := by simp [foo]
-
-open Module.Free in
-def bar [Module.Free R M] :
-    R ⊗[ℤ] (ChooseBasisIndex R M →₀ R) ≃ₗ[ℤ] (ChooseBasisIndex R M →₀ (R ⊗[ℤ] R)) := by
-  exact finsuppRight ℤ R R (ChooseBasisIndex R M)
-
-open Module.Free in
-def asdf [Module.Free R M]:
-    (ChooseBasisIndex R M →₀ (R ⊗[ℤ] R)) ≃ₗ[R] ChooseBasisIndex R M →₀ R :=
-  Finsupp.mapRange.linearEquiv (TensorProduct.int_linearEquiv R)
-
-open Module.Free in
-def finsuppRight'' [Module.Free R M] :
-    R ⊗[ℤ] (ChooseBasisIndex R M →₀ R) ≃ₗ[R] (ChooseBasisIndex R M →₀ (R ⊗[ℤ] R)) := {
-      bar R M with
-      map_smul' r x := by
-        induction x using TensorProduct.induction_on with
-        | zero => simp
-        | add x y hx hy =>
-          simp only [smul_add, AddHom.toFun_eq_coe, LinearMap.coe_toAddHom,
-            LinearEquiv.coe_coe, map_add, RingHom.id_apply] at *
-          simp [hx, hy]
-        | tmul s f =>
-          simp only [bar, AddHom.toFun_eq_coe, LinearMap.coe_toAddHom, LinearEquiv.coe_coe,
-            RingHom.id_apply]
-          simp only [smul_tmul', finsuppRight_apply_tmul]
-          simp_rw [← smul_tmul', Finsupp.smul_sum, Finsupp.smul_single] }
-
-open Module.Free in
-def finsuppRight' [Module.Free R M] :
-    R ⊗[ℤ] (ChooseBasisIndex R M →₀ R) ≃ₗ[R] (ChooseBasisIndex R M →₀ R) := by
-  apply LinearEquiv.trans (finsuppRight'' R M) (asdf R M)
-
-open Module.Free in
-example [Module.Free R M] :
-  M ≃ₗ[R] (ChooseBasisIndex R M →₀ R) := (Module.Free.chooseBasis R M).repr
-
-def Module.Free.linearEquiv [Module.Free R M] : R ⊗[ℤ] M ≃ₗ[R] M :=
-  (LinearEquiv.baseChange ℤ R M (Free.ChooseBasisIndex R M →₀ R)
-    (LinearEquiv.restrictScalars ℤ (Module.Free.chooseBasis R M).repr)).trans
-      ((finsuppRight' R M).trans (Module.Free.chooseBasis R M).repr.symm)
-
-def baseChange_equiv [Module.Free R M] :
-    R ⊗[ℤ] DividedPowerAlgebra ℤ M ≃ₐ[R] DividedPowerAlgebra R M :=
-  (DividedPowerAlgebra.dpScalarExtensionEquiv ℤ R M).trans
-    (LinearEquiv.lift (Module.Free.linearEquiv R M))
-
-theorem free [Module.Free R M] : Module.Free R (DividedPowerAlgebra R M) := by
-  apply Module.Free.of_equiv' _ (baseChange_equiv R M).toLinearEquiv
-  have : Free ℤ (DividedPowerAlgebra ℤ M) := sorry
-  exact Algebra.TensorProduct.instFree ℤ R (DividedPowerAlgebra ℤ M)
+theorem free : Module.Free R (DividedPowerAlgebra R M) :=
+  Module.Free.of_equiv (baseChange_equiv R M).toLinearEquiv
 
 end Free
 
