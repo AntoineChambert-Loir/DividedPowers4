@@ -5,7 +5,7 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 
 import Mathlib.RingTheory.DividedPowers.Basic
-import DividedPowers.ExponentialModule.Basic
+import DividedPowers.ExponentialModule.Basic2
 
 /-! # Divided powers and exponential power series
 
@@ -58,6 +58,7 @@ noncomputable def exp'_linearMap (hI : DividedPowers I) :
   map_add' := fun a b ↦ by
     rw [← coe_inj, coe_exp', exp', Submodule.coe_add, coe_add, hI.exp_add a.prop b.prop,
       coe_exp', coe_mk]
+    rfl
   map_smul' := fun r a ↦ by
     rw [RingHom.id_apply, ← coe_inj]
     simp only [coe_exp', SetLike.val_smul, smul_eq_mul, hI.exp_smul a.prop, coe_smul,

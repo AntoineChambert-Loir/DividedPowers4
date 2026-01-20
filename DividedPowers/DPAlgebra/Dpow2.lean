@@ -3,19 +3,12 @@ Copyright (c) 2024 Antoine Chambert-Loir, María Inés de Frutos-Fernández. All
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
-import DividedPowers.DPAlgebra.Exponential
 import DividedPowers.DPAlgebra.Free2
-import DividedPowers.DPAlgebra.Graded.GradeZero
-import DividedPowers.ForMathlib.Data.FinsetLemmas
 import DividedPowers.ForMathlib.Data.Nat.Choose.Multinomial
-import DividedPowers.ForMathlib.RingTheory.DividedPowers.Basic
 import DividedPowers.ForMathlib.RingTheory.Localization.FractionRing
 import Mathlib.RingTheory.DividedPowers.Padic
 import Mathlib.RingTheory.DividedPowers.SubDPIdeal
 import Mathlib.RingTheory.MvPolynomial.Basic
-import Mathlib.RingTheory.PowerSeries.PiTopology
-import DividedPowers.ForMathlib.Algebra.TrivSqZeroExt
-import DividedPowers.ForMathlib.RingTheory.GradedAlgebra.Basic
 
 /-! # Construction of the divided power structure on the divided power algebra (work in progress)
 
@@ -852,6 +845,8 @@ def dividedPowers : DividedPowers (augIdeal R M) := Presentation.dividedPowers (
 theorem dpow_eq_dp (n : ℕ) (x : M) : (dividedPowers R M).dpow n (ι R M x) = dp R n x :=
   Presentation.dpow_eq_dp (presentation R M) n x
 
+#print axioms dividedPowers
+
 end
 
 end General
@@ -885,5 +880,6 @@ theorem dpowExp_eq_of_support_subset {x : DividedPowerAlgebra R M} (hx : x ∈ a
     Algebra.mul_smul_comm, PowerSeries.coeff_mk, map_sum, LinearMap.map_smul_of_tower]
 
 end Unused
-
 end DividedPowerAlgebra
+
+#min_imports

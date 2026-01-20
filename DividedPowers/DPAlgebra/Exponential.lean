@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 import DividedPowers.DPAlgebra.Init
-import DividedPowers.ExponentialModule.Basic
+import DividedPowers.ExponentialModule.Basic2
 import DividedPowers.ForMathlib.LinearAlgebra.Isomorphisms
 import Mathlib.LinearAlgebra.Isomorphisms
 

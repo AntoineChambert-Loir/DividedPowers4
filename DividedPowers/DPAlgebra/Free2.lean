@@ -4,15 +4,10 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 import DividedPowers.DPAlgebra.BaseChange
-import DividedPowers.DPAlgebra.Graded.Basic
 import DividedPowers.DPAlgebra.Graded.GradeZero
-import DividedPowers.ForMathlib.RingTheory.TensorProduct.DirectLimit.FG
 import DividedPowers.ForMathlib.Data.FinsetLemmas
-import DividedPowers.Plurinomial
-import Mathlib.LinearAlgebra.FreeModule.Basic
-import Mathlib.RingTheory.DividedPowers.RatAlgebra
 import DividedPowers.ForMathlib.RingTheory.DividedPowers.Basic
-import Mathlib.RingTheory.MvPolynomial.WeightedHomogeneous
+import Mathlib.RingTheory.DividedPowers.RatAlgebra
 import Mathlib.RingTheory.TensorProduct.Free
 
 noncomputable section
@@ -853,6 +848,7 @@ lemma repr_dp_one [DecidableEq ι] (m : M) : (basis R M b).repr (dp R 1 m) =
     _ = _ := by
       simp
 
+#print axioms repr_dp_one
 
 end Free
 
