@@ -531,6 +531,8 @@ example {A : Type*} [CommSemiring A]
     {R : Type*} [CommSemiring R] [Algebra A R] {I : Ideal R} (FI : Set I) : Set R :=
   I.subtype '' FI
 
+#exit
+
 def Ideal.span_isHomogeneous' {A : Type*} [CommSemiring A]
     {R : Type*} [CommSemiring R] [Algebra A R]
     {S : Subalgebra A R} {I : Ideal R}
