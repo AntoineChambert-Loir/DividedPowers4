@@ -203,9 +203,40 @@ private theorem coeff_linearCombination_X_pow_of_eq {σ : Type*} (a : σ →₀ 
     coeff_sum]
   simp_rw [← C_eq_coe_nat, coeff_C_mul, smul_eq_C_mul, mul_pow, Finset.prod_mul_distrib, ← map_pow,
     ← map_prod, coeff_C_mul, coeff_prod_X_pow, mul_ite, mul_one, mul_zero]
-  /-
   rw [Finset.sum_eq_single (Finsupp.indicator a.support (fun i _ ↦ d i) : σ → ℕ)]
-  · simp only [← DFunLike.coe_fn_eq, Finsupp.indicator_indicator, inter_self,
+  · simp only [← DFunLike.coe_fn_eq, Finsupp.indicator_indicator]
+    split_ifs with hd'
+    swap
+    · simp [funext_iff] at hd'
+      obtain ⟨i, hi, hdi⟩ := hd'
+      rw [eq_comm]
+      convert mul_zero _
+      rw [← d.mul_prod_erase i, hi, zero_pow hdi, zero_mul]
+      exact Finsupp.mem_support_iff.mpr hdi
+    replace hd' : ∀ i, a i = 0 → d i = 0 := by
+      simpa [funext_iff] using hd'
+    have hd'' : d.support ⊆ a.support := fun i hi ↦ by
+      simp [Finsupp.mem_support_iff] at hi ⊢
+      exact fun h ↦ hi (hd' i h)
+    rw [← Finset.prod_sdiff hd'', ← mul_assoc, Finsupp.prod]
+    apply congr_arg₂
+    · convert mul_one _
+      · apply Finset.prod_eq_one
+        intro i hi
+        simp only [mem_sdiff, Finsupp.mem_support_iff, ne_eq, Decidable.not_not] at hi
+        simp [hi.2, hi]
+      · sorry
+    · apply Finset.prod_congr rfl
+      intro i hi
+      simp only [indicator_apply, Finsupp.mem_support_iff, ne_eq, dite_eq_ite, ite_not, pow_ite,
+        pow_zero, ite_eq_right_iff]
+      intro hi'
+      suffices d i = 0 by simp [this]
+      exact hd' i hi'
+
+/-
+
+    simp only [inter_self,
       Finsupp.self_eq_restrict_iff, fun_support_eq, coe_subset]
     split_ifs with hd'
     · have : d = Finsupp.restrict d a.support := by
@@ -241,8 +272,8 @@ private theorem coeff_linearCombination_X_pow_of_eq {σ : Type*} (a : σ →₀ 
     · intro i hi
       simp only [restrict_apply, Finsupp.mem_support_iff, ne_eq, ite_not, ite_eq_left_iff,
         Classical.not_imp] at hi ⊢
-      exact hi.1 -/
-  sorry
+      exact hi.1
+-/
 
 private theorem coeff_linearCombination_X_pow_of_ne {σ : Type*} (a : σ →₀ R) {d : σ →₀ ℕ} {n : ℕ}
     (hd : d.sum (fun _ m ↦ m) ≠ n) :

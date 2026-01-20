@@ -558,8 +558,8 @@ theorem Ideal.span_isHomogeneous {A : Type*} [CommSemiring A]
     simp only [mem_sup, Subalgebra.mem_toSubmodule, restrictScalars_mem] at hx'
     obtain ⟨y, hy, z, hz, rfl⟩ := hx'
     refine ⟨y, ⟨⟨hy, ?_⟩, z, ⟨⟨hz, ?_⟩, rfl⟩⟩⟩
-    sorry
-    sorry
+    · sorry
+    · sorry
 
 
 def Subalgebra.isHomogeneous {A : Type*} [CommSemiring A]
