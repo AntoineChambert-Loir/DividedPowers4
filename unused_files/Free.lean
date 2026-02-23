@@ -430,7 +430,7 @@ theorem Int.basis_mem_grade (n : ι →₀ ℕ) :
           refine (ha ?_).elim
           simpa using hi
       · simp
-  simp only [map_finsuppProd, basis, Basis.coe_mk, mk_X]
+  simp only [map_finsuppProd, basis, Basis.coe_mk, dp_def]; rfl
 
 lemma Int.basis_mem_grade_iff_eq (n : ι →₀ ℕ) (d : ℕ) :
     Int.basis b n ∈ grade ℤ M d ↔ (n.sum fun _ a ↦ a) = d := by

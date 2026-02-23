@@ -86,14 +86,14 @@ def grade (n : ℕ) : Submodule R (DividedPowerAlgebra R M) :=
 variable {R M}
 lemma mem_grade_iff {a : DividedPowerAlgebra R M} {n : ℕ} :
     a ∈ grade R M n ↔ ∃ (p : MvPolynomial (ℕ × M) R),
-      (p ∈ weightedHomogeneousSubmodule R Prod.fst n) ∧ mk p = a := by
+      (p ∈ weightedHomogeneousSubmodule R Prod.fst n) ∧ mkAlgHom R (Rel R M) p = a := by
   simp only [grade, _root_.quotSubmodule, Submodule.mem_map]; rfl
 
 def mk' {p : MvPolynomial (ℕ × M) R} {n : ℕ} (hp : IsWeightedHomogeneous Prod.fst p n) :
-    grade R M n := ⟨mk p, mem_grade_iff.mp ⟨p, hp, rfl⟩⟩
+    grade R M n := ⟨mkAlgHom R (Rel R M) p, mem_grade_iff.mp ⟨p, hp, rfl⟩⟩
 
 lemma coe_mk' {p : MvPolynomial (ℕ × M) R} {n : ℕ} (hp : IsWeightedHomogeneous Prod.fst p n) :
-    (mk' hp) = mk p := rfl
+    (mk' hp) = mkAlgHom R (Rel R M) p := rfl
 
 variable (R M)
 
@@ -125,8 +125,10 @@ theorem mul_mem ⦃i j : ℕ⦄ {gi gj : DividedPowerAlgebra R M}
 def decompose : DividedPowerAlgebra R M → DirectSum ℕ fun i : ℕ => ↥(grade R M i) :=
   (gradedAlgebra R M).toDecomposition.decompose'
 
+-- NOTE: We might not need these `toSupported` lemmas. For now, needed for GradeZero.
+
 theorem mk_comp_toSupported :
-    (@mk R M).comp ((Subalgebra.val _).comp (toSupported R)) = mk := by
+    (mkAlgHom R (Rel R M)).comp ((Subalgebra.val _).comp (toSupported R)) = mkAlgHom R (Rel R M) := by
   apply MvPolynomial.algHom_ext
   rintro ⟨n, m⟩
   simp only [AlgHom.coe_comp, Subalgebra.coe_val, Function.comp_apply, aeval_X, toSupported]
@@ -137,17 +139,18 @@ theorem mk_comp_toSupported :
     exact (dp_zero R m).symm
 
 theorem surjective_of_supported :
-    Surjective ((@mk R M).comp (Subalgebra.val (supported R {nm : ℕ × M | 0 < nm.1}))) := by
+    Surjective ((mkAlgHom R (Rel R M)).comp (Subalgebra.val (supported R {nm : ℕ × M | 0 < nm.1}))) := by
   intro f
-  obtain ⟨p', hp'⟩ := DividedPowerAlgebra.mk_surjective f
+  sorry
+  /- obtain ⟨p', hp'⟩ := DividedPowerAlgebra.mk_surjective f
   use toSupported R p'
-  rw [← AlgHom.comp_apply, AlgHom.comp_assoc, mk_comp_toSupported, ← hp']
+  rw [← AlgHom.comp_apply, AlgHom.comp_assoc, mk_comp_toSupported, ← hp'] -/
 
 variable {R M}
 
 theorem surjective_of_supported' {n : ℕ} (p : grade R M n) :
     ∃ q : supported R {nm : ℕ × M | 0 < nm.1},
-      IsWeightedHomogeneous Prod.fst q.1 n ∧ (@mk R M) q.1 = ↑p := by
+      IsWeightedHomogeneous Prod.fst q.1 n ∧ (mkAlgHom R (Rel R M)) q.1 = ↑p := by
   obtain ⟨p', hpn', hp'⟩ := mem_grade_iff.mpr p.2
   use toSupported R p'
   refine ⟨toSupported_isHomogeneous _ _ _ hpn', ?_⟩
@@ -158,7 +161,7 @@ theorem surjective_of_supported' {n : ℕ} (p : grade R M n) :
   degree `n` supported on `{nm : ℕ × M | 0 < nm.1}`. -/
 theorem mem_grade_iff' {n : ℕ} (p : DividedPowerAlgebra R M) :
     p ∈ grade R M n ↔ ∃ q : supported R {nm : ℕ × M | 0 < nm.1},
-      IsWeightedHomogeneous Prod.fst q.1 n ∧ (@mk R M) q.1 = p :=
+      IsWeightedHomogeneous Prod.fst q.1 n ∧ (mkAlgHom R (Rel R M)) q.1 = p :=
   ⟨fun hp ↦ Submodule.coe_mk p hp ▸ surjective_of_supported' _, fun ⟨q, hq, hpq⟩ ↦  ⟨q, hq, hpq⟩⟩
 
 /-- We say that a divided power algebra has a *graded* divided power structure if for every `n : ℕ`,

@@ -94,14 +94,22 @@ open MvPolynomial
 
 variable {R M}
 
-/-- The canonical `AlgHom` from `MvPolynomial (ℕ × M) R ` to `DividedPowerAlgebra R M`. -/
+/- /-- The canonical `AlgHom` from `MvPolynomial (ℕ × M) R ` to `DividedPowerAlgebra R M`. -/
 def mk : MvPolynomial (ℕ × M) R →ₐ[R] DividedPowerAlgebra R M :=
   mkAlgHom R (Rel R M)
 
 lemma mk_surjective : Function.Surjective (@mk R M _ _ _) := RingQuot.mkAlgHom_surjective _ _
 
 lemma mk_C (a : R) : mk (C a) = algebraMap R (DividedPowerAlgebra R M) a := by
+  rw [← MvPolynomial.algebraMap_eq, AlgHom.commutes] -/
+
+lemma mkAlgHom_C (a : R) :
+    mkAlgHom R (Rel R M) (C a) = algebraMap R (DividedPowerAlgebra R M) a := by
   rw [← MvPolynomial.algebraMap_eq, AlgHom.commutes]
+
+lemma mkRingHom_C (a : R) :
+    mkRingHom (Rel R M) (C a) = algebraMap R (DividedPowerAlgebra R M) a := by
+  rw [← mkAlgHom_C, mkAlgHom, AlgHom.coe_mk]
 
 variable (R)
 
@@ -111,10 +119,46 @@ def dp (n : ℕ) (m : M) : DividedPowerAlgebra R M := mkAlgHom R (Rel R M) (X �
 theorem dp_def (n : ℕ) (m : M) :
   dp R n m = mkAlgHom R (Rel R M) (X ⟨n, m⟩) := rfl
 
-lemma mk_X (mn : ℕ × M) : mk (X mn) = dp R mn.1 mn.2 := by
-  simp [dp]; rfl
-
 --theorem dp_def' (n : ℕ) (m : M) : dp R n m = mk (X ⟨n, m⟩) := rfl
+
+/- lemma mk_X (mn : ℕ × M) : mk (X mn) = dp R mn.1 mn.2 := by
+  simp [dp_def]; rfl -/
+
+protected theorem induction_on' {P : DividedPowerAlgebra R M → Prop} (f : DividedPowerAlgebra R M)
+    (h_C : ∀ a, P (mkAlgHom R (Rel R M) (C a))) (h_add : ∀ f g, P f → P g → P (f + g))
+    (h_dp : ∀ (f : DividedPowerAlgebra R M) (n : ℕ) (m : M), P f → P (f * dp R n m)) : P f := by
+  obtain ⟨F, hf⟩ := RingQuot.mkRingHom_surjective (DividedPowerAlgebra.Rel R M) f
+  rw [← hf]
+  induction F using MvPolynomial.induction_on generalizing f with
+  | C a =>
+      convert h_C a using 1;
+      rw [mkAlgHom, AlgHom.coe_mk]
+  | add g1 g2 hg1 hg2 =>
+      rw [map_add]
+      exact h_add _ _ (hg1 ((mkRingHom (Rel R M)) g1) rfl) (hg2 ((mkRingHom (Rel R M)) g2) rfl)
+  | mul_X g nm h =>
+      have h' : (mkRingHom (Rel R M)) (X nm) = dp R nm.1 nm.2 := by
+        simp only [dp_def, Prod.mk.eta, mkAlgHom, AlgHom.coe_mk]
+      rw [_root_.map_mul, h']
+      exact h_dp _ _ _ (h (mkRingHom (Rel R M) g) rfl)
+
+protected theorem induction_on {P : DividedPowerAlgebra R M → Prop} (f : DividedPowerAlgebra R M)
+    (h_C : ∀ a, P (algebraMap R _ a)) (h_add : ∀ f g, P f → P g → P (f + g))
+    (h_dp : ∀ (f : DividedPowerAlgebra R M) (n : ℕ) (m : M), P f → P (f * dp R n m)) : P f := by
+  obtain ⟨F, hf⟩ := RingQuot.mkRingHom_surjective (DividedPowerAlgebra.Rel R M) f
+  rw [← hf]
+  induction F using MvPolynomial.induction_on generalizing f with
+  | C a =>
+      rw [mkRingHom_C]
+      exact h_C a
+  | add g1 g2 hg1 hg2 =>
+      rw [map_add]
+      exact h_add _ _ (hg1 ((mkRingHom (Rel R M)) g1) rfl) (hg2 ((mkRingHom (Rel R M)) g2) rfl)
+  | mul_X g nm h =>
+      have h' : (mkRingHom (Rel R M)) (X nm) = dp R nm.1 nm.2 := by
+        simp only [dp_def, Prod.mk.eta, mkAlgHom, AlgHom.coe_mk]
+      rw [_root_.map_mul, h']
+      exact h_dp _ _ _ (h (mkRingHom (Rel R M) g) rfl)
 
 theorem dp_eq_mkRingHom (n : ℕ) (m : M) :
     dp R n m = mkRingHom (Rel R M) (X (⟨n, m⟩)) := by
@@ -231,23 +275,64 @@ theorem algHom_ext {A : Type*} [CommSemiring A] [Algebra R A]
     (h : ∀ n m, f (dp R n m) = g (dp R n m)) : f = g :=
   algHom_ext_iff.mpr h
 
-protected theorem induction_on {P : DividedPowerAlgebra R M → Prop} (f : DividedPowerAlgebra R M)
-    (h_C : ∀ a, P (mk (C a))) (h_add : ∀ f g, P f → P g → P (f + g))
-    (h_dp : ∀ (f : DividedPowerAlgebra R M) (n : ℕ) (m : M), P f → P (f * dp R n m)) : P f := by
-  obtain ⟨F, hf⟩ := RingQuot.mkRingHom_surjective (DividedPowerAlgebra.Rel R M) f
-  rw [← hf]
-  induction F using MvPolynomial.induction_on generalizing f with
-  | C a =>
-      convert h_C a using 1;
-      rw [mk, mkAlgHom, AlgHom.coe_mk]
-  | add g1 g2 hg1 hg2 =>
-      rw [map_add]
-      exact h_add _ _ (hg1 ((mkRingHom (Rel R M)) g1) rfl) (hg2 ((mkRingHom (Rel R M)) g2) rfl)
-  | mul_X g nm h =>
-      have h' : (mkRingHom (Rel R M)) (X nm) = dp R nm.1 nm.2 := by
-        simp only [dp_def, Prod.mk.eta, mkAlgHom, AlgHom.coe_mk]
-      rw [_root_.map_mul, h']
-      exact h_dp _ _ _ (h (mkRingHom (Rel R M) g) rfl)
+section
+
+variable {R M : Type*} [CommRing R] [AddCommGroup M] [Module R M]
+    {ι : Type*} {v : ι → M}
+
+/- If the `R`-module is spanned by elements `v i`, then `DividedPowerAlgebra R M`
+is linearly spanned by the finite products `∏ i, dp R (k i) (v i)`.
+
+When these `v i` form a `Module.Basis`, these elements are linearly independent,
+hence form a `Module.Basis` of `DividedPowerAlgebra R M`, see `DividedPowers.DPAlgebra.Free`. -/
+theorem submodule_span_prod_dp_eq_top (hv : Submodule.span R (Set.range v) = ⊤) :
+    Submodule.span R (Set.range fun (n : ι →₀ ℕ) ↦ n.prod fun i k ↦ dp R k (v i)) = ⊤ := by
+  rw [eq_top_iff]
+  intro p hp
+  clear hp
+  induction p using DividedPowerAlgebra.induction_on with
+  | h_C r =>
+    simp only [Algebra.algebraMap_eq_smul_one]
+    exact Submodule.smul_mem _ _ (Submodule.subset_span ⟨0, by simp⟩)
+  | h_add x y hx hy =>
+    exact Submodule.add_mem _ hx hy
+  | h_dp x k m hx =>
+    have hm : m ∈ Submodule.span R (Set.range v) := by
+      simp [hv, Submodule.mem_top]
+    induction hm using Submodule.span_induction generalizing x k with
+    | zero => rw [dp_null]; split_ifs <;> simp [hx]
+    | smul r m hm h =>
+      simp only [dp_smul, Algebra.mul_smul_comm, Submodule.smul_mem _ _ (h x k hx)]
+    | mem y hy =>
+      obtain ⟨i, rfl⟩ := hy
+      induction hx using Submodule.span_induction with
+      | zero => simp
+      | mem x hx =>
+        obtain ⟨n, rfl⟩ := hx
+        simp only
+        rw [← n.mul_prod_erase' i _ (fun i ↦ dp_zero R (v i)), mul_comm,
+          ← mul_assoc]
+        rw [dp_mul, nsmul_eq_mul, mul_assoc, ← nsmul_eq_mul]
+        apply Submodule.smul_of_tower_mem
+        apply Submodule.mem_span_of_mem
+        use Finsupp.single i k + n
+        simp only
+        rw [← (Finsupp.single i k + n).mul_prod_erase' i _ (fun i ↦ dp_zero _ _)]
+        simp
+      | add x y hxmem hymem hx hy =>
+        rw [add_mul]
+        apply Submodule.add_mem _ hx hy
+      | smul r x hxmem hx =>
+        rw [smul_mul_assoc]
+        apply Submodule.smul_mem _ _ hx
+    | add m n hm_mem hn_mem hm hn =>
+      rw [dp_add, mul_sum]
+      apply Submodule.sum_mem
+      intro c hc
+      rw [← mul_assoc]
+      exact hn (x * dp R c.1 m) c.2 (hm x c.1 hx)
+
+end
 
 variable (R)
 
@@ -282,8 +367,8 @@ theorem lift'_apply {f : ℕ × M → A} (hf_zero : ∀ m, f (0, m) = 1)
     (hf_mul : ∀ n p m, f ⟨n, m⟩ * f ⟨p, m⟩ = (n + p).choose n • f ⟨n + p, m⟩)
     (hf_add : ∀ n u v, f ⟨n, u + v⟩ = (antidiagonal n).sum fun (k, l) => f ⟨k, u⟩ * f ⟨l, v⟩)
     (p : MvPolynomial (ℕ × M) R) :
-    lift' hf_zero hf_smul hf_mul hf_add (mk p) = aeval f p := by
-  rw [mk, lift', RingQuot.liftAlgHom_mkAlgHom_apply, coe_eval₂AlgHom]
+    lift' hf_zero hf_smul hf_mul hf_add (mkAlgHom R (Rel R M) p) = aeval f p := by
+  rw [lift', RingQuot.liftAlgHom_mkAlgHom_apply, coe_eval₂AlgHom]
   rfl
 
 @[simp]
@@ -293,7 +378,7 @@ theorem lift'_apply_dp {f : ℕ × M → A} (hf_zero : ∀ m, f (0, m) = 1)
     (hf_add : ∀ n u v, f ⟨n, u + v⟩ = (antidiagonal n).sum fun (k, l) => f ⟨k, u⟩ * f ⟨l, v⟩)
     (n : ℕ) (m : M) :
     lift' hf_zero hf_smul hf_mul hf_add (dp R n m) = f ⟨n, m⟩ := by
-  rw [dp_def, ← mk, lift'_apply hf_zero hf_smul hf_mul hf_add, aeval_X]
+  rw [dp_def, lift'_apply hf_zero hf_smul hf_mul hf_add, aeval_X]
 
 variable {I : Ideal A} (hI : DividedPowers I) (φ : M →ₗ[R] A) (hφ : ∀ m, φ m ∈ I)
 
@@ -312,7 +397,7 @@ variable {φ}
 
 @[simp]
 theorem lift_apply (p : MvPolynomial (ℕ × M) R) :
-    lift hI φ hφ (mk p) = aeval (fun nm : ℕ × M => hI.dpow nm.1 (φ nm.2)) p := by
+    lift hI φ hφ (mkAlgHom R (Rel R M) p) = aeval (fun nm : ℕ × M => hI.dpow nm.1 (φ nm.2)) p := by
   rw [lift, lift'_apply]
 
 @[simp]
@@ -332,6 +417,7 @@ theorem ι_comp_lift : (lift hI φ hφ).toLinearMap.comp (ι R M) = φ := by
   ext; simp
 
 end UniversalProperty
+
 
 section Functoriality
 
@@ -372,7 +458,7 @@ protected def lift : DividedPowerAlgebra R M →ₐ[R] DividedPowerAlgebra S N :
     (LinearMap.dp_zero f) (LinearMap.dp_smul S f) (LinearMap.dp_mul f) (LinearMap.dp_add f)
 
 theorem lift_apply (p : MvPolynomial (ℕ × M) R) :
-    LinearMap.lift S f (mk p) = aeval (fun nm => dp S nm.fst (f nm.snd)) p := by
+    LinearMap.lift S f (mkAlgHom R (Rel R M) p) = aeval (fun nm => dp S nm.fst (f nm.snd)) p := by
   rw [LinearMap.lift, lift'_apply]
 
 theorem lift_apply_dp (n : ℕ) (a : M) : LinearMap.lift S f (dp R n a) = dp S n (f a) := by
@@ -389,8 +475,9 @@ theorem lift_comp_ι :
 theorem lift_surjective {f : M →ₗ[R] N} (hf : Function.Surjective f) :
     Function.Surjective (LinearMap.lift R f) := by
   rw [← AlgHom.range_eq_top, ← Algebra.map_top (LinearMap.lift R f), eq_top_iff,
-    ← (AlgHom.range_eq_top mk).mpr mk_surjective, ← Algebra.map_top,
-    (Subalgebra.gc_map_comap _).le_iff_le, ← MvPolynomial.adjoin_range_X, Algebra.adjoin_le_iff]
+    ← (AlgHom.range_eq_top (mkAlgHom R (Rel R N))).mpr (mkAlgHom_surjective R (Rel R N)),
+    ← Algebra.map_top, (Subalgebra.gc_map_comap _).le_iff_le, ← MvPolynomial.adjoin_range_X,
+    Algebra.adjoin_le_iff]
   intro
   simp only [Set.mem_range, Prod.exists]
   rintro ⟨n, m, rfl⟩
@@ -456,70 +543,5 @@ theorem LinearEquiv.lift_trans (g : M ≃ₗ[R] N) (h : N ≃ₗ[R] P) :
 end IsScalarTower
 
 end Functoriality
-
-section
-
-variable {R M : Type*} [CommRing R] [AddCommGroup M] [Module R M]
-    {ι : Type*} {v : ι → M}
-
-/- If the `R`-module is spanned by elements `v i`, then `DividedPowerAlgebra R M`
-is linearly spanned by the finite products `∏ i, dp R (k i) (v i)`.
-
-When these `v i` form a `Module.Basis`, these elements are linearly independent,
-hence form a `Module.Basis` of `DividedPowerAlgebra R M`, see `DividedPowers.DPAlgebra.Free`. -/
-theorem submodule_span_prod_dp_eq_top (hv : Submodule.span R (Set.range v) = ⊤) :
-    Submodule.span R (Set.range fun (n : ι →₀ ℕ) ↦ n.prod fun i k ↦ dp R k (v i)) = ⊤ := by
-  rw [eq_top_iff]
-  intro p hp
-  clear hp
-  induction p using DividedPowerAlgebra.induction_on with
-  | h_C r =>
-    simp only [algHom_C, Algebra.algebraMap_eq_smul_one]
-    exact Submodule.smul_mem _ _ (Submodule.subset_span ⟨0, by simp⟩)
-  | h_add x y hx hy =>
-    exact Submodule.add_mem _ hx hy
-  | h_dp x k m hx =>
-    have hm : m ∈ Submodule.span R (Set.range v) := by
-      simp [hv, Submodule.mem_top]
-    induction hm using Submodule.span_induction generalizing x k with
-    | zero => rw [dp_null]; split_ifs <;> simp [hx]
-    | smul r m hm h =>
-      simp only [dp_smul, Algebra.mul_smul_comm, Submodule.smul_mem _ _ (h x k hx)]
-    | mem y hy =>
-      obtain ⟨i, rfl⟩ := hy
-      induction hx using Submodule.span_induction with
-      | zero => simp
-      | mem x hx =>
-        obtain ⟨n, rfl⟩ := hx
-        simp only
-        rw [← n.mul_prod_erase' i _ (fun i ↦ dp_zero R (v i)), mul_comm,
-          ← mul_assoc]
-        rw [dp_mul, nsmul_eq_mul, mul_assoc, ← nsmul_eq_mul]
-        apply Submodule.smul_of_tower_mem
-        apply Submodule.mem_span_of_mem
-        use Finsupp.single i k + n
-        simp only
-        rw [← (Finsupp.single i k + n).mul_prod_erase' i _ (fun i ↦ dp_zero _ _)]
-        simp
-      | add x y hxmem hymem hx hy =>
-        rw [add_mul]
-        apply Submodule.add_mem _ hx hy
-      | smul r x hxmem hx =>
-        rw [smul_mul_assoc]
-        apply Submodule.smul_mem _ _ hx
-    | add m n hm_mem hn_mem hm hn =>
-      rw [dp_add, mul_sum]
-      apply Submodule.sum_mem
-      intro c hc
-      rw [← mul_assoc]
-      exact hn (x * dp R c.1 m) c.2 (hm x c.1 hx)
-
--- #eval Multiset.multinomial {1, 2, 2}
--- #print Nat.multinomial
--- #eval Multiset.toFinsupp {1, 2, 2}
-
-
-
-end
 
 end DividedPowerAlgebra
