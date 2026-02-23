@@ -11,7 +11,7 @@ import DividedPowers.DPAlgebra.Graded.GradeOne
 import DividedPowers.DPAlgebra.Graded.GradeZero
 import DividedPowers.DPAlgebra.Init
 import DividedPowers.DPAlgebra.Misc
-import DividedPowers.DPAlgebra.PolynomialLaw -- It uses sorry
+--import DividedPowers.DPAlgebra.PolynomialLaw -- It uses sorry
 import DividedPowers.DPAlgebra.RobyLemma9
 --import DividedPowers.DPMorphism --In PR #22318
 import DividedPowers.ExponentialModule.Basic -- In #30972, #30974, #30975, #30976 (partially PR'd)
@@ -46,7 +46,7 @@ import DividedPowers.ForMathlib.RingTheory.Localization.FractionRing
 --import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Evaluation -- In PR 15019
 --import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.LinearTopology -- In PR #15007
 --import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Order -- In PR #14983
---import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.PiTopology -- In PR #14866 and PR #14989
+--import DividedPowers.ForMathlib.RingTheory.MvPDividedPowers/DPAlgebra/Free.leanowerSeries.PiTopology -- In PR #14866 and PR #14989
 import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.StronglySummable.Basic -- it uses sorry
 import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.StronglySummable.Topology
 --import DividedPowers.ForMathlib.MvPowerSeries.Sandbox -- Test file, do not import here.
@@ -67,7 +67,7 @@ import DividedPowers.ForMathlib.Topology.Algebra.LinearTopology
 import DividedPowers.IdealAdd
 import DividedPowers.IdealAdd_v1 -- For comparison of definitions
 --import DividedPowers.Padic
-import DividedPowers.PolynomialLaw.BaseChange
+/- import DividedPowers.PolynomialLaw.BaseChange
 --import DividedPowers.PolynomialLaw.Basic -- In PR #22912
 import DividedPowers.PolynomialLaw.Basic -- toFun, PR #26719, and new basic stuff
 import DividedPowers.PolynomialLaw.BiCoeff
@@ -81,6 +81,6 @@ import DividedPowers.PolynomialLaw.LocFinsupp
 import DividedPowers.PolynomialLaw.MultiCoeff
 import DividedPowers.PolynomialLaw.MultiHomogeneous -- It has a sorry
 import DividedPowers.PolynomialLaw.Polarized
-import DividedPowers.PolynomialLaw.Prod
+import DividedPowers.PolynomialLaw.Prod -/
 --import DividedPowers.RatAlgebra -- In PR #22322
 --import DividedPowers.SubDPIdeal
