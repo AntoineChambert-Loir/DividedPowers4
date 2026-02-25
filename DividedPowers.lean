@@ -40,9 +40,9 @@ import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Pi
 import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Prod
 import DividedPowers.ForMathlib.RingTheory.AugmentationIdeal -- uses sorry.
 --import DividedPowers.ForMathlib.RingTheory.Congruence.Hom
-import DividedPowers.ForMathlib.RingTheory.DividedPowers.Basic
+import DividedPowers.ForMathlib.RingTheory.DividedPowers.Basic -- In #35768
 import DividedPowers.ForMathlib.RingTheory.GradedAlgebra.Basic
-import DividedPowers.ForMathlib.RingTheory.Localization.FractionRing
+import DividedPowers.ForMathlib.RingTheory.Localization.FractionRing -- In #35770
 --import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Evaluation -- In PR 15019
 --import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.LinearTopology -- In PR #15007
 --import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Order -- In PR #14983

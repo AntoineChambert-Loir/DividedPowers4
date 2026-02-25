@@ -19,6 +19,8 @@ We provide some additional formulas for computation with divided powers.
   `hI.dpow n (∏ i ∈ s, r i) = n.factorial ^ (s.card - 1) • (∏ i ∈ s, hI.dpow n (r i))`.
 -/
 
+-- In #35768
+
 namespace DividedPowers
 
 open Finset
@@ -41,7 +43,6 @@ theorem dpow_linearCombination {A : Type*} [CommSemiring A] [Algebra R A] {J : I
   rw [Finsupp.sum, hJ.dpow_sum (fun i hi ↦ Submodule.smul_of_tower_mem J _ (hx i hi))]
   apply Finset.sum_congr rfl
   intros
-  simp only [Finsupp.prod]
   apply Finset.prod_congr rfl
   intro i hi
   rw [Algebra.smul_def, hJ.dpow_mul (hx i hi), ← map_pow, ← Algebra.smul_def]
@@ -57,24 +58,17 @@ theorem dpow_prod {r : ι → R} {s : Finset ι} (hs : s.Nonempty) (hs' : ∀ i 
     rw [Finset.prod_insert has]
     by_cases h : s.Nonempty
     · rw [dpow_mul]
-      · simp only [Finset.card_insert_of_notMem has, add_tsub_cancel_right,
-          nsmul_eq_mul, Nat.cast_pow, Finset.prod_insert has]
-        rw [hrec h]
-        · simp only [nsmul_eq_mul, Nat.cast_pow, ← mul_assoc]
-          apply congr_arg₂ _ _ rfl
-          have : #s = #s - 1 + 1 := by
-            refine (Nat.sub_eq_iff_eq_add ?_).mp rfl
-            exact one_le_card.mpr h
-          nth_rewrite 2 [this]
-          rw [mul_comm, pow_succ, mul_assoc, hI.factorial_mul_dpow_eq_pow]
-          exact hs' a (mem_insert_self a s)
-        · intro i hi
-          apply hs' i (mem_insert_of_mem hi)
-      obtain ⟨j, hj⟩ := h
-      rw [Finset.prod_eq_prod_diff_singleton_mul hj]
-      apply Ideal.mul_mem_left
-      apply hs' j (mem_insert_of_mem hj)
-    · simp only [not_nonempty_iff_eq_empty] at h
-      simp [h]
+      · simp only [Finset.card_insert_of_notMem has, add_tsub_cancel_right, nsmul_eq_mul,
+          Nat.cast_pow, Finset.prod_insert has,
+          hrec h (fun i hi ↦ hs' i (mem_insert_of_mem hi)), ← mul_assoc]
+        apply congr_arg₂ _ _ rfl
+        have : #s = #s - 1 + 1 := by grind
+        nth_rewrite 2 [this]
+        rw [mul_comm, pow_succ, mul_assoc, hI.factorial_mul_dpow_eq_pow]
+        exact hs' a (mem_insert_self a s)
+      · obtain ⟨j, hj⟩ := h
+        rw [Finset.prod_eq_prod_diff_singleton_mul hj]
+        exact I.mul_mem_left _ (hs' j (mem_insert_of_mem hj))
+    · simp [not_nonempty_iff_eq_empty.mp h]
 
 end DividedPowers

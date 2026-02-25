@@ -7,6 +7,8 @@ import Mathlib.RingTheory.Localization.FractionRing
 
 /-! # Results about localization -/
 
+-- In #35770
+
 namespace Localization
 
 variable {R : Type*} [CommRing R] {M : Submonoid R}
