@@ -47,13 +47,15 @@ We will later show that that `DividedPowerAlgebra R M` has divided powers (see t
 
 -/
 
-section
+/- section
+
+-- Unused
 
 theorem Ideal.sub_mem_ofRel {R : Type*} [Ring R] {r : R → R → Prop} {a b : R} (hr : r a b) :
     a - b ∈ Ideal.ofRel r :=
   Submodule.subset_span ⟨a, b, hr, by rw [sub_add_cancel]⟩
 
-end
+end -/
 
 variable (R M : Type*) [CommSemiring R] [AddCommMonoid M] [Module R M]
 
@@ -221,16 +223,6 @@ lemma prod_dp {ι : Type*} (s : Finset ι) {n : ι → ℕ} (m : M) :
     apply congr_arg₂ _ _ rfl
     rw [multinomial_insert hi, mul_comm, cast_mul, sum_insert hi]
 
-lemma pow_dp' (n : ℕ) (m : M) (k : ℕ) :
-    (dp R n m) ^ k = (Nat.multinomial (range k) (fun _ ↦ n)) * dp R (k * n) m := by
-  rw [← Fin.prod_const, prod_dp]
-  simp [Nat.multinomial]
-
-lemma pow_dp (n : ℕ) (m : M) (k : ℕ) :
-    (dp R n m) ^ k = (Multiset.plurinomial (k • {n})) * dp R (k * n) m := by
-  rw [Multiset.plurinomial_nsmul_singleton, ← Fin.prod_const, prod_dp]
-  simp [Nat.multinomial]
-
 open scoped Nat
 
 theorem natFactorial_mul_dp_eq (n : ℕ) (x : M) :
@@ -332,6 +324,21 @@ theorem submodule_span_prod_dp_eq_top (hv : Submodule.span R (Set.range v) = ⊤
       rw [← mul_assoc]
       exact hn (x * dp R c.1 m) c.2 (hm x c.1 hx)
 
+
+-- Up to here, in #35804
+
+-- Not clear if we want this version
+lemma pow_dp' (n : ℕ) (m : M) (k : ℕ) :
+    (dp R n m) ^ k = (Nat.multinomial (range k) (fun _ ↦ n)) * dp R (k * n) m := by
+  rw [← Fin.prod_const, prod_dp]
+  simp [Nat.multinomial]
+
+-- Needs plurinomial
+lemma pow_dp (n : ℕ) (m : M) (k : ℕ) :
+    (dp R n m) ^ k = (Multiset.plurinomial (k • {n})) * dp R (k * n) m := by
+  rw [Multiset.plurinomial_nsmul_singleton, ← Fin.prod_const, prod_dp]
+  simp [Nat.multinomial]
+
 end
 
 variable (R)
@@ -380,40 +387,40 @@ theorem lift'_apply_dp {f : ℕ × M → A} (hf_zero : ∀ m, f (0, m) = 1)
     lift' hf_zero hf_smul hf_mul hf_add (dp R n m) = f ⟨n, m⟩ := by
   rw [dp_def, lift'_apply hf_zero hf_smul hf_mul hf_add, aeval_X]
 
-variable {I : Ideal A} (hI : DividedPowers I) (φ : M →ₗ[R] A) (hφ : ∀ m, φ m ∈ I)
+variable {I : Ideal A} (hI : DividedPowers I) (g : M →ₗ[R] A) (hg : ∀ m, g m ∈ I)
 
 /-- The weak universal property of a divided power algebra for morphisms to divided power rings -/
 def lift : DividedPowerAlgebra R M →ₐ[R] A :=
-  lift' (f := fun nm => hI.dpow nm.1 (φ nm.2))
-    (fun m => hI.dpow_zero (hφ m))
+  lift' (f := fun nm => hI.dpow nm.1 (g nm.2))
+    (fun m => hI.dpow_zero (hg m))
     (fun n r m => by
       dsimp only
-      rw [LinearMap.map_smulₛₗ, RingHom.id_apply, ← algebraMap_smul A r (φ m), smul_eq_mul,
-        hI.dpow_mul (hφ m), ← smul_eq_mul, ← map_pow, algebraMap_smul])
-    (fun n p m => by rw [hI.mul_dpow (hφ m), ← nsmul_eq_mul])
-    (fun n u v => by simp [hI.dpow_add (hφ u) (hφ v)])
+      rw [LinearMap.map_smulₛₗ, RingHom.id_apply, ← algebraMap_smul A r (g m), smul_eq_mul,
+        hI.dpow_mul (hg m), ← smul_eq_mul, ← map_pow, algebraMap_smul])
+    (fun n p m => by rw [hI.mul_dpow (hg m), ← nsmul_eq_mul])
+    (fun n u v => by simp [hI.dpow_add (hg u) (hg v)])
 
-variable {φ}
+variable {g}
 
 @[simp]
 theorem lift_apply (p : MvPolynomial (ℕ × M) R) :
-    lift hI φ hφ (mkAlgHom R (Rel R M) p) = aeval (fun nm : ℕ × M => hI.dpow nm.1 (φ nm.2)) p := by
+    lift hI g hg (mkAlgHom R (Rel R M) p) = aeval (fun nm : ℕ × M => hI.dpow nm.1 (g nm.2)) p := by
   rw [lift, lift'_apply]
 
 @[simp]
 theorem lift_apply_dp (n : ℕ) (m : M) :
-    lift hI φ hφ (dp R n m) = hI.dpow n (φ m) := by rw [lift, lift'_apply_dp]
+    lift hI g hg (dp R n m) = hI.dpow n (g m) := by rw [lift, lift'_apply_dp]
 
 theorem lift_unique {f : DividedPowerAlgebra R M →ₐ[R] A}
-    (hf : ∀ n m, f (dp R n m) = hI.dpow n (φ  m)) : f = lift hI φ hφ :=
+    (hf : ∀ n m, f (dp R n m) = hI.dpow n (g m)) : f = lift hI g hg :=
   algHom_ext (fun _ _ ↦ by rw [lift_apply_dp, hf])
 
 @[simp]
-theorem lift_ι_apply (m : M) : lift hI φ hφ (ι R M m) = φ m := by
-  simp [ι_def, hI.dpow_one (hφ m)]
+theorem lift_ι_apply (m : M) : lift hI g hg (ι R M m) = g m := by
+  simp [ι_def, hI.dpow_one (hg m)]
 
 @[simp]
-theorem ι_comp_lift : (lift hI φ hφ).toLinearMap.comp (ι R M) = φ := by
+theorem ι_comp_lift : (lift hI g hg).toLinearMap.comp (ι R M) = g := by
   ext; simp
 
 end UniversalProperty

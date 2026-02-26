@@ -10,6 +10,7 @@ import Mathlib.Algebra.MvPolynomial.Monad
 import Mathlib.Algebra.MvPolynomial.Supported
 import Mathlib.RingTheory.Ideal.Quotient.Operations
 import Mathlib.RingTheory.TensorProduct.MvPolynomial
+import Mathlib
 
 /-! # Miscellaneous lemmas and definitions for `MvPolynomial`
 
@@ -45,28 +46,28 @@ theorem eval₂_X_pow {s : σ} {n : ℕ} : ((X s) ^ n).eval₂ f x = (x s) ^ n :
   simp
 
 @[simp]
-theorem eval₂Hom.smul (f : R →+* S) (g : σ → S) (r : R) (P : MvPolynomial σ R) :
+theorem eval₂Hom_smul (f : R →+* S) (g : σ → S) (r : R) (P : MvPolynomial σ R) :
     eval₂Hom f g (r • P) = f r • eval₂Hom f g P := by
-  simp only [smul_eq_C_mul, coe_eval₂Hom, eval₂_mul, eval₂_C, smul_eq_mul]
+  simp [smul_eq_C_mul]
 
-/-- `eval₂` as an `AddMonoidHom`. -/
+/- /-- `eval₂` as an `AddMonoidHom`. -/
 @[simps]
 def eval₂AddMonoidHom (f : R →+* S) (g : σ → S) :
     (MvPolynomial σ R) →+ S where
-  toFun := eval₂ f g
-  map_zero' := eval₂_zero _ _
+  toFun        := eval₂ f g
+  map_zero'    := eval₂_zero _ _
   map_add' _ _ := eval₂_add _ _
 
+-- This is called `eval₂Hom` in Mathlib.
 /-- `eval₂` as a `RingHom`. -/
 def eval₂RingHom (f : R →+* S) (g : σ → S) : (MvPolynomial σ R) →+* S :=
   { eval₂AddMonoidHom f g with
-    map_one' := eval₂_one _ _
-    map_mul' := fun _ _ => eval₂_mul _ _ }
-
-@[simp]
-theorem coe_eval₂RingHom (f : R →+* S) (g : σ → S) : ⇑(eval₂RingHom f g) = eval₂ f g :=
-  rfl
-
+    map_one'     := eval₂_one _ _
+    map_mul' _ _ := eval₂_mul _ _ }
+ -/
+/- @[simp]
+theorem coe_eval₂RingHom (f : R →+* S) (g : σ → S) : ⇑(eval₂Hom f g) = eval₂ f g := rfl
+ -/
 section Algebra
 
 variable (R)
@@ -76,7 +77,7 @@ variable [Algebra R S]
 /-- `MvPolynomial.eval₂ (algebraMap R S) g` as an `R`-algebra homomorphism. -/
 def eval₂AlgHom (g : σ → S) : MvPolynomial σ R →ₐ[R] S :=
   { eval₂Hom (algebraMap R S) g with
-    commutes' := fun r => by rw [RingHom.toFun_eq_coe, coe_eval₂Hom, algebraMap_eq, eval₂_C] }
+    commutes' r := by simp }
 
 variable {R}
 
@@ -92,9 +93,6 @@ theorem eval₂AlgHom_X' (g : σ → S) (i : σ) :
   eval₂AlgHom R g (X i : MvPolynomial σ R) = g i := eval₂_X (algebraMap R S) g i
 
 variable {S' : Type*} [CommSemiring S'] [Algebra R S']
-
-lemma C_eq_algebraMap (r : R) :
-    C (algebraMap R S r) = algebraMap R (MvPolynomial σ S) r := rfl
 
 theorem aeval_range (s : σ → S) : (aeval s).range = Algebra.adjoin R (Set.range s) := by
   apply le_antisymm
@@ -117,16 +115,18 @@ open Ideal.Quotient
 theorem mkₐ_eq_aeval {C : Type*} [CommRing C] {D : Type*} (I : Ideal (MvPolynomial D C)) :
     Ideal.Quotient.mkₐ C I = aeval fun d : D => Ideal.Quotient.mk I (X d) := by
   ext d
-  simp only [mkₐ_eq_mk, aeval_X]
+  simp
 
 theorem mk_eq_eval₂ {C : Type*} [CommRing C] {D : Type*} (I : Ideal (MvPolynomial D C)) :
     (Ideal.Quotient.mk I).toFun =
       eval₂ (algebraMap C (MvPolynomial D C ⧸ I)) fun d : D => Ideal.Quotient.mk I (X d) := by
   ext d
-  simp_rw [RingHom.toFun_eq_coe, ← mkₐ_eq_mk C, mkₐ_eq_aeval, aeval_X]
-  rfl
+  simp_rw [RingHom.toFun_eq_coe, ← mkₐ_eq_mk C, mkₐ_eq_aeval, aeval_X, aeval,
+    AlgHom.coe_mk, coe_eval₂Hom]
 
 end Eval
+
+-- Up to here, in #35803
 
 section BaseChange
 

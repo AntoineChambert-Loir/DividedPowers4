@@ -9,7 +9,7 @@ import DividedPowers.DPAlgebra.Free
 import DividedPowers.DPAlgebra.Graded.Basic
 import DividedPowers.DPAlgebra.Graded.GradeOne
 import DividedPowers.DPAlgebra.Graded.GradeZero
-import DividedPowers.DPAlgebra.Init
+import DividedPowers.DPAlgebra.Init -- Partly in #35804
 import DividedPowers.DPAlgebra.Misc
 --import DividedPowers.DPAlgebra.PolynomialLaw -- It uses sorry
 import DividedPowers.DPAlgebra.RobyLemma9
@@ -23,7 +23,7 @@ import DividedPowers.ForMathlib.Algebra.Algebra.Bilinear
 -- import DividedPowers.ForMathlib.Algebra.BigOperators.Group.Finset.Basic -- In PR #30539
 -- import DividedPowers.ForMathlib.Algebra.Module.LinearMap.Defs -- In PR #30546
 --import DividedPowers.ForMathlib.Algebra.MvPolynomial.Equiv -- In PR #15019
-import DividedPowers.ForMathlib.Algebra.MvPolynomial.Lemmas
+import DividedPowers.ForMathlib.Algebra.MvPolynomial.Lemmas -- Partly in #35803
 --import DividedPowers.ForMathlib.Algebra.Polynomial.AlgebraMap -- In PR #30547
 import DividedPowers.ForMathlib.Algebra.TrivSqZeroExt
 import DividedPowers.ForMathlib.Data.FinsetLemmas
