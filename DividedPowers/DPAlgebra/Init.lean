@@ -105,6 +105,9 @@ lemma mk_surjective : Function.Surjective (@mk R M _ _ _) := RingQuot.mkAlgHom_s
 lemma mk_C (a : R) : mk (C a) = algebraMap R (DividedPowerAlgebra R M) a := by
   rw [← MvPolynomial.algebraMap_eq, AlgHom.commutes] -/
 
+lemma mkAlgHom_surjective : Function.Surjective (mkAlgHom R (Rel R M)) :=
+  RingQuot.mkAlgHom_surjective _ _
+
 lemma mkAlgHom_C (a : R) :
     mkAlgHom R (Rel R M) (C a) = algebraMap R (DividedPowerAlgebra R M) a := by
   rw [← MvPolynomial.algebraMap_eq, AlgHom.commutes]
@@ -257,7 +260,7 @@ theorem algHom_ext_iff {A : Type*} [CommSemiring A] [Algebra R A]
     (f = g) ↔ (∀ n m, f (dp R n m) = g (dp R n m)) := by
   refine ⟨fun h _ _ ↦ by rw [h], fun h ↦ ?_⟩
   . rw [DFunLike.ext'_iff]
-    apply Function.Surjective.injective_comp_right (mkAlgHom_surjective R (Rel R M))
+    apply Function.Surjective.injective_comp_right mkAlgHom_surjective
     simp only [← AlgHom.coe_comp, ← AlgHom.coe_comp, ← DFunLike.ext'_iff]
     exact MvPolynomial.algHom_ext fun ⟨n, m⟩ => h n m
 
@@ -482,7 +485,7 @@ theorem lift_comp_ι :
 theorem lift_surjective {f : M →ₗ[R] N} (hf : Function.Surjective f) :
     Function.Surjective (LinearMap.lift R f) := by
   rw [← AlgHom.range_eq_top, ← Algebra.map_top (LinearMap.lift R f), eq_top_iff,
-    ← (AlgHom.range_eq_top (mkAlgHom R (Rel R N))).mpr (mkAlgHom_surjective R (Rel R N)),
+    ← (AlgHom.range_eq_top (mkAlgHom R (Rel R N))).mpr mkAlgHom_surjective,
     ← Algebra.map_top, (Subalgebra.gc_map_comap _).le_iff_le, ← MvPolynomial.adjoin_range_X,
     Algebra.adjoin_le_iff]
   intro

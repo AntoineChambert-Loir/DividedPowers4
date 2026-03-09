@@ -141,10 +141,9 @@ theorem mk_comp_toSupported :
 theorem surjective_of_supported :
     Surjective ((mkAlgHom R (Rel R M)).comp (Subalgebra.val (supported R {nm : ℕ × M | 0 < nm.1}))) := by
   intro f
-  sorry
-  /- obtain ⟨p', hp'⟩ := DividedPowerAlgebra.mk_surjective f
+  obtain ⟨p', hp'⟩ :=  mkAlgHom_surjective f
   use toSupported R p'
-  rw [← AlgHom.comp_apply, AlgHom.comp_assoc, mk_comp_toSupported, ← hp'] -/
+  rw [← AlgHom.comp_apply, AlgHom.comp_assoc, mk_comp_toSupported, ← hp']
 
 variable {R M}
 

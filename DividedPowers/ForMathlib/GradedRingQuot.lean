@@ -39,7 +39,7 @@ Let `R` be a commutative semiring, `A` a commutative `R`-algebra, `I` an ideal i
 
 open DirectSum Function
 
-section Classes
+/-section Classes
 
 namespace LinearMapClass
 
@@ -65,9 +65,9 @@ theorem toLinearMap_coe_coe {F : Type*} [FunLike F β γ] [AlgHomClass F R β γ
 
 end AlgHomClass
 
-end Classes
+end Classes-/
 
-theorem DFinsupp.mk_eq_sum {ι : Type*} [DecidableEq ι] {β : ι → Type*}
+/- theorem DFinsupp.mk_eq_sum {ι : Type*} [DecidableEq ι] {β : ι → Type*}
     [∀ i, AddCommMonoid (β i)] (s : Finset ι) (f : ∀ i, β i) :
     (DFinsupp.mk s fun i => f i) = s.sum fun i => of β i (f i) := by
   ext i
@@ -77,206 +77,7 @@ theorem DFinsupp.mk_eq_sum {ι : Type*} [DecidableEq ι] {β : ι → Type*}
       (fun j _ hij =>  of_eq_of_ne _ _ _ hij.symm), of_eq_same]
   · rw [DFinsupp.finset_sum_apply, Finset.sum_eq_zero
       (fun j hj => of_eq_of_ne _ _ _ (ne_of_mem_of_not_mem hj hi).symm)]
-
-section DirectSum
-
-namespace DirectSum
-
-variable {ι : Type*} {R : Type*} [Semiring R]
-
-/-- The components of a direct sum, as add_monoid_hom -/
-def component' {β : ι → Type*} [∀ i, AddCommMonoid (β i)] (i : ι) : (⨁ i, β i) →+ β i :=
-  component ℕ ι β i
-
-theorem component'_eq {β : ι → Type*} [∀ i, AddCommMonoid (β i)] (x : DirectSum ι β) (i : ι) :
-    component' i x = x i := rfl
-
-theorem ext_iff' {β : ι → Type*} [∀ i, AddCommMonoid (β i)]
-    (x y : ⨁ i, β i) : x = y ↔ ∀ i, component' i x = component' i y := DirectSum.ext_iff
-
-/- Four versions of a direct sum of maps
-   direct_sum.map'' : for add_monoid_hom
-   direct_sum.lmap''  : for linear_map
-   the  double-primed versions are defined in terms of classes
-   In principle, the latter should suffice. -/
-
-variable [DecidableEq ι]
-
-/-- `AddMonoidHom` from a direct sum to a direct sum given by families of
-  `AddMonoidHomClass` maps. -/
-def map'' {β γ : ι → Type*} [∀ i, AddCommMonoid (β i)] [∀ i, AddCommMonoid (γ i)]
-    {F : ∀ _ : ι, Type*} [∀ i, FunLike (F i) (β i) (γ i)]
-    [∀ i, AddMonoidHomClass (F i) (β i) (γ i)] (h : ∀ i, F i) :
-    (⨁ i, β i) →+ ⨁ i, γ i :=
-  toAddMonoid fun i => (of γ i).comp (h i)
-
-/-- `AddMonoidHom` from a direct sum to a direct sum given by families of `AddMonoidHom`s. -/
-def map' {β γ : ι → Type*} [∀ i, AddCommMonoid (β i)] [∀ i, AddCommMonoid (γ i)]
-    (h : ∀ i, β i →+ γ i) : (⨁ i, β i) →+ (⨁ i, γ i) :=
-  toAddMonoid fun i => (of γ i).comp (h i)
-
-/-- `LinearMap` from a direct sum to a direct sum given by families of `LinearMapClass` maps. -/
-def lmap'' {β γ : ι → Type*}
-    [∀ i, AddCommMonoid (β i)] [∀ i, Module R (β i)]
-    [∀ i, AddCommMonoid (γ i)] [∀ i, Module R (γ i)]
-    {F : ∀ _ : ι, Type*} [∀ i, FunLike (F i) (β i) (γ i)] [∀ i, LinearMapClass (F i) R (β i) (γ i)]
-    (h : ∀ i, F i) : (⨁ i, β i) →ₗ[R] (⨁ i, γ i) :=
-  toModule R ι (⨁ i, γ i) fun i => (lof R ι γ i).comp (h i : β i →ₗ[R] γ i)
-
-/-- `LinearMap` from a direct sum to a direct sum given by families of `LinearMap`s. -/
-def lmap' {β γ : ι → Type*} [∀ i, AddCommMonoid (β i)] [∀ i, Module R (β i)]
-    [∀ i, AddCommMonoid (γ i)] [∀ i, Module R (γ i)] (h : ∀ i, β i →ₗ[R] γ i) :
-    (⨁ i, β i) →ₗ[R] (⨁ i, γ i) :=
-  toModule R ι _ fun i => (lof R ι γ i).comp (h i)
-
-theorem map'_eq_lmap'_toAddMonoidHom {β γ : ι → Type*} [∀ i, AddCommMonoid (β i)]
-    [∀ i, AddCommMonoid (γ i)] (h : ∀ i, β i →+ γ i) :
-    map' h = (lmap' fun i => (h i).toNatLinearMap).toAddMonoidHom := rfl
-
-theorem lmap'_toAddMonoidHom_eq_map' {β γ : ι → Type*} [∀ i, AddCommMonoid (β i)]
-    [∀ i, Module R (β i)] [∀ i, AddCommMonoid (γ i)] [∀ i, Module R (γ i)]
-    (h : ∀ i, β i →ₗ[R] γ i) :
-    (lmap' h).toAddMonoidHom = map' fun i => (h i).toAddMonoidHom := rfl
-
--- Lemmas to help computation
-theorem map''_of {β γ : ι → Type*} [∀ i, AddCommMonoid (β i)] [∀ i, AddCommMonoid (γ i)]
-    {F : ι → Type*} [∀ i, FunLike (F i) (β i) (γ i)] [∀ i, AddMonoidHomClass (F i) (β i) (γ i)]
-    (h : ∀ i, F i) (i : ι) (x : β i) : map'' h (of β i x) = of γ i (h i x) := by
-  simp only [map'', toAddMonoid_of, AddMonoidHom.coe_comp, AddMonoidHom.coe_coe]
-  rfl
-
-theorem map''_apply {β γ : ι → Type*} [Π i, AddCommMonoid (β i)] [Π i, AddCommMonoid (γ i)]
-    {F : Π _i, Type*} [∀ i, FunLike (F i) (β i) (γ i)] [Π i, AddMonoidHomClass (F i) (β i) (γ i)]
-    (h : Π i, F i) (x : DirectSum ι β) (i : ι) : map'' h x i = h i (x i) := by
-  let f : DirectSum ι β →+ γ i :=
-  { toFun := fun x => map'' h x i
-    map_zero' := by simp only [map_zero, zero_apply]
-    map_add' := by simp only [map_add, add_apply, forall_const] }
-  let g : DirectSum ι β →+ γ i :=
-  { toFun := fun y => h i (y i)
-    map_zero' := by simp only [zero_apply, map_zero]
-    map_add' := by simp only [add_apply, map_add, forall_const] }
-  change f x = g x
-  suffices f = g by
-    rw [this]
-  apply addHom_ext
-  intros j y
-  simp only [AddMonoidHom.coe_mk, ZeroHom.coe_mk, map''_of, f, g]
-  by_cases hj : i = j
-  · rw [hj]; simp only [of_eq_same]
-  · simp only [of_eq_of_ne j i _ hj, map_zero]
-
-theorem map'_of {β γ : ι → Type*} [∀ i, AddCommMonoid (β i)] [∀ i, AddCommMonoid (γ i)]
-    (h : ∀ i, β i →+ γ i) (i : ι) (x : β i) :
-    map' h (of β i x) = of γ i (h i x) := by
-  simp [map', toAddMonoid_of, AddMonoidHom.coe_comp]
-
-theorem lmap'_lof {β γ : ι → Type*} [∀ i, AddCommMonoid (β i)] [∀ i, AddCommMonoid (γ i)]
-    [∀ i, Module R (β i)] [∀ i, Module R (γ i)] (h : ∀ i, β i →ₗ[R] γ i) (i : ι) (x : β i) :
-  lmap' h (lof R ι β i x) = lof R ι γ i (h i x) := by
-  simp [lmap', toModule_lof, LinearMap.coe_comp]
-
-theorem lmap'_surjective {β γ : ι → Type*} [∀ i, AddCommMonoid (β i)] [∀ i, Module R (β i)]
-    [∀ i, AddCommMonoid (γ i)] [∀ i, Module R (γ i)] (f : ∀ i, β i →ₗ[R] γ i)
-    (h : ∀ i, Surjective (f i)) : Surjective (lmap' f) := by
-  intro c
-  induction c using DirectSum.induction_on with
-  | zero => exact ⟨0, map_zero _⟩
-  | of i xi =>
-    use of _ i (h i xi).choose
-    rw [← lof_eq_of R, lmap'_lof, lof_eq_of, (h i xi).choose_spec]
-  | add x y hx hy =>
-    obtain ⟨a, ha, rfl⟩ := hx
-    obtain ⟨b, hb, rfl⟩ := hy
-    exact ⟨a + b, map_add _ _ _⟩
-
-theorem lmap'_apply {β γ : ι → Type*} [∀ i, AddCommMonoid (β i)] [∀ i, AddCommMonoid (γ i)]
-    [∀ i, Module R (β i)] [∀ i, Module R (γ i)] (h : ∀ i, β i →ₗ[R] γ i) (x : ⨁ i, β i) (i : ι) :
-    lmap' h x i = h i (x i) := by
-  simp only [apply_eq_component R, ← LinearMap.comp_apply]
-  apply LinearMap.congr_fun
-  ext j y
-  simp only [LinearMap.comp_apply, lmap'_lof]
-  simp only [lof_eq_of, ← apply_eq_component]
-  by_cases hji : i = j
-  · rw [hji]; simp only [of_eq_same]
-  · simp only [of_eq_of_ne j i _ hji, map_zero]
-
-theorem toModule_comp_lmap'_eq {β γ : ι → Type*} {δ : Type*} [∀ i, AddCommMonoid (β i)]
-    [∀ i, AddCommMonoid (γ i)] [AddCommMonoid δ] [∀ i, Module R (β i)] [∀ i, Module R (γ i)]
-    [Module R δ] (h : ∀ i, β i →ₗ[R] γ i) (f : ∀ i, γ i →ₗ[R] δ) (x : ⨁ i, β i) :
-    toModule R ι δ f (lmap' h x) = toModule R ι δ (fun i => (f i).comp (h i)) x := by
-  rw [← LinearMap.comp_apply]
-  apply LinearMap.congr_fun
-  ext i y
-  simp only [LinearMap.coe_comp, comp_apply, lmap'_lof, toModule_lof]
-
-theorem map'_apply {β γ : ι → Type*} [∀ i, AddCommMonoid (β i)] [∀ i, AddCommMonoid (γ i)]
-    (h : ∀ i, β i →+ γ i) (x : ⨁ i, β i) (i : ι) : map' h x i = h i (x i) := by
-  let f : (⨁ i, β i) →+ γ i :=
-    { toFun     := fun x => map' h x i
-      map_zero' := by simp only [map_zero, zero_apply]
-      map_add'  := by simp only [map_add, add_apply, forall_const] }
-  let g : (⨁ i, β i) →+ γ i :=
-    { toFun     := fun y => h i (y i)
-      map_zero' := by simp only [zero_apply, map_zero]
-      map_add'  := by simp only [add_apply, map_add, forall_const] }
-  change f x = g x
-  apply DFunLike.congr_fun
-  ext j y
-  simp only [f, g, AddMonoidHom.coe_comp, AddMonoidHom.coe_mk, ZeroHom.coe_mk, comp_apply,
-    map'_of]
-  by_cases hj : i = j
-  · rw [hj]; simp only [of_eq_same]
-  · simp only [of_eq_of_ne j i _ hj, map_zero]
-
-theorem mk_apply {β : ι → Type*} [∀ i, AddCommMonoid (β i)] (s : Finset ι)
-    (f : (∀ i : (↑s : Set ι), β i.1)) (i : ι) :
-    mk β s f i = if h : i ∈ s then f ⟨i, h⟩ else 0 := rfl
-
-theorem mk_eq_sum' {β : ι → Type*} [∀ i, AddCommMonoid (β i)] (s : Finset ι) (f : ∀ i, β i) :
-    (mk β s (fun i => f i)) = s.sum (fun i => of β i (f i)) := by
-  apply DFinsupp.ext
-  intro i
-  convert mk_apply s _ i
-  rw [DFinsupp.finset_sum_apply]
-  split_ifs with hi
-  · rw [Finset.sum_eq_single_of_mem i hi (fun j _ hij => of_eq_of_ne _ _ _ hij.symm),
-      ← lof_eq_of ℕ, lof_apply]
-  · exact Finset.sum_eq_zero (fun _ hj ↦ of_eq_of_ne _ _ _ (ne_of_mem_of_not_mem hj hi).symm)
-
-theorem mk_eq_sum {β : ι → Type*} [∀ i, AddCommMonoid (β i)] (s : Finset ι) (x : ∀ i : s, β i) :
-  mk β s x = s.sum fun i => of β i (if h : i ∈ s then x ⟨i, h⟩ else 0) := by
-  apply DFinsupp.ext
-  intro i
-  rw [mk_apply]
-  split_ifs with hi
-  · rw [DFinsupp.finset_sum_apply, Finset.sum_eq_single i (fun j _ hji =>
-      of_eq_of_ne _ _ _ hji.symm), of_eq_same, dif_pos hi]
-    · intro his
-      rw [of_eq_same, dif_neg his]
-  · rw [DFinsupp.finset_sum_apply, Finset.sum_eq_zero
-      (fun j hj => of_eq_of_ne _ _ _ (ne_of_mem_of_not_mem hj hi).symm)]
-
-theorem toAddMonoid_mk {β : ι → Type*} [∀ i, AddCommMonoid (β i)] {γ : Type*} [AddCommMonoid γ]
-    (ψ : ∀ i, β i →+ γ) (s : Finset ι) (x : ∀ i : s, β i) :
-    toAddMonoid ψ (mk β s x) =
-      s.sum fun i => ψ i (if h : i ∈ s then x ⟨i, h⟩ else 0) := by
-  rw [mk_eq_sum, map_sum, Finset.sum_congr rfl (fun i _ => toAddMonoid_of _ _ _)]
-
-theorem map_apply' {β γ : ι → Type*} [∀ i, AddCommMonoid (β i)] [∀ i, AddCommMonoid (γ i)]
-    [∀ (i : ι) (x : β i), Decidable (x ≠ 0)]  {F : ∀ _, Type*} [∀ i, FunLike (F i) (β i) (γ i)]
-    [∀ i, AddMonoidHomClass (F i) (β i) (γ i)] (h : ∀ i, F i) (x : ⨁ i, β i) :
-    map'' h x = mk γ x.support (fun i => (h i) (x i)) := by
-  conv_lhs => rw [← sum_support_of x]
-  simp_rw [map_sum, map''_of]
-  rw [eq_comm]
-  convert mk_eq_sum x.support fun i => (h i) (x i)
-  rwa [dif_pos]
-
-end DirectSum
-
-end DirectSum
+ -/
 
 section GradedQuot
 
@@ -567,27 +368,27 @@ instance SetLike.GradedMonoid_RingQuot [AddMonoid ι] [h𝒜 : SetLike.GradedMon
 
 theorem quotDecompose_left_inv'_aux :
     (coeLinearMap fun i => Submodule.map (RingQuot.mkAlgHom R rel).toLinearMap (𝒜 i)).comp
-      (lmap' (quotCompMap R 𝒜 rel)) =
+      (lmap (quotCompMap R 𝒜 rel)) =
     (RingQuot.mkAlgHom R rel).toLinearMap.comp (coeLinearMap 𝒜) := by
   apply linearMap_ext
   intro i
   ext ⟨x, hx⟩
-  simp only [quotCompMap, LinearMap.coe_comp, comp_apply, AlgHom.toLinearMap_apply, lmap'_lof]
+  simp only [quotCompMap, LinearMap.coe_comp, comp_apply, AlgHom.toLinearMap_apply, lmap_lof]
   simp only [lof_eq_of, coeLinearMap_of]
   rfl
 
 theorem quotDecompose_left_inv'_aux_apply (x) :
     (coeLinearMap fun i => Submodule.map (RingQuot.mkAlgHom R rel).toLinearMap (𝒜 i))
-      (lmap' (quotCompMap R 𝒜 rel) x) =
+      (lmap (quotCompMap R 𝒜 rel) x) =
     (RingQuot.mkAlgHom R rel) (coeLinearMap 𝒜 x) := by
   let e := quotDecompose_left_inv'_aux 𝒜 rel
   simp only [LinearMap.ext_iff, LinearMap.comp_apply, AlgHom.toLinearMap_apply] at e
   apply e
 
 lemma quotDecompose'_apply (a : DirectSum ι (fun i => 𝒜 i)) :
-    (quotDecompose' R 𝒜 rel) (lmap' (quotCompMap R 𝒜 rel) a) =
+    (quotDecompose' R 𝒜 rel) (lmap (quotCompMap R 𝒜 rel) a) =
       RingQuot.mkAlgHom R rel (coeLinearMap 𝒜 a) := by
-  suffices (quotDecompose' R 𝒜 rel).comp (lmap' (quotCompMap R 𝒜 rel)) =
+  suffices (quotDecompose' R 𝒜 rel).comp (lmap (quotCompMap R 𝒜 rel)) =
       (RingQuot.mkAlgHom R rel).toLinearMap.comp (coeLinearMap 𝒜) by
     simp only [LinearMap.ext_iff, LinearMap.comp_apply, AlgHom.toLinearMap_apply] at this
     apply this
@@ -595,7 +396,7 @@ lemma quotDecompose'_apply (a : DirectSum ι (fun i => 𝒜 i)) :
   intro i
   ext ⟨x, hx⟩
   simp only [quotDecompose', LinearMap.coe_comp, comp_apply, AlgHom.toLinearMap_apply,
-    lmap'_lof, toModule_lof]
+    lmap_lof, toModule_lof]
   simp only [lof_eq_of, coeLinearMap_of, quotCompMap, LinearMap.coe_mk,
     AddHom.coe_mk, Submodule.coe_subtype]
 
@@ -603,11 +404,11 @@ section AddMonoid
 
 variable [AddMonoid ι]
 
-lemma lmap'_quotCompMap_apply [h𝒜 : GradedAlgebra 𝒜] (i : ι)
+lemma lmap_quotCompMap_apply [h𝒜 : GradedAlgebra 𝒜] (i : ι)
     (a : DirectSum ι fun i ↦ ↥(𝒜 i)) :
     RingQuot.mkAlgHom R rel ↑(((decompose fun i => 𝒜 i) ((coeLinearMap fun i => 𝒜 i) a)) i) =
-      ((lmap' (quotCompMap R 𝒜 rel)) a) i := by
-  simp only [lmap'_apply]
+      ((lmap (quotCompMap R 𝒜 rel)) a) i := by
+  simp only [lmap_apply]
   congr
   exact h𝒜.right_inv a
 
@@ -617,7 +418,7 @@ theorem quotDecompose'_surjective [h𝒜 : GradedAlgebra 𝒜] :
   obtain ⟨a, rfl⟩ := RingQuot.mkAlgHom_surjective R rel x
   let e : (coeLinearMap 𝒜) ((decomposeAlgEquiv 𝒜).toLinearMap a) = a :=
     h𝒜.left_inv a
-  use (lmap' (quotCompMap R 𝒜 rel)) ((decomposeAlgEquiv 𝒜).toLinearMap a)
+  use (lmap (quotCompMap R 𝒜 rel)) ((decomposeAlgEquiv 𝒜).toLinearMap a)
   conv_rhs => rw [← e]
   apply quotDecompose_left_inv'_aux_apply
 
@@ -639,7 +440,6 @@ lemma obvious_iff {x y : A} :
     | add _ _ k k' => simp only [map_add, k, k']
     | mul _ _ k k' => simp only [map_mul, k, k']
 
-
 theorem quotDecompose_injective [h𝒜 : GradedAlgebra 𝒜]
     (hrel : Rel.IsHomogeneous 𝒜 rel) {x y : A}
     (hxy : RingQuot.mkAlgHom R rel x = RingQuot.mkAlgHom R rel y) (i : ι) :
@@ -649,8 +449,9 @@ theorem quotDecompose_injective [h𝒜 : GradedAlgebra 𝒜]
 
 end AddMonoid
 
-theorem quotDecompose_surjective2 : Surjective (lmap' (quotCompMap R 𝒜 rel)) := by
-  apply lmap'_surjective (quotCompMap R 𝒜 rel)
+omit [DecidableEq ι] in
+theorem quotDecompose_surjective2 : Surjective (lmap (quotCompMap R 𝒜 rel)) := by
+  rw [lmap_surjective]
   rintro i ⟨x, ⟨a, ha, rfl⟩⟩
   exact ⟨⟨a, ha⟩, rfl⟩
 
@@ -668,10 +469,10 @@ theorem quotDecompose'_injective [h𝒜 : GradedAlgebra 𝒜]
   specialize hxy' i
   simp only [Decomposition.decompose'_eq] at hxy'
   suffices ∀ a, RingQuot.mkAlgHom R rel ↑(((decompose fun i => 𝒜 i)
-      ((coeLinearMap fun i => 𝒜 i) a)) i) = ((lmap' (quotCompMap R 𝒜 rel)) a) i by
+      ((coeLinearMap fun i => 𝒜 i) a)) i) = ((lmap (quotCompMap R 𝒜 rel)) a) i by
     simpa only [this, SetLike.coe_eq_coe] using hxy'
   intro a
-  simp only [lmap'_apply]
+  simp only [lmap_apply]
   congr
   exact h𝒜.right_inv a
 
@@ -681,16 +482,17 @@ theorem quotDecompose_injective' [h𝒜 : GradedAlgebra 𝒜]
   have hφ : ∀ i, Surjective (quotCompMap R 𝒜 rel i) := by
     rintro i ⟨x, ⟨a, ha, rfl⟩ ⟩
     exact ⟨⟨a, ha⟩, rfl⟩
+  rw [← lmap_surjective] at hφ
   intro x y hxy
-  obtain ⟨a, ha, rfl⟩ := lmap'_surjective (quotCompMap R 𝒜 rel) hφ x
-  obtain ⟨b, hb, rfl⟩ := lmap'_surjective (quotCompMap R 𝒜 rel) hφ y
+  obtain ⟨a, ha, rfl⟩ := hφ x
+  obtain ⟨b, hb, rfl⟩ := hφ y
   simp only [quotDecompose_left_inv'_aux_apply] at hxy
   let hxy' := quotDecompose_injective 𝒜 rel hrel hxy
   apply DFinsupp.ext
   intro i
   specialize hxy' i
   simp only [Decomposition.decompose'_eq] at hxy'
-  simpa only [lmap'_quotCompMap_apply, SetLike.coe_eq_coe] using hxy'
+  simpa only [lmap_quotCompMap_apply, SetLike.coe_eq_coe] using hxy'
 
 lemma quotDecompose'_bijective [GradedAlgebra 𝒜]
     (hrel : Rel.IsHomogeneous 𝒜 rel) : Bijective (quotDecompose' R 𝒜 rel) :=
@@ -743,11 +545,11 @@ variable [DecidableEq ι] [AddMonoid ι]
 /-- The decomposition at the higher level -/
 def Ideal.quotDecomposeLaux [GradedAlgebra 𝒜] :
     A →ₗ[R] DirectSum ι fun i : ι => (I.quotSubmodule R 𝒜 i) :=
-  LinearMap.comp (lmap' (I.quotCompMap R 𝒜)) (decomposeAlgEquiv 𝒜).toLinearMap
+  LinearMap.comp (lmap (I.quotCompMap R 𝒜)) (decomposeAlgEquiv 𝒜).toLinearMap
 
 theorem Ideal.quotDecomposeLaux_of_mem_eq_zero [GradedAlgebra 𝒜] (hI : I.IsHomogeneous 𝒜) {x : A}
     (hx : x ∈ I) (i : ι) : ((I.quotDecomposeLaux R 𝒜) x) i = 0 := by
-  rw [Ideal.quotDecomposeLaux, LinearMap.comp_apply, lmap'_apply, quotCompMap]
+  rw [Ideal.quotDecomposeLaux, LinearMap.comp_apply, lmap_apply, quotCompMap]
   simp only [Ideal.Quotient.mkₐ_eq_mk, AlgEquiv.toLinearMap_apply, decomposeAlgEquiv_apply,
     LinearMap.coe_mk, AddHom.coe_mk, Submodule.mk_eq_zero]
   rw [Ideal.Quotient.eq_zero_iff_mem]
@@ -770,14 +572,14 @@ theorem Ideal.quotDecomposeLaux_apply_mk [GradedAlgebra 𝒜] (hI : I.IsHomogene
   Submodule.liftQ_apply (I.restrictScalars R) (quotDecomposeLaux R 𝒜 I) a
 
 private theorem Ideal.quotDecomposition_left_inv'_aux [GradedAlgebra 𝒜] :
-  LinearMap.comp (coeLinearMap (Ideal.quotSubmodule R 𝒜 I)) (lmap' (Ideal.quotCompMap R 𝒜 I)) =
+  LinearMap.comp (coeLinearMap (Ideal.quotSubmodule R 𝒜 I)) (lmap (Ideal.quotCompMap R 𝒜 I)) =
     LinearMap.comp (Submodule.mkQ (Submodule.restrictScalars R I)) (coeLinearMap 𝒜) := by
   apply linearMap_ext
   intro i
   ext x
   dsimp only [LinearMap.coe_comp, comp_apply]
   change _ = (Submodule.mkQ (Submodule.restrictScalars R I)) (_)
-  rw [lmap'_lof]
+  rw [lmap_lof]
   simp only [lof_eq_of, coeLinearMap_of, Submodule.mkQ_apply]
   rfl
 
@@ -811,9 +613,9 @@ theorem Ideal.quotDecomposition_right_inv' [GradedAlgebra 𝒜] (hI : I.IsHomoge
   simp only [AlgHom.toLinearMap_apply, Quotient.mkₐ_eq_mk, Ideal.quotDecomposeLaux_apply_mk,
     Ideal.quotDecomposeLaux]
   simp only [LinearMap.coe_comp, comp_apply]
-  change lmap' _ (decompose 𝒜 x) = _
+  change lmap _ (decompose 𝒜 x) = _
   suffices decompose 𝒜 x = lof R ι (fun i => 𝒜 i) i (⟨x, hx⟩ : 𝒜 i) by
-    rw [this, lmap'_lof, lof_eq_of]
+    rw [this, lmap_lof, lof_eq_of]
     apply congr_arg₂ _ rfl
     rw [quotCompMap]
     simp only [Ideal.Quotient.mkₐ_eq_mk, LinearMap.coe_mk]
