@@ -79,7 +79,6 @@ noncomputable def exp_LinearMap :
     rw [← algebraMap_smul (DividedPowerAlgebra R M) r (exp R m), coe_smul, coeff_rescale, coeff_exp,
       ← map_pow, dp_smul, Algebra.algebraMap_self, RingHom.id_apply,Algebra.smul_def, map_pow]
 
-
 theorem coe_exp_LinearMap : ⇑(exp_LinearMap R M) = exp R := rfl
 
 theorem coeff_exp_LinearMap (n : ℕ) (m : M) :

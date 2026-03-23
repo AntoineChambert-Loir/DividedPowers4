@@ -14,7 +14,8 @@ import DividedPowers.DPAlgebra.Misc
 --import DividedPowers.DPAlgebra.PolynomialLaw -- It uses sorry
 import DividedPowers.DPAlgebra.RobyLemma9
 --import DividedPowers.DPMorphism --In PR #22318
-import DividedPowers.ExponentialModule.Basic -- In #30972, #30974, #30975, #30976 (partially PR'd)
+import DividedPowers.ExponentialModule.Basic -- In #36441, #36444, #37037
+import DividedPowers.ExponentialModule.Basic -- In PR #37038
 import DividedPowers.Exponential
 --import DividedPowers.ForMathlib.AlgebraLemmas -- In PR #22237, #22239 and #22240.
 import DividedPowers.ForMathlib.Algebra.Algebra.Bilinear
