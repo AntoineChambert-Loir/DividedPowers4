@@ -39,7 +39,7 @@ variable (R : Type*) [CommRing R] {M : Type*} [AddCommGroup M] [Module R M]
 
 section GradeOne
 
-theorem ι_mem_grade_one (m : M) : ι R M m ∈ grade R M 1 :=
+theorem ι_mem_grade_one (m : M) : embed R M m ∈ grade R M 1 :=
   ⟨X ⟨1,m⟩, ⟨isWeightedHomogeneous_X R Prod.fst ⟨1,m⟩, rfl⟩⟩
 
 section DecidableEq
@@ -64,8 +64,8 @@ def toTrivSqZeroExt : DividedPowerAlgebra R M →ₐ[R] TrivSqZeroExt R M :=
 
 variable {M}
 
-@[simp] theorem toTrivSqZeroExt_ι (x : M) :
-    toTrivSqZeroExt R M (ι R M x) = inr x := lift_ι_apply _ _ x
+@[simp] theorem toTrivSqZeroExt_embed (x : M) :
+    toTrivSqZeroExt R M (embed R M x) = inr x := lift_ι_apply _ _ x
 
 theorem toTrivSqZeroExt_apply_dp_of_two_le  (n : ℕ) (m : M) (hn : 2 ≤ n) :
     toTrivSqZeroExt R M (dp R n m) = 0 := by
@@ -119,31 +119,32 @@ variable [DecidableEq R] [Module Rᵐᵒᵖ M] [IsCentralScalar R M]
 theorem deg_one_right_inv :
     RightInverse
       (TrivSqZeroExt.sndHom R M ∘ (toTrivSqZeroExt R M).toLinearMap ∘ (grade R M 1).subtype)
-      (proj' R M 1 ∘ ι R M) := by
+      (proj' R M 1 ∘ embed R M) := by
   simp only [Function.rightInverse_iff_comp, ← LinearMap.coe_comp, ← @LinearMap.id_coe R]
   rw [DFunLike.coe_injective.eq_iff]
   apply LinearMap.ext_on_range (grade_one_eq_span' R M).symm
   intro m
-  simp only [proj', GradedAlgebra.proj', ι, LinearMap.coe_comp, LinearMap.coe_mk, AddHom.coe_mk,
+  simp only [proj', GradedAlgebra.proj', embed, LinearMap.coe_comp, LinearMap.coe_mk, AddHom.coe_mk,
     Submodule.coe_subtype, comp_apply, AlgHom.toLinearMap_apply, sndHom_apply,
     LinearMap.id_coe, id_eq]
   ext
   dsimp only
-  rw [← ι_def R m, toTrivSqZeroExt_ι, ← ι_def, snd_inr, decompose_of_mem_same]
+  rw [← embed_def m,  toTrivSqZeroExt_embed, ← embed_def, snd_inr, decompose_of_mem_same]
   exact ι_mem_grade_one _ _
 
+set_option backward.isDefEq.respectTransparency false in
 theorem deg_one_left_inv :
-    LeftInverse (fun x : grade R M 1 => (toTrivSqZeroExt R M x.1).snd) (proj' R M 1 ∘ ι R M) := by
+    LeftInverse (fun x : grade R M 1 => (toTrivSqZeroExt R M x.1).snd) (proj' R M 1 ∘ embed R M) := by
   intro m
-  simp only [proj', GradedAlgebra.proj', LinearMap.coe_mk, AddHom.coe_mk, ι, Function.comp_apply]
-  rw [← TrivSqZeroExt.snd_inr R m, ← ι_def]
+  simp only [proj', GradedAlgebra.proj', LinearMap.coe_mk, AddHom.coe_mk, embed, Function.comp_apply]
+  rw [← TrivSqZeroExt.snd_inr R m, ← embed_def]
   apply congr_arg
-  rw [snd_inr, decompose_of_mem_same, toTrivSqZeroExt_ι]
+  rw [snd_inr, decompose_of_mem_same, toTrivSqZeroExt_embed]
   exact ι_mem_grade_one _ _
 
-/-- The linear equivalence `(proj' R M 1).comp (ι R M) : M → grade R M 1`. -/
+/-- The linear equivalence `(proj' R M 1).comp (embed R M) : M → grade R M 1`. -/
 def linearEquivDegreeOne : M ≃ₗ[R] (grade R M 1) where
-  toFun         := (proj' R M 1).comp (ι R M)
+  toFun         := (proj' R M 1).comp (embed R M)
   invFun x      := TrivSqZeroExt.sndHom R M (toTrivSqZeroExt R M x.1)
   map_add' x y  := by simp only [map_add]
   map_smul' r x := by simp only [LinearMap.map_smulₛₗ]
@@ -151,16 +152,16 @@ def linearEquivDegreeOne : M ≃ₗ[R] (grade R M 1) where
   right_inv     := deg_one_right_inv R M
 
 lemma ι_toTrivSqZeroExt_of_mem_grade_one {a} (ha : a ∈ grade R M 1) :
-    (ι R M) ((sndHom R M) ((toTrivSqZeroExt R M) a)) = a := by
-  suffices ⟨(ι R M) ((sndHom R M) ((toTrivSqZeroExt R M) a)), ι_mem_grade_one R _⟩ =
+    (embed R M) ((sndHom R M) ((toTrivSqZeroExt R M) a)) = a := by
+  suffices ⟨(embed R M) ((sndHom R M) ((toTrivSqZeroExt R M) a)), ι_mem_grade_one R _⟩ =
       (⟨a, ha⟩ : grade R M 1) by
     simpa only [sndHom_apply, Subtype.mk.injEq] using this
   apply (linearEquivDegreeOne R M).symm.injective
-  simp only [← LinearEquiv.invFun_eq_symm, linearEquivDegreeOne, toTrivSqZeroExt_ι,
+  simp only [← LinearEquiv.invFun_eq_symm, linearEquivDegreeOne, toTrivSqZeroExt_embed,
     sndHom_apply, snd_inr]
 
 theorem mem_grade_one_iff (a : DividedPowerAlgebra R M) :
-    a ∈ grade R M 1 ↔ ∃ m, a = ι R M m := by
+    a ∈ grade R M 1 ↔ ∃ m, a = embed R M m := by
   constructor
   . intro ha
     use ((sndHom R M) ((toTrivSqZeroExt R M) a))

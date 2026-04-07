@@ -71,6 +71,7 @@ theorem iff_summable [TopologicalSpace α] [DiscreteTopology α] {f : ι → MvP
     StronglySummable f ↔ Summable f :=
   ⟨summable, fun hf d => finite_support_of_summable (hf.map _ (continuous_coeff α d))⟩
 
+set_option backward.isDefEq.respectTransparency false in
 theorem iff_summable' [TopologicalSpace α] [DiscreteTopology α] {f : ι → MvPowerSeries σ α} :
     StronglySummable f ↔ Filter.Tendsto f Filter.cofinite (nhds 0) := by
   haveI := instIsTopologicalRing σ α
@@ -106,6 +107,7 @@ variable [UniformSpace α] [IsUniformAddGroup α]
 
 --#check MvPowerSeries.StronglyMultipliable.coeff_prod_apply_eq_finset_prod
 
+set_option backward.isDefEq.respectTransparency false in
 theorem hasProd_of_one_add (hf : StronglySummable f) :
     HasProd (fun i => 1 + f i) hf.toStronglyMultipliable.prod := by
   classical
@@ -122,7 +124,7 @@ theorem hasProd_of_one_add (hf : StronglySummable f) :
     change _ + (_ + f) = f
     simp_rw [← add_assoc, add_neg_cancel, zero_add]
   have hV₀ : V₀ ∈ nhds (0 : MvPowerSeries σ α) := by
-    apply continuousAt_def.mp (Continuous.continuousAt (continuous_add_left _))
+    apply continuousAt_def.mp (Continuous.continuousAt (continuous_const_add _))
     rw [add_zero]
     exact hV
   rw [nhds_pi, Filter.mem_pi] at hV₀
@@ -135,7 +137,7 @@ theorem hasProd_of_one_add (hf : StronglySummable f) :
   apply htV₀
   intro d hd
   convert mem_of_mem_nhds (ht d) using 1
-  change (-_ + _) = 0
+  change (-_ + _)  = (0 : α)
   rw [neg_add_eq_sub, sub_eq_zero]
   symm
   apply StronglyMultipliable.coeff_prod_apply_eq_finset_prod hf (J := J)

@@ -152,7 +152,7 @@ variable {R M N : Type*} [CommRing R]
 /-- The kernel of the canonical map from `DividedPowerAlgebra R M`
 to `DividedPowerAlgebra R N` associated with a surjective linear map
 from `M` to `N`. -/
-def kerLift : Ideal (DividedPowerAlgebra R M) := Ideal.span
+noncomputable def kerLift : Ideal (DividedPowerAlgebra R M) := Ideal.span
   (Set.range (fun (nq : PNat × (LinearMap.ker f)) ↦ dp R nq.1 (nq.2 : M)))
 
 noncomputable def quotientEquiv_toAlgHom :
@@ -166,25 +166,28 @@ noncomputable def quotientEquiv_toAlgHom :
     SetLike.mem_coe, RingHom.mem_ker, forall_exists_index, and_imp]
   rintro ⟨n, hn⟩ m hm ⟨rfl⟩
   simp only [PNat.mk_coe, LinearMap.lift_apply_dp, hm]
-  exact dp_null_of_ne_zero R (Nat.ne_zero_of_lt hn)
+  exact dp_null_of_ne_zero (Nat.ne_zero_of_lt hn)
 
 @[simp]
 theorem quotientEquiv_toAlgHom_mk_dp (n : ℕ) (m : M) :
     (quotientEquiv_toAlgHom f) ((Ideal.Quotient.mk (kerLift f)) (dp R n m)) = dp R n (f m) := by
   simp [quotientEquiv_toAlgHom, LinearMap.lift_apply_dp]
 
+set_option backward.isDefEq.respectTransparency false in
 noncomputable def quotientEquiv_symm_toAlgHom :
     DividedPowerAlgebra R N →ₐ[R] (DividedPowerAlgebra R M ⧸ (kerLift f)) :=
   (exponentialModule_equiv R N (DividedPowerAlgebra R M ⧸ kerLift f)).symm (by
     let h : M →ₗ[R] (ExponentialModule (DividedPowerAlgebra R M)) :=
       exp_LinearMap R M
-    let h' : (ExponentialModule (DividedPowerAlgebra R M)) →ₗ[R] (ExponentialModule (DividedPowerAlgebra R M ⧸ kerLift f)) :=
-      linearMap (Ideal.Quotient.mkₐ R (kerLift f))
+    let h' : (ExponentialModule (DividedPowerAlgebra R M)) →ₗ[R]
+      (ExponentialModule (DividedPowerAlgebra R M ⧸ kerLift f)) :=
+        linearMap (Ideal.Quotient.mkₐ R (kerLift f))
     refine (f.equiv_of_isSurjective _ hf).invFun ⟨h'.comp h, ?_⟩
     intro m hm
     simp only [LinearMap.mem_ker, LinearMap.coe_comp, Function.comp_apply, h', h] at hm ⊢
     ext k
-    simp only [coeff_linearMap, coeff_exp_LinearMap, Ideal.Quotient.mkₐ_eq_mk, coe_zero_eq_one,
+    erw [coeff_linearMap] -- Why is erw now needed? (Apr. 7)
+    simp only [coeff_exp_LinearMap, Ideal.Quotient.mkₐ_eq_mk, coe_zero_eq_one,
       coeff_one]
     split_ifs with hk
     · simp [hk, dp_zero]
@@ -198,6 +201,7 @@ def quotientEquiv_symm_toAlgHom_dp (k : ℕ) (m : M) :
     quotientEquiv_symm_toAlgHom f hf (dp R k (f m)) = Submodule.mkQ _ (dp R k m) := by
   simp [quotientEquiv_symm_toAlgHom, exponentialModule_equiv_symm_apply, coeff_linearMap, coeff_exp_LinearMap]
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The canonical algebra equivalence of a quotient of
 divided power algebra associated with a surjective linear map. -/
 noncomputable def quotientEquiv :
@@ -207,9 +211,11 @@ noncomputable def quotientEquiv :
     intro k n
     obtain ⟨m, rfl⟩ := hf n
     simp
-  · apply Ideal.Quotient.algHom_ext
-    rw [algHom_ext_iff]
-    intros; simp
+  · ext
+    --apply Ideal.Quotient.algHom_ext
+    --rw [algHom_ext_iff]
+    intros; simp --Why is this broken?
+    sorry
 
 include hf in
 -- This is [Roby-1963, Prop. IV.8].

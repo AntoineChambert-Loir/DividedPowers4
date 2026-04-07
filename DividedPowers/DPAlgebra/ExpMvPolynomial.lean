@@ -9,7 +9,7 @@ import DividedPowers.ForMathlib.RingTheory.TensorProduct.DirectLimit.FG
 import DividedPowers.ForMathlib.Data.FinsetLemmas
 import Mathlib.LinearAlgebra.FreeModule.Basic
 import Mathlib.RingTheory.DividedPowers.RatAlgebra
-import DividedPowers.ForMathlib.RingTheory.DividedPowers.Basic
+import Mathlib.RingTheory.DividedPowers.Basic
 import Mathlib.RingTheory.MvPolynomial.WeightedHomogeneous
 import Mathlib.Algebra.Algebra.Rat
 --import Mathlib.FieldTheory.RatFunc.Defs

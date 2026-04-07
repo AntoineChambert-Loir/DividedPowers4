@@ -56,6 +56,7 @@ lemma apply_single
     e ((single a n) b) = single a (e n) b :=
   Finsupp.apply_single e a n b
 
+set_option backward.isDefEq.respectTransparency false in
 /-- RingHom functoriality for the monoid algebra -/
 noncomputable def ringHom [MulOneClass α] (e : N →+* P) :
     MonoidAlgebra N α →+* MonoidAlgebra P α := {
@@ -141,6 +142,7 @@ namespace MonoidAlgebra
 
 open Finsupp
 
+set_option backward.isDefEq.respectTransparency false in
 /-- AlgHom for the tensor product of the monoid algebra with an algebra -/
 noncomputable def rTensorAlgHom :
     (MonoidAlgebra M α) ⊗[R] N →ₐ[S] MonoidAlgebra (M ⊗[R] N) α :=
@@ -175,7 +177,7 @@ variable [DecidableEq α]
 lemma rTensorAlgHom_toLinearMap :
     (rTensorAlgHom :
       MonoidAlgebra M α ⊗[R] N →ₐ[S] MonoidAlgebra (M ⊗[R] N) α).toLinearMap =
-      (finsuppLeft' _ _ _ _ _).toLinearMap := by
+      (finsuppLeft _ _ _ _ _).toLinearMap := by
   ext x n
   dsimp only [AlgebraTensorModule.curry_apply, TensorProduct.curry_apply,
     LinearMap.coe_restrictScalars, AlgHom.toLinearMap_apply]
@@ -185,23 +187,24 @@ lemma rTensorAlgHom_toLinearMap :
   rw [rTensorAlgHom_apply_tmul_apply, ← finsuppLeft_apply_tmul_apply]
   rfl -/
 
-lemma rTensorAlgHom_toLinearMap' :
+/- lemma rTensorAlgHom_toLinearMap' :
     (rTensorAlgHom :
       MonoidAlgebra M α ⊗[R] N →ₐ[R] MonoidAlgebra (M ⊗[R] N) α).toLinearMap =
-      (finsuppLeft _ _ _ _).toLinearMap := by
-  rw [rTensorAlgHom_toLinearMap]
-  rfl
+      (finsuppLeft _ _ _ _ _).toLinearMap := by
+  rw [rTensorAlgHom_toLinearMap] -/
 
+open Classical in
 lemma rTensorAlgHom_apply_eq (x : MonoidAlgebra M α ⊗[R] N) :
-    rTensorAlgHom (S := S) x = finsuppLeft' _ _ _ _ S x := by
+    rTensorAlgHom (S := S) x = finsuppLeft _ S _ _ _ x := by
   rw [← AlgHom.toLinearMap_apply, rTensorAlgHom_toLinearMap]
   rfl
 
+set_option backward.isDefEq.respectTransparency false in
 /-- AlgHom equiv for the tensor product of the monoid algebra with an algebra -/
 noncomputable def rTensorAlgEquiv :
     (MonoidAlgebra M α) ⊗[R] N ≃ₐ[S] MonoidAlgebra (M ⊗[R] N) α := by
   apply AlgEquiv.ofLinearEquiv
-    (TensorProduct.finsuppLeft' R M N α S :
+    (TensorProduct.finsuppLeft R S M N α :
       MonoidAlgebra M α ⊗[R] N ≃ₗ[S] (MonoidAlgebra (M ⊗[R] N) α))
   · simp only [Algebra.TensorProduct.one_def]
     apply symm
@@ -214,9 +217,10 @@ noncomputable def rTensorAlgEquiv :
     rfl
 
 lemma rTensorAlgEquiv_apply_eq (x : MonoidAlgebra M α ⊗[R] N) :
-    rTensorAlgEquiv (S := S) x = finsuppLeft R M N α x :=
+    rTensorAlgEquiv (S := S) x = finsuppLeft R S M N α x :=
   rfl
 
+set_option backward.isDefEq.respectTransparency false in
 lemma rTensorAlgEquiv_apply_tmul_apply
     (x : MonoidAlgebra M α) (n : N) (a : α) :
     rTensorAlgEquiv (S := S) (x ⊗ₜ[R] n) a = (x a) ⊗ₜ[R] n := by

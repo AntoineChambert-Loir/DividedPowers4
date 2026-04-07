@@ -6,7 +6,7 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 import DividedPowers.ForMathlib.Algebra.MvPolynomial.Lemmas
 import Mathlib.Algebra.MvPolynomial.Supported
 import Mathlib.Algebra.RingQuot
-import Mathlib.Algebra.TrivSqZeroExt
+import Mathlib.Algebra.TrivSqZeroExt.Basic
 import Mathlib.RingTheory.Ideal.Maps
 import Mathlib.RingTheory.MvPolynomial.WeightedHomogeneous
 

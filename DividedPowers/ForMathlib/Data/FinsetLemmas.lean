@@ -21,7 +21,7 @@ theorem prod_smul' {α β ι : Type*} [CommMonoid β] [CommMonoid α] [MulAction
   | empty =>  simp
   | cons _ _ hj ih => rw [prod_cons, ih, smul_mul_smul_comm, ← prod_cons hj, ← prod_cons hj]
 
-lemma sym_map {α β : Type*} [DecidableEq α] [DecidableEq β] {n : ℕ} (g : α ↪ β) (s : Finset α) :
+/- lemma sym_map {α β : Type*} [DecidableEq α] [DecidableEq β] {n : ℕ} (g : α ↪ β) (s : Finset α) :
     (s.map g).sym n = (s.sym n).map ⟨Sym.map g, Sym.map_injective g.injective _⟩ := by
   ext d
   simp only [mem_sym_iff, mem_map, Function.Embedding.coeFn_mk]
@@ -41,7 +41,7 @@ lemma sym_map {α β : Type*} [DecidableEq α] [DecidableEq β] {n : ℕ} (g : �
   · rintro ⟨b, hb, rfl⟩ d hd
     simp only [Sym.mem_map] at hd
     obtain ⟨a, ha, rfl⟩ := hd
-    refine ⟨a, hb a ha, rfl⟩
+    refine ⟨a, hb a ha, rfl⟩ -/
 
 end Finset
 

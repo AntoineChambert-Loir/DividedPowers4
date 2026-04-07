@@ -252,7 +252,7 @@ theorem support_mul [DecidableEq ι] [DecidableEq σ] {f : ι → MvPowerSeries 
       rw [h₂, MulZeroClass.mul_zero]
   · by_contra h'
     refine' h (sum_eq_zero _)
-    push_neg at h'
+    push Not at h'
     -- why is it necessary?
     simp only [mem_antidiagonal] at h' ⊢
     exact h'
@@ -451,14 +451,13 @@ theorem support_partialProduct_subset [DecidableEq ι] [DecidableEq σ]
     Finset.coe_subset, not_imp_comm, Finset.not_subset]
   rintro ⟨i, hi, h⟩
   rw [StronglySummable.not_mem_unionOfSupportOfCoeffLe_iff] at h
-  simp only [partialProduct, prod_eq_mul_prod_diff_singleton hi, coeff_mul]
+  simp only [partialProduct, prod_eq_mul_prod_diff_singleton_of_mem hi, coeff_mul]
   apply sum_eq_zero
   rintro ⟨x, y⟩
   rw [mem_antidiagonal]
   intro hxy
   rw [h x _, MulZeroClass.zero_mul]
   simp only [← hxy, le_self_add]
-
 
 
 /- TODO : give a more general (and easier) definition
@@ -523,6 +522,7 @@ theorem prod_eq_sum_add_sum (hf : StronglyMultipliable f) (s : Set ι) :
       (hf.of_indicator ({I : Finset ι | ↑I ⊆ s}ᶜ)).sum :=
   by rw [hf.prod_eq, ← hf.add_compl]
 
+set_option backward.isDefEq.respectTransparency false in
 /-- A version of `prod_eq_sum_add_sum` for `s : Finset ι`. -/
 theorem prod_eq_finset_prod_add [DecidableEq ι] (hf : StronglyMultipliable f) (s : Finset ι) :
     hf.prod = (s.prod fun i => 1 + f i) + (hf.of_indicator ({I : Finset ι | I ⊆ s}ᶜ)).sum := by
@@ -543,7 +543,7 @@ theorem coeff_prod_apply_eq_finset_prod [DecidableEq ι] [DecidableEq σ]
   · rw [map_zero]
   . simp only [Finset.not_subset] at h
     obtain ⟨i, hit, hiJ⟩ := h
-    simp only [partialProduct, prod_eq_mul_prod_diff_singleton hit, coeff_mul]
+    simp only [partialProduct, prod_eq_mul_prod_diff_singleton_of_mem hit, coeff_mul]
     apply sum_eq_zero
     rintro ⟨x, y⟩ hxy
     rw [mem_antidiagonal] at hxy

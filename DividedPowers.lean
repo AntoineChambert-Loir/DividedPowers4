@@ -29,9 +29,9 @@ import DividedPowers.ForMathlib.Algebra.MvPolynomial.Lemmas -- Partly in #35803
 import DividedPowers.ForMathlib.Algebra.TrivSqZeroExt
 import DividedPowers.ForMathlib.Data.FinsetLemmas
 --import DividedPowers.ForMathlib.Data.Nat.Factorial.NatCast -- In PR #24439
-import DividedPowers.ForMathlib.Data.Nat.Choose.Multinomial -- In #35756
+--import DividedPowers.ForMathlib.Data.Nat.Choose.Multinomial -- In #35756
 --import DividedPowers.ForMathlib.Bell -- -- In PR #15644
-import DividedPowers.ForMathlib.GradedBaseChange
+--import DividedPowers.ForMathlib.GradedBaseChange
 import DividedPowers.ForMathlib.GradedRingQuot
 --import DividedPowers.ForMathlib.InfiniteSum.Basic -- In mathlib
 --import DividedPowers.ForMathlib.InfiniteSum.Order -- In mathlib
@@ -41,9 +41,9 @@ import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Pi
 import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Prod
 import DividedPowers.ForMathlib.RingTheory.AugmentationIdeal -- uses sorry.
 --import DividedPowers.ForMathlib.RingTheory.Congruence.Hom
-import DividedPowers.ForMathlib.RingTheory.DividedPowers.Basic -- In #35768
+--import DividedPowers.ForMathlib.RingTheory.DividedPowers.Basic -- In #35768
 import DividedPowers.ForMathlib.RingTheory.GradedAlgebra.Basic
-import DividedPowers.ForMathlib.RingTheory.Localization.FractionRing -- In #35770
+--import DividedPowers.ForMathlib.RingTheory.Localization.FractionRing -- In #35770
 --import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Evaluation -- In PR 15019
 --import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.LinearTopology -- In PR #15007
 --import DividedPowers.ForMathlib.RingTheory.MvPowerSeries.Order -- In PR #14983

@@ -32,14 +32,14 @@ variable {R : Type*} [CommSemiring R] {S : Type*} [CommSemiring S] {σ : Type*}
 
 variable {p q : MvPolynomial σ R} {f : R →+* S} {x : σ → S}
 
-theorem eval₂_mul_eq_zero_of_left (hp : p.eval₂ f x = 0) : (p * q).eval₂ f x = 0 := by
+/- theorem eval₂_mul_eq_zero_of_left (hp : p.eval₂ f x = 0) : (p * q).eval₂ f x = 0 := by
   simp [eval₂_mul f x, hp]
 
 theorem eval₂_mul_eq_zero_of_right (hq : q.eval₂ f x = 0) : (p * q).eval₂ f x = 0 := by
   rw [eval₂_mul f x]
-  exact mul_eq_zero_of_right (p.eval₂ f x) hq
+  exact mul_eq_zero_of_right (p.eval₂ f x) hq -/
 
-variable (f x)
+/- variable (f x)
 
 theorem eval₂_X_pow {s : σ} {n : ℕ} : ((X s) ^ n).eval₂ f x = (x s) ^ n := by
   rw [X_pow_eq_monomial, eval₂_monomial f x]
@@ -48,7 +48,7 @@ theorem eval₂_X_pow {s : σ} {n : ℕ} : ((X s) ^ n).eval₂ f x = (x s) ^ n :
 @[simp]
 theorem eval₂Hom_smul (f : R →+* S) (g : σ → S) (r : R) (P : MvPolynomial σ R) :
     eval₂Hom f g (r • P) = f r • eval₂Hom f g P := by
-  simp [smul_eq_C_mul]
+  simp [smul_eq_C_mul] -/
 
 /- /-- `eval₂` as an `AddMonoidHom`. -/
 @[simps]
@@ -74,7 +74,7 @@ variable (R)
 
 variable [Algebra R S]
 
-/-- `MvPolynomial.eval₂ (algebraMap R S) g` as an `R`-algebra homomorphism. -/
+/- /-- `MvPolynomial.eval₂ (algebraMap R S) g` as an `R`-algebra homomorphism. -/
 def eval₂AlgHom (g : σ → S) : MvPolynomial σ R →ₐ[R] S :=
   { eval₂Hom (algebraMap R S) g with
     commutes' r := by simp }
@@ -90,11 +90,11 @@ theorem coe_eval₂AlgHom (g : σ → S) :
 
 @[simp]
 theorem eval₂AlgHom_X' (g : σ → S) (i : σ) :
-  eval₂AlgHom R g (X i : MvPolynomial σ R) = g i := eval₂_X (algebraMap R S) g i
+  eval₂AlgHom R g (X i : MvPolynomial σ R) = g i := eval₂_X (algebraMap R S) g i -/
 
 variable {S' : Type*} [CommSemiring S'] [Algebra R S']
 
-theorem aeval_range (s : σ → S) : (aeval s).range = Algebra.adjoin R (Set.range s) := by
+/- theorem aeval_range (s : σ → S) : (aeval s).range = Algebra.adjoin R (Set.range s) := by
   apply le_antisymm
   · rintro x ⟨p, rfl⟩
     simp only [AlgHom.toRingHom_eq_coe, RingHom.coe_coe]
@@ -106,13 +106,13 @@ theorem aeval_range (s : σ → S) : (aeval s).range = Algebra.adjoin R (Set.ran
       exact Subalgebra.mul_mem _ h (Algebra.subset_adjoin (Set.mem_range_self n))
   · rw [Algebra.adjoin_le_iff]
     rintro x ⟨i, rfl⟩
-    use X i, by aesop
+    use X i, by aesop -/
 
 end Algebra
 
 open Ideal.Quotient
 
-theorem mkₐ_eq_aeval {C : Type*} [CommRing C] {D : Type*} (I : Ideal (MvPolynomial D C)) :
+/- theorem mkₐ_eq_aeval {C : Type*} [CommRing C] {D : Type*} (I : Ideal (MvPolynomial D C)) :
     Ideal.Quotient.mkₐ C I = aeval fun d : D => Ideal.Quotient.mk I (X d) := by
   ext d
   simp
@@ -122,7 +122,7 @@ theorem mk_eq_eval₂ {C : Type*} [CommRing C] {D : Type*} (I : Ideal (MvPolynom
       eval₂ (algebraMap C (MvPolynomial D C ⧸ I)) fun d : D => Ideal.Quotient.mk I (X d) := by
   ext d
   simp_rw [RingHom.toFun_eq_coe, ← mkₐ_eq_mk C, mkₐ_eq_aeval, aeval_X, aeval,
-    AlgHom.coe_mk, coe_eval₂Hom]
+    AlgHom.coe_mk, coe_eval₂Hom] -/
 
 end Eval
 
@@ -359,6 +359,7 @@ theorem _root_.Finsupp.prod_mul_prod_compl {ι M N : Type*} [Zero M] [CommMonoid
     all_goals simp [← hs']
     intro i hi _; exact hi
 
+set_option backward.isDefEq.respectTransparency false in
 lemma splitAlgEquiv_monomial {ι : Type*} (s : Set ι) [∀ x, Decidable (x ∈ s)] (k : ι →₀ ℕ) (r : R) :
     splitAlgEquiv s (monomial k r) =
       monomial (k.subtypeDomain s.compl) (monomial (k.subtypeDomain s) r) := by
@@ -383,6 +384,7 @@ lemma splitAlgEquiv_monomial {ι : Type*} (s : Set ι) [∀ x, Decidable (x ∈ 
     rfl
   · intro x; simp [dif_neg (show ¬((x : ι) ∈ s) by aesop)]
 
+set_option backward.isDefEq.respectTransparency false in
 lemma coeff_eq_coeff_splitAlgEquiv {ι : Type*} (s : Set ι) [∀ x, Decidable (x ∈ s)]
     (P : MvPolynomial ι R) (k : ι →₀ ℕ) :
     P.coeff k = MvPolynomial.coeff (k.subtypeDomain s)
