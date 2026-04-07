@@ -616,10 +616,10 @@ private lemma lift_f (d : ι →₀ ℕ) :
 
 variable [DecidableEq R]
 
-private def φ : R → (MvPolynomial R ℤ) := fun r ↦ if r = 0 then 0 else MvPolynomial.X r
+private def X' : R → (MvPolynomial R ℤ) := fun r ↦ if r = 0 then 0 else MvPolynomial.X r
 
-lemma algebraMap_φ (r : R) : algebraMap (MvPolynomial R ℤ) R (φ r) = r := by
-    simp only [RingHom.algebraMap_toAlgebra, φ]
+lemma algebraMap_φ (r : R) : algebraMap (MvPolynomial R ℤ) R (X' r) = r := by
+    simp only [RingHom.algebraMap_toAlgebra, X']
     split_ifs with hr
     · simp [hr]
     · rw [MvPolynomial.coe_eval₂Hom]; simp
@@ -628,11 +628,11 @@ private def toN (x : DividedPowerAlgebra R M) :
     DividedPowerAlgebra (MvPolynomial R ℤ) (ι →₀ MvPolynomial R ℤ) :=
   Finsupp.linearCombination (MvPolynomial R ℤ)
     (basis (MvPolynomial R ℤ) (ι →₀ MvPolynomial R ℤ) Finsupp.basisSingleOne)
-    (((basis R M b).repr x).mapRange φ (by simp [φ]))
+    (((basis R M b).repr x).mapRange X' (by simp [X']))
 
 lemma toN_repr (x : DividedPowerAlgebra R M) (d : ι →₀ ℕ) :
       ((basis (MvPolynomial R ℤ) (ι →₀ MvPolynomial R ℤ) Finsupp.basisSingleOne).repr
-        (toN b x) d) = φ ((basis R M b).repr x d) := by
+        (toN b x) d) = X' ((basis R M b).repr x d) := by
     simp only [toN]
     simp [Finsupp.linearCombination, Finsupp.lsum, map_finsuppSum]
 
@@ -640,7 +640,7 @@ lemma toNx {x : DividedPowerAlgebra R M} (hx : x ∈ augIdeal R M) :
     toN b x ∈ augIdeal (MvPolynomial R ℤ) (ι →₀ MvPolynomial R ℤ) := by
   rw [mem_augIdeal_iff_of_repr Finsupp.basisSingleOne]
   rw [mem_augIdeal_iff_of_repr b] at hx
-  simp [toN_repr, hx, φ]
+  simp [toN_repr, hx, X']
 
 private lemma id_eq_lift_toN (x : DividedPowerAlgebra R M) :
     x = LinearMap.lift R (f b) (toN b x) := by
@@ -651,7 +651,7 @@ private lemma id_eq_lift_toN (x : DividedPowerAlgebra R M) :
   simp only [lift_f, algebra_compatible_smul R, Algebra.algebraMap_self,
     RingHomCompTriple.comp_apply, map_smul, Basis.repr_self, Finsupp.coe_smul, Pi.smul_apply]
   rw [Finsupp.sum_eq_single d]
-  · simp only [Finsupp.mapRange_apply, Finsupp.single_eq_same,φ]
+  · simp only [Finsupp.mapRange_apply, Finsupp.single_eq_same,X']
     split_ifs with hd
     · simp [hd]
     · simp [RingHom.algebraMap_toAlgebra]
@@ -768,7 +768,7 @@ noncomputable section
 
 variable (M) in
 /-- A presentation of a module by a free module with a basis. -/
-structure _root_.Module.Presentation where
+structure _root_.Module.Presentation' where
     /-- A set `s` of elements in `M`. -/
     s : Set M
     /-- The underlying type `L` for the free module. -/
@@ -789,7 +789,7 @@ open Module
 
 variable (M) in
 /-- The basic presentation of a module. -/
-def presentation [DecidableEq M] : Presentation R M where
+def presentation [DecidableEq M] : Presentation' R M where
   s      := (Set.univ : Set M)
   L      := Set.univ →₀ R
   dec_s  := inferInstance
@@ -801,7 +801,7 @@ def presentation [DecidableEq M] : Presentation R M where
 
 namespace Presentation
 
-variable {R} [DecidableEq R] (hL : DividedPowers (augIdeal R L)) (p : Presentation R M)
+variable {R} [DecidableEq R] (hL : DividedPowers (augIdeal R L)) (p : Presentation' R M)
 
 private instance : AddCommGroup p.L := p.acgL
 
