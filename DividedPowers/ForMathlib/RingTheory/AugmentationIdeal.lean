@@ -432,7 +432,8 @@ theorem Subalgebra.restrictScalars_toSubmodule_bot :
 theorem Subalgebra.codisjoint_bot_iff (I : Ideal R) :
     Codisjoint (Subalgebra.toSubmodule (⊥ : Subalgebra S R)) (I.restrictScalars S) ↔
     Codisjoint (Subalgebra.toSubmodule S) (I.restrictScalars A) := by
-  rw [← Submodule.codisjoint_restrictScalars_iff A, Subalgebra.restrictScalars_toSubmodule_bot]
+  rw [← Submodule.codisjoint_restrictScalars_iff A _ _]
+  rw [Subalgebra.restrictScalars_toSubmodule_bot]
   exact Iff.rfl
 
 theorem Subalgebra.disjoint_bot_iff (I : Ideal R) :
