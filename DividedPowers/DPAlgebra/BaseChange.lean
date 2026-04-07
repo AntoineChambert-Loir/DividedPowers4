@@ -101,7 +101,7 @@ theorem dpScalarExtension_unique
   | tmul s x =>
     induction x using DividedPowerAlgebra.induction_on with
     | h_C a =>
-      rw [mk_C, Algebra.algebraMap_eq_smul_one, tmul_smul, smul_tmul', ← mul_one s, ← smul_eq_mul,
+      rw [Algebra.algebraMap_eq_smul_one, tmul_smul, smul_tmul', ← mul_one s, ← smul_eq_mul,
         ← smul_assoc, ← smul_tmul', map_smul,map_smul, ← Algebra.TensorProduct.one_def,
         _root_.map_one, _root_.map_one]
     | h_add f g hf hg => simp only [tmul_add, map_add, hf, hg]
@@ -150,7 +150,7 @@ theorem dpScalarExtensionInv_unique
   intro x
   induction x using DividedPowerAlgebra.induction_on with
   | h_C a =>
-    rw [mk_C, Algebra.algebraMap_eq_smul_one, map_smul, _root_.map_one, map_smul, _root_.map_one]
+    rw [Algebra.algebraMap_eq_smul_one, map_smul, _root_.map_one, map_smul, _root_.map_one]
   | h_add f g hf hg => simp only [map_add, hf, hg]
   | h_dp f n sm hf =>
     suffices h_eq : φ (dp S n sm) = (dpScalarExtensionInv R S M) (dp S n sm) by

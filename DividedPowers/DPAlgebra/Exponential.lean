@@ -76,8 +76,9 @@ noncomputable def exp_LinearMap :
     apply coe_injective
     ext n
     simp only [coeff_exp, RingHom.id_apply]
-    rw [← algebraMap_smul (DividedPowerAlgebra R M) r (exp R m), coe_smul, coeff_rescale, coeff_exp,
-      ← map_pow, dp_smul, Algebra.algebraMap_self, RingHom.id_apply,Algebra.smul_def, map_pow]
+    rw [← algebraMap_smul (DividedPowerAlgebra R M) r (exp R m), ExponentialModule.coe_smul,
+      coeff_rescale, coeff_exp, ← map_pow, dp_smul, Algebra.algebraMap_self, RingHom.id_apply,
+      Algebra.smul_def, map_pow]
 
 theorem coe_exp_LinearMap : ⇑(exp_LinearMap R M) = exp R := rfl
 
@@ -101,13 +102,13 @@ def exponentialModule_equiv :
       simp only [coeff_zero_eq_constantCoeff]
       exact constantCoeff_coe (β m)
     · intro n r m
-      simp only [LinearMapClass.map_smul, coe_smul, coeff_rescale]
+      simp only [LinearMapClass.map_smul, ExponentialModule.coe_smul, coeff_rescale]
       rw [Algebra.smul_def, map_pow]
     · intro n p m
       simp only [nsmul_eq_mul]
       rw [(isExponential_iff.mp (isExponential_coe _)).1]
     · intro n x y
-      simp only [map_add, coe_add, coeff_mul]
+      simp only [map_add, ExponentialModule.coe_add, coeff_mul]
   left_inv := by
     intro α
     simp only [LinearMap.coe_comp, Function.comp_apply]
