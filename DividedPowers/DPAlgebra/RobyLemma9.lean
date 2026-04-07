@@ -101,7 +101,7 @@ noncomputable def ψRight : N →ₐ[S] M ⊗[R] N ⧸ kerφ R S M N :=
       exact Ideal.subset_span ⟨s, Set.mem_univ s, rfl⟩ }
 
 noncomputable def ψ : M ⊗[S] N →ₐ[S] M ⊗[R] N ⧸ kerφ R S M N :=
-  productMap (ψLeft R S M N) (ψRight R S M N)
+  productMap (S := (M ⊗[R] N ⧸ kerφ R S M N) ) (ψLeft R S M N) (ψRight R S M N)
 
 theorem ψ_apply (m : M) (n : N) :
     ψ R S M N (m ⊗ₜ[S] n) = Ideal.Quotient.mk (kerφ R S M N) (m ⊗ₜ[R] n) := by

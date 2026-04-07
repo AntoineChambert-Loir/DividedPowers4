@@ -31,7 +31,7 @@ import DividedPowers.ForMathlib.Data.FinsetLemmas
 --import DividedPowers.ForMathlib.Data.Nat.Factorial.NatCast -- In PR #24439
 --import DividedPowers.ForMathlib.Data.Nat.Choose.Multinomial -- In #35756
 --import DividedPowers.ForMathlib.Bell -- -- In PR #15644
-import DividedPowers.ForMathlib.GradedBaseChange
+--import DividedPowers.ForMathlib.GradedBaseChange
 import DividedPowers.ForMathlib.GradedRingQuot
 --import DividedPowers.ForMathlib.InfiniteSum.Basic -- In mathlib
 --import DividedPowers.ForMathlib.InfiniteSum.Order -- In mathlib

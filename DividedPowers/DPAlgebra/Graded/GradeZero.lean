@@ -156,8 +156,8 @@ theorem dp_mem_augIdeal {n : ℕ} (hn : 0 < n) (m : M) :
   rw [mem_augIdeal_iff, dp, algebraMapInv_mk, aeval_X, if_pos hn]
 
 /-- The image of ι is contained in the augmentation ideal -/
-theorem ι_mem_augIdeal (m : M) : ι R M m ∈ augIdeal R M := by
-  simp [mem_augIdeal_iff, ι_def, dp, algebraMapInv_mk]
+theorem ι_mem_augIdeal (m : M) : embed R M m ∈ augIdeal R M := by
+  simp [mem_augIdeal_iff, embed_def, dp, algebraMapInv_mk]
 
 /-- The lift of the algebra morphism `algebraMapInv R M` to the quotient by the augmentation
   ideal. -/
@@ -214,7 +214,7 @@ theorem augIdeal_eq_span : augIdeal R M = span (Set.image2 (dp R) {n : ℕ | 0 <
     suffices supp_ss : ↑c.support ⊆ {nm : ℕ × M | 0 < nm.fst} by
       by_cases hc0 : c.support.Nonempty
       · obtain ⟨⟨n, m⟩, hnm⟩ := hc0
-        rw [Finset.prod_eq_mul_prod_diff_singleton hnm]
+        rw [Finset.prod_eq_mul_prod_diff_singleton_of_mem hnm]
         simp only [_root_.map_mul, map_pow]
         apply mul_mem_right _ _
           (pow_mem_of_mem _ _ _ (Nat.pos_of_ne_zero (Finsupp.mem_support_iff.mp hnm)))

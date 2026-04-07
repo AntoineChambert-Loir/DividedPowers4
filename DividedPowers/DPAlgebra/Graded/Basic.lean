@@ -136,7 +136,7 @@ theorem mk_comp_toSupported :
   · rfl
   · simp only [not_lt, le_zero_iff] at h
     rw [h, OneMemClass.coe_one, map_one]
-    exact (dp_zero R m).symm
+    exact dp_zero.symm
 
 theorem surjective_of_supported :
     Surjective ((mkAlgHom R (Rel R M)).comp (Subalgebra.val (supported R {nm : ℕ × M | 0 < nm.1}))) := by

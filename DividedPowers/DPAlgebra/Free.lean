@@ -165,11 +165,11 @@ lemma range_morphism : AlgHom.range (morphism b) = expMvPolynomial :=  by
   constructor
   · rintro ⟨n, rfl⟩
     induction n using DividedPowerAlgebra.induction_on with
-    | h_C a => simp
-    | h_add f g hf hg =>
+    | C a => simp
+    | add f g hf hg =>
       simp only [map_add]
       exact Subalgebra.add_mem _ hf hg
-    | h_dp x n m hx =>
+    | dp x n m hx =>
       simp only [AlgHom.toRingHom_eq_coe, RingHom.coe_coe, map_mul]
       apply Subalgebra.mul_mem _ hx
       have := b.mem_span m
@@ -204,6 +204,7 @@ lemma range_morphism : AlgHom.range (morphism b) = expMvPolynomial :=  by
     | smul a x hx hxmem =>
       exact Subalgebra.smul_mem (morphism b).range hxmem a
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The basis of `DividedPowerAlgebra ℤ M` associated with a basis of `M`. -/
 noncomputable def Int.basis {M : Type v} [AddCommGroup M]
     {ι : Type*} (b : Basis ι ℤ M) :
@@ -246,6 +247,7 @@ noncomputable def Int.basis {M : Type v} [AddCommGroup M]
     simp only [v]
     rw [← submodule_span_prod_dp_eq_top b.span_eq]
 
+set_option backward.isDefEq.respectTransparency false in
 lemma injective_morphism : Function.Injective (morphism b) := by
   rw [RingHom.injective_iff_ker_eq_bot, eq_bot_iff]
   intro p
@@ -378,8 +380,7 @@ def DirectSum.Decomposition.basis (h : DirectSum.basis_isHomogeneous G b) (i : �
   let v (a : {a : α | b a ∈ G i}) : G i := ⟨b a.val, a.prop⟩
   apply Basis.mk (v := v)
   · apply LinearIndependent.of_comp (f := (G i).subtype)
-    exact LinearIndepOn.mono b.linearIndependent.linearIndepOn
-      (Set.subset_univ _)
+    exact LinearIndepOn.mono (b.linearIndependent.linearIndepOn _) (Set.subset_univ _)
   classical
   rintro ⟨x,  hx⟩ -
   rw [mem_iff_basis_mem_of_mem_support h] at hx
@@ -460,6 +461,7 @@ noncomputable def Int.basis_grade (d : ℕ) :
   intro n
   refine ⟨_, basis_mem_grade b n⟩
 
+set_option backward.isDefEq.respectTransparency false in
 theorem Int.coe_basis_grade (n : ι →₀ ℕ) (d : ℕ) (hn : (n.sum fun _ a ↦ a) = d) :
     Int.basis_grade b d ⟨n, hn⟩ = Int.basis b n := by
   simp [basis_grade, DirectSum.Decomposition.basis, Equiv.setCongr, Equiv.subtypeEquivProp]
@@ -477,7 +479,16 @@ open Module Module.Free TensorProduct
 
 variable {ι : Type*} (b : Basis ι R M)
 
+example : CommRing (R ⊗[ℤ] DividedPowerAlgebra ℤ M) := by
+  apply Algebra.TensorProduct.instCommRing
+
+example : Semiring (R ⊗[ℤ] DividedPowerAlgebra ℤ M) := Algebra.TensorProduct.instSemiring
+
+example (S : Type*) [CommRing S] : CommRing (R ⊗[ℤ] S) := inferInstance
+
 -- Prop. A2.1
+set_option backward.isDefEq.respectTransparency false in
+set_option trace.Meta.synthInstance true in
 noncomputable example :
     R ⊗[ℤ] DividedPowerAlgebra ℤ M ≃ₐ[R] DividedPowerAlgebra R (R ⊗[ℤ] M) :=
   DividedPowerAlgebra.dpScalarExtensionEquiv ℤ R M
@@ -485,8 +496,9 @@ noncomputable example :
 def baseChange_equiv'  :
     R ⊗[ℤ] (ι →₀ ℤ) ≃ₗ[R] M := by
   classical
-  exact (finsuppScalarRight' ℤ R ι R).trans (b.repr).symm
+  exact (finsuppScalarRight ℤ R R ι).trans (b.repr).symm
 
+set_option backward.isDefEq.respectTransparency false in
 def baseChange_equiv :
     R ⊗[ℤ] DividedPowerAlgebra ℤ (ι →₀ ℤ) ≃ₐ[R]
       DividedPowerAlgebra R M :=
@@ -499,11 +511,13 @@ instance : Free ℤ (DividedPowerAlgebra ℤ (ι →₀ ℤ)) :=
 def foo : Basis ι ℤ (ι →₀ ℤ) := by
   exact Finsupp.basisSingleOne
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The basis of `DividedPowerAlgebra R M` associated with a basis of `M`. -/
 noncomputable def basis {ι : Type*} (b : Basis ι R M) :
     Basis (ι →₀ ℕ) R (DividedPowerAlgebra R M) :=
   (Algebra.TensorProduct.basis R (Int.basis Finsupp.basisSingleOne)).map (baseChange_equiv R M b).toLinearEquiv
 
+set_option backward.isDefEq.respectTransparency false in
 lemma basis_eq (d : ι →₀ ℕ) :
     basis R M b d = d.prod (fun i k ↦ dp R k (b i)) := by
   classical
@@ -547,8 +561,9 @@ lemma basis_eq (d : ι →₀ ℕ) :
         AlgEquiv.ofAlgHom_apply]
       rw [LinearMap.lift_apply_dp]
       congr
-      simp [finsuppScalarRight', finsuppScalarRight_apply_tmul]
+      simp [finsuppScalarRight]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem free (b : Basis ι R M) : Module.Free R (DividedPowerAlgebra R M) :=
   Module.Free.of_equiv (baseChange_equiv R M b).toLinearEquiv
 
@@ -562,7 +577,7 @@ lemma basis_eq' [DecidableEq ι] {m : M} {n : ℕ} {x : Sym ι n} (hx : x ∈ (b
   · intro i
     simp only [mem_sym_iff, Finsupp.mem_support_iff, ne_eq] at hx
     simpa using hx i
-  · exact fun i _ ↦ dp_zero R (b i)
+  · exact fun i _ ↦ dp_zero
 
 lemma basis_zero_eq_one : basis R M b 0 = 1 := by simp [basis_eq]
 
@@ -574,11 +589,11 @@ lemma basis_single_eq (i : ι) (n : ℕ) :
   · simp [dp_zero]
 
 lemma basis_single_one_eq (i : ι) :
-    basis R M b (Finsupp.single i 1) = DividedPowerAlgebra.ι R M (b i) := by
-  rw [basis_single_eq, ι_def]
+    basis R M b (Finsupp.single i 1) = DividedPowerAlgebra.embed R M (b i) := by
+  rw [basis_single_eq, embed_def]
 
 theorem basis_repr_ι (m : M) (d) [Decidable (∃ i, d = Finsupp.single i 1)] :
-    (basis R M b).repr (DividedPowerAlgebra.ι R M m) d =
+    (basis R M b).repr (DividedPowerAlgebra.embed R M m) d =
       if H : ∃ i, d = Finsupp.single i 1 then b.repr m H.choose else 0 := by
   have hm : m = ((b.repr m).sum fun i c ↦ c • b i) := by
     have := (Basis.linearCombination_repr b m).symm
@@ -603,7 +618,7 @@ theorem basis_repr_ι (m : M) (d) [Decidable (∃ i, d = Finsupp.single i 1)] :
     exact fun H' ↦ H ⟨i, H'⟩
 
 theorem ι_repr_support_eq (m : M) :
-    ((basis R M b).repr (DividedPowerAlgebra.ι R M m)).support =
+    ((basis R M b).repr (DividedPowerAlgebra.embed R M m)).support =
       (b.repr m).support.map ⟨fun i ↦ Finsupp.single i 1, fun i j ↦ by
         simp [Finsupp.single_left_inj Nat.one_ne_zero]⟩ := by
   classical
@@ -771,7 +786,7 @@ open scoped Nat
 /- Can one simplify the quantity
  n! ^ (#d.support - 1) * ∏ i ∈ d.support n.uniformBell (d i) ? -/
 theorem dpow_basis_eq (H : DividedPowers (augIdeal R M))
-    (hH : ∀ (n : ℕ) (x : M), H.dpow n (DividedPowerAlgebra.ι R M x) = dp R n x)
+    (hH : ∀ (n : ℕ) (x : M), H.dpow n (DividedPowerAlgebra.embed R M x) = dp R n x)
     {ι : Type*} [DecidableEq ι] (b : Basis ι R M) (n : ℕ) (d : ι →₀ ℕ) (hd : d ≠ 0) :
     H.dpow n (basis R M b d) = (n ! ^ (#d.support - 1) • ∏ i ∈ d.support, n.uniformBell (d i)) •
         basis R M b (n • d) := by
@@ -784,7 +799,7 @@ theorem dpow_basis_eq (H : DividedPowers (augIdeal R M))
     rw [← hH, dpow_comp _ ( Finsupp.mem_support_iff.mp hx) (ι_mem_augIdeal R M (b i)), hH]
     simp
   rw [Finset.prod_congr rfl this, Finset.prod_smul', smul_assoc, basis_eq,
-    Finsupp.prod_of_support_subset _ Finsupp.support_smul _ (fun i _ ↦ dp_zero R (b i))]
+    Finsupp.prod_of_support_subset _ Finsupp.support_smul _ (fun i _ ↦ dp_zero)]
   simp
 
 

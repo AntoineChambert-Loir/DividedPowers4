@@ -40,7 +40,7 @@ proof presented there), and is similar to the one sketched in the appendix of [B
 
 * `DividedPowerAlgebra.onDPAlgebra_unique`: [Roby-1965, Lemma 2]: there is at most one divided
   power structure on the augmentation ideal of `DividedPowerAlgebra R M` such that
-  `∀ (n : ℕ) (x : M), h.dpow n (ι R M x) = dp R n x`.
+  `∀ (n : ℕ) (x : M), h.dpow n (embed R M x) = dp R n x`.
 
 ## References
 
@@ -68,10 +68,10 @@ universe u v v₁ v₂ w uA uR uS uM
 variable (R : Type u) [CommRing R] (M : Type v) [AddCommGroup M] [Module R M] (x : M) {n : ℕ}
 
 /-- Lemma 2 of Roby 65 : there is at most one divided power structure on the augmentation ideal
-  of `DividedPowerAlgebra R M` such that `∀ (n : ℕ) (x : M), h.dpow n (ι R M x) = dp R n x`. -/
+  of `DividedPowerAlgebra R M` such that `∀ (n : ℕ) (x : M), h.dpow n (embed R M x) = dp R n x`. -/
 theorem onDPAlgebra_unique (h h' : DividedPowers (augIdeal R M))
-    (h1 : ∀ (n : ℕ) (x : M), h.dpow n (ι R M x) = dp R n x)
-    (h1' : ∀ (n : ℕ) (x : M), h'.dpow n (ι R M x) = dp R n x) : h = h' := by
+    (h1 : ∀ (n : ℕ) (x : M), h.dpow n (embed R M x) = dp R n x)
+    (h1' : ∀ (n : ℕ) (x : M), h'.dpow n (embed R M x) = dp R n x) : h = h' := by
   apply DividedPowers.dpow_eq_from_gens h' h (augIdeal_eq_span R M)
   rintro n f ⟨q, hq : 0 < q, m, _, rfl⟩
   nth_rw 1 [← h1' q m]
@@ -212,7 +212,7 @@ noncomputable def dpow (n : ℕ) (x : DividedPowerAlgebra R M) : DividedPowerAlg
   else 0
 
 theorem dpow_eq (H : DividedPowers (augIdeal R M))
-    (hH : ∀ (n : ℕ) (x : M), H.dpow n (DividedPowerAlgebra.ι R M x) = dp R n x)
+    (hH : ∀ (n : ℕ) (x : M), H.dpow n (DividedPowerAlgebra.embed R M x) = dp R n x)
     {ι : Type*} [DecidableEq ι] (b : Basis ι R M) {n : ℕ} {x : DividedPowerAlgebra R M} :
     H.dpow n x = dpow b n x := by
   simp only [dpow]
@@ -274,7 +274,7 @@ theorem dpow_eq_of_support_subset {x : DividedPowerAlgebra R M} (hx : x ∈ augI
       rw [H0 k hk d hd.2, pow_zero]
     · intros; rfl
 
- theorem dpow_ι (m : M) : dpow b n (DividedPowerAlgebra.ι R M m) = dp R n m := by
+ theorem dpow_ι (m : M) : dpow b n (DividedPowerAlgebra.embed R M m) = dp R n m := by
   simp only [dpow, if_pos (ι_mem_augIdeal R M m)]
   have hm : m = ((b.repr m).sum fun i c ↦ c • b i) := by
     have := (Basis.linearCombination_repr b m).symm
@@ -287,9 +287,9 @@ theorem dpow_eq_of_support_subset {x : DividedPowerAlgebra R M} (hx : x ∈ augI
   conv_rhs =>
     rw [hm]
     simp only [Finsupp.sum]
-    rw [dp_sum _ (b.repr m).support n]
+    rw [dp_sum (b.repr m).support n]
   set s := (b.repr m).support with hs
-  set t := ((basis R M b).repr ((DividedPowerAlgebra.ι R M) m)).support with ht
+  set t := ((basis R M b).repr ((DividedPowerAlgebra.embed R M) m)).support with ht
   have hst : t = Finset.map g s := by
     simp only [← hs, ht, ι_repr_support_eq]
     congr
@@ -301,7 +301,7 @@ theorem dpow_eq_of_support_subset {x : DividedPowerAlgebra R M} (hx : x ∈ augI
   rw [cK_map_single_eq_one hk, one_smul]
   simp only [prod_map, Multiset.count_map_eq_count' _ _ g.injective]
   have (x) (_ : x ∈ s) :
-    ((basis R M b).repr ((DividedPowerAlgebra.ι R M) m)) (g x) ^ Multiset.count x k =
+    ((basis R M b).repr ((DividedPowerAlgebra.embed R M) m)) (g x) ^ Multiset.count x k =
     (b.repr m) x ^ Multiset.count x ↑k := by
     conv_lhs => rw [hm, map_finsuppSum, map_finsuppSum]
     simp only [map_smul, Finsupp.sum_apply, Finsupp.coe_smul, Pi.smul_apply, smul_eq_mul,
@@ -534,7 +534,7 @@ theorem lift_dpow_eq_dpow_lift (n : ℕ) {x : DividedPowerAlgebra R M} (hx : x �
   apply lift_dpow (hf b) hx -- (by exact hf b) x hx
   intro n x
   rw [RatAlgebra.dpow_eq_inv_fact_smul _ _ (ι_mem_augIdeal _ _ x)]
-  simp only [Ring.inverse_eq_inv', DividedPowerAlgebra.ι, LinearMap.coe_mk, AddHom.coe_mk]
+  simp only [Ring.inverse_eq_inv', DividedPowerAlgebra.embed, LinearMap.coe_mk, AddHom.coe_mk]
   have : Invertible (n ! : ℚ) := invertibleOfNonzero (by simp [Nat.factorial_ne_zero])
   rw [← invOf_eq_inv, invOf_smul_eq_iff, ← natFactorial_mul_dp_eq]
   simp [Algebra.smul_def]
@@ -574,7 +574,7 @@ theorem dpow_eq (x : DividedPowerAlgebra R M) :
   · rw [dpow_null b hx]
 
 theorem dpow_ι_eq_dp (n : ℕ) (x : M) :
-    (dividedPowers b).dpow n (DividedPowerAlgebra.ι R M x) = dp R n x := by
+    (dividedPowers b).dpow n (DividedPowerAlgebra.embed R M x) = dp R n x := by
   rw [dpow_eq, dpow_ι]
 
 end CharZero
@@ -736,7 +736,7 @@ def dividedPowers : DividedPowers (augIdeal R M) where
   dpow_comp := dpow_comp b
 
 theorem dpow_eq_dp (n : ℕ) (x : M) :
-    (dividedPowers b).dpow n (DividedPowerAlgebra.ι R M x) = dp R n x := by
+    (dividedPowers b).dpow n (DividedPowerAlgebra.embed R M x) = dp R n x := by
   simp [dividedPowers, dpow_ι]
 
 end
@@ -750,7 +750,7 @@ section General
 variable {M} {L : Type*} [AddCommGroup L] [Module R L] {f : L →ₗ[R] M}
 
 theorem isSubDPIdeal_of_isSurjective [DecidableEq R] (hL : DividedPowers (augIdeal R L))
-    (dpow_eq_dp : ∀ (n : ℕ) (x : L), hL.dpow n (ι R L x) = dp R n x) (hf : Function.Surjective f) :
+    (dpow_eq_dp : ∀ (n : ℕ) (x : L), hL.dpow n (embed R L x) = dp R n x) (hf : Function.Surjective f) :
     hL.IsSubDPIdeal (RingHom.ker (LinearMap.lift R f)) := by
   rw [LinearMap.ker_lift_of_surjective f hf, kerLift, hL.span_isSubDPIdeal_iff]
   · rintro n hn _ ⟨⟨⟨q, hq⟩, ⟨l, hl⟩⟩, rfl⟩
@@ -825,7 +825,7 @@ def dividedPowers : DividedPowers (augIdeal R M) :=
     (LinearMap.lift_surjective p.surj) (LinearMap.augIdeal_map_lift R p.L p.f p.surj).symm
     (isSubDPIdeal p)
 
-theorem dpow_eq_dp (n : ℕ) (x : M) : (dividedPowers p).dpow n (ι R M x) = dp R n x := by
+theorem dpow_eq_dp (n : ℕ) (x : M) : (dividedPowers p).dpow n (embed R M x) = dp R n x := by
   simp only [dividedPowers]
   obtain ⟨y, rfl⟩ := p.surj x
   rw [← LinearMap.lift_ι_apply]
@@ -842,7 +842,7 @@ variable (M) in
 /-- The canonical divided powers structure on the universal divided power algebra. -/
 def dividedPowers : DividedPowers (augIdeal R M) := Presentation.dividedPowers (presentation R M)
 
-theorem dpow_eq_dp (n : ℕ) (x : M) : (dividedPowers R M).dpow n (ι R M x) = dp R n x :=
+theorem dpow_eq_dp (n : ℕ) (x : M) : (dividedPowers R M).dpow n (embed R M x) = dp R n x :=
   Presentation.dpow_eq_dp (presentation R M) n x
 
 #print axioms dividedPowers

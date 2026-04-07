@@ -6,6 +6,7 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 
 import Mathlib.Data.Nat.Choose.Multinomial
 import Mathlib.RingTheory.PowerSeries.Substitution
+import Mathlib.Algebra.MvPolynomial.Coeff
 
 /-! # Indicator
 
@@ -27,7 +28,7 @@ namespace Finsupp
 
 variable {σ α : Type*} [Zero α] {f g : σ → α} {d : σ →₀ α}  {s t: Finset σ}
 
-theorem indicator_indicator (f' : (i : σ) → i ∈ s → α) [DecidableEq σ] :
+/- theorem indicator_indicator (f' : (i : σ) → i ∈ s → α) [DecidableEq σ] :
     indicator t (fun i _ ↦ indicator s f' i) =
       indicator (s ∩ t) (fun i hi ↦ f' i (Finset.mem_of_mem_inter_left hi)) := by
   ext i
@@ -53,7 +54,7 @@ theorem multinomial_of_support_subset {d : σ →₀ ℕ} (h : d.support ⊆ s) 
     Nat.multinomial s d = d.multinomial := by
   rw [Nat.multinomial, Finsupp.multinomial,
     sum_of_support_subset _ h _ (by simp), prod_of_support_subset _ h _ (by simp)]
-  simp
+  simp -/
 
 end Finsupp
 
@@ -67,7 +68,7 @@ open Finsupp
 
 variable {σ : Type*} (d : σ →₀ ℕ) (x : σ → ℕ) (s : Finset σ)
 
-theorem prod_X_pow :
+/- theorem prod_X_pow :
     ∏ y ∈ s, (X y : MvPolynomial σ R) ^ x y = monomial (indicator s (fun i _ ↦ x i)) (1 : R) := by
   rw [monomial_eq, C_1, one_mul, prod,
     Finset.prod_subset (s₁ := (indicator s (fun i _ ↦ x i)).support) (s₂ := s)
@@ -79,8 +80,8 @@ theorem prod_X_pow :
 
 theorem coeff_prod_X_pow [DecidableEq σ] : coeff d (∏ y ∈ s, (X y : MvPolynomial σ R) ^ x y) =
       if d = indicator s (fun i _ ↦ x i) then 1 else 0 := by
-  simp_rw [prod_X_pow x s, coeff_monomial, eq_comm]
-
+  simp_rw [prod_X_pow x s, coeff_monomial, eq_comm] -/
+/-
 variable {d} in
 private theorem coeff_linearCombination_X_pow_of_eq (a : σ →₀ R) {n : ℕ}
     (hd : d.sum (fun _ m ↦ m) = n) :
@@ -170,7 +171,7 @@ lemma coeff_add_pow (d : Fin 2 →₀ ℕ) (n : ℕ) :
   · rw [multinomial_eq_of_support_subset (subset_univ d.support)]
     erw [Nat.binomial_eq_choose Fin.zero_ne_one]
     simp [hd]
-  · rfl
+  · rfl -/
 
 end MvPolynomial
 
