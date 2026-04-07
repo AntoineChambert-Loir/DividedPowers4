@@ -67,6 +67,7 @@ instance : Mul (𝒜 0) where
 
 theorem one_mem : (1 : A) ∈ 𝒜 0 := SetLike.one_mem_graded 𝒜
 
+set_option backward.isDefEq.respectTransparency false in
 instance commSemiring : CommSemiring (𝒜 0) :=
   { (inferInstance : AddCommMonoid (𝒜 0)) with
     add  := (· + ·)
@@ -103,6 +104,7 @@ end AddCommMonoid
 variable {ι : Type*} [AddCommMonoid ι] [PartialOrder ι] [CanonicallyOrderedAdd ι]
   (𝒜 : ι → Submodule R A) [DecidableEq ι] [GradedAlgebra 𝒜]
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The projection from `A` to `𝒜 0`, as a `RingHom`. -/
 @[simps]
 def proj'_zeroRingHom : A →+* 𝒜 0 where
@@ -127,6 +129,7 @@ variable {R A ι : Type*} [CommRing R] [CommRing A] [Algebra R A] [AddCommMonoid
 
 namespace GradeZero
 
+set_option backward.isDefEq.respectTransparency false in
 instance commRing : CommRing (𝒜 0) :=
 { (inferInstance : AddCommGroup (𝒜 0)) with
     add  := (· + ·)

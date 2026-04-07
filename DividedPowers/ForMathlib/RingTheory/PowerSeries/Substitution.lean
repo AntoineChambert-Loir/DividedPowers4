@@ -55,13 +55,13 @@ lemma rescale_eq_rescale (r : R) (f : PowerSeries R) :
   rw [coeff_rescale, coeff, MvPowerSeries.coeff_rescale]
   simp
 
-lemma rescale_eq_subst (r : R) (f : PowerSeries R) :
+/- lemma rescale_eq_subst (r : R) (f : PowerSeries R) :
     PowerSeries.rescale r f = PowerSeries.subst (r • X : R⟦X⟧) f := by
   rw [rescale_eq_rescale, MvPowerSeries.rescale_eq_subst, X, subst, Pi.smul_def']
 
 /-- Rescale power series, as an `AlgHom` -/
 noncomputable def rescaleAlgHom (r : R) : R⟦X⟧ →ₐ[R] R⟦X⟧ :=
-  MvPowerSeries.rescaleAlgHom (fun _ ↦ r)
+  MvPowerSeries.rescaleAlgHom (fun _ ↦ r) -/
 
 lemma rescaleAlgHom_eq_rescaleAlgHom (r : R) (f : PowerSeries R) :
     rescaleAlgHom r f = MvPowerSeries.rescaleAlgHom (fun _ ↦ r) f := by
@@ -82,6 +82,7 @@ theorem rescale_mul' (a b : R) (f : R⟦X⟧) :
   rw [← Pi.mul_def, MvPowerSeries.rescale_mul]
   simp
 
+set_option backward.isDefEq.respectTransparency false in
 /-- When `p` is linear, substitution of `p` and then a scalar homothety is substitution of
   the homothety then `p`. -/
 lemma subst_linear_subst_scalar_comm (a : R) {σ : Type*} (p : MvPowerSeries σ R)

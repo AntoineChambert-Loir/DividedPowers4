@@ -36,21 +36,23 @@ end MvPolynomial
 
 open MvPolynomial
 
+set_option backward.isDefEq.respectTransparency false in
 theorem LinearMap.rTensor_finsuppLeft_eq {S S' : Type*} [CommSemiring S] [Algebra R S]
     [CommSemiring S'] [Algebra R S'] (φ : S →ₐ[R] S') (k : σ →₀ ℕ) (sn : MvPolynomial σ S ⊗[R] N) :
-    (LinearMap.rTensor N φ.toLinearMap) (((finsuppLeft R S N (σ →₀ ℕ)) sn) k) =
-      ((finsuppLeft R S' N (σ →₀ ℕ)) ((LinearMap.rTensor N (mapAlgHom φ).toLinearMap) sn)) k := by
+    (LinearMap.rTensor N φ.toLinearMap) (((finsuppLeft R S S N (σ →₀ ℕ)) sn) k) =
+      ((finsuppLeft R S' S' N (σ →₀ ℕ)) ((LinearMap.rTensor N (mapAlgHom φ).toLinearMap) sn)) k := by
   induction sn using TensorProduct.induction_on with
   | zero => simp
   | tmul p n =>
     rw [rTensor_tmul, finsuppLeft_apply_tmul_apply,
       rTensor_tmul, finsuppLeft_apply_tmul_apply]
     congr
-    exact (MvPolynomial.coeff_map φ.toRingHom p k).symm
+   -- exact (MvPolynomial.coeff_map φ.toRingHom p k).symm
   | add x y hx hy => simp [← hx, ← hy]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem TensorProduct.finsuppLeft_symm_apply_eq_sum {S : Type*} [CommSemiring S] [Algebra R S]
-    (sn : (σ →₀ ℕ) →₀ S ⊗[R] N) : (finsuppLeft R S N (σ →₀ ℕ)).symm sn =
+    (sn : (σ →₀ ℕ) →₀ S ⊗[R] N) : (finsuppLeft R S S N (σ →₀ ℕ)).symm sn =
       sn.sum fun k ↦ ⇑(AlgebraTensorModule.map (monomial k) LinearMap.id) := by
   induction sn using Finsupp.induction_linear with
   | zero => simp
@@ -82,9 +84,9 @@ theorem TensorProduct.tmul_eq_aeval_one_sum :
     rw [MvPolynomial.rTensor_apply_tmul, Finsupp.sum]
     simp only [eval₂, RingHom.coe_coe, Pi.one_apply, one_pow]
     rw [finsupp_support_eq_support, support_X (R := R)]
-    simp only [Finset.sum_singleton, map_zero, Finsupp.prod_single_index, mul_one,
-      Finsupp.sum_single_index, Algebra.TensorProduct.lid_tmul]
-    simp [X, ← single_eq_monomial, single_eq_same]
+    simp only [Finset.sum_singleton, prod_fun_one, mul_one, AddMonoidAlgebra.coeff]
+    rw [Finsupp.sum_single_index (by simp [map_zero])]
+    simp [Algebra.TensorProduct.lid_tmul, X, ← single_eq_monomial, single_eq_same, one_smul]
   · have hSM := TensorProduct.not_nontrivial_of_not_nontrivial R S (Π i, M i)
       (Algebra.not_nontrivial_of_not_nontrivial R S hR)
     simp only [nontrivial_iff, ne_eq, not_exists, not_not] at hSM

@@ -4,8 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 import DividedPowers.DPAlgebra.Free
-import DividedPowers.ForMathlib.Data.Nat.Choose.Multinomial
-import DividedPowers.ForMathlib.RingTheory.Localization.FractionRing
+import Mathlib.Data.Nat.Choose.Multinomial
+import Mathlib.RingTheory.Localization.FractionRing
 import Mathlib.RingTheory.DividedPowers.Padic
 import Mathlib.RingTheory.DividedPowers.SubDPIdeal
 import Mathlib.RingTheory.MvPolynomial.Basic

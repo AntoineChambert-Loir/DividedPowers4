@@ -6,7 +6,7 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 import DividedPowers.DPAlgebra.BaseChange
 import DividedPowers.DPAlgebra.Graded.GradeZero
 import DividedPowers.ForMathlib.Data.FinsetLemmas
-import DividedPowers.ForMathlib.RingTheory.DividedPowers.Basic
+import Mathlib.RingTheory.DividedPowers.Basic
 import Mathlib.RingTheory.DividedPowers.RatAlgebra
 import Mathlib.RingTheory.TensorProduct.Free
 
