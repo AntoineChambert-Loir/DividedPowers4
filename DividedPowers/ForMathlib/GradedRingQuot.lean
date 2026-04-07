@@ -93,14 +93,13 @@ variable (rel : A → A → Prop)
 lemma DirectSum.decomposeAlgEquiv_coe [GradedAlgebra 𝒜] (a : A) :
     decomposeAlgEquiv 𝒜 a = decompose 𝒜 a := by rfl
 
-lemma RingConGen.Rel.sum {α : Type*} [Ring α] (r : RingCon α) {ι : Type*} [DecidableEq ι]
+lemma RingConGen.Rel.sum {α : Type*} [Ring α] (r : RingCon α) {ι : Type*}
     {a b : ι → α} (s : Finset ι) (hs : ∀ i ∈ s, r (a i) (b i)) :
-    RingConGen.Rel r (s.sum a) (s.sum b) := by
-  revert hs
+    RingConGen.Rel r (∑ i ∈ s, a i) (∑ i ∈ s, b i) := by
+  have : DecidableEq ι := Classical.typeDecidableEq ι
   induction s using Finset.induction_on with
-  | empty => exact fun _ =>  RingConGen.Rel.refl _
+  | empty => exact RingConGen.Rel.refl _
   | insert j t hj ht =>
-    intro hs
     simp only [Finset.sum_insert hj]
     exact (RingConGen.Rel.of _ _ (hs j (Finset.mem_insert_self j t))).add
       (ht (fun i hi =>  hs i (Finset.mem_insert_of_mem hi)))

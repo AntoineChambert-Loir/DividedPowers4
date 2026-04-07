@@ -46,7 +46,7 @@ def algebraMapInv : DividedPowerAlgebra R M →ₐ[R] R :=
     (fun _ => by simp only [LinearMap.zero_apply, mem_bot])
 
 theorem algebraMapInv_mk (f : MvPolynomial (ℕ × M) R) :
-    algebraMapInv R M (mk f) = aeval (fun nm : ℕ × M => ite (0 < nm.1) (0 : R) 1) f := by
+    algebraMapInv R M (mkAlgHom R (Rel R M) f) = aeval (fun nm : ℕ × M => ite (0 < nm.1) (0 : R) 1) f := by
   rw [← AlgHom.comp_apply]
   apply AlgHom.congr_fun
   ext ⟨n, m⟩
@@ -61,8 +61,7 @@ theorem algebraMapInv_mk (f : MvPolynomial (ℕ × M) R) :
 
 theorem algebraMapInv_dp (n : ℕ) (m : M) :
     algebraMapInv R M (dp R n m) = if n = 0 then 1 else 0 := by
-  rw [show dp R n m = mk (X (n, m)) by rfl, algebraMapInv_mk]
-  simp only [aeval_X]
+  simp only [dp, algebraMapInv_mk, aeval_X]
   by_cases hn : n = 0
   · rw [if_pos hn, if_neg (Eq.not_gt hn)]
   · rw [if_neg hn, if_pos (Nat.zero_lt_of_ne_zero hn)]
@@ -97,7 +96,7 @@ theorem algebraMap_right_inv_of_degree_zero (x : grade R M 0) :
   obtain ⟨p, hp0, hpx⟩ := (mem_grade_iff' _).mp x.2
   suffices ∃ (a : R), p.val = C a by
     obtain ⟨a, ha⟩ := this
-    simp only [← hpx, ha, mk_C, AlgHom.commutes, Algebra.algebraMap_self, RingHom.id_apply]
+    simp only [← hpx, ha, mkAlgHom_C, AlgHom.commutes, Algebra.algebraMap_self, RingHom.id_apply]
   use constantCoeff p.val
   ext exp
   simp only [coeff_C]
@@ -148,18 +147,17 @@ instance [DecidableEq R] : DecidablePred (fun x ↦ x ∈ augIdeal R M) := by
 /-- For `Nontrivial R`, `dp R n m` is contained in the augmentation ideal iff `0 < n`. -/
 theorem dp_mem_augIdeal_iff [Nontrivial R] (n : ℕ) (m : M) :
     dp R n m ∈ augIdeal R M ↔ 0 < n := by
-  erw [mem_augIdeal_iff, dp, algebraMapInv_mk, aeval_X]
+  rw [mem_augIdeal_iff, dp, algebraMapInv_mk, aeval_X]
   simp only [ite_eq_left_iff, not_not, one_ne_zero, imp_false]
 
 /-- `dp R n m` is contained in the augmentation ideal for `0 < n` -/
 theorem dp_mem_augIdeal {n : ℕ} (hn : 0 < n) (m : M) :
     dp R n m ∈ augIdeal R M := by
-  erw [mem_augIdeal_iff, dp, algebraMapInv_mk, aeval_X, if_pos hn]
+  rw [mem_augIdeal_iff, dp, algebraMapInv_mk, aeval_X, if_pos hn]
 
 /-- The image of ι is contained in the augmentation ideal -/
 theorem ι_mem_augIdeal (m : M) : ι R M m ∈ augIdeal R M := by
-  have : (mkAlgHom R (Rel R M)) (X (1, m)) = mk (X (1, m)) := rfl
-  simp only [this, mem_augIdeal_iff, ι_def, dp, algebraMapInv_mk, aeval_X, zero_lt_one, ite_true]
+  simp [mem_augIdeal_iff, ι_def, dp, algebraMapInv_mk]
 
 /-- The lift of the algebra morphism `algebraMapInv R M` to the quotient by the augmentation
   ideal. -/
@@ -177,7 +175,7 @@ lemma kerLiftAlg_rightInverse :
     (RingHom.kerLift_injective _) (kerLiftAlg_leftInverse _ _)
 
 theorem coeff_zero_of_mem_augIdeal {f : MvPolynomial (ℕ × M) R}
-    (hf : f ∈ supported R {nm : ℕ × M | 0 < nm.fst}) (hf0 : mk f ∈ augIdeal R M) :
+    (hf : f ∈ supported R {nm : ℕ × M | 0 < nm.fst}) (hf0 : mkAlgHom R _ f ∈ augIdeal R M) :
     coeff 0 f = 0 := by
   simp only [augIdeal, RingHom.mem_ker] at hf0
   rw [← hf0, algebraMapInv_mk R M, eq_comm]
@@ -343,7 +341,7 @@ theorem algebraMap_mem_grade_zero  (r : R) :
   constructor
   · simp only [mem_weightedHomogeneousSubmodule]
     exact isWeightedHomogeneous_C Prod.fst r
-  · rw [mk_C]
+  · rw [mkAlgHom_C]
 
 /-- The degree 0 part of `DividedPowerAlgebra R M` as an `R`-subalgebra. -/
 def gradeZeroSubalgebra : Subalgebra R (DividedPowerAlgebra R M) where
