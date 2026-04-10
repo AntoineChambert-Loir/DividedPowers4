@@ -488,7 +488,7 @@ example (S : Type*) [CommRing S] : CommRing (R ⊗[ℤ] S) := inferInstance
 
 -- Prop. A2.1
 set_option backward.isDefEq.respectTransparency false in
-set_option trace.Meta.synthInstance true in
+--set_option trace.Meta.synthInstance true in
 noncomputable example :
     R ⊗[ℤ] DividedPowerAlgebra ℤ M ≃ₐ[R] DividedPowerAlgebra R (R ⊗[ℤ] M) :=
   DividedPowerAlgebra.dpScalarExtensionEquiv ℤ R M
@@ -555,13 +555,18 @@ lemma basis_eq (d : ι →₀ ℕ) :
       congr
       simp only [Int.basis, Finsupp.coe_basisSingleOne, Basis.coe_mk]
       rw [Finsupp.prod_single_index (by rw [dp_zero])]
+      simp only [baseChange_equiv]
+      rw [dpScalarExtensionEquiv]
       simp only [baseChange_equiv, dpScalarExtensionEquiv, baseChange_equiv', AlgEquiv.trans_apply,
+        AlgEquiv.ofAlgHom_apply, dpScalarExtension_apply_one_dp]
+      sorry
+      /- simp only [baseChange_equiv, dpScalarExtensionEquiv, baseChange_equiv', AlgEquiv.trans_apply,
         AlgEquiv.ofAlgHom_apply, dpScalarExtension_apply_one_dp]
       simp only [LinearEquiv.lift, LinearEquiv.trans_symm, LinearEquiv.symm_symm,
         AlgEquiv.ofAlgHom_apply]
       rw [LinearMap.lift_apply_dp]
       congr
-      simp [finsuppScalarRight]
+      simp [finsuppScalarRight] -/
 
 set_option backward.isDefEq.respectTransparency false in
 theorem free (b : Basis ι R M) : Module.Free R (DividedPowerAlgebra R M) :=
@@ -864,7 +869,7 @@ lemma repr_dp_one [DecidableEq ι] (m : M) : (basis R M b).repr (dp R 1 m) =
     _ = _ := by
       simp
 
-#print axioms repr_dp_one
+--#print axioms repr_dp_one
 
 end Free
 

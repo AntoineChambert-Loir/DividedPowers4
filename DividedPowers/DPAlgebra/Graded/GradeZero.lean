@@ -52,12 +52,12 @@ theorem algebraMapInv_mk (f : MvPolynomial (ℕ × M) R) :
   ext ⟨n, m⟩
   simp only [algebraMapInv, AlgHom.comp_apply, aeval_X]
   by_cases hn : 0 < n
-  · simp only [if_pos hn, lift_apply, LinearMap.zero_apply, aeval_X]
+  · rw [if_pos hn, lift_apply]
+    simp only [LinearMap.zero_apply, aeval_X]
     rw [DividedPowers.dpow_eval_zero _ (ne_of_gt hn)]
-  · rw [if_neg hn]
+  · rw [if_neg hn, lift_apply]
     rw [not_lt, le_zero_iff] at hn
-    simp only [hn, lift_apply, LinearMap.zero_apply, aeval_X,
-      DividedPowers.dpow_zero _ (mem_bot.mpr rfl)]
+    simp [hn, DividedPowers.dpow_zero _ (mem_bot.mpr rfl)]
 
 theorem algebraMapInv_dp (n : ℕ) (m : M) :
     algebraMapInv R M (dp R n m) = if n = 0 then 1 else 0 := by
@@ -267,6 +267,7 @@ section
 
 variable (S : Type*) [CommRing S] [Algebra R S] {N : Type*} [AddCommGroup N] [Module R N]
   [Module S N] [IsScalarTower R S N] (f : M →ₗ[R] N)
+  [Algebra R (DividedPowerAlgebra S N)] [IsScalarTower R S (DividedPowerAlgebra S N)]
 
 theorem LinearMap.augIdeal_map_lift_le :
     (augIdeal R M).map (LinearMap.lift S f) ≤ augIdeal S N := by

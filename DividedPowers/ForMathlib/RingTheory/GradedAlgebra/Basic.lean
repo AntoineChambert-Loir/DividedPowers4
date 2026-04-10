@@ -12,6 +12,8 @@ noncomputable section
 
 open Finset MvPolynomial DirectSum
 
+
+
 section
 
 theorem Finsupp.prod_mem_grade {κ A R : Type*} [AddCommMonoid κ] [DecidableEq κ] [CommSemiring A]
