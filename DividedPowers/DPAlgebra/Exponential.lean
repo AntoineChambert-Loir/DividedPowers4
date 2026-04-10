@@ -211,11 +211,9 @@ noncomputable def quotientEquiv :
     intro k n
     obtain ⟨m, rfl⟩ := hf n
     simp
-  · ext
-    --apply Ideal.Quotient.algHom_ext
-    --rw [algHom_ext_iff]
-    intros; simp --Why is this broken?
-    sorry
+  · apply Ideal.Quotient.algHom_ext
+    rw [algHom_ext_iff]
+    intros; simp
 
 include hf in
 -- This is [Roby-1963, Prop. IV.8].

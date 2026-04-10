@@ -557,16 +557,13 @@ lemma basis_eq (d : ι →₀ ℕ) :
       rw [Finsupp.prod_single_index (by rw [dp_zero])]
       simp only [baseChange_equiv]
       rw [dpScalarExtensionEquiv]
-      simp only [baseChange_equiv, dpScalarExtensionEquiv, baseChange_equiv', AlgEquiv.trans_apply,
-        AlgEquiv.ofAlgHom_apply, dpScalarExtension_apply_one_dp]
-      sorry
-      /- simp only [baseChange_equiv, dpScalarExtensionEquiv, baseChange_equiv', AlgEquiv.trans_apply,
+      simp only [baseChange_equiv', AlgEquiv.trans_apply,
         AlgEquiv.ofAlgHom_apply, dpScalarExtension_apply_one_dp]
       simp only [LinearEquiv.lift, LinearEquiv.trans_symm, LinearEquiv.symm_symm,
         AlgEquiv.ofAlgHom_apply]
       rw [LinearMap.lift_apply_dp]
       congr
-      simp [finsuppScalarRight] -/
+      simp [finsuppScalarRight]
 
 set_option backward.isDefEq.respectTransparency false in
 theorem free (b : Basis ι R M) : Module.Free R (DividedPowerAlgebra R M) :=
@@ -597,7 +594,7 @@ lemma basis_single_one_eq (i : ι) :
     basis R M b (Finsupp.single i 1) = DividedPowerAlgebra.embed R M (b i) := by
   rw [basis_single_eq, embed_def]
 
-theorem basis_repr_ι (m : M) (d) [Decidable (∃ i, d = Finsupp.single i 1)] :
+theorem basis_repr_embed (m : M) (d) [Decidable (∃ i, d = Finsupp.single i 1)] :
     (basis R M b).repr (DividedPowerAlgebra.embed R M m) d =
       if H : ∃ i, d = Finsupp.single i 1 then b.repr m H.choose else 0 := by
   have hm : m = ((b.repr m).sum fun i c ↦ c • b i) := by
@@ -622,13 +619,13 @@ theorem basis_repr_ι (m : M) (d) [Decidable (∃ i, d = Finsupp.single i 1)] :
     rw [Finsupp.single_eq_of_ne, mul_zero]
     exact fun H' ↦ H ⟨i, H'⟩
 
-theorem ι_repr_support_eq (m : M) :
+theorem embed_repr_support_eq (m : M) :
     ((basis R M b).repr (DividedPowerAlgebra.embed R M m)).support =
       (b.repr m).support.map ⟨fun i ↦ Finsupp.single i 1, fun i j ↦ by
         simp [Finsupp.single_left_inj Nat.one_ne_zero]⟩ := by
   classical
   ext d
-  rw [Finsupp.mem_support_iff, basis_repr_ι]
+  rw [Finsupp.mem_support_iff, basis_repr_embed]
   split_ifs with H
   · obtain ⟨i, rfl⟩ := id H
     suffices H.choose = i by
@@ -801,7 +798,7 @@ theorem dpow_basis_eq (H : DividedPowers (augIdeal R M))
     (Nat.zero_lt_of_ne_zero (Finsupp.mem_support_iff.mp hi)) (b i))]
   have (i) (hx : i ∈ d.support) : H.dpow n (dp R (d i) (b i)) =
       (n.uniformBell (d i)) • dp R (n * d i) (b i) := by
-    rw [← hH, dpow_comp _ ( Finsupp.mem_support_iff.mp hx) (ι_mem_augIdeal R M (b i)), hH]
+    rw [← hH, dpow_comp _ ( Finsupp.mem_support_iff.mp hx) (embed_mem_augIdeal R M (b i)), hH]
     simp
   rw [Finset.prod_congr rfl this, Finset.prod_smul', smul_assoc, basis_eq,
     Finsupp.prod_of_support_subset _ Finsupp.support_smul _ (fun i _ ↦ dp_zero)]

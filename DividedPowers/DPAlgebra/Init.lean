@@ -420,11 +420,11 @@ theorem lift_unique {f : DividedPowerAlgebra R M →ₐ[R] A}
   algHom_ext (fun _ _ ↦ by rw [lift_apply_dp, hf])
 
 @[simp]
-theorem lift_ι_apply (m : M) : lift hI g hg (embed R M m) = g m := by
+theorem lift_embed_apply (m : M) : lift hI g hg (embed R M m) = g m := by
   simp [embed_def, hI.dpow_one (hg m)]
 
 @[simp]
-theorem ι_comp_lift : (lift hI g hg).toLinearMap.comp (embed R M) = g := by
+theorem embed_comp_lift : (lift hI g hg).toLinearMap.comp (embed R M) = g := by
   ext; simp
 
 end UniversalProperty
@@ -482,10 +482,10 @@ theorem lift_apply_dp (n : ℕ) (a : M) : LinearMap.lift S f (dp R n a) = dp S n
   rw [LinearMap.lift, lift'_apply_dp]
 
 @[simp]
-theorem lift_ι_apply (m : M) : LinearMap.lift S f (embed R M m) = embed S N (f m) := by
+theorem lift_embed_apply (m : M) : LinearMap.lift S f (embed R M m) = embed S N (f m) := by
   simp [embed_def, LinearMap.lift_apply_dp]
 
-theorem lift_comp_ι :
+theorem lift_comp_embed :
     (LinearMap.lift S f).toLinearMap.comp (embed R M) = ((embed S N).restrictScalars R).comp f := by
   ext; simp
 

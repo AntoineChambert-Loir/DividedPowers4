@@ -77,8 +77,8 @@ theorem onDPAlgebra_unique (h h' : DividedPowers (augIdeal R M))
   apply DividedPowers.dpow_eq_from_gens h' h (augIdeal_eq_span R M)
   rintro n f ⟨q, hq : 0 < q, m, _, rfl⟩
   nth_rw 1 [← h1' q m]
-  rw [← h1 q m, h.dpow_comp (ne_of_gt hq) (ι_mem_augIdeal R M m),
-    h'.dpow_comp (ne_of_gt hq) (ι_mem_augIdeal R M m), h1 _ m, h1' _ m]
+  rw [← h1 q m, h.dpow_comp (ne_of_gt hq) (embed_mem_augIdeal R M m),
+    h'.dpow_comp (ne_of_gt hq) (embed_mem_augIdeal R M m), h1 _ m, h1' _ m]
 
 namespace Free
 
@@ -277,7 +277,7 @@ theorem dpow_eq_of_support_subset {x : DividedPowerAlgebra R M} (hx : x ∈ augI
     · intros; rfl
 
  theorem dpow_embed (m : M) : dpow b n (DividedPowerAlgebra.embed R M m) = dp R n m := by
-  simp only [dpow, if_pos (ι_mem_augIdeal R M m)]
+  simp only [dpow, if_pos (embed_mem_augIdeal R M m)]
   have hm : m = ((b.repr m).sum fun i c ↦ c • b i) := by
     have := (Basis.linearCombination_repr b m).symm
     simpa only [Finsupp.linearCombination, Finsupp.lsum] using this
@@ -293,7 +293,7 @@ theorem dpow_eq_of_support_subset {x : DividedPowerAlgebra R M} (hx : x ∈ augI
   set s := (b.repr m).support with hs
   set t := ((basis R M b).repr ((DividedPowerAlgebra.embed R M) m)).support with ht
   have hst : t = Finset.map g s := by
-    simp only [← hs, ht, ι_repr_support_eq]
+    simp only [← hs, ht, embed_repr_support_eq]
     congr
   have hst' : t.sym n = Finset.map gg (s.sym n) := hst ▸ Finset.sym_map _ _
   rw [hst', Finset.sum_map]
@@ -554,7 +554,7 @@ theorem lift_dpow_eq_dpow_lift (n : ℕ) {x : DividedPowerAlgebra R M} (hx : x �
   rw [dpow_eq _ ?_ c]
   apply lift_dpow hf hx -- (by exact hf b) x hx
   intro n x
-  rw [RatAlgebra.dpow_eq_inv_fact_smul _ _ (ι_mem_augIdeal _ _ x)]
+  rw [RatAlgebra.dpow_eq_inv_fact_smul _ _ (embed_mem_augIdeal _ _ x)]
   simp only [Ring.inverse_eq_inv', DividedPowerAlgebra.embed, LinearMap.coe_mk, AddHom.coe_mk]
   have : Invertible (n ! : ℚ) := invertibleOfNonzero (by simp [Nat.factorial_ne_zero])
   rw [← invOf_eq_inv, invOf_smul_eq_iff, ← natFactorial_mul_dp_eq]
@@ -1054,7 +1054,7 @@ theorem isSubDPIdeal_of_isSurjective [DecidableEq R] (hL : DividedPowers (augIde
   rw [LinearMap.ker_lift_of_surjective f hf, kerLift, hL.span_isSubDPIdeal_iff]
   · rintro n hn _ ⟨⟨⟨q, hq⟩, ⟨l, hl⟩⟩, rfl⟩
     simp only [PNat.mk_coe]
-    rw [← dpow_eq_dp, hL.dpow_comp (Nat.ne_zero_of_lt hq) (ι_mem_augIdeal R L l)]
+    rw [← dpow_eq_dp, hL.dpow_comp (Nat.ne_zero_of_lt hq) (embed_mem_augIdeal R L l)]
     apply Ideal.mul_mem_left
     apply Ideal.subset_span
     rw [dpow_eq_dp]
@@ -1172,6 +1172,8 @@ theorem isSubDPIdeal {hRL : DividedPowers (augIdeal R L)}
     exact ⟨(isSubDPIdeal_of_isSurjective R hRL hRL_dp hf).dpow_mem
       n hn hx.1, dpow_mem _ hn hx.2⟩
 
+#print axioms isSubDPIdeal_of_isSurjective
+
 include hf in
 theorem isSubDPIdeal' {hRL : DividedPowers (augIdeal R L)}
     (hRL_dp : ∀ (n : ℕ) (x : L), hRL.dpow n (embed R L x) = dp R n x) :
@@ -1183,31 +1185,31 @@ theorem isSubDPIdeal' {hRL : DividedPowers (augIdeal R L)}
     exact ⟨(isSubDPIdeal_of_isSurjective R hRL hRL_dp hf).dpow_mem
       n hn hx.1, dpow_mem _ hn hx.2⟩
 
-#check isSubDPIdeal'
+#print axioms isSubDPIdeal
 
 include hf in
 def dividedPowers_from_free [Free R L] : DividedPowers (augIdeal R M) :=
-  DividedPowers.Quotient.OfSurjective.dividedPowers (Free.dividedPowers R L)
-    (LinearMap.lift_surjective hf) (LinearMap.augIdeal_map_lift R L f hf).symm
+  DividedPowers.Quotient.OfSurjective.dividedPowers
+    (Free.dividedPowers R L)
+    (LinearMap.lift_surjective hf)
+    (LinearMap.augIdeal_map_lift R L f hf).symm
     (isSubDPIdeal' hf Free.dpow_embed_eq_dp)
 
-set_option pp.proofs true in
+-- This should be the proof of the next lemma,
+-- but we are stuck with an `erw` !
+example [Free R L] (n : ℕ) (x : M) :
+    (dividedPowers_from_free hf).dpow n (embed R M x) = dp R n x := by
+  obtain ⟨y, rfl⟩ := hf x
+  rw [← LinearMap.lift_embed_apply]
+  erw [Quotient.OfSurjective.dpow_apply (ha := embed_mem_augIdeal _ _ y)]
+  simp [Free.dpow_embed_eq_dp, LinearMap.lift_apply_dp]
+
 theorem dpow_from_free_embed_eq_dp [Free R L] (n : ℕ) (x : M) :
     (dividedPowers_from_free hf).dpow n (embed R M x) = dp R n x := by
-  -- simp only [dividedPowers_from_free]
   obtain ⟨y, rfl⟩ := hf x
-  rw [← LinearMap.lift_ι_apply]
- -- simp only [AlgHom.toRingHom_eq_coe]
-  simp only [dividedPowers_from_free]
-  have := Quotient.OfSurjective.dpow_apply (Free.dividedPowers R L)
-    (LinearMap.lift_surjective hf) (LinearMap.augIdeal_map_lift R L f hf).symm
-    (isSubDPIdeal' hf Free.dpow_embed_eq_dp) (ι_mem_augIdeal _ _ y) (n := n)
-  --have : (dividedPowers_from_free hf).dpow n ()
-  simp only [AlgHom.toRingHom_eq_coe, RingHom.coe_coe] at this
-  erw [Quotient.OfSurjective.dpow_apply (Free.dividedPowers R L)
-    (LinearMap.lift_surjective' hf) (LinearMap.augIdeal_map_lift R L f hf).symm
-    (isSubDPIdeal hf Free.dpow_embed_eq_dp) (ι_mem_augIdeal _ _ y) (n := n)]
-  simp [Free.dpow_embed_eq_dp, LinearMap.lift_apply_dp]
+  rw [← LinearMap.lift_embed_apply, dividedPowers_from_free, ← LinearMap.lift_apply_dp,
+    ← Free.dpow_embed_eq_dp]
+  apply Quotient.OfSurjective.dpow_apply (ha := embed_mem_augIdeal _ _ y)
 
 end Presentation
 
@@ -1230,6 +1232,8 @@ theorem dpow_embed_eq_dp (n : ℕ) (x : M) : (dividedPowers R M).dpow n (embed R
   simp [dividedPowers, Presentation.dpow_from_free_embed_eq_dp]
 
 end
+
+#print axioms DividedPowerAlgebra.dividedPowers
 
 end General
 

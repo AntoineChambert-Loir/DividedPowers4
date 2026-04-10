@@ -155,8 +155,8 @@ theorem dp_mem_augIdeal {n : ℕ} (hn : 0 < n) (m : M) :
     dp R n m ∈ augIdeal R M := by
   rw [mem_augIdeal_iff, dp, algebraMapInv_mk, aeval_X, if_pos hn]
 
-/-- The image of ι is contained in the augmentation ideal -/
-theorem ι_mem_augIdeal (m : M) : embed R M m ∈ augIdeal R M := by
+/-- The image of `embed` is contained in the augmentation ideal -/
+theorem embed_mem_augIdeal (m : M) : embed R M m ∈ augIdeal R M := by
   simp [mem_augIdeal_iff, embed_def, dp, algebraMapInv_mk]
 
 /-- The lift of the algebra morphism `algebraMapInv R M` to the quotient by the augmentation
