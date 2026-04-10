@@ -137,6 +137,7 @@ theorem Decompose.baseChange.decompose_of_mem {m : S ⊗[R] M} {i : ι}
   · exact hm
 
 /-- Base change of a graded module -/
+@[implicit_reducible]
 noncomputable def DirectSum.Decomposition.baseChange [Decomposition ℳ] :
     Decomposition (fun i => (ℳ i).baseChange S) where
       decompose' := DirectSum.Decompose.baseChange.decompose ℳ
@@ -169,6 +170,7 @@ variable [CommSemiring S] [Algebra R S]
 
 open TensorProduct
 
+@[implicit_reducible]
 noncomputable def GradedAlgebra.baseChange :
   GradedAlgebra (fun i ↦ Submodule.baseChange S (𝒜 i)) where
     toDecomposition := DirectSum.Decomposition.baseChange 𝒜

@@ -51,6 +51,10 @@ open Algebra.TensorProduct DividedPowers DividedPowerAlgebra
 noncomputable def dpScalarExtension' (R : Type u) [CommSemiring R] (S : Type _) [CommSemiring S]
     [Algebra R S] (M : Type _) [AddCommMonoid M] [Module R M] [Module S M] [IsScalarTower R S M] :
     S ⊗[R] DividedPowerAlgebra R M →ₐ[S] DividedPowerAlgebra S M := by
+ /-  let : Algebra R (DividedPowerAlgebra S (S ⊗[R] (Dividedp))) := RingQuot.instAlgebra _
+  have : IsScalarTower R S (DividedPowerAlgebra S (S ⊗[R] M)) := RingQuot.instIsScalarTower _  -/
+  let : Algebra R (DividedPowerAlgebra S M) := RingQuot.instAlgebra _
+  have : IsScalarTower R S (DividedPowerAlgebra S M) := RingQuot.instIsScalarTower _
   apply AlgHom.baseChange
   apply lift' (f := fun nm => dp S nm.1 nm.2)
   · intro m; rw [dp_zero]
@@ -68,6 +72,8 @@ variable (A : Type*) [CommSemiring A] (R : Type*) [CommSemiring R] [Algebra A R]
   `DividedPowerAlgebra R (R ⊗[A] M)`. -/
 noncomputable def dpScalarExtension :
     R ⊗[A] DividedPowerAlgebra A M →ₐ[R] DividedPowerAlgebra R (R ⊗[A] M) := by
+  let : Algebra A (DividedPowerAlgebra R (R ⊗[A] M)) := RingQuot.instAlgebra _
+  have : IsScalarTower A R (DividedPowerAlgebra R (R ⊗[A] M)) := RingQuot.instIsScalarTower _
   apply AlgHom.baseChange
   apply lift' (f := (fun nm => dp R nm.1 (1 ⊗ₜ[A] nm.2) : ℕ × M → DividedPowerAlgebra R (R ⊗[A] M)))
     (fun _ => by simp only [dp_zero])
@@ -78,6 +84,8 @@ noncomputable def dpScalarExtension :
 
 theorem dpScalarExtension_apply_dp (r : R) (n : ℕ) (m : M) :
     dpScalarExtension A R M ((r ^ n) ⊗ₜ[A] (dp A n m)) = dp R n (r ⊗ₜ[A] m) := by
+  let :  Algebra A (DividedPowerAlgebra R (R ⊗[A] M)) := RingQuot.instAlgebra _
+  have :  IsScalarTower A R (DividedPowerAlgebra R (R ⊗[A] M)) := RingQuot.instIsScalarTower _
   rw [dpScalarExtension, AlgHom.baseChange_tmul, lift'_apply_dp, ← dp_smul, smul_tmul',
     smul_eq_mul, mul_one]
 
@@ -169,8 +177,14 @@ theorem dpScalarExtensionInv_unique
       rw [hx nn.1, hy nn.2]
 
 noncomputable example (R : Type*) [CommSemiring R] (A : Type*) [CommSemiring A] [Algebra R A]
-    (S : Type*) [CommSemiring S] [Algebra R S] : Algebra S (S ⊗[R] A) := inferInstance
+    (S : Type*) [CommSemiring S] [Algebra R S] : Algebra S (S ⊗[R] A) := leftAlgebra
+/-
+#synth Algebra S (S ⊗[R] DividedPowerAlgebra R M)
 
+#synth IsScalarTower R S (S ⊗[R] DividedPowerAlgebra R M) -/
+
+
+--set_option pp.analyze true in
 /-- The base change isomorphism for the divided power algebra
 [Roby1963, theorem III.3] -/
 noncomputable def dpScalarExtensionEquiv :
@@ -194,13 +208,15 @@ noncomputable def dpScalarExtensionEquiv :
         rintro ⟨k, l⟩ _
         rw [_root_.map_mul, _root_.map_mul, hx, hy])
     (by
+      --have : Algebra S (S ⊗[R] DividedPowerAlgebra R M) := inferInstance
+      --have : IsScalarTower R S (S ⊗[R] DividedPowerAlgebra R M) := inferInstance
       apply Algebra.TensorProduct.ext
       · ext
-      · sorry/- apply DividedPowerAlgebra.algHom_ext
+      · apply DividedPowerAlgebra.algHom_ext --(A := S ⊗[R] (DividedPowerAlgebra R M))
         intro n m
-        simp only [coe_comp, coe_restrictScalars', Function.comp_apply, includeRight_apply,
+        simp [coe_comp, coe_restrictScalars', Function.comp_apply, includeRight_apply,
           coe_id, id_eq]
-        rw [← one_pow n, dpScalarExtension_apply_dp, dpScalarExtensionInv_apply_dp] -/)
+        rw [← one_pow n, dpScalarExtension_apply_dp, dpScalarExtensionInv_apply_dp])
 
 theorem coe_dpScalarExtensionEquiv :
     ⇑(dpScalarExtensionEquiv R S M) = ⇑(dpScalarExtension R S M) := by
@@ -231,7 +247,13 @@ theorem rTensor_comp_dpScalarExtensionEquiv_symm_eq {S : Type*} [CommRing S] [Al
 
 open MvPolynomial
 
-set_option backward.isDefEq.respectTransparency false in
+/- noncomputable local instance {N : Type*} [AddCommMonoid N] [Module S N] :
+    Algebra R (DividedPowerAlgebra S N) := RingQuot.instAlgebra (Rel S N)
+
+noncomputable local instance {N : Type*} [AddCommMonoid N] [Module S N] :
+    IsScalarTower R S (DividedPowerAlgebra S N) := RingQuot.instIsScalarTower (Rel S N) -/
+
+--set_option backward.isDefEq.respectTransparency false in
 theorem dpScalarExtension_mem_grade {a : DividedPowerAlgebra R M} {n : ℕ} (ha : a ∈ grade R M n)
     (s : S) : dpScalarExtension R S M (s ⊗ₜ[R] a) ∈ grade S (S ⊗[R] M) n := by
   rw [mem_grade_iff]
@@ -254,6 +276,8 @@ theorem dpScalarExtension_mem_grade {a : DividedPowerAlgebra R M} {n : ℕ} (ha 
     rfl
   · have h_eq : (algebraMap S (MvPolynomial (ℕ × M) S)).comp (algebraMap R S) =
       (algebraMap R (MvPolynomial (ℕ × M) S)) := rfl
+    let : Algebra R (DividedPowerAlgebra S (S ⊗[R] M)) := RingQuot.instAlgebra (Rel S _)
+    let : IsScalarTower R S (DividedPowerAlgebra S (S ⊗[R] M)) := RingQuot.instIsScalarTower (Rel S _)
     have h_eq' : (algebraMap S (DividedPowerAlgebra S (S ⊗[R] M))).comp (algebraMap R S) =
       (algebraMap R (DividedPowerAlgebra S (S ⊗[R] M))) := rfl
     have h_eq'' (d : ℕ × M →₀ ℕ) : MvPolynomial.coeff d ((MvPolynomial.eval₂Hom
@@ -267,9 +291,10 @@ theorem dpScalarExtension_mem_grade {a : DividedPowerAlgebra R M} {n : ℕ} (ha 
     simp only [SetLike.mem_coe, mem_weightedHomogeneousSubmodule, IsWeightedHomogeneous] at hpn
     simp only [hp', baseChange, coe_mk, ← hpa, MvPolynomial.rename, ← MvPolynomial.algebraMap_eq,
       dpScalarExtension, AlgHom.baseChange, toRingHom_eq_coe, coe_mk, RingHom.coe_coe,
-      productMap_apply_tmul, _root_.map_one, one_mul, lift', toLinearMap_apply, RingQuot.liftAlgHom_mkAlgHom_apply,
-      coe_eval₂AlgHom, Function.comp_def, baseChange, hf,  coe_mk]
-    rw [← AlgHom.comp_apply, MvPolynomial.comp_aeval, aeval_def]
+      productMap_apply_tmul, _root_.map_one, one_mul, lift', toLinearMap_apply,
+      Function.comp_def, hf]
+    rw [RingQuot.liftAlgHom_mkAlgHom_apply, coe_eval₂AlgHom,
+      ← AlgHom.comp_apply, MvPolynomial.comp_aeval, aeval_def]
     simp only [eval₂_eq]
     have h_sum (d : ℕ × M →₀ ℕ) : MvPolynomial.coeff d ((MvPolynomial.eval₂Hom
           (MvPolynomial.C.comp ↑(Algebra.algHom R R S)) MvPolynomial.X) p) =
@@ -303,7 +328,8 @@ theorem dpScalarExtension_mem_grade {a : DividedPowerAlgebra R M} {n : ℕ} (ha 
       simp only [dp_def]
       rw [← h_eq', RingHom.coe_comp, Function.comp_apply, MvPolynomial.algebraMap_eq, ← h_eq'',
         h_sum d, coeff_sum, map_sum]
-      simp only [MvPolynomial.coeff_C_mul, MvPolynomial.coeff_monomial, mul_ite, mul_one, mul_zero]
-      rfl
+      simp only [MvPolynomial.coeff_C_mul, MvPolynomial.coeff_monomial, mul_ite, mul_one, mul_zero,
+        map_sum]
+      congr
 
 end DividedPowerAlgebra

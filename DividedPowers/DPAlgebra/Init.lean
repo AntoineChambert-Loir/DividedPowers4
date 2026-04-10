@@ -7,6 +7,7 @@ import DividedPowers.ForMathlib.Algebra.MvPolynomial.Lemmas
 import Mathlib.Algebra.RingQuot
 import Mathlib.RingTheory.DividedPowers.Basic
 import DividedPowers.Plurinomial
+import DividedPowers.DPAlgebra.Init2
 
 noncomputable section
 
@@ -452,7 +453,13 @@ section IsScalarTower
 
 variable (S)
 
-variable [Algebra R S] [IsScalarTower R S N]
+variable [Algebra R S] [IsScalarTower R S N] [Algebra R (DividedPowerAlgebra S N)]
+  [IsScalarTower R S (DividedPowerAlgebra S N)]
+
+/- local instance : Algebra R (DividedPowerAlgebra S N) := RingQuot.instAlgebra (Rel S N)
+
+local instance : IsScalarTower R S (DividedPowerAlgebra S N) := RingQuot.instIsScalarTower (Rel S N)
+ -/
 
 lemma dp_smul (n : ℕ) (r : R) (a : M) : dp S n (f (r • a)) = r ^ n • dp S n (f a) := by
   rw [f.map_smul, algebra_compatible_smul S r (f a),
@@ -495,8 +502,10 @@ theorem lift_surjective {f : M →ₗ[R] N} (hf : Function.Surjective f) :
   simp [Algebra.map_top, Subalgebra.coe_comap, AlgHom.coe_range, Set.mem_preimage,
     Set.mem_range]
   use dp R n l
-  simp [LinearMap.lift_apply_dp]
-  rfl
+  rw [LinearMap.lift_apply_dp, dp]
+
+theorem lift_surjective' {f : M →ₗ[R] N} (hf : Function.Surjective f) :
+    Function.Surjective (LinearMap.lift R f).toRingHom := lift_surjective hf
 
 end IsScalarTower
 

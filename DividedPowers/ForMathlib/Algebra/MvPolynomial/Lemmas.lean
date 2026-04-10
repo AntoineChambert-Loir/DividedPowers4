@@ -10,7 +10,7 @@ import Mathlib.Algebra.MvPolynomial.Monad
 import Mathlib.Algebra.MvPolynomial.Supported
 import Mathlib.RingTheory.Ideal.Quotient.Operations
 import Mathlib.RingTheory.TensorProduct.MvPolynomial
-import Mathlib
+--import Mathlib
 
 /-! # Miscellaneous lemmas and definitions for `MvPolynomial`
 

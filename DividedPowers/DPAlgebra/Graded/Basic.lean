@@ -203,6 +203,10 @@ theorem lift_isHomogeneous {A : Type*} [CommSemiring A] [Algebra R A] (𝒜 : �
 variable {N : Type*} [AddCommMonoid N] [Module R N] [Module S N]
   [IsScalarTower R S N]
 
+local instance : Algebra R (DividedPowerAlgebra S N) := RingQuot.instAlgebra (Rel S N)
+
+local instance : IsScalarTower R S (DividedPowerAlgebra S N) := RingQuot.instIsScalarTower (Rel S N)
+
 theorem lift'_isHomogeneous (f : M →ₗ[R] N) :
     GAlgHom.IsHomogeneous (DividedPowerAlgebra.grade R M) (DividedPowerAlgebra.grade S N)
       (id : ℕ → ℕ) (DividedPowerAlgebra.LinearMap.lift S f) :=
