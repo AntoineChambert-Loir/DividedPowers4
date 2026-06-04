@@ -503,6 +503,7 @@ lemma quotDecomposition_IsInternal [GradedAlgebra 𝒜]
   quotDecompose'_bijective 𝒜 rel hrel
 
 /-- The decomposition of `RingQuot rel` as a direct sum of its graded pieces. -/
+@[implicit_reducible]
 noncomputable def quotDecomposition [GradedAlgebra 𝒜]
     (hrel : Rel.IsHomogeneous 𝒜 rel) : Decomposition (quotSubmodule R 𝒜 rel) :=
   { decompose' := invFun (quotDecompose' R 𝒜 rel)
@@ -510,6 +511,7 @@ noncomputable def quotDecomposition [GradedAlgebra 𝒜]
     right_inv  := leftInverse_invFun (quotDecompose_injective' 𝒜 rel hrel) }
 
 /-- The graded algebra structure on `RingQuot rel`. -/
+@[implicit_reducible]
 noncomputable def quotGradedAlgebra [GradedAlgebra 𝒜]
     (hrel : Rel.IsHomogeneous 𝒜 rel) : GradedAlgebra (quotSubmodule R 𝒜 rel) :=
   { toGradedMonoid  := SetLike.GradedMonoid_RingQuot 𝒜 rel
@@ -628,6 +630,7 @@ theorem Ideal.quotDecomposition_right_inv [GradedAlgebra 𝒜] (hI : I.IsHomogen
   I.quotDecomposition_right_inv' R 𝒜 hI
 
 /-- The decomposition of `A/I` as the direct sum of its graded components. -/
+@[implicit_reducible]
 def Ideal.quotDecomposition [GradedAlgebra 𝒜] (hI : I.IsHomogeneous 𝒜) :
     Decomposition (I.quotSubmodule R 𝒜) := {
   decompose' := I.quotDecompose R 𝒜 hI
@@ -635,6 +638,7 @@ def Ideal.quotDecomposition [GradedAlgebra 𝒜] (hI : I.IsHomogeneous 𝒜) :
   right_inv  := I.quotDecomposition_right_inv R 𝒜 hI }
 
 /-- The quotient of a graded algebra by a homogeneous ideal, as a graded algebra -/
+@[implicit_reducible]
 def Ideal.gradedQuotAlg [GradedAlgebra 𝒜] (hI : I.IsHomogeneous 𝒜) :
   GradedAlgebra (I.quotSubmodule R 𝒜) := {
   toDecomposition := I.quotDecomposition R 𝒜 hI

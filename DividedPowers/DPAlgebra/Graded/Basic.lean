@@ -101,6 +101,7 @@ theorem one_mem : (1 : DividedPowerAlgebra R M) ∈ grade R M 0 :=
   ⟨1, isWeightedHomogeneous_one R _, by simp [map_one]⟩
 
 /-- The canonical decomposition of `DividedPowerAlgebra R M` -/
+@[implicit_reducible]
 def decomposition : DirectSum.Decomposition (M := DividedPowerAlgebra R M) (grade R M) :=
   quotDecomposition (weightedHomogeneousSubmodule R (Prod.fst : ℕ × M → ℕ))
     (DividedPowerAlgebra.Rel R M) (Rel_isHomogeneous R M)

@@ -1172,7 +1172,7 @@ theorem isSubDPIdeal {hRL : DividedPowers (augIdeal R L)}
     exact ⟨(isSubDPIdeal_of_isSurjective R hRL hRL_dp hf).dpow_mem
       n hn hx.1, dpow_mem _ hn hx.2⟩
 
-#print axioms isSubDPIdeal_of_isSurjective
+--#print axioms isSubDPIdeal_of_isSurjective
 
 include hf in
 theorem isSubDPIdeal' {hRL : DividedPowers (augIdeal R L)}
@@ -1185,7 +1185,7 @@ theorem isSubDPIdeal' {hRL : DividedPowers (augIdeal R L)}
     exact ⟨(isSubDPIdeal_of_isSurjective R hRL hRL_dp hf).dpow_mem
       n hn hx.1, dpow_mem _ hn hx.2⟩
 
-#print axioms isSubDPIdeal
+--#print axioms isSubDPIdeal
 
 include hf in
 def dividedPowers_from_free [Free R L] : DividedPowers (augIdeal R M) :=
@@ -1233,7 +1233,7 @@ theorem dpow_embed_eq_dp (n : ℕ) (x : M) : (dividedPowers R M).dpow n (embed R
 
 end
 
-#print axioms DividedPowerAlgebra.dividedPowers
+--#print axioms DividedPowerAlgebra.dividedPowers
 
 end General
 
