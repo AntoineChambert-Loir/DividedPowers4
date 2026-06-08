@@ -569,8 +569,9 @@ def Ideal.quotDecompose [GradedAlgebra 𝒜] (hI : I.IsHomogeneous 𝒜) :
   apply I.quotDecomposeLaux_ker R 𝒜 hI
 
 theorem Ideal.quotDecomposeLaux_apply_mk [GradedAlgebra 𝒜] (hI : I.IsHomogeneous 𝒜) (a : A) :
-    I.quotDecompose R 𝒜 hI (Ideal.Quotient.mk I a) = I.quotDecomposeLaux R 𝒜 a :=
-  sorry --Submodule.liftQ_apply (I.restrictScalars R) (quotDecomposeLaux R 𝒜 I) a
+    I.quotDecompose R 𝒜 hI (Ideal.Quotient.mk I a) = I.quotDecomposeLaux R 𝒜 a := by
+  apply Submodule.liftQ_apply (I.restrictScalars R) _
+  --have := Submodule.liftQ_apply (I.restrictScalars R) (quotDecomposeLaux R (A := A) 𝒜 I) a
 
 private theorem Ideal.quotDecomposition_left_inv'_aux [GradedAlgebra 𝒜] :
   LinearMap.comp (coeLinearMap (Ideal.quotSubmodule R 𝒜 I)) (lmap (Ideal.quotCompMap R 𝒜 I)) =

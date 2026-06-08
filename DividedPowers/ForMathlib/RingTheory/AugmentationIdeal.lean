@@ -127,10 +127,20 @@ theorem ker_rTensor_of_projectionOnto :
   simp only [exact_iff, range_subtype, ker_projectionOnto]
   simp [← range_eq_top, range_projectionOnto]
 
+-- TODO: PR to Mathlib/LinearAlgebra/TensorProduct/Tower.lean
+open Function in
+theorem baseChange_exact {R A M N P : Type*} [CommRing R] [CommRing A] [Algebra R A]
+    [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R N] [AddCommGroup P] [Module R P]
+    {f : M →ₗ[R] N} {g : N →ₗ[R] P} (hfg : Exact f g) (hg : Surjective g) :
+    Exact (baseChange A f) (baseChange A g) := by
+  simpa [baseChange_eq_ltensor] using lTensor_exact A hfg hg
+
 theorem ker_baseChange_of_projectionOnto (R : Type*) [CommRing R] [Algebra A R] :
     ker (baseChange R (Submodule.projectionOnto _ _ hM)) =
       range (baseChange R M₂.subtype) := by
-  sorry --simpa [← exact_iff] using ker_lTensor_of_projectionOnto hM R
+  ext x
+  simp only [mem_ker, baseChange_eq_ltensor, mem_range]
+  rw [← mem_ker, ← mem_range, ker_lTensor_of_projectionOnto hM R]
 
 theorem isCompl_lTensor (hM : IsCompl M₁ M₂) :
     IsCompl (range (lTensor Q M₁.subtype)) (range (lTensor Q M₂.subtype)) := by
@@ -433,10 +443,8 @@ theorem Subalgebra.restrictScalars_toSubmodule_bot :
 theorem Subalgebra.codisjoint_bot_iff (I : Ideal R) :
     Codisjoint (Subalgebra.toSubmodule (⊥ : Subalgebra S R)) (I.restrictScalars S) ↔
     Codisjoint (Subalgebra.toSubmodule S) (I.restrictScalars A) := by
-  sorry
-  /- rw [← Submodule.codisjoint_restrictScalars_iff A _ _]
-  rw [Subalgebra.restrictScalars_toSubmodule_bot]
-  exact Iff.rfl -/
+  rw [← Submodule.codisjoint_restrictScalars_iff A, Subalgebra.restrictScalars_toSubmodule_bot]
+  exact Iff.rfl
 
 theorem Subalgebra.disjoint_bot_iff (I : Ideal R) :
     Disjoint (Subalgebra.toSubmodule (⊥ : Subalgebra S R)) (I.restrictScalars S) ↔
@@ -494,9 +502,9 @@ theorem isAugmentation_tensorProduct (A : Type*) [CommRing A] {R S : Type*} [Com
     simp [Submodule.TensorProduct]
     rw [sup_comm]
     rw [← restrictScalars_mem A, sup_restrictScalars]
-    simp only [Ideal.map_includeLeft_eq, Ideal.map_includeRight_eq]
-    sorry
-    /- rw [← id_comp (⊤ : Submodule A R).subtype, ← comp_id (Submodule.restrictScalars A J).subtype,
+    simp only [Ideal.map_includeLeft_eq, Ideal.map_includeRight_eq,
+      Submodule.restrictScalars_self, mapIncl]
+    rw [← id_comp (⊤ : Submodule A R).subtype, ← comp_id (Submodule.restrictScalars A J).subtype,
       ← id_comp (⊤ : Submodule A S).subtype, ← comp_id (Submodule.restrictScalars A I).subtype]
     simp only [TensorProduct.map_comp, range_comp]
     simp only [comp_id, lTensor, rTensor, LinearMap.range_eq_map]
@@ -508,7 +516,6 @@ theorem isAugmentation_tensorProduct (A : Type*) [CommRing A] {R S : Type*} [Com
       rw [Submodule.map_top, LinearMap.range_eq_top]
       apply TensorProduct.map_surjective Function.surjective_id
       rw [← LinearMap.range_eq_top, range_subtype]]
-    simp -/
 
 end Ideal
 

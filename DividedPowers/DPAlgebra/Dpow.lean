@@ -138,10 +138,7 @@ theorem cK_map_single_eq_one {s : Finset ι} {k : Sym ι n} (hk : k  ∈ s.sym n
     convert mul_one _
     · apply Finset.prod_eq_one
       intro i hi
-      have : i = j := by
-        by_contra! h
-        --simp [g, Finsupp.single_eq_of_ne h] at hi
-        sorry
+      have : i = j := by aesop
       simp [this, g, Nat.uniformBell_one_right]
     · suffices (g j).support = {j} by simp [this, card_singleton, tsub_self, pow_zero]
       ext i
@@ -190,7 +187,7 @@ theorem cK_one {k : Sym (ι →₀ ℕ) 1} : cK k s = 1 := by
       intro i hi
       have : Pi.single d (d i) = fun a ↦ if a = d then a i else 0 := by
         ext a
-        split_ifs with h <;> sorry --simp [Pi.single_apply, h]
+        split_ifs with h <;> simp [h]
       simp [Multiset.nodup_singleton, Multiset.count_singleton, ← this, Nat.multinomial_single]
     · simp [Nat.uniformBell_one_left]
   · intro c hc hcd
@@ -281,7 +278,7 @@ theorem dpow_eq_of_support_subset {x : DividedPowerAlgebra R M} (hx : x ∈ augI
   simp only [dpow, if_pos (embed_mem_augIdeal R M m)]
   have hm : m = ((b.repr m).sum fun i c ↦ c • b i) := by
     have := (Basis.linearCombination_repr b m).symm
-    sorry --simpa only [Finsupp.linearCombination, Finsupp.lsum] using this
+    simpa [Finsupp.linearCombination, Finsupp.lsum] using this
   let g : ι ↪ (ι →₀ ℕ) :=
     ⟨fun i ↦ Finsupp.single i 1, Finsupp.single_left_injective Nat.one_ne_zero⟩
   let gg : Sym ι n ↪ Sym (ι →₀ ℕ) n := {

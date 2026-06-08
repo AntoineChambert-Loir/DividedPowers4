@@ -144,24 +144,24 @@ open Finsupp
 
 set_option backward.isDefEq.respectTransparency false in
 /-- AlgHom for the tensor product of the monoid algebra with an algebra -/
+--open Classical in
 noncomputable def rTensorAlgHom :
     (MonoidAlgebra M α) ⊗[R] N →ₐ[S] MonoidAlgebra (M ⊗[R] N) α :=
   Algebra.TensorProduct.lift
     (algHom Algebra.TensorProduct.includeLeft)
     (singleOneAlgHom.comp Algebra.TensorProduct.includeRight)
     (fun x n => by
+      classical
       simp only [AlgHom.coe_comp, Function.comp_apply, Algebra.TensorProduct.includeRight_apply,
         singleOneAlgHom_apply, commute_iff_eq]
       apply Finsupp.ext
       intro a
       rw [mul_def, sum_apply]
-      sorry
-      /- erw [sum_apply, sum_single_index (by simp), sum_apply]
-      apply sum_congr
-      · intro b _
-        rw [sum_apply, sum_single_index (by simp)]
-        simp only [mul_one, single_apply, one_mul]
-        split_ifs; simp [algHom_apply_apply]; rfl -/)
+      simp only [mul_one, mul_zero, Finsupp.single_zero, Finsupp.sum_single_index]
+      rw [sum_eq_single a (by aesop) (by aesop), single_eq_same, mul_apply]
+      simp only [one_mul, zero_mul, ite_self, sum_fun_zero, Finsupp.sum_single_index, sum_ite_eq',
+        mem_support_iff, ne_eq, ite_not]
+      split_ifs <;> aesop (add norm algHom_apply_apply))
 
 lemma rTensorAlgHom_apply_tmul_apply
     (x : MonoidAlgebra M α) (n : N) (a : α) :
@@ -179,19 +179,11 @@ lemma rTensorAlgHom_toLinearMap :
       MonoidAlgebra M α ⊗[R] N →ₐ[S] MonoidAlgebra (M ⊗[R] N) α).toLinearMap =
       (finsuppLeft _ _ _ _ _).toLinearMap := by
   ext x n
-  /- dsimp only [AlgebraTensorModule.curry_apply, TensorProduct.curry_apply,
-    LinearMap.coe_restrictScalars, AlgHom.toLinearMap_apply] -/
-  sorry
-  /- apply Finsupp.ext
-  intro a
-  rw [rTensorAlgHom_apply_tmul_apply, ← finsuppLeft_apply_tmul_apply]
-  rfl -/
-
-/- lemma rTensorAlgHom_toLinearMap' :
-    (rTensorAlgHom :
-      MonoidAlgebra M α ⊗[R] N →ₐ[R] MonoidAlgebra (M ⊗[R] N) α).toLinearMap =
-      (finsuppLeft _ _ _ _ _).toLinearMap := by
-  rw [rTensorAlgHom_toLinearMap] -/
+  simp only [LinearMap.coe_comp, Function.comp_apply, lsingle_apply,
+    AlgebraTensorModule.curry_apply, TensorProduct.curry_apply, LinearMap.coe_restrictScalars,
+    AlgHom.toLinearMap_apply]
+  rw [rTensorAlgHom_apply_tmul_apply]
+  erw [finsuppLeft_apply_tmul_apply]
 
 open Classical in
 lemma rTensorAlgHom_apply_eq (x : MonoidAlgebra M α ⊗[R] N) :
@@ -210,7 +202,7 @@ noncomputable def rTensorAlgEquiv :
     apply symm
     rw [← LinearEquiv.symm_apply_eq]
     simp only [one_def]
-    sorry --apply finsuppLeft_symm_apply_single
+    apply finsuppLeft_symm_apply_single
   · intro x y
     erw [← rTensorAlgHom_apply_eq (S := S)]
     simp only [_root_.map_mul, rTensorAlgHom_apply_eq]

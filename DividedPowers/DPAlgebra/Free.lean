@@ -599,7 +599,7 @@ theorem basis_repr_embed (m : M) (d) [Decidable (∃ i, d = Finsupp.single i 1)]
       if H : ∃ i, d = Finsupp.single i 1 then b.repr m H.choose else 0 := by
   have hm : m = ((b.repr m).sum fun i c ↦ c • b i) := by
     have := (Basis.linearCombination_repr b m).symm
-    sorry --simpa only [Finsupp.linearCombination, Finsupp.lsum] using this
+    simpa [Finsupp.linearCombination, Finsupp.lsum] using this
   conv_lhs => rw [hm]
   simp [map_finsuppSum]
   simp only [← basis_single_one_eq, Basis.repr_self]
@@ -703,7 +703,8 @@ theorem basis_repr_mul [DecidableEq ι] (x y : DividedPowerAlgebra R M) (d : ι 
         ((basis R M b).repr x uv.1 * (basis R M b).repr y uv.2) := by
   have h (x : DividedPowerAlgebra R M) :
       x = (((basis R M b).repr x).sum fun i c ↦ c • (basis R M b) i) := by
-    sorry --simpa only using (Basis.linearCombination_repr (basis R M b) x).symm
+    simpa only [Finsupp.linearCombination_apply] using
+       (Basis.linearCombination_repr (basis R M b) x).symm
   conv_lhs => rw [h x, h y]
   simp only [Finsupp.sum, Finset.sum_mul, Finset.mul_sum, map_sum]
   rw [Finset.sum_comm]
@@ -780,9 +781,8 @@ theorem ne_zero_of_mem_support_of_mem_augIdeal
 
 theorem eq_of_repr (x : DividedPowerAlgebra R M) :
     x = (((basis R M b).repr x).sum fun i r ↦ r • basis R M b i) := by
-  sorry
-  /- simpa only [Finsupp.linearCombination, Finsupp.lsum] using
-    (Basis.linearCombination_repr (basis R M b) x).symm -/
+  simpa [Finsupp.linearCombination, Finsupp.lsum] using
+    (Basis.linearCombination_repr (basis R M b) x).symm
 
 open scoped Nat
 
@@ -824,7 +824,7 @@ lemma repr_dp_one [DecidableEq ι] (m : M) : (basis R M b).repr (dp R 1 m) =
       ((basis R M b) (Multiset.toFinsupp (Sym.oneEquiv x)))) := by
   have hm : m = ((b.repr m).sum fun i c ↦ c • b i) := by
       have := (Basis.linearCombination_repr b m).symm
-      sorry --simpa only [Finsupp.linearCombination, Finsupp.lsum] using this
+      simpa [Finsupp.linearCombination, Finsupp.lsum] using this
   simp only [Finsupp.sum] at hm
   conv_lhs =>
     rw [hm, dp_sum]
