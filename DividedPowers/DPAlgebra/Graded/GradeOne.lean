@@ -44,13 +44,13 @@ theorem embed_mem_grade_one (m : M) : embed R M m ∈ grade R M 1 :=
 
 section DecidableEq
 
-variable [DecidableEq R]
+variable [hR : DecidableEq R]
 
 section Module
 
 variable [Module Rᵐᵒᵖ M] [IsCentralScalar R M]
 
-instance [hR : DecidableEq R] : DecidablePred (fun x ↦ x ∈ kerIdeal R M) :=
+instance : DecidablePred (fun x ↦ x ∈ kerIdeal R M) :=
   fun a ↦ hR ((fstHom R R M) a) 0
 
 variable (M)
@@ -94,7 +94,7 @@ theorem grade_one_eq_span :
     have hsupp : ∀ nm : ℕ × M, nm ∈ d.support → 0 < nm.fst := by
       intro nm hnm
       apply mem_supported.mp q.2
-      rw [mem_coe, mem_vars]
+      rw [mem_coe, mem_vars_iff_mem_support]
       exact ⟨d, hd, hnm⟩
     obtain ⟨m, hm⟩ := eq_finsupp_single_of_degree_one M (hq1 (mem_support_iff.mp hd)) hsupp
     rw [← hm, monomial_eq, C_mul', map_smul, Finsupp.prod_single_index, pow_one]

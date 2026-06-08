@@ -37,15 +37,14 @@ noncomputable def baseChange : S ⊗[R] M →ₗ[S] S :=
 
 theorem baseChange_apply_tmul (r : S) (m : M) :
     baseChange S f (r ⊗ₜ[R] m) = r * ((f m) • (1 : S)) := by
-  simp [baseChange, coe_comp, Function.comp_apply, baseChange_tmul, AlgEquiv.toLinearMap_apply,
-    rid_tmul, Algebra.mul_smul_comm, mul_one]
+  simp [baseChange, coe_comp, Function.comp_apply, baseChange_tmul, Algebra.mul_smul_comm, mul_one]
 
 theorem baseChange_compat_apply (m : S ⊗[R] M) :
     φ (baseChange S f m) = (baseChange S' f) ((rTensor M φ.toLinearMap) m) := by
   induction m using TensorProduct.induction_on with
   | zero => simp [map_zero]
-  | tmul => simp [baseChange, coe_comp, Function.comp_apply, baseChange_tmul,
-      AlgEquiv.toLinearMap_apply, rid_tmul, map_smul, rTensor_tmul, AlgHom.toLinearMap_apply]
+  | tmul => simp [baseChange, coe_comp, Function.comp_apply, baseChange_tmul, map_smul,
+      rTensor_tmul, AlgHom.toLinearMap_apply]
   | add x y hx hy => simp [map_add, hx, hy]
 
 end LinearForm

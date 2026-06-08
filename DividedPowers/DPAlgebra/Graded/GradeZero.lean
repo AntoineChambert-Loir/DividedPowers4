@@ -117,7 +117,7 @@ theorem algebraMap_right_inv_of_degree_zero (x : grade R M 0) :
     . apply lt_irrefl 0
       nth_rewrite 2 [← hnm0]
       apply MvPolynomial.mem_supported.mp p.prop
-      simp only [mem_coe, mem_vars, Finsupp.mem_support_iff, ne_eq, mem_support_iff]
+      simp only [mem_coe, mem_vars_iff_mem_support, Finsupp.mem_support_iff, ne_eq, mem_support_iff]
       simp only [Finsupp.mem_support_iff] at hnm
       exact ⟨exp, h, hnm⟩
 
@@ -190,7 +190,7 @@ theorem coeff_zero_of_mem_augIdeal {f : MvPolynomial (ℕ × M) R}
     apply Finset.prod_eq_zero hi
     have hi' : 0 < i.fst := by
       apply mem_supported.mp hf
-      rw [Finset.mem_coe, mem_vars]
+      rw [Finset.mem_coe, mem_vars_iff_mem_support]
       exact ⟨b, ⟨hb, hi⟩⟩
     rw [if_pos hi']
     exact zero_pow (Finsupp.mem_support_iff.mp hi)
@@ -226,7 +226,7 @@ theorem augIdeal_eq_span : augIdeal R M = span (Set.image2 (dp R) {n : ℕ | 0 <
     · -- proof of supp_ss
       intro nm hnm
       apply mem_supported.mp hf
-      simp only [mem_vars, mem_coe, mem_support_iff, ne_eq, Finsupp.mem_support_iff]
+      simp only [mem_vars_iff_mem_support, mem_coe, mem_support_iff, ne_eq, Finsupp.mem_support_iff]
       rw [mem_coe, Finsupp.mem_support_iff] at hnm
       exact ⟨c, ⟨mem_support_iff.mp hc, hnm⟩⟩
   · rw [span_le]

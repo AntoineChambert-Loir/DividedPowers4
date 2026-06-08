@@ -366,7 +366,7 @@ theorem dpow_comp_coeffs {m n p : ℕ} (hn : n ≠ 0) (hp : p ≤ m * n) :
     ← mul_assoc, mul_comm (C ((Nat.uniformBell m n) : ℚ)), mul_assoc, C_eq_natCast,
     ← hI.dpow_comp hn Submodule.mem_top, ← dpow_eq_of_mem_left' hI hI hII Submodule.mem_top,
     ← dpow_eq_of_mem_left' hI hI hII Submodule.mem_top, dpow_comp_aux hI hI hII hn hX h1,
-    ← C_eq_natCast, mul_sum, finset_sum_coeff]
+    ← C_eq_natCast, mul_sum, finsetSum_coeff]
   simp only [hI, RatAlgebra.dpow_eq_inv_fact_smul _ _ Submodule.mem_top, map_natCast,
     Ring.inverse_eq_inv', Algebra.mul_smul_comm, one_pow, mul_one, coeff_smul, coeff_natCast_mul,
     smul_eq_mul]
