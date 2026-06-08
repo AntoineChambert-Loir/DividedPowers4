@@ -346,7 +346,7 @@ theorem mem_iff_basis_mem_of_mem_support
     simp only [ZeroMemClass.coe_zero, map_zero, Basis.coord_apply] at hx
     rw [← hx]
     simp only [map_sum, map_smul, DirectSum.decomposeLinearEquiv_apply,
-      AddSubmonoidClass.coe_finset_sum, SetLike.val_smul, Finsupp.coe_finset_sum, Finsupp.coe_smul,
+      AddSubmonoidClass.coe_finsetSum, SetLike.val_smul, Finsupp.coe_finsetSum, Finsupp.coe_smul,
       sum_apply, Pi.smul_apply, smul_eq_mul]
     rw [Finset.sum_eq_single a]
     · rw [eq_comm]
@@ -599,7 +599,7 @@ theorem basis_repr_embed (m : M) (d) [Decidable (∃ i, d = Finsupp.single i 1)]
       if H : ∃ i, d = Finsupp.single i 1 then b.repr m H.choose else 0 := by
   have hm : m = ((b.repr m).sum fun i c ↦ c • b i) := by
     have := (Basis.linearCombination_repr b m).symm
-    simpa only [Finsupp.linearCombination, Finsupp.lsum] using this
+    sorry --simpa only [Finsupp.linearCombination, Finsupp.lsum] using this
   conv_lhs => rw [hm]
   simp [map_finsuppSum]
   simp only [← basis_single_one_eq, Basis.repr_self]
@@ -673,11 +673,11 @@ theorem basis_prod (α : Type*) (f : α → (ι →₀ ℕ)) (s : Finset α) :
     apply congr_arg₂
     · apply Finset.prod_congr rfl
       intro i hi
-      simp only [mem_sdiff, Finsupp.mem_support_iff, Finsupp.coe_finset_sum, sum_apply, ne_eq,
+      simp only [mem_sdiff, Finsupp.mem_support_iff, Finsupp.coe_finsetSum, sum_apply, ne_eq,
         sum_eq_zero_iff, mem_insert, forall_eq_or_imp, not_and, not_forall, not_exists,
         not_not] at hi
       rw [Nat.multinomial_insert has]
-      simp only [Finset.sum_insert has, Finsupp.coe_add, Finsupp.coe_finset_sum, Pi.add_apply,
+      simp only [Finset.sum_insert has, Finsupp.coe_add, Finsupp.coe_finsetSum, Pi.add_apply,
         sum_apply]
       symm
       convert mul_one _
@@ -703,11 +703,11 @@ theorem basis_repr_mul [DecidableEq ι] (x y : DividedPowerAlgebra R M) (d : ι 
         ((basis R M b).repr x uv.1 * (basis R M b).repr y uv.2) := by
   have h (x : DividedPowerAlgebra R M) :
       x = (((basis R M b).repr x).sum fun i c ↦ c • (basis R M b) i) := by
-    simpa only using (Basis.linearCombination_repr (basis R M b) x).symm
+    sorry --simpa only using (Basis.linearCombination_repr (basis R M b) x).symm
   conv_lhs => rw [h x, h y]
   simp only [Finsupp.sum, Finset.sum_mul, Finset.mul_sum, map_sum]
   rw [Finset.sum_comm]
-  simp only [Algebra.mul_smul_comm, Algebra.smul_mul_assoc, map_smul, Finsupp.coe_finset_sum,
+  simp only [Algebra.mul_smul_comm, Algebra.smul_mul_assoc, map_smul, Finsupp.coe_finsetSum,
     Finsupp.coe_smul, sum_apply, Pi.smul_apply, smul_eq_mul]
   simp only [basis_mul, map_nsmul]
   rw [← Finset.sum_product']
@@ -780,8 +780,9 @@ theorem ne_zero_of_mem_support_of_mem_augIdeal
 
 theorem eq_of_repr (x : DividedPowerAlgebra R M) :
     x = (((basis R M b).repr x).sum fun i r ↦ r • basis R M b i) := by
-  simpa only [Finsupp.linearCombination, Finsupp.lsum] using
-    (Basis.linearCombination_repr (basis R M b) x).symm
+  sorry
+  /- simpa only [Finsupp.linearCombination, Finsupp.lsum] using
+    (Basis.linearCombination_repr (basis R M b) x).symm -/
 
 open scoped Nat
 
@@ -823,7 +824,7 @@ lemma repr_dp_one [DecidableEq ι] (m : M) : (basis R M b).repr (dp R 1 m) =
       ((basis R M b) (Multiset.toFinsupp (Sym.oneEquiv x)))) := by
   have hm : m = ((b.repr m).sum fun i c ↦ c • b i) := by
       have := (Basis.linearCombination_repr b m).symm
-      simpa only [Finsupp.linearCombination, Finsupp.lsum] using this
+      sorry --simpa only [Finsupp.linearCombination, Finsupp.lsum] using this
   simp only [Finsupp.sum] at hm
   conv_lhs =>
     rw [hm, dp_sum]

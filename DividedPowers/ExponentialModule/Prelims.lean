@@ -213,7 +213,9 @@ lemma forall_congr_curry₀ {α : Type*} [Zero α] {p : (Fin 2 →₀ α) → Pr
 
 end CommSemiring
 
-section CommRing
+
+-- In #38615
+/- section CommRing
 
 variable [CommRing R]
 
@@ -271,7 +273,7 @@ lemma coeff_subst_X₀_mul_X₁ (f : R⟦X⟧) (e : Fin 2 →₀ ℕ) :
     exact absurd (mem_antidiagonal.mpr he') he
 
 end CommRing
-
+ -/
 end Bivariate
 
 section CommSemiring

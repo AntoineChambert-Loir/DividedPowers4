@@ -6,7 +6,7 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 import DividedPowers.ForMathlib.Algebra.MvPolynomial.Lemmas
 import Mathlib.Algebra.RingQuot
 import Mathlib.RingTheory.DividedPowers.Basic
-import DividedPowers.Plurinomial
+import Mathlib.Data.Nat.Choose.Multinomial
 import DividedPowers.DPAlgebra.Init2
 
 noncomputable section
@@ -339,8 +339,8 @@ lemma pow_dp' (n : ℕ) (m : M) (k : ℕ) :
 
 -- Needs plurinomial
 lemma pow_dp (n : ℕ) (m : M) (k : ℕ) :
-    (dp R n m) ^ k = (Multiset.plurinomial (k • {n})) * dp R (k * n) m := by
-  rw [Multiset.plurinomial_nsmul_singleton, ← Fin.prod_const, prod_dp]
+    (dp R n m) ^ k = (Multiset.multinomial (k • {n})) * dp R (k * n) m := by
+  rw [Multiset.multinomial_nsmul_singleton, ← Fin.prod_const, prod_dp]
   simp [Nat.multinomial]
 
 --end

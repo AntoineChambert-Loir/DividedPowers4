@@ -6,6 +6,8 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 import Mathlib.Data.Nat.Choose.Multinomial
 import Mathlib.Data.List.ToFinsupp
 
+-- In #35830
+
 open List Multiset Nat
 
 lemma List.toFinsupp_support_subset {α : Type*} [Zero α] [DecidableEq α] (l : List α) :

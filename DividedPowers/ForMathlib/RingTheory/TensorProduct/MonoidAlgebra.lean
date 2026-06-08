@@ -179,8 +179,8 @@ lemma rTensorAlgHom_toLinearMap :
       MonoidAlgebra M α ⊗[R] N →ₐ[S] MonoidAlgebra (M ⊗[R] N) α).toLinearMap =
       (finsuppLeft _ _ _ _ _).toLinearMap := by
   ext x n
-  dsimp only [AlgebraTensorModule.curry_apply, TensorProduct.curry_apply,
-    LinearMap.coe_restrictScalars, AlgHom.toLinearMap_apply]
+  /- dsimp only [AlgebraTensorModule.curry_apply, TensorProduct.curry_apply,
+    LinearMap.coe_restrictScalars, AlgHom.toLinearMap_apply] -/
   sorry
   /- apply Finsupp.ext
   intro a

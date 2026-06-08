@@ -150,7 +150,7 @@ lemma rTensorAlgHom_toLinearMap :
     LinearMap.coe_restrictScalars, AlgHom.toLinearMap_apply, coe_comp, Function.comp_apply,
     AlgebraTensorModule.curry_apply, curry_apply, LinearMap.coe_restrictScalars,
     AlgHom.toLinearMap_apply, LinearEquiv.coe_coe]
-  rw [rTensorAlgHom_coeff_apply_tmul, rTensorLinearEquiv_coeff_tmul]
+  erw [rTensorAlgHom_coeff_apply_tmul, rTensorLinearEquiv_coeff_tmul]
 
 lemma rTensorAlgHom_apply_eq (p : Polynomial S ⊗[R] N) :
     rTensorAlgHom R N S p = rTensorLinearEquiv R N S p := by

@@ -15,7 +15,7 @@ import DividedPowers.DPAlgebra.Misc
 import DividedPowers.DPAlgebra.RobyLemma9
 --import DividedPowers.DPMorphism --In PR #22318
 import DividedPowers.ExponentialModule.Basic -- In PR #37038
-import DividedPowers.ExponentialModule.Prelims -- In #36441, #36444, #37037
+--import DividedPowers.ExponentialModule.Prelims -- In #36441, #36444, #37037
 import DividedPowers.Exponential
 --import DividedPowers.ForMathlib.AlgebraLemmas -- In PR #22237, #22239 and #22240.
 import DividedPowers.ForMathlib.Algebra.Algebra.Bilinear

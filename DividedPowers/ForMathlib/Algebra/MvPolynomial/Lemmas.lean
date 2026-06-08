@@ -148,7 +148,7 @@ lemma coeff_baseChange_apply (φ : S →ₐ[R] S') (f : MvPolynomial σ S) (n : 
   | add f g hf hg => simp [hf, hg]
   | mul_X q s h =>
     simp only [eval₂_mul, eval₂_X, coeff_mul, map_sum, map_mul]
-    exact Finset.sum_congr rfl (fun k _ ↦ by simp [h k.1, coeff_X'])
+    exact Finset.sum_congr rfl (fun k _ ↦ by simp [h k.1, coeff_X])
 
 lemma lcoeff_comp_baseChange_eq (φ : S →ₐ[R] S') (p : σ →₀ ℕ) :
     LinearMap.comp (AlgHom.toLinearMap φ) ((lcoeff S p).restrictScalars R) =
@@ -421,7 +421,7 @@ theorem vars_X_subset {R : Type*} {σ : Type*} (n : σ) [CommSemiring R] :
     (X n : MvPolynomial σ R).vars ⊆ {n} := by
   classical
   intro u
-  rw [X, mem_vars, Finset.mem_singleton]
+  rw [X, mem_vars_iff_mem_support, Finset.mem_singleton]
   rintro ⟨c, hc, hc'⟩
   by_contra h'
   rw [mem_support_iff, coeff_monomial, ne_eq] at hc
@@ -486,7 +486,7 @@ theorem eq_finsupp_single_of_degree_one [DecidableEq M] {d : ℕ × M →₀ ℕ
     rw [not_exists] at h0
     have hd0 : (d.support.sum fun a : ℕ × M => d a • a.fst) = 0 := by
       rw [Finset.sum_eq_zero (fun nm hnm ↦ Nat.lt_one_iff.mp <| lt_of_le_of_ne
-        (hd ▸ Finset.single_le_sum (fun x _ => zero_le (d x • x.fst)) hnm) (h0 nm))]
+        (hd ▸ Finset.single_le_sum (fun x _ => zero_le (a := d x • x.fst)) hnm) (h0 nm))]
     rw [hd0] at hd
     exact zero_ne_one hd
   obtain ⟨nm, hnm⟩ := hnm

@@ -105,4 +105,6 @@ theorem TensorProduct.eq_rTensor_sum (sm : S ⊗[R] ((i : ι) → M i)) :
       AlgEquiv.toLinearEquiv_apply, map_tmul, AlgHom.toLinearMap_apply,
       AlgHom.coe_restrictScalars', id_coe, id_eq]
     apply tmul_eq_aeval_one_sum
-  | add sm₁ sm₂ hsm₁ hsm₂ => simp [map_add, tmul_add, Finset.sum_add_distrib, ← hsm₁, ← hsm₂]
+  | add sm₁ sm₂ hsm₁ hsm₂ =>
+    simp [map_add, tmul_add, Finset.sum_add_distrib]
+    erw [← hsm₁, ← hsm₂]
