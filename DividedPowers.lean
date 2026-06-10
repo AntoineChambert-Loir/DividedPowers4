@@ -26,8 +26,8 @@ import DividedPowers.ForMathlib.Algebra.Algebra.Bilinear
 --import DividedPowers.ForMathlib.Algebra.MvPolynomial.Equiv -- In PR #15019
 import DividedPowers.ForMathlib.Algebra.MvPolynomial.Lemmas -- Partly in #35803
 --import DividedPowers.ForMathlib.Algebra.Polynomial.AlgebraMap -- In PR #30547
-import DividedPowers.ForMathlib.Algebra.TrivSqZeroExt
-import DividedPowers.ForMathlib.Data.FinsetLemmas
+--import DividedPowers.ForMathlib.Algebra.TrivSqZeroExt -- In #35690
+import DividedPowers.ForMathlib.Data.FinsetLemmas -- In #40415
 --import DividedPowers.ForMathlib.Data.Nat.Factorial.NatCast -- In PR #24439
 --import DividedPowers.ForMathlib.Data.Nat.Choose.Multinomial -- In #35756
 --import DividedPowers.ForMathlib.Bell -- -- In PR #15644
@@ -36,10 +36,11 @@ import DividedPowers.ForMathlib.GradedRingQuot
 --import DividedPowers.ForMathlib.InfiniteSum.Basic -- In mathlib
 --import DividedPowers.ForMathlib.InfiniteSum.Order -- In mathlib
 import DividedPowers.ForMathlib.Lcoeff
+import DividedPowers.ForMathlib.LinearAlgebra.Isomorphisms -- In #40417
 import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Basic
 import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Pi
 import DividedPowers.ForMathlib.LinearAlgebra.TensorProduct.Prod
-import DividedPowers.ForMathlib.RingTheory.AugmentationIdeal -- uses sorry.
+--import DividedPowers.ForMathlib.RingTheory.AugmentationIdeal -- uses sorry.
 --import DividedPowers.ForMathlib.RingTheory.Congruence.Hom
 --import DividedPowers.ForMathlib.RingTheory.DividedPowers.Basic -- In #35768
 import DividedPowers.ForMathlib.RingTheory.GradedAlgebra.Basic

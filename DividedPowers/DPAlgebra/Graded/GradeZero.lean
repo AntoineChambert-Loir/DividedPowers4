@@ -5,7 +5,7 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 import DividedPowers.DPAlgebra.Graded.Basic
 import DividedPowers.DPAlgebra.Init
-import DividedPowers.ForMathlib.RingTheory.AugmentationIdeal
+import Mathlib.RingTheory.Ideal.IsAugmentation
 
 /-!
 # The degree zero submodule of the universal divided power algebra
@@ -366,22 +366,14 @@ theorem gradeZeroSubalgebra_eq_bot : gradeZeroSubalgebra R M = ⊥ := by
 /-- `augIdeal R M` is an augmentation ideal of the `R`-algebra `DividedPowerAlgebra R M`. -/
 theorem isAugmentation_augIdeal : Ideal.IsAugmentation R (augIdeal R M) := by
   apply IsCompl.mk
-  · rw [Submodule.disjoint_def]
-    intro x
-    simp only [Subalgebra.mem_toSubmodule, Algebra.mem_bot]
-    rintro ⟨r, rfl⟩
-    simp only [Submodule.restrictScalars_mem, mem_augIdeal_iff, AlgHom.commutes,
-      Algebra.algebraMap_self, RingHom.id_apply]
-    rintro rfl
-    rw [map_zero]
+  · simp_rw [Submodule.disjoint_def, Submodule.mem_one]
+    rintro x ⟨r, rfl⟩
+    simp [mem_augIdeal_iff]
   · rw [codisjoint_iff, eq_top_iff]
     intro p _
-    simp only [Submodule.mem_sup, Subalgebra.mem_toSubmodule, Submodule.restrictScalars_mem]
-    refine ⟨algebraMap R _ (algebraMapInv R M p), ?_, _, ?_, add_sub_cancel _ p⟩
-    · rw [Algebra.mem_bot]
-      exact Set.mem_range_self ((algebraMapInv R M) p)
-    · simp only [mem_augIdeal_iff, map_sub, AlgHom.commutes, Algebra.algebraMap_self,
-        RingHom.id_apply, sub_self]
+    simp only [Submodule.mem_sup, Submodule.mem_one, Submodule.restrictScalars_mem]
+    exact ⟨algebraMap R _ (algebraMapInv R M p), Set.mem_range_self ((algebraMapInv R M) p), _,
+      by simp [mem_augIdeal_iff], add_sub_cancel _ p⟩
 
 /-- `augIdeal R M` is an augmentation ideal of the `gradeZeroSubalgebra R M`-algebra
   `DividedPowerAlgebra R M`. -/
@@ -390,23 +382,15 @@ theorem isAugmentation_augIdeal' :
   apply IsCompl.mk
   · rw [Submodule.disjoint_def]
     intro x
-    simp only [Subalgebra.mem_toSubmodule, Algebra.mem_bot, Set.mem_range, Subtype.exists,
-      Submodule.restrictScalars_mem, forall_exists_index, gradeZeroSubalgebra_eq_bot]
-    rintro x y ⟨rfl⟩ ⟨rfl⟩ hy
-    change algebraMap R _ y ∈ augIdeal R M at hy
-    rw [mem_augIdeal_iff] at hy
-    simp only [AlgHom.commutes, Algebra.algebraMap_self, RingHom.id_apply] at hy
-    simp only [hy, map_zero]
-    rfl
+    simp only [Submodule.mem_one, Subalgebra.algebraMap_apply, Subtype.exists, Algebra.mem_bot,
+      gradeZeroSubalgebra_eq_bot, Set.mem_range, exists_prop, Submodule.restrictScalars_mem]
+    rintro ⟨x, ⟨y, rfl⟩, rfl⟩ hy
+    simpa [mem_augIdeal_iff] using hy
   · rw [codisjoint_iff, eq_top_iff]
     intro p _
-    simp only [Submodule.mem_sup, Subalgebra.mem_toSubmodule, Submodule.restrictScalars_mem]
-    use algebraMap R _ (algebraMapInv R M p)
-    refine ⟨?_, ?_⟩
-    · simp only [Algebra.mem_bot, Set.mem_range, Subtype.exists]
-      exact ⟨algebraMap R _ (algebraMapInv R M p), algebraMap_mem_grade_zero R M _, rfl⟩
-    · refine ⟨p - algebraMap R _ (algebraMapInv R M p), ?_, add_sub_cancel _ _⟩
-      simp only [mem_augIdeal_iff, map_sub, AlgHom.commutes, Algebra.algebraMap_self,
-        RingHom.id_apply, sub_self]
+    simp only [Submodule.mem_sup, Submodule.mem_one, Submodule.restrictScalars_mem, Subtype.exists]
+    exact ⟨ algebraMap R _ (algebraMapInv R M p),
+      ⟨⟨algebraMap R _ (algebraMapInv R M p), algebraMap_mem_grade_zero R M _, rfl⟩,
+        ⟨p - algebraMap R _ (algebraMapInv R M p), by simp [mem_augIdeal_iff], add_sub_cancel _ _⟩⟩⟩
 
 end GradeZero

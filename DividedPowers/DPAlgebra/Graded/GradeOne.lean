@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 import DividedPowers.DPAlgebra.Graded.Basic
-import DividedPowers.ForMathlib.Algebra.TrivSqZeroExt
+import Mathlib.Algebra.TrivSqZeroExt.Ideal
 import Mathlib.RingTheory.DividedPowers.RatAlgebra
 
 /-!
@@ -59,8 +59,8 @@ variable (M)
   that sends `DividedPowerAlgebra.embed` to `TrivSqZeroExt.inr`. -/
 def toTrivSqZeroExt : DividedPowerAlgebra R M →ₐ[R] TrivSqZeroExt R M :=
   lift (DividedPowers.OfSquareZero.dividedPowers
-      (TrivSqZeroExt.sqZero R M) : DividedPowers (kerIdeal R M))
-    (inrHom R M) (fun m => (mem_kerIdeal_iff_exists R M _).mpr ⟨m, rfl⟩)
+      (TrivSqZeroExt.kerIdeal_sq R M) : DividedPowers (kerIdeal R M))
+    (inrHom R M) (fun m => (mem_kerIdeal_iff_inr R M _).mpr (by simp))
 
 variable {M}
 

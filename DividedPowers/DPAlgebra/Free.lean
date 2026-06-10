@@ -5,7 +5,7 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 import DividedPowers.DPAlgebra.BaseChange
 import DividedPowers.DPAlgebra.Graded.GradeZero
-import DividedPowers.ForMathlib.Data.FinsetLemmas
+--import DividedPowers.ForMathlib.Data.FinsetLemmas
 import Mathlib.RingTheory.DividedPowers.Basic
 import Mathlib.RingTheory.DividedPowers.RatAlgebra
 import Mathlib.RingTheory.TensorProduct.Free
@@ -649,7 +649,7 @@ theorem basis_mul (m n : ι →₀ ℕ) :
   have hns : n.support ⊆ s := Finsupp.support_monotone le_add_self
   rw [Finsupp.prod_of_support_subset m hms _ (fun _ _ ↦ by simp [dp_zero]),
     Finsupp.prod_of_support_subset n hns _ (fun _ _ ↦ by simp [dp_zero])]
-  simp only [Finsupp.prod, s, ← Finset.prod_mul_distrib, dp_mul, ← Finset.prod_smul']
+  simp only [Finsupp.prod, s, ← Finset.prod_mul_distrib, dp_mul, ← Finset.prod_smul]
   exact Finset.prod_congr rfl (fun  _ _ ↦ by simp)
 
 theorem basis_prod (α : Type*) (f : α → (ι →₀ ℕ)) (s : Finset α) :
@@ -801,7 +801,7 @@ theorem dpow_basis_eq (H : DividedPowers (augIdeal R M))
       (n.uniformBell (d i)) • dp R (n * d i) (b i) := by
     rw [← hH, dpow_comp _ ( Finsupp.mem_support_iff.mp hx) (embed_mem_augIdeal R M (b i)), hH]
     simp
-  rw [Finset.prod_congr rfl this, Finset.prod_smul', smul_assoc, basis_eq,
+  rw [Finset.prod_congr rfl this, Finset.prod_smul, smul_assoc, basis_eq,
     Finsupp.prod_of_support_subset _ Finsupp.support_smul _ (fun i _ ↦ dp_zero)]
   simp
 
@@ -831,7 +831,7 @@ lemma repr_dp_one [DecidableEq ι] (m : M) : (basis R M b).repr (dp R 1 m) =
     simp only [sym_succ, Nat.succ_eq_add_one, Nat.reduceAdd, sym_zero, image_singleton,
       sup_singleton_apply, Finsupp.mem_support_iff, ne_eq, Sym.cons_inj_left, imp_self,
       implies_true, sum_image, map_sum]
-    simp only [dp_smul, Finset.prod_smul', map_smul]
+    simp only [dp_smul, Finset.prod_smul, map_smul]
   simp only [Sym.cons_inj_left, implies_true, Set.injOn_of_eq_iff_eq, sum_image, Sym.oneEquiv_apply,
     Sym.coe_mk, Multiset.toFinsupp_singleton, Basis.repr_self, Finsupp.smul_single, smul_eq_mul,
     mul_one]

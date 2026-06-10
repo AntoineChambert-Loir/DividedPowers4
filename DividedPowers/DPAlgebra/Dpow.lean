@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 import DividedPowers.DPAlgebra.Free
+import DividedPowers.ForMathlib.Data.FinsetLemmas
 import Mathlib.Data.Nat.Choose.Multinomial
 import Mathlib.RingTheory.Localization.FractionRing
 import Mathlib.RingTheory.DividedPowers.Padic
@@ -221,7 +222,7 @@ theorem dpow_eq (H : DividedPowers (augIdeal R M))
     rw [H.dpow_linearCombination
       (fun _ hd ↦ basis_mem_augIdeal b (ne_zero_of_mem_support_of_mem_augIdeal b hx hd))]
     apply Finset.sum_congr rfl (fun k hk ↦ ?_)
-    simp only [Finsupp.prod, Finset.prod_smul']
+    simp only [Finsupp.prod, Finset.prod_smul]
     set A := (∏ i ∈ ((basis R M b).repr x).support, ((basis R M b).repr x) i ^ Multiset.count i k)
     set B := ∏ i ∈ ((basis R M b).repr x).support, H.dpow (Multiset.count i k) ((basis R M b) i)
       with hB
@@ -229,7 +230,7 @@ theorem dpow_eq (H : DividedPowers (augIdeal R M))
     suffices B = cK k ((basis R M b).repr x).support • C by simp [this]
     have (i) (hi : i ∈ ((basis R M b).repr x).support) :=
       dpow_basis_eq H hH b (Multiset.count i ↑k) i (ne_zero_of_mem_support_of_mem_augIdeal b hx hi)
-    simp only [Finset.prod_congr rfl this, Finset.prod_smul', basis_prod,
+    simp only [Finset.prod_congr rfl this, Finset.prod_smul, basis_prod,
       k.sum_eq_val_sum hk, ← hC] at hB
     simp only [hB, ← smul_assoc]
     apply congr_arg₂ _ _ rfl
@@ -327,7 +328,7 @@ theorem dpow_eq_of_support_subset {x : DividedPowerAlgebra R M} (hx : x ∈ augI
       simp only [Multiset.count_cons, H, add_comm, Multiset.map_cons,
         Multiset.sum_cons, Finsupp.coe_add, Pi.add_apply, add_left_inj]
       simp [g, Finsupp.single_apply, eq_comm]
-  simp only [hk', dp_smul, Finset.prod_smul']
+  simp only [hk', dp_smul, Finset.prod_smul]
   apply congr_arg₂ _ rfl
   simp [basis_eq, Finsupp.prod]
   have : (k : Multiset ι).toFinset ⊆ s := by

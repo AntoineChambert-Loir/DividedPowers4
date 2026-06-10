@@ -182,7 +182,7 @@ noncomputable def quotientEquiv_symm_toAlgHom :
     let h' : (ExponentialModule (DividedPowerAlgebra R M)) →ₗ[R]
       (ExponentialModule (DividedPowerAlgebra R M ⧸ kerLift f)) :=
         linearMap (Ideal.Quotient.mkₐ R (kerLift f))
-    refine (f.equiv_of_isSurjective _ hf).invFun ⟨h'.comp h, ?_⟩
+    refine (f.equivOfSurjective hf).invFun ⟨h'.comp h, ?_⟩
     intro m hm
     simp only [LinearMap.mem_ker, LinearMap.coe_comp, Function.comp_apply, h', h] at hm ⊢
     ext k
@@ -199,14 +199,15 @@ noncomputable def quotientEquiv_symm_toAlgHom :
 @[simp]
 def quotientEquiv_symm_toAlgHom_dp (k : ℕ) (m : M) :
     quotientEquiv_symm_toAlgHom f hf (dp R k (f m)) = Submodule.mkQ _ (dp R k m) := by
-  simp [quotientEquiv_symm_toAlgHom, exponentialModule_equiv_symm_apply, coeff_linearMap, coeff_exp_LinearMap]
+  simp [quotientEquiv_symm_toAlgHom, exponentialModule_equiv_symm_apply, coeff_linearMap,
+    coeff_exp_LinearMap]
 
 set_option backward.isDefEq.respectTransparency false in
 /-- The canonical algebra equivalence of a quotient of
 divided power algebra associated with a surjective linear map. -/
 noncomputable def quotientEquiv :
     (DividedPowerAlgebra R M ⧸ (kerLift f)) ≃ₐ[R] DividedPowerAlgebra R N := by
-  apply AlgEquiv.ofAlgHom (quotientEquiv_toAlgHom f) (quotientEquiv_symm_toAlgHom f hf)
+  apply AlgEquiv.ofAlgHom (quotientEquiv_toAlgHom f) (quotientEquiv_symm_toAlgHom _ hf)
   · rw [algHom_ext_iff]
     intro k n
     obtain ⟨m, rfl⟩ := hf n

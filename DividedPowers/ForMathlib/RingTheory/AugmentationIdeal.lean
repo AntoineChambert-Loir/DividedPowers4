@@ -6,6 +6,7 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 import Mathlib.Algebra.Algebra.Subalgebra.Tower
 import Mathlib.LinearAlgebra.Projection
 import Mathlib.LinearAlgebra.TensorProduct.RightExactness
+import Mathlib.RingTheory.Ideal.IsAugmentation
 
 /-! # Augmentation ideals
 
@@ -25,6 +26,8 @@ then the ideal `R ⊗[A] I` of `R ⊗[A] S` is an augmentation ideal.
   quotient map `R →+* R ⧸ I` has a section which is a ring homomorphism (possibly with a variant
   “with data” that keeps track of the choice of one such section).
 -/
+
+--NOTE (MI, 10/6/26: we are not using these results in DPAlgebra/)
 
 section DistribLattice
 
@@ -463,18 +466,19 @@ variable (R : Type*) [CommRing R] {A : Type*} [CommRing A] [Algebra R A] (J : Id
 
 open TensorProduct Ideal LinearMap Submodule
 
-/-- An ideal `J` of a commutative `R`-algebra `A` is an augmentation ideal if it is a complement
-  to `⊥ : Subalgebra R A`. -/
-def IsAugmentation (R : Type*) [CommSemiring R]
-    {A : Type*} [CommSemiring A] [Algebra R A] (J : Ideal A) : Prop :=
-  IsCompl (Subalgebra.toSubmodule (⊥ : Subalgebra R A)) (J.restrictScalars R)
+-- In #37444
+-- /-- An ideal `J` of a commutative `R`-algebra `A` is an augmentation ideal if it is a complement
+--   to `⊥ : Subalgebra R A`. -/
+-- def IsAugmentation (R : Type*) [CommSemiring R]
+--     {A : Type*} [CommSemiring A] [Algebra R A] (J : Ideal A) : Prop :=
+--   IsCompl (Subalgebra.toSubmodule (⊥ : Subalgebra R A)) (J.restrictScalars R)
 
-theorem isAugmentation_subalgebra_iff {A : Type*} [CommSemiring A] {R : Type*} [CommSemiring R]
-    [Algebra A R] {S : Subalgebra A R} {I : Ideal R} :
-    I.IsAugmentation S ↔ IsCompl (Subalgebra.toSubmodule S) (I.restrictScalars A) := by
-  unfold Ideal.IsAugmentation
-  rw [← Submodule.isCompl_restrictScalars_iff A, Subalgebra.restrictScalars_toSubmodule_bot]
-  exact Iff.rfl
+-- theorem isAugmentation_subalgebra_iff {A : Type*} [CommSemiring A] {R : Type*} [CommSemiring R]
+--     [Algebra A R] {S : Subalgebra A R} {I : Ideal R} :
+--     I.IsAugmentation S ↔ IsCompl (Subalgebra.toSubmodule S) (I.restrictScalars A) := by
+--   unfold Ideal.IsAugmentation
+--   rw [← Submodule.isCompl_restrictScalars_iff A, Subalgebra.restrictScalars_toSubmodule_bot]
+--   exact Iff.rfl
 
 /-- If `R` is a `CommRing` and an `A`-algebra, then the ideal `R ⊗[A] I` of `R ⊗[A] S` is an
   augmentation ideal. -/
@@ -482,8 +486,8 @@ theorem isAugmentation_baseChange {S : Type*} [CommRing S] [Algebra A S] {I : Id
     (hI : IsCompl (Subalgebra.toSubmodule (⊥ : Subalgebra A S)) (I.restrictScalars A))
     {R : Type*} [CommRing R] [Algebra A R] :
     (Ideal.map Algebra.TensorProduct.includeRight I : Ideal (R ⊗[A] S)).IsAugmentation R := by
-  unfold IsAugmentation
-  rw [Algebra.baseChange_bot, Algebra.TensorProduct.map_includeRight_eq_range_baseChange]
+  rw [isAugmentation_iff, Algebra.TensorProduct.map_includeRight_eq_range_baseChange,
+    ← Algebra.toSubmodule_bot, Algebra.baseChange_bot]
   exact isCompl_baseChange hI R
 
 theorem isAugmentation_tensorProduct (A : Type*) [CommRing A] {R S : Type*} [CommRing R]
