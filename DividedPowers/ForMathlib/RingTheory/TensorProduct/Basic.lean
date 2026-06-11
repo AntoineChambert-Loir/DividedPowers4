@@ -21,33 +21,33 @@ identity map.
 
 -/
 
-namespace LinearForm
+-- namespace LinearForm
 
-open Algebra Algebra.TensorProduct Function LinearMap TensorProduct
+-- open Algebra Algebra.TensorProduct Function LinearMap TensorProduct
 
-variable {R S S' M : Type*} [CommSemiring R] [CommSemiring S] [Algebra R S]
-  [CommSemiring S'] [Algebra R S'] (φ : S →ₐ[R] S') [AddCommMonoid M] [Module R M] (f : M →ₗ[R] R)
+-- variable {R S S' M : Type*} [CommSemiring R] [CommSemiring S] [Algebra R S]
+--   [CommSemiring S'] [Algebra R S'] (φ : S →ₐ[R] S') [AddCommMonoid M] [Module R M] (f : M →ₗ[R] R)
 
-variable (S) in
-/-- `baseChange S f` for `f : M →ₗ[R] R` is the `S`-linear map `S ⊗[R] M →ₗ[S] S`.
+-- variable (S) in
+-- /-- `baseChange S f` for `f : M →ₗ[R] R` is the `S`-linear map `S ⊗[R] M →ₗ[S] S`.
 
-This "base change" operation is also known as "extension of scalars". -/
-noncomputable def baseChange : S ⊗[R] M →ₗ[S] S :=
-  (Algebra.TensorProduct.rid R S S).toLinearMap.comp (f.baseChange S)
+-- This "base change" operation is also known as "extension of scalars". -/
+-- noncomputable def baseChange : S ⊗[R] M →ₗ[S] S :=
+--   (Algebra.TensorProduct.rid R S S).toLinearMap.comp (f.baseChange S)
 
-theorem baseChange_apply_tmul (r : S) (m : M) :
-    baseChange S f (r ⊗ₜ[R] m) = r * ((f m) • (1 : S)) := by
-  simp [baseChange, coe_comp, Function.comp_apply, baseChange_tmul, Algebra.mul_smul_comm, mul_one]
+-- theorem baseChange_apply_tmul (r : S) (m : M) :
+--     baseChange S f (r ⊗ₜ[R] m) = r * ((f m) • (1 : S)) := by
+--   simp [baseChange, coe_comp, Function.comp_apply, baseChange_tmul, Algebra.mul_smul_comm, mul_one]
 
-theorem baseChange_compat_apply (m : S ⊗[R] M) :
-    φ (baseChange S f m) = (baseChange S' f) ((rTensor M φ.toLinearMap) m) := by
-  induction m using TensorProduct.induction_on with
-  | zero => simp [map_zero]
-  | tmul => simp [baseChange, coe_comp, Function.comp_apply, baseChange_tmul, map_smul,
-      rTensor_tmul, AlgHom.toLinearMap_apply]
-  | add x y hx hy => simp [map_add, hx, hy]
+-- theorem baseChange_compat_apply (m : S ⊗[R] M) :
+--     φ (baseChange S f m) = (baseChange S' f) ((rTensor M φ.toLinearMap) m) := by
+--   induction m using TensorProduct.induction_on with
+--   | zero => simp [map_zero]
+--   | tmul => simp [baseChange, coe_comp, Function.comp_apply, baseChange_tmul, map_smul,
+--       rTensor_tmul, AlgHom.toLinearMap_apply]
+--   | add x y hx hy => simp [map_add, hx, hy]
 
-end LinearForm
+-- end LinearForm
 
 section TensorProduct
 
@@ -57,6 +57,7 @@ variable (R : Type*) [CommSemiring R] (S : Type*) [CommSemiring S] [Algebra R S]
 
 open TensorProduct
 
+-- Isn't this like LinearMap.liftBaseChangeEquiv?
 /-- The base change adjunction for linear maps. -/
 noncomputable def LinearMap.baseChangeEquiv : (S ⊗[R] M →ₗ[S] N) ≃ₗ[S] (M →ₗ[R] N) where
   toFun g := LinearMap.comp (g.restrictScalars R) ({
@@ -69,11 +70,13 @@ noncomputable def LinearMap.baseChangeEquiv : (S ⊗[R] M →ₗ[S] N) ≃ₗ[S]
   map_add' _ _  := by ext; simp
   map_smul' s g := by ext; simp
 
-variable {R S N}
-noncomputable def TensorProduct.includeRight : N →ₗ[R] S ⊗[R] N where
-  toFun     := fun n ↦ 1 ⊗ₜ n
-  map_add'  := fun x y ↦ tmul_add 1 x y
-  map_smul' := fun r x ↦ by simp only [tmul_smul, smul_tmul', RingHom.id_apply]
+--#check LinearMap.liftBaseChangeEquiv (R := R) (M := M) (N := N) S
+
+-- variable {R S N}
+-- noncomputable def TensorProduct.includeRight : N →ₗ[R] S ⊗[R] N where
+--   toFun     := fun n ↦ 1 ⊗ₜ n
+--   map_add'  := fun x y ↦ tmul_add 1 x y
+--   map_smul' := fun r x ↦ by simp only [tmul_smul, smul_tmul', RingHom.id_apply]
 
 end TensorProduct
 

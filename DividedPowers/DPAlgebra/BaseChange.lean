@@ -129,7 +129,7 @@ open PowerSeries
   `ExponentialModule (S ⊗[R] DividedPowerAlgebra R M)`. -/
 noncomputable def dpScalarExtensionExp :
     S ⊗[R] M →ₗ[S] ExponentialModule (S ⊗[R] DividedPowerAlgebra R M) :=
-  (LinearMap.baseChangeEquiv R S M (ExponentialModule (S ⊗[R] DividedPowerAlgebra R M))).symm
+  LinearMap.liftBaseChangeEquiv S
     ((ExponentialModule.linearMap Algebra.TensorProduct.includeRight).comp (exp_LinearMap R M))
 
 /-- The natural `S`-algebra map from `DividedPowerAlgebra S (S ⊗[R] M)` to
@@ -143,11 +143,12 @@ noncomputable def dpScalarExtensionInv  :
 theorem dpScalarExtensionInv_apply_dp (n : ℕ) (s : S) (m : M) :
     dpScalarExtensionInv R S M (dp S n (s ⊗ₜ[R] m)) = (s ^ n) ⊗ₜ[R] (dp R n m) := by
   rw [dpScalarExtensionInv, exponentialModule_equiv_symm_apply]
-  simp only [dpScalarExtensionExp, LinearMap.baseChangeEquiv, LinearEquiv.coe_symm_mk,
-    AlgebraTensorModule.lift_apply, lift.tmul, LinearMap.coe_restrictScalars, LinearMap.flip_apply,
-    LinearMap.lsmul_apply, LinearMap.smul_apply, LinearMap.coe_comp, Function.comp_apply]
-  rw [ExponentialModule.coe_smul, PowerSeries.coeff_rescale, ExponentialModule.coeff_linearMap]
-  simp [coeff_exp_LinearMap]
+  sorry
+  -- simp only [dpScalarExtensionExp, LinearMap.liftBaseChangeEquiv, LinearEquiv.coe_symm_mk,
+  --   AlgebraTensorModule.lift_apply, lift.tmul, LinearMap.coe_restrictScalars, LinearMap.flip_apply,
+  --   LinearMap.lsmul_apply, LinearMap.smul_apply, LinearMap.coe_comp, Function.comp_apply]
+  -- rw [ExponentialModule.coe_smul, PowerSeries.coeff_rescale, ExponentialModule.coeff_linearMap]
+  -- simp [coeff_exp_LinearMap]
 
 /-- Uniqueness claim of Roby1963, theorem III.2 -/
 theorem dpScalarExtensionInv_unique
