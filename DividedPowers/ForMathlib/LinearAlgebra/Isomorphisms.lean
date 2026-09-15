@@ -21,6 +21,7 @@ theorem quotKerEquivOfSurjective_symm_apply (hf : Function.Surjective f) (x : M)
 
 /-- Given a surjective `f : M →ₗ[R] N` and an `R`-module `P`, this is a bijection between `R`-linear
   maps `N →ₗ[R] P` and `R`-linear maps `g : M →ₗ[R] P` such that `ker f ≤ ker g`. -/
+@[simps apply]
 noncomputable def equivOfSurjective :
     (N →ₗ[R] P) ≃ {g : M →ₗ[R] P // ker f ≤ ker g} where
   toFun h := ⟨h.comp f, fun x hx ↦ by
@@ -35,10 +36,6 @@ noncomputable def equivOfSurjective :
   right_inv := fun ⟨g, hg⟩ ↦ by
     ext m
     simp [f.quotKerEquivOfSurjective_symm_apply hf]
-
-@[simp]
-theorem equivOfSurjective_apply {h : N →ₗ[R] P} {m : M} :
-    ((f.equivOfSurjective hf) h).1 m = h (f m) := rfl
 
 @[simp]
 theorem equivOfSurjective_symm_apply {g : M →ₗ[R] P} (hg : ker f ≤ ker g) {m : M} :

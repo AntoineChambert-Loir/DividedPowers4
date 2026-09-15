@@ -47,24 +47,30 @@ open Sym
 
 end Finset
 
-namespace Sym
+-- namespace Sym
 
-open Finset
+-- open Finset
 
--- In #40415. Renamed to `Finset.sum_count_sym_eq_val_sum` in the PR (might change).
-theorem sum_eq_val_sum {ι : Type*} [DecidableEq ι] {n : ℕ} {k : Sym (ι →₀ ℕ) n}
-    {s : Finset (ι →₀ ℕ)} (hk : k ∈ s.sym n) :
-    ∑ d ∈ s, Multiset.count d k • d = k.val.sum := by
-  induction n with
-  | zero =>
-    have : k = 0 := Sym.uniqueZero.eq_default k
-    simp [this]
-  | succ n hrec =>
-    simp only [sym_succ, Nat.succ_eq_add_one, mem_sup, mem_image] at hk
-    obtain ⟨a, hat, k, hk, rfl⟩ := hk
-    simp only [coe_cons, Multiset.count_cons, add_smul, ite_smul, one_smul, zero_nsmul, val_eq_coe,
-      Nat.succ_eq_add_one, Multiset.sum_cons, sum_add_distrib]
-    nth_rewrite 2 [sum_eq_single a (fun _ _ hab ↦ by rw [if_neg hab]) (fun has ↦ (has hat).elim)]
-    rw [if_pos rfl, add_comm, hrec hk, val_eq_coe]
+-- #check val_sum_eq_sum_count_nsmul
 
-end Sym
+-- PR closed; replaced this lemma by an application of `val_sum_eq_sum_count_nsmul` as suggested
+-- by the reviewer
+
+-- -- In #40415. Renamed to `Finset.sum_count_sym_eq_val_sum` in the PR (might change).
+-- theorem sum_eq_val_sum {ι : Type*} [DecidableEq ι] {n : ℕ} {k : Sym (ι →₀ ℕ) n}
+--     {s : Finset (ι →₀ ℕ)} (hk : k ∈ s.sym n) :
+--     ∑ d ∈ s, Multiset.count d k • d = k.val.sum := by
+--   apply (val_sum_eq_sum_count_nsmul hk).symm
+--   -- induction n with
+--   -- | zero =>
+--   --   have : k = 0 := Sym.uniqueZero.eq_default k
+--   --   simp [this]
+--   -- | succ n hrec =>
+--   --   simp only [sym_succ, Nat.succ_eq_add_one, mem_sup, mem_image] at hk
+--   --   obtain ⟨a, hat, k, hk, rfl⟩ := hk
+--   --   simp only [coe_cons, Multiset.count_cons, add_smul, ite_smul, one_smul, zero_nsmul, val_eq_coe,
+--   --     Nat.succ_eq_add_one, Multiset.sum_cons, sum_add_distrib]
+--   --   nth_rewrite 2 [sum_eq_single a (fun _ _ hab ↦ by rw [if_neg hab]) (fun has ↦ (has hat).elim)]
+--   --   rw [if_pos rfl, add_comm, hrec hk, val_eq_coe]
+
+-- end Sym

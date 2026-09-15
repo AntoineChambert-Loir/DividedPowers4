@@ -231,7 +231,7 @@ theorem dpow_eq (H : DividedPowers (augIdeal R M))
     have (i) (hi : i ∈ ((basis R M b).repr x).support) :=
       dpow_basis_eq H hH b (Multiset.count i ↑k) i (ne_zero_of_mem_support_of_mem_augIdeal b hx hi)
     simp only [Finset.prod_congr rfl this, Finset.prod_smul, basis_prod,
-      k.sum_eq_val_sum hk, ← hC] at hB
+      ← val_sum_eq_sum_count_nsmul hk, ← hC] at hB
     simp only [hB, ← smul_assoc]
     apply congr_arg₂ _ _ rfl
     simp only [smul_eq_mul, Sym.val_eq_coe, Finsupp.coe_smul, Pi.smul_apply, cK]
