@@ -128,9 +128,8 @@ theorem _root_.add_pow' (x y : R) (n : ℕ) :
     (x + y) ^ n = ∑ m ∈ antidiagonal n, n.choose m.1 • (x ^ m.1 * y ^ m.2) :=
   (Commute.all x y).add_pow' n
 
-protected theorem rescale_add (r s : A) {f : R⟦X⟧} (hf : IsExponential f) :
-    rescale (algebraMap A R r + algebraMap A R s) f =
-      rescale (algebraMap A R r) f * rescale (algebraMap A R s) f := by
+protected theorem rescale_add (r s : R) {f : R⟦X⟧} (hf : IsExponential f) :
+    rescale (r + s) f = rescale r f * rescale s f := by
   rw [isExponential_iff] at hf
   ext d
   simp only [coeff_rescale, coeff_mul, add_pow', Finset.sum_mul]
@@ -146,9 +145,12 @@ open Additive
 
 section Instances
 
-/-- Action of `A` on the additive group `Additive R⟦X⟧` given by rescaling -/
-noncomputable instance : SMul A (Additive R⟦X⟧) where
-  smul r f := ofMul.toFun (rescale (algebraMap A R r) (toMul f))
+/-- Action of `R` on the additive group `Additive R⟦X⟧` given by rescaling -/
+noncomputable instance : SMul A (Additive R⟦X⟧) :=
+  ⟨fun a f ↦ ofMul (rescale (algebraMap A R a) (toMul f))⟩
+
+theorem smul_def (r : R) (f : Additive R⟦X⟧) :
+    r • f = ofMul (rescale r (toMul f)) := rfl
 
 lemma smul_ofMul (r : A) (f : R⟦X⟧) :
   r • (ofMul f) = ofMul (rescale (algebraMap A R r) f) := rfl
@@ -195,7 +197,7 @@ open PowerSeries Additive
 @[coe] def toPowerSeries (f : ExponentialModule R) : R⟦X⟧ := toMul f
 
 variable (R) in
-instance instCoe : Coe (ExponentialModule R) R⟦X⟧ := ⟨toPowerSeries⟩
+instance instCoe : Coe (ExponentialModule R) R⟦X⟧ := ⟨fun f ↦ toMul f⟩
 
 lemma isExponential_coe (f : ExponentialModule R) : IsExponential (f : R⟦X⟧) := f.prop
 
@@ -204,60 +206,52 @@ lemma constantCoeff_coe (f : ExponentialModule R) : constantCoeff (f : R⟦X⟧)
   f.prop.constantCoeff
 
 lemma coe_injective : Function.Injective ((↑) : ExponentialModule R → R⟦X⟧) :=
-  fun f g ↦ by simp [toPowerSeries]
+  fun f g ↦ by simp
 
-@[simp, norm_cast]
+@[norm_cast]
 lemma coe_inj {f g : ExponentialModule R} : (f : R⟦X⟧) = ↑g ↔ f = g := coe_injective.eq_iff
 
 @[ext]
 lemma coe_ext {f g : ExponentialModule R} (h : (f : R⟦X⟧) = ↑g) : f = g := coe_injective h
 
 @[simp]
-theorem toMul_val_eq_coe {f : ExponentialModule R} : toMul (f : Additive R⟦X⟧) = f := rfl
-
-@[simp]
 theorem coe_mk {f : R⟦X⟧} (hf : IsExponential f) : (⟨ofMul f, hf⟩ : ExponentialModule R) = f := rfl
 
 @[simp]
 lemma coe_add (f g : ExponentialModule R) : (↑(f + g) : R⟦X⟧) = f * g := by
-  simp only [toPowerSeries, AddSubmonoid.coe_add, toMul_add]
+  simp only [AddSubmonoid.coe_add, toMul_add]
 
-noncomputable instance instSMul : SMul A (ExponentialModule R) where
+section
+
+variable (A R M) [CommSemiring A] [CommSemiring R] [Algebra A R] 
+  [AddCommMonoid M] [Module R M]
+
+end
+
+noncomputable instance : SMul A (ExponentialModule R) where
   smul r f := ⟨r • (f : Additive R⟦X⟧), by
     simp only [mem_exponentialModule_iff', toMul_smul]
     exact f.prop.rescale (algebraMap A R r)⟩
 
 @[simp]
-lemma coe_smul_eq_rescale (r : A) (f : ExponentialModule R) :
-    ((r • f) : ExponentialModule R) = rescale (algebraMap A R r) (f : R⟦X⟧) := rfl
-
-theorem coe_smul (r : A) (f : ExponentialModule R) :
-  (r • f : ExponentialModule R) = r • (f : Additive R⟦X⟧) := rfl
-
--- should be in PowerSeries
-@[simp]
-theorem rescale_rescale (r s : A) (f : R⟦X⟧) : 
-    (rescale ((algebraMap A R) r)) ((rescale ((algebraMap A R) s)) f)
-      = (rescale ((algebraMap A R) r * (algebraMap A R) s)) f := by 
-  ext
-  simp [rescale, mul_pow, mul_assoc]
+lemma coe_smul (r : A) (f : ExponentialModule R) :
+    ((r • f) : ExponentialModule R) = rescale (algebraMap A R r) ↑f := rfl
 
 @[simp]
 lemma coe_zero : ((0 : ExponentialModule R)  : R⟦X⟧) = 1 := by
-  simp [toPowerSeries]
+  simp
 
 lemma coe_ofMul (f : R⟦X⟧) (hf : IsExponential f) :
     ↑(⟨ofMul f, hf⟩ : ExponentialModule R) = f := by rfl
 
-noncomputable instance instModule : Module A (ExponentialModule R) where
-  one_smul f := by rw [← coe_inj]; simp
-  mul_smul r s f := by simp [← Subtype.coe_inj, coe_smul, mul_smul]
-  smul_zero r := by rw [← coe_inj]; simp
-  smul_add r f g := by rw [← coe_inj]; simp
-  add_smul r s f := by 
-    rw [← coe_inj];  simp
-    rw [← IsExponential.rescale_add r s (isExponential_coe f)]  
-  zero_smul f := by rw [← coe_inj]; simp
+/-- The `A`-module structure on `ExponentialModule R`, if `R` is an `A`-algebra -/
+noncomputable instance : Module A (ExponentialModule R) where
+  one_smul f := by simp [← coe_inj]
+  mul_smul r s f := by simp [← coe_inj, PowerSeries.rescale_rescale, mul_comm]
+  smul_zero r := by simp [← coe_inj]
+  smul_add r f g := by simp [← coe_inj]
+  add_smul r s f := by simp [← coe_inj, ← IsExponential.rescale_add r s (isExponential_coe f)]
+  zero_smul f := by simp [← coe_inj]
 
 end ExponentialModule
 
@@ -298,15 +292,19 @@ protected theorem invOfUnit_eq_rescale_neg_one {f : R⟦X⟧} (hf : IsExponentia
 protected theorem inv {f : R⟦X⟧} (hf : IsExponential f) : IsExponential (f.invOfUnit 1) := by
   simp [hf.invOfUnit_eq_rescale_neg_one, hf.neg]
 
-protected theorem map (φ : R →+* S) {f : R⟦X⟧} (hf : IsExponential f) :
-    let _ : CommRing S := RingHom.commSemiringToCommRing φ
+protected theorem map {S : Type*} [CommRing S] (φ : R →+* S) {f : R⟦X⟧} (hf : IsExponential f) :
     IsExponential (PowerSeries.map φ f) := by
-  let _ : CommRing S := RingHom.commSemiringToCommRing φ
   rw [isExponential_iff] at hf ⊢
   refine ⟨fun p q ↦ ?_, ?_⟩
   · simp only [coeff_map, ← map_mul, ← hf.1 p q]
     simp
   · rw [← coeff_zero_eq_constantCoeff_apply, coeff_map, coeff_zero_eq_constantCoeff, hf.2, map_one]
+
+protected theorem map' (φ : R →+* S) {f : R⟦X⟧} (hf : IsExponential f) :
+    let _ : CommRing S := RingHom.commSemiringToCommRing φ
+    IsExponential (PowerSeries.map φ f) := by
+  let _ : CommRing S := RingHom.commSemiringToCommRing φ
+  exact hf.map φ
 
 end IsExponential
 
@@ -316,7 +314,7 @@ open PowerSeries Additive
 
 variable [CommRing R]
 
-noncomputable instance instAddCommGroup : AddCommGroup (ExponentialModule R) where
+noncomputable instance : AddCommGroup (ExponentialModule R) where
   neg f := (-1 : ℤ) • f
   zsmul n f := n • f
   zsmul_zero' f := by simp
@@ -328,20 +326,17 @@ noncomputable instance instAddCommGroup : AddCommGroup (ExponentialModule R) whe
     simp [← f.2.neg_mul_self_eq_one]
   add_comm f g := add_comm f g
 
-instance instIsScalarTower (R : Type*) [CommRing R] (S : Type*) [CommRing S] [Algebra R S]
+instance (R : Type*) [CommRing R] (S : Type*) [CommRing S] [Algebra R S]
     (A : Type*) [CommRing A] [Algebra R A] [Algebra S A] [IsScalarTower R S A] :
     IsScalarTower R S (ExponentialModule A) where
   smul_assoc r s f := by
     apply coe_injective
-    simp only [coe_smul_eq_rescale]
+    simp only [coe_smul]
     rw [← algebraMap_smul S, smul_eq_mul, map_mul, mul_comm, rescale_mul]
     simp only [RingHom.coe_comp, Function.comp_apply]
     apply congr_fun
     ext f n
     simp [IsScalarTower.algebraMap_eq R S A, RingHom.coe_comp, Function.comp_apply]
-
-lemma coe_ofMul (f : R⟦X⟧) (hf : IsExponential f) :
-    ↑(⟨ofMul f, hf⟩ : ExponentialModule R) = f := rfl
 
 lemma subst_add_coe_eq_mul (f : ExponentialModule R) :
     subst (S := R) (X₀ + X₁) (f : R⟦X⟧) = (subst X₀ (f : R⟦X⟧)) * (subst X₁ (f : R⟦X⟧)) := by
@@ -361,19 +356,13 @@ noncomputable def linearMap :
     ExponentialModule R →ₗ[A] ExponentialModule S where
   toFun := fun f ↦
     ⟨ofMul (PowerSeries.map φ (f : R⟦X⟧)), by
-      simp [mem_exponentialModule_iff]
-      convert f.prop.map (φ  : R →+* S)
-      ext <;> rfl⟩
-  map_add' := fun f g ↦ coe_injective (by simp [coe_add])
-  map_smul' := fun a f ↦
-    coe_injective (by simp [-coe_mk, coe_smul, coe_ofMul, rescale_map_eq_map_rescale])
+      rw [mem_exponentialModule_iff]
+      exact f.prop.map (φ : R →+* S)⟩
+  map_add' := fun _ _ ↦ coe_injective (by simp)
+  map_smul' := fun _ _ ↦ coe_injective (by simp [rescale_algebraMap_map])
 
 theorem coeff_linearMap (n : ℕ) (f : ExponentialModule R) :
     coeff n (linearMap φ f) = φ (coeff n f) := rfl
-
-@[simp]
-lemma coe_zero_eq_one (A : Type*) [CommRing A] :
-    ((0 : ExponentialModule A) : A⟦X⟧) = 1 := by rfl
 
 end ExponentialModule
 
@@ -381,4 +370,4 @@ end CommRing
 
 end PowerSeries
 
---#lint
+-- #lint

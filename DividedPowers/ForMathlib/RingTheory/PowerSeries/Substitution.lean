@@ -107,7 +107,8 @@ lemma subst_linear_subst_scalar_comm (a : R) {σ : Type*} (p : MvPowerSeries σ 
   by_contra hd1
   exact hd (hp_lin d hd1)
 
-theorem rescale_map_eq_map_rescale' (φ : R →+* S) (r : R) (f : R⟦X⟧) :
+/- in PowerSeries.Basic with other names
+theorem rescale_map_eq_map_rescale (φ : R →+* S) (r : R) (f : R⟦X⟧) :
     rescale (φ r) (PowerSeries.map φ f) =
       PowerSeries.map (φ : R →+* S) (rescale r f) := by
   ext n
@@ -117,5 +118,5 @@ theorem rescale_map_eq_map_rescale [Algebra A S] (φ : R →ₐ[A] S) (a : A) (f
     rescale (algebraMap A S a) (PowerSeries.map φ f) =
       PowerSeries.map (φ : R →+* S) (rescale (algebraMap A R a) f) := by
   rw [← rescale_map_eq_map_rescale', RingHom.coe_coe, AlgHom.commutes]
-
+-/
 end PowerSeries
