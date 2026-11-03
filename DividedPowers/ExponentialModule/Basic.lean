@@ -12,7 +12,7 @@ import Mathlib.Algebra.Ring.Ext
 /-! # Exponential module of a commutative ring
 
 Let `R` be a commutative ring. The exponential module of `R` is the set of all power series
-`f : R⟦X⟧` that are of exponential type : `f (X + Y) = f X * f Y` where `X` and `Y` are two
+`f : R⟦X⟧` that are of exponential type : `f (0) = 1` and `f (X + Y) = f X * f Y` where `X` and `Y` are two
 indeterminates. It is an abelian group under multiplication, and an `R`-module under rescaling.
 
 ## Main Definitions
