@@ -86,22 +86,22 @@ protected theorem one : IsExponential (1 : R⟦X⟧) where
     rw [← Polynomial.coe_one, subst_coe (HasSubst.X 1), subst_coe (HasSubst.X 0),
       subst_coe ((HasSubst.X 0).add (HasSubst.X 1))]
     simp
-  constantCoeff := by simp only [map_one]
+  constantCoeff := by simp
 
 /-- If `f` and `g` are exponential, then so is `f * g`. -/
 protected theorem mul {f g : PowerSeries R} (hf : IsExponential f) (hg : IsExponential g) :
     IsExponential (f * g) where
   add_mul := by
     repeat rw [← coe_substAlgHom (HasSubst.of_constantCoeff_zero (by simp))]
-    simp only [map_mul, coe_substAlgHom, hf.add_mul, hg.add_mul]
+    simp [map_mul, coe_substAlgHom, hf.add_mul, hg.add_mul]
     ring
-  constantCoeff := by simp only [map_mul, hf.constantCoeff, hg.constantCoeff, mul_one]
+  constantCoeff := by simp [hf.constantCoeff, hg.constantCoeff]
 
 /-- If `f` is exponential and  `n : ℕ`, then `f ^ n` is exponential. -/
 protected theorem npow {f : R⟦X⟧} (hf : IsExponential f) (n : ℕ) :
     IsExponential (f ^ n) := by
   induction n with
-  | zero => simp [pow_zero, IsExponential.one]
+  | zero => simp [IsExponential.one]
   | succ n hn => simp [pow_succ, hn.mul hf]
 
 /-- If `f` is exponential, then `f(r • T)` is exponential, for any `r : R`. -/
@@ -109,7 +109,7 @@ protected theorem rescale (a : A) {f : PowerSeries R} (hf : IsExponential f) :
     IsExponential (rescale (algebraMap A R a) f) := by
   rw [isExponential_iff] at hf ⊢
   refine ⟨fun p q ↦ ?_, ?_⟩
-  · simp only [coeff_rescale, mul_mul_mul_comm, ← hf.1 p q]
+  · simp [mul_mul_mul_comm, ← hf.1 p q]
     ring
   · rw [← coeff_zero_eq_constantCoeff, coeff_rescale]
     simp [hf.2]
@@ -146,35 +146,36 @@ open Additive
 
 section Instances
 
+/-- Action of `A` on the additive group `Additive R⟦X⟧` given by rescaling -/
 noncomputable instance : SMul A (Additive R⟦X⟧) where
   smul r f := ofMul.toFun (rescale (algebraMap A R r) (toMul f))
 
-lemma toAdditive_smul_coe (r : A) (f : R⟦X⟧) :
+lemma smul_ofMul (r : A) (f : R⟦X⟧) :
   r • (ofMul f) = ofMul (rescale (algebraMap A R r) f) := rfl
 
-lemma toAdditive_smul_coe' (r : A) (f : Additive R⟦X⟧) :
+lemma toMul_smul (r : A) (f : Additive R⟦X⟧) :
   toMul (r • f) = rescale (algebraMap A R r) (toMul f) := rfl
 
 noncomputable instance : DistribMulAction A (Additive R⟦X⟧) where
-  one_smul := by simp [toAdditive_smul_coe]
+  one_smul := by simp [smul_ofMul]
   mul_smul := by
     suffices  ∀ (x y : A) (b : Additive R⟦X⟧), (y * x) • b = x • y • b by
       intro x y b
       rw [← this, mul_comm]
-    simp [toAdditive_smul_coe, rescale_mul]
+    simp [smul_ofMul, rescale_mul]
   smul_zero a := by
-    rw [← ofMul_one, toAdditive_smul_coe, map_one]
-  smul_add := by simp [toAdditive_smul_coe, ← ofMul_mul]
+    rw [← ofMul_one, smul_ofMul, map_one]
+  smul_add := by simp [smul_ofMul, ← ofMul_mul]
 
 end Instances
 
 variable (R) in
-/-- The `R`-module of exponential power series `f : R⟦X⟧` satisfying `f(X+Y) = f(X) f(Y)` and
+/-- The `R`-module of exponential power series `f : R⟦X⟧` satisfying `f(X+Y) = f(X) * f(Y)` and
   `f(0) = 1`. The addition law is the multiplication of power series.
   The scalar multiplication law is given by `PowerSeries.rescale`.
   This is implemented as an `AddSubmonoid (Additive R⟦X⟧) `. -/
 def ExponentialModule : AddSubmonoid (Additive R⟦X⟧) where
-  carrier := { f : Additive R⟦X⟧ | IsExponential (toMul f) }
+  carrier := {f : Additive R⟦X⟧ | IsExponential (toMul f)}
   add_mem' {f g} hf hg := by simp [hf.mul hg]
   zero_mem' := by simp [IsExponential.one]
 
@@ -191,10 +192,16 @@ namespace ExponentialModule
 open PowerSeries Additive
 
 /-- The coercion map from `ExponentialModule R` to `R⟦X⟧`. -/
-@[coe] def toPowerSeries (f : ExponentialModule R) : R⟦X⟧ := toMul (f : Additive R⟦X⟧)
+@[coe] def toPowerSeries (f : ExponentialModule R) : R⟦X⟧ := toMul f
 
 variable (R) in
 instance instCoe : Coe (ExponentialModule R) R⟦X⟧ := ⟨toPowerSeries⟩
+
+lemma isExponential_coe (f : ExponentialModule R) : IsExponential (f : R⟦X⟧) := f.prop
+
+@[simp]
+lemma constantCoeff_coe (f : ExponentialModule R) : constantCoeff (f : R⟦X⟧) = 1 :=
+  f.prop.constantCoeff
 
 lemma coe_injective : Function.Injective ((↑) : ExponentialModule R → R⟦X⟧) :=
   fun f g ↦ by simp [toPowerSeries]
@@ -206,18 +213,44 @@ lemma coe_inj {f g : ExponentialModule R} : (f : R⟦X⟧) = ↑g ↔ f = g := c
 lemma coe_ext {f g : ExponentialModule R} (h : (f : R⟦X⟧) = ↑g) : f = g := coe_injective h
 
 @[simp]
-theorem toMul_val_eq_coe {f : ExponentialModule R} : toMul (↑f : Additive R⟦X⟧) = ↑f := rfl
+theorem toMul_val_eq_coe {f : ExponentialModule R} : toMul (f : Additive R⟦X⟧) = f := rfl
 
 @[simp]
-theorem coe_mk {f : R⟦X⟧} (hf : IsExponential f) : ↑(⟨ofMul f, hf⟩ : ExponentialModule R) = f := rfl
+theorem coe_mk {f : R⟦X⟧} (hf : IsExponential f) : (⟨ofMul f, hf⟩ : ExponentialModule R) = f := rfl
+
+@[simp]
+lemma coe_add (f g : ExponentialModule R) : (↑(f + g) : R⟦X⟧) = f * g := by
+  simp only [toPowerSeries, AddSubmonoid.coe_add, toMul_add]
 
 noncomputable instance instSMul : SMul A (ExponentialModule R) where
   smul r f := ⟨r • (f : Additive R⟦X⟧), by
-    simp only [mem_exponentialModule_iff', toAdditive_smul_coe']
+    simp only [mem_exponentialModule_iff', toMul_smul]
     exact f.prop.rescale (algebraMap A R r)⟩
 
-theorem smul_def (r : A) (f : ExponentialModule R) :
+@[simp]
+lemma coe_smul_eq_rescale (r : A) (f : ExponentialModule R) :
+    ((r • f) : ExponentialModule R) = rescale (algebraMap A R r) (f : R⟦X⟧) := rfl
+
+theorem coe_smul (r : A) (f : ExponentialModule R) :
   (r • f : ExponentialModule R) = r • (f : Additive R⟦X⟧) := rfl
+
+-- should be in PowerSeries
+@[simp]
+theorem rescale_rescale (r s : A) (f : R⟦X⟧) : 
+    (rescale ((algebraMap A R) r)) ((rescale ((algebraMap A R) s)) f)
+      = (rescale ((algebraMap A R) r * (algebraMap A R) s)) f := by 
+  ext
+  simp [rescale, mul_pow, mul_assoc]
+
+noncomputable instance instModule : Module A (ExponentialModule R) where
+  one_smul f := by rw [← coe_inj]; simp
+  mul_smul r s f := by rw [← coe_inj]; simp
+  smul_zero r := by rw [← coe_inj]; simp
+  smul_add r f g := by rw [← coe_inj]; simp
+  add_smul r s f := by 
+    rw [← coe_inj];  simp
+    rw [← IsExponential.rescale_add r s (isExponential_coe f)]
+  zero_smul f := by rw [← coe_inj]; simp
 
 noncomputable instance instModule : Module A (ExponentialModule R) where
   one_smul f := by rw [← Subtype.coe_inj, smul_def, one_smul]
@@ -227,18 +260,12 @@ noncomputable instance instModule : Module A (ExponentialModule R) where
   add_smul r s f := by
     simp only [← Subtype.coe_inj, smul_def, AddSubmonoid.coe_add]
     apply Additive.toMul.injective
-    simp [toAdditive_smul_coe', -toMul_val_eq_coe, f.prop.rescale_add r s]
+    simp [toMul_smul, -toMul_val_eq_coe, f.prop.rescale_add r s]
   zero_smul f := by
     simp only [← Subtype.coe_inj, smul_def, ZeroMemClass.coe_zero]
     apply Additive.toMul.injective
     have hf : constantCoeff f = (1 : R) := f.prop.constantCoeff
-    simp [toAdditive_smul_coe', toMul_val_eq_coe, hf]
-
-lemma coe_add (f g : ExponentialModule R) : (↑(f + g) : R⟦X⟧) = ↑f * ↑g := by
-  simp only [toPowerSeries, AddSubmonoid.coe_add, toMul_add]
-
-lemma coe_smul (r : A) (f : ExponentialModule R) :
-    ((r • f) : ExponentialModule R) = rescale (algebraMap A R r) (f : R⟦X⟧) := rfl
+    simp [toMul_smul, toMul_val_eq_coe, hf]
 
 end ExponentialModule
 
@@ -306,9 +333,7 @@ noncomputable instance instAddCommGroup : AddCommGroup (ExponentialModule R) whe
   neg_add_cancel f := by
     rw [← Subtype.coe_inj]
     apply Additive.toMul.injective
-    simp only [AddSubmonoid.coe_add, toMul_add]
-    rw [ZeroMemClass.coe_zero, toMul_zero, ← f.2.neg_mul_self_eq_one]
-    simp [coe_smul]
+    simp [← f.2.neg_mul_self_eq_one]
   add_comm f g := add_comm f g
 
 instance instIsScalarTower (R : Type*) [CommRing R] (S : Type*) [CommRing S] [Algebra R S]
@@ -316,7 +341,7 @@ instance instIsScalarTower (R : Type*) [CommRing R] (S : Type*) [CommRing S] [Al
     IsScalarTower R S (ExponentialModule A) where
   smul_assoc r s f := by
     apply coe_injective
-    simp only [coe_smul]
+    simp only [coe_smul_eq_rescale]
     rw [← algebraMap_smul S, smul_eq_mul, map_mul, mul_comm, rescale_mul]
     simp only [RingHom.coe_comp, Function.comp_apply]
     apply congr_fun
@@ -325,11 +350,6 @@ instance instIsScalarTower (R : Type*) [CommRing R] (S : Type*) [CommRing S] [Al
 
 lemma coe_ofMul (f : R⟦X⟧) (hf : IsExponential f) :
     ↑(⟨ofMul f, hf⟩ : ExponentialModule R) = f := rfl
-
-lemma isExponential_coe (f : ExponentialModule R) : IsExponential (f : R⟦X⟧) := f.prop
-
-lemma constantCoeff_coe (f : ExponentialModule R) : constantCoeff (f : R⟦X⟧) = 1 :=
-  f.prop.constantCoeff
 
 lemma subst_add_coe_eq_mul (f : ExponentialModule R) :
     subst (S := R) (X₀ + X₁) (f : R⟦X⟧) = (subst X₀ (f : R⟦X⟧)) * (subst X₁ (f : R⟦X⟧)) := by
