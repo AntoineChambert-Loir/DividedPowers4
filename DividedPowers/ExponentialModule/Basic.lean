@@ -242,30 +242,22 @@ theorem rescale_rescale (r s : A) (f : R⟦X⟧) :
   ext
   simp [rescale, mul_pow, mul_assoc]
 
+@[simp]
+lemma coe_zero : ((0 : ExponentialModule R)  : R⟦X⟧) = 1 := by
+  simp [toPowerSeries]
+
+lemma coe_ofMul (f : R⟦X⟧) (hf : IsExponential f) :
+    ↑(⟨ofMul f, hf⟩ : ExponentialModule R) = f := by rfl
+
 noncomputable instance instModule : Module A (ExponentialModule R) where
   one_smul f := by rw [← coe_inj]; simp
-  mul_smul r s f := by rw [← coe_inj]; simp
+  mul_smul r s f := by simp [← Subtype.coe_inj, coe_smul, mul_smul]
   smul_zero r := by rw [← coe_inj]; simp
   smul_add r f g := by rw [← coe_inj]; simp
   add_smul r s f := by 
     rw [← coe_inj];  simp
-    rw [← IsExponential.rescale_add r s (isExponential_coe f)]
+    rw [← IsExponential.rescale_add r s (isExponential_coe f)]  
   zero_smul f := by rw [← coe_inj]; simp
-
-noncomputable instance instModule : Module A (ExponentialModule R) where
-  one_smul f := by rw [← Subtype.coe_inj, smul_def, one_smul]
-  mul_smul r s f := by simp [← Subtype.coe_inj, smul_def, mul_smul]
-  smul_zero r := by rw [← Subtype.coe_inj, smul_def, ZeroMemClass.coe_zero, smul_zero]
-  smul_add r f g := by simp [← Subtype.coe_inj, smul_def]
-  add_smul r s f := by
-    simp only [← Subtype.coe_inj, smul_def, AddSubmonoid.coe_add]
-    apply Additive.toMul.injective
-    simp [toMul_smul, -toMul_val_eq_coe, f.prop.rescale_add r s]
-  zero_smul f := by
-    simp only [← Subtype.coe_inj, smul_def, ZeroMemClass.coe_zero]
-    apply Additive.toMul.injective
-    have hf : constantCoeff f = (1 : R) := f.prop.constantCoeff
-    simp [toMul_smul, toMul_val_eq_coe, hf]
 
 end ExponentialModule
 
