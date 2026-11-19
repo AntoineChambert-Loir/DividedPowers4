@@ -186,9 +186,7 @@ noncomputable def quotientEquiv_symm_toAlgHom :
     intro m hm
     simp only [LinearMap.mem_ker, LinearMap.coe_comp, Function.comp_apply, h', h] at hm ⊢
     ext k
-    erw [coeff_linearMap] -- Why is erw now needed? (Apr. 7)
-    simp only [coeff_exp_LinearMap, Ideal.Quotient.mkₐ_eq_mk, coe_zero_eq_one,
-      coeff_one]
+    simp only [coeff_linearMap, coeff_exp_LinearMap, Ideal.Quotient.mkₐ_eq_mk, ZeroMemClass.coe_zero, toMul_zero, coeff_one]
     split_ifs with hk
     · simp [hk, dp_zero]
     · rw [Ideal.Quotient.eq_zero_iff_mem, kerLift]
