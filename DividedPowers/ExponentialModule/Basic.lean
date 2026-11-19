@@ -194,9 +194,6 @@ namespace ExponentialModule
 
 open PowerSeries Additive
 
-/-- The coercion map from `ExponentialModule R` to `R⟦X⟧` -/
-@[coe] def toPowerSeries (f : ExponentialModule R) : R⟦X⟧ := toMul f
-
 variable (R) in
 /-- Coercion from `ExponentialModule R` to `R⟦X⟧`  -/
 instance instCoe : Coe (ExponentialModule R) R⟦X⟧ := ⟨fun f ↦ toMul f⟩
