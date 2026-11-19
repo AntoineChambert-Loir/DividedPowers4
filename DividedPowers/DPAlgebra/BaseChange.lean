@@ -5,6 +5,7 @@ Authors: Antoine Chambert-Loir, María Inés de Frutos-Fernández
 -/
 import DividedPowers.DPAlgebra.Exponential
 import DividedPowers.DPAlgebra.Graded.Basic
+import DividedPowers.DPAlgebra.Graded.GradeZero
 import DividedPowers.ForMathlib.RingTheory.TensorProduct.Basic
 
 /-! # Base change properties of the divided power algebra
@@ -272,33 +273,75 @@ noncomputable local instance {N : Type*} [AddCommMonoid N] [Module S N] :
 -- Induction principle for using `a ∈ grade R M n`
 theorem grade_induction {a : DividedPowerAlgebra R M} {n : ℕ} (ha : a ∈ grade R M n) 
     {P : DividedPowerAlgebra R M → ℕ → Prop}
+    (P_null : P 0 n) (P_one : P 1 0)
     (P_add : ∀ {a b : DividedPowerAlgebra R M} {n : ℕ} (ha : a ∈ grade R M n) (hb : b ∈ grade R M n) (hPa : P a n) (hPb : P b n), P (a + b) n)
     (P_smul : ∀ (r : R) {a : DividedPowerAlgebra R M} {n : ℕ} (ha : a ∈ grade R M n) (hPa : P a n), P (r • a) n)
     (P_mul : ∀ {a b : DividedPowerAlgebra R M} {m n p : ℕ} (h : m + n = p) (ha : a ∈ grade R M m) (hb : b ∈ grade R M n) (hPa : P a m) (hPb : P b n), P (a * b) p)
     (P_dp : ∀ (m : M) (p : ℕ), P (dp R p m) p) :
     P a n := by
-  sorry
+  rw [mem_grade_iff'] at ha
+  obtain ⟨q, hq, rfl⟩ := ha
+  rw [MvPolynomial.as_sum (q : MvPolynomial (ℕ × M) R), map_sum]
+  generalize (q : MvPolynomial (ℕ × M) R).support = s
+  classical
+  induction s using Finset.induction_on with
+  | empty => simp [P_null]
+  | insert d s hds hs => 
+    rw [Finset.sum_insert hds]
+    apply P_add _ _ _ hs
+    · sorry -- exactly proved below
+    · rw [mem_grade_iff]
+      use ∑ x ∈ s, MvPolynomial.monomial x (MvPolynomial.coeff x (q : MvPolynomial (ℕ × M) R))
+      refine ⟨?_, by rw [map_sum]⟩
+      rw [mem_weightedHomogeneousSubmodule]
+      apply IsWeightedHomogeneous.sum
+      intro i hi
+      by_cases hc : MvPolynomial.coeff i (q : MvPolynomial (ℕ × M) R) = 0
+      · simp [hc, isWeightedHomogeneous_zero]
+      · exact isWeightedHomogeneous_monomial _ _ _ (hq hc)
+    · by_cases hc : MvPolynomial.coeff d (q : MvPolynomial _ R) = 0
+      · simp [hc, P_null]
+      rw [← mul_one (MvPolynomial.coeff d _), ← smul_eq_mul, map_smul, map_smul]
+      apply P_smul
+      · rw [mem_grade_iff]
+        refine ⟨MvPolynomial.monomial d 1, ?_, rfl⟩
+        rw [mem_weightedHomogeneousSubmodule]
+        exact isWeightedHomogeneous_monomial _ _ _ (hq hc)
+      · simp only [← prod_X_pow_eq_monomial, ← hq hc, Finsupp.weight,
+          Finsupp.linearCombination, LinearMap.toAddMonoidHom_coe, Finsupp.coe_lsum, 
+          Finsupp.sum, LinearMap.coe_smulRight, LinearMap.id_coe, id_eq, smul_eq_mul]
+        generalize d.support = s
+        induction s using Finset.induction_on with
+        | empty => simp [P_one]
+        | insert d s hs => sorry
+
+
 
 theorem dpScalarExtension_mem_grade {a : DividedPowerAlgebra R M} {n : ℕ} (ha : a ∈ grade R M n)
     (s : S) : dpScalarExtension R S M (s ⊗ₜ[R] a) ∈ grade S (S ⊗[R] M) n := by
-  apply grade_induction (P := fun a n ↦ dpScalarExtension R S M (s ⊗ₜ[R] a) ∈ grade S _ n) ha
+  rw [← mul_one s, ← smul_eq_mul, ← smul_tmul', map_smul]
+  apply Submodule.smul_mem
+  apply grade_induction (P := fun a n ↦ dpScalarExtension R S M (1 ⊗ₜ[R] a) ∈ grade S _ n) ha
+  · simp
+  · have : dpScalarExtension R S M (1 ⊗ₜ[R] 1) = 1 := map_one (dpScalarExtension R S M)
+    -- strange!
+    simp [this, one_mem]
   -- P_add
-  sorry
+  · intro a b n ha hb ha' hb'
+    rw [tmul_add, map_add]
+    apply Submodule.add_mem _ ha' hb'
   -- P_smul
-  sorry
+  · intro r a n ha ha'
+    rw [tmul_smul, map_smul_of_tower _ r _, algebra_compatible_smul S r _]
+    exact Submodule.smul_mem _ _ ha'
   -- P_mul
-  sorry
+  · intro a b m n p hmnp ha hb ha' hb'
+    rw [← mul_one 1, ← tmul_mul_tmul, map_mul, ← hmnp]
+    exact mul_mem S (S ⊗[R] M) ha' hb'
   -- P_dp
   · intro m p
-    sorry
-/-  induction ha using grade_induction with
-  | P_add => sorry
-  | P_smul => sorry
-  | P_mul => sorry
-  | P_dp => sorry
-
--/
-
+    rw [dpScalarExtension_apply_one_dp]
+    exact dp_mem_grade S (S ⊗[R] M) p (1 ⊗ₜ[R] m)
 
 --set_option backward.isDefEq.respectTransparency false in
 theorem dpScalarExtension_mem_grade' {a : DividedPowerAlgebra R M} {n : ℕ} (ha : a ∈ grade R M n)
