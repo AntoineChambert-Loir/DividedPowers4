@@ -88,10 +88,6 @@ variable (A : Type*) [CommSemiring A] (R : Type*) [CommSemiring R] [Algebra A R]
   `DividedPowerAlgebra R (R ⊗[A] M)`. -/
 noncomputable def dpScalarExtension :
     R ⊗[A] DividedPowerAlgebra A M →ₐ[R] DividedPowerAlgebra R (R ⊗[A] M) := by
-  /- made a general instance 
-  let : Algebra A (DividedPowerAlgebra R (R ⊗[A] M)) := RingQuot.instAlgebra _
-  have : IsScalarTower A R (DividedPowerAlgebra R (R ⊗[A] M)) := RingQuot.instIsScalarTower _
-  -/
   apply AlgHom.baseChange
   apply lift' (f := (fun nm => dp R nm.1 (1 ⊗ₜ[A] nm.2) : ℕ × M → DividedPowerAlgebra R (R ⊗[A] M)))
     (fun _ => by simp only [dp_zero])
@@ -160,7 +156,7 @@ noncomputable def dpScalarExtensionInv  :
 /-- Roby1963, theorem III.2 -/
 theorem dpScalarExtensionInv_apply_dp (n : ℕ) (s : S) (m : M) :
     dpScalarExtensionInv R S M (dp S n (s ⊗ₜ[R] m)) = (s ^ n) ⊗ₜ[R] (dp R n m) := by
-  simp [dpScalarExtensionInv, exponentialModule_equiv_symm_apply, dpScalarExtensionExp, 
+  simp [dpScalarExtensionInv, exponentialModule_equiv_symm_apply, dpScalarExtensionExp,
     ExponentialModule.coeff_linearMap, coeff_exp_LinearMap]
 
 /-- Uniqueness claim of Roby1963, theorem III.2 -/
@@ -267,11 +263,12 @@ open MvPolynomial
 noncomputable local instance {N : Type*} [AddCommMonoid N] [Module S N] :
     IsScalarTower R S (DividedPowerAlgebra S N) := RingQuot.instIsScalarTower (Rel S N) -/
 
-@[simp] theorem _root_.Algebra.coe_algHom {R S A : Type*} [CommSemiring R] [CommSemiring S] [Semiring A] [Algebra R S] [Algebra S A] [Algebra R A] [IsScalarTower R S A] :
-  (Algebra.algHom R S A : S →+* A) = algebraMap S A := rfl
+@[simp] theorem _root_.Algebra.coe_algHom {R S A : Type*} [CommSemiring R] [CommSemiring S]
+    [Semiring A] [Algebra R S] [Algebra S A] [Algebra R A] [IsScalarTower R S A] :
+    (Algebra.algHom R S A : S →+* A) = algebraMap S A := rfl
 
 -- Induction principle for using `a ∈ grade R M n`
-theorem grade_induction {a : DividedPowerAlgebra R M} {n : ℕ} (ha : a ∈ grade R M n) 
+theorem acl_grade_induction {a : DividedPowerAlgebra R M} {n : ℕ} (ha : a ∈ grade R M n) 
     {P : DividedPowerAlgebra R M → ℕ → Prop}
     (P_null : P 0 n) (P_one : P 1 0)
     (P_add : ∀ {a b : DividedPowerAlgebra R M} {n : ℕ} (ha : a ∈ grade R M n) (hb : b ∈ grade R M n) (hPa : P a n) (hPb : P b n), P (a + b) n)
@@ -410,5 +407,104 @@ theorem dpScalarExtension_mem_grade' {a : DividedPowerAlgebra R M} {n : ℕ} (ha
       simp only [MvPolynomial.coeff_C_mul, MvPolynomial.coeff_monomial, mul_ite, mul_one, mul_zero,
         map_sum]
       rfl
+
+theorem grade_induction
+    (a : DividedPowerAlgebra R M) (n : ℕ) (ha : a ∈ grade R M n)
+    {P : (a : DividedPowerAlgebra R M) → (n : ℕ) → (a ∈ grade R M n) → Prop}
+    (P_add : ∀ {a b : DividedPowerAlgebra R M} {n : ℕ} (ha : a ∈ grade R M n)
+      (hb : b ∈ grade R M n) (hPa : P a n ha) (hPb : P b n hb),
+      P (a + b) n ((grade R M n).add_mem ha hb))
+    (P_smul : ∀ (r : R) {a : DividedPowerAlgebra R M} {n : ℕ} (ha : a ∈ grade R M n)
+      (hPa : P a n ha), P (r • a) n ((grade R M n).smul_mem r ha))
+    (P_mul : ∀ {a b : DividedPowerAlgebra R M} {m n p : ℕ} (h : m + n = p) (ha : a ∈ grade R M m)
+      (hb : b ∈ grade R M n) (hPa : P a m ha) (hPb : P b n hb),
+      P (a * b) p (h ▸ mul_mem R M ha hb))
+    (P_dp : ∀ (m : M) (p : ℕ), P (dp R p m) p (dp_mem_grade R M p m))  :
+    P a n ha := by
+  sorry
+
+theorem dpScalarExtension_mem_grade {a : DividedPowerAlgebra R M} {n : ℕ} (ha : a ∈ grade R M n)
+    (s : S) : dpScalarExtension R S M (s ⊗ₜ[R] a) ∈ grade S (S ⊗[R] M) n := by
+  induction a, n, ha using grade_induction generalizing s with
+  | P_add _ _ ha hb => simp [tmul_add, map_add, Submodule.add_mem _ (ha _) (hb _)]
+  | P_smul _ _ h =>
+    specialize h s
+    rw [dpScalarExtension_tmul] at h -- Maybe this lemma can be generalized?
+    rw [← smul_tmul, dpScalarExtension_tmul, smul_assoc]
+    exact Submodule.smul_of_tower_mem _ _ h
+  | P_mul h ha hb ha' hb'  =>
+    rw [← one_mul s, ← tmul_mul_tmul, ← h, map_mul]
+    exact mul_mem S (S ⊗[R] M) (ha' 1) (hb' s)
+  | P_dp =>
+    rw [dpScalarExtension_tmul, dpScalarExtension_apply_one_dp]
+    apply Submodule.smul_mem _ _ (dp_mem_grade _ _ _ _)
+
+-- --set_option backward.isDefEq.respectTransparency false in
+-- theorem dpScalarExtension_mem_grade' {a : DividedPowerAlgebra R M} {n : ℕ} (ha : a ∈ grade R M n)
+--     (s : S) : dpScalarExtension R S M (s ⊗ₜ[R] a) ∈ grade S (S ⊗[R] M) n := by
+--   rw [mem_grade_iff]
+--   set f : R →ₐ[R] S := Algebra.algHom R R S with hf
+--   obtain ⟨p, hpn, hpa⟩ := ha
+--   set p' : MvPolynomial (ℕ × M) S := MvPolynomial.baseChange f p with hp'
+--   use s • rename (Prod.map id (fun m => 1 ⊗ₜ m)) p'
+--   constructor
+--   · simp only [SetLike.mem_coe, mem_weightedHomogeneousSubmodule, IsWeightedHomogeneous] at hpn ⊢
+--     intro d' hd'
+--     simp only [MvPolynomial.coeff_smul, smul_eq_mul] at hd'
+--     obtain ⟨d, hdd', hd0⟩ := coeff_rename_ne_zero _ _ _ (right_ne_zero_of_mul hd')
+--     rw [← hdd']
+--     simp only [hp', hf, coeff_baseChange_apply] at hd0
+--     have hd0' : coeff d p ≠ 0 := by
+--       intro h
+--       simp only [h, map_zero, ne_eq, not_true_eq_false] at hd0
+--     simp [← hpn hd0', Finsupp.weight, LinearMap.toAddMonoidHom_coe, Finsupp.linearCombination_mapDomain, Prod.map_fst']
+--   · have h_eq (d : ℕ × M →₀ ℕ) : MvPolynomial.coeff d ((MvPolynomial.eval₂Hom
+--           (MvPolynomial.C.comp ↑(Algebra.algHom R R S)) MvPolynomial.X) p) =
+--             (algebraMap R S) (MvPolynomial.coeff d p) := by
+--       simp [← MvPolynomial.coeff_map, ← map_eq_eval₂Hom_C_comp _]
+--     rw [LinearMapClass.map_smul, dpScalarExtension_tmul]
+--     congr 1
+--     simp only [SetLike.mem_coe, mem_weightedHomogeneousSubmodule, IsWeightedHomogeneous] at hpn
+--     simp only [hp', baseChange, coe_mk, ← hpa, MvPolynomial.rename, ← MvPolynomial.algebraMap_eq,
+--       dpScalarExtension, AlgHom.baseChange, toRingHom_eq_coe, coe_mk, RingHom.coe_coe,
+--       productMap_apply_tmul, _root_.map_one, one_mul, lift', toLinearMap_apply,
+--       Function.comp_def, hf]
+--     rw [RingQuot.liftAlgHom_mkAlgHom_apply, coe_eval₂AlgHom,
+--       ← AlgHom.comp_apply, MvPolynomial.comp_aeval, aeval_def]
+--     simp only [eval₂_eq]
+--     have h_sum (d : ℕ × M →₀ ℕ) : MvPolynomial.coeff d ((MvPolynomial.eval₂Hom
+--           (MvPolynomial.C.comp ↑(Algebra.algHom R R S)) MvPolynomial.X) p) =
+--         (coeff d (∑ x ∈ p.support, MvPolynomial.C ((algebraMap R S) (coeff x p)) *
+--           (monomial x) 1)) := by
+--       classical
+--       rw [h_eq]
+--       conv_lhs => rw [MvPolynomial.as_sum (p := p)]
+--       simp only [coeff_sum, MvPolynomial.coeff_C_mul, _root_.map_sum,
+--         MvPolynomial.coeff_monomial, mul_ite, mul_one, mul_zero]
+--       refine Finset.sum_congr rfl (fun x _hx => ?_)
+--       split_ifs
+--       · rfl
+--       · rw [map_zero]
+--     classical
+--     rw [Finset.sum_subset_zero_on_sdiff]
+--     · intro x hx
+--       simp only [mem_support_iff, ne_eq] at hx ⊢
+--       simp only [MvPolynomial.algebraMap_eq, h_sum x, coeff_sum, MvPolynomial.coeff_C_mul, mul_one,
+--         mul_zero, MvPolynomial.coeff_monomial, mul_ite, Finset.sum_ite_eq', mem_support_iff, ne_eq,
+--         ite_not, ite_eq_left_iff, Classical.not_imp] at hx
+--       exact hx.1
+--     · intro x hx
+--       simp only [Finset.mem_sdiff, mem_support_iff, ne_eq, Decidable.not_not,
+--         MvPolynomial.algebraMap_eq,h_sum x, coeff_sum, MvPolynomial.coeff_C_mul,
+--         MvPolynomial.coeff_monomial, mul_ite, mul_one, mul_zero, Finset.sum_ite_eq',
+--         mem_support_iff, ne_eq, ite_not, ite_eq_left_iff] at hx
+--       rw [IsScalarTower.algebraMap_apply R S (DividedPowerAlgebra S (S ⊗[R] M)),
+--         hx.2 hx.1, map_zero, zero_mul]
+--     · intro d _hd
+--       rw [IsScalarTower.algebraMap_eq R S, RingHom.coe_comp, Function.comp_apply, MvPolynomial.algebraMap_eq, ← h_eq,
+--         h_sum d, coeff_sum, map_sum]
+--       simp only [MvPolynomial.coeff_C_mul, MvPolynomial.coeff_monomial, mul_ite, mul_one, mul_zero,
+--         map_sum]
+--       rfl
 
 end DividedPowerAlgebra
