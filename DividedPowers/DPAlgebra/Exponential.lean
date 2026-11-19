@@ -128,8 +128,7 @@ theorem exponentialModule_equiv_apply (α : DividedPowerAlgebra R M →ₐ[R] S)
 theorem exponentialModule_equiv_symm_apply
     (β : M →ₗ[R] ExponentialModule S) (n : ℕ) (m : M) :
     (exponentialModule_equiv R M S).symm β (dp R n m) = coeff n (β m) := by
-  unfold exponentialModule_equiv
-  simp only [Equiv.coe_fn_symm_mk, lift'_apply_dp]
+  simp [exponentialModule_equiv, lift'_apply_dp]
 
 end DividedPowerAlgebra
 
