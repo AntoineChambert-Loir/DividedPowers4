@@ -158,6 +158,7 @@ lemma smul_ofMul (r : A) (f : R⟦X⟧) :
 lemma toMul_smul (r : A) (f : Additive R⟦X⟧) :
   toMul (r • f) = rescale (algebraMap A R r) (toMul f) := rfl
 
+/-- Action of `R` on the additive group `Additive R⟦X⟧` given by rescaling -/
 noncomputable instance : DistribMulAction A (Additive R⟦X⟧) where
   one_smul := by simp [smul_ofMul]
   mul_smul := by
@@ -193,10 +194,11 @@ namespace ExponentialModule
 
 open PowerSeries Additive
 
-/-- The coercion map from `ExponentialModule R` to `R⟦X⟧`. -/
+/-- The coercion map from `ExponentialModule R` to `R⟦X⟧` -/
 @[coe] def toPowerSeries (f : ExponentialModule R) : R⟦X⟧ := toMul f
 
 variable (R) in
+/-- Coercion from `ExponentialModule R` to `R⟦X⟧`  -/
 instance instCoe : Coe (ExponentialModule R) R⟦X⟧ := ⟨fun f ↦ toMul f⟩
 
 lemma isExponential_coe (f : ExponentialModule R) : IsExponential (f : R⟦X⟧) := f.prop
@@ -228,6 +230,7 @@ variable (A R M) [CommSemiring A] [CommSemiring R] [Algebra A R]
 
 end
 
+/-- The action of `A` on `ExponentialModule R` induced by the one on `Additive R⟦X⟧` -/
 noncomputable instance : SMul A (ExponentialModule R) where
   smul r f := ⟨r • (f : Additive R⟦X⟧), by
     simp only [mem_exponentialModule_iff', toMul_smul]
@@ -246,12 +249,12 @@ lemma coe_ofMul (f : R⟦X⟧) (hf : IsExponential f) :
 
 /-- The `A`-module structure on `ExponentialModule R`, if `R` is an `A`-algebra -/
 noncomputable instance : Module A (ExponentialModule R) where
-  one_smul f := by simp [← coe_inj]
-  mul_smul r s f := by simp [← coe_inj, PowerSeries.rescale_rescale, mul_comm]
-  smul_zero r := by simp [← coe_inj]
-  smul_add r f g := by simp [← coe_inj]
-  add_smul r s f := by simp [← coe_inj, ← IsExponential.rescale_add r s (isExponential_coe f)]
-  zero_smul f := by simp [← coe_inj]
+  one_smul  := by simp [← coe_inj]
+  mul_smul  := by simp [← coe_inj, PowerSeries.rescale_rescale, mul_comm]
+  smul_zero := by simp [← coe_inj]
+  smul_add  := by simp [← coe_inj]
+  add_smul  := by simp [← coe_inj ,← IsExponential.rescale_add _ _ (isExponential_coe _)]
+  zero_smul := by simp [← coe_inj]
 
 end ExponentialModule
 
@@ -269,7 +272,7 @@ protected theorem neg {f : R⟦X⟧} (hf : IsExponential f) :
 protected theorem self_mul_neg_eq_one {f : R⟦X⟧} (hf : IsExponential f) :
     f * (rescale (-1 : R) f) = 1 := by
   have hadd := hf.rescale_add (1 : R) (-1 : R)
-  simp only [Algebra.algebraMap_self, RingHom.id_apply, add_neg_cancel, rescale_zero,
+  simp only [RingHom.id_apply, add_neg_cancel, rescale_zero,
     RingHom.coe_comp, Function.comp_apply, rescale_one] at hadd
   rw [← hadd, hf.constantCoeff, map_one]
 
@@ -314,18 +317,16 @@ open PowerSeries Additive
 
 variable [CommRing R]
 
+/-- The `AddCommGroup` structure on `ExponentialModule R` inherited from `Additive R⟦X⟧` -/
 noncomputable instance : AddCommGroup (ExponentialModule R) where
-  neg f := (-1 : ℤ) • f
-  zsmul n f := n • f
-  zsmul_zero' f := by simp
-  zsmul_succ' n f := by simp [add_smul]
-  zsmul_neg' n f := by simp [Int.negSucc_eq, ← smul_assoc]
-  neg_add_cancel f := by
-    rw [← Subtype.coe_inj]
-    apply Additive.toMul.injective
-    simp [← f.2.neg_mul_self_eq_one]
-  add_comm f g := add_comm f g
+  neg f            := (-1 : ℤ) • f
+  zsmul n f        := n • f
+  zsmul_zero'      := by simp
+  zsmul_succ'      := by simp [add_smul]
+  zsmul_neg'       := by simp [Int.negSucc_eq, ← smul_assoc]
+  neg_add_cancel f := by simp [← coe_inj, ← f.2.neg_mul_self_eq_one]
 
+/-- Compatibility of module structures on `ExponentialModule A` in a tower `R S A` of commutative rings -/
 instance (R : Type*) [CommRing R] (S : Type*) [CommRing S] [Algebra R S]
     (A : Type*) [CommRing A] [Algebra R A] [Algebra S A] [IsScalarTower R S A] :
     IsScalarTower R S (ExponentialModule A) where
