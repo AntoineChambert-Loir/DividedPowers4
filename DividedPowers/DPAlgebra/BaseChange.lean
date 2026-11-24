@@ -268,7 +268,7 @@ noncomputable local instance {N : Type*} [AddCommMonoid N] [Module S N] :
     (Algebra.algHom R S A : S →+* A) = algebraMap S A := rfl
 
 -- Induction principle for using `a ∈ grade R M n`
-theorem acl_grade_induction {a : DividedPowerAlgebra R M} {n : ℕ} (ha : a ∈ grade R M n) 
+theorem acl_grade_induction {a : DividedPowerAlgebra R M} {n : ℕ} (ha : a ∈ grade R M n)
     {P : DividedPowerAlgebra R M → ℕ → Prop}
     (P_null : P 0 n) (P_one : P 1 0)
     (P_add : ∀ {a b : DividedPowerAlgebra R M} {n : ℕ} (ha : a ∈ grade R M n) (hb : b ∈ grade R M n) (hPa : P a n) (hPb : P b n), P (a + b) n)
@@ -283,7 +283,7 @@ theorem acl_grade_induction {a : DividedPowerAlgebra R M} {n : ℕ} (ha : a ∈ 
   classical
   induction s using Finset.induction_on with
   | empty => simp [P_null]
-  | insert d s hds hs => 
+  | insert d s hds hs =>
     rw [Finset.sum_insert hds]
     apply P_add _ _ _ hs
     · sorry -- exactly proved below
@@ -305,40 +305,55 @@ theorem acl_grade_induction {a : DividedPowerAlgebra R M} {n : ℕ} (ha : a ∈ 
         rw [mem_weightedHomogeneousSubmodule]
         exact isWeightedHomogeneous_monomial _ _ _ (hq hc)
       · simp only [← prod_X_pow_eq_monomial, ← hq hc, Finsupp.weight,
-          Finsupp.linearCombination, LinearMap.toAddMonoidHom_coe, Finsupp.coe_lsum, 
+          Finsupp.linearCombination, LinearMap.toAddMonoidHom_coe, Finsupp.coe_lsum,
           Finsupp.sum, LinearMap.coe_smulRight, LinearMap.id_coe, id_eq, smul_eq_mul]
         generalize d.support = s
         induction s using Finset.induction_on with
         | empty => simp [P_one]
         | insert d s hs => sorry
 
-
+theorem grade_induction
+    (a : DividedPowerAlgebra R M) (n : ℕ) (ha : a ∈ grade R M n)
+    {P : (a : DividedPowerAlgebra R M) → (n : ℕ) → (a ∈ grade R M n) → Prop}
+    (P_add : ∀ {a b : DividedPowerAlgebra R M} {n : ℕ} (ha : a ∈ grade R M n)
+      (hb : b ∈ grade R M n) (hPa : P a n ha) (hPb : P b n hb),
+      P (a + b) n ((grade R M n).add_mem ha hb))
+    (P_smul : ∀ (r : R) {a : DividedPowerAlgebra R M} {n : ℕ} (ha : a ∈ grade R M n)
+      (hPa : P a n ha), P (r • a) n ((grade R M n).smul_mem r ha))
+    (P_mul : ∀ {a b : DividedPowerAlgebra R M} {m n p : ℕ} (h : m + n = p) (ha : a ∈ grade R M m)
+      (hb : b ∈ grade R M n) (hPa : P a m ha) (hPb : P b n hb),
+      P (a * b) p (h ▸ mul_mem R M ha hb))
+    (P_dp : ∀ (m : M) (p : ℕ), P (dp R p m) p (dp_mem_grade R M p m))  :
+    P a n ha := by
+  let Q (a : DividedPowerAlgebra R M) : Prop :=
+    ∀ (n : ℕ), P (DividedPowerAlgebra.proj' R M n a) n (Submodule.coe_mem (proj' R M n a))
+  suffices Q a by
+    simp only [Q] at this
+    convert this n
+    rw [eq_comm]
+    simp [proj']
+    sorry
+  clear ha
+  induction a using DividedPowerAlgebra.induction_on with
+  | C => sorry
+  | add a b ha hb => sorry
+  | dp x n m hx => sorry
 
 theorem dpScalarExtension_mem_grade {a : DividedPowerAlgebra R M} {n : ℕ} (ha : a ∈ grade R M n)
     (s : S) : dpScalarExtension R S M (s ⊗ₜ[R] a) ∈ grade S (S ⊗[R] M) n := by
-  rw [← mul_one s, ← smul_eq_mul, ← smul_tmul', map_smul]
-  apply Submodule.smul_mem
-  apply grade_induction (P := fun a n ↦ dpScalarExtension R S M (1 ⊗ₜ[R] a) ∈ grade S _ n) ha
-  · simp
-  · have : dpScalarExtension R S M (1 ⊗ₜ[R] 1) = 1 := map_one (dpScalarExtension R S M)
-    -- strange!
-    simp [this, one_mem]
-  -- P_add
-  · intro a b n ha hb ha' hb'
-    rw [tmul_add, map_add]
-    apply Submodule.add_mem _ ha' hb'
-  -- P_smul
-  · intro r a n ha ha'
-    rw [tmul_smul, map_smul_of_tower _ r _, algebra_compatible_smul S r _]
-    exact Submodule.smul_mem _ _ ha'
-  -- P_mul
-  · intro a b m n p hmnp ha hb ha' hb'
-    rw [← mul_one 1, ← tmul_mul_tmul, map_mul, ← hmnp]
-    exact mul_mem S (S ⊗[R] M) ha' hb'
-  -- P_dp
-  · intro m p
-    rw [dpScalarExtension_apply_one_dp]
-    exact dp_mem_grade S (S ⊗[R] M) p (1 ⊗ₜ[R] m)
+  induction a, n, ha using grade_induction generalizing s with
+  | P_add _ _ ha hb => simp [tmul_add, map_add, Submodule.add_mem _ (ha _) (hb _)]
+  | P_smul _ _ h =>
+    specialize h s
+    rw [dpScalarExtension_tmul] at h -- Maybe this lemma can be generalized?
+    rw [← smul_tmul, dpScalarExtension_tmul, smul_assoc]
+    exact Submodule.smul_of_tower_mem _ _ h
+  | P_mul h ha hb ha' hb'  =>
+    rw [← one_mul s, ← tmul_mul_tmul, ← h, map_mul]
+    exact mul_mem S (S ⊗[R] M) (ha' 1) (hb' s)
+  | P_dp =>
+    rw [dpScalarExtension_tmul, dpScalarExtension_apply_one_dp]
+    apply Submodule.smul_mem _ _ (dp_mem_grade _ _ _ _)
 
 --set_option backward.isDefEq.respectTransparency false in
 theorem dpScalarExtension_mem_grade' {a : DividedPowerAlgebra R M} {n : ℕ} (ha : a ∈ grade R M n)
