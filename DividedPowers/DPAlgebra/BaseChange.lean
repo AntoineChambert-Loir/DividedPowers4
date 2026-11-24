@@ -334,10 +334,22 @@ theorem grade_induction
     simp [proj']
     sorry
   clear ha
+  dsimp [Q]
   induction a using DividedPowerAlgebra.induction_on with
-  | C => sorry
-  | add a b ha hb => sorry
-  | dp x n m hx => sorry
+  | C a =>
+    intro n
+    sorry
+  | add a b _ _ =>
+    intro n
+    simp only [map_add, Submodule.coe_add]
+    exact P_add (Submodule.coe_mem (proj' R M n a))
+      (by exact Submodule.coe_mem (proj' R M n b)) (by aesop) (by aesop)
+  | dp x n m hx =>
+    intro k
+    simp only [proj', GradedAlgebra.proj', LinearMap.coe_mk, AddHom.coe_mk, DirectSum.decompose_mul]
+    sorry
+
+#exit
 
 theorem dpScalarExtension_mem_grade {a : DividedPowerAlgebra R M} {n : ℕ} (ha : a ∈ grade R M n)
     (s : S) : dpScalarExtension R S M (s ⊗ₜ[R] a) ∈ grade S (S ⊗[R] M) n := by
