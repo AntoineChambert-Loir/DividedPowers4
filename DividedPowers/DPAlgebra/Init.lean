@@ -331,6 +331,37 @@ theorem submodule_span_prod_dp_eq_top (hv : Submodule.span R (Set.range v) = ⊤
 
 -- Up to here, in #35804
 
+theorem mkAlgHom_monomial (d : (ℕ × M) →₀ ℕ) (r : R) :
+    mkAlgHom R (Rel R M) (monomial d r) = r • d.prod (fun nm k ↦ (dp R nm.1 nm.2) ^ k) := by
+  rw [MvPolynomial.monomial_eq, map_mul, mkAlgHom_C, Algebra.smul_def]
+  simp [map_finsuppProd, dp_def, map_pow]
+
+/- If the `R`-module is spanned by elements `v i`, then `DividedPowerAlgebra R M`
+is linearly spanned by the finite products `∏ i, dp R (k i) (v i)`.
+
+When these `v i` form a `Module.Basis`, these elements are linearly independent,
+hence form a `Module.Basis` of `DividedPowerAlgebra R M`, see `DividedPowers.DPAlgebra.Free`. -/
+
+theorem adjoin_dp_eq_top {R M : Type*} [CommRing R] [AddCommGroup M] [Module R M]
+    {ι : Type*} {v : ι → M}(hv : Submodule.span R (Set.range v) = ⊤) :
+    Algebra.adjoin R (Set.range fun (k,i) ↦ dp R k (v i)) = ⊤ := by
+  rw [eq_top_iff]
+  intro x hx
+  clear hx
+  induction x using DividedPowerAlgebra.induction_on with
+  | C a =>  simp
+  | add x y hx hy => exact add_mem hx hy
+  | dp x k m hx =>  
+    apply mul_mem hx
+    have hm : m ∈ Submodule.span R (Set.range v) := by simp [hv]
+    induction hm using Submodule.span_induction generalizing k with
+    | zero => simp only [dp_null] ; aesop
+    | mem => apply Algebra.mem_adjoin_of_mem ; aesop
+    | add _ _ _ _ hx hy => 
+      rw [dp_add]
+      exact Subalgebra.sum_mem _ (fun u _ ↦ mul_mem (hx u.1) (hy u.2))
+    | smul => rw [dp_smul]; aesop
+
 -- Not clear if we want this version
 lemma pow_dp' (n : ℕ) (m : M) (k : ℕ) :
     (dp R n m) ^ k = (Nat.multinomial (range k) (fun _ ↦ n)) * dp R (k * n) m := by

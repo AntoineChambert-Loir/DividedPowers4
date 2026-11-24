@@ -164,6 +164,105 @@ theorem mem_grade_iff' {n : ℕ} (p : DividedPowerAlgebra R M) :
       IsWeightedHomogeneous Prod.fst q.1 n ∧ (mkAlgHom R (Rel R M)) q.1 = p :=
   ⟨fun hp ↦ Submodule.coe_mk p hp ▸ surjective_of_supported' _, fun ⟨q, hq, hpq⟩ ↦  ⟨q, hq, hpq⟩⟩
 
+variable {ι : Type*} {v : ι → M} (hv : Submodule.span R (Set.range v) = ⊤) (n : ℕ)
+
+/- If the `R`-module is spanned by elements `v i`, then `grade R M n`
+is linearly spanned by the finite products `∏ i, dp R (k i) (v i)` for which
+the sum of the `k i` equals `n`.
+
+When these `v i` form a `Module.Basis`, these elements are linearly independent,
+hence form a `Module.Basis` of `DividedPowerAlgebra R M`, see `DividedPowers.DPAlgebra.Free`. -/
+theorem submodule_span_prod_dp_eq_grade {ι : Type*} {v : ι → M} (hv : Submodule.span R (Set.range v) = ⊤) (n : ℕ) :
+    Submodule.span R (Set.range fun (x : (Σ' (x : ι →₀ ℕ), x.degree = n)) ↦ x.1.prod fun i k ↦ dp R k (v i)) = grade R M n := by
+  ext x
+  refine ⟨fun hx ↦ ?_, fun hx ↦ ?_⟩
+  · induction hx using Submodule.span_induction with
+    | zero => simp
+    | mem x hx => 
+      simp only [Set.mem_range, PSigma.exists, exists_prop] at hx
+      obtain ⟨k, hkn, hx⟩ := hx
+      simp only [← hkn, ← hx, Finsupp.prod, Finsupp.degree_apply]
+      apply SetLike.prod_mem_graded
+      exact fun i _ ↦ dp_mem_grade R M (k i) (v i)
+    | add => aesop
+    | smul => aesop
+  · set g := fun (n : ℕ) (x : Σ' (k : ι →₀ ℕ), k.degree = n) ↦ x.1.prod fun i s ↦ dp R s (v i) with hg
+    have dp_mul_g (n : ℕ) (i : ι) (m : ℕ) (x : Σ' (k : ι →₀ ℕ), k.degree = n) :
+       dp R m (v i) * g n x = (Nat.choose (m + x.1 i) m) • g (n + m) ⟨x.1 + Finsupp.single i m, by simp [map_add, x.2]⟩ := by
+      obtain ⟨x, hx⟩ := x
+      have H (i : ι) : dp R 0 (v i) = 1 := by rw [dp_zero]
+      simp only [hg]
+      -- generalize Finsupp.mul_pro_erase' so that it only assumes `g y (f y) = 1`
+      rw [← Finsupp.mul_prod_erase' x i _ H]
+      rw [← Finsupp.mul_prod_erase' (x + Finsupp.single i m) i _ H]
+      rw [Finsupp.erase_add, Finsupp.erase_single, add_zero]
+      rw [← smul_mul_assoc]
+      rw [← mul_assoc]
+      congr
+      simp only [Finsupp.coe_add, Pi.add_apply, Finsupp.single_eq_same, nsmul_eq_mul,
+        DividedPowerAlgebra.dp_mul, add_comm m]
+    change x ∈ Submodule.span R (Set.range (g n))
+    rw [mem_grade_iff] at hx
+    obtain ⟨p, hp, rfl⟩ := hx
+    induction hp using MvPolynomial.IsWeightedHomogeneous.induction_on with
+    | zero => simp
+    | add => aesop
+    | monomial d r hr => 
+      rw [mkAlgHom_monomial]
+      apply Submodule.smul_mem
+      rw [← hr]
+      clear hr
+      induction d using Finsupp.induction with
+      | zero => 
+        apply Submodule.mem_span_of_mem
+        simp only [hg, Set.mem_range, PSigma.exists, exists_prop]
+        use 0
+        simp
+      | single_add nm k d hnmd hk hrec => 
+        obtain ⟨n, m⟩ := nm
+        rw [Finsupp.prod_add_index_of_disjoint (by aesop)]
+        clear hk
+        simp only [pow_zero, Finsupp.prod_single_index]
+        rw [map_add, Finsupp.weight_single]
+        dsimp only [smul_eq_mul]
+        induction k with
+        | zero => rw [pow_zero, one_mul, zero_mul, zero_add] ; aesop
+        | succ k hind => 
+          rw [pow_succ', mul_assoc, add_comm k 1, add_mul, one_mul, add_assoc]
+          generalize dp R n m ^ k * (d.prod fun nm k ↦ dp R nm.1 nm.2 ^ k) = w at *
+          generalize k * n + (Finsupp.weight Prod.fst) d = e at *
+          clear hnmd
+          have hm : m ∈ Submodule.span R (Set.range v) := by rw [hv] ; aesop
+          induction hm using Submodule.span_induction generalizing n e w with
+          | zero => 
+            rw [dp_null]
+            split_ifs with h
+            · rw [one_mul, h, zero_add] ; assumption
+            · rw [zero_mul] ; aesop
+          | add m m' hm hm' hm_ind hm'_ind => 
+            rw [dp_add, Finset.sum_mul]
+            apply Submodule.sum_mem
+            intro c hc
+            rw [mul_assoc]
+            rw [mem_antidiagonal] at hc
+            rw [← hc, add_assoc]
+            exact hm_ind c.1 (dp R c.2 m' * w) (c.2 + e) (hm'_ind c.2 w e hind)
+          | smul r m hm hrec => 
+            rw [dp_smul, smul_mul_assoc]
+            exact Submodule.smul_mem (Submodule.span R (Set.range (g (n + e)))) (r ^ n)
+                (hrec n w e hind)
+          | mem x hx => 
+            induction hind using Submodule.span_induction with
+            | zero => simp
+            | add => rw [mul_add]; aesop
+            | smul => rw [mul_smul_comm]; aesop
+            | mem w hw => 
+              simp only [Set.mem_range, PSigma.exists] at hx hw
+              obtain ⟨x, rfl⟩ := hx
+              obtain ⟨y, hy, rfl⟩ := hw
+              rw [dp_mul_g, ← Nat.cast_smul_eq_nsmul R, add_comm n e]
+              aesop
+      
 /-- We say that a divided power algebra has a *graded* divided power structure if for every `n : ℕ`,
   `hI.dpow n` sends elements of `𝒜 i` to elements of `𝒜 (n • i)`.  -/
 def HasGradedDpow {A : Type*} [CommSemiring A] [Algebra R A]
