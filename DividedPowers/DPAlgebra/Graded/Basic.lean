@@ -330,6 +330,9 @@ theorem proj'_zero_mul (x y : DividedPowerAlgebra R M) :
     (proj' R M 0) (x * y) = (proj' R M 0) x * (proj' R M 0) y := by
   simp only [proj', ← GradedAlgebra.proj'_zeroRingHom_apply, _root_.map_mul]
 
+theorem proj'_mul_dp (n : ℕ) (a : DividedPowerAlgebra R M) (k : ℕ) (m : M) :
+    (proj' R M n (a * dp R k m) : DividedPowerAlgebra R M) = 
+      if k ≤ n then proj' R M (n - k) a * dp R k m else 0 := sorry
 end proj'
 
 end DividedPowerAlgebra
